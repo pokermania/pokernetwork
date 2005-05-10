@@ -1,0 +1,28 @@
+<?xml version='1.0'  encoding='iso-8859-1' ?>
+<bot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="bot.xsd"
+	reconnect="yes" watch="no" level="3" delay="0" verbose="0" >
+  <path>conf/engine /etc/poker3d/engine</path>
+  <host>localhost</host>
+  <port>19378</port>
+  <!-- <jabber host="mekensleep.org" chat="poks.mekensleep.lan" port="5222" /> -->
+
+  <table name="One" count="4" />
+  <table name="Two" count="4" />
+  <table name="Three" count="4" />
+  <table name="Four" count="4" />
+
+  <table name="Five" count="4" />
+  <table name="Six" count="4" />
+  <table name="Seven" count="4" />
+  <table name="Eight" count="4" />
+
+  <table name="Nine" count="4" />
+  <table name="Ten" count="4" />
+  <table name="Eleven" count="4" />
+  <table name="Twelve" count="4" />
+
+  <table name="Thirteen" count="4" />
+  <table name="Fourteen" count="4" />
+
+</bot>

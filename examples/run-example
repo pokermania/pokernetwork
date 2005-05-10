@@ -1,0 +1,49 @@
+#!/bin/bash
+
+echo "Preparing the poker3dtest database, enter the root user password."
+( 
+
+cat <<'!'
+
+USE mysql;
+
+DELETE FROM `user` WHERE User = 'poker3dtest' AND Host = 'localhost';
+
+DELETE FROM `db` WHERE User = 'poker3dtest' AND Host = 'localhost';
+
+DELETE FROM `tables_priv` WHERE User = 'poker3dtest' AND Host = 'localhost';
+
+DELETE FROM `columns_priv` WHERE User = 'poker3dtest' AND Host = 'localhost';
+
+GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , FILE , INDEX , ALTER , CREATE TEMPORARY TABLES ON * . * TO 'poker3dtest'@'localhost'
+IDENTIFIED BY 'poker3d'
+WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;
+
+DROP DATABASE IF EXISTS poker3dtest;
+CREATE DATABASE poker3dtest;
+USE poker3dtest;
+!
+
+cat ../database/schema.sql
+
+) | mysql -u root -p 
+
+python -u ../pokernetwork/pokerserver.py poker.server.xml > pokerserver.log 2>&1 &
+server_pid=$!
+echo "Server now running as process $server_pid with logs in pokerserver.log"
+
+sleep 1
+while : 
+do
+  python -u pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
+  bot_pid=$!
+  trap "kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
+  echo "Bots now running as process $bot_pid with logs in pokerbot.log"
+  wait $bot_pid
+  if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
+  then
+      exit -1
+  fi
+exit 0
+done
+

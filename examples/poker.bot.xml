@@ -1,0 +1,19 @@
+<?xml version='1.0'  encoding='iso-8859-1' ?>
+
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="poker-bot.xsd"
+	  delays="false" wait="0" reconnect="yes" watch="no" level="1" verbose="3" no_display_packets="yes" disconnect_delay="280" reconnect_delay="60" >
+  <delays position="0" round="1" showdown="5" lag="15" />
+  <name>test</name>
+  <passwd>test</passwd>
+  <servers>localhost:19378</servers>
+  <muck>yes</muck>
+  <auto_post>yes</auto_post>
+  <path>/etc/poker-engine</path> 
+
+  <table name="One" count="6" />
+<!--
+  <tournament name="sitngo20" count="20" />
+-->
+
+</settings>

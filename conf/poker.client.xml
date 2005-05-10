@@ -1,0 +1,14 @@
+<?xml version='1.0'  encoding='iso-8859-1' ?>
+
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="poker-client.xsd"
+	  verbose="0" delays="true" >
+  <delays position="0" round="1" showdown="5" lag="15" />
+  <name>username</name>
+  <passwd>password</passwd>
+  <servers>mekensleep.org:19378</servers>
+  <muck>yes</muck>
+  <auto_post>yes</auto_post>
+  <chat max_chars="40" line_length="20" />
+  <path>/etc/poker-engine</path> 
+</settings>

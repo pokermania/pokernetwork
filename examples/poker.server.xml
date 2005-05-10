@@ -1,0 +1,17 @@
+<?xml version='1.0'  encoding='iso-8859-1' ?>
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="server.xsd"
+  	autodeal="yes"
+    simultaneous="4"
+    verbose="3"
+    chat="yes" >
+
+  <delays autodeal="0" />
+  
+  <table name="One" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="30" real_money="0" />
+
+  <port>19378</port>
+  <database name="poker3dtest" host="localhost" user="poker3dtest" password="poker3d" />
+  <path>/etc/poker-engine</path> 
+  <users temporary="NONE" />
+</server>
