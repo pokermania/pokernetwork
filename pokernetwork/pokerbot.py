@@ -70,6 +70,7 @@ class PokerBot:
                 protocol.sendPacket(PacketPokerTourneySelect(string = join_info["name"]))
             else:
                 protocol.sendPacket(PacketPokerTableSelect(string = "play"))
+            self.state = STATE_SEARCHING
             self.factory.can_disconnect = True
             
     def _handleConnection(self, protocol, packet):
@@ -88,6 +89,7 @@ class PokerBot:
             self.state = STATE_RUNNING
             if self.batch_end_action:
                 self.batch_end_action()
+                self.batch_end_action = None
             
         elif packet.type == PACKET_POKER_TABLE_LIST:
             if self.state == STATE_SEARCHING:
@@ -160,6 +162,8 @@ class PokerBot:
             if packet.other_type == PACKET_POKER_TOURNEY_REGISTER:
                 if packet.code == PacketPokerTourneyRegister.NOT_ENOUGH_MONEY:
                     self.factory.went_broke = True
+                elif packet.code == PacketPokerTourneyRegister.ALREADY_REGISTERED:
+                    giveup = False
                 else:
                     name = self.factory.join_info['name']
                     print "Registration refused for tournament %s, try later" % name
@@ -252,6 +256,10 @@ class PokerBot:
     def play(self, protocol, game):
         serial = protocol.getSerial()
         name = protocol.getName()
+        if serial not in game.serialsNotFold():
+            print name + ": the server must have decided to play on our behalf before we had a chance to decide (TIMEOUT happening at the exact same time we reconnected), most likely"
+            return
+        
         (desired_action, ev) = self.eval(game, serial)
         actions = game.possibleActions(serial)
         if self.factory.verbose:
@@ -288,8 +296,8 @@ class PokerBotProtocol(PokerClientProtocol):
     def protocolEstablished(self):
         PokerClientProtocol.protocolEstablished(self)
         self._prefix = self.user.name + " "
-        if self.factory.disconnect_delay > 0:
-            delay = randint(1, self.factory.disconnect_delay)
+        if self.factory.disconnect_delay:
+            delay = randint(*self.factory.disconnect_delay)
             print self.user.name + ": will disconnect in %d seconds (for kicks)" % delay
             reactor.callLater(delay, lambda: self.disconnectMyself(self.user.name))
 
@@ -300,7 +308,7 @@ class PokerBotProtocol(PokerClientProtocol):
                 print self.user.name + ": disconnecting (for kicks)"
                 self.transport.loseConnection()
             else:
-                delay = randint(1, self.factory.disconnect_delay)
+                delay = randint(*self.factory.disconnect_delay)
                 print self.user.name + ": scheduled disconnection not allowed, will try again in %d seconds (for kicks)" % delay
                 reactor.callLater(delay, lambda: self.disconnectMyself(self.user.name))
         
@@ -315,8 +323,12 @@ class PokerBotFactory(PokerClientFactory):
         self.reconnect = settings.headerGet("/settings/@reconnect") == "yes"
         self.watch = settings.headerGet("/settings/@watch") == "yes"
         self.wait = settings.headerGetInt("/settings/@wait")
-        self.disconnect_delay = settings.headerGetInt("/settings/@disconnect_delay")
-        self.reconnect_delay = settings.headerGetInt("/settings/@reconnect_delay")
+        self.disconnect_delay = settings.headerGet("/settings/@disconnect_delay")
+        if self.disconnect_delay:
+            self.disconnect_delay = tuple(map(lambda x: int(x), split(self.disconnect_delay, ",")))
+        self.reconnect_delay = settings.headerGet("/settings/@reconnect_delay")
+        if self.reconnect_delay:
+            self.reconnect_delay = tuple(map(lambda x: int(x), split(self.reconnect_delay, ",")))
         self.verbose = settings.headerGetInt("/settings/@verbose")
         self.bot = None
         self.went_broke = False
@@ -357,7 +369,7 @@ class PokerBotFactory(PokerClientFactory):
                 self.went_broke = False
                 reactor.callLater(self.wait, connector.connect)
             elif self.disconnected_volontarily:
-                delay = randint(1, self.reconnect_delay)
+                delay = randint(*self.reconnect_delay)
                 print self.name + " Re-establishing in %d seconds." % delay
                 self.disconnected_volontarily = False
                 reactor.callLater(delay, connector.connect)
@@ -423,7 +435,7 @@ class Bot(internet.TCPClient):
         return internet.TCPClient.stopService(self)
 
 def run(argv):
-    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/pokernetwork/poker.bot.xml"
+    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.bot.xml"
 
     settings = Config([''])
     settings.load(configuration)

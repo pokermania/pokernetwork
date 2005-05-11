@@ -574,12 +574,13 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.position_is_obsolete = True
             if ( packet.string != "end" and not game.isBlindAnteRound() ):
                 forward_packets.insert(-1, PacketPokerEndRound(game_id = game.id))
-                
+
+            if game.isBlindAnteRound():
+                game.blindAnteRoundEnd()
+
             if packet.string == "end":
                 game.endState()
                 
-            if game.isBlindAnteRound():
-                game.nextRound()
             #
             # A state change is received at the begining of each
             # betting round. No state change is received when

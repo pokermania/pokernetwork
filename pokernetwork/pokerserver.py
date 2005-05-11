@@ -1982,10 +1982,16 @@ class PokerServerFactory(UGAMEServerFactory):
                                code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
                                message = "Tournament %d does not exist" % tourney_serial)
         tourney = self.tourneys[tourney_serial]
+
+        if tourney.isRegistered(serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                               code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
+                               message = "Player %d already registered in tournament %d " % ( serial, tourney_serial ) )
+
         if not tourney.canRegister(serial):
             return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
                                code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
-                               message = "Unable to register in tournament %d " % tourney_serial)
+                               message = "Registration refused in tournament %d " % tourney_serial)
 
         cursor = self.db.cursor()
         #
@@ -2637,7 +2643,7 @@ class PokerService(internet.TCPServer):
         return deferred
     
 def run(argv):
-    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/pokernetwork/poker.server.xml"
+    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.server.xml"
     settings = Config([''])
     settings.load(configuration)
     if not settings.header:
