@@ -1,0 +1,5 @@
+poker-network (1.0.0-1) unstable; urgency=low
+
+  * initial revision (closes: #308576)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 11 May 2005 11:51:28 +0200

@@ -1,0 +1,70 @@
+Template: python2.3-poker-network/db/skip
+Type: boolean
+Default: true
+Description: MySQL configuration.
+ Do you want to configure MySQL, so poker-network can have persistent data for
+ each user ?
+
+Template: python2.3-poker-network/db/abort
+Type: note
+Description: Abort.
+ You will need to configure MySQL by hand or try dpkg-reconfigure
+ python2.3-poker-network.
+
+Template: python2.3-poker-network/db/host
+Type: string
+Default: localhost
+Description: Please enter poker-network database host name:
+ This should be the host-name or IP address that poker-network will use to access
+ the database.
+
+Template: python2.3-poker-network/db/name
+Type: string
+Default: pokernetwork
+Description: Please enter poker-network database name:
+ This is the name of the database that poker-network will use.
+
+Template: python2.3-poker-network/db/user/name
+Type: string
+Default: pokernetwork
+Description: Please enter the database user name to access the database:
+ This is the user name that poker-network will use to access the database.
+
+Template: python2.3-poker-network/db/user/password
+Type: password
+Description: Please enter the password to access the database:
+ This is the password that poker-network will use, along with user name you
+ provided, to access the database.
+
+Template: python2.3-poker-network/db/user/password/confirm
+Type: password
+Description: Please retype the password to access the database:
+ Please enter the database access password again. If the password you are
+ going to retype mismatch the previous entered one, I'll ask you to enter
+ them again.
+
+Template: python2.3-poker-network/db/user/password/mismatch
+Type: text
+Description: Passwords mismatch.
+ The database access passwords you entered mismatch. Please try again.
+
+Template: python2.3-poker-network/db/admin/name
+Type: string
+Default: root
+Description: Please enter the database administrator user name:
+ This user name will be used to access the database to create (if needed):
+ .
+  (1) The database
+  (2) The new database account that poker-network will use to access the
+ database
+ .
+ It should be 'root' for MySQL.
+
+Template: python2.3-poker-network/db/admin/password
+Type: password
+Description: Please enter the database administrator password (if any):
+ This is the password that will be used along with the database
+ administrator user name.
+ .
+ NOTE: This password will not be asked twice, since it's not a new
+ password.
