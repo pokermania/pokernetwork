@@ -6,14 +6,14 @@
   <delays position="0" round="1" showdown="5" lag="15" />
   <name>test</name>
   <passwd>test</passwd>
-  <servers>localhost:19378</servers>
+  <servers>localhost:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <path>/etc/poker-engine</path> 
 
-<!--
-  <table name="One" count="6" />
--->
   <tournament name="sitngo4" count="4" />
+  <tournament name="sitngo8" count="8" />
+  <tournament name="sitngo20" count="20" />
+  <tournament name="sitngo50" count="50" />
 
 </settings>

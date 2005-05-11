@@ -2835,8 +2835,10 @@ class PacketPokerPlayersList(PacketPokerId):
     """
 
     players = []
-    format = "!IB"
+    format = "!H"
     format_size = calcsize(format)
+    format_item = "!IB"
+    format_item_size = calcsize(format_item)
     
     type = PACKET_POKER_PLAYERS_LIST
 
@@ -2847,7 +2849,7 @@ class PacketPokerPlayersList(PacketPokerId):
     def pack(self):
         block = PacketPokerId.pack(self) + pack(PacketPokerPlayersList.format, len(self.players))
         for (name, chips, flag) in self.players:
-            block += self.packstring(name) + pack(PacketPokerPlayersList.format, chips, flag)
+            block += self.packstring(name) + pack(PacketPokerPlayersList.format_item, chips, flag)
         return block
 
     def unpack(self, block):
@@ -2857,15 +2859,15 @@ class PacketPokerPlayersList(PacketPokerId):
         self.players = []
         for i in xrange(len):
             (block, name) = self.unpackstring(block)
-            (chips, flag) = unpack(PacketPokerPlayersList.format, block[:PacketPokerPlayersList.format_size])
-            block = block[PacketPokerPlayersList.format_size:]
-            self.players.append((name, chips))
+            (chips, flag) = unpack(PacketPokerPlayersList.format_item, block[:PacketPokerPlayersList.format_item_size])
+            block = block[PacketPokerPlayersList.format_item_size:]
+            self.players.append((name, chips, flag))
         return block
         
     def calcsize(self):
         size = PacketPokerId.calcsize(self) + PacketPokerPlayersList.format_size
         for (name, chips, flag) in self.players:
-            size += self.calcsizestring(name) + PacketPokerPlayersList.format_size
+            size += self.calcsizestring(name) + PacketPokerPlayersList.format_item_size
         return size
 
     def __str__(self):
@@ -3166,3 +3168,44 @@ class PacketPokerTourneyUnregister(PacketPokerId):
 
 PacketFactory[PACKET_POKER_TOURNEY_UNREGISTER] = PacketPokerTourneyUnregister
 
+########################################
+
+PACKET_POKER_ANIMATION_DEALER_CHANGE = 217
+PacketNames[PACKET_POKER_ANIMATION_DEALER_CHANGE] = "POKER_PLAYER_DEALER_CHANGE"
+
+class PacketPokerAnimationDealerChange(PacketPokerId):
+    """\
+"""
+    type = PACKET_POKER_ANIMATION_DEALER_CHANGE
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("state"):
+            self.state = kwargs["state"]
+        
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
+    
+PacketFactory[PACKET_POKER_ANIMATION_DEALER_CHANGE] = PacketPokerAnimationDealerChange
+
+########################################
+
+PACKET_POKER_ANIMATION_DEALER_BUTTON = 218
+PacketNames[PACKET_POKER_ANIMATION_DEALER_BUTTON] = "POKER_PLAYER_DEALER_BUTTON"
+
+class PacketPokerAnimationDealerButton(PacketPokerId):
+    """\
+"""
+    type = PACKET_POKER_ANIMATION_DEALER_BUTTON
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("state"):
+            self.state = kwargs["state"]
+        
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
+    
+PacketFactory[PACKET_POKER_ANIMATION_DEALER_BUTTON] = PacketPokerAnimationDealerButton

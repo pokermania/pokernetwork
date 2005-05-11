@@ -35,7 +35,7 @@ echo "Server now running as process $server_pid with logs in pokerserver.log"
 sleep 1
 while : 
 do
-  python -u pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
+  python -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
   bot_pid=$!
   trap "kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
   echo "Bots now running as process $bot_pid with logs in pokerbot.log"
@@ -44,5 +44,6 @@ do
   then
       exit -1
   fi
+  sleep 1
 done
 

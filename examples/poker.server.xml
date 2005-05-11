@@ -10,7 +10,7 @@
   
   <table name="One" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="30" real_money="0" />
 
-  <port>19378</port>
+  <port>19380</port>
   <database name="poker3dtest" host="localhost" user="poker3dtest" password="poker3d" />
   <path>/etc/poker-engine</path> 
   <users temporary="NONE" />
