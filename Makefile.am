@@ -72,3 +72,6 @@ EXTRA_DIST = \
 
 clean-local:
 	rm -f */*.py[co]
+
+install-data-hook:
+	chmod 600 ${DESTDIR}${pkgsysconfdir}/poker.server.xml

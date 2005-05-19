@@ -2409,8 +2409,8 @@ PacketNames[PACKET_POKER_BLIND_REQUEST] = "POKER_BLIND_REQUEST"
 class PacketPokerBlindRequest(PacketPokerBlind):
     """\
 Semantics: the player "serial" is required to pay the a blind
-of "amount" and a dead of "dead" for game "game_id". If this
-request is for a late blind, "is_late" is non zero.
+of "amount" and a dead of "dead" for game "game_id". The logical
+state of the blind is given in "state".
 
 Direction: server  => client
 
@@ -2420,7 +2420,7 @@ pay the blind), PACKET_POKER_BLIND (to pay the blind),
 PACKET_POKER_WAIT_BIG_BLIND (if not willing to pay a late blind but
 willing to pay the big blind when due).
 
-is_late: non zero if requesting a late blind.
+state: "small", "big", "late", "big_and_dead".
 dead: amount to pay for the dead (goes to the pot).
 amount: amount to pay for the blind (live for the next betting round).
 serial: integer uniquely identifying a player.
@@ -2429,29 +2429,25 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_BLIND_REQUEST
 
-    is_late = 0
-
-    format = "!B"
-    format_size = calcsize(format)
+    state = "unknown"
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("is_late"):
-            self.is_late = kwargs["is_late"] and 1 or 0
+        self.state = kwargs.get("state", "unknown")
         PacketPokerBlind.__init__(self, *args, **kwargs)
 
     def pack(self):
-        return PacketPokerBlind.pack(self) + pack(PacketPokerBlindRequest.format, self.is_late)
+        return PacketPokerBlind.pack(self) + self.packstring(self.state)
 
     def unpack(self, block):
         block = PacketPokerBlind.unpack(self, block)
-        (self.is_late,) = unpack(PacketPokerBlindRequest.format, block[:PacketPokerBlindRequest.format_size])
-        return block[PacketPokerBlindRequest.format_size:]
+        (block, self.state) = self.unpackstring(block)
+        return block
 
     def calcsize(self):
-        return PacketPokerBlind.calcsize(self) + PacketPokerBlindRequest.format_size
+        return PacketPokerBlind.calcsize(self) + self.calcsizestring(self.state)
 
     def __str__(self):
-        return PacketPokerBlind.__str__(self) + " is_late = %d" % ( self.is_late )
+        return PacketPokerBlind.__str__(self) + " state = %s" % self.state
     
 PacketFactory[PACKET_POKER_BLIND_REQUEST] = PacketPokerBlindRequest
 
@@ -3041,8 +3037,12 @@ class PacketPokerTourney(Packet):
         self.buy_in = kwargs.get("buy_in", 10)
         self.start_time = kwargs.get("start_time", 0)
         self.sit_n_go = kwargs.get("sit_n_go", 'y')
+        if self.sit_n_go == 1: self.sit_n_go = 'y'
+        if self.sit_n_go == 0: self.sit_n_go = 'n'
         self.players_quota = kwargs.get("players_quota", 0)
         self.real_money = kwargs.get("real_money", 'n')
+        if self.real_money == 1: self.real_money = 'y'
+        if self.real_money == 0: self.real_money = 'n'
 
     def pack(self):
         block = Packet.pack(self)
@@ -3164,6 +3164,11 @@ PacketNames[PACKET_POKER_TOURNEY_UNREGISTER] = "POKER_TOURNEY_UNREGISTER"
 
 class PacketPokerTourneyUnregister(PacketPokerId):
 
+    DOES_NOT_EXIST = 1
+    NOT_REGISTERED = 2
+    TOO_LATE = 3
+    SERVER_ERROR = 4
+
     type = PACKET_POKER_TOURNEY_UNREGISTER
 
 PacketFactory[PACKET_POKER_TOURNEY_UNREGISTER] = PacketPokerTourneyUnregister
@@ -3209,3 +3214,14 @@ class PacketPokerAnimationDealerButton(PacketPokerId):
         return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
     
 PacketFactory[PACKET_POKER_ANIMATION_DEALER_BUTTON] = PacketPokerAnimationDealerButton
+
+########################################
+
+PACKET_POKER_TOURNEY_PLAYERS_LIST = 219
+PacketNames[PACKET_POKER_TOURNEY_PLAYERS_LIST] = "POKER_TOURNEY_PLAYERS_LIST"
+
+class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
+
+    type = PACKET_POKER_TOURNEY_PLAYERS_LIST
+
+PacketFactory[PACKET_POKER_TOURNEY_PLAYERS_LIST] = PacketPokerTourneyPlayersList

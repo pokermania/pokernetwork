@@ -101,6 +101,12 @@ class PokerClientFactory(UGAMEClientFactory):
         settings.headerSet("/settings/name", self.name)
         settings.headerSet("/settings/passwd", self.password)
 
+    def isOutbound(self, packet):
+        return ( packet.type == PACKET_POKER_PLAYERS_LIST or
+                 packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST or
+                 packet.type == PACKET_POKER_TOURNEY_UNREGISTER or
+                 packet.type == PACKET_POKER_TOURNEY_REGISTER )
+        
     def getGame(self, game_id):
         if not hasattr(self, "games") or not self.games.has_key(game_id):
             return False
@@ -126,7 +132,7 @@ class PokerClientFactory(UGAMEClientFactory):
         del self.games[game_id]
 
     def packet2game(self, packet):
-        if hasattr(packet, "game_id") and self.games.has_key(packet.game_id):
+        if not self.isOutbound(packet) and hasattr(packet, "game_id") and self.games.has_key(packet.game_id):
             return self.games[packet.game_id]
         else:
             return False
@@ -141,7 +147,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         UGAMEClientProtocol.__init__(self)
         self.callbacks = {
             'current': {},
-            'not_current': {}
+            'not_current': {},
+            'outbound': {}
             }
         self.setCurrentGameId(None)
         self.pending_auth_request = False
@@ -161,6 +168,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         
     def setCurrentGameId(self, game_id):
         if not hasattr(self, 'factory') or self.factory.verbose > 2: self.message("setCurrentGameId(%s)" % game_id)
+        self.hold(0)
         self.currentGameId = game_id
 
     def getCurrentGameId(self):
@@ -181,7 +189,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if what != True:
             whats = [ what ]
         else:
-            whats = [ 'current', 'not_current' ]
+            whats = [ 'current', 'not_current', 'outbound' ]
         for what in whats:
             callbacks = self.callbacks[what]
             for name in names:
@@ -563,6 +571,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     forward_packets.extend(self.chipsBet2Pot(game, player, packet.dead, 0))
                 forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
 
+        elif packet.type == PACKET_POKER_BLIND_REQUEST:
+            game.setPlayerBlind(packet.serial, packet.state)
+                
         elif packet.type == PACKET_POKER_ANTE:
             player = game.getPlayer(packet.serial)
             game.ante(packet.serial, packet.amount)
@@ -812,7 +823,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                 serial = self.getSerial()))
 
     def resendPackets(self, game_id):
-        """ ex redisplay  / refresh """
         game = self.getGame(game_id)
         packets = []
         packet = PacketPokerTable(id = game.id,
@@ -820,6 +830,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   variant = game.variant,
                                   seats = game.max_players,
                                   betting_structure = game.betting_structure)
+        self.setCurrentGameId(game.id)
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
         packets.append(packet)
@@ -891,7 +902,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.schedulePacket(PacketBootstrap())
 
     def packet2id(self, packet):
-        if hasattr(packet, "game_id"):
+        if not self.factory.isOutbound(packet) and hasattr(packet, "game_id"):
             return packet.game_id
         elif packet.type == PACKET_POKER_TABLE:
             return packet.id
@@ -908,7 +919,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.publish_time = publish_time
             
     def schedulePacket(self, packet):
-        if hasattr(packet, "game_id") and not self.factory.gameExists(packet.game_id):
+        if not self.factory.isOutbound(packet) and hasattr(packet, "game_id") and not self.factory.gameExists(packet.game_id):
             return
         self.publish_packets.append(packet)
         self.publishPacket()
@@ -948,12 +959,21 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def publishPacket(self):
         packet = self.publish_packets.pop(0)
         if self.factory.verbose > 2: self.message("publishPackets: %s" % packet)
-        what = 'not_current'
-        if hasattr(packet, "game_id") and packet.game_id == self.getCurrentGameId():
+        what = 'outbound'
+        if hasattr(packet, "game_id"):
+            if self.factory.isOutbound(packet):
+                what = 'outbound'
+            else:
+                if packet.game_id == self.getCurrentGameId():
+                    what = 'current'
+                else:
+                    what = 'not_current'
+        elif ( packet.type == PACKET_POKER_TABLE or
+               packet.type == PACKET_POKER_TABLE_QUIT ):
             what = 'current'
+        else:
+            what = 'outbound'
 
-        if packet.type == PACKET_POKER_TABLE or packet.type == PACKET_POKER_TABLE_QUIT:
-            what = 'current'
         if self.callbacks[what].has_key(packet.type):
             callbacks = self.callbacks[what][packet.type]
             for callback in callbacks:

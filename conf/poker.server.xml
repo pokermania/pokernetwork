@@ -27,7 +27,7 @@
   <table name="Fourteen" variant="7stud" betting_structure="ante-5-10-limit" seats="8" timeout="60" real_money="0" />
 
   <port>19378</port>
-  <database name="%DATABASE%" host="localhost" user="%USER%" password="%PASS%" />
+  <database name="%DATABASE%" host="%DBHOST%" user="%USER%" password="%PASS%" />
   <path>/etc/poker-engine</path> 
   <users temporary="BOT" />
 </server>

@@ -137,11 +137,21 @@ class PokerServer(UGAMEServer):
             self.sendPacketVerbose(tourneys)
             return
         
+        elif packet.type == PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST:
+            self.sendPacketVerbose(self.factory.tourneyPlayersList(packet.game_id))
+
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             if self.getSerial() == packet.serial:
                 self.sendPacketVerbose(self.factory.tourneyRegister(packet))
             else:
                 print "attempt to register in tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() )
+            return
+            
+        elif packet.type == PACKET_POKER_TOURNEY_UNREGISTER:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.factory.tourneyUnregister(packet))
+            else:
+                print "attempt to unregister from tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() )
             return
             
         table = self.packet2table(packet)
@@ -476,8 +486,9 @@ class PokerServer(UGAMEServer):
             # immediately and can be announced to all players, including
             # the one that will be removed.
             #
-            table.broadcast(PacketPokerPlayerLeave(game_id = game.id,
-                                                   serial = serial))
+            packet = PacketPokerPlayerLeave(game_id = game.id, serial = serial)
+            self.sendPacketVerbose(packet)
+            table.broadcast(packet)
             return True
         else:
             return False
@@ -747,12 +758,12 @@ class PokerTable:
                 packets.extend(self.cards2packets(game_id, board, pockets, cache))
                 
             elif type == "blind_request":
-                (type, serial, amount, dead, is_late) = event
+                (type, serial, amount, dead, state) = event
                 packets.append(PacketPokerBlindRequest(game_id = game_id,
                                                        serial = serial,
                                                        amount = amount,
                                                        dead = dead,
-                                                       is_late = is_late))
+                                                       state = state))
 
             elif type == "wait_blind":
                 (type, serial) = event
@@ -1359,8 +1370,8 @@ class PokerTable:
             #
             if self.isOpen():
                 if client.removePlayer(self, serial):
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
                     self.seated2observer(client)
+                    self.factory.leavePlayer(serial, game.id, self.real_money)
                 else:
                     self.update()
             else:
@@ -1399,8 +1410,8 @@ class PokerTable:
                 # If not on a closed table, stand up.
                 #
                 if client.removePlayer(self, serial):
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
                     self.seated2observer(client)
+                    self.factory.leavePlayer(serial, game.id, self.real_money)
                 else:
                     self.update()
             else:
@@ -1432,8 +1443,8 @@ class PokerTable:
             #
             if self.isOpen():
                 if client.removePlayer(self, serial):
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
                     self.seated2observer(client)
+                    self.factory.leavePlayer(serial, game.id, self.real_money)
                 else:
                     self.update()
             else:
@@ -1772,6 +1783,7 @@ class PokerServerFactory(UGAMEServerFactory):
         self.authSetLevel(PACKET_POKER_SEAT, User.REGULAR)
         self.authSetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
         self.authSetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
+        self.authSetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
         self.authSetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
 
     def shutdown(self):
@@ -1969,10 +1981,24 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.execute(sql)
         if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
         cursor.close()
-        
+
+    def tourneyPlayersList(self, tourney_serial):
+        if not self.tourneys.has_key(tourney_serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                               code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
+                               message = "Tournament %d does not exist" % tourney_serial)
+        tourney = self.tourneys[tourney_serial]
+        players = map(lambda serial: ( self.getName(serial), -1, 0 ), tourney.players)
+        return PacketPokerTourneyPlayersList(game_id = tourney_serial,
+                                             players = players)
+
     def tourneySelect(self, string):
-        return ( filter(lambda schedule: schedule['respawn'] == 'n' and schedule['name'] == string, self.tourneys_schedule.values()) +
-                 map(lambda tourney: tourney.__dict__, filter(lambda tourney: tourney.name == string, self.tourneys.values() ) ) )
+        if(string == ''):
+            return ( filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) +
+                     map(lambda tourney: tourney.__dict__, self.tourneys.values() ) )
+        else:
+            return ( filter(lambda schedule: schedule['respawn'] == 'n' and schedule['name'] == string, self.tourneys_schedule.values()) +
+                     map(lambda tourney: tourney.__dict__, filter(lambda tourney: tourney.name == string, self.tourneys.values() ) ) )
     
     def tourneyRegister(self, packet):
         serial = packet.serial
@@ -2031,6 +2057,61 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.close()
 
         tourney.register(serial)
+            
+        return packet
+
+    def tourneyUnregister(self, packet):
+        serial = packet.serial
+        tourney_serial = packet.game_id
+        if not self.tourneys.has_key(tourney_serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.DOES_NOT_EXIST,
+                               message = "Tournament %d does not exist" % tourney_serial)
+        tourney = self.tourneys[tourney_serial]
+
+        if not tourney.isRegistered(serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.NOT_REGISTERED,
+                               message = "Player %d is not registered in tournament %d " % ( serial, tourney_serial ) )
+
+        if not tourney.canUnregister(serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.TOO_LATE,
+                               message = "It is too late to unregister player %d from tournament %d " % ( serial, tourney_serial ) )
+
+        cursor = self.db.cursor()
+        #
+        # Refund buy in
+        #
+        schedule = self.tourneys_schedule[tourney.schedule_serial]
+        base = schedule['real_money'] == 'y' and "real" or "play"
+        withdraw = schedule['buy_in'] + schedule['rake']
+        sql = ( "update users set "
+                " users." + str(base) + "_money = users." + str(base) + "_money + " + str(withdraw) + " "
+                " where serial = " + str(serial) )
+        if self.verbose > 1:
+            print "tourneyUnregister: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.SERVER_ERROR,
+                               message = "Server error")
+        #
+        # Unregister
+        #
+        sql = "delete from user2tourney where user_serial = %d and tourney_serial = %d" % ( serial, tourney_serial )
+        if self.verbose > 4: print "tourneyUnregister: " + sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            cursor.close()
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.SERVER_ERROR,
+                               message = "Server error")
+        cursor.close()
+
+        tourney.unregister(serial)
             
         return packet
 

@@ -26,7 +26,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.54)
-AC_INIT(poker-network, 1.0.0)
+AC_INIT(poker-network, 1.0.1)
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([pokernetwork/protocol.py])

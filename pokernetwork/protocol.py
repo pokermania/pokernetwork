@@ -171,12 +171,6 @@ class UGAMEProtocol(protocol.Protocol):
             packet.time__ = time()
             self.getOrCreateQueue(id).packets.append(packet)
         
-    def insertPacket(self, packet):
-        id = self._packet2id(packet)
-        if id != None:
-            packet.time__ = time()
-            self.getOrCreateQueue(id).packets.insert(0, packet)
-        
     def handleData(self):
         if self._packet_len >= self._expected_len:
             type = Packet()

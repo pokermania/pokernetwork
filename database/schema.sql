@@ -188,6 +188,8 @@ create table tourneys (
   finish_time int default 0,
   state varchar(32) default "registering",
   schedule_serial int,
+  add_on_count int default 0,
+  rebuy_count int default 0,
 
 	primary key (serial)
 );

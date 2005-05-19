@@ -105,11 +105,11 @@ class UGAMEServer(UGAMEProtocol):
     def flushContext(self):
         for packet in self._context:
             print "PACKET %s " % packet
+            self._handler = self._handleConnection
             if packet and self.isAuthorized(packet.type):
                 if hasattr(packet, "serial"):
                     packet.serial = self.getSerial()
-                self.insertPacket(packet)
-            self._handler = self._handleConnection
+                self._handler(packet)
         self._context = []
 
     def userRemove(self, packet):
