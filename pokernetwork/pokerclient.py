@@ -819,6 +819,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             packet = PacketPokerPlayerLeave(game_id = game.id,
                                             serial = serial)
             self.schedulePacket(packet)
+        self.schedulePacket(PacketPokerStreamMode(game_id = game.id))
         self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
                                                 serial = self.getSerial()))
 
