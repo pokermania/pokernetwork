@@ -102,7 +102,8 @@ class PokerClientFactory(UGAMEClientFactory):
         settings.headerSet("/settings/passwd", self.password)
 
     def isOutbound(self, packet):
-        return ( packet.type == PACKET_POKER_PLAYERS_LIST or
+        return ( packet.type == PACKET_ERROR or
+                 packet.type == PACKET_POKER_PLAYERS_LIST or
                  packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST or
                  packet.type == PACKET_POKER_TOURNEY_UNREGISTER or
                  packet.type == PACKET_POKER_TOURNEY_REGISTER )
@@ -341,32 +342,26 @@ class PokerClientProtocol(UGAMEClientProtocol):
             pass
 
         elif packet.type == PACKET_AUTH_REQUEST:
-            self.pending_auth_request = True
+            pass
 
         elif packet.type == PACKET_AUTH_EXPIRES:
-            self.pending_auth_request = False
+            pass
 
         elif packet.type == PACKET_AUTH_REFUSED:
-            self.pending_auth_request = False
+            pass
 
         elif packet.type == PACKET_AUTH_CANCEL:
-            self.pending_auth_request = False
+            pass
 
         elif packet.type == PACKET_AUTH_OK:
             pass
         
         elif packet.type == PACKET_SERIAL:
             self.handleSerial(packet)
-            if not self.pending_auth_request:
-#                self.sendPacket(PacketPokerPlayerInfo(serial = self.getSerial(),
-#                                                      name = self.getName(),
-#                                                      outfit = self.factory.getOutfit()))
-                self.sendPacket(PacketPokerPlayerInfo(serial = self.getSerial(),
-                                                      name = self.getName(),
-                                                      url = self.factory.getUrl(),
-                                                      outfit = self.factory.getOutfit()))
-                self.deleteGames()
-            self.pending_auth_request = False
+            self.sendPacket(PacketPokerPlayerInfo(serial = self.getSerial(),
+                                                  name = self.getName(),
+                                                  url = self.factory.getUrl(),
+                                                  outfit = self.factory.getOutfit()))
 
         elif packet.type == PACKET_POKER_START:
             if packet.hand_serial == 0:

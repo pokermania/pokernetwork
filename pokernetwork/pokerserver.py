@@ -93,8 +93,6 @@ class PokerServer(UGAMEServer):
             return
 
         if packet.type == PACKET_LOGIN:
-            for table in self.tables.values():
-                table.quitPlayer(self, self.getSerial())
             self.auth(packet)
             return
 
