@@ -131,9 +131,15 @@ class UGAMEProtocol(protocol.Protocol):
             now = time()
             to_delete = []
             #
+            # Shallow copy the queues list so that 
+            # self.discardPacket can remove an entry
+            # without conpromizing the for loop on queues
+            #
+            queues = self._queues.copy()
+            #
             # Process exactly one packet in each queue
             #
-            for (id, queue) in self._queues.iteritems():
+            for (id, queue) in queues.iteritems():
                 if len(queue.packets) <= 0:
                     if queue.delay <= now:
                         to_delete.append(id)

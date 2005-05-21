@@ -29,5 +29,5 @@
   <port>19380</port>
   <database name="poker3dtest" host="localhost" user="poker3dtest" password="poker3d" />
   <path>/etc/poker-engine</path> 
-  <users temporary="NONE" />
+  <users temporary="BOT" />
 </server>

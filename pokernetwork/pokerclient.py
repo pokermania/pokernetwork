@@ -305,11 +305,32 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def logout(self):
         self.sendPacket(PacketLogout())
         self.user.logout()
+
+    def gameEvent(self, game_id, type, *args):
+        if self.factory.verbose > 4:
+            self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, type, str(args) ))
+        if game_id != self.currentGameId:
+            if self.factory.verbose > 3:
+                self.message("gameEvent: game %d is not the current game (%d)" % ( game_id, self.currentGameId ))
+            return
+        forward_packets = self.forward_packets
+        if not forward_packets:
+            if self.factory.verbose > 3:
+                self.message("gameEvent: called outside _handleConnection for game %d, ignored" % game_id)
+            return
+        game = self.factory.getGame(game_id)
+        if not game:
+            if self.factory.verbose > 3:
+                self.message("gameEvent: called for unknown game %d, ignored" % game_id)
+            return
+        if type == "end_round":
+            forward_packets.append(PacketPokerEndRound(game_id = game_id))
         
     def _handleConnection(self, packet):
         if self.factory.verbose > 3: self.message("PokerClientProtocol:handleConnection: %s" % packet )
         
-        forward_packets = [ packet ]
+        self.forward_packets = [ packet ]
+        forward_packets = self.forward_packets
         
         game = self.factory.packet2game(packet)
         
@@ -335,6 +356,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.setBettingStructure(packet.betting_structure)
                 new_game.setMaxPlayers(packet.seats)
                 new_game.reset()
+                new_game.registerCallback(self.gameEvent)
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
 
@@ -435,7 +457,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             game.board.set(packet.cards)
 
         elif packet.type == PACKET_POKER_DEALER:
-            game.setDealer(packet.serial)
+            game.setDealer(packet.dealer)
             
         elif packet.type == PACKET_POKER_SIT_OUT:
             game.sitOut(packet.serial)
@@ -546,6 +568,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         elif packet.type == PACKET_POKER_RAISE:
             game.callNraise(packet.serial, packet.amount)
             player = game.getPlayer(packet.serial)
+            if not self.no_display_packets:
+                forward_packets.extend(self.updateBetLimit(game))
             forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
             if not self.no_display_packets:
                 forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
@@ -557,9 +581,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
             player = game.getPlayer(packet.serial)
             highest_bet = game.highestBetNotFold()
             game.blind(packet.serial, packet.amount, packet.dead)
-            if ( highest_bet < game.blind_info["big"] and
-                 packet.amount >= game.blind_info["big"] ):
-                forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
             if not self.no_display_packets:
                 if packet.dead > 0:
                     forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.dead))
@@ -578,8 +599,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         elif packet.type == PACKET_POKER_STATE:
             self.position_is_obsolete = True
-            if ( packet.string != "end" and not game.isBlindAnteRound() ):
-                forward_packets.insert(-1, PacketPokerEndRound(game_id = game.id))
 
             if game.isBlindAnteRound():
                 game.blindAnteRoundEnd()
@@ -618,6 +637,11 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                                   serial = player.serial,
                                                                   cards = cards))
 
+            if ( packet.string != "end" and not game.isBlindAnteRound() ):
+                if not self.no_display_packets:
+                    forward_packets.extend(self.updateBetLimit(game))
+                forward_packets.append(PacketPokerBeginRound(game_id = game.id))
+
             if game.state != packet.string:
                 self.error("state = %s, expected %s instead " % ( game.state, packet.string ))
 
@@ -630,8 +654,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     self.serial_in_position = game.getSerialInPosition()
                     self_in_position = self.serial_in_position == self.getSerial()
                     if self.serial_in_position > 0:
-                        if not self.no_display_packets:
-                            forward_packets.extend(self.updateBetLimit(game))
                         if position_changed:
                             forward_packets.append(PacketPokerPosition(game_id = game.id,
                                                                        serial = self.serial_in_position))
@@ -654,6 +676,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         for forward_packet in forward_packets:
             self.schedulePacket(forward_packet)
+        self.forward_packets = None
 
     def moveBet2Pot(self, game):
         packets = []
@@ -675,7 +698,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
     moveBet2Player = moveBet2Pot
         
     def updateBetLimit(self, game):
-        if not self.getSerial() in game.serialsPlaying():
+        if ( self.getSerial() not in game.serialsPlaying() or
+             game.isBlindAnteRound() ):
             return []
             
         packets = []

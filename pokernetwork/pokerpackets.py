@@ -135,8 +135,7 @@ class PacketPokerId(PacketSerial):
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("game_id"):
-            self.game_id = kwargs["game_id"]
+        self.game_id = kwargs.get("game_id", 0)
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -575,23 +574,16 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_BEST_CARDS
 
-    side = ""
-    hand = ""
-    cards = []
-    bestcards = []
-    board = []
-
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("side"):
-            self.side = kwargs["side"]
-        if kwargs.has_key("hand"):
-            self.hand = kwargs["hand"]
-        if kwargs.has_key("board"):
-            self.board = kwargs["board"]
-        if kwargs.has_key("bestcards"):
-            self.board = kwargs["bestcards"]
+        self.side = kwargs.get("side", "")
+        self.hand = kwargs.get("hand", "")
+        self.bestcards = kwargs.get("bestcards", [])
+        self.board = kwargs.get("board", [])
         PacketPokerCards.__init__(self, *args, **kwargs)
         
+    def __str__(self):
+        return PacketPokerCards.__str__(self) + " side = %s, hand = %s, bestcards = %s, board = %s" % ( self.side, self.hand, str(self.bestcards), str(self.board) )
+
 PacketFactory[PACKET_POKER_BEST_CARDS] = PacketPokerBestCards
 
 ########################################
@@ -720,26 +712,8 @@ Direction: server  => client
 Context: this packet is sent at least each time the pot "index" is
 updated.
 
-Note: the server formats the chip list according to the
-/bet/chips element of the betting structure description.
-For instance if the poker.10-15-pot-limit.xml betting structure
-description contains:
-
-    <chips values="5 10 20 25 50 100 250 500 5000" />
-
-then a "bet" field containing [1, 0, 2, 0, 1, 0, 0, 0, 0]
-means one chips of 5, two chips of 20 and one chip of 50.
-In order to avoid the complexity of refering to the proper
-betting structure, the may normalize the lists so as to
-behave as if all betting structure had the following
-/bet/chips element:
-
-    <chips values="1 2 5 10 20 25 50 100 250 500 1000 2000 5000" />
-
-bet: list of integers counting the number of chips in the pot.
-     The value of each chip depends on the betting structure as
-     explained above.
-index: integer uniquely identifying a side pot.
+bet: list of pairs ( chip_value, chip_count ).
+index: integer uniquely identifying a side pot in the range [0,10[
 game_id: integer uniquely identifying a game.
 """
 
@@ -1042,9 +1016,10 @@ PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
 PACKET_POKER_DEALER = 134
 PacketNames[PACKET_POKER_DEALER] = "POKER_DEALER"
 
-class PacketPokerDealer(PacketPokerId):
+class PacketPokerDealer(Packet):
     """\
-Semantics: the dealer button for game "game_id" is at seat "serial".
+Semantics: the dealer button for game "game_id" is at seat "dealer".
+and the previous dealer was at seat "previous_dealer"
 
 Direction: server  => client
 
@@ -1052,11 +1027,34 @@ Context: this packet is guaranteed to be sent when the game is not
 running. The dealer is never altered while the game is running.
 It is never sent for non button games such as stud 7.
 
-serial: the seat number on wich the dealer button is located [0-9].
+dealer: the seat number on wich the dealer button is located [0-9].
+previous_dealer: the seat number on wich the previous dealer button is located [0-9].
 game_id: integer uniquely identifying a game.
 """
     
     type = PACKET_POKER_DEALER
+
+    format = "!IBB"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.game_id = kwargs.get("game_id", 0)
+        self.dealer = kwargs.get("dealer", -1)
+        self.previous_dealer = kwargs.get("previous_dealer", -1)
+
+    def pack(self):
+        return Packet.pack(self) + pack(PacketPokerDealer.format, self.game_id, self.dealer, self.previous_dealer)
+        
+    def unpack(self, block):
+        block = Packet.unpack(self, block)
+        (self.game_id, self.dealer, self.previous_dealer) = unpack(PacketPokerDealer.format, block[:PacketPokerDealer.format_size])
+        return block[PacketPokerDealer.format_size:]
+
+    def calcsize(self):
+        return Packet.calcsize(self) + PacketPokerDealer.format_size
+
+    def __str__(self):
+        return Packet.__str__(self) + " game_id = %d, dealer = %d, previous_dealer = %d" % ( self.game_id, self.dealer, self.previous_dealer )
 
 PacketFactory[PACKET_POKER_DEALER] = PacketPokerDealer
 
@@ -1818,9 +1816,9 @@ game_id: integer uniquely identifying a game.
 
     def __init__(self, *args, **kwargs):
         PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs["chips"]
-        self.pot = kwargs["pot"]
-        self.reason = kwargs["reason"]
+        self.chips = kwargs.get("chips", [])
+        self.pot = kwargs.get("pot", -1)
+        self.reason = kwargs.get("reason", "")
         
     def __str__(self):
         return PacketPokerId.__str__(self) + " chips = %s, pot = %d, reason = %s" % ( self.chips, self.pot, self.reason )
@@ -1896,8 +1894,13 @@ Direction: client <=> client
 
 Context: inferred at the end of a sequence of packet related to
 a betting round. Paying the blind / ante is not considered a
-betting round. This packet is sent before opening a new betting
-round (i.e. before a PACKET_POKER_STATE is received).
+betting round. This packet is sent when the client side
+knows that the round is finished but before the corresponding
+packet (PACKET_POKER_STATE) has been received from the server.
+It will be followed by the POKER_BEGIN_ROUND packet, either
+immediatly if the server has no delay between betting rounds
+or later if the server waits a few seconds between two betting
+rounds.
 It is not inferred at the end of the last betting round.
 
 game_id: integer uniquely identifying a game.
@@ -2338,19 +2341,15 @@ class PacketPokerDisplayNode(Packet):
     """request POKER_DISPLAY_NODE packet"""
     
     type = PACKET_POKER_DISPLAY_NODE
-    name = ""
-    state = ""
-    style = ""
+
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("name"):
-            self.name = kwargs["name"]
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
-        if kwargs.has_key("style"):
-            self.style = kwargs["style"]
+        self.name = kwargs.get("name", "")
+        self.state = kwargs.get("state", "")
+        self.style = kwargs.get("style", "")
+        self.selection = kwargs.get("selection", None)
 
     def __str__(self):
-        return Packet.__str__(self) + " name = %s, state = %s, style = %s " % ( self.name, self.state, self.style )
+        return Packet.__str__(self) + " name = %s, state = %s, style = %s, selection = %s " % ( self.name, self.state, self.style, self.selection )
 
 PacketFactory[PACKET_POKER_DISPLAY_NODE] = PacketPokerDisplayNode
 
@@ -3225,3 +3224,41 @@ class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
     type = PACKET_POKER_TOURNEY_PLAYERS_LIST
 
 PacketFactory[PACKET_POKER_TOURNEY_PLAYERS_LIST] = PacketPokerTourneyPlayersList
+
+########################################
+
+PACKET_POKER_BEGIN_ROUND = 220
+PacketNames[PACKET_POKER_BEGIN_ROUND] = "POKER_BEGIN_ROUND"
+
+class PacketPokerBeginRound(PacketPokerId):
+    """\
+Semantics: opens a betting round for game "game_id".
+
+Direction: client <=> client
+
+Context: inferred when the client knows that a betting round will
+begin although it does not yet received information from the server to
+initialize it. Paying the blind / ante is not considered a betting
+round. It follows the POKER_END_ROUND packet, either
+immediatly if the server has no delay between betting rounds
+or later if the server waits a few seconds between two betting
+rounds.
+
+Example applied to holdem:
+
+         state
+
+         blind     END
+BEGIN    preflop   END
+BEGIN    flop      END
+BEGIN    turn      END
+BEGIN    river
+         end
+
+game_id: integer uniquely identifying a game.
+"""
+    
+    type = PACKET_POKER_BEGIN_ROUND
+
+PacketFactory[PACKET_POKER_BEGIN_ROUND] = PacketPokerBeginRound
+

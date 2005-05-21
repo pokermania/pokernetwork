@@ -586,6 +586,7 @@ class PokerTable:
             "playerTimeoutSerial": 0
             }
         self.timeout_policy = "sitOut"
+        self.previous_dealer = -1
 
     def isValid(self):
         return hasattr(self, "factory")
@@ -722,7 +723,9 @@ class PokerTable:
                 packets.append(PacketPokerInGame(game_id = game_id,
                                                  players = player_list))
                 packets.append(PacketPokerDealer(game_id = game_id,
-                                                 serial = dealer))
+                                                 dealer = dealer,
+                                                 previous_dealer = self.previous_dealer))
+                self.previous_dealer = dealer
                 packets.append(PacketPokerStart(game_id = game_id,
                                                 hand_serial = hand_serial,
                                                 hands_count = hands_count,
