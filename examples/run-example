@@ -38,11 +38,15 @@ do
   bot_pid=$!
   trap "kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
   echo "Bots now running as process $bot_pid with logs in pokerbot.log"
-  wait $bot_pid
-  if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
+  if wait $bot_pid
   then
+    if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
+    then
       exit -1
+    fi
+    sleep 1
+  else
+    break
   fi
-  sleep 1
 done
 

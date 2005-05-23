@@ -44,6 +44,15 @@ class UGAMEClientProtocol(UGAMEProtocol):
     def getName(self):
         return self.user.name
 
+    def getUrl(self):
+        return self.user.url
+
+    def getOutfit(self):
+        return self.user.outfit
+
+    def isLogged(self):
+        return self.user.isLogged()
+    
     def sendPacket(self, packet):
         if self.established != 0:
             if self.factory.verbose > 2:

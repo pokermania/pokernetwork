@@ -11,7 +11,7 @@
   <auto_post>yes</auto_post>
   <path>/etc/poker-engine</path> 
 
-  <table name="One" count="3" />
+  <table name="One" count="2" />
   <table name="Two" count="1" />
   <table name="Three" count="1" />
   <table name="Four" count="5" />

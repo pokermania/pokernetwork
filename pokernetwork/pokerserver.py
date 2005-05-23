@@ -64,11 +64,6 @@ class PokerServer(UGAMEServer):
 
     def __init__(self):
         self.tables = {}
-#        self.player_info = PacketPokerPlayerInfo(name = "anonymous",
-#                                                 outfit = "default")
-        self.player_info = PacketPokerPlayerInfo(name = "anonymous",
-                                                 url= "default",
-                                                 outfit = "default")
         UGAMEServer.__init__(self)
 
     def __del__(self):
@@ -96,7 +91,7 @@ class PokerServer(UGAMEServer):
             self.auth(packet)
             return
 
-        elif packet.type == PACKET_POKER_GET_USER_INFO:
+        if packet.type == PACKET_POKER_GET_USER_INFO:
             if self.getSerial() == packet.serial:
                 self.getUserInfo(packet.serial)
             else:
@@ -115,7 +110,8 @@ class PokerServer(UGAMEServer):
                 if self.setPlayerInfo(packet):
                     self.sendPacketVerbose(packet)
                 else:
-                    self.sendPacketVerbose(PacketError(code = PACKET_POKER_PLAYER_INFO,
+                    self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_PLAYER_INFO,
+                                                       code = PACKET_POKER_PLAYER_INFO,
                                                        message = "Failed to save set player information"))
             else:
                 print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
@@ -128,7 +124,7 @@ class PokerServer(UGAMEServer):
                 print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
             return
 
-        elif packet.type == PACKET_POKER_TOURNEY_SELECT:
+        if packet.type == PACKET_POKER_TOURNEY_SELECT:
             tourneys = PacketPokerTourneyList()
             for tourney in self.factory.tourneySelect(packet.string):
                 tourneys.packets.append(PacketPokerTourney(**tourney))
@@ -140,7 +136,7 @@ class PokerServer(UGAMEServer):
 
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.factory.tourneyRegister(packet))
+                self.factory.tourneyRegister(packet)
             else:
                 print "attempt to register in tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() )
             return
@@ -349,7 +345,8 @@ class PokerServer(UGAMEServer):
             self.logout()
             
     def setPlayerInfo(self, packet):
-        self.player_info = packet
+        self.user.url = packet.url
+        self.user.outfit = packet.outfit
         return self.factory.setPlayerInfo(packet)
 
     def setPersonalInfo(self, packet):
@@ -357,7 +354,10 @@ class PokerServer(UGAMEServer):
         self.factory.setPersonalInfo(packet)
 
     def getPlayerInfo(self):
-        return self.player_info
+        return PacketPokerPlayerInfo(serial = self.getSerial(),
+                                     name = self.getName(),
+                                     url = self.user.url,
+                                     outfit = self.user.outfit)
     
     def listPlayers(self, packet):
         table = self.factory.getTable(packet.game_id)
@@ -431,7 +431,15 @@ class PokerServer(UGAMEServer):
                                                            serial = player.serial,
                                                            name = player_info.name,
                                                            url = player_info.url,
-                                                           outfit = player_info.outfit))
+                                                           outfit = player_info.outfit,
+                                                           blind = player.blind,
+                                                           remove_next_turn = player.remove_next_turn,
+                                                           sit_out = player.sit_out,
+                                                           sit_out_next_turn = player.sit_out_next_turn,
+                                                           auto = player.auto,
+                                                           auto_blind_ante = player.auto_blind_ante,
+                                                           wait_for = player.wait_for,
+                                                           seat = player.seat))
             if not game.isPlaying(player.serial):
                 self.sendPacketVerbose(PacketPokerPlayerChips(game_id = game.id,
                                                               serial = player.serial,
@@ -459,14 +467,14 @@ class PokerServer(UGAMEServer):
         self.sendPacketVerbose(PacketPokerStreamMode(game_id = game.id))
 
     def addPlayer(self, table, seat):
-        table.game.addPlayer(self.getSerial(), seat)
-        self.sendNewPlayerInformation(table)
+        serial = self.getSerial()
+        table.game.addPlayer(serial, seat)
+        table.sendNewPlayerInformation(serial)
         
     def connectionLost(self, reason):
         if self.factory.verbose:
             print "Connection lost for %s/%d" % ( self.getName(), self.getSerial() )
         for table in self.tables.values():
-
             table.disconnectPlayer(self, self.getSerial())
         UGAMEServer.connectionLost(self, reason)
 
@@ -478,13 +486,15 @@ class PokerServer(UGAMEServer):
 
     def removePlayer(self, table, serial):
         game = table.game
+        player = game.getPlayer(serial)
+        seat = player and player.seat
         if game.removePlayer(serial):
             #
             # If the player is not in a game, the removal will be effective
             # immediately and can be announced to all players, including
             # the one that will be removed.
             #
-            packet = PacketPokerPlayerLeave(game_id = game.id, serial = serial)
+            packet = PacketPokerPlayerLeave(game_id = game.id, serial = serial, seat = seat)
             self.sendPacketVerbose(packet)
             table.broadcast(packet)
             return True
@@ -538,10 +548,6 @@ class PokerServer(UGAMEServer):
         else:
             return False
         
-    def sendNewPlayerInformation(self, table):
-        packets = table.newPlayerInformation(self.getSerial(), self.getPlayerInfo())
-        table.broadcast(packets)
-
 class PokerPredefinedDecks:
     def __init__(self, decks):
         self.decks = decks
@@ -839,9 +845,10 @@ class PokerTable:
                     
             elif type == "leave":
                 (type, quitters) = event
-                for serial in quitters:
+                for (serial, seat) in quitters:
                     packets.append(PacketPokerPlayerLeave(game_id = game_id,
-                                                          serial = serial))
+                                                          serial = serial,
+                                                          seat = seat))
                 
             elif type == "finish":
                 pass
@@ -1103,8 +1110,8 @@ class PokerTable:
                 
             elif type == "wait_for":
                 (type, serial, reason) = event
-                messages.append("%s waiting for " % self.getName(serial))
-                messages.append("%s" % ( reason == "late" and "late blind" or "big blind"))
+                messages.append("%s waiting for " % self.getName(serial) +
+                                "%s" % ( reason == "late" and "late blind" or "big blind"))
             
             elif type == "player_list":
                 pass
@@ -1223,7 +1230,7 @@ class PokerTable:
             type = event[0]
             if type == "leave":
                 (type, quitters) = event
-                for serial in quitters:
+                for (serial, seat) in quitters:
                     self.factory.leavePlayer(serial, game.id, self.real_money)
                     if self.serial2client.has_key(serial):
                         self.seated2observer(self.serial2client[serial])
@@ -1262,19 +1269,20 @@ class PokerTable:
             if self.factory.verbose > 2:
                 print "Not autodealing because less than 2 players willing to play"
             return
-        #
-        # Do not auto deal a table where there are only temporary
-        # users (i.e. bots)
-        #
-        onlyTemporaryPlayers = True
-        for serial in game.serialsSit():
-            if not match("^" + self.temporaryPlayersPattern, self.getName(serial)):
-                onlyTemporaryPlayers = False
-                break
-        if onlyTemporaryPlayers:
-            if self.factory.verbose > 2:
-                print "Not autodealing because player names sit in match %s" % self.temporaryPlayersPattern
-            return
+        if not game.isTournament():
+            #
+            # Do not auto deal a table where there are only temporary
+            # users (i.e. bots)
+            #
+            onlyTemporaryPlayers = True
+            for serial in game.serialsSit():
+                if not match("^" + self.temporaryPlayersPattern, self.getName(serial)):
+                    onlyTemporaryPlayers = False
+                    break
+            if onlyTemporaryPlayers:
+                if self.factory.verbose > 2:
+                    print "Not autodealing because player names sit in match %s" % self.temporaryPlayersPattern
+                return
         if self.factory.verbose > 2:
             print "Autodeal scheduled in %f seconds" % float(self.delays["autodeal"])
         info["dealTimeout"] = reactor.callLater(float(self.delays["autodeal"]), self.autoDeal)
@@ -1304,9 +1312,10 @@ class PokerTable:
         pprint(history)
         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = history[0]
         game = self.game
-        for serial in game.serialsAll():
+        for player in game.playersAll():
             client.sendPacketVerbose(PacketPokerPlayerLeave(game_id = game.id,
-                                                            serial = serial))
+                                                            serial = player.serial,
+                                                            seat = player.seat))
         game.reset()
         game.name = "*REPLAY*"
         game.setVariant(variant)
@@ -1390,6 +1399,9 @@ class PokerTable:
     def kickPlayer(self, serial):
         game = self.game
 
+        player = game.getPlayer(serial)
+        seat = player and player.seat
+        
         if not game.removePlayer(serial):
             print " *ERROR* kickPlayer did not succeed in removing player %d from game %d" % ( serial, game.id )
             return
@@ -1400,7 +1412,8 @@ class PokerTable:
             self.seated2observer(self.serial2client[serial])
 
         self.broadcast(PacketPokerPlayerLeave(game_id = game.id,
-                                              serial = serial))
+                                              serial = serial,
+                                              seat = seat))
 
     def disconnectPlayer(self, client, serial):
         game = self.game
@@ -1450,6 +1463,11 @@ class PokerTable:
                     self.update()
             else:
                 client.error("cannot leave a closed table")
+                client.PacketPokerError(game_id = game.id,
+                                        serial = serial,
+                                        other_type = PACKET_POKER_PLAYER_LEAVE,
+                                        code = PacketPokerPlayerLeave.TOURNEY,
+                                        message = "Cannot leave tournament table")
                 return False
 
         return True
@@ -1478,15 +1496,18 @@ class PokerTable:
         if client:
             client.join(other_table)
         other_table.movePlayerTo(serial, money, sit_out)
-        if client:
-            client.sendNewPlayerInformation(other_table)
-        else:
-            other_table.broadcast(other_table.newPlayerInformation(serial, self.getPlayerInfo(serial)))
+        other_table.sendNewPlayerInformation(serial)
         if self.factory.verbose:
             print "player %d moved from table %d to table %d" % ( serial, game.id, to_game_id )
 
-    def newPlayerInformation(self, serial, player_info):
+    def sendNewPlayerInformation(self, serial):
+        packets = self.newPlayerInformation(serial)
+        self.broadcast(packets)
+
+    def newPlayerInformation(self, serial):
+        player_info = self.getPlayerInfo(serial)
         game = self.game
+        player = game.getPlayer(serial)
         if self.factory.verbose > 1:
             print "about player %d" % serial
         nochips = PokerChips(game.chips_values).chips
@@ -1495,7 +1516,15 @@ class PokerTable:
                                     serial = serial,
                                     name = player_info.name,
                                     url = player_info.url,
-                                    outfit = player_info.outfit),
+                                    outfit = player_info.outfit,
+                                    blind = player.blind,
+                                    remove_next_turn = player.remove_next_turn,
+                                    sit_out = player.sit_out,
+                                    sit_out_next_turn = player.sit_out_next_turn,
+                                    auto = player.auto,
+                                    auto_blind_ante = player.auto_blind_ante,
+                                    wait_for = player.wait_for,
+                                    seat = player.seat),
             PacketPokerSeats(game_id = game.id, seats = game.seats()),
             PacketPokerPlayerChips(game_id = game.id,
                                    serial = serial,
@@ -1784,6 +1813,7 @@ class PokerServerFactory(UGAMEServerFactory):
         self.authSetLevel(PACKET_POKER_SEAT, User.REGULAR)
         self.authSetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
         self.authSetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
+        self.authSetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
         self.authSetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
         self.authSetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
 
@@ -2004,21 +2034,32 @@ class PokerServerFactory(UGAMEServerFactory):
     def tourneyRegister(self, packet):
         serial = packet.serial
         tourney_serial = packet.game_id
+        client = self.serial2client.get(serial, None)
+        
         if not self.tourneys.has_key(tourney_serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
-                               message = "Tournament %d does not exist" % tourney_serial)
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
+                                message = "Tournament %d does not exist" % tourney_serial)
+            print error
+            if client: client.sendPacketVerbose(error)
+            return False
         tourney = self.tourneys[tourney_serial]
 
         if tourney.isRegistered(serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
-                               message = "Player %d already registered in tournament %d " % ( serial, tourney_serial ) )
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
+                                message = "Player %d already registered in tournament %d " % ( serial, tourney_serial ) )
+            print error
+            if client: client.sendPacketVerbose(error)
+            return False
 
         if not tourney.canRegister(serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
-                               message = "Registration refused in tournament %d " % tourney_serial)
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
+                                message = "Registration refused in tournament %d " % tourney_serial)
+            print error
+            if client: client.sendPacketVerbose(error)
+            return False
 
         cursor = self.db.cursor()
         #
@@ -2035,14 +2076,19 @@ class PokerServerFactory(UGAMEServerFactory):
             print "tourneyRegister: %s" % sql
         cursor.execute(sql)
         if cursor.rowcount == 0:
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
-                               message = "Not enough money to enter the tournament %d" % tourney_serial)
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
+                                message = "Not enough money to enter the tournament %d" % tourney_serial)
+            if client: client.sendPacketVerbose(error)
+            print error
+            return False
         if cursor.rowcount != 1:
             print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.SERVER_ERROR,
-                               message = "Server error")
+            if client:
+                client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                                     code = PacketPokerTourneyRegister.SERVER_ERROR,
+                                                     message = "Server error"))
+            return False
         #
         # Register
         #
@@ -2052,14 +2098,17 @@ class PokerServerFactory(UGAMEServerFactory):
         if cursor.rowcount != 1:
             print " *ERROR* insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
             cursor.close()
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.SERVER_ERROR,
-                               message = "Server error")
+            if client:
+                client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                                     code = PacketPokerTourneyRegister.SERVER_ERROR,
+                                                     message = "Server error"))
+            return False
         cursor.close()
 
+        # notify success
+        client.sendPacketVerbose(packet)
         tourney.register(serial)
-            
-        return packet
+        return True
 
     def tourneyUnregister(self, packet):
         serial = packet.serial

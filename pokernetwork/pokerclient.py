@@ -71,7 +71,6 @@ class PokerClientFactory(UGAMEClientFactory):
             self.delays = {}
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
         self.protocol = PokerClientProtocol
-        self.serial2player_info = {}
         self.games = {}
 
     def __del__(self):
@@ -414,16 +413,17 @@ class PokerClientProtocol(UGAMEClientProtocol):
             game.canceled(packet.serial, packet.amount)
 
         elif packet.type == PACKET_POKER_PLAYER_INFO:
-            if game:
-                game.getPlayer(packet.serial).name = packet.name
-                self.factory.serial2player_info[packet.serial] = packet
-            elif packet.serial == self.getSerial():
-                self.factory.serial2player_info[packet.serial] = packet
-                
+            pass
+
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             game.addPlayer(packet.serial)
-            game.getPlayer(packet.serial).name = packet.name
-            self.factory.serial2player_info[packet.serial] = packet
+            player = game.getPlayer(packet.serial)
+            player.name = packet.name
+            player.url = packet.url
+            player.outfit = packet.outfit
+            player.auto_blind_ante = packet.auto_blind_ante
+            player.wait_for = packet.wait_for
+            player.auto = packet.auto
 
         elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                packet.type == PACKET_POKER_TABLE_MOVE ) :
@@ -461,6 +461,15 @@ class PokerClientProtocol(UGAMEClientProtocol):
             
         elif packet.type == PACKET_POKER_SIT_OUT:
             game.sitOut(packet.serial)
+
+        elif packet.type == PACKET_POKER_AUTO_FOLD:
+            game.autoPlayer(packet.serial)
+
+        elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
+            game.autoBlindAnte(packet.serial)
+
+        elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
+            game.noAutoBlindAnte(packet.serial)
 
         elif packet.type == PACKET_POKER_SIT:
             game.sit(packet.serial)
@@ -834,9 +843,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.unschedulePackets(thisgame)
         self.discardPackets(game_id)
         self.schedulePacket(PacketPokerBatchMode(game_id = game.id))
-        for serial in game.serialsAll():
+        for player in game.playersAll():
             packet = PacketPokerPlayerLeave(game_id = game.id,
-                                            serial = serial)
+                                            serial = player.serial,
+                                            seat = player.seat)
             self.schedulePacket(packet)
         self.schedulePacket(PacketPokerStreamMode(game_id = game.id))
         self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
@@ -855,9 +865,19 @@ class PokerClientProtocol(UGAMEClientProtocol):
         packet.seats_all = game.seats_all
         packets.append(packet)
         for player in game.playersAll():
-            player_info = self.factory.serial2player_info[player.serial]
-            player_info.game_id = game.id
-            packets.append(player_info)
+            packets.append(PacketPokerPlayerArrive(game_id = game.id,
+                                                   serial = player.serial,
+                                                   name = player.name,
+                                                   url = player.url,
+                                                   outfit = player.outfit,
+                                                   blind = player.blind,
+                                                   remove_next_turn = player.remove_next_turn,
+                                                   sit_out = player.sit_out,
+                                                   sit_out_next_turn = player.sit_out_next_turn,
+                                                   auto = player.auto,
+                                                   auto_blind_ante = player.auto_blind_ante,
+                                                   wait_for = player.wait_for,
+                                                   seat = player.seat))
             if player.isSit():
                 packets.append(PacketPokerSit(game_id = game.id,
                                               serial = player.serial))

@@ -33,11 +33,15 @@ class User:
     def __init__(self, serial = 0):
         self.serial = serial
         self.name = "anonymous"
+        self.url = "random"
+        self.outfit = "random"
         self.privilege = None
 
     def logout(self):
         self.serial = 0
         self.name = "anonymous"
+        self.url = "random"
+        self.outfit = "random"
         self.privilege = None
         
     def isLogged(self):
@@ -73,4 +77,4 @@ class User:
         return (True, None)
         
     def __str__(self):
-        return "serial = %d, name = %s, privilege = %d" % ( self.serial, self.name, self.privilege )
+        return "serial = %d, name = %s, url = %s, outfit = %s, privilege = %d" % ( self.serial, self.name, self.url, self.outfit, self.privilege )

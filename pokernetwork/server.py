@@ -123,6 +123,15 @@ class UGAMEServer(UGAMEProtocol):
     def getName(self):
         return self.user.name
 
+    def getUrl(self):
+        return self.user.url
+
+    def getOutfit(self):
+        return self.user.outfit
+    
+    def isLogged(self):
+        return self.user.isLogged()
+    
     def sendPacket(self, packet):
         self.transport.write(packet.pack())
 

@@ -989,30 +989,6 @@ PacketFactory[PACKET_POKER_CLIENT_ACTION] = PacketPokerClientAction
 
 ########################################
 
-PACKET_POKER_PLAYER_LEAVE = 133
-PacketNames[PACKET_POKER_PLAYER_LEAVE] = "POKER_PLAYER_LEAVE"
-
-class PacketPokerPlayerLeave(PacketPokerId):
-    """\
-Semantics: the player "serial" leaves the seat at game "game_id".
-
-Direction: server <=> client
-
-Context: ineffective in tournament games. If the player is playing a
-hand the server will wait until the end of the turn to relay the
-packet to other players involved in the same hand. A player is allowed
-to leave in the middle of the game but the server hides this to the
-other players.
-
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-    type = PACKET_POKER_PLAYER_LEAVE
-
-PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
-
-########################################
-
 PACKET_POKER_DEALER = 134
 PacketNames[PACKET_POKER_DEALER] = "POKER_DEALER"
 
@@ -1441,13 +1417,11 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_SEAT
 
-    seat = 255
     format = "!B"
     format_size = calcsize(format)
     
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("seat"):
-            self.seat = kwargs["seat"]
+        self.seat = kwargs.get("seat", 255)
         PacketPokerId.__init__(self, *args, **kwargs)
         
     def pack(self):
@@ -1465,6 +1439,34 @@ game_id: integer uniquely identifying a game.
         return PacketPokerId.__str__(self) + " seat = %d" % self.seat
 
 PacketFactory[PACKET_POKER_SEAT] = PacketPokerSeat
+
+########################################
+
+PACKET_POKER_PLAYER_LEAVE = 133
+PacketNames[PACKET_POKER_PLAYER_LEAVE] = "POKER_PLAYER_LEAVE"
+
+class PacketPokerPlayerLeave(PacketPokerSeat):
+    """\
+Semantics: the player "serial" leaves the seat "seat" at game "game_id".
+
+Direction: server <=> client
+
+Context: ineffective in tournament games. If the player is playing a
+hand the server will wait until the end of the turn to relay the
+packet to other players involved in the same hand. A player is allowed
+to leave in the middle of the game but the server hides this to the
+other players.
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+seat: the seat left in the range [0,9]
+"""
+
+    TOURNEY = 1
+    
+    type = PACKET_POKER_PLAYER_LEAVE
+
+PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
 
 ########################################
 
@@ -1654,15 +1656,12 @@ outfit: name of the player outfit.
 serial: integer uniquely identifying a player.
 """
 
+   NOT_LOGGED = 1
+    
    type = PACKET_POKER_PLAYER_INFO
 
-   name = None
-   outfit = "default"
-   url = "default"
-   
    def __init__(self, *args, **kwargs):
-       if kwargs.has_key("name"):
-           self.name = kwargs["name"]
+       self.name = kwargs.get('name', "noname")
        self.url = kwargs.get('url', "random")
        self.outfit = kwargs.get('outfit',"random")
        PacketPokerId.__init__(self, *args, **kwargs)
@@ -1691,7 +1690,7 @@ PACKET_POKER_PLAYER_ARRIVE = 163
 PacketNames[PACKET_POKER_PLAYER_ARRIVE] = "POKER_PLAYER_ARRIVE"
 
 class PacketPokerPlayerArrive(PacketPokerPlayerInfo):
-   """\
+    """\
 Semantics: the player "serial" is seated at the game "game_id".
 Descriptive information for the player such as "name" and "outfit"
 is provided.
@@ -1707,9 +1706,64 @@ outfit: unique name of the player outfit.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
 
-   type = PACKET_POKER_PLAYER_ARRIVE
+    type = PACKET_POKER_PLAYER_ARRIVE
+
+    format = "!BBBBBBBB"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.blind = kwargs.get("blind", "late")
+        self.remove_next_turn = kwargs.get("remove_next_turn", False)
+        self.sit_out = kwargs.get("sit_out", True)
+        self.sit_out_next_turn = kwargs.get("sit_out_next_turn", False)
+        self.auto = kwargs.get("auto", False)
+        self.auto_blind_ante = kwargs.get("auto_blind_ante", False)
+        self.wait_for = kwargs.get("wait_for", False)
+        self.buy_in_payed = kwargs.get("buy_in_payed", False)
+        self.seat = kwargs.get("seat", None)
+        PacketPokerPlayerInfo.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        blind = str(self.blind)
+        remove_next_turn = self.remove_next_turn and 1 or 0
+        sit_out = self.sit_out and 1 or 0
+        sit_out_next_turn = self.sit_out_next_turn and 1 or 0
+        auto = self.auto and 1 or 0
+        auto_blind_ante = self.auto_blind_ante and 1 or 0
+        wait_for = self.wait_for and 1 or 0
+        buy_in_payed = self.buy_in_payed and 1 or 0
+        seat = self.seat == None and 255 or self.seat
+        return PacketPokerPlayerInfo.pack(self) + self.packstring(blind) + pack(PacketPokerPlayerArrive.format, remove_next_turn, sit_out, sit_out_next_turn, auto, auto_blind_ante, wait_for, buy_in_payed, seat)
+        
+    def unpack(self, block):
+        block = PacketPokerPlayerInfo.unpack(self, block)
+        (block, blind) = self.unpackstring(block)
+        if blind == 'None':
+            self.blind = None
+        elif blind == 'False':
+            self.blind = False
+        else:
+            self.blind = blind
+        ( remove_next_turn, sit_out, sit_out_next_turn, auto, auto_blind_ante, wait_for, buy_in_payed, seat ) = unpack(PacketPokerPlayerArrive.format, block[:PacketPokerPlayerArrive.format_size])
+        self.remove_next_turn = remove_next_turn == 1
+        self.sit_out = sit_out == 1
+        self.sit_out_next_turn = sit_out_next_turn == 1
+        self.auto = auto == 1
+        self.auto_blind_ante = auto_blind_ante == 1
+        self.wait_for = wait_for == 1
+        self.buy_in_payed = buy_in_payed == 1
+        if seat == 255:
+            self.seat = None
+        else:
+            self.seat = seat
+        return block[PacketPokerPlayerArrive.format_size:]
+
+    def calcsize(self):
+        return PacketPokerPlayerInfo.calcsize(self) + self.calcsizestring(str(self.blind)) + PacketPokerPlayerArrive.format_size
+
+    def __str__(self):
+        return PacketPokerPlayerInfo.__str__(self) + "blind = %s, remove_next_turn = %s, sit_out = %s, sit_out_next_turn = %s, auto = %s, auto_blind_ante = %s, wait_for = %s, buy_in_payed = %s, seat = %s " % ( self.blind, self.remove_next_turn, self.sit_out, self.sit_out_next_turn, self.auto, self.auto_blind_ante, self.wait_for, self.buy_in_payed, self.seat )
 
 PacketFactory[PACKET_POKER_PLAYER_ARRIVE] = PacketPokerPlayerArrive
 
@@ -2055,6 +2109,8 @@ rating: server wide ELO rating.
 serial: integer uniquely identifying a player.
 """
 
+    NOT_LOGGED = 1
+    
     type = PACKET_POKER_USER_INFO
     play_money = -1
     play_money_in_game = -1
@@ -2882,7 +2938,10 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
     """\
 """
 
+    NOT_LOGGED = 1
+    
     type = PACKET_POKER_PERSONAL_INFO
+
     def __init__(self, *args, **kwargs):
         self.email = kwargs.get("email", "")
         self.addr_street = kwargs.get("addr_street", "")
@@ -2947,6 +3006,8 @@ before sending this packet.
 
 serial: integer uniquely identifying a player.
 """
+    
+    NOT_LOGGED = 1
     
     type = PACKET_POKER_GET_PERSONAL_INFO
 
