@@ -133,6 +133,7 @@ class PokerServer(UGAMEServer):
         
         elif packet.type == PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST:
             self.sendPacketVerbose(self.factory.tourneyPlayersList(packet.game_id))
+            return
 
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             if self.getSerial() == packet.serial:
@@ -148,6 +149,22 @@ class PokerServer(UGAMEServer):
                 print "attempt to unregister from tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() )
             return
             
+        elif packet.type == PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST:
+            self.listPlayers(packet)
+            return
+
+        elif packet.type == PACKET_POKER_TABLE_SELECT:
+            self.listTables(packet)
+            return
+
+        elif packet.type == PACKET_POKER_HAND_SELECT:
+            self.listHands(packet, self.getSerial())
+            return
+
+        elif packet.type == PACKET_POKER_HAND_SELECT_ALL:
+            self.listHands(packet, None)
+            return
+
         table = self.packet2table(packet)
             
         if table:
@@ -323,18 +340,6 @@ class PokerServer(UGAMEServer):
             if table:
                 table.joinPlayer(self, self.getSerial())
             
-        elif packet.type == PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST:
-            self.listPlayers(packet)
-
-        elif packet.type == PACKET_POKER_TABLE_SELECT:
-            self.listTables(packet)
-
-        elif packet.type == PACKET_POKER_HAND_SELECT:
-            self.listHands(packet, self.getSerial())
-
-        elif packet.type == PACKET_POKER_HAND_SELECT_ALL:
-            self.listHands(packet, None)
-
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
                 table.quitPlayer(self, self.getSerial())
@@ -1907,6 +1912,7 @@ class PokerServerFactory(UGAMEServerFactory):
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
         tourney.schedule_serial = schedule['serial']
+        tourney.real_money = schedule['real_money']
         tourney.callback_new_state = self.tourneyNewState
         tourney.callback_create_game = self.tourneyCreateTable
         tourney.callback_game_filled = self.tourneyGameFilled
@@ -2024,12 +2030,19 @@ class PokerServerFactory(UGAMEServerFactory):
                                              players = players)
 
     def tourneySelect(self, string):
-        if(string == ''):
-            return ( filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) +
-                     map(lambda tourney: tourney.__dict__, self.tourneys.values() ) )
+        tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
+        criterion = split(string, "\t")
+        if string == '':
+            return tourneys
+        elif len(criterion) > 1:
+            ( real_money, type ) = criterion
+            sit_n_go = type == 'sit_n_go'
+            if real_money:
+                return filter(lambda tourney: tourney['real_money'] == real_money and tourney['sit_n_go'] == sit_n_go, tourneys)
+            else:
+                return filter(lambda tourney: tourney['sit_n_go'] == sit_n_go, tourneys)
         else:
-            return ( filter(lambda schedule: schedule['respawn'] == 'n' and schedule['name'] == string, self.tourneys_schedule.values()) +
-                     map(lambda tourney: tourney.__dict__, filter(lambda tourney: tourney.name == string, self.tourneys.values() ) ) )
+            return filter(lambda tourney: tourney['name'] == string, tourneys)
     
     def tourneyRegister(self, packet):
         serial = packet.serial
@@ -2231,20 +2244,25 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.close()
         return map(lambda x: x[0], hands)
 
-    def listTables(self, select, serial):
-        tables = []
-        for table in self.tables:
-            game = table.game
-            if select == "my":
-                if serial in game.serialsAll():
-                    tables.append(table)
-            elif select == "play" and table.real_money == 0:
-                tables.append(table)
-            elif select == "real" and table.real_money == 1:
-                tables.append(table)
-            elif select == "all":
-                tables.append(table)
-        return tables
+    def listTables(self, string, serial):
+        criterion = split(string, "\t")
+        if string == '' or string == 'all':
+            return self.tables
+        elif string == 'my':
+            return filter(lambda table: serial in table.game.serialsAll(), self.tables)
+        elif string == 'play':
+            return filter(lambda table: table.real_money == 0, self.tables)
+        elif string == 'real':
+            return filter(lambda table: table.real_money == 1, self.tables)
+        elif len(criterion) > 1:
+            ( real_money, variant ) = criterion
+            if real_money:
+                real_money = real_money == 'y' and 1 or 0
+                return filter(lambda table: table.game.variant == variant and table.real_money == real_money, self.tables)
+            else:
+                return filter(lambda table: table.game.variant == variant, self.tables)
+        else:
+            return filter(lambda table: table.game.name == string, self.tables)
 
     def cleanUp(self, temporary_users = ''):
         cursor = self.db.cursor()
