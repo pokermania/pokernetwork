@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004 Mekensleep
+# Copyright (C) 2004, 2005 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -54,8 +54,9 @@ from pokernetwork.server import UGAMEServer, UGAMEServerFactory
 from pokernetwork.user import User
 from pokernetwork.config import Config
 
-from pokerengine.pokergame import PokerGameServer, PokerPlayer, PokerChips
+from pokerengine.pokergame import PokerGameServer, PokerPlayer, history2messages
 from pokerengine.pokercards import PokerCards
+from pokerengine.pokerchips import PokerChips
 from pokerengine.pokertournament import *
 from pokernetwork.pokerpackets import *
 
@@ -159,6 +160,13 @@ class PokerServer(UGAMEServer):
 
         elif packet.type == PACKET_POKER_HAND_SELECT:
             self.listHands(packet, self.getSerial())
+            return
+
+        elif packet.type == PACKET_POKER_HAND_HISTORY:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.factory.getHandHistory(packet.game_id, packet.serial))
+            else:
+                print "attempt to get history of player %d by player %d" % ( packet.serial, self.getSerial() )
             return
 
         elif packet.type == PACKET_POKER_HAND_SELECT_ALL:
@@ -391,19 +399,29 @@ class PokerServer(UGAMEServer):
         self.sendPacketVerbose(PacketPokerTableList(packets = packets))
 
     def listHands(self, packet, serial):
+        start = packet.start
+        count = min(packet.count, 200)
         if serial != None:
-            sql = "select distinct hands.serial from hands,user2hand "
-            sql += " where user2hand.hand_serial = hands.serial "
-            sql += " and user2hand.user_serial = %d " % serial
+            select_list = "select distinct hands.serial from hands,user2hand "
+            select_total = "select count(distinct hands.serial) from hands,user2hand "
+            where  = " where user2hand.hand_serial = hands.serial "
+            where += " and user2hand.user_serial = %d " % serial
             if packet.string:
-                sql += " and " + packet.string
-            sql += " order by hands.serial desc limit 50 "
+                where += " and " + packet.string
         else:
-            sql = "select serial from hands "
+            select_list = "select serial from hands "
+            select_total = "select count(serial) from hands "
+            where = ""
             if packet.string:
-                sql += "where " + packet.string
-        hands = self.factory.listHands(sql)
-        self.sendPacketVerbose(PacketPokerHandList(hands = hands))
+                where = "where " + packet.string
+        where += " order by hands.serial desc"
+        limit = " limit %d,%d " % ( start, count )
+        (total, hands) = self.factory.listHands(select_list + where + limit, select_total + where)
+        self.sendPacketVerbose(PacketPokerHandList(string = packet.string,
+                                                   start = packet.start,
+                                                   count = packet.count,
+                                                   hands = hands,
+                                                   total = total))
 
     def createTable(self, packet):
         table = self.factory.createTable(self.getSerial(), {
@@ -565,14 +583,15 @@ class PokerPredefinedDecks:
             self.index = 0
         
 class PokerTable:
-    def __init__(self, factory, id, description):
+    def __init__(self, factory, id = 0, description = None):
         self.factory = factory
         settings = self.factory.settings
         self.game = PokerGameServer("poker.%s.xml", factory.dirs)
+        self.game.verbose = factory.verbose
+        self.history_index = 0
         predefined_decks = settings.headerGetList("/server/decks/deck")
         if predefined_decks:
             self.game.shuffler = PokerPredefinedDecks(map(lambda deck: self.game.eval.string2card(split(deck)), predefined_decks))
-        self.game.verbose = factory.verbose
         self.observers = []
         self.waiting = []
         game = self.game
@@ -588,7 +607,6 @@ class PokerTable:
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
         self.temporaryPlayersPattern = settings.headerGet("/server/users/@temporary")
-        self.history_index = 0
         self.cache = self.createCache()
         self.owner = 0
         self.serial2client = {}
@@ -1028,7 +1046,7 @@ class PokerTable:
 
             elif type == "end":
                 (type, winners, winner2share, showdown_stack) = event
-                new_history.append((type, winners, winner2share, []))
+                new_history.append(event)
 
             elif type == "sitOut":
                 new_history.append(event)
@@ -1044,183 +1062,8 @@ class PokerTable:
 
         return new_history
 
-    def gameResolve2messages(self, hands, serial2name, serial2displayed, frame):
-        def card2string(hand):
-            eval = self.game.eval
-            return join(eval.card2string(hand[1][1:]))
-        
-        messages = []
-        best = { 'hi': 0,
-                 'low': 0x0FFFFFFF }
-        for serial in frame['serials']:
-            for side in ('hi', 'low'):
-                hand = hands[serial]
-                if not hand.has_key(side):
-                    continue
-                if hand[side][1][0] == 'Nothing':
-                    continue
-
-                hand = hand[side]
-                show = False
-                if ( ( side == 'hi' and best['hi'] <= hand[0] ) or
-                     ( side == 'low' and best['low'] >= hand[0] ) ):
-                    best[side] = hand[0]
-                    show = True
-
-                if serial2displayed.has_key(serial) and not serial in frame[side]:
-                    #
-                    # If the player already exposed the hand and is not going
-                    # to win this side of the pot, there is no need to issue
-                    # a message.
-                    #
-                    continue
-                
-                if show:
-                    serial2displayed[serial] = True
-                    value = self.game.readableHandValueLong(side, hand[1][0], hand[1][1:])
-                    messages.append("%s shows %s for %s " % ( serial2name[serial], value, side ))
-                else:
-                    messages.append("%s mucks loosing hand" % ( serial2name[serial] ))
-
-        for side in ('hi', 'low'):
-            if not frame.has_key(side):
-                continue
-            message = join([ serial2name[serial] for serial in frame[side] ])
-            if len(frame[side]) > 1:
-                message += " tie for %s " % side
-            else:
-                message += " wins %s " % side
-            messages.append(message)
-
-        if len(frame['serial2share']) > 1:
-            message = "winners share a pot of %d" % frame['pot']
-            if frame.has_key('chips_left'):
-                message += " (minus %d odd chips)" % frame['chips_left']
-            messages.append(message)
-            
-        for (serial, share) in frame['serial2share'].iteritems():
-            messages.append("%s receives %d" % ( serial2name[serial], share ))
-
-        return messages
-            
-    def game2messages(self):
-        game = self.game
-        messages = []
-        subject = ''
-        for event in game.historyGet()[self.history_index:]:
-            type = event[0]
-            if type == "game":
-                (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = event
-                subject = "hand #%d, %s, %s" % ( hand_serial, variant, betting_structure )
-                
-            elif type == "wait_for":
-                (type, serial, reason) = event
-                messages.append("%s waiting for " % self.getName(serial) +
-                                "%s" % ( reason == "late" and "late blind" or "big blind"))
-            
-            elif type == "player_list":
-                pass
-            
-            elif type == "round":
-                (type, name, board, pockets) = event
-                messages.append("%s, %d players" % ( name, len(pockets) ))
-                if not board.isEmpty():
-                    messages.append("Board: %s" % game.cards2string(board))
-
-            elif type == "showdown":
-                (type, board, pockets) = event
-                
-            elif type == "position":
-                pass
-            
-            elif type == "blind_request":
-                pass
-            
-            elif type == "wait_blind":
-                pass
-            
-            elif type == "blind":
-                (type, serial, amount, dead) = event
-                if dead > 0:
-                    dead_message = " and %d dead man" % dead
-                else:
-                    dead_message = ""
-                messages.append("%s pays %d blind%s" % ( self.getName(serial), amount, dead_message ))
-
-            elif type == "ante_request":
-                pass
-            
-            elif type == "ante":
-                (type, serial, amount) = event
-                messages.append("%s pays %d ante" % ( self.getName(serial), amount ))
-
-            elif type == "all-in":
-                (type, serial) = event
-                messages.append("%s is all in" % self.getName(serial))
-            
-            elif type == "call":
-                (type, serial, amount) = event
-                messages.append("%s calls %d" % ( self.getName(serial), amount ))
-                
-            elif type == "check":
-                (type, serial) = event
-                messages.append("%s checks" % self.getName(serial))
-                
-            elif type == "fold":
-                (type, serial) = event
-                messages.append("%s folds" % self.getName(serial))
-
-            elif type == "raise":
-                (type, serial, amount) = event
-                amount = PokerChips(game.chips_values, amount).toint()
-                messages.append("%s raise %d" % ( self.getName(serial), amount ) )
-
-            elif type == "canceled":
-                (type, serial, amount) = event
-                if serial > 0 and amount > 0:
-                    returned_message = " (%d returned to %s)" % ( amount, self.getName(serial) )
-                else:
-                    returned_message = ""
-                messages.append("turn canceled%s" % returned_message)
-                
-            elif type == "end":
-                (type, winners, winner2share, showdown_stack) = event
-                if not showdown_stack[0].has_key('serial2best'):
-                    serial = winners[0]
-                    messages.append("%s receives %d (everyone else folded)" % ( self.getName(serial), winner2share[serial] ))
-                else:
-                    serial2displayed = {}
-                    hands = showdown_stack[0]['serial2best']
-                    serial2name = dict(zip(hands.keys(), [ self.getName(serial) for serial in hands.keys() ]))
-                    for frame in showdown_stack[1:]:
-                        message = None
-                        if frame['type'] == 'left_over':
-                            message = "%s receives %d odd chips" % ( self.getName(frame['serial']), frame['chips_left'])
-                        elif frame['type'] == 'uncalled':
-                            message = "returning uncalled bet %d to %s" % ( frame['uncalled'], serial2name[frame['serial']] )
-                        elif frame['type'] == 'resolve':
-                            messages.extend(self.gameResolve2messages(hands, serial2name, serial2displayed, frame))
-                        else:
-                            print "*ERROR* unexpected showdown_stack frame type %s" % frame['type']
-                        if message:
-                            messages.append(message)
-            elif type == "sitOut":
-                (type, serial) = event
-                messages.append("%s sits out" % ( self.getName(serial) ))
-
-            elif type == "leave":
-                pass
-
-            elif type == "finish":
-                pass
-            
-            else:
-                print "*ERROR* unknown history type %s " % type
-
-        return (subject, messages)
-
     def syncChat(self):
-        (subject, messages) = self.game2messages()
+        (subject, messages) = history2messages(self.game, self.game.historyGet()[self.history_index:], serial2name = self.getName)
         if messages or subject:
             if self.factory.chat:
                 if messages:
@@ -1313,8 +1156,8 @@ class PokerTable:
         history = self.factory.loadHand(hand)
         if not history:
             return
-        print "handReplay"
-        pprint(history)
+        #print "handReplay"
+        #pprint(history)
         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = history[0]
         game = self.game
         for player in game.playersAll():
@@ -1345,7 +1188,7 @@ class PokerTable:
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
                 continue
             client.sendPacketVerbose(packet)
-        
+
     def isJoined(self, client):
         return client in self.observers or self.serial2client.has_key(client.getSerial())
 
@@ -2191,12 +2034,56 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.close()
         return int(serial)
 
-    def loadHand(self, serial):
+    def getHandHistory(self, hand_serial, serial):
+        history = self.loadHand(hand_serial)
+
+        if not history:
+            return PacketPokerError(game_id = hand_serial,
+                                    serial = serial,
+                                    other_type = PACKET_POKER_HAND_HISTORY,
+                                    code = PacketPokerHandHistory.NOT_FOUND,
+                                    message = "Hand %d was not found in history of player %d" % ( hand_serial, serial ) )
+
+        (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = history[0]
+
+        if serial not in player_list:
+            return PacketPokerError(game_id = hand_serial,
+                                    serial = serial,
+                                    other_type = PACKET_POKER_HAND_HISTORY,
+                                    code = PacketPokerHandHistory.FORBIDDEN,
+                                    message = "Player %d did not participate in hand %d" % ( serial, hand_serial ) )
+            
+        serial2name = {}
+        for serial in player_list:
+            serial2name[serial] = self.getName(serial)
+        #
+        # Filter out the pocket cards that do not belong to player "serial"
+        #
+        for event in history:
+            if event[0] == "round":
+                (type, name, board, pockets) = event
+                if pockets:
+                    for (player_serial, pocket) in pockets.iteritems():
+                        if player_serial != serial:
+                            pocket.loseNotVisible()
+            elif event[0] == "showdown":
+                (type, board, pockets) = event
+                if pockets:
+                    for (player_serial, pocket) in pockets.iteritems():
+                        if player_serial != serial:
+                            pocket.loseNotVisible()
+
+        return PacketPokerHandHistory(game_id = hand_serial,
+                                      serial = serial,
+                                      history = str(history),
+                                      serial2name = str(serial2name))
+        
+    def loadHand(self, hand_serial):
         cursor = self.db.cursor()
-        sql = ( "select description from hands where serial = " + str(serial) )
+        sql = ( "select description from hands where serial = " + str(hand_serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
-            print " *ERROR* loadHand(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            print " *ERROR* loadHand(%d) expected one row got %d" % ( hand_serial, cursor.rowcount )
             cursor.close()            
             return None
         (description,) = cursor.fetchone()
@@ -2205,7 +2092,7 @@ class PokerServerFactory(UGAMEServerFactory):
             history = eval(description.replace("\r",""))
             return history
         except:
-            print " *ERROR* loadHand(%d) eval failed for %s" % ( serial, description )
+            print " *ERROR* loadHand(%d) eval failed for %s" % ( hand_serial, description )
             print_exc()
             return None
             
@@ -2235,14 +2122,16 @@ class PokerServerFactory(UGAMEServerFactory):
        
         cursor.close()
         
-    def listHands(self, sql):
+    def listHands(self, sql_list, sql_total):
         cursor = self.db.cursor()
         if self.verbose > 1:
-            print "listHands: %s" % sql
-        cursor.execute(sql)
-        hands = cursor.fetchmany()
+            print "listHands: " + sql_list + " " + sql_total
+        cursor.execute(sql_list)
+        hands = cursor.fetchall()
+        cursor.execute(sql_total)
+        total = cursor.fetchone()[0]
         cursor.close()
-        return map(lambda x: x[0], hands)
+        return (total, map(lambda x: x[0], hands))
 
     def listTables(self, string, serial):
         criterion = split(string, "\t")
@@ -2421,7 +2310,7 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getName(%d) expected one row got %d" % ( serial, cursor.rowcount )
-            return "ERROR"
+            return "UNKNOWN"
         (name,) = cursor.fetchone()
         cursor.close()
         return name

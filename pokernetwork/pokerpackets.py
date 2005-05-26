@@ -1973,6 +1973,8 @@ class PacketPokerHandSelect(PacketString):
     """\
 Semantics: query the hand history for player "serial"
 and filter them according to the "string" boolean expression.
+Return slice of the matching hands that are in the range
+["start", "start" + "count"[
 
 Direction: server <=  client
 
@@ -1984,10 +1986,34 @@ available fields are "name" for the symbolic name of the hand,
 "description" for the python expression describing the hand, "serial"
 for the unique identifier of the hand also known as the hand_serial
 in the PACKET_POKER_START packet.
+start: index of the first matching hand
+count: number of matching hands to return starting from start
 serial: integer uniquely identifying a player.
 """
     
     type = PACKET_POKER_HAND_SELECT
+
+    format = "!IB"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.start = kwargs.get("start", 0)
+        self.count = kwargs.get("count", 50)
+        PacketString.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketString.pack(self) + pack(PacketPokerHandSelect.format, self.start, self.count)
+
+    def unpack(self, block):
+        block = PacketString.unpack(self, block)
+        (self.start, self.count) = unpack(PacketPokerHandSelect.format, block[:PacketPokerHandSelect.format_size])
+        return block[PacketPokerHandSelect.format_size:]
+
+    def calcsize(self):
+        return PacketString.calcsize(self) + PacketPokerHandSelect.format_size
+
+    def __str__(self):
+        return PacketString.__str__(self) + " start = %d, count = %d" % ( self.start, self.count )
 
 PacketFactory[PACKET_POKER_HAND_SELECT] = PacketPokerHandSelect
 
@@ -1996,7 +2022,7 @@ PacketFactory[PACKET_POKER_HAND_SELECT] = PacketPokerHandSelect
 PACKET_POKER_HAND_LIST = 172
 PacketNames[PACKET_POKER_HAND_LIST] = "POKER_HAND_LIST"
 
-class PacketPokerHandList(PacketPokerId):
+class PacketPokerHandList(PacketPokerHandSelect):
     """\
 Semantics: a list of hand serials known to the server.
 
@@ -2009,30 +2035,31 @@ hands: list of integers uniquely identifying a hand to the server.
 
     type = PACKET_POKER_HAND_LIST
 
-    hands = []
-
+    format = "!I"
+    format_size = calcsize(format)
     format_element = "!I"
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("hands"):
-            self.hands = kwargs["hands"]
-        PacketPokerId.__init__(self, *args, **kwargs)
+        self.hands = kwargs.get("hands", [])
+        self.total = kwargs.get("total", -1)
+        PacketPokerHandSelect.__init__(self, *args, **kwargs)
 
     def pack(self):
-        block = PacketPokerId.pack(self)
+        block = PacketPokerHandSelect.pack(self)
         block += self.packlist(self.hands, PacketPokerHandList.format_element)
-        return block
+        return block + pack(PacketPokerHandList.format, self.total)
 
     def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
+        block = PacketPokerHandSelect.unpack(self, block)
         (block, self.hands) = self.unpacklist(block, PacketPokerHandList.format_element)
-        return block
+        (self.total,) = unpack(PacketPokerHandList.format, block[:PacketPokerHandList.format_size])
+        return block[PacketPokerHandList.format_size:]
 
     def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.hands, PacketPokerHandList.format_element) 
+        return PacketPokerHandSelect.calcsize(self) + self.calcsizelist(self.hands, PacketPokerHandList.format_element) + PacketPokerHandList.format_size
 
     def __str__(self):
-        return PacketPokerId.__str__(self) + " hands = %s" % self.hands
+        return PacketPokerHandSelect.__str__(self) + " hands = %s, total = %d" % ( self.hands, self.total )
 
 PacketFactory[PACKET_POKER_HAND_LIST] = PacketPokerHandList
 
@@ -3322,4 +3349,37 @@ game_id: integer uniquely identifying a game.
     type = PACKET_POKER_BEGIN_ROUND
 
 PacketFactory[PACKET_POKER_BEGIN_ROUND] = PacketPokerBeginRound
+
+########################################
+
+PACKET_POKER_HAND_HISTORY = 221
+PacketNames[PACKET_POKER_HAND_HISTORY] = "POKER_HAND_HISTORY"
+
+class PacketPokerHandHistory(PacketPokerId):
+    type = PACKET_POKER_HAND_HISTORY
+
+    NOT_FOUND = 1
+    FORBIDDEN = 2
+    
+    def __init__(self, *args, **kwargs):
+        self.history = kwargs.get("history", "")
+        self.serial2name = kwargs.get("serial2name", "")
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketPokerId.pack(self) + self.packstring(self.history) + self.packstring(self.serial2name)
+
+    def unpack(self, block):
+        block = PacketPokerId.unpack(self, block)
+        (block, self.history) = self.unpackstring(block)
+        (block, self.serial2name) = self.unpackstring(block)
+        return block
+
+    def calcsize(self):
+        return PacketPokerId.calcsize(self) + self.calcsizestring(self.history) + self.calcsizestring(self.serial2name)
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " history = %s, serial2name = %s" % ( self.history, self.serial2name )
+
+PacketFactory[PACKET_POKER_HAND_HISTORY] = PacketPokerHandHistory
 

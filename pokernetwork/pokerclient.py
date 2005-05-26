@@ -102,6 +102,8 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def isOutbound(self, packet):
         return ( packet.type == PACKET_ERROR or
+                 packet.type == PACKET_POKER_HAND_LIST or
+                 packet.type == PACKET_POKER_HAND_HISTORY or
                  packet.type == PACKET_POKER_PLAYERS_LIST or
                  packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST or
                  packet.type == PACKET_POKER_TOURNEY_UNREGISTER or
