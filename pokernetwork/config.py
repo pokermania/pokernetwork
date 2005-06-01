@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004 Mekensleep
+# Copyright (C) 2004, 2005 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -23,7 +23,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-from os.path import exists, expanduser
+from os.path import exists, expanduser, abspath
 import libxml2
 import re
 
@@ -36,9 +36,9 @@ class Config:
 
     def load(self, path):
         for dir in self.dirs:
-            abspath = expanduser(dir and (dir + "/" + path) or path )
-            if exists(abspath):
-                self.path = abspath
+            tmppath = abspath(expanduser(dir and (dir + "/" + path) or path ))
+            if exists(tmppath):
+                self.path = tmppath
                 break
         if self.path:
             self.doc = libxml2.parseFile(self.path)
@@ -48,6 +48,12 @@ class Config:
             print "Config::load: unable to find %s in directories %s" % ( path, self.dirs )
             return False
 
+    def save(self):
+        if not self.path:
+            print "unable to write back to %s" % self.path
+            return
+        self.doc.saveFile(self.path)
+        
     def headerGetList(self, name):
         result = self.header.xpathEval(name)
         return [o.content for o in result]
@@ -62,6 +68,10 @@ class Config:
     def headerGet(self, name):
         results = self.header.xpathEval(name)
         return results and results[0].content or ""
+        
+    def headerSet(self, name, value):
+        results = self.header.xpathEval(name)
+        results[0].setContent(value)
         
     def headerGetProperties(self, name):
         results = []

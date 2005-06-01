@@ -35,8 +35,29 @@ from pokerengine.pokergame import PokerGameClient, PokerPlayer
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 
+from pokernetwork.config import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
+from pokernetwork.pokerchildren import PokerChildren
 from pokernetwork.pokerpackets import *
+
+class PokerSkin:
+    """Poker Skin"""
+
+    def __init__(self, *args, **kwargs):
+        self.url = kwargs.get('url',"random")
+        self.outfit = kwargs.get('outfit',"random")
+        
+    def getUrl(self):
+        return self.url
+
+    def setUrl(self, url):
+        self.url = url
+
+    def getOutfit(self):
+        return self.outfit
+
+    def setOutfit(self,outfit):
+        self.outfit=outfit
 
 class PokerClientFactory(UGAMEClientFactory):
     "client factory"
@@ -44,6 +65,7 @@ class PokerClientFactory(UGAMEClientFactory):
     def __init__(self, *args, **kwargs):
         UGAMEClientFactory.__init__(self, *args, **kwargs)
         self.settings = kwargs["settings"]
+        self.config = kwargs.get("config", None)
 
         settings = self.settings
         self.no_display_packets = settings.headerGet("/settings/@no_display_packets")
@@ -72,16 +94,43 @@ class PokerClientFactory(UGAMEClientFactory):
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
         self.protocol = PokerClientProtocol
         self.games = {}
+        self.file2name = {}
+        self.initSkins()
+        self.children = PokerChildren(self.config, self.settings)
 
     def __del__(self):
         del self.games
 
+    def restart(self):
+        self.children.killall()
+        import sys
+        import os
+        argv = [ sys.executable ]
+        argv.extend(sys.argv)
+        os.execv(sys.executable, argv)
+        
+    def initSkins(self):
+        self.skin = PokerSkin()
+
     def getUrl(self):
-        return "random"
+        return self.skin.getUrl()
 
     def getOutfit(self):
-        return "random"
+        return self.skin.getOutfit()
     
+    def translateFile2Name(self, file):
+        if not self.file2name.has_key(file):
+            config = Config(self.dirs)
+            config.load("poker.%s.xml" % file)
+            name = config.headerGet("/bet/description")
+            if not name:
+                name = config.headerGet("/poker/variant/@name")
+                if not name:
+                    print "*CRITICAL* can't find readable name for %s" % file
+                    name = file
+            self.file2name[file] = name
+        return self.file2name[file]
+
     def saveAuthToFile(self, name, password, remember):
         settings = self.settings
         self.name = name
@@ -96,7 +145,7 @@ class PokerClientFactory(UGAMEClientFactory):
         settings.headerSet("/settings/remember", remember)
         settings.headerSet("/settings/name", name)
         settings.headerSet("/settings/passwd", password)
-        settings.saveHeader()
+        settings.save()
         settings.headerSet("/settings/name", self.name)
         settings.headerSet("/settings/passwd", self.password)
 

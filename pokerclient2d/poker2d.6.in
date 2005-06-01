@@ -1,0 +1,44 @@
+'''
+''' Copyright (C) 2005 Mekensleep
+'''
+''' Mekensleep
+''' 24 rue vieille du temple
+''' 75004 Paris
+'''       licensing@mekensleep.com
+'''
+''' This program is free software; you can redistribute it and/or modify
+''' it under the terms of the GNU General Public License as published by
+''' the Free Software Foundation; either version 2 of the License, or
+''' (at your option) any later version.
+'''
+''' This program is distributed in the hope that it will be useful,
+''' but WITHOUT ANY WARRANTY; without even the implied warranty of
+''' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+''' GNU General Public License for more details.
+'''
+''' You should have received a copy of the GNU General Public License
+''' along with this program; if not, write to the Free Software
+''' Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+'''
+''' Authors:
+'''  Loic Dachary <loic@gnu.org>
+'''
+.TH poker2d 6 local
+.SH NAME
+poker2d \- GTK based poker client for poker-network
+
+.SH SYNOPSIS
+poker2d [ poker2d.xml ]
+
+.SH DESCRIPTION
+
+Play poker using a GTK interface with other players connected to a server.
+When run it reads parameters from the configuration file given in argument.
+If no configuration file is given, it first tries to read ~/.poker2d/poker2d.xml, then
+/usr/share/poker-network/poker2d/poker2d.xml.
+
+.SH AUTHORS
+
+Loic Dachary <loic@gnu.org>, Cedric Pinson <cpinson@freesheep.org>,
+Henry Precheur <henry@precheur.org>,
+Olivier Lejade <olivier@mekensleep.org>

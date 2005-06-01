@@ -15,6 +15,20 @@ cd $srcdir
 
 DIE=0
 
+have_libtool=false
+if libtoolize --version < /dev/null > /dev/null 2>&1 ; then
+	libtool_version=`libtoolize --version | sed 's/^[^0-9]*\([0-9].[0-9.]*\).*/\1/'`
+	case $libtool_version in
+		1.4*|1.5*)
+			have_libtool=true
+			;;
+	esac
+fi
+if $have_libtool ; then : ; else
+	echo "You need libtool >= 1.4 installed to compile $PROJECT."
+	DIE=1
+fi
+
 autoconf=''
 for at in autoconf autoconf-2.53 autoconf-2.54 autoconf-2.55 autoconf-2.56 autoconf-2.57 autoconf-2.58 autoconf-2.59; do
 	if $at --version < /dev/null > /dev/null 2>&1 ; then
@@ -86,6 +100,9 @@ if test $? -eq 0; then
 	echo "Running 'autoheader'"
 	autoheader || exit $?
 fi
+
+echo "Running 'libtoolize $LT_FLAGS'"
+libtoolize $LT_FLAGS || exit $?
 
 echo "Running '$automake $AM_FLAGS'"
 $automake $AM_FLAGS || exit $?

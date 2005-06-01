@@ -26,16 +26,31 @@
 # 
 ACLOCAL_AMFLAGS = -I config
 
+if POKER2D
+  POKER2D_SUBDIRS = pokerclient2d
+else
+  POKER2D_SUBDIRS = 
+endif
+
+SUBDIRS = ${POKER2D_SUBDIRS}
+
 MAINTAINERCLEANFILES = \
-	py-compile \
+	INSTALL \
+	ABOUT-NLS \
+	Makefile.in \
 	aclocal.m4 \
 	config.guess \
+	config.rpath \
+	config.h.in \
 	config.sub \
 	configure \
+	depcomp \
 	install-sh \
+	ltmain.sh \
 	missing \
-	Makefile.in \
-	INSTALL
+	mkinstalldirs \
+	compile \
+	py-compile
 
 pkgsysconfdir = ${sysconfdir}/${PACKAGE}
 dist_pkgsysconf_DATA = \
@@ -43,13 +58,14 @@ dist_pkgsysconf_DATA = \
 	conf/poker.bot.xml \
 	conf/poker.server.xml
 
-pythondir = ${pyexecdir}/pokernetwork
-python_PYTHON = \
+pokernetworkdir = ${pyexecdir}/pokernetwork
+pokernetwork_PYTHON = \
 	pokernetwork/client.py \
 	pokernetwork/protocol.py \
 	pokernetwork/server.py \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerclient.py \
+	pokernetwork/pokerchildren.py \
 	pokernetwork/config.py \
 	pokernetwork/__init__.py \
 	pokernetwork/packets.py \
@@ -57,8 +73,17 @@ python_PYTHON = \
 	pokernetwork/pokerbot.py \
 	pokernetwork/user.py
 
-pokerdbdir=${pkgdatadir}
+pokeruidir = ${pyexecdir}/pokerui
+pokerui_PYTHON = \
+	pokerui/pokerrenderer.py \
+	pokerui/pokerinterface.py \
+	pokerui/pokerinteractor.py \
+	pokerui/pokerdisplay.py \
+	pokerui/__init__.py \
+	pokerui/pokeranimation.py \
+	pokerui/pokerchat.py
 
+pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
 	database/schema.sql
 
@@ -68,10 +93,11 @@ EXTRA_DIST = \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \
-  examples/run-example
+	examples/run-example
 
 clean-local:
 	rm -f */*.py[co]
+	rm -f examples/*.log
 
 install-data-hook:
 	chmod 600 ${DESTDIR}${pkgsysconfdir}/poker.server.xml

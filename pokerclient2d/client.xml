@@ -1,0 +1,36 @@
+<?xml version='1.0'  encoding='iso-8859-1' ?> <!-- -*- nxml -*- -->
+
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="poker.sequence.xsd">
+
+  <interactors2d>
+    <check>
+      <map enabled_default="Check"
+           enabled_clicked="Check"
+           enabled_clicked_in_position="Check"
+           scheduled_default="(Check)"
+           scheduled_clicked="(Check)"
+           activated_default="Check"
+           activated_clicked="Check" />
+    </check>
+    <fold>
+      <map enabled_default="Fold"
+           enabled_clicked="Fold"
+           enabled_clicked_in_position="Fold"
+           scheduled_default="(Fold)"
+           scheduled_clicked="(Fold)"
+           activated_default="Fold"
+           activated_clicked="Fold" />
+    </fold>
+    <shadowstacks>
+      <map enabled_default="enabled"
+           enabled_clicked="enabled"
+           enabled_clicked_in_position="enabled"
+           scheduled_default="scheduled"
+           scheduled_clicked="scheduled"
+           activated_default="activated"
+           activated_clicked="activated" />
+    </shadowstacks>
+  </interactors2d>
+
+</sequence>

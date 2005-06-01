@@ -1,0 +1,41 @@
+OBJS =	\
+        util.o \
+	gui.o \
+	dispatcher.o \
+	outfits.o \
+	menu.o \
+	chooser.o \
+	sit_actions.o \
+	yesno_message.o \
+	tournaments.o \
+	message_box.o \
+	login.o \
+	blind.o \
+	chat.o \
+	buy_in.o \
+	lobby.o \
+	hand_history.o \
+	cashier.o \
+        network.o \
+        main.o
+
+CC = gcc
+CFLAGS =	-I/usr/local/include/libglade-2.0 -I/usr/include/gtk-2.0 -I/usr/include/libxml2 -I/usr/lib/gtk-2.0/include \
+		-I/usr/X11R6/include -I/usr/include/atk-1.0 -I/usr/include/pango-1.0 -I/usr/include/freetype2 \
+		-I/opt/cxclient/usr/X11R6/include -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
+LDFLAGS =	-Wl,--export-dynamic  -L/usr/lib -L/usr/local/lib -lglade-2.0 -lgtk-x11-2.0 -lxml2 -lz -lgdk-x11-2.0 -latk-1.0 \
+		-lgdk_pixbuf-2.0 -lm -lpangoxft-1.0 -lpangox-1.0 -lpango-1.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl \
+		-liconv -largp
+
+all:	poker3d-interface
+
+poker3d-interface: ${OBJS}
+	${CC} -s ${OBJS} -o poker3d-interface ${LDFLAGS}
+
+install: poker3d-interface
+	cp poker3d-interface.exe /cygdrive/u/base/example/poker/
+
+clean:
+	rm *.o poker3d-interface.exe
+.c.o:
+	${CC} ${CFLAGS} -c $< -o $@
