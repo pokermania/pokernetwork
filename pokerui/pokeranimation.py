@@ -30,7 +30,6 @@ from twisted.internet import defer
 
 from pokernetwork.pokerpackets import *
 from random import choice, uniform, randint
-from underware.config import Config, ConfigError
 from pokerengine.pokerchips import PokerChips
 from time import time
 
