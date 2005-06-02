@@ -156,7 +156,8 @@ class PokerTable2D:
         self.serial2player = {}
         fixed = self.glade.get_widget("game_fixed")
         for widget in fixed.get_children():
-            widget.hide()
+            if widget.get_name() != "switch":
+                widget.hide()
         if not self.game.isTournament():
             for seat in self.seats:
                 seat.show()
@@ -232,7 +233,7 @@ class PokerTable2D:
                 if i >= board_length:
                     self.board[i].hide()
                 else:
-                    self.board[i].set_from_file(self.glade.relave_file("cards/small-%s.jpg" % board[i]))
+                    self.board[i].set_from_file(self.glade.relative_file("cards/small-%s.jpg" % board[i]))
                     self.board[i].show()
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
@@ -326,11 +327,7 @@ class PokerDisplay2D(PokerDisplay):
         self.animations = pokeranimation2d.create(self.glade, config, settings)
         
     def on_switch_clicked(self, button):
-        game_ids = self.id2table.keys()
-        current = game_ids.index(self.protocol.getCurrentGameId())
-        game_ids = game_ids[current:] + game_ids[:current]
-        self.message("switch %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1]))
-        self.renderer.connectTable(game_ids[1])
+        self.renderer.rotateTable()
 
     def on_sit_clicked(self, button):
         seat = int(button.get_name()[-1])
@@ -463,18 +460,18 @@ class PokerDisplay2D(PokerDisplay):
             if not self.id2table.has_key(packet.id):
                 self.id2table[packet.id] = PokerTable2D(packet, self)
             self.id2table[packet.id].reset()
-            if(len(self.id2table) > 1):
-                self.switch.show()
 
         elif packet.type == PACKET_POKER_TABLE_QUIT:
             self.deleteTable(packet.id)
-            if(len(self.id2table) < 2):
-                self.switch.hide()
             
         elif packet.type == PACKET_POKER_TABLE_DESTROY:
             self.deleteTable(packet.game_id)
-            if(len(self.id2table) < 2):
+
+        elif packet.type == PACKET_POKER_CURRENT_GAMES:
+            if packet.count < 2:
                 self.switch.hide()
+            else:
+                self.switch.show()
 
         elif packet.type == PACKET_QUIT:
             reactor.stop()

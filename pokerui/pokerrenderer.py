@@ -476,6 +476,9 @@ class PokerRenderer:
                 self.factory.interface.chatShow()
             self.changeState(JOINING_DONE)
 
+        elif packet.type == PACKET_POKER_CURRENT_GAMES:
+            self.render(game, packet)
+
         elif packet.type == PACKET_POKER_TABLE_QUIT:
             self.deleteGame(game.id)
             self.protocol.setCurrentGameId(None)
@@ -1301,6 +1304,13 @@ class PokerRenderer:
             self.changeState(SEARCHING_MY_CANCEL)
         else:
             self.changeState(JOINING_MY, *tables)
+
+    def rotateTable(self):
+        game_ids = self.factory.games.keys()
+        current = game_ids.index(self.protocol.getCurrentGameId())
+        game_ids = game_ids[current:] + game_ids[:current]
+        print "rotateTable: %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1])
+        self.connectTable(game_ids[1])
         
     def connectTable(self, game_id):
         serial = self.protocol.getSerial()

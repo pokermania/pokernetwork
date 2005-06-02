@@ -415,6 +415,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.registerCallback(self.gameEvent)
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
+                self.forward_packets.append(self.currentGames())
 
         elif packet.type == PACKET_POKER_PLAYERS_LIST:
             pass
@@ -794,6 +795,11 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.error("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d" % ( game.chips_values, min_bet, max_bet ))
         return packets
 
+    def currentGames(self):
+        games = self.factory.games.keys()
+        return PacketPokerCurrentGames(game_ids = games,
+                                       count = len(games))
+    
     def packetsPot2Player(self, game):
         packets = []
         current_pot = 0
@@ -908,6 +914,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.schedulePacket(PacketPokerStreamMode(game_id = game.id))
         self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
                                                 serial = self.getSerial()))
+        self.schedulePacket(self.currentGames())
 
     def resendPackets(self, game_id):
         game = self.getGame(game_id)

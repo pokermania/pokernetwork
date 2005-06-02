@@ -3383,3 +3383,37 @@ class PacketPokerHandHistory(PacketPokerId):
 
 PacketFactory[PACKET_POKER_HAND_HISTORY] = PacketPokerHandHistory
 
+########################################
+
+PACKET_POKER_CURRENT_GAMES = 222
+PacketNames[PACKET_POKER_CURRENT_GAMES] = "POKER_CURRENT_GAMES"
+
+class PacketPokerCurrentGames(Packet):
+
+    type = PACKET_POKER_CURRENT_GAMES
+
+    format = "!B"
+    format_size = calcsize(format)
+    format_element = "!I"
+
+    def __init__(self, *args, **kwargs):
+        self.game_ids = kwargs.get("game_ids", [])
+        self.count = kwargs.get("count", 0)
+
+    def pack(self):
+        return Packet.pack(self) + self.packlist(self.game_ids, PacketPokerCurrentGames.format_element) + pack(PacketPokerCurrentGames.format, self.count)
+        
+    def unpack(self, block):
+        block = Packet.unpack(self, block)
+        (block, self.game_ids) = self.unpacklist(block, PacketPokerCurrentGames.format_element)
+        (self.count,) = unpack(PacketPokerCurrentGames.format, block[:PacketPokerCurrentGames.format_size])
+        return block[PacketPokerCurrentGames.format_size:]
+
+    def calcsize(self):
+        return Packet.calcsize(self) + self.calcsizelist(self.game_ids, PacketPokerCurrentGames.format_element) + PacketPokerCurrentGames.format_size
+
+    def __str__(self):
+        return Packet.__str__(self) + " count = %d, game_ids = %s" % ( self.count, self.game_ids )
+
+PacketFactory[PACKET_POKER_CURRENT_GAMES] = PacketPokerCurrentGames
+
