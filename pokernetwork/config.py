@@ -48,6 +48,11 @@ class Config:
             print "Config::load: unable to find %s in directories %s" % ( path, self.dirs )
             return False
 
+    def loadFromString(self, string):
+        self.path = "<string>"
+        self.doc = libxml2.parseMemory(string, len(string))
+        self.header = self.doc.xpathNewContext()
+
     def save(self):
         if not self.path:
             print "unable to write back to %s" % self.path

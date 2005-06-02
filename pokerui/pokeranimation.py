@@ -83,7 +83,7 @@ class PokerAnimationPlayer:
         self.is_suspended = False
         
     def callLater(self, delay, function, *args, **kwargs):
-        self.callLater(function.__name__, delay, function, *args, **kwargs)
+        self.callLaterTagged(function.__name__, delay, function, *args, **kwargs)
         
     def callLaterTagged(self, tag, delay, function, *args, **kwargs):
         timer = reactor.callLater(delay, function, *args, **kwargs)

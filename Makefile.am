@@ -93,6 +93,8 @@ EXTRA_DIST = \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \
+	examples/interface_dummy_server.py \
+	examples/interface.py \
 	examples/run-example
 
 clean-local:

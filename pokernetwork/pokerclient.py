@@ -95,7 +95,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.protocol = PokerClientProtocol
         self.games = {}
         self.file2name = {}
-        self.initSkins()
+        PokerClientFactory.initSkins(self)
         self.children = PokerChildren(self.config, self.settings)
 
     def __del__(self):
@@ -115,8 +115,14 @@ class PokerClientFactory(UGAMEClientFactory):
     def getUrl(self):
         return self.skin.getUrl()
 
+    def setUrl(self,url):
+        return self.skin.setUrl(url)
+
     def getOutfit(self):
         return self.skin.getOutfit()
+    
+    def setOutfit(self,outfit):
+        return self.skin.setOutfit(outfit)
     
     def translateFile2Name(self, file):
         if not self.file2name.has_key(file):

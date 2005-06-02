@@ -132,9 +132,6 @@ class PokerClientFactory2D(PokerClientFactory):
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
-        settings = self.settings
-        config = self.config
-
         self.renderer = PokerRenderer(self)
         self.interface = None
         self.initDisplay()
@@ -166,7 +163,6 @@ class PokerClientFactory2D(PokerClientFactory):
             self.display.render(packet)
 
     def initDisplay(self):
-        self.display = None
         self.display = PokerDisplay2D(settings = self.settings,
                                       config = self.config,
                                       factory = self)

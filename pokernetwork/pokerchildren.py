@@ -23,7 +23,6 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-#
 import os
 if os.name != "posix" :
     import win32api, win32pdhutil, win32con
@@ -40,16 +39,6 @@ import libxml2
 
 from twisted.internet import reactor
 from twisted.python import dispatch
-
-def expand(url, command, substitute):
-    args = []
-    for arg in split(command):
-        for (original, destination) in substitute.iteritems():
-            arg = replace(arg, original, destination)
-        args.append(arg)
-    if not exists(args[0]):
-        print "ERROR: %s, as found in %s at line %s is not an existing file." % ( args[0], url, command )
-    return args
 
 def killProcName(procname_ori):
     print "killing " + procname_ori
@@ -185,8 +174,11 @@ class PokerChildren:
         self.children = []
 
     def spawn(self, child):
-        child.spawn()
-        self.children.append(child)
+        if child.spawn():
+            self.children.append(child)
+            return True
+        else:
+            return False
         
     def kill(self, child):
         child.kill()
