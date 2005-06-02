@@ -1305,7 +1305,7 @@ class PokerRenderer:
         else:
             self.changeState(JOINING_MY, *tables)
 
-    def rotateTable(self):
+    def rotateTable(self, dummy = None):
         game_ids = self.factory.games.keys()
         current = game_ids.index(self.protocol.getCurrentGameId())
         game_ids = game_ids[current:] + game_ids[:current]
