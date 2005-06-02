@@ -304,7 +304,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
 /*         position.x = center_x - 450; */
 /*         position.y = center_y + 313; */
         position.x = center_x + 403;
-        position.y = center_y + 358;
+        position.y = center_y + 313;
         gui_place(g_outfit_ok_window, &position, screen);
         gtk_widget_show_all(g_outfit_ok_window);
       }
