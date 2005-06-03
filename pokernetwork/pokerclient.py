@@ -107,15 +107,16 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def restart(self):
         self.children.killall()
+        reactor.disconnectAll()
         import sys
         import os
-        reactor.disconnectAll()
-        os.execv("poker3d.exe", ["poker3d.exe"])
-        print "aaaaarggghglfdh dfgFD JGFDgj fdg !!!!!!!!!!!!!!!!!"
-        sys.exit(0)
-        argv = [ sys.executable ]
-        argv.extend(sys.argv)
-        os.execv(sys.executable, argv)
+        if os.name != "posix" :
+            os.execv("poker3d.exe", ["poker3d.exe"])
+            sys.exit(0)
+        else:
+            argv = [ sys.executable ]
+            argv.extend(sys.argv)
+            os.execv(sys.executable, argv)
         
     def initSkins(self):
         self.skin = PokerSkin()
