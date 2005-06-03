@@ -1,6 +1,12 @@
-Fri Jun 03 17:51:32 2005  Loic Dachary  <loic@gnu.org>
+Fri Jun 03 20:50:53 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.1
+
+	* pokerui/pokerrenderer.py (PokerRenderer.showTournaments): handle tables/tournament
+	  switching with persistent values.
+
+	* pokernetwork/pokerclient.py (PokerClientFactory.__init__): end_round and begin_round
+	  delays
 
 	* pokernetwork/pokerserver.py (PokerServerFactory.getPersonalInfo): email None 
 	  converted to ""

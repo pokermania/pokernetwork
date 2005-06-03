@@ -10,8 +10,8 @@
   <chat max_chars="40" line_length="20"/>
   <servers>localhost:19380</servers>
   <sound>yes</sound>
-  <tournaments real_money="n" type="sit_n_go" sort="name"/>
-  <lobby real_money="n" type="omaha" sort="name"/>
+  <tournaments real_money="n" type="regular" sort="name"/>
+  <lobby real_money="n" type="stud7" sort="name"/>
   <skin url="random" outfit="random"/>
   <user path="~/.poker2d"/>
   <path>/etc/poker-engine /etc/poker-network .</path> 

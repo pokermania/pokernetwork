@@ -1148,10 +1148,11 @@ class PokerRenderer:
         if interface:
             interface.updateLobby(self.factory.translateFile2Name, tables)
 
-    def showLobby(self):
+    def showLobby(self, type = None):
         interface = self.factory.interface
         if interface:
-            interface.showLobby(self.state_lobby['type'], self.state_lobby['real_money'])
+            type = type or self.state_lobby['type']
+            interface.showLobby(type, self.state_lobby['real_money'])
         
     def hideLobby(self):
         interface = self.factory.interface
@@ -1221,10 +1222,11 @@ class PokerRenderer:
         if interface:
             interface.updateTournaments(tournaments)
 
-    def showTournaments(self):
+    def showTournaments(self, type = None):
         interface = self.factory.interface
         if interface:
-            interface.showTournaments(self.state_tournaments['type'], self.state_tournaments['real_money'])
+            type = type or self.state_tournaments['type']
+            interface.showTournaments(type, self.state_tournaments['real_money'])
         
     def hideTournaments(self):
         interface = self.factory.interface
@@ -1402,7 +1404,7 @@ class PokerRenderer:
 
         elif state == LOBBY and ( self.state2hide() or self.state == SEARCHING_MY ):
             self.state = state
-            self.showLobby()
+            self.showLobby(*args)
             self.queryLobby()
 
         elif state == SEARCHING_MY and ( self.state2hide() or self.state == LOGIN ):
@@ -1526,7 +1528,7 @@ class PokerRenderer:
             
         elif state == TOURNAMENTS and self.state2hide():
             self.state = state
-            self.showTournaments()
+            self.showTournaments(*args)
             self.queryTournaments()
 
         elif state == TOURNAMENTS_REGISTER and self.state == TOURNAMENTS:

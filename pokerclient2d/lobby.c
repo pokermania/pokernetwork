@@ -411,6 +411,9 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       } else if(!strcmp(type, "stud7")) {
         gtk_notebook_set_current_page(s_notebook, VARIANT_STUD7);
       }
+      GtkToggleButton* button = gui_get_widget(g_lobby_tabs_xml, type);
+      g_assert(button);
+      gtk_toggle_button_set_active(button, TRUE);
       g_free(type);
     }
 
