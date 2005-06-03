@@ -1077,6 +1077,8 @@ class PokerRenderer:
         if self.state == OUTFIT:
             self.outfit_editor.hideOutfits()
             self.state = IDLE
+            self.factory.setUrl(url)
+            self.factory.setOutfit(outfit)
             if outfit != None:
                 self.protocol.sendPacket(PacketPokerPlayerInfo(serial = self.protocol.getSerial(),
                                                                name = self.protocol.user.name,

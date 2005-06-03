@@ -201,9 +201,17 @@ class PokerInterface(dispatch.EventDispatcher):
         slot_value_index = slot.keys().index(outfit['NAME'])
         packet.extend((slot_type, "0" ,str(len(slot)), str(slot_value_index)))
         nparams = min(len(outfit['VALUES']), 4)
+
+        key = 'global_skin_hue/hue_set'
+        if slot_type != 'head' and outfit['VALUES'].has_key(key) :
+            nparams = nparams - 1
+
         packet.append(str(nparams))
         count = 0
         for (xpath, value) in outfit['VALUES'].iteritems():
+            if slot_type != 'head' and xpath == key:
+                continue
+
             if count >= nparams: break
             count += 1
             definition = outfit['DEFINITIONS'][xpath]
