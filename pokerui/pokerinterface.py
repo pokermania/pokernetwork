@@ -215,6 +215,9 @@ class PokerInterface(dispatch.EventDispatcher):
             if count >= nparams: break
             count += 1
             definition = outfit['DEFINITIONS'][xpath]
+            print "vlaue %s " % value['value']
+            print "definition %s" % definition['ids']
+            print "slot_type %s" % slot_type
             index = definition['ids'].index(value['value'])
             packet.extend((definition['text'], xpath, "0", str(len(definition['ids'])), str(index)))
             packet.append(definition['preview_type'])

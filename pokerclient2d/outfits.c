@@ -409,7 +409,6 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
         int value = get_int();
 
         if (max_value-1 > min_value) {
-
           gtk_widget_set_child_visible(container, TRUE);
 
           GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_label"));
@@ -437,6 +436,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           gtk_widget_set_child_visible(container, FALSE);
           slot_cant_be_displayed = 1;
         }
+
 
         g_free(title);
       }
@@ -513,37 +513,35 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
            * Slider
            */
 					if ( !slot_cant_be_displayed) {
-
 						gtk_widget_set_child_visible(container, TRUE);
-
-						sprintf(widget_name, "param%d_label", i);
-						GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
-						g_assert(label);
-						gtk_label_set_text(label, title);
-
-						sprintf(widget_name, "param%d_slider", i);
-						GtkRange* range = GTK_RANGE(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
-						g_assert(range);
-
-						strcpy(params_user_data[i].name, tag);
-
-						// get current value of rangein order to avoid a reset
-						gdouble current_value = gtk_range_get_value(GTK_RANGE(range));
-						int vint = (int)(current_value);
-						g_signal_handler_block((gpointer)range, params_handlers[i]);
-						gtk_range_set_range(range, min_value, max_value - 1);
-						if (value != vint || slot_slider_has_changed) {
-							//printf("SLIDER PARAMETER current value %d / %d\n",vint,value);
-							gtk_range_set_value(range, value);
-							gtk_range_set_increments(range, 1.0f, 0.0f);
-							param_update_preview(&params_user_data[i], value);
-						}
-						g_signal_handler_unblock((gpointer)range, params_handlers[i]);
-
 					} else {
-
 						gtk_widget_set_child_visible(container, FALSE);
 					}
+
+					sprintf(widget_name, "param%d_label", i);
+					GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
+					g_assert(label);
+					gtk_label_set_text(label, title);
+
+					sprintf(widget_name, "param%d_slider", i);
+					GtkRange* range = GTK_RANGE(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
+					g_assert(range);
+
+					strcpy(params_user_data[i].name, tag);
+
+					// get current value of rangein order to avoid a reset
+					gdouble current_value = gtk_range_get_value(GTK_RANGE(range));
+					int vint = (int)(current_value);
+					g_signal_handler_block((gpointer)range, params_handlers[i]);
+					gtk_range_set_range(range, min_value, max_value - 1);
+					if (value != vint || slot_slider_has_changed) {
+						//printf("SLIDER PARAMETER current value %d / %d\n",vint,value);
+						gtk_range_set_value(range, value);
+						gtk_range_set_increments(range, 1.0f, 0.0f);
+						param_update_preview(&params_user_data[i], value);
+					}
+					g_signal_handler_unblock((gpointer)range, params_handlers[i]);
+
 
           g_free(tag);
           g_free(title);
