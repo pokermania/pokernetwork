@@ -550,10 +550,12 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_END_ROUND:
             self.render(game, packet)
             self.cancelAllInteractors(game.id)
+            self.delay(game, "end_round")
 
         elif packet.type == PACKET_POKER_BEGIN_ROUND:
             self.render(game, packet)
             self.handleInteractors(game)
+            self.delay(game, "begin_round")
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
             self.render(game, packet)
@@ -687,8 +689,7 @@ class PokerRenderer:
                 self.changeState(PAY_BLIND_ANTE_DONE)
 
         elif packet.type == PACKET_POKER_STATE:
-            if packet.string != "end":
-                self.delay(game, "round")
+            pass
 
     def sitActionsShow(self):
         interface = self.factory.interface

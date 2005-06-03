@@ -158,6 +158,9 @@ class UGAMEProtocol(protocol.Protocol):
                     packet = queue.packets.pop(0)
                     del packet.time__
                     self._handler(packet)
+                else:
+                    if self.factory.verbose > 4:
+                        print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )
             #
             # Remove empty queues for which there is no delay
             #

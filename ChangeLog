@@ -1,3 +1,17 @@
+Fri Jun 03 17:51:32 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.1
+
+	* pokernetwork/pokerserver.py (PokerServerFactory.getPersonalInfo): email None 
+	  converted to ""
+
+	* pokerui/pokerinterface.py (PokerInterface.handleLobby): two arguments only
+	  and not three (https://gna.org/bugs/index.php?func=detailitem&item_id=2387)
+
+	* pokernetwork/pokerserver.py (PokerServer.listTables): 
+	* pokernetwork/pokerclient.py (PokerClientProtocol.resendPackets): fill all game
+	  information.
+
 Fri May 06 10:31:37 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.0

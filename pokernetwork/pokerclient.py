@@ -89,6 +89,10 @@ class PokerClientFactory(UGAMEClientFactory):
             self.delays = self.delays[0]
             for (key, value) in self.delays.iteritems():
                 self.delays[key] = int(value)
+            if self.delays.has_key("round"):
+                self.delays["end_round"] = self.delays["round"]
+                self.delays["begin_round"] = self.delays["round"]
+                del self.delays["round"]
         else:
             self.delays = {}
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
@@ -923,7 +927,11 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   name = game.name,
                                   variant = game.variant,
                                   seats = game.max_players,
-                                  betting_structure = game.betting_structure)
+                                  betting_structure = game.betting_structure,
+                                  players = game.allCount(),
+                                  hands_per_hour = game.stats["hands_per_hour"],
+                                  average_pot = game.stats["average_pot"],
+                                  percent_flop = game.stats["percent_flop"])
         self.setCurrentGameId(game.id)
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all

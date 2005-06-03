@@ -34,21 +34,22 @@ create table users (
 	privilege int default 1,
 
 	play_money int default 5000,
-  real_money int default 0,
+        real_money int default 0,
 	point_money int default 5000,
 
 	rating int default 1000,
 	future_rating float default 1000,
 	games_count int default 0,
 	
-	primary key (serial)
+	primary key (serial),
+        unique key name_idx (name)
 );
 
 drop table if exists users_private;
 
 create table users_private (
 	serial int unsigned not null,
-	email varchar(128) default "",
+	email varchar(128),
 	addr_street varchar(255) default "",
 	addr_zip varchar(64) default "",
 	addr_town varchar(64) default "",
@@ -56,7 +57,8 @@ create table users_private (
 	addr_country varchar(64) default "",
 	phone varchar(64) default "",
 
-	primary key (serial)
+	primary key (serial),
+        unique key email_idx (email)
 );
 
 drop table if exists user2table;
@@ -216,6 +218,19 @@ INSERT INTO hands VALUES (2,'All In','[(\'game\',\n  1,\n  1,\n  0,\n  109162850
 INSERT INTO `hands` VALUES (3, 'Straight Flush Omaha8', '[(\'game\',\n  1,\n  24074,\n  1,\n  1095434064.7536609,\n  \'omaha8\',\n  \'10-15-pot-limit\',\n  [2996, 2993, 1051L, 2982L],\n  1,\n  {1051L: [18, 21, 17, 0, 0, 0, 0, 0, 0],\n   2982L: [56, 56, 42, 0, 0, 0, 0, 0, 0],\n   2993: [56, 56, 42, 0, 0, 0, 0, 0, 0],\n   2996: [34, 33, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n   \'values\': [5, 10, 20, 25, 50, 100, 250, 500, 5000]}),\n (\'position\', 2),\n (\'blind\', 1051L, 5, 0),\n (\'position\', 3),\n (\'blind\', 2982L, 10, 0),\n (\'position\', 0),\n (\'blind\', 2996, 10, 0),\n (\'round\',\n  \'pre-flop\',\n  PokerCards([]),\n  {1051L: PokerCards([216, 210, 234, 202]),\n   2982L: PokerCards([215, 198, 206, 226]),\n   2993: PokerCards([218, 230, 195, 212]),\n   2996: PokerCards([194, 231, 205, 211])}),\n (\'check\', 2996L),\n (\'call\', 2993L, 10),\n (\'fold\', 1051L),\n (\'check\', 2982L),\n (\'round\',\n  \'flop\',\n  PokerCards([35, 28, 27]),\n  {2982L: PokerCards([215, 198, 206, 226]),\n   2993: PokerCards([218, 230, 195, 212]),\n   2996: PokerCards([194, 231, 205, 211])}),\n (\'check\', 2982L),\n (\'check\', 2996L),\n (\'raise\', 2993L, [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),\n (\'call\', 2982L, 10),\n (\'call\', 2996L, 10),\n (\'round\', \'turn\', PokerCards([35, 28, 27, 29]), None),\n (\'raise\', 2982L, [3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),\n (\'fold\', 2996L),\n (\'raise\', 2993L, [6, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]),\n (\'call\', 2982L, 65),\n (\'round\',\n  \'river\',\n  PokerCards([35, 28, 27, 29, 33]),\n  {2982L: PokerCards([215, 198, 206, 226]),\n   2993: PokerCards([218, 230, 195, 212])}),\n (\'raise\', 2982L, [11, 11, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0]),\n (\'raise\', 2993L, [22, 22, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0]),\n (\'raise\', 2982L, [41, 40, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0]),\n (\'call\', 2993L, 880),\n (\'showdown\',\n  None,\n  {2993: PokerCards([26, 38, 3, 20]), 2982L: PokerCards([23, 6, 14, 34])}),\n (\'end\', [2993], {2993: 3380, 1051L: 5}, []),\n (\'sitOut\', 2982L)]');
 
 --
--- Default admin user
+-- Default admin users
 --
-INSERT INTO users VALUES (0,'admin','default','default','fakefake',2,500000,200,500000,1000,1000,0);
+INSERT INTO users VALUES (1,'admin','default','default','fakefake',2,500000,200,500000,1000,1000,0);
+INSERT INTO `users_private` ( `serial` , `email` , `addr_street` , `addr_zip` , `addr_town` , `addr_state` , `addr_country` , `phone` )
+VALUES (
+1, NULL , '', '', '', '', '', ''
+);
+INSERT INTO `users` ( `serial` , `name` , `skin_url` , `skin_outfit` , `password` , `privilege` , `play_money` , `real_money` , `point_money` , `rating` , `future_rating` , `games_count` )
+VALUES (
+2, 'admin_web', 'default', NULL , 'fakefake', '1', '5000', '0', '5000', '1000', '1000', '0'
+);
+INSERT INTO `users_private` ( `serial` , `email` , `addr_street` , `addr_zip` , `addr_town` , `addr_state` , `addr_country` , `phone` )
+VALUES (
+2, NULL , '', '', '', '', '', ''
+);
+

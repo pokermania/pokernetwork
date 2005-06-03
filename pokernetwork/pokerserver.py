@@ -445,7 +445,14 @@ class PokerServer(UGAMEServer):
                                                 name = game.name,
                                                 variant = game.variant,
                                                 seats = game.max_players,
-                                                betting_structure = game.betting_structure))
+                                                betting_structure = game.betting_structure,
+                                                players = game.allCount(),
+                                                hands_per_hour = game.stats["hands_per_hour"],
+                                                average_pot = game.stats["average_pot"],
+                                                percent_flop = game.stats["percent_flop"],
+                                                timeout = table.playerTimeout,
+                                                observers = len(table.observers),
+                                                waiting = len(table.waiting)))
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
         nochips = PokerChips(game.chips_values).chips
         for player in game.serial2player.values():
@@ -2264,6 +2271,7 @@ class PokerServerFactory(UGAMEServerFactory):
             print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerPersonalInfo(serial = serial)
         (packet.email, packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
+        if packet.email == None: packet.email = ""
         cursor.close()
         return packet
 

@@ -99,12 +99,12 @@ class InterfaceTest:
         #self.chat()
         #self.table_list()
         #self.login()
-        self.message_box()
+        #self.message_box()
         #self.yesno()
         #self.sit_actions()
         #self.chooser()
         #self.menu()
-        #self.outfits()
+        self.outfits()
         #self.tournaments()
 
     def tournaments(self):

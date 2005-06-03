@@ -153,8 +153,8 @@ class PokerInterface(dispatch.EventDispatcher):
         self.command("tournaments", "hide")
         
     def handleLobby(self, data):
-        self.publishEvent(INTERFACE_LOBBY, data[:3])
-        return data[3:]
+        self.publishEvent(INTERFACE_LOBBY, data[:2])
+        return data[2:]
     
     def updateLobbyPlayersList(self, players):
         packet = [ "lobby", "players", str(len(players)) ]
