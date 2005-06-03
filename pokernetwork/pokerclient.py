@@ -109,6 +109,10 @@ class PokerClientFactory(UGAMEClientFactory):
         self.children.killall()
         import sys
         import os
+        reactor.disconnectAll()
+        os.execv("poker3d.exe", ["poker3d.exe"])
+        print "aaaaarggghglfdh dfgFD JGFDgj fdg !!!!!!!!!!!!!!!!!"
+        sys.exit(0)
         argv = [ sys.executable ]
         argv.extend(sys.argv)
         os.execv(sys.executable, argv)
