@@ -431,6 +431,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
             gtk_range_set_value(range, value);
             gtk_range_set_increments(range, 1.0f, 0.0f);
           }
+					printf("SLIDER SLOT current value %d - %d\n",(int)gtk_range_get_value(GTK_RANGE(range)),value);
           g_signal_handler_unblock((gpointer)range, params_handlers[0]);
         } else {
           gtk_widget_set_child_visible(container, FALSE);
@@ -535,11 +536,11 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
 					g_signal_handler_block((gpointer)range, params_handlers[i]);
 					gtk_range_set_range(range, min_value, max_value - 1);
 					if (value != vint || slot_slider_has_changed) {
-						//printf("SLIDER PARAMETER current value %d / %d\n",vint,value);
 						gtk_range_set_value(range, value);
 						gtk_range_set_increments(range, 1.0f, 0.0f);
-						param_update_preview(&params_user_data[i], value);
 					}
+					printf("SLIDER PARAM %d current value %d - %d\n",i,(int)gtk_range_get_value(GTK_RANGE(range)),value);
+					param_update_preview(&params_user_data[i], value);
 					g_signal_handler_unblock((gpointer)range, params_handlers[i]);
 
 
