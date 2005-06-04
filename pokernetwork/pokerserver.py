@@ -197,7 +197,7 @@ class PokerServer(UGAMEServer):
                 if ( self.getSerial() == packet.serial or
                      self.getSerial() == table.owner ):
                     if not table.seatPlayer(self, packet.serial, packet.seat):
-                        packet.seat = 255
+                        packet.seat = -1
                     else:
                         packet.seat = game.getPlayer(packet.serial).seat
                     self.getUserInfo(packet.serial)

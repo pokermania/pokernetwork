@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" display2d="yes" display3d="no" verbose="5" delays="true" tcptimeout="2000">
-  <delays position="0" begin_round="3" end_round="3" showdown="5" lag="15"/>
+  <delays position="0" begin_round="1" end_round="1" end_round_last="1" showdown="7" lag="15"/>
   <screen fullscreen="no" width="1024" height="768"/>
   <name>foobar1</name>
   <passwd>foobar</passwd>

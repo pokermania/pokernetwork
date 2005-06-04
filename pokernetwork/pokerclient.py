@@ -374,8 +374,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def gameEvent(self, game_id, type, *args):
         if self.factory.verbose > 4:
             self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, type, str(args) ))
+
         if game_id != self.currentGameId:
-            if self.factory.verbose > 3:
+            if self.factory.verbose > 4:
                 self.message("gameEvent: game %d is not the current game (%d)" % ( game_id, self.currentGameId ))
             return
         forward_packets = self.forward_packets
@@ -388,8 +389,22 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if self.factory.verbose > 3:
                 self.message("gameEvent: called for unknown game %d, ignored" % game_id)
             return
+
         if type == "end_round":
             forward_packets.append(PacketPokerEndRound(game_id = game_id))
+
+        elif type == "end_round_last":
+            forward_packets.append(PacketPokerEndRoundLast(game_id = game_id))
+
+        elif type == "money2bet":
+            ( serial, amount ) = args
+            player = game.getPlayer(serial)
+            if game.historyGet()[-1][0] == "raise":
+                if not self.no_display_packets:
+                    forward_packets.extend(self.updateBetLimit(game))
+                forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
+            if not self.no_display_packets:
+                forward_packets.extend(self.chipsPlayer2Bet(game, player, amount.chips))
         
     def _handleConnection(self, packet):
         if self.factory.verbose > 3: self.message("PokerClientProtocol:handleConnection: %s" % packet )
@@ -479,6 +494,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 if packet.amount > 0:
                     forward_packets.append(self.chipsPot2Player(game, player, packet.amount, 0, "canceled"))
             game.canceled(packet.serial, packet.amount)
+            forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
 
         elif packet.type == PACKET_POKER_PLAYER_INFO:
             pass
@@ -502,7 +518,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             forward_packets.remove(packet)
 
         elif packet.type == PACKET_POKER_SEAT:
-            if packet.seat == 255:
+            if packet.seat == -1:
                 self.error("This seat is busy")
             else:
                 if game.isTournament():
@@ -571,6 +587,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     forward_packets.append(PacketPokerPlayerWin(serial = serial, game_id = game.id))
             
             if game.winners:
+                #
+                # If the knows the winners before an explicit call to the distributeMoney
+                # method, it means that there is no showdown.
+                #
                 if not self.no_display_packets:
                     forward_packets.extend(self.packetsPot2Player(game))
             else:
@@ -585,8 +605,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     forward_packets.extend(self.packetsShowdown(game))
                     forward_packets.extend(self.packetsPot2Player(game))
                 game.endTurn()
-                forward_packets.append(PacketPokerPosition(game_id = game.id,
-                                                           serial = 0))
+            forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
             
         elif packet.type == PACKET_POKER_REBUY:
             forward_packets.remove(packet)
@@ -634,29 +653,16 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                          serial = packet.serial))
             
         elif packet.type == PACKET_POKER_CALL:
-            player = game.getPlayer(packet.serial)
-            if not self.no_display_packets:
-                transfered = player.money.copy()
             game.call(packet.serial)
-            if not self.no_display_packets:
-                transfered.subtract(player.money)
-                forward_packets.extend(self.chipsPlayer2Bet(game, player, transfered.chips))
 
         elif packet.type == PACKET_POKER_RAISE:
             game.callNraise(packet.serial, packet.amount)
-            player = game.getPlayer(packet.serial)
-            if not self.no_display_packets:
-                forward_packets.extend(self.updateBetLimit(game))
-            forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
-            if not self.no_display_packets:
-                forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
 
         elif packet.type == PACKET_POKER_CHECK:
             game.check(packet.serial)
 
         elif packet.type == PACKET_POKER_BLIND:
             player = game.getPlayer(packet.serial)
-            highest_bet = game.highestBetNotFold()
             game.blind(packet.serial, packet.amount, packet.dead)
             if not self.no_display_packets:
                 if packet.dead > 0:

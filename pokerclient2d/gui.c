@@ -112,6 +112,8 @@ static void gui_move(GtkWidget* window, GtkLayout* screen, gint x, gint y) {
   }
 }
 
+// g_message("gui_"#NAME"_move %dx%d window to x=%d y=%d (screen %dx%d)", window_width, window_height, x, y, screen_width, screen_height);
+
 #define GUI_FUNCTION_MOVE(NAME, X, Y) \
 static void	gui_##NAME##_move(GtkWidget* window, GtkLayout* screen, int window_width, int window_height) \
 { \
@@ -124,7 +126,6 @@ static void	gui_##NAME##_move(GtkWidget* window, GtkLayout* screen, int window_w
  \
   gint x = (X); \
   gint y = (Y); \
-  g_message("gui_"#NAME"_move %dx%d window to x=%d y=%d (screen %dx%d)", window_width, window_height, x, y, screen_width, screen_height); \
 \
   gui_move(window, screen, x, y); \
 } \
@@ -142,22 +143,12 @@ static void	gui_##NAME##_size_callback(GtkWidget*	widget, \
   gui_##NAME##_move(widget, GTK_LAYOUT(user_data), allocation->width, allocation->height); \
 } \
 \
-static void	gui_##NAME##_request_callback(GtkWidget *widget, \
-                                            GtkRequisition *requisition, \
-                                            gpointer user_data) \
-{ \
-    g_message("gui_"#NAME"_request_callback: width = %d, height = %d", requisition->width, requisition->height); \
-} \
-\
 void	gui_##NAME(GtkWidget* window, GtkLayout* screen) \
 { \
   g_signal_connect(G_OBJECT(window), "show", \
                    G_CALLBACK(gui_##NAME##_show_callback), screen); \
   g_signal_connect(G_OBJECT(window), "size-allocate", \
                    G_CALLBACK(gui_##NAME##_size_callback), \
-                   screen); \
-  g_signal_connect(G_OBJECT(window), "size-request", \
-                   G_CALLBACK(gui_##NAME##_request_callback), \
                    screen); \
   gtk_widget_show_all(window); \
   gui_##NAME##_move(window, screen, -1, -1); \

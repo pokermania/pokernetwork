@@ -85,6 +85,7 @@ class PokerRenderer:
         self.state_buy_in = ()
         self.state_login = ()
         self.state_tournaments = factory.settings.headerGetProperties("/settings/tournaments")
+        self.state_joining_my = 0
         if not self.state_tournaments:
             print "CRITICAL: missing /settings/tournaments"
         else:
@@ -550,7 +551,13 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_END_ROUND:
             self.render(game, packet)
             self.cancelAllInteractors(game.id)
+            self.handleInteractors(game)
             self.delay(game, "end_round")
+
+        elif packet.type == PACKET_POKER_END_ROUND_LAST:
+            self.render(game, packet)
+            self.handleInteractors(game)
+            self.delay(game, "end_round_last")
 
         elif packet.type == PACKET_POKER_BEGIN_ROUND:
             self.render(game, packet)
@@ -571,9 +578,9 @@ class PokerRenderer:
             self.handleInteractors(game)
                
         elif packet.type == PACKET_POKER_POSITION:
-            packet.serial = game.getSerialInPosition()
             self.render(game, packet)
-            self.delay(game, "position")
+            if packet.serial != 0:
+                self.delay(game, "position")
 
         elif packet.type == PACKET_POKER_CHAT:
             interface = self.factory.interface
@@ -814,30 +821,27 @@ class PokerRenderer:
         interactor_set = self.getOrCreateInteractorSet(game.id)
         interactors = interactor_set.items
         serial = self.protocol.getSerial()
-        evaluate = game.isInGame(serial) and not game.isBlindAnteRound()
-        # print "evaluate: %s / %s" % ( evaluate, self.interactors_evaluate )
-        if evaluate or interactor_set.evaluate:
-            if evaluate:
-                def updateInteractor(interactor, enabled, isInPosition, userData):
-                    if enabled:
-                        interactor.setEnableIfDisabled()
-                        interactor.setUserData(userData)
-                        interactor.setInPosition(isInPosition)
-                    else:
-                        interactor.disable()
-                    interactor.update()
-                    return enabled
-                
-                isInPosition = game.getSerialInPosition() == serial
-                player = game.getPlayer(serial)
-                if updateInteractor(interactors["check"], evaluate and game.canCheck(serial), isInPosition, None): interactor_set.evaluate = True
-                if updateInteractor(interactors["fold"], evaluate, isInPosition, None): interactor_set.evaluate = True
-                if updateInteractor(interactors["shadowstacks"], evaluate and ( game.canCall(serial) or game.canRaise(serial) ), isInPosition, [ player.money.toint(), game.highestBetNotFold() ]): interactor_set.evaluate = True
-            else:
-                for (name, interactor) in interactors.iteritems():
+        if game.willAct(serial):
+            def updateInteractor(interactor, enabled, isInPosition, userData):
+                if enabled:
+                    interactor.setEnableIfDisabled()
+                    interactor.setUserData(userData)
+                    interactor.setInPosition(isInPosition)
+                else:
+                    interactor.cancel()
                     interactor.disable()
-                    interactor.update()
-                interactor_set.evaluate = False
+                interactor.update()
+                return enabled
+
+            isInPosition = game.getSerialInPosition() == serial
+            player = game.getPlayer(serial)
+            updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, None)
+            updateInteractor(interactors["fold"], True, isInPosition, None)
+            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money.toint(), game.highestBetNotFold() ])
+        else:
+            for (name, interactor) in interactors.iteritems():
+                interactor.disable()
+                interactor.update()
 
     def cancelAllInteractors(self, game_id):
         interactor_set = self.getOrCreateInteractorSet(game_id)
@@ -1521,6 +1525,7 @@ class PokerRenderer:
             for table in args:
                 self.protocol.sendPacket(PacketPokerTableJoin(game_id = table.id,
                                                               serial = self.protocol.getSerial()))
+            self.state_joining_my = len(args)
             self.state = state
 
         elif state == SEARCHING_MY_CANCEL:
@@ -1583,8 +1588,10 @@ class PokerRenderer:
             self.hideLobby()
             self.hideTournaments()
             if self.state == JOINING_MY:
-                self.state = state
-                self.changeState(LOGIN_DONE, True)
+                self.state_joining_my -= 1
+                if self.state_joining_my <= 0:
+                    self.state = state
+                    self.changeState(LOGIN_DONE, True)
             else:
                 self.state = IDLE
             

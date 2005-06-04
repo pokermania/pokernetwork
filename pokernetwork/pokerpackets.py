@@ -1423,7 +1423,7 @@ game_id: integer uniquely identifying a game.
     format_size = calcsize(format)
     
     def __init__(self, *args, **kwargs):
-        self.seat = kwargs.get("seat", 255)
+        self.seat = kwargs.get("seat", -1)
         PacketPokerId.__init__(self, *args, **kwargs)
         
     def pack(self):
@@ -1432,6 +1432,7 @@ game_id: integer uniquely identifying a game.
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
         (self.seat,) = unpack(PacketPokerSeat.format, block[:PacketPokerSeat.format_size])
+        if self.seat == 255: self.seat = -1
         return block[PacketPokerSeat.format_size:]
 
     def calcsize(self):
@@ -3418,4 +3419,15 @@ class PacketPokerCurrentGames(Packet):
         return Packet.__str__(self) + " count = %d, game_ids = %s" % ( self.count, self.game_ids )
 
 PacketFactory[PACKET_POKER_CURRENT_GAMES] = PacketPokerCurrentGames
+
+######################################## Display packet
+
+PACKET_POKER_END_ROUND_LAST = 223
+PacketNames[PACKET_POKER_END_ROUND_LAST] = "POKER_END_ROUND_LAST"
+
+class PacketPokerEndRoundLast(PacketPokerId):
+    
+    type = PACKET_POKER_END_ROUND_LAST
+
+PacketFactory[PACKET_POKER_END_ROUND_LAST] = PacketPokerEndRoundLast
 

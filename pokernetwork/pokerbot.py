@@ -153,7 +153,7 @@ class PokerBot:
             self.state = STATE_RUNNING
             
         elif packet.type == PACKET_POKER_SEAT:
-            if packet.seat == 255:
+            if packet.seat == -1:
                 print "Not allowed to get a seat, give up"
                 protocol.transport.loseConnection()
 

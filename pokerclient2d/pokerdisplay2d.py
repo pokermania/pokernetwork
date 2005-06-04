@@ -36,12 +36,20 @@ from pokerui.pokerdisplay import PokerDisplay
 import gtk
 import gtk.glade
 
+def chips2int(chips):
+    total = 0
+    while chips:
+        value = chips.pop(0)
+        count = chips.pop(0)
+        total += value * count
+    return total
+
 class PokerPlayer2D:
     def __init__(self, player, table):
         self.table = table
         self.player = player
         self.verbose = table.verbose
-        self.seat = None
+        self.seat = -1
         self.serial = player.serial
         self.best_cards = { 'hi': None, 'low': None }
         self.setSeat(player.seat)
@@ -61,19 +69,18 @@ class PokerPlayer2D:
         self.money = glade.get_widget("money_seat%d" % seat)
         self.money.show()
         self.bet = glade.get_widget("bet_seat%d" % seat)
+        self.bet.hide()
         self.cards = map(lambda x: glade.get_widget("card%d_seat%d" % ( x, seat )), xrange(1,8))
-        self.updateChips()
-        self.updateCards()
 
-    def updateChips(self):
-        player = self.table.game.getPlayer(self.serial)
-        bet = player.bet.toint()
+    def updateChips(self, bet, money):
+        bet = chips2int(bet)
+        money = chips2int(money)
         if bet > 0:
             self.bet.set_text(str(bet))
             self.bet.show()
         else:
             self.bet.hide()
-        self.money.set_text(str(player.money.toint()))
+        self.money.set_text(str(money))
 
     def updateCards(self):
         game = self.table.game
@@ -108,7 +115,7 @@ class PokerPlayer2D:
             for card in self.cards:
                 card.hide()
             self.table.deletePlayer(self.serial)
-            self.seat = None
+            self.seat = -1
 
         elif packet.type == PACKET_POKER_BEST_CARDS:
             side = packet.side and packet.side or "hi"
@@ -116,8 +123,7 @@ class PokerPlayer2D:
             self.updateCards()
             
         elif packet.type == PACKET_POKER_PLAYER_CHIPS:
-            if self.seat != None:
-                self.updateChips()
+            self.updateChips(packet.bet, packet.money)
 
         elif packet.type == PACKET_POKER_PLAYER_CARDS:
             self.updateCards()
