@@ -119,6 +119,9 @@ static void param_update_preview(struct outfit_params* params, int value)
   GtkImage* preview = params->preview;
   GdkWindow* window = GTK_WIDGET(preview)->window;
   GtkAllocation allocation = GTK_WIDGET(preview)->allocation;
+
+	params->current = value;
+
   if(params->gc == NULL)
     params->gc = gdk_gc_new(window);
 
@@ -142,16 +145,15 @@ static void on_param_slider_value_changed(GtkRange *range, gpointer user_data)
   /*
    * Output new value
    */
-  int value = (int)floorf(gtk_range_get_value(GTK_RANGE(range)));
-/*   if(params->current != value) { */
+  int value = (int)(gtk_range_get_value(GTK_RANGE(range)));
+	if(params->current != value) {
     set_string("outfit");
     set_string("parameter");
     set_string(params->name);
     set_int((int)value);
     flush_io_channel();
-    params->current = value;
     param_update_preview(params, value);
-/*   } */
+	}
 }
 
 static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, gpointer user_data)
@@ -169,6 +171,8 @@ static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, 
     GdkRectangle rectangle = params->rectangle;
     rectangle.x += allocation.x;
     rectangle.y += allocation.y;
+		printf("on_param_expose --- %s\n",params->name);
+		printf("on_param_expose --- current %d\n",params->current);
     if(!gdk_color_parse(params->colors[params->current], &color)) {
       g_message("param_expose_event color conversion failed for %d/%s", params->current, params->colors[params->current]);
       return FALSE;
