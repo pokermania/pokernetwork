@@ -124,6 +124,7 @@ class UGAMEProtocol(protocol.Protocol):
         
     def discardPackets(self, id):
         if self._queues.has_key(id):
+            self._queues[id] = Queue()
             del self._queues[id]
         
     def _processQueues(self):
@@ -159,7 +160,7 @@ class UGAMEProtocol(protocol.Protocol):
                     del packet.time__
                     self._handler(packet)
                 else:
-                    if self.factory.verbose > 4:
+                    if self.factory.verbose > 5:
                         print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )
             #
             # Remove empty queues for which there is no delay

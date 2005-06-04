@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="5" delays="true" tcptimeout="2000">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="5"
+          display2d="yes" display3d="no"
+          delays="true" tcptimeout="2000">
   <delays position="1" round="2" showdown="5" lag="15"/>
   <screen fullscreen="no" width="1024" height="768"/>
   <name>foobar1</name>

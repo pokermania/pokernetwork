@@ -36,7 +36,7 @@
 #define VARIANT_HOLDEM 0
 #define VARIANT_OMAHA 1
 #define VARIANT_OMAHA8 2
-#define VARIANT_STUD7 3
+#define VARIANT_7STUD 3
 #define VARIANTS_COUNT 4
 
 static GladeXML* s_lobby_xml = 0;
@@ -50,7 +50,7 @@ static char* s_variants_names[VARIANTS_COUNT] = {
   "holdem",
   "omaha",
   "omaha8",
-  "stud7"
+  "7stud"
 };
 static GtkNotebook* s_notebook = 0;
 
@@ -161,8 +161,8 @@ static void	on_table_toggled(GtkWidget *widget, gpointer user_data)
       gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA);
     } else if(!strcmp(name, "omaha8")) {
       gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA8);
-    } else if(!strcmp(name, "stud7")) {
-      gtk_notebook_set_current_page(s_notebook, VARIANT_STUD7);
+    } else if(!strcmp(name, "7stud")) {
+      gtk_notebook_set_current_page(s_notebook, VARIANT_7STUD);
     }
     set_string("lobby");
     set_string("refresh");
@@ -408,8 +408,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
         gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA);
       } else if(!strcmp(type, "omaha8")) {
         gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA8);
-      } else if(!strcmp(type, "stud7")) {
-        gtk_notebook_set_current_page(s_notebook, VARIANT_STUD7);
+      } else if(!strcmp(type, "7stud")) {
+        gtk_notebook_set_current_page(s_notebook, VARIANT_7STUD);
       }
       GtkToggleButton* button = gui_get_widget(g_lobby_tabs_xml, type);
       g_assert(button);
@@ -441,7 +441,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     close_lobby();
 
   } else if(!strcmp(tag, "holdem") || !strcmp(tag, "omaha") ||
-            !strcmp(tag, "omaha8") || !strcmp(tag, "stud7")) {
+            !strcmp(tag, "omaha8") || !strcmp(tag, "7stud")) {
     int rows = get_int();
     int i;
     int variant_index;
@@ -452,8 +452,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       variant_index = VARIANT_OMAHA;
     } else if(!strcmp(tag, "omaha8")) {
       variant_index = VARIANT_OMAHA8;
-    } else if(!strcmp(tag, "stud7")) {
-      variant_index = VARIANT_STUD7;
+    } else if(!strcmp(tag, "7stud")) {
+      variant_index = VARIANT_7STUD;
     }
 
     gtk_list_store_clear(s_variants_store[variant_index]);

@@ -631,7 +631,7 @@ class PokerTable:
         if self.transient:
             self.factory.destroyTable(self.game.id)
             
-        self.broadcast(PacketPokerTableDestroy(serial = self.game.id))
+        self.broadcast(PacketPokerTableDestroy(game_id = self.game.id))
         for client in self.serial2client.values() + self.observers:
             del client.tables[self.game.id]
             

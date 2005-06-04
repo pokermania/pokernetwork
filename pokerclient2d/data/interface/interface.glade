@@ -341,19 +341,6 @@
 	      <property name="spacing">0</property>
 
 	      <child>
-		<widget class="GtkButton" id="yesno_no_button">
-		  <property name="visible">True</property>
-		  <property name="can_default">True</property>
-		  <property name="can_focus">True</property>
-		  <property name="label">NO</property>
-		  <property name="use_underline">True</property>
-		  <property name="relief">GTK_RELIEF_NONE</property>
-		  <property name="focus_on_click">True</property>
-		  <signal name="clicked" handler="on_yesno_no_button_clicked" last_modification_time="Mon, 19 Jul 2004 14:38:16 GMT"/>
-		</widget>
-	      </child>
-
-	      <child>
 		<widget class="GtkButton" id="yesno_yes_button">
 		  <property name="visible">True</property>
 		  <property name="can_default">True</property>
@@ -362,7 +349,20 @@
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NONE</property>
 		  <property name="focus_on_click">True</property>
-		  <signal name="clicked" handler="on_yesno_yes_button_clicked" last_modification_time="Mon, 19 Jul 2004 14:38:09 GMT"/>
+		  <signal name="clicked" handler="on_yesno_yes_button_clicked" last_modification_time="Fri, 03 Jun 2005 21:35:31 GMT"/>
+		</widget>
+	      </child>
+
+	      <child>
+		<widget class="GtkButton" id="yesno_no_button">
+		  <property name="visible">True</property>
+		  <property name="can_default">True</property>
+		  <property name="can_focus">True</property>
+		  <property name="label">NO</property>
+		  <property name="use_underline">True</property>
+		  <property name="relief">GTK_RELIEF_NONE</property>
+		  <property name="focus_on_click">True</property>
+		  <signal name="clicked" handler="on_yesno_no_button_clicked" last_modification_time="Fri, 03 Jun 2005 21:35:24 GMT"/>
 		</widget>
 	      </child>
 	    </widget>
@@ -4864,7 +4864,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkScrolledWindow" id="stud7">
+				<widget class="GtkScrolledWindow" id="7stud">
 				  <property name="visible">True</property>
 				  <property name="can_focus">True</property>
 				  <property name="hscrollbar_policy">GTK_POLICY_ALWAYS</property>
@@ -4873,7 +4873,7 @@
 				  <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
 
 				  <child>
-				    <widget class="GtkTreeView" id="stud7_treeview">
+				    <widget class="GtkTreeView" id="7stud_treeview">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
 				      <property name="headers_visible">True</property>
@@ -4890,7 +4890,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkLabel" id="stud7">
+				<widget class="GtkLabel" id="7stud">
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes">Stud 7</property>
 				  <property name="use_underline">False</property>
@@ -5814,25 +5814,6 @@
 		<packing>
 		  <property name="x">630</property>
 		  <property name="y">200</property>
-		</packing>
-	      </child>
-
-	      <child>
-		<widget class="GtkButton" id="sit_seat0">
-		  <property name="width_request">110</property>
-		  <property name="height_request">30</property>
-		  <property name="visible">True</property>
-		  <property name="tooltip" translatable="yes">Click to sit at the table</property>
-		  <property name="can_focus">True</property>
-		  <property name="label" translatable="yes">Get a seat</property>
-		  <property name="use_underline">True</property>
-		  <property name="relief">GTK_RELIEF_NORMAL</property>
-		  <property name="focus_on_click">True</property>
-		  <signal name="clicked" handler="on_sit_clicked" last_modification_time="Wed, 18 May 2005 07:24:24 GMT"/>
-		</widget>
-		<packing>
-		  <property name="x">16</property>
-		  <property name="y">208</property>
 		</packing>
 	      </child>
 
@@ -8127,6 +8108,25 @@
 		  <property name="y">552</property>
 		</packing>
 	      </child>
+
+	      <child>
+		<widget class="GtkButton" id="sit_seat0">
+		  <property name="width_request">110</property>
+		  <property name="height_request">30</property>
+		  <property name="visible">True</property>
+		  <property name="tooltip" translatable="yes">Click to sit at the table</property>
+		  <property name="can_focus">True</property>
+		  <property name="label" translatable="yes">Get a seat</property>
+		  <property name="use_underline">True</property>
+		  <property name="relief">GTK_RELIEF_NORMAL</property>
+		  <property name="focus_on_click">True</property>
+		  <signal name="clicked" handler="on_sit_clicked" last_modification_time="Wed, 18 May 2005 07:24:24 GMT"/>
+		</widget>
+		<packing>
+		  <property name="x">16</property>
+		  <property name="y">208</property>
+		</packing>
+	      </child>
 	    </widget>
 	  </child>
 	</widget>
@@ -8340,7 +8340,7 @@
 	  </child>
 
 	  <child>
-	    <widget class="GtkRadioButton" id="stud7">
+	    <widget class="GtkRadioButton" id="7stud">
 	      <property name="width_request">135</property>
 	      <property name="visible">True</property>
 	      <property name="can_focus">True</property>

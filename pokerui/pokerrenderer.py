@@ -1565,7 +1565,7 @@ class PokerRenderer:
                                  restore_state = SEATING,
                                  restore_args = args)
 
-        elif state == LEAVING_DONE:
+        elif state == LEAVING_DONE and self.state == LEAVING:
             self.hideBlind()
             self.factory.interface.buyInHide()
             self.sitActionsHide()

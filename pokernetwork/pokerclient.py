@@ -406,8 +406,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.handlePersonalInfo(packet)
 
         elif packet.type == PACKET_POKER_TABLE_DESTROY:
-            game = self.factory.getGame(packet.serial)
-            self.scheduleTableQuit(game)
+            game = self.factory.getGame(packet.game_id)
+            if game:
+                self.scheduleTableQuit(game)
             
         elif packet.type == PACKET_POKER_TABLE:
             if packet.id == 0:
@@ -905,15 +906,18 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def publishQuit(self):
         for game in self.factory.games.values():
-            self.scheduleTableQuit(game)
+            self.scheduleTableAbort(game)
         self.publishAllPackets()
 
-    def scheduleTableQuit(self, game):
+    def scheduleTableAbort(self, game):
         game_id = game.id
         def thisgame(packet):
             return hasattr(packet, "game_id") and packet.game_id == game_id
         self.unschedulePackets(thisgame)
         self.discardPackets(game_id)
+        self.scheduleTableQuit(game)
+
+    def scheduleTableQuit(self, game):
         self.schedulePacket(PacketPokerBatchMode(game_id = game.id))
         for player in game.playersAll():
             packet = PacketPokerPlayerLeave(game_id = game.id,
@@ -1006,7 +1010,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def sendPacket(self, packet):
         if packet.type == PACKET_POKER_TABLE_QUIT:
-            self.scheduleTableQuit(self.getGame(packet.game_id))
+            self.scheduleTableAbort(self.getGame(packet.game_id))
         elif packet.type == PACKET_QUIT:
             self.ignoreIncomingData()
             self.publishQuit()

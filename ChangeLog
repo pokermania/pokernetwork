@@ -1,6 +1,8 @@
-Fri Jun 03 20:50:53 2005  Loic Dachary  <loic@gnu.org>
+Fri Jun 03 21:16:42 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.1
+
+	* pokerclient2d/lobby.c (handle_lobby): s/stud7/7stud/
 
 	* pokerui/pokerrenderer.py (PokerRenderer.showTournaments): handle tables/tournament
 	  switching with persistent values.
