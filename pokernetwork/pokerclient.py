@@ -945,6 +945,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
         packets.append(packet)
+        packets.append(PacketPokerDealer(game_id = game.id, dealer = game.dealer_seat))
         for player in game.playersAll():
             packets.append(PacketPokerPlayerArrive(game_id = game.id,
                                                    serial = player.serial,

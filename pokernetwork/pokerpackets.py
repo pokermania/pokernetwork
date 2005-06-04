@@ -1024,6 +1024,8 @@ game_id: integer uniquely identifying a game.
     def unpack(self, block):
         block = Packet.unpack(self, block)
         (self.game_id, self.dealer, self.previous_dealer) = unpack(PacketPokerDealer.format, block[:PacketPokerDealer.format_size])
+        if self.dealer == 255: self.dealer = -1
+        if self.previous_dealer == 255: self.previous_dealer = -1
         return block[PacketPokerDealer.format_size:]
 
     def calcsize(self):

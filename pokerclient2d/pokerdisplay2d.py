@@ -241,7 +241,7 @@ class PokerTable2D:
 
         elif packet.type == PACKET_POKER_DEALER:
             self.dealer_buttons[packet.dealer].show()
-            if packet.previous_dealer != 255:
+            if packet.previous_dealer >= 0:
                 self.dealer_buttons[packet.previous_dealer].hide()
 
         elif packet.type == PACKET_POKER_POT_CHIPS:

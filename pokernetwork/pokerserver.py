@@ -758,9 +758,16 @@ class PokerTable:
                                                               money = chips))
                 packets.append(PacketPokerInGame(game_id = game_id,
                                                  players = player_list))
+                #
+                # This may happen, for instance, if a turn is canceled
+                #
+                if self.previous_dealer == dealer:
+                    previous_dealer = -1
+                else:
+                    previous_dealer = self.previous_dealer
                 packets.append(PacketPokerDealer(game_id = game_id,
                                                  dealer = dealer,
-                                                 previous_dealer = self.previous_dealer))
+                                                 previous_dealer = previous_dealer))
                 self.previous_dealer = dealer
                 packets.append(PacketPokerStart(game_id = game_id,
                                                 hand_serial = hand_serial,
