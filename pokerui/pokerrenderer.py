@@ -1598,11 +1598,11 @@ class PokerRenderer:
         elif state == LEAVING:
             ( game, serial ) = args
 
+            self.state = state
             if ( game and game.isSeated(serial) ):
                 packet = PacketPokerPlayerLeave(game_id = game.id,
                                                 serial = serial)
                 self.protocol.sendPacket(packet)
-                self.state = state
             else:
                 self.changeState(LEAVING_DONE)
 

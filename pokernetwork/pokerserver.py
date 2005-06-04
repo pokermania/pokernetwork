@@ -1409,9 +1409,11 @@ class PokerTable:
 
     def movePlayerFrom(self, serial, to_game_id):
         game = self.game
+        player = game.getPlayer(serial)
         self.broadcast(PacketPokerTableMove(game_id = game.id,
                                             serial = serial,
-                                            to_game_id = to_game_id))
+                                            to_game_id = to_game_id,
+                                            seat = player.seat))
         sit_out = game.isSitOut(serial)
         game.removePlayer(serial)
         return sit_out

@@ -1280,56 +1280,6 @@ PacketFactory[PACKET_POKER_TABLE_DESTROY] = PacketPokerTableDestroy
 
 ########################################
 
-PACKET_POKER_TABLE_MOVE = 147
-PacketNames[PACKET_POKER_TABLE_MOVE] = "POKER_TABLE_MOVE"
-
-class PacketPokerTableMove(PacketPokerId):
-    """\
-Semantics: move player "serial" from game "game_id" to
-game "to_game_id". Special operation meant to reseat a player
-from a tournament game to another. The player is automatically
-seated at sit-in in the new game.
-
-Direction: server  => client
-
-Context: this packet is equivalent to a PACKET_POKER_LEAVE immediately
-followed by a PACKET_POKER_JOIN, a PACKET_POKER_SEAT and a PACKET_POKER_SIT
-without the race conditions that would occur if using multiple packets.
-
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-to_game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_TABLE_MOVE
-
-    to_game_id = -1
-    format = "!I"
-    format_size = calcsize(format)
-    
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("to_game_id"):
-            self.to_game_id = kwargs["to_game_id"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-        
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerTableMove.format, self.to_game_id)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.to_game_id,) = unpack(PacketPokerTableMove.format, block[:PacketPokerTableMove.format_size])
-        return block[PacketPokerTableMove.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerTableMove.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " to_game_id = %d" % self.to_game_id
-
-PacketFactory[PACKET_POKER_TABLE_MOVE] = PacketPokerTableMove
-
-########################################
-
 PACKET_POKER_TIMEOUT_WARNING = 152
 PacketNames[PACKET_POKER_TIMEOUT_WARNING] = "POKER_TIMEOUT_WARNING"
 
@@ -1442,6 +1392,54 @@ game_id: integer uniquely identifying a game.
         return PacketPokerId.__str__(self) + " seat = %d" % self.seat
 
 PacketFactory[PACKET_POKER_SEAT] = PacketPokerSeat
+
+########################################
+
+PACKET_POKER_TABLE_MOVE = 147
+PacketNames[PACKET_POKER_TABLE_MOVE] = "POKER_TABLE_MOVE"
+
+class PacketPokerTableMove(PacketPokerSeat):
+    """\
+Semantics: move player "serial" from game "game_id" to
+game "to_game_id". Special operation meant to reseat a player
+from a tournament game to another. The player is automatically
+seated at sit-in in the new game.
+
+Direction: server  => client
+
+Context: this packet is equivalent to a PACKET_POKER_LEAVE immediately
+followed by a PACKET_POKER_JOIN, a PACKET_POKER_SEAT and a PACKET_POKER_SIT
+without the race conditions that would occur if using multiple packets.
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+to_game_id: integer uniquely identifying a game.
+"""
+
+    type = PACKET_POKER_TABLE_MOVE
+
+    format = "!I"
+    format_size = calcsize(format)
+    
+    def __init__(self, *args, **kwargs):
+        self.to_game_id = kwargs.get("to_game_id", -1)
+        PacketPokerSeat.__init__(self, *args, **kwargs)
+        
+    def pack(self):
+        return PacketPokerSeat.pack(self) + pack(PacketPokerTableMove.format, self.to_game_id)
+
+    def unpack(self, block):
+        block = PacketPokerSeat.unpack(self, block)
+        (self.to_game_id,) = unpack(PacketPokerTableMove.format, block[:PacketPokerTableMove.format_size])
+        return block[PacketPokerTableMove.format_size:]
+
+    def calcsize(self):
+        return PacketPokerSeat.calcsize(self) + PacketPokerTableMove.format_size
+
+    def __str__(self):
+        return PacketPokerSeat.__str__(self) + " to_game_id = %d" % self.to_game_id
+
+PacketFactory[PACKET_POKER_TABLE_MOVE] = PacketPokerTableMove
 
 ########################################
 
