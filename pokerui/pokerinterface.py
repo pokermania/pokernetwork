@@ -29,7 +29,7 @@ from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
 from twisted.python import dispatch
 from string import split, join, rstrip
-from time import time, strftime
+from time import time, strftime, gmtime
 
 INTERFACE_READY = "//event/poker3d/pokerinterface/ready"
 INTERFACE_GONE = "//event/poker3d/pokerinterface/gone"
@@ -124,26 +124,34 @@ class PokerInterface(dispatch.EventDispatcher):
         return data[3:]
     
     def updateTournamentsPlayersList(self, can_register, players):
-        packet = [ "tournaments", "players", (can_register and "1" or "0"), str(len(players)) ]
+        register_map = { True: "1",
+                         False: "0",
+                         None: "2" }
+        packet = [ "tournaments", "players", register_map[can_register], str(len(players)) ]
         if len(players) > 0:
             packet.extend(map(lambda player: player[0], players))
         self.command(*packet)
 
-    def updateTournaments(self, tournaments = []):
+    def updateTournaments(self, players_count, tournaments_count, current_tournament, tournaments):
+        self.command('tournaments', 'info', "Players: %d" % players_count, "Tournaments: %d" % tournaments_count)
         sit_n_go = filter(lambda tournament: tournament.sit_n_go == 'y', tournaments)
+        selected_index = 2
         if sit_n_go:
-            packet = ['tournaments', 'sit_n_go', str(len(sit_n_go)) ]
+            packet = ['tournaments', 'sit_n_go', '0', str(len(sit_n_go)) ]
             for tournament in sit_n_go:
-                players = str(tournament.players_quota)
+                players = "%d/%d" % ( tournament.registered, tournament.players_quota )
                 packet.extend((str(tournament.serial), tournament.description_short, tournament.state, players))
+                if tournament.serial == current_tournament:
+                    packet[selected_index] = str(current_tournament)
             self.command(*packet)
             
         regular = filter(lambda tournament: tournament.sit_n_go == 'n', tournaments)
         if regular:
-            packet = ['tournaments', 'sit_n_go', str(len(regular)) ]
+            packet = ['tournaments', 'regular', '0', str(len(regular)) ]
             for tournament in regular:
-                players = str(tournament.players_quota)
-                packet.extend((str(tournament.serial), strftime("%Y/%m/%d %H:%M", tournament.start_time), tournament.description_short, tournament.state, players))
+                packet.extend((str(tournament.serial), strftime("%Y/%m/%d %H:%M", gmtime(tournament.start_time)), tournament.description_short, tournament.state, str(tournament.registered)))
+                if tournament.serial == current_tournament:
+                    packet[selected_index] = str(current_tournament)
             self.command(*packet)
             
     def showTournaments(self, page, real_money):
@@ -162,7 +170,7 @@ class PokerInterface(dispatch.EventDispatcher):
             map(lambda player: packet.extend(map(lambda value: str(value), player)), players)
         self.command(*packet)
 
-    def updateLobby(self, file2name, tables = []):
+    def updateLobby(self, players_count, tables_count, file2name, tables):
         variant2tables = {}
         for table in tables:
             if not variant2tables.has_key(table.variant):
@@ -185,6 +193,8 @@ class PokerInterface(dispatch.EventDispatcher):
             for table in tables:
                 packet.extend(table)
             self.command(*packet)
+
+        self.command('lobby', 'stats', "Players: %d" % players_count, "Tables: %d" % tables_count)
             
     def showLobby(self, page, real_money):
         self.command("lobby", "show", page, real_money)

@@ -28,7 +28,7 @@ cat ../database/schema.sql
 
 ) | mysql -u root -p 
 
-python -u ../pokernetwork/pokerserver.py poker.server-monotone.xml > pokerserver.log 2>&1 &
+python -u ../pokernetwork/pokerserver.py poker.server.xml > pokerserver.log 2>&1 &
 server_pid=$!
 echo "Server now running as process $server_pid with logs in pokerserver.log"
 sleep 1

@@ -41,8 +41,8 @@
 
 static GladeXML* s_lobby_xml = 0;
 static GtkWidget*	s_lobby_window = 0;
-static GtkWidget*	s_players_label = 0;
-static GtkWidget*	s_tables_label = 0;
+static GtkLabel*	s_players_label = 0;
+static GtkLabel*	s_tables_label = 0;
 static GtkLabel*	s_go_to_label = 0;
 static GtkButton*	s_go_to_button = 0;
 static GtkListStore* s_variants_store[VARIANTS_COUNT] = { 0, };
@@ -139,7 +139,7 @@ static void	on_lobby_list_treeview_selection_changed(GtkTreeSelection *treeselec
       gtk_tree_model_get(model, &iter, 0, &id, -1);
       g_message("clicked row contains %d", id);
       set_string("lobby");
-      set_string("player_list");
+      set_string("details");
       set_int(id);
       flush_io_channel();
 
@@ -290,8 +290,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 #define TABLE_COLUMN_TIMEOUT 10
 #undef SET_COLUMN
     }
-    s_players_label = gui_get_widget(g_lobby_xml, "players_label");
-    s_tables_label = gui_get_widget(g_lobby_xml, "tables_label");
+    s_players_label = GTK_LABEL(gui_get_widget(g_lobby_xml, "players_label"));
+    s_tables_label = GTK_LABEL(gui_get_widget(g_lobby_xml, "tables_label"));
     GUI_BRANCH(g_lobby_xml, on_all_radio_clicked);
     GUI_BRANCH(g_lobby_xml, on_play_money_radio_clicked);
     GUI_BRANCH(g_lobby_xml, on_real_money_radio_clicked);
@@ -411,7 +411,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       } else if(!strcmp(type, "7stud")) {
         gtk_notebook_set_current_page(s_notebook, VARIANT_7STUD);
       }
-      GtkToggleButton* button = gui_get_widget(g_lobby_tabs_xml, type);
+      GtkToggleButton* button = GTK_TOGGLE_BUTTON(gui_get_widget(g_lobby_tabs_xml, type));
       g_assert(button);
       gtk_toggle_button_set_active(button, TRUE);
       g_free(type);
@@ -440,11 +440,19 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
   } else if(!strcmp(tag, "hide")) {
     close_lobby();
 
+  } else if(!strcmp(tag, "stats")) {
+    char* players_count = get_string();
+    char* tables_count = get_string();
+    gtk_label_set_text(s_players_label, players_count);
+    gtk_label_set_text(s_tables_label, tables_count);
+    g_free(players_count);
+    g_free(tables_count);
+
   } else if(!strcmp(tag, "holdem") || !strcmp(tag, "omaha") ||
             !strcmp(tag, "omaha8") || !strcmp(tag, "7stud")) {
     int rows = get_int();
     int i;
-    int variant_index;
+    int variant_index = VARIANT_HOLDEM;
     
     if(!strcmp(tag, "holdem")) {
       variant_index = VARIANT_HOLDEM;

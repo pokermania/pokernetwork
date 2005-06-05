@@ -63,6 +63,8 @@ OUTFIT = "outfit"
 TOURNAMENTS = "tournaments"
 TOURNAMENTS_REGISTER = "tournaments_register"
 TOURNAMENTS_REGISTER_DONE = "tournaments_register_done"
+TOURNAMENTS_UNREGISTER = "tournaments_unregister"
+TOURNAMENTS_UNREGISTER_DONE = "tournaments_unregister_done"
 LOGOUT = "logout"
 JOINING = "joining"
 JOINING_MY = "joining_my"
@@ -85,16 +87,18 @@ class PokerRenderer:
         self.state_buy_in = ()
         self.state_login = ()
         self.state_tournaments = factory.settings.headerGetProperties("/settings/tournaments")
-        self.state_joining_my = 0
         if not self.state_tournaments:
             print "CRITICAL: missing /settings/tournaments"
         else:
             self.state_tournaments = self.state_tournaments[0]
+        self.state_tournaments["current"] = 0
         self.state_lobby = factory.settings.headerGetProperties("/settings/lobby")
         if not self.state_lobby:
             print "CRITICAL: missing /settings/lobby"
         else:
             self.state_lobby = self.state_lobby[0]
+        self.state_lobby["current"] = 0
+        self.state_joining_my = 0
         self.delays = False
         self.factory = factory
         self.protocol = None
@@ -423,7 +427,7 @@ class PokerRenderer:
             
         elif packet.type == PACKET_POKER_TABLE_LIST:
             if self.state == LOBBY:
-                self.updateLobby(packet.packets)
+                self.updateLobby(packet)
             elif self.state == SEARCHING_MY:
                 self.choseTable(packet.packets)
             else:
@@ -431,6 +435,9 @@ class PokerRenderer:
 
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             self.changeState(TOURNAMENTS_REGISTER_DONE)
+            
+        elif packet.type == PACKET_POKER_TOURNEY_UNREGISTER:
+            self.changeState(TOURNAMENTS_UNREGISTER_DONE)
             
         elif packet.type == PACKET_ERROR:
             if packet.other_type == PACKET_POKER_TOURNEY_REGISTER:
@@ -446,7 +453,7 @@ class PokerRenderer:
             self.updateTournamentsPlayersList(packet)
         
         elif packet.type == PACKET_POKER_TOURNEY_LIST:
-            self.updateTournaments(packet.packets)
+            self.updateTournaments(packet)
                 
         elif packet.type == PACKET_POKER_PLAYERS_LIST:
             self.updateLobbyPlayersList(packet)
@@ -1096,8 +1103,9 @@ class PokerRenderer:
     def handleLobby(self, args):
         if self.factory.verbose > 2: print "handleLobby: " + str(args)
         (action, value) = args
-        if action == "player_list":
-            self.protocol.sendPacket(PacketPokerTableRequestPlayersList(game_id = int(value)))
+        if action == "details":
+            game_id = int(value)
+            self.protocol.sendPacket(PacketPokerTableRequestPlayersList(game_id = game_id))
 
         elif action == "join":
             if self.has_outfit:
@@ -1145,12 +1153,12 @@ class PokerRenderer:
             return
         interface.updateLobbyPlayersList(packet.players)
         
-    def updateLobby(self, tables):
+    def updateLobby(self, packet):
         if self.state != LOBBY:
             return
         interface = self.factory.interface
         if interface:
-            interface.updateLobby(self.factory.translateFile2Name, tables)
+            interface.updateLobby(packet.players, packet.tables, self.factory.translateFile2Name, packet.packets)
 
     def showLobby(self, type = None):
         interface = self.factory.interface
@@ -1167,15 +1175,17 @@ class PokerRenderer:
     def handleTournaments(self, args):
         if self.factory.verbose > 2: print "handleTournaments: " + str(args)
         (action, value) = args
-        if action == "player_list":
-            self.protocol.sendPacket(PacketPokerTourneyRequestPlayersList(game_id = int(value)))
+        if action == "details":
+            tourney_id = int(value)
+            self.state_tournaments["current"] = tourney_id
+            self.protocol.sendPacket(PacketPokerTourneyRequestPlayersList(game_id = tourney_id))
 
         elif action == "register":
             self.changeState(TOURNAMENTS_REGISTER, int(value))
+
         elif action == "unregister":
-            self.protocol.sendPacket(PacketPokerTourneyUnregister(game_id = int(value),
-                                                                  serial = self.protocol.getSerial()))
-            self.protocol.sendPacket(PacketPokerTourneyRequestPlayersList(game_id = int(value)))
+            self.changeState(TOURNAMENTS_UNREGISTER, int(value))
+
         elif action == "refresh":
             if value == "play":
                 self.state_tournaments['real_money'] = 'n'
@@ -1216,15 +1226,24 @@ class PokerRenderer:
         interface = self.factory.interface
         if not interface:
             return
-        can_register = self.protocol.getName() not in map(lambda player: player[0], packet.players)
+        tournament = self.state_tournaments["tournaments"][packet.serial]
+        can_register = None
+        if tournament.state == "registering":
+            can_register = self.protocol.getName() not in map(lambda player: player[0], packet.players)
         interface.updateTournamentsPlayersList(can_register, packet.players)
         
-    def updateTournaments(self, tournaments):
+    def updateTournaments(self, packet):
         if self.state != TOURNAMENTS:
             return
+        tournaments = packet.packets
+        tournaments_map = dict(zip(map(lambda tournament: tournament.serial, tournaments), tournaments))
+        self.state_tournaments["tournaments"] = tournaments_map
+        tournament_id = self.state_tournaments["current"]
+        if not tournaments_map.has_key(tournament_id):
+            tournament_id = 0
         interface = self.factory.interface
         if interface:
-            interface.updateTournaments(tournaments)
+            interface.updateTournaments(packet.players, packet.tourneys, tournament_id, tournaments)
 
     def showTournaments(self, type = None):
         interface = self.factory.interface
@@ -1542,7 +1561,6 @@ class PokerRenderer:
                 serial = self.protocol.getSerial()
                 self.protocol.sendPacket(PacketPokerTourneyRegister(game_id = game_id,
                                                                     serial = serial))
-                self.protocol.sendPacket(PacketPokerTourneyRequestPlayersList(game_id = game_id))
                 self.state = TOURNAMENTS_REGISTER
             else:
                 self.changeState(LOGIN,
@@ -1551,8 +1569,19 @@ class PokerRenderer:
                                  restore_args = args)
             
         elif state == TOURNAMENTS_REGISTER_DONE and self.state == TOURNAMENTS_REGISTER:
-            self.hideTournaments()
             self.state = IDLE
+            self.changeState(TOURNAMENTS)
+
+        elif state == TOURNAMENTS_UNREGISTER and self.state == TOURNAMENTS:
+            game_id = args[0]
+            serial = self.protocol.getSerial()
+            self.protocol.sendPacket(PacketPokerTourneyUnregister(game_id = game_id,
+                                                                  serial = serial))
+            self.state = TOURNAMENTS_UNREGISTER
+            
+        elif state == TOURNAMENTS_UNREGISTER_DONE and self.state == TOURNAMENTS_UNREGISTER:
+            self.state = IDLE
+            self.changeState(TOURNAMENTS)
 
         elif state == SEATING and self.state2hide():
             if self.protocol.user.isLogged():

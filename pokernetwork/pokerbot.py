@@ -27,6 +27,7 @@
 import sys
 sys.path.insert(0, "..")
 
+from os import popen
 from string import split
 from random import randint
 from traceback import print_exc
@@ -42,6 +43,7 @@ from pokerengine.pokertournament import *
 from pokernetwork.config import Config
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
+from pokernetwork.user import checkName
 
 LEVEL2ITERATIONS = {
     0: 10,
@@ -56,6 +58,31 @@ STATE_RUNNING = 0
 STATE_RECONNECTING = 1
 STATE_SEARCHING = 2
 STATE_BATCH = 3
+
+#
+# If name generation is slow use /dev/urandom instead of
+# /dev/random. apg will switch to /dev/urandom if it cannot
+# open it for reading. chmod go-rw /dev/random will do this
+# trick if not running the bots as root.
+#
+class StringGenerator:
+
+    def __init__(self, name_prefix):
+        self.name_prefix = name_prefix
+        self.pool = []
+
+    def getName(self):
+        return self.name_prefix + self.getString()
+
+    def getPassword(self):
+        return self.getString()
+
+    def getString(self):
+        while len(self.pool) == 0:
+            input = popen("/usr/bin/apg -m 5 -x 10 -M ncl -q -c 'foobaralsdkjfalsdkjfalsdkjfalsdjkfal;dskfjasdf'")
+            self.pool = filter(lambda string: checkName(string)[0], map(lambda string: string[:-1], input.readlines()))
+            input.close()
+        return self.pool.pop()
 
 class PokerBot:
 
@@ -314,6 +341,8 @@ class PokerBotProtocol(PokerClientProtocol):
         
 class PokerBotFactory(PokerClientFactory):
 
+    string_generator = None
+
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
         self.protocol = PokerBotProtocol
@@ -334,13 +363,13 @@ class PokerBotFactory(PokerClientFactory):
         self.went_broke = False
         self.disconnected_volontarily = False
         self.can_disconnect = True
-        self.name = "BOT%09d" % randint(0, 200000000)
+        self.name = PokerBotFactory.string_generator.getName()
+        self.password = PokerBotFactory.string_generator.getPassword()
         
     def buildProtocol(self, addr):
         protocol = PokerClientFactory.buildProtocol(self, addr)
         pokerbot = PokerBot(self)
         protocol._poll = False
-        protocol.user.password = "fakefake"
         protocol.registerHandler(True, PACKET_BOOTSTRAP, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_ERROR, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_BATCH_MODE, pokerbot._handleConnection)
@@ -364,7 +393,7 @@ class PokerBotFactory(PokerClientFactory):
         reconnect = False
         if self.reconnect:
             if self.went_broke:
-                self.name = "BOT%09d" % randint(0, 200000000)
+                self.name = PokerBotFactory.string_generator.getName()
                 print "Re-establishing (get more money)."
                 self.went_broke = False
                 reactor.callLater(self.wait, connector.connect)
@@ -439,6 +468,8 @@ def run(argv):
 
     settings = Config([''])
     settings.load(configuration)
+
+    PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
 
     ( host, port ) = split(settings.headerGet("/settings/servers"), ":")
     port = int(port)

@@ -36,6 +36,7 @@ from string import split, lower, join
 from pprint import pprint, pformat
 import time
 import os
+import operator
 from traceback import print_exc, print_stack
 
 from MySQLdb.cursors import DictCursor
@@ -126,7 +127,9 @@ class PokerServer(UGAMEServer):
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
-            tourneys = PacketPokerTourneyList()
+            ( players, tourneys ) = self.factory.tourneyStats()
+            tourneys = PacketPokerTourneyList(players = players,
+                                              tourneys = tourneys)
             for tourney in self.factory.tourneySelect(packet.string):
                 tourneys.packets.append(PacketPokerTourney(**tourney))
             self.sendPacketVerbose(tourneys)
@@ -396,7 +399,10 @@ class PokerServer(UGAMEServer):
                                       observers = len(table.observers),
                                       waiting = len(table.waiting))
             packets.append(packet)
-        self.sendPacketVerbose(PacketPokerTableList(packets = packets))
+        ( players, tables ) = self.factory.statsTables()
+        self.sendPacketVerbose(PacketPokerTableList(players = players,
+                                                    tables = tables,
+                                                    packets = packets))
 
     def listHands(self, packet, serial):
         start = packet.start
@@ -1757,7 +1763,7 @@ class PokerServerFactory(UGAMEServerFactory):
                          schedule['rebuy_delay'],
                          schedule['add_on'],
                          schedule['add_on_delay'] ) )
-        if self.verbose > 2: print "spawnTourney: %s" % schedule['name']
+        if self.verbose > 2: print "spawnTourney: " + str(schedule)
         #
         # Accomodate with MySQLdb versions < 1.1
         #
@@ -1885,8 +1891,13 @@ class PokerServerFactory(UGAMEServerFactory):
                                message = "Tournament %d does not exist" % tourney_serial)
         tourney = self.tourneys[tourney_serial]
         players = map(lambda serial: ( self.getName(serial), -1, 0 ), tourney.players)
-        return PacketPokerTourneyPlayersList(game_id = tourney_serial,
+        return PacketPokerTourneyPlayersList(serial = tourney_serial,
                                              players = players)
+
+    def tourneyStats(self):
+        players = reduce(operator.add, map(lambda tourney: tourney.registered, self.tourneys.values()))
+        scheduled = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values())
+        return ( players, len(self.tourneys) + len(scheduled) )
 
     def tourneySelect(self, string):
         tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
@@ -1895,7 +1906,7 @@ class PokerServerFactory(UGAMEServerFactory):
             return tourneys
         elif len(criterion) > 1:
             ( real_money, type ) = criterion
-            sit_n_go = type == 'sit_n_go'
+            sit_n_go = type == 'sit_n_go' and 'y' or 'n'
             if real_money:
                 return filter(lambda tourney: tourney['real_money'] == real_money and tourney['sit_n_go'] == sit_n_go, tourneys)
             else:
@@ -2149,6 +2160,10 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.close()
         return (total, map(lambda x: x[0], hands))
 
+    def statsTables(self):
+        players = reduce(operator.add, map(lambda table: table.game.allCount(), self.tables))
+        return ( players, len(self.tables) )
+                         
     def listTables(self, string, serial):
         criterion = split(string, "\t")
         if string == '' or string == 'all':

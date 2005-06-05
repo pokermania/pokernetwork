@@ -26,6 +26,30 @@
 #
 from re import match
 
+def checkName(name):
+    if not match("^[a-zA-Z][a-zA-Z0-9]{4,9}$", name):
+        if len(name) > 10:
+            return (False, "login name must be at most 10 characters long")
+        elif len(name) < 5:
+            return (False, "login name must be at least 5 characters long")
+        elif not match("^[a-zA-Z]", name):
+            return (False, "login name must start with a letter")
+        else:
+            return (False, "login name must be all letters and digits")
+
+    return (True, None)
+
+def checkPassword(password):
+    if not match("^[a-zA-Z0-9]{5,9}$", password):
+        if len(password) > 10:
+            return (False, "password must be at most 10 characters long")
+        elif len(password) < 5:
+            return (False, "password must be at least 5 characters long")
+        else:
+            return (False, "password must be all letters and digits")
+
+    return (True, None)
+
 class User:
     REGULAR = 1
     ADMIN = 2
@@ -54,27 +78,11 @@ class User:
         return self.privilege >= privilege
 
     def checkNameAndPassword(self, name, password):
-        if not match("^[a-z][a-z0-9]{4,9}$", name):
-            if len(name) > 10:
-                return (False, "login name must be at most 10 characters long")
-            elif len(name) < 5:
-                return (False, "login name must be at least 5 characters long")
-            elif not match("^[a-z]", name):
-                return (False, "login name must start with a lower case letter")
-            else:
-                return (False, "login name must be all lower case letters and digits")
+        status = checkName(name)
+        if status[0]:
+            return checkPassword(password)
+        else:
+            return status
 
-        if not match("^[a-z][a-z0-9]{4,9}$", password):
-            if len(password) > 10:
-                return (False, "password must be at most 10 characters long")
-            elif len(password) < 5:
-                return (False, "password must be at least 5 characters long")
-            elif not match("^[a-z]", password):
-                return (False, "password must start with a lower case letter")
-            else:
-                return (False, "password must be all lower case letters and digits")
-
-        return (True, None)
-        
     def __str__(self):
         return "serial = %d, name = %s, url = %s, outfit = %s, privilege = %d" % ( self.serial, self.name, self.url, self.outfit, self.privilege )

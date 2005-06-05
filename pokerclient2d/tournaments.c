@@ -35,12 +35,14 @@
 
 static GladeXML* s_tournaments_xml = 0;
 static GtkWidget*	s_tournaments_window = 0;
-static GtkWidget*	s_players_label = 0;
-static GtkWidget*	s_tournaments_label = 0;
+static GtkLabel*	s_players_label = 0;
+static GtkLabel*	s_tournaments_label = 0;
 static GtkLabel*	s_register_unregister_label = 0;
 static GtkButton*	s_register_unregister_button = 0;
 static GtkListStore* s_sit_n_go_store = 0;
+static GtkTreeSelection* s_sit_n_go_selection = 0;
 static GtkListStore* s_regular_store = 0;
+static GtkTreeSelection* s_regular_selection = 0;
 static GtkNotebook* s_notebook = 0;
 
 static GtkWidget*	s_tournament_info_window = 0;
@@ -103,18 +105,20 @@ static void	on_row_activated(GtkTreeView        *treeview,
 
       gtk_tree_model_get(model, &iter, 0, &id, -1);
       g_message("Double-clicked row contains %d", id);
+#if 0
       set_string("tournaments");
       set_string("select");
       set_int(id);
       flush_io_channel();
       close_tournaments();
+#endif
     }
   else
     g_warning("row_activated: unable to find active row");
 }
 
 static void	on_tournament_list_treeview_selection_changed(GtkTreeSelection *treeselection,
-                                                          gpointer user_data)
+                                                              gpointer user_data)
 {
   int* selection = (int*)user_data;
 
@@ -127,7 +131,7 @@ static void	on_tournament_list_treeview_selection_changed(GtkTreeSelection *tree
       gtk_tree_model_get(model, &iter, 0, &id, -1);
       g_message("clicked row contains %d", id);
       set_string("tournaments");
-      set_string("player_list");
+      set_string("details");
       set_int(id);
       flush_io_channel();
 
@@ -233,6 +237,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       GtkTreeView* treeview = GTK_TREE_VIEW(gui_get_widget(g_tournaments_xml, "sit_n_go_treeview"));
       GtkTreeSelection*	selection = gtk_tree_view_get_selection(treeview);
       g_signal_connect(selection, "changed", (GCallback)on_tournament_list_treeview_selection_changed, &s_selected_tournament);
+      s_sit_n_go_selection = selection;
       g_signal_connect(treeview, "row-activated", (GCallback)on_row_activated, &s_selected_tournament);
       gtk_tree_view_set_rules_hint(treeview, TRUE);
       gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(s_sit_n_go_store));
@@ -269,6 +274,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       GtkTreeView* treeview = GTK_TREE_VIEW(gui_get_widget(g_tournaments_xml, "regular_treeview"));
       GtkTreeSelection*	selection = gtk_tree_view_get_selection(treeview);
       g_signal_connect(selection, "changed", (GCallback)on_tournament_list_treeview_selection_changed, &s_selected_tournament);
+      s_regular_selection = selection;
       g_signal_connect(treeview, "row-activated", (GCallback)on_row_activated, &s_selected_tournament);
       gtk_tree_view_set_rules_hint(treeview, TRUE);
       gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(s_regular_store));
@@ -309,8 +315,8 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       }
       gtk_tree_view_set_search_column(treeview, REGULAR_TITLE);
     }
-    s_players_label = gui_get_widget(g_tournaments_xml, "players_label");
-    s_tournaments_label = gui_get_widget(g_tournaments_xml, "tournaments_label");
+    s_players_label = GTK_LABEL(gui_get_widget(g_tournaments_xml, "players_label"));
+    s_tournaments_label = GTK_LABEL(gui_get_widget(g_tournaments_xml, "tournaments_label"));
     GUI_BRANCH(g_tournaments_xml, on_all_radio_clicked);
     GUI_BRANCH(g_tournaments_xml, on_play_money_radio_clicked);
     GUI_BRANCH(g_tournaments_xml, on_real_money_radio_clicked);
@@ -402,7 +408,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       } else {
         gtk_notebook_set_current_page(s_notebook, PAGE_REGULAR);
       }
-      GtkToggleButton* button = gui_get_widget(g_lobby_tabs_xml, type);
+      GtkToggleButton* button = GTK_TOGGLE_BUTTON(gui_get_widget(g_lobby_tabs_xml, type));
       g_assert(button);
       gtk_toggle_button_set_active(button, TRUE);
       g_free(type);
@@ -431,7 +437,16 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
   } else if(!strcmp(tag, "hide")) {
     close_tournaments();
 
+  } else if(!strcmp(tag, "info")) {
+    char* players_count = get_string();
+    char* tournaments_count = get_string();
+    gtk_label_set_text(s_players_label, players_count);
+    gtk_label_set_text(s_tournaments_label, tournaments_count);
+    g_free(players_count);
+    g_free(tournaments_count);
+
   } else if(!strcmp(tag, "sit_n_go")) {
+    int selected = get_int();
     int rows = get_int();
     int i;
 
@@ -445,16 +460,19 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
       gtk_list_store_append(s_sit_n_go_store, &iter);
       gtk_list_store_set(s_sit_n_go_store, &iter, SIT_N_GO_ID, id, SIT_N_GO_TITLE, title, SIT_N_GO_STATE, state, SIT_N_GO_PLAYERS, players, -1);
+      if(selected == id)
+        gtk_tree_selection_select_iter(s_sit_n_go_selection, &iter);
 
       g_free(title);
       g_free(state);
       g_free(players);
     }
-    s_selected_tournament = 0;
+    s_selected_tournament = selected;
     gtk_list_store_clear(s_players_store);
     gtk_widget_set_sensitive(GTK_WIDGET(s_register_unregister_button), FALSE);
 
   } else if(!strcmp(tag, "regular")) {
+    int selected = get_int();
     int rows = get_int();
     int i;
 
@@ -469,21 +487,28 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
       gtk_list_store_append(s_regular_store, &iter);
       gtk_list_store_set(s_regular_store, &iter, REGULAR_ID, id, REGULAR_DATE, date, REGULAR_TITLE, title, REGULAR_STATE, state, REGULAR_PLAYERS, players, -1);
+      if(selected == id)
+        gtk_tree_selection_select_iter(s_regular_selection, &iter);
 
       g_free(date);
       g_free(title);
       g_free(state);
       g_free(players);
     }
-    s_selected_tournament = 0;
+    s_selected_tournament = selected;
     gtk_list_store_clear(s_players_store);
+    gtk_label_set_text(s_register_unregister_label, "");
     gtk_widget_set_sensitive(GTK_WIDGET(s_register_unregister_button), FALSE);
 
   } else if(!strcmp(tag, "players")) {
     can_register = get_int();
-    char* label = can_register ? "Register" : "Unregister";
+    char* label = "";
+    if(can_register == 1)
+      label = "Register";
+    else if(can_register == 0)
+      label = "Unregister";
     gtk_label_set_text(s_register_unregister_label, label);
-    gtk_widget_set_sensitive(GTK_WIDGET(s_register_unregister_button), TRUE);
+    gtk_widget_set_sensitive(GTK_WIDGET(s_register_unregister_button), can_register != 2);
     {
       int players_count = get_int();
       int i;
