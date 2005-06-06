@@ -1,6 +1,11 @@
-Sun Jun 05 12:09:59 2005  Loic Dachary  <loic@gnu.org>
+Mon Jun 06 17:00:04 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.1
+
+	* pokerui/pokerrenderer.py (PokerRenderer.hold): hold if in
+	  stream mode only. Also hold when observing a table.
+
+Sun Jun 05 12:09:59 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerbot.py (PokerBotFactory.__init__): name generation
 

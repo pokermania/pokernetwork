@@ -263,7 +263,7 @@ class PokerTable2D:
             winner = self.winners[packet.pot]
             if self.game.hasLow() and self.game.hasHigh():
                 if best_cards['hi'] and best_cards['low']:
-                    label = "High: " + best_cards['hi'].hand + ", Low: " + best_cards['low']
+                    label = "High: " + best_cards['hi'].hand + ", Low: " + best_cards['low'].hand
                 elif best_cards['hi']:
                     label = "High: " + best_cards['hi'].hand
                 elif best_cards['low']:

@@ -12,6 +12,10 @@
   <table name="Two" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" real_money="0" />
   <table name="Three" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" real_money="0" />
   <table name="Four" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" real_money="0" />
+  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" real_money="0" />
+  <table name="Deux" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" real_money="0" />
+  <table name="Trois" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" real_money="0" />
+  <table name="Quatre" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" real_money="0" />
 
   <table name="Five" variant="omaha" betting_structure="2-4-limit" seats="10" timeout="60" real_money="0" />
   <table name="Six" variant="omaha" betting_structure="10-15-limit" seats="10" timeout="60" real_money="0" />

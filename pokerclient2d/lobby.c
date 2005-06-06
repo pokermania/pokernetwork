@@ -46,6 +46,7 @@ static GtkLabel*	s_tables_label = 0;
 static GtkLabel*	s_go_to_label = 0;
 static GtkButton*	s_go_to_button = 0;
 static GtkListStore* s_variants_store[VARIANTS_COUNT] = { 0, };
+static GtkTreeSelection* s_variants_selection[VARIANTS_COUNT] = { 0, };
 static char* s_variants_names[VARIANTS_COUNT] = {
   "holdem",
   "omaha",
@@ -257,6 +258,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       GtkTreeView* treeview = GTK_TREE_VIEW(gui_get_widget(g_lobby_xml, tmp));
       GtkTreeSelection*	selection = gtk_tree_view_get_selection(treeview);
       g_signal_connect(selection, "changed", (GCallback)on_lobby_list_treeview_selection_changed, &s_selected_table);
+      s_variants_selection[i] = selection;
       g_signal_connect(treeview, "row-activated", (GCallback)on_row_activated, &s_selected_table);
       gtk_tree_view_set_rules_hint(treeview, TRUE);
       gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(s_variants_store[i]));
@@ -440,7 +442,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
   } else if(!strcmp(tag, "hide")) {
     close_lobby();
 
-  } else if(!strcmp(tag, "stats")) {
+  } else if(!strcmp(tag, "info")) {
     char* players_count = get_string();
     char* tables_count = get_string();
     gtk_label_set_text(s_players_label, players_count);
@@ -450,6 +452,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 
   } else if(!strcmp(tag, "holdem") || !strcmp(tag, "omaha") ||
             !strcmp(tag, "omaha8") || !strcmp(tag, "7stud")) {
+    int selected = get_int();
     int rows = get_int();
     int i;
     int variant_index = VARIANT_HOLDEM;
@@ -471,6 +474,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 
       gtk_list_store_append(s_variants_store[variant_index], &iter);
       gtk_list_store_set(s_variants_store[variant_index], &iter, TABLE_COLUMN_ID, id, -1);
+      if(selected == id)
+        gtk_tree_selection_select_iter(s_variants_selection[variant_index], &iter);
 
 #define SET_COLUMN(INDEX) \
       { \
@@ -490,10 +495,11 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       SET_COLUMN(TABLE_COLUMN_TIMEOUT);
 #undef SET_COLUMN
     }
-    s_selected_table = 0;
-    gtk_list_store_clear(s_players_store);
-    gtk_widget_set_sensitive(GTK_WIDGET(s_go_to_button), FALSE);
-
+    s_selected_table = selected;
+    if(!selected) {
+      gtk_list_store_clear(s_players_store);
+      gtk_widget_set_sensitive(GTK_WIDGET(s_go_to_button), FALSE);
+    }
   } else if(!strcmp(tag, "players")) {
     int players_count = get_int();
     int i;

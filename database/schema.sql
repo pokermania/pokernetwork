@@ -130,41 +130,82 @@ create table tourneys_schedule (
 	primary key (serial)
 );
 
+--
+-- Holdem sit and go
+--
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo2', 'Sit and Go 2 players', 'Sit and Go 2 players', '2', 'holdem', 'level-15-30-no-limit', '2', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo2', 'Sit and Go 2 players, Holdem', 'Sit and Go 2 players', '2', 'holdem', 'level-15-30-no-limit', '2', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo3', 'Sit and Go 3 players', 'Sit and Go 3 players', '3', 'holdem', 'level-15-30-no-limit', '3', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo3', 'Sit and Go 3 players, Holdem', 'Sit and Go 3 players', '3', 'holdem', 'level-15-30-no-limit', '3', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo4', 'Sit and Go 4 players', 'Sit and Go 4 players', '4', 'holdem', 'level-15-30-no-limit', '4', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo4', 'Sit and Go 4 players, Holdem', 'Sit and Go 4 players', '4', 'holdem', 'level-15-30-no-limit', '4', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo5', 'Sit and Go 5 players', 'Sit and Go 5 players', '5', 'holdem', 'level-15-30-no-limit', '5', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo5', 'Sit and Go 5 players, Holdem', 'Sit and Go 5 players', '5', 'holdem', 'level-15-30-no-limit', '5', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo6', 'Sit and Go 6 players', 'Sit and Go 6 players', '6', 'holdem', 'level-15-30-no-limit', '6', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo6', 'Sit and Go 6 players, Holdem', 'Sit and Go 6 players', '6', 'holdem', 'level-15-30-no-limit', '6', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo7', 'Sit and Go 7 players', 'Sit and Go 7 players', '7', 'holdem', 'level-15-30-no-limit', '7', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo7', 'Sit and Go 7 players, Holdem', 'Sit and Go 7 players', '7', 'holdem', 'level-15-30-no-limit', '7', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo8', 'Sit and Go 8 players', 'Sit and Go 8 players', '8', 'holdem', 'level-15-30-no-limit', '8', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo8', 'Sit and Go 8 players, Holdem', 'Sit and Go 8 players', '8', 'holdem', 'level-15-30-no-limit', '8', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo9', 'Sit and Go 9 players', 'Sit and Go 9 players', '9', 'holdem', 'level-15-30-no-limit', '9', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo9', 'Sit and Go 9 players, Holdem', 'Sit and Go 9 players', '9', 'holdem', 'level-15-30-no-limit', '9', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo10', 'Sit and Go single table', 'Sit and Go single table', '10', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo10', 'Sit and Go single table, Holdem', 'Sit and Go single table', '10', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo20', 'Sit and Go 2 tables', 'Sit and Go 2 tables', '20', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo20', 'Sit and Go 2 tables, Holdem', 'Sit and Go 2 tables', '20', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo30', 'Sit and Go 3 tables', 'Sit and Go 3 tables', '30', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo30', 'Sit and Go 3 tables, Holdem', 'Sit and Go 3 tables', '30', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
-VALUES ( 'sitngo50', 'Sit and Go 5 tables', 'Sit and Go 5 tables', '50', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+VALUES ( 'sitngo50', 'Sit and Go 5 tables, Holdem', 'Sit and Go 5 tables', '50', 'holdem', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+--
+-- Omaha sit and go
+--
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo2', 'Sit and Go 2 players, Omaha', 'Sit and Go 2 players', '2', 'omaha', 'level-15-30-no-limit', '2', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo3', 'Sit and Go 3 players, Omaha', 'Sit and Go 3 players', '3', 'omaha', 'level-15-30-no-limit', '3', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo4', 'Sit and Go 4 players, Omaha', 'Sit and Go 4 players', '4', 'omaha', 'level-15-30-no-limit', '4', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo5', 'Sit and Go 5 players, Omaha', 'Sit and Go 5 players', '5', 'omaha', 'level-15-30-no-limit', '5', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo6', 'Sit and Go 6 players, Omaha', 'Sit and Go 6 players', '6', 'omaha', 'level-15-30-no-limit', '6', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo7', 'Sit and Go 7 players, Omaha', 'Sit and Go 7 players', '7', 'omaha', 'level-15-30-no-limit', '7', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo8', 'Sit and Go 8 players, Omaha', 'Sit and Go 8 players', '8', 'omaha', 'level-15-30-no-limit', '8', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo9', 'Sit and Go 9 players, Omaha', 'Sit and Go 9 players', '9', 'omaha', 'level-15-30-no-limit', '9', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo10', 'Sit and Go single table, Omaha', 'Sit and Go single table', '10', 'omaha', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo20', 'Sit and Go 2 tables, Omaha', 'Sit and Go 2 tables', '20', 'omaha', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo30', 'Sit and Go 3 tables, Omaha', 'Sit and Go 3 tables', '30', 'omaha', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
+
+INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `real_money` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
+VALUES ( 'Ositngo50', 'Sit and Go 5 tables, Omaha', 'Sit and Go 5 tables', '50', 'omaha', 'level-15-30-no-limit', '10', 'n', '3000', '0', 'y', '0', '0', 'y', '0' );
 
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `real_money`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular1', 'Holdem No Limit, 200 + 10', 'Holdem No Limit, 200 + 10', '1000', 'holdem', 'level-15-30-no-limit', '10', 'n', '200', '10', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 8 hour), unix_timestamp(now() + interval 7 hour), 'n', '0');
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `real_money`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular2', 'Holdem No Limit, 2000 + 100', 'Holdem No Limit, 2000 + 100', '1000', 'holdem', 'level-15-30-no-limit', '10', 'n', '2000', '100', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 9 hour), unix_timestamp(now() + interval 8 hour), 'n', '0');

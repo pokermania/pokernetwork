@@ -170,11 +170,14 @@ class PokerInterface(dispatch.EventDispatcher):
             map(lambda player: packet.extend(map(lambda value: str(value), player)), players)
         self.command(*packet)
 
-    def updateLobby(self, players_count, tables_count, file2name, tables):
+    def updateLobby(self, players_count, tables_count, game_id, file2name, tables):
+        selected_variant = ""
         variant2tables = {}
         for table in tables:
             if not variant2tables.has_key(table.variant):
                 variant2tables[table.variant] = []
+            if table.id == game_id:
+                selected_variant = table.variant
             info = ( str(table.id),
                      table.name,
                      file2name(table.betting_structure),
@@ -189,12 +192,13 @@ class PokerInterface(dispatch.EventDispatcher):
             variant2tables[table.variant].append(info)
 
         for (variant, tables) in variant2tables.iteritems():
-            packet = ['lobby', variant, str(len(tables)) ]
+            selected = variant == selected_variant and str(game_id) or '0'
+            packet = ['lobby', variant, selected, str(len(tables)) ]
             for table in tables:
                 packet.extend(table)
             self.command(*packet)
 
-        self.command('lobby', 'stats', "Players: %d" % players_count, "Tables: %d" % tables_count)
+        self.command('lobby', 'info', "Players: %d" % players_count, "Tables: %d" % tables_count)
             
     def showLobby(self, page, real_money):
         self.command("lobby", "show", page, real_money)
