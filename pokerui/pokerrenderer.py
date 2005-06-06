@@ -535,12 +535,13 @@ class PokerRenderer:
                 packet.outfit = self.factory.getOutfit()
                 self.sitActionsUpdate()
             elif self.has_outfit:
+                url = self.factory.getUrl()
                 if packet.url == "random":
-                    packet.url = choice(("player.male.cal3d", "player.female.cal3d"))
+                    url = choice(("player.male.cal3d", "player.female.cal3d"))
                 if packet.outfit == "random":
                     outfit_infos = self.factory.outfit_infos
-                    skin_url = self.factory.getUrl()
-                    packet.outfit = outfit_infos.randomOutfitAsXML(outfit_infos.path2sex(skin_url))
+                    packet.outfit = outfit_infos.randomOutfitAsXML(outfit_infos.path2sex(url))
+                packet.url = url
             self.render(game, packet)
 
             if packet.serial == self.protocol.getSerial():
