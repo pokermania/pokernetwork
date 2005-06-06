@@ -99,7 +99,6 @@ class PokerRenderer:
             self.state_lobby = self.state_lobby[0]
         self.state_lobby["current"] = 0
         self.state_joining_my = 0
-        self.delays = False
         self.factory = factory
         self.protocol = None
         self.stream_mode = True
@@ -433,6 +432,9 @@ class PokerRenderer:
             else:
                 print "handleGame: unexpected state for TABLE_LIST: " + self.state
 
+        elif packet.type == PACKET_POKER_PLAYERS_LIST:
+            self.updateLobbyPlayersList(packet)
+        
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             self.changeState(TOURNAMENTS_REGISTER_DONE)
             
@@ -455,9 +457,6 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_TOURNEY_LIST:
             self.updateTournaments(packet)
                 
-        elif packet.type == PACKET_POKER_PLAYERS_LIST:
-            self.updateLobbyPlayersList(packet)
-        
         elif packet.type == PACKET_POKER_TABLE_DESTROY:
             if self.replayGameId == packet.serial:
                 self.protocol._lagmax = self.factory.delays.get("lag", 15)
@@ -640,18 +639,15 @@ class PokerRenderer:
             self.render(game, packet)
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
-                self.delays = False
                 self.changeState(SIT_OUT)
 
         elif packet.type == PACKET_POKER_AUTO_FOLD:
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
-                self.delays = False
 
         elif packet.type == PACKET_POKER_SIT:
             self.render(game, packet)
             if packet.serial == self.protocol.getSerial():
-                self.delays = True
                 self.sitActionsUpdate()
             
         elif packet.type == PACKET_POKER_TIMEOUT_WARNING:
@@ -797,8 +793,6 @@ class PokerRenderer:
         self.changeState(REBUY_DONE)
 
     def hold(self, delay, id = None):
-        if delay > 0 and not self.delays:
-            return
         self.protocol.hold(delay, id)
         
     def delay(self, game, event):
@@ -1105,6 +1099,7 @@ class PokerRenderer:
         (action, value) = args
         if action == "details":
             game_id = int(value)
+            self.state_lobby["current"] = game_id
             self.protocol.sendPacket(PacketPokerTableRequestPlayersList(game_id = game_id))
 
         elif action == "join":
@@ -1157,8 +1152,14 @@ class PokerRenderer:
         if self.state != LOBBY:
             return
         interface = self.factory.interface
+        tables = packet.packets
+        tables_map = dict(zip(map(lambda tournament: tournament.id, tables), tables))
+        self.state_lobby["tables"] = tables_map
+        game_id = self.state_lobby["current"]
+        if not tables_map.has_key(game_id):
+            game_id = 0
         if interface:
-            interface.updateLobby(packet.players, packet.tables, self.factory.translateFile2Name, packet.packets)
+            interface.updateLobby(packet.players, packet.tables, game_id, self.factory.translateFile2Name, packet.packets)
 
     def showLobby(self, type = None):
         interface = self.factory.interface
