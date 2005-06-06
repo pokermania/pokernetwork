@@ -793,6 +793,8 @@ class PokerRenderer:
         self.changeState(REBUY_DONE)
 
     def hold(self, delay, id = None):
+        if delay > 0 and not self.stream_mode:
+            return
         self.protocol.hold(delay, id)
         
     def delay(self, game, event):
