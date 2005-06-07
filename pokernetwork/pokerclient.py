@@ -51,7 +51,7 @@ class PokerSkin:
     def destroy(self):
         pass
 
-    def interfaceReady(self, interface):
+    def interfaceReady(self, interface, display):
         pass
 
     def interpret(self, url, outfit):
@@ -112,10 +112,11 @@ class PokerClientFactory(UGAMEClientFactory):
         else:
             self.delays = {}
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
+        self.skin = PokerSkin(settings = self.settings)
         self.protocol = PokerClientProtocol
         self.games = {}
         self.file2name = {}
-        self.initSkins()
+
         self.children = PokerChildren(self.config, self.settings)
         self.interface = None
 
@@ -157,9 +158,6 @@ class PokerClientFactory(UGAMEClientFactory):
             self.renderer.confirmQuit()
             packet = PacketQuit()
             self.display.render(packet)
-
-    def initSkins(self):
-        self.skin = PokerSkin(settings = self.settings)
 
     def getSkin(self):
         return self.skin

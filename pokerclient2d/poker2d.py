@@ -171,7 +171,7 @@ class PokerClientFactory2D(PokerClientFactory):
 
         self.interface = PokerInterface2D(self.settings)
         self.showServers()
-        self.skin.interfaceReady(self.interface)
+        self.skin.interfaceReady(self.interface, self.display)
         self.renderer.interfaceReady(self.interface)
 
     def initDisplay(self):
