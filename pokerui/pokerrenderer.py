@@ -581,8 +581,9 @@ class PokerRenderer:
                 interface.chatHistory(packet.message)
             # duplicate PacketPokerChat
             # in order to preseve integrity of original packet
-            message = self.chatFormatMessage(packet.message)
-            message = PokerChat.filterChatTrigger(message)
+            message = packet.message
+            #self.chatFormatMessage(packet.message)
+            #message = PokerChat.filterChatTrigger(message)
             chatPacket = PacketPokerChat(game_id = packet.game_id,
                                          serial = packet.serial,
                                          message = message)
