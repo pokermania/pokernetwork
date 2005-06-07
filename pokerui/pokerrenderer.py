@@ -60,6 +60,7 @@ PAY_BLIND_ANTE_SEND = "pay_blind_ante_send"
 PAY_BLIND_ANTE_DONE = "pay_blind_ante_done"
 CASHIER = "cashier"
 OUTFIT = "outfit"
+OUTFIT_DONE = "outfit_done"
 TOURNAMENTS = "tournaments"
 TOURNAMENTS_REGISTER = "tournaments_register"
 TOURNAMENTS_REGISTER_DONE = "tournaments_register_done"
@@ -76,7 +77,6 @@ CANCELED = "canceled"
 SIT_OUT = "sit_out"
     
 class PokerRenderer:
-    """Poker client 3d rendering"""
 
     def __init__(self, factory):
         self.replayStepping = True
@@ -104,10 +104,6 @@ class PokerRenderer:
         self.stream_mode = True
         self.bet_step = 1 # else if a human is already here we don't receive a packet POKER_BET_LIMIT and if we don't receive this packet bet_step is not defined
         self.interactors_evaluate = False
-        self.has_outfit = factory.settings.headerGet("/settings/@display3d") == "yes"
-        if self.has_outfit:
-            from poker.pokeroutfit import PokerOutfitEditor
-            self.outfit_editor = PokerOutfitEditor(factory)
         self.interactors_map = { }
         self.interactors = { }
 
@@ -155,8 +151,6 @@ class PokerRenderer:
         self.factory.quit()
 
     def confirmQuit(self):
-        if self.has_outfit:
-            self.outfit_editor.display.destroy()
         if self.protocol:
             self.sendPacket(PacketQuit())
         
@@ -254,8 +248,6 @@ class PokerRenderer:
         interface.registerHandler(pokerinterface.INTERFACE_LOGIN, self.interfaceCallbackLogin)
 
     def interfaceReady(self, interface):
-        if self.has_outfit:
-            self.outfit_editor.setInterface(interface)
         interface.registerHandler(pokerinterface.INTERFACE_CASHIER, self.handleCashier)
         interface.registerHandler(pokerinterface.INTERFACE_LOBBY, self.handleLobby)
         interface.registerHandler(pokerinterface.INTERFACE_TOURNAMENTS, self.handleTournaments)
@@ -534,14 +526,8 @@ class PokerRenderer:
                 packet.url = self.factory.getUrl()
                 packet.outfit = self.factory.getOutfit()
                 self.sitActionsUpdate()
-            elif self.has_outfit:
-                url = self.factory.getUrl()
-                if packet.url == "random":
-                    url = choice(("player.male.cal3d", "player.female.cal3d"))
-                if packet.outfit == "random":
-                    outfit_infos = self.factory.outfit_infos
-                    packet.outfit = outfit_infos.randomOutfitAsXML(outfit_infos.path2sex(url))
-                packet.url = url
+            else:
+                ( packet.url, packet.outfit ) = self.factory.getSkin().interpret(packet.url, packet.outfit)
             self.render(game, packet)
 
             if packet.serial == self.protocol.getSerial():
@@ -997,9 +983,6 @@ class PokerRenderer:
             self.hideTournaments()
         elif self.state == CASHIER:
             self.hideCashier()
-        elif self.state == OUTFIT:
-            if self.has_outfit:
-                outfit_editor.hideOutfits()
         elif self.state == IDLE:
             pass
         else:
@@ -1013,14 +996,7 @@ class PokerRenderer:
         elif name == "cashier":
             self.changeState(CASHIER)
         elif name == "outfits":
-            if self.state != OUTFIT:
-                if self.isSeated():
-                    self.showMessage("You must leave the table to change your outfit", None)
-                else:
-                    if self.state2hide():
-                        self.state = OUTFIT
-                        if self.has_outfit:
-                            self.outfit_editor.showOutfits(self.factory.getUrl(), self.selectOutfit)
+            self.changeState(OUTFIT)
         elif name == "hand_history":
             self.changeState(HAND_LIST)
         elif name == "quit":
@@ -1081,21 +1057,17 @@ class PokerRenderer:
         return game and game.isSeated(serial)
         
     def selectOutfit(self, url, outfit):
-        print "selectOutfit: %s %s" % ( url, outfit )
-        interface = self.factory.interface
         if self.state == OUTFIT:
-            self.outfit_editor.hideOutfits()
-            self.state = IDLE
-            self.factory.setUrl(url)
-            self.factory.setOutfit(outfit)
+            skin = self.factory.getSkin()
+            skin.setUrl(url)
+            skin.setOutfit(outfit)
             if outfit != None:
                 self.protocol.sendPacket(PacketPokerPlayerInfo(serial = self.protocol.getSerial(),
                                                                name = self.protocol.user.name,
                                                                url = url,
                                                                outfit = outfit
                                                                ))
-        else:
-            print "selectOutfit: ignored because not in OUTFIT state"
+            self.changeState(OUTFIT_DONE)
 
     def handleLobby(self, args):
         if self.factory.verbose > 2: print "handleLobby: " + str(args)
@@ -1106,8 +1078,7 @@ class PokerRenderer:
             self.protocol.sendPacket(PacketPokerTableRequestPlayersList(game_id = game_id))
 
         elif action == "join":
-            if self.has_outfit:
-                self.protocol.publishDelay(2)
+            self.protocol.publishDelay(2)
             self.connectTable(int(value))
         elif action == "refresh":
             if value == "play":
@@ -1648,6 +1619,20 @@ class PokerRenderer:
                 self.hideBlind()
                 self.state = IDLE
 
+        elif state == OUTFIT:
+            if self.isSeated():
+                self.showMessage("You must leave the table to change your outfit", None)
+            else:
+                if self.state2hide():
+                    self.factory.getSkin().showOutfitEditor(self.selectOutfit)
+                    self.factory.interface.hideMenu()
+                    self.state = state
+
+        elif state == OUTFIT_DONE and self.state == OUTFIT:
+            self.factory.getSkin().hideOutfitEditor()
+            self.factory.interface.showMenu()
+            self.state = IDLE
+            
         elif state == HAND_LIST:
             if self.protocol.user.isLogged():
                 if self.state2hide():

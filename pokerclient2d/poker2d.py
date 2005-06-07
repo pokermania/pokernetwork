@@ -119,7 +119,7 @@ gtk2reactor.install()
 from twisted.internet import reactor
 from twisted.internet import error
 
-from pokernetwork.pokerclient import PokerClientFactory
+from pokernetwork.pokerclient import PokerClientFactory, PokerSkin
 from pokernetwork.pokerpackets import *
 
 from pokerui import pokerinterface
@@ -128,39 +128,51 @@ from pokerui.pokerrenderer import PokerRenderer
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D
 from pokerclient2d.pokerinterface2d import PokerInterface2D
 
+import gtk
+
+class PokerSkin2D(PokerSkin):
+    def __init__(self, *args, **kwargs):
+        PokerSkin.__init__(self, *args, **kwargs)
+        color = gtk.ColorSelectionDialog("Outfit selection")
+        color.ok_button.connect("clicked", self.colorSelected)
+        color.cancel_button.connect("clicked", self.colorSelectionCanceled)
+        self.color_dialog = color
+        self.select_callback = None
+        ( self.url, self.outfit ) = self.interpret(self.url, self.outfit)
+
+    def interpret(self, url, outfit):
+        if outfit == "random" or "<?xml" in outfit:
+            outfit = "#%02x%02x%02x" % ( randint(100,255), randint(100,255), randint(100,255) )
+        return (url, outfit)
+
+    def hideOutfitEditor(self):
+        self.color_dialog.hide()
+
+    def showOutfitEditor(self, select_callback):
+        self.select_callback = select_callback
+        self.color_dialog.show()
+
+    def colorSelected(self, *args):
+        color = self.color_dialog.colorsel.get_current_color()
+        outfit = "#%02x%02x%02x" % ( (color.red >> 8), (color.green >> 8), (color.blue >> 8) )
+        self.select_callback("random", outfit)
+
+    def colorSelectionCanceled(self, *args):
+        self.select_callback("random", None)
+        
 class PokerClientFactory2D(PokerClientFactory):
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
+        self.skin = PokerSkin2D(settings = self.settings)
         self.renderer = PokerRenderer(self)
         self.interface = None
         self.initDisplay()
 
         self.interface = PokerInterface2D(self.settings)
         self.showServers()
+        self.skin.interfaceReady(self.interface)
         self.renderer.interfaceReady(self.interface)
-
-    def quit(self, dummy = None):
-        interface = self.interface
-        if interface:
-            if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
-                interface.yesnoBox("Do you really want to quit ?")
-                interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
-        else:
-            self.confirmQuit(True)
-
-    def confirmQuit(self, response):
-        if response:
-            #
-            # !!! The order MATTERS here !!! underware must be notified last
-            # otherwise leak detection won't be happy. Inverting the two
-            # is not fatal and the data will be freed eventually. However,
-            # debugging is made much harder because leak detection can't
-            # check as much as it could.
-            #
-            self.renderer.confirmQuit()
-            packet = PacketQuit()
-            self.display.render(packet)
 
     def initDisplay(self):
         self.display = PokerDisplay2D(settings = self.settings,

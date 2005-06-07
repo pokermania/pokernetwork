@@ -11,7 +11,7 @@
   <servers>localhost:19380 game1-test:19378</servers>
   <sound>yes</sound>
   <tournaments real_money="n" type="sit_n_go" sort="name"/>
-  <lobby real_money="n" type="holdem" sort="name"/>
+  <lobby real_money="n" type="omaha8" sort="name"/>
   <skin url="random" outfit="random"/>
   <user path="~/.poker2d"/>
   <path>/etc/poker-engine /etc/poker-network .</path> 

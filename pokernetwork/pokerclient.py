@@ -44,9 +44,19 @@ class PokerSkin:
     """Poker Skin"""
 
     def __init__(self, *args, **kwargs):
-        self.url = kwargs.get('url',"random")
-        self.outfit = kwargs.get('outfit',"random")
-        
+        self.settings = kwargs['settings']
+        self.url = self.settings.headerGet("/settings/skin/@url") or "random"
+        self.outfit = self.settings.headerGet("/settings/skin/@outfit") or "random"
+
+    def destroy(self):
+        pass
+
+    def interfaceReady(self, interface):
+        pass
+
+    def interpret(self, url, outfit):
+        return (url, outfit)
+    
     def getUrl(self):
         return self.url
 
@@ -56,8 +66,14 @@ class PokerSkin:
     def getOutfit(self):
         return self.outfit
 
-    def setOutfit(self,outfit):
-        self.outfit=outfit
+    def setOutfit(self, outfit):
+        self.outfit = outfit
+
+    def hideOutfitEditor(self):
+        pass
+
+    def showOutfitEditor(self, select_callback):
+        pass
 
 class PokerClientFactory(UGAMEClientFactory):
     "client factory"
@@ -99,8 +115,9 @@ class PokerClientFactory(UGAMEClientFactory):
         self.protocol = PokerClientProtocol
         self.games = {}
         self.file2name = {}
-        PokerClientFactory.initSkins(self)
+        self.initSkins()
         self.children = PokerChildren(self.config, self.settings)
+        self.interface = None
 
     def __del__(self):
         del self.games
@@ -118,9 +135,35 @@ class PokerClientFactory(UGAMEClientFactory):
             argv.extend(sys.argv)
             os.execv(sys.executable, argv)
         
-    def initSkins(self):
-        self.skin = PokerSkin()
+    def quit(self, dummy = None):
+        interface = self.interface
+        if interface:
+            if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
+                interface.yesnoBox("Do you really want to quit ?")
+                interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
+        else:
+            self.confirmQuit(True)
 
+    def confirmQuit(self, response):
+        if response:
+            #
+            # !!! The order MATTERS here !!! underware must be notified last
+            # otherwise leak detection won't be happy. Inverting the two
+            # is not fatal and the data will be freed eventually. However,
+            # debugging is made much harder because leak detection can't
+            # check as much as it could.
+            #
+            self.skin.destroy()
+            self.renderer.confirmQuit()
+            packet = PacketQuit()
+            self.display.render(packet)
+
+    def initSkins(self):
+        self.skin = PokerSkin(settings = self.settings)
+
+    def getSkin(self):
+        return self.skin
+    
     def getUrl(self):
         return self.skin.getUrl()
 

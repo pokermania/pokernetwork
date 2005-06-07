@@ -53,6 +53,7 @@ class PokerPlayer2D:
         self.serial = player.serial
         self.best_cards = { 'hi': None, 'low': None }
         self.setSeat(player.seat)
+        self.setOutfit(player.url, player.outfit)
 
     def message(self, string):
         print "[PokerPlayer2D " + str(self.table.game.id) + "/" + str(self.serial) + "] " + string
@@ -71,6 +72,10 @@ class PokerPlayer2D:
         self.bet = glade.get_widget("bet_seat%d" % seat)
         self.bet.hide()
         self.cards = map(lambda x: glade.get_widget("card%d_seat%d" % ( x, seat )), xrange(1,8))
+
+    def setOutfit(self, url, outfit):
+        color = gtk.gdk.color_parse(outfit)
+        self.name.modify_fg(gtk.STATE_NORMAL, color)
 
     def updateChips(self, bet, money):
         bet = chips2int(bet)
