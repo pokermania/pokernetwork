@@ -6,7 +6,7 @@
 	verbose="0"
 	chat="yes" >
 
-  <delays autodeal="3" round="2" position="1" showdown="5" />
+  <delays autodeal="3" round="2" position="1" showdown="5" finish="3" />
   
   <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" real_money="0" />
   <table name="Two" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" real_money="0" />

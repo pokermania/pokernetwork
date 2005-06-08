@@ -150,21 +150,24 @@ class PokerInteractors:
                                                                                        self.interactorSelectedCallback,
                                                                                        self.factory.config.headerGetProperties("/sequence/interactors"+display+"/check/map")[0],
                                                                                        game_id,
-                                                                                       self.factory.verbose),
+                                                                                       self.factory.verbose,
+                                                                                       str(game_id)),
                                                                fold = PokerInteractor("fold",
                                                                                       self.interactorAction,
                                                                                       self.interactorDisplayNode,
                                                                                       self.interactorSelectedCallback,
                                                                                       self.factory.config.headerGetProperties("/sequence/interactors"+display+"/fold/map")[0],
                                                                                       game_id,
-                                                                                      self.factory.verbose),
+                                                                                      self.factory.verbose,
+                                                                                      str(game_id)),
                                                                shadowstacks = PokerInteractor("shadowstacks",
                                                                                               self.interactorAction,
                                                                                               self.interactorDisplayShadowStacks,
                                                                                               self.interactorSelectedCallback,
                                                                                               self.factory.config.headerGetProperties("/sequence/interactors"+display+"/shadowstacks/map")[0],
                                                                                               game_id,
-                                                                                              self.factory.verbose))
+                                                                                              self.factory.verbose,
+                                                                                              str(game_id)))
         return self.interactors_map[game_id]        
 
     def handleInteractors(self, game):
@@ -184,9 +187,9 @@ class PokerInteractors:
 
             isInPosition = game.getSerialInPosition() == serial
             player = game.getPlayer(serial)
-            updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, None)
-            updateInteractor(interactors["fold"], True, isInPosition, None)
-            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money.toint(), game.highestBetNotFold() ])
+            updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, [ game.id ])
+            updateInteractor(interactors["fold"], True, isInPosition, [ game.id ])
+            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money.toint(), game.highestBetNotFold(), game.id ])
         else:
             for (name, interactor) in interactors.iteritems():
                 interactor.disable()
@@ -287,8 +290,6 @@ class PokerRenderer:
     def __init__(self, factory):
         self.replayStepping = True
         self.replayGameId = None
-#        self.scheduledAction = {}
-#        self.futureAction = {}
         self.state = IDLE
         self.state_buy_in = ()
         self.state_login = ()
@@ -1146,7 +1147,7 @@ class PokerRenderer:
             self.protocol.sendPacket(PacketPokerTableRequestPlayersList(game_id = game_id))
 
         elif action == "join":
-            self.protocol.publishDelay(2)
+            self.protocol.publishDelay(1)
             self.connectTable(int(value))
 
         elif action == "refresh":

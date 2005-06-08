@@ -236,7 +236,10 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def gameExists(self, game_id):
         return self.games.has_key(game_id)
-    
+
+SERIAL_IN_POSITION = 0
+POSITION_OBSOLETE = 1
+
 class PokerClientProtocol(UGAMEClientProtocol):
     """Poker client"""
 
@@ -249,8 +252,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             }
         self.setCurrentGameId(None)
         self.pending_auth_request = False
-        self.serial_in_position = 0
-        self.position_is_obsolete = True
+        self.position_info = {}
         self.publish_packets = []
         self.input_packets = []
         self.publish_timer = None
@@ -406,15 +408,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if self.factory.verbose > 4:
             self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, type, str(args) ))
 
-        if game_id != self.currentGameId:
-            if self.factory.verbose > 4:
-                self.message("gameEvent: game %d is not the current game (%d)" % ( game_id, self.currentGameId ))
-            return
         forward_packets = self.forward_packets
         if not forward_packets:
             if self.factory.verbose > 3:
                 self.message("gameEvent: called outside _handleConnection for game %d, ignored" % game_id)
             return
+
         game = self.factory.getGame(game_id)
         if not game:
             if self.factory.verbose > 3:
@@ -471,6 +470,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.registerCallback(self.gameEvent)
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
+                self.position_info[new_game.id] = ( 0, 0 )
                 self.forward_packets.append(self.currentGames())
 
         elif packet.type == PACKET_POKER_PLAYERS_LIST:
@@ -509,7 +509,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 game.setHandsCount(packet.hands_count)
                 game.setLevel(packet.level)
                 game.beginTurn(packet.hand_serial)
-                self.position_is_obsolete = True
+                self.position_info[POSITION_OBSOLETE] = True
                 if not self.no_display_packets:
                     forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
                     for serial in game.player_list:
@@ -712,7 +712,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 forward_packets.extend(self.chipsBet2Pot(game, player, packet.amount, 0))
 
         elif packet.type == PACKET_POKER_STATE:
-            self.position_is_obsolete = True
+            self.position_info[POSITION_OBSOLETE] = True
 
             if game.isBlindAnteRound():
                 game.blindAnteRoundEnd()
@@ -759,34 +759,35 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if game.state != packet.string:
                 self.error("state = %s, expected %s instead " % ( game.state, packet.string ))
 
-        if ( game and
-             game.id == self.getCurrentGameId() ):
+        if game:
+            ( serial_in_position, position_is_obsolete ) = self.position_info[game.id]
             if game.isRunning():
-                position_changed = self.serial_in_position != game.getSerialInPosition()
-                if self.position_is_obsolete or position_changed:
-                    self_was_in_position = self.serial_in_position == self.getSerial()
-                    self.serial_in_position = game.getSerialInPosition()
-                    self_in_position = self.serial_in_position == self.getSerial()
-                    if self.serial_in_position > 0:
+                position_changed = serial_in_position != game.getSerialInPosition()
+                if position_is_obsolete or position_changed:
+                    self_was_in_position = serial_in_position == self.getSerial()
+                    serial_in_position = game.getSerialInPosition()
+                    self_in_position = serial_in_position == self.getSerial()
+                    if serial_in_position > 0:
                         if position_changed:
                             forward_packets.append(PacketPokerPosition(game_id = game.id,
-                                                                       serial = self.serial_in_position))
+                                                                       serial = serial_in_position))
                         if ( self_was_in_position and not self_in_position ):
                             forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
-                                                                               serial = self.serial_in_position))
-                        if ( ( not self_was_in_position or self.position_is_obsolete ) and self_in_position ):
+                                                                               serial = serial_in_position))
+                        if ( ( not self_was_in_position or position_is_obsolete ) and self_in_position ):
                             forward_packets.append(PacketPokerSelfInPosition(game_id = game.id,
-                                                                             serial = self.serial_in_position))
+                                                                             serial = serial_in_position))
                     elif self_was_in_position:
                         forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
                                                                            serial = self.getSerial()))
 
             else:
-                if self.serial_in_position > 0:
+                if serial_in_position > 0:
                     forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
                                                                        serial = self.getSerial()))
-                    self.serial_in_position = 0
-            self.position_is_obsolete = False
+                    serial_in_position = 0
+            position_is_obsolete = False
+            self.position_info[game.id] = ( serial_in_position, position_is_obsolete )
 
         for forward_packet in forward_packets:
             self.schedulePacket(forward_packet)
@@ -1037,6 +1038,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
         
     def deleteGame(self, game_id):
         if self.factory.verbose > 2: self.message("deleteGame: %d" % game_id)
+        if self.position_info.has_key(game_id):
+            del self.position_info[game_id]
+        else:
+            print "CRITICAL: no position_info for game %d" % game_id
         self.factory.deleteGame(game_id)
         def thisgame(packet):
             return hasattr(packet, "game_id") and packet.game_id == game_id

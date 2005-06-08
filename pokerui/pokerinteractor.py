@@ -118,7 +118,6 @@ class disabled(state):
 class PokerInteractorSet:
     def __init__(self, *args, **kwargs):
         self.items = kwargs
-        self.evaluate = False
         
 class PokerInteractor:
     "Poker interactors logic"
@@ -135,7 +134,7 @@ class PokerInteractor:
 #        self.name = name
 #        self.setState(self.disabled())
 #        return
-    def __init__(self, name, action, display, select, nameMap, game_id, verbose = 0):
+    def __init__(self, name, action, display, select, nameMap, game_id, verbose = 0, prefix = ""):
         self.name = name
         self.actionCallback = action
         self.displayCallback = display
@@ -145,6 +144,7 @@ class PokerInteractor:
         self.game_id = game_id
         self.verbose = verbose
         self.selected_value = None
+        self.prefix = prefix
 
         self.state = disabled()
         self.state.enter(self)
@@ -257,9 +257,9 @@ class PokerInteractor:
         
     def update(self):        
         if self.changed:
-            if self.verbose: print "PokerInteractor::update: before " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
+            if self.verbose: print self.prefix + " PokerInteractor::update: before " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
             self.state.update(self)
-            if self.verbose: print "                         after  " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
+            if self.verbose: print self.prefix + "                         after  " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
             self.displayCallback(self)
             self.changed = False
             self.state.changed = False
