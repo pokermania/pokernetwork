@@ -89,15 +89,18 @@ class PokerInteractors:
     def setProtocol(self, protocol):
         self.protocol = protocol
         if protocol:
-            protocol.registerHandler("current", PACKET_POKER_STREAM_MODE, self._handleConnection)
-            protocol.registerHandler("current", PACKET_POKER_END_ROUND, self._handleConnection)
-            protocol.registerHandler("current", PACKET_POKER_END_ROUND_LAST, self._handleConnection)
-            protocol.registerHandler("current", PACKET_POKER_BEGIN_ROUND, self._handleConnection)
-            protocol.registerHandler("current", PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
-            protocol.registerHandler("current", PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
-            protocol.registerHandler("current", PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_STREAM_MODE, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_END_ROUND, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_END_ROUND_LAST, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_BEGIN_ROUND, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
+            protocol.registerHandler(True, PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
 
     def _handleConnection(self, protocol, packet):
+        if self.factory.verbose > 3:
+            print "PokerInteractors::_handleConnection: " + str(packet)
+
         game = self.factory.packet2game(packet)
         
         if packet.type == PACKET_POKER_STREAM_MODE:
@@ -126,13 +129,13 @@ class PokerInteractors:
 
     def destroy(self):
         protocol = self.protocol
-        protocol.unregisterHandler("current", PACKET_POKER_STREAM_MODE, self._handleConnection)
-        protocol.unregisterHandler("current", PACKET_POKER_END_ROUND, self._handleConnection)
-        protocol.unregisterHandler("current", PACKET_POKER_END_ROUND_LAST, self._handleConnection)
-        protocol.unregisterHandler("current", PACKET_POKER_BEGIN_ROUND, self._handleConnection)
-        protocol.unregisterHandler("current", PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
-        protocol.unregisterHandler("current", PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
-        protocol.unregisterHandler("current", PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_STREAM_MODE, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_END_ROUND, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_END_ROUND_LAST, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_BEGIN_ROUND, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
+        protocol.unregisterHandler(True, PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
         self.renderer = None
         self.protocol = None
         self.factory = None

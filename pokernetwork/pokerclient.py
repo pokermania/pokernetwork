@@ -299,9 +299,14 @@ class PokerClientProtocol(UGAMEClientProtocol):
             names = [ name ]
         else:
             names = PacketNames.keys()
-        callbacks = self.callbacks[what]
-        for name in names:
-            callbacks[name].remove(meth)
+        if what != True:
+            whats = [ what ]
+        else:
+            whats = [ 'current', 'not_current', 'outbound' ]
+        for what in whats:
+            callbacks = self.callbacks[what]
+            for name in names:
+                callbacks[name].remove(meth)
         
     def normalizeChips(self, game, chips):
         chips = chips[:]
@@ -843,8 +848,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.error("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d" % ( game.chips_values, min_bet, max_bet ))
         return packets
 
-    def currentGames(self):
+    def currentGames(self, exclude = None):
         games = self.factory.games.keys()
+        if exclude:
+            games.remove(exclude)
         return PacketPokerCurrentGames(game_ids = games,
                                        count = len(games))
     
@@ -945,7 +952,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def publishQuit(self):
         for game in self.factory.games.values():
             self.scheduleTableAbort(game)
-        self.publishAllPackets()
 
     def scheduleTableAbort(self, game):
         game_id = game.id
@@ -965,7 +971,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.schedulePacket(PacketPokerStreamMode(game_id = game.id))
         self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
                                                 serial = self.getSerial()))
-        self.schedulePacket(self.currentGames())
+        self.schedulePacket(self.currentGames(game.id))
+        self.publishAllPackets()
 
     def resendPackets(self, game_id):
         game = self.getGame(game_id)
