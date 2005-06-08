@@ -158,10 +158,9 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     
     if(0) {
     }
-    set_check(shadow)
+    set_check(graphics)
       set_check(sound)
       set_check(fullscreen)
-      set_check(shaders)
       set_check(auto_post)
       set_check(remember_me)
       set_check(muck)

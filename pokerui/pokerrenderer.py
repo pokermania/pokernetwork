@@ -1632,7 +1632,8 @@ class PokerRenderer:
         elif state == OUTFIT_DONE and self.state == OUTFIT:
             self.factory.getSkin().hideOutfitEditor()
             self.factory.interface.showMenu()
-            self.state = IDLE
+            self.state = IDLE            
+            self.changeState(LOBBY)
             
         elif state == HAND_LIST:
             if self.protocol.user.isLogged():

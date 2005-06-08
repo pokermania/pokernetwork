@@ -12,6 +12,8 @@
   <sound>yes</sound>
   <tournaments real_money="n" type="sit_n_go" sort="name"/>
   <lobby real_money="n" type="omaha8" sort="name"/>
+  <shadow>yes</shadow>
+  <vprogram>yes</vprogram>
   <skin url="random" outfit="random"/>
   <user path="~/.poker2d"/>
   <path>/etc/poker-engine /etc/poker-network .</path> 
