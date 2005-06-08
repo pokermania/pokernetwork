@@ -1080,7 +1080,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if not self.factory.isOutbound(packet) and hasattr(packet, "game_id") and not self.factory.gameExists(packet.game_id):
             return
         self.publish_packets.append(packet)
-        self.publishPacket()
+        if self._poll == False:
+            self.publishPacket()
             
     def unschedulePackets(self, predicate):
         self.publish_packets = filter(lambda packet: not predicate(packet), self.publish_packets)

@@ -125,6 +125,14 @@ class PokerInteractors:
             self.handleInteractors(game)
 
     def destroy(self):
+        protocol = self.protocol
+        protocol.unregisterHandler("current", PACKET_POKER_STREAM_MODE, self._handleConnection)
+        protocol.unregisterHandler("current", PACKET_POKER_END_ROUND, self._handleConnection)
+        protocol.unregisterHandler("current", PACKET_POKER_END_ROUND_LAST, self._handleConnection)
+        protocol.unregisterHandler("current", PACKET_POKER_BEGIN_ROUND, self._handleConnection)
+        protocol.unregisterHandler("current", PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
+        protocol.unregisterHandler("current", PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
+        protocol.unregisterHandler("current", PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
         self.renderer = None
         self.protocol = None
         self.factory = None
@@ -1140,6 +1148,7 @@ class PokerRenderer:
         elif action == "join":
             self.protocol.publishDelay(2)
             self.connectTable(int(value))
+
         elif action == "refresh":
             if value == "play":
                 self.state_lobby['real_money'] = 'n'
@@ -1150,6 +1159,7 @@ class PokerRenderer:
             else:
                 self.state_lobby['type'] = value
             self.queryLobby()
+
         elif action == "quit":
             if value == "cashier":
                 self.changeState(CASHIER)
