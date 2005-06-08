@@ -75,6 +75,7 @@ LEAVING_DONE = "leaving_done"
 LEAVING_CANCEL = "leaving_cancel"
 CANCELED = "canceled"
 SIT_OUT = "sit_out"
+QUIT = "quit"
     
 class PokerRenderer:
 
@@ -147,12 +148,22 @@ class PokerRenderer:
     def logout(self):
         self.changeState(LOGOUT)
 
-    def quit(self):
-        self.factory.quit()
+    def quit(self, dummy = None):
+        interface = self.factory.interface
+        if interface:
+            if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
+                interface.yesnoBox("Do you really want to quit ?")
+                interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
+                self.changeState(QUIT)
+        else:
+            self.confirmQuit(True)
 
-    def confirmQuit(self):
-        if self.protocol:
-            self.sendPacket(PacketQuit())
+
+    def confirmQuit(self, response = False):
+        if response:
+            self.factory.quit()
+            if self.protocol:
+                self.sendPacket(PacketQuit())
         
     def autoBlind(self, auto):
         game_id = self.protocol.getCurrentGameId()
@@ -1645,6 +1656,11 @@ class PokerRenderer:
                 self.changeState(LOGIN,
                                  done_state = IDLE,
                                  restore_state = HAND_LIST)
+
+        elif state == QUIT:
+            if self.state == OUTFIT:
+                self.factory.getSkin().hideOutfitEditor()
+                self.factory.interface.showMenu()
 
         elif state == IDLE:
             self.state2hide()

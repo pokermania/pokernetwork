@@ -137,21 +137,16 @@ class PokerClientFactory(UGAMEClientFactory):
             os.execv(sys.executable, argv)
 
     def quit(self):
-        self.confirmQuit("yes")
-
-    def confirmQuit(self, response):
-        if response:
-            #
-            # !!! The order MATTERS here !!! underware must be notified last
-            # otherwise leak detection won't be happy. Inverting the two
-            # is not fatal and the data will be freed eventually. However,
-            # debugging is made much harder because leak detection can't
-            # check as much as it could.
-            #
-            self.skin.destroy()
-            self.renderer.confirmQuit()
-            packet = PacketQuit()
-            self.display.render(packet)
+        #
+        # !!! The order MATTERS here !!! underware must be notified last
+        # otherwise leak detection won't be happy. Inverting the two
+        # is not fatal and the data will be freed eventually. However,
+        # debugging is made much harder because leak detection can't
+        # check as much as it could.
+        #
+        self.skin.destroy()
+        packet = PacketQuit()
+        self.display.render(packet)
 
     def getSkin(self):
         return self.skin

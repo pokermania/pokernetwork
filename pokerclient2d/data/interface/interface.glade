@@ -2645,7 +2645,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> _Auto Select</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <signal name="activate" handler="on_auto_select_activate" last_modification_time="Wed, 16 Mar 2005 11:38:39 GMT"/>
 				</widget>
 			      </child>
@@ -2666,7 +2666,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 12_80x1024</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x1024_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -2677,7 +2677,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_400x1050</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1400x1050_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -2688,7 +2688,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1600x1_200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1600x1200_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -2699,7 +2699,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_920x1200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1920x1200_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -2744,7 +2744,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> _2D</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <signal name="activate" handler="on_2d_activate" last_modification_time="Fri, 27 May 2005 09:15:49 GMT"/>
 				</widget>
 			      </child>

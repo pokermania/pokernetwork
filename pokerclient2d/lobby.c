@@ -338,8 +338,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       g_assert(style);
       GTK_STYLE_GET_CLASS(style)->draw_focus = nil_draw_focus;
     }
-    if(screen) gtk_layout_put(screen, s_lobby_tabs_window, 0, 0);
     gtk_widget_set_size_request(s_lobby_tabs_window, gui_width(screen), -1);
+    if(screen) gtk_layout_put(screen, s_lobby_tabs_window, 0, 0);
     
     GUI_BRANCH(g_lobby_tabs_xml, on_table_toggled);
     GUI_BRANCH(g_lobby_tabs_xml, on_tourney_toggled);
