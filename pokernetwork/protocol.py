@@ -47,6 +47,7 @@ class UGAMEProtocol(protocol.Protocol):
         self._packet_len = 0
         self._timer = None
         self._packet2id = lambda x: 0
+        self._packet2front = lambda x: False
         self._handler = self._handleConnection
         self._queues = {}
         self._lagmax = 0
@@ -155,9 +156,10 @@ class UGAMEProtocol(protocol.Protocol):
                 #
                 # If time has come, process one packet
                 #
-                if queue.delay <= now:
+                if queue.delay <= now or queue.packets[0].nodelay__:
                     packet = queue.packets.pop(0)
                     del packet.time__
+                    del packet.nodelay__
                     self._handler(packet)
                 else:
                     if self.factory.verbose > 5:
@@ -179,7 +181,13 @@ class UGAMEProtocol(protocol.Protocol):
         id = self._packet2id(packet)
         if id != None:
             packet.time__ = time()
-            self.getOrCreateQueue(id).packets.append(packet)
+            front = self._packet2front(packet)
+            if front and self._queues.has_key(id):
+                packet.nodelay__ = True
+                self._queues[id].packets.insert(0, packet)
+            else:
+                packet.nodelay__ = False
+                self.getOrCreateQueue(id).packets.append(packet)
         
     def handleData(self):
         if self._packet_len >= self._expected_len:

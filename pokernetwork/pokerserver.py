@@ -629,6 +629,10 @@ class PokerTable:
             }
         self.timeout_policy = "sitOut"
         self.previous_dealer = -1
+        self.game_delay = {
+            "start": 0,
+            "delay": 0
+            }
 
     def isValid(self):
         return hasattr(self, "factory")
@@ -1096,7 +1100,20 @@ class PokerTable:
         game = self.game
         for event in game.historyGet()[self.history_index:]:
             type = event[0]
-            if type == "leave":
+            if type == "game":
+                self.game_delay = {
+                    "start": time.time(),
+                    "delay": float(self.delays["autodeal"])
+                    }
+            elif ( type == "round" or
+                   type == "position" or
+                   type == "showdown" or
+                   type == "finish" ):
+                self.game_delay["delay"] += float(self.delays[type])
+                if self.factory.verbose > 2:
+                    print "delayedActions: game minimum duration is now " + str(self.game_delay["delay"])
+
+            elif type == "leave":
                 (type, quitters) = event
                 for (serial, seat) in quitters:
                     self.factory.leavePlayer(serial, game.id, self.real_money)
@@ -1151,9 +1168,15 @@ class PokerTable:
                 if self.factory.verbose > 2:
                     print "Not autodealing because player names sit in match %s" % self.temporaryPlayersPattern
                 return
+        delay = self.game_delay["delay"]
+        if delay > 0:
+            delta = ( self.game_delay["start"] + delay ) - time.time()
+            if delta < 0: delta = 0
+        else:
+            delta = 0
         if self.factory.verbose > 2:
-            print "Autodeal scheduled in %f seconds" % float(self.delays["autodeal"])
-        info["dealTimeout"] = reactor.callLater(float(self.delays["autodeal"]), self.autoDeal)
+            print "Autodeal scheduled in %f seconds" % delta
+        info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
         
     def update(self):
         if not self.isValid():

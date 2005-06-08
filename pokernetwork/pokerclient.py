@@ -27,6 +27,7 @@
 
 import time
 from string import split
+from re import match
 
 from twisted.internet import reactor
 
@@ -1057,8 +1058,21 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.user.name = self.factory.name
         self.user.password = self.factory.password
         self._packet2id = self.packet2id
+        self._packet2front = self.packet2front
         self.schedulePacket(PacketBootstrap())
 
+    def packet2front(self, packet):
+        if ( hasattr(packet, "game_id") and
+             self.getGame(packet.game_id) ):
+            if ( packet.type == PACKET_POKER_CHAT and
+                 not match("^Dealer:", packet.message) ):
+                return True
+
+            elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
+                return True
+
+        return False
+             
     def packet2id(self, packet):
         if not self.factory.isOutbound(packet) and hasattr(packet, "game_id"):
             return packet.game_id
