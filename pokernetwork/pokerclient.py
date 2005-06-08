@@ -1007,7 +1007,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                         seats = game.seats()))
         packets.append(PacketPokerStart(game_id = game.id,
                                         hand_serial = game.hand_serial))
-        for player in game.playersAll():
+        for player in game.playersNotFold():
             packet = PacketPokerPlayerCards(game_id = game.id,
                                             serial = player.serial,
                                             cards = player.hand.toRawList())

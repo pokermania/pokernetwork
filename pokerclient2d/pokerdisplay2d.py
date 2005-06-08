@@ -106,8 +106,12 @@ class PokerPlayer2D:
                     self.cards[card_slot].set_from_file(glade.relative_file("cards/small-%s.jpg" % cards_names[card_index]))
                 self.cards[card_slot].show()
 
+    def hideCards(self):
+        for card in self.cards:
+            card.hide()
+
     def start(self):
-        self.updateCards()
+        self.hideCards()
         self.best_cards = { 'hi': None, 'low': None }
         
     def render(self, packet):
@@ -285,14 +289,17 @@ class PokerTable2D:
         elif hasattr(packet, "serial") and self.serial2player.has_key(packet.serial):
             self.serial2player[packet.serial].render(packet)
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
-                if ( packet.serial == self.display.protocol.getSerial() and
+                serial = self.display.protocol.getSerial()
+                if ( packet.serial == serial and
                      not self.game.isTournament() ):
                     for seat in self.seats:
                         seat.show()
                     for player in self.serial2player.values():
                         self.seats[player.seat].hide()
-                else:
+                elif serial in self.serial2player.keys():
                     self.seats[packet.seat].hide()
+                else:
+                    self.seats[packet.seat].show()
 
 class PokerDisplay2D(PokerDisplay):
     def __init__(self, *args, **kwargs):

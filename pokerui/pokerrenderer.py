@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004 Mekensleep
+# Copyright (C) 2004, 2005 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -76,7 +76,204 @@ LEAVING_CANCEL = "leaving_cancel"
 CANCELED = "canceled"
 SIT_OUT = "sit_out"
 QUIT = "quit"
+
+
+class PokerInteractors:
+
+    def __init__(self, factory, renderer):
+        self.renderer = renderer
+        self.factory = factory
+        self.protocol = None
+        self.interactors_map = { }
+        
+    def setProtocol(self, protocol):
+        self.protocol = protocol
+        if protocol:
+            protocol.registerHandler("current", PACKET_POKER_STREAM_MODE, self._handleConnection)
+            protocol.registerHandler("current", PACKET_POKER_END_ROUND, self._handleConnection)
+            protocol.registerHandler("current", PACKET_POKER_END_ROUND_LAST, self._handleConnection)
+            protocol.registerHandler("current", PACKET_POKER_BEGIN_ROUND, self._handleConnection)
+            protocol.registerHandler("current", PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
+            protocol.registerHandler("current", PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
+            protocol.registerHandler("current", PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
+
+    def _handleConnection(self, protocol, packet):
+        game = self.factory.packet2game(packet)
+        
+        if packet.type == PACKET_POKER_STREAM_MODE:
+            self.handleInteractors(game)
+            self.interactorsSyncDisplay(game.id)
     
+        elif packet.type == PACKET_POKER_END_ROUND:
+            self.cancelAllInteractors(game.id)
+            self.handleInteractors(game)
+
+        elif packet.type == PACKET_POKER_END_ROUND_LAST:
+            self.handleInteractors(game)
+
+        elif packet.type == PACKET_POKER_BEGIN_ROUND:
+            self.handleInteractors(game)
+
+        elif packet.type == PACKET_POKER_SELF_IN_POSITION:
+            self.handleInteractors(game)
+
+        elif packet.type == PACKET_POKER_SELF_LOST_POSITION:
+            self.handleInteractors(game)
+
+        elif packet.type == PACKET_POKER_HIGHEST_BET_INCREASE:
+            self.cancelAllInteractors(game.id)
+            self.handleInteractors(game)
+
+    def destroy(self):
+        self.renderer = None
+        self.protocol = None
+        self.factory = None
+        
+    def deleteInteractorSet(self, game_id):
+        if self.interactors_map.has_key(game_id):
+            del self.interactors_map[game_id]
+
+    def getOrCreateInteractorSet(self, game_id):
+        if self.interactors_map.has_key(game_id) == False:
+            display = self.factory.settings.headerGet("/settings/@display3d") == "yes" and "3d" or "2d"
+            self.interactors_map[game_id] = PokerInteractorSet(check = PokerInteractor("check",
+                                                                                       self.interactorAction,
+                                                                                       self.interactorDisplayNode,
+                                                                                       self.interactorSelectedCallback,
+                                                                                       self.factory.config.headerGetProperties("/sequence/interactors"+display+"/check/map")[0],
+                                                                                       game_id,
+                                                                                       self.factory.verbose),
+                                                               fold = PokerInteractor("fold",
+                                                                                      self.interactorAction,
+                                                                                      self.interactorDisplayNode,
+                                                                                      self.interactorSelectedCallback,
+                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/fold/map")[0],
+                                                                                      game_id,
+                                                                                      self.factory.verbose),
+                                                               shadowstacks = PokerInteractor("shadowstacks",
+                                                                                              self.interactorAction,
+                                                                                              self.interactorDisplayShadowStacks,
+                                                                                              self.interactorSelectedCallback,
+                                                                                              self.factory.config.headerGetProperties("/sequence/interactors"+display+"/shadowstacks/map")[0],
+                                                                                              game_id,
+                                                                                              self.factory.verbose))
+        return self.interactors_map[game_id]        
+
+    def handleInteractors(self, game):
+        interactor_set = self.getOrCreateInteractorSet(game.id)
+        interactors = interactor_set.items
+        serial = self.protocol.getSerial()
+        if game.willAct(serial):
+            def updateInteractor(interactor, enabled, isInPosition, userData):
+                if enabled:
+                    interactor.setEnableIfDisabled()
+                    interactor.setUserData(userData)
+                    interactor.setInPosition(isInPosition)
+                else:
+                    interactor.disable()
+                interactor.update()
+                return enabled
+
+            isInPosition = game.getSerialInPosition() == serial
+            player = game.getPlayer(serial)
+            updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, None)
+            updateInteractor(interactors["fold"], True, isInPosition, None)
+            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money.toint(), game.highestBetNotFold() ])
+        else:
+            for (name, interactor) in interactors.iteritems():
+                interactor.disable()
+                interactor.update()
+
+    def cancelAllInteractors(self, game_id):
+        interactor_set = self.getOrCreateInteractorSet(game_id)
+        interactors = interactor_set.items
+        for (name, interactor) in interactors.iteritems():
+            interactor.cancel()
+            interactor.update()
+        
+    def disableAllInteractorButThisOne(self, interactor):
+        keep = interactor.name
+        interactor_set = self.getOrCreateInteractorSet(interactor.game_id)
+        interactors = interactor_set.items
+        for (name, interactor) in interactors.iteritems():
+            if keep != name:
+                interactor.disable()
+                interactor.update()
+
+    def cancelAllInteractorButThisOne(self, interactor):
+        keep = interactor.name
+        interactor_set = self.getOrCreateInteractorSet(interactor.game_id)
+        interactors = interactor_set.items
+        for (name, interactor) in interactors.iteritems():
+            if keep != name:
+                interactor.cancel()
+                interactor.update()
+    
+    def interactorDisplayNode(self, interactor):
+        if interactor.game_id == self.protocol.getCurrentGameId():
+            game = self.factory.getGame(interactor.game_id)
+            if game and interactor.stateHasChanged():
+                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
+                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
+        
+    def interactorDisplayShadowStacks(self, interactor):
+        if interactor.game_id == self.protocol.getCurrentGameId():
+            game = self.factory.getGame(interactor.game_id)
+            if game and interactor.hasChanged():
+                print "interactorDisplayShadowStacks"
+                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
+
+    def interactorsSyncDisplay(self, game_id):
+        print "interactorsSyncDisplay"
+        
+        game = self.factory.getGame(game_id)
+        interactor_set = self.getOrCreateInteractorSet(game_id)
+        interactors = interactor_set.items
+        for (name, interactor) in interactors.iteritems():
+            print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
+            self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
+            if interactor.name != "shadowstacks":
+                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
+                
+    def interactorAction(self, interactor):
+        self.cancelAllInteractorButThisOne(interactor)
+        game = self.factory.getGame(interactor.game_id)
+        packet = interactor.getSelectedValue()
+        if packet.type == PACKET_POKER_RAISE:
+            value = packet.amount
+            chips = PokerChips(game.chips_values, value)
+            packet.amount = chips.chips
+        self.protocol.sendPacket(packet)
+
+    def interactorSelectedCallback(self, interactor):
+        self.cancelAllInteractorButThisOne(interactor)
+
+    def interactorSelected(self, packet):
+        if self.protocol.getCurrentGameId() == packet.game_id:
+            if packet.type == PACKET_POKER_CALL:
+                name = "shadowstacks"
+            elif packet.type == PACKET_POKER_RAISE:
+                name = "shadowstacks"
+            elif packet.type == PACKET_POKER_FOLD:
+                name = "fold"
+            elif packet.type == PACKET_POKER_CHECK:
+                name = "check"
+            else:
+                print "*CRITICAL* unexpected event %s " % event
+                return
+
+#           interactor = self.interactors[name]
+#           interactor.select(packet)
+#           interactor.update()
+
+            interactor = self.getOrCreateInteractorSet(packet.game_id).items[name]
+            interactor.select(packet)
+            interactor.update()
+            
+
+    def render(self, game, packet):
+        self.renderer.render(game, packet)
+        
 class PokerRenderer:
 
     def __init__(self, factory):
@@ -104,39 +301,7 @@ class PokerRenderer:
         self.protocol = None
         self.stream_mode = True
         self.bet_step = 1 # else if a human is already here we don't receive a packet POKER_BET_LIMIT and if we don't receive this packet bet_step is not defined
-        self.interactors_evaluate = False
-        self.interactors_map = { }
-        self.interactors = { }
-
-    def deleteInteractorSet(self, game_id):
-        if self.interactors_map.has_key(game_id):
-            del self.interactors_map[game_id]
-            
-    def getOrCreateInteractorSet(self, game_id):
-        if self.interactors_map.has_key(game_id) == False:
-            display = self.factory.settings.headerGet("/settings/@display3d") == "yes" and "3d" or "2d"
-            self.interactors_map[game_id] = PokerInteractorSet(check = PokerInteractor("check",
-                                                                                       self.interactorAction,
-                                                                                       self.interactorDisplayNode,
-                                                                                       self.interactorSelectedCallback,
-                                                                                       self.factory.config.headerGetProperties("/sequence/interactors"+display+"/check/map")[0],
-                                                                                       game_id,
-                                                                                       self.factory.verbose),
-                                                               fold = PokerInteractor("fold",
-                                                                                      self.interactorAction,
-                                                                                      self.interactorDisplayNode,
-                                                                                      self.interactorSelectedCallback,
-                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/fold/map")[0],
-                                                                                      game_id,
-                                                                                      self.factory.verbose),
-                                                               shadowstacks = PokerInteractor("shadowstacks",
-                                                                                              self.interactorAction,
-                                                                                              self.interactorDisplayShadowStacks,
-                                                                                              self.interactorSelectedCallback,
-                                                                                              self.factory.config.headerGetProperties("/sequence/interactors"+display+"/shadowstacks/map")[0],
-                                                                                              game_id,
-                                                                                              self.factory.verbose))
-        return self.interactors_map[game_id]        
+        self.interactors = PokerInteractors(factory, self)
 
     def setProtocol(self, protocol):
         self.protocol = protocol
@@ -144,6 +309,7 @@ class PokerRenderer:
             self.protocol.play_money = -1
             protocol.registerHandler("current", None, self._handleConnection)
             protocol.registerHandler("outbound", None, self._handleConnection)
+            self.interactors.setProtocol(protocol)
             
     def logout(self):
         self.changeState(LOGOUT)
@@ -161,9 +327,10 @@ class PokerRenderer:
 
     def confirmQuit(self, response = False):
         if response:
-            self.factory.quit()
             if self.protocol:
                 self.sendPacket(PacketQuit())
+            self.interactors.destroy()
+            self.factory.quit()
         
     def autoBlind(self, auto):
         game_id = self.protocol.getCurrentGameId()
@@ -397,8 +564,6 @@ class PokerRenderer:
             self.stream_mode = True
             self.render(game, packet)
             self.restoreGameSate(game)
-            self.handleInteractors(game)
-            self.interactorsSyncDisplay(game.id)
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
             self.stream_mode = False
@@ -554,32 +719,24 @@ class PokerRenderer:
 
         elif packet.type == PACKET_POKER_END_ROUND:
             self.render(game, packet)
-            self.cancelAllInteractors(game.id)
-            self.handleInteractors(game)
             self.delay(game, "end_round")
 
         elif packet.type == PACKET_POKER_END_ROUND_LAST:
             self.render(game, packet)
-            self.handleInteractors(game)
             self.delay(game, "end_round_last")
 
         elif packet.type == PACKET_POKER_BEGIN_ROUND:
             self.render(game, packet)
-            self.handleInteractors(game)
             self.delay(game, "begin_round")
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
             self.render(game, packet)
-            self.handleInteractors(game)
 
         elif packet.type == PACKET_POKER_SELF_LOST_POSITION:
             self.render(game, packet)
-            self.handleInteractors(game)
 
         elif packet.type == PACKET_POKER_HIGHEST_BET_INCREASE:
             self.render(game, packet)
-            self.cancelAllInteractors(game.id)
-            self.handleInteractors(game)
                
         elif packet.type == PACKET_POKER_POSITION:
             self.render(game, packet)
@@ -700,6 +857,9 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_STATE:
             pass
 
+    def interactorSelected(self, packet):
+        self.interactors.interactorSelected(packet)
+
     def sitActionsShow(self):
         interface = self.factory.interface
         if interface:
@@ -819,118 +979,6 @@ class PokerRenderer:
             packets[index].amount = chips.chips
         self.protocol.sendPacket(packets[index])
         
-    def handleInteractors(self, game):
-        interactor_set = self.getOrCreateInteractorSet(game.id)
-        interactors = interactor_set.items
-        serial = self.protocol.getSerial()
-        if game.willAct(serial):
-            def updateInteractor(interactor, enabled, isInPosition, userData):
-                if enabled:
-                    interactor.setEnableIfDisabled()
-                    interactor.setUserData(userData)
-                    interactor.setInPosition(isInPosition)
-                else:
-                    interactor.cancel()
-                    interactor.disable()
-                interactor.update()
-                return enabled
-
-            isInPosition = game.getSerialInPosition() == serial
-            player = game.getPlayer(serial)
-            updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, None)
-            updateInteractor(interactors["fold"], True, isInPosition, None)
-            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money.toint(), game.highestBetNotFold() ])
-        else:
-            for (name, interactor) in interactors.iteritems():
-                interactor.disable()
-                interactor.update()
-
-    def cancelAllInteractors(self, game_id):
-        interactor_set = self.getOrCreateInteractorSet(game_id)
-        interactors = interactor_set.items
-        for (name, interactor) in interactors.iteritems():
-            interactor.cancel()
-            interactor.update()
-        
-    def disableAllInteractorButThisOne(self, interactor):
-        keep = interactor.name
-        interactor_set = self.getOrCreateInteractorSet(interactor.game_id)
-        interactors = interactor_set.items
-        for (name, interactor) in interactors.iteritems():
-            if keep != name:
-                interactor.disable()
-                interactor.update()
-
-    def cancelAllInteractorButThisOne(self, interactor):
-        keep = interactor.name
-        interactor_set = self.getOrCreateInteractorSet(interactor.game_id)
-        interactors = interactor_set.items
-        for (name, interactor) in interactors.iteritems():
-            if keep != name:
-                interactor.cancel()
-                interactor.update()
-    
-    def interactorDisplayNode(self, interactor):
-        if interactor.game_id == self.protocol.getCurrentGameId():
-            game = self.factory.getGame(interactor.game_id)
-            if game and interactor.stateHasChanged():
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
-        
-    def interactorDisplayShadowStacks(self, interactor):
-        if interactor.game_id == self.protocol.getCurrentGameId():
-            game = self.factory.getGame(interactor.game_id)
-            if game and interactor.hasChanged():
-                print "interactorDisplayShadowStacks"
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
-
-    def interactorsSyncDisplay(self, game_id):
-        print "interactorsSyncDisplay"
-        
-        game = self.factory.getGame(game_id)
-        interactor_set = self.getOrCreateInteractorSet(game_id)
-        interactors = interactor_set.items
-        for (name, interactor) in interactors.iteritems():
-            print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
-            self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
-            if interactor.name != "shadowstacks":
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
-                
-    def interactorAction(self, interactor):
-        self.cancelAllInteractorButThisOne(interactor)
-        game = self.factory.getGame(interactor.game_id)
-        packet = interactor.getSelectedValue()
-        if packet.type == PACKET_POKER_RAISE:
-            value = packet.amount
-            chips = PokerChips(game.chips_values, value)
-            packet.amount = chips.chips
-        self.protocol.sendPacket(packet)
-
-    def interactorSelectedCallback(self, interactor):
-        self.cancelAllInteractorButThisOne(interactor)
-
-    def interactorSelected(self, packet):
-        if self.protocol.getCurrentGameId() == packet.game_id:
-            if packet.type == PACKET_POKER_CALL:
-                name = "shadowstacks"
-            elif packet.type == PACKET_POKER_RAISE:
-                name = "shadowstacks"
-            elif packet.type == PACKET_POKER_FOLD:
-                name = "fold"
-            elif packet.type == PACKET_POKER_CHECK:
-                name = "check"
-            else:
-                print "*CRITICAL* unexpected event %s " % event
-                return
-
-#           interactor = self.interactors[name]
-#           interactor.select(packet)
-#           interactor.update()
-
-            interactor = self.getOrCreateInteractorSet(packet.game_id).items[name]
-            interactor.select(packet)
-            interactor.update()
-            
     def render(self, game, packet):
         display = self.factory.display
         display.render(packet)
@@ -1363,7 +1411,7 @@ class PokerRenderer:
         display = self.factory.display
         display.render(PacketPokerTableDestroy(game_id = game_id))
         self.protocol.deleteGame(game_id)
-        self.deleteInteractorSet(game_id)
+        self.interactors.deleteInteractorSet(game_id)
 
     def sendPacketSitOut(self, packet):
         self.sendPacket(packet)
