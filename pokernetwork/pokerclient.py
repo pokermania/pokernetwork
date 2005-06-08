@@ -135,15 +135,9 @@ class PokerClientFactory(UGAMEClientFactory):
             argv = [ sys.executable ]
             argv.extend(sys.argv)
             os.execv(sys.executable, argv)
-        
-    def quit(self, dummy = None):
-        interface = self.interface
-        if interface:
-            if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
-                interface.yesnoBox("Do you really want to quit ?")
-                interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
-        else:
-            self.confirmQuit(True)
+
+    def quit(self):
+        self.confirmQuit("yes")
 
     def confirmQuit(self, response):
         if response:

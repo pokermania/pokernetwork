@@ -90,6 +90,15 @@ Using current directory instead.
         if not exists(rcdir):
             os.mkdir(rcdir)
 
+    def quit(self, dummy = None):
+        interface = self.interface
+        if interface:
+            if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
+                interface.yesnoBox("Do you really want to quit ?")
+                interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
+        else:
+            self.confirmQuit(True)
+
     def run(self):
         settings = self.settings
         config = self.config
