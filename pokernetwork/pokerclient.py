@@ -542,7 +542,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 pass
 
             elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
-                game.addPlayer(packet.serial)
+                game.addPlayer(packet.serial, packet.seat)
                 player = game.getPlayer(packet.serial)
                 player.name = packet.name
                 player.url = packet.url
@@ -550,10 +550,14 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 player.auto_blind_ante = packet.auto_blind_ante
                 player.wait_for = packet.wait_for
                 player.auto = packet.auto
+                self.forward_packets.append(PacketPokerSeats(game_id = game.id,
+                                                             seats = game.seats()))
 
             elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                    packet.type == PACKET_POKER_TABLE_MOVE ) :
                 game.removePlayer(packet.serial)
+                self.forward_packets.append(PacketPokerSeats(game_id = game.id,
+                                                             seats = game.seats()))
 
             elif packet.type == PACKET_POKER_POSITION:
                 game.setPosition(packet.serial)
@@ -571,7 +575,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 pass
 
             elif packet.type == PACKET_POKER_SEATS:
-                game.setSeats(packet.seats)
+                forward_packets.remove(packet)
+                #game.setSeats(packet.seats)
 
             elif packet.type == PACKET_POKER_PLAYER_CARDS:
                 player = game.getPlayer(packet.serial)
@@ -1087,7 +1092,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                  not match("^Dealer:", packet.message) ):
                 return True
 
-            elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
+            elif ( packet.type == PACKET_POKER_PLAYER_ARRIVE and
+                   packet.serial == self.getSerial() ):
                 return True
 
         return False
