@@ -986,6 +986,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   hands_per_hour = game.stats["hands_per_hour"],
                                   average_pot = game.stats["average_pot"],
                                   percent_flop = game.stats["percent_flop"])
+        self.publishAllPackets()
         self.setCurrentGameId(game.id)
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
