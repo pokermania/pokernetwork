@@ -983,7 +983,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
                                                 serial = self.getSerial()))
         self.schedulePacket(self.currentGames(game.id))
-        self.publishAllPackets()
+        #self.publishAllPackets()
 
     def resendPackets(self, game_id):
         self.publishAllPackets()
