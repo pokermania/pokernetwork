@@ -37,6 +37,7 @@ from pokerengine.pokergame import PokerGameClient, PokerPlayer, history2messages
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclient import ABSOLUTE_LAGMAX
 from pokerui import pokerinterface
 from pokerui.pokerinteractor import PokerInteractor, PokerInteractorSet
 from pokerui.pokerchat import PokerChat
@@ -321,6 +322,7 @@ class PokerRenderer:
             self.protocol.play_money = -1
             protocol.registerHandler("current", None, self._handleConnection)
             protocol.registerHandler("outbound", None, self._handleConnection)
+            protocol.registerLagmax(self.updateLagmax)
             self.interactors.setProtocol(protocol)
             
     def logout(self):
@@ -701,6 +703,7 @@ class PokerRenderer:
             return
             
         if packet.type == PACKET_POKER_START:
+            self.resetLagmax()
             self.render(game, packet)
 
         elif packet.type == PACKET_POKER_CANCELED:
@@ -742,6 +745,7 @@ class PokerRenderer:
             self.delay(game, "begin_round")
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
+            self.resetLagmax()
             self.render(game, packet)
 
         elif packet.type == PACKET_POKER_SELF_LOST_POSITION:
@@ -753,7 +757,7 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_POSITION:
             self.render(game, packet)
             if packet.serial != 0:
-                self.delay(game, "position")
+                self.delay(game, game.isBlindAnteRound() and "blind_ante_position" or "position")
 
         elif packet.type == PACKET_POKER_CHAT:
             interface = self.factory.interface
@@ -962,6 +966,18 @@ class PokerRenderer:
                                                   game_id = game.id,
                                                   amount = int(float(value))))
         self.changeState(REBUY_DONE)
+
+    def resetLagmax(self):
+        if self.factory.verbose > 2: print "resetLagmax: %d" % ABSOLUTE_LAGMAX
+        self.protocol._lagmax = ABSOLUTE_LAGMAX
+
+    def updateLagmax(self, packet):
+        if self.factory.packet2game(packet):
+            if ( packet.type == PACKET_POKER_START or
+                 ( packet.type == PACKET_POKER_POSITION and
+                   packet.serial == self.protocol.getSerial() ) ):
+                if self.factory.verbose > 2: print "updateLagmax: %d" % self.protocol.lag
+                self.protocol._lagmax = self.protocol.lag
 
     def hold(self, delay, id = None):
         if delay > 0 and not self.stream_mode:

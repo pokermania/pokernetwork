@@ -202,7 +202,7 @@ PacketFactory[PACKET_POKER_ERROR] = PacketPokerError
 PACKET_POKER_POSITION = 115
 PacketNames[PACKET_POKER_POSITION] = "POKER_POSITION"
 
-class PacketPokerPosition(PacketPokerId):
+class PacketPokerPosition(Packet):
     """\
 Semantics: the player "serial" is now in position for game
 "game_id" and should act. If "serial" is 0, no player is
@@ -223,6 +223,29 @@ game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_POSITION
+
+    format = "!IB"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.game_id = kwargs.get("game_id", 0)
+        self.position = kwargs.get("position", -1)
+        self.serial = kwargs.get("serial", 0) # accepted by constructor but otherwise ignored
+
+    def pack(self):
+        return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, self.position)
+        
+    def unpack(self, block):
+        block = Packet.unpack(self, block)
+        (self.game_id, self.position) = unpack(PacketPokerPosition.format, block[:PacketPokerPosition.format_size])
+        if self.position == 255: self.position = -1
+        return block[PacketPokerPosition.format_size:]
+
+    def calcsize(self):
+        return Packet.calcsize(self) + PacketPokerPosition.format_size
+
+    def __str__(self):
+        return Packet.__str__(self) + " game_id = %d, position = %d, serial = %d" % ( self.game_id, self.position, self.serial )
 
 PacketFactory[PACKET_POKER_POSITION] = PacketPokerPosition
 

@@ -805,7 +805,7 @@ class PokerTable:
             elif type == "position":
                 (type, position) = event
                 packets.append(PacketPokerPosition(game_id = game_id,
-                                                   serial = position))
+                                                   position = position))
                 
             elif type == "showdown":
                 (type, board, pockets) = event

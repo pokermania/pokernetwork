@@ -105,11 +105,13 @@ class PokerClientFactory(UGAMEClientFactory):
         if self.delays:
             self.delays = self.delays[0]
             for (key, value) in self.delays.iteritems():
-                self.delays[key] = int(value)
+                self.delays[key] = float(value)
             if self.delays.has_key("round"):
                 self.delays["end_round"] = self.delays["round"]
                 self.delays["begin_round"] = self.delays["round"]
                 del self.delays["round"]
+            if not self.delays.has_key("blind_ante_position"):
+                self.delays["blind_ante_position"] = self.delays["position"]
         else:
             self.delays = {}
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
@@ -240,6 +242,9 @@ class PokerClientFactory(UGAMEClientFactory):
 SERIAL_IN_POSITION = 0
 POSITION_OBSOLETE = 1
 
+ABSOLUTE_LAGMAX = 120
+DEFAULT_LAGMAX = 15
+
 class PokerClientProtocol(UGAMEClientProtocol):
     """Poker client"""
 
@@ -258,6 +263,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.publish_timer = None
         self.publish_time = 0
         self.publishPackets()
+        self.lag = DEFAULT_LAGMAX
+        self.lagmax_callbacks = []
 
     def error(self, string):
         self.message("ERROR " + string)
@@ -276,7 +283,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def connectionMade(self):
         "connectionMade"
         if self.factory.delays_enable:
-            self._lagmax = self.factory.delays.get("lag", 15)
+            self._lagmax = ABSOLUTE_LAGMAX
+            self.lag = self.factory.delays.get("lag", DEFAULT_LAGMAX)
         self.no_display_packets = self.factory.no_display_packets
         UGAMEClientProtocol.connectionMade(self)
 
@@ -536,7 +544,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     if packet.amount > 0:
                         forward_packets.append(self.chipsPot2Player(game, player, packet.amount, 0, "canceled"))
                 game.canceled(packet.serial, packet.amount)
-                forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
+                forward_packets.append(PacketPokerPosition(game_id = game.id))
 
             elif packet.type == PACKET_POKER_PLAYER_INFO:
                 pass
@@ -550,17 +558,20 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 player.auto_blind_ante = packet.auto_blind_ante
                 player.wait_for = packet.wait_for
                 player.auto = packet.auto
-                self.forward_packets.append(PacketPokerSeats(game_id = game.id,
-                                                             seats = game.seats()))
+                if not self.no_display_packets:
+                    self.forward_packets.append(PacketPokerSeats(game_id = game.id,
+                                                                 seats = game.seats()))
 
             elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                    packet.type == PACKET_POKER_TABLE_MOVE ) :
                 game.removePlayer(packet.serial)
-                self.forward_packets.append(PacketPokerSeats(game_id = game.id,
-                                                             seats = game.seats()))
+                if not self.no_display_packets:
+                    self.forward_packets.append(PacketPokerSeats(game_id = game.id,
+                                                                 seats = game.seats()))
 
             elif packet.type == PACKET_POKER_POSITION:
-                game.setPosition(packet.serial)
+                if game.isBlindAnteRound():
+                    game.setPosition(packet.position)
                 forward_packets.remove(packet)
 
             elif packet.type == PACKET_POKER_SEAT:
@@ -652,7 +663,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                         forward_packets.extend(self.packetsShowdown(game))
                         forward_packets.extend(self.packetsPot2Player(game))
                     game.endTurn()
-                forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
+                forward_packets.append(PacketPokerPosition(game_id = game.id))
 
             elif packet.type == PACKET_POKER_REBUY:
                 forward_packets.remove(packet)
@@ -1097,8 +1108,19 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 return True
 
         return False
-             
+
+    def registerLagmax(self, method):
+        self.lagmax_callbacks.append(method)
+
+    def unregisterLagmax(self, method):
+        self.lagmax_callbacks.remove(method)
+        
+    def triggerLagmax(self, packet):
+        for method in self.lagmax_callbacks:
+            method(packet)
+    
     def packet2id(self, packet):
+        self.triggerLagmax(packet)
         if not self.factory.isOutbound(packet) and hasattr(packet, "game_id"):
             return packet.game_id
         elif packet.type == PACKET_POKER_TABLE:
