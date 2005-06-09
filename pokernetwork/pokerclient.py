@@ -447,19 +447,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.forward_packets = [ packet ]
         forward_packets = self.forward_packets
         
-        game = self.factory.packet2game(packet)
-        
         if packet.type == PACKET_POKER_USER_INFO:
             self.handleUserInfo(packet)
 
         elif packet.type == PACKET_POKER_PERSONAL_INFO:
             self.handlePersonalInfo(packet)
 
-        elif packet.type == PACKET_POKER_TABLE_DESTROY:
-            game = self.factory.getGame(packet.game_id)
-            if game:
-                self.scheduleTableQuit(game)
-            
         elif packet.type == PACKET_POKER_TABLE:
             if packet.id == 0:
                 self.error("server refused our request")
@@ -503,268 +496,281 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                   url = self.factory.getUrl(),
                                                   outfit = self.factory.getOutfit()))
 
-        elif packet.type == PACKET_POKER_START:
-            if packet.hand_serial == 0:
-                self.error("game start was refused")
-                forward_packets.remove(packet)
-            elif game.isRunning():
-                raise UserWarning, "you should not be here (state: %s)" % game.state
-            else:
-                game.setTime(packet.time)
-                game.setHandsCount(packet.hands_count)
-                game.setLevel(packet.level)
-                game.beginTurn(packet.hand_serial)
-                self.position_info[POSITION_OBSOLETE] = True
-                if not self.no_display_packets:
-                    forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
-                    for serial in game.player_list:
-                        forward_packets.append(self.updatePlayerChips(game, game.serial2player[serial]))
-                    forward_packets.extend(self.updatePotsChips(game, []))
+        game = self.factory.packet2game(packet)
 
-        elif packet.type == PACKET_POKER_CANCELED:
-            if not self.no_display_packets and packet.amount > 0:
-                player = game.getPlayer(packet.serial)
-                bet = player.bet.toint()
-                if bet > 0:
-                    forward_packets.extend(self.chipsBet2Pot(game, player, player.bet, 0))
-                if packet.amount > 0:
-                    forward_packets.append(self.chipsPot2Player(game, player, packet.amount, 0, "canceled"))
-            game.canceled(packet.serial, packet.amount)
-            forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
-
-        elif packet.type == PACKET_POKER_PLAYER_INFO:
-            pass
-
-        elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
-            game.addPlayer(packet.serial)
-            player = game.getPlayer(packet.serial)
-            player.name = packet.name
-            player.url = packet.url
-            player.outfit = packet.outfit
-            player.auto_blind_ante = packet.auto_blind_ante
-            player.wait_for = packet.wait_for
-            player.auto = packet.auto
-
-        elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
-               packet.type == PACKET_POKER_TABLE_MOVE ) :
-            game.removePlayer(packet.serial)
-
-        elif packet.type == PACKET_POKER_POSITION:
-            game.setPosition(packet.serial)
-            forward_packets.remove(packet)
-
-        elif packet.type == PACKET_POKER_SEAT:
-            if packet.seat == -1:
-                self.error("This seat is busy")
-            else:
-                if game.isTournament():
-                    self.sendPacket(PacketPokerSit(serial = self.getSerial(),
-                                                   game_id = game.id))
-            
-        elif packet.type == PACKET_POKER_LOOK_CARDS:
-            pass
-            
-        elif packet.type == PACKET_POKER_SEATS:
-            game.setSeats(packet.seats)
-            
-        elif packet.type == PACKET_POKER_PLAYER_CARDS:
-            player = game.getPlayer(packet.serial)
-            player.hand.set(packet.cards)
-            if not self.no_display_packets:
-                forward_packets.remove(packet)
-
-        elif packet.type == PACKET_POKER_BOARD_CARDS:
-            game.board.set(packet.cards)
-
-        elif packet.type == PACKET_POKER_DEALER:
-            game.setDealer(packet.dealer)
-            
-        elif packet.type == PACKET_POKER_SIT_OUT:
-            game.sitOut(packet.serial)
-
-        elif packet.type == PACKET_POKER_AUTO_FOLD:
-            game.autoPlayer(packet.serial)
-
-        elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
-            game.autoBlindAnte(packet.serial)
-
-        elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
-            game.noAutoBlindAnte(packet.serial)
-
-        elif packet.type == PACKET_POKER_SIT:
-            game.sit(packet.serial)
-            
-        elif packet.type == PACKET_POKER_WAIT_FOR:
-            game.getPlayer(packet.serial).wait_for = packet.reason
-            forward_packets.remove(packet)
-            
-        elif packet.type == PACKET_POKER_IN_GAME:
-            for serial in game.serialsAll():
-                if serial in packet.players:
-                    if not game.isSit(serial):
-                        game.sit(serial)
-                        forward_packets.append(PacketPokerSit(game_id = game.id,
-                                                              serial = serial))
-                else:
-                    if game.isSit(serial):
-                        wait_for = game.getPlayer(serial).wait_for
-                        game.sitOut(serial)
-                        if wait_for:
-                            forward_packets.append(PacketPokerWaitFor(game_id = game.id,
-                                                                      serial = serial,
-                                                                      reason = wait_for))
-                        else:
-                            forward_packets.append(PacketPokerSitOut(game_id = game.id,
-                                                                     serial = serial))
-            
-        elif packet.type == PACKET_POKER_WIN:
-            if not self.no_display_packets:
-                for serial in packet.serials:
-                    forward_packets.append(PacketPokerPlayerWin(serial = serial, game_id = game.id))
-            
-            if game.winners:
-                #
-                # If the knows the winners before an explicit call to the distributeMoney
-                # method, it means that there is no showdown.
-                #
-                if not self.no_display_packets:
-                    forward_packets.extend(self.packetsPot2Player(game))
-            else:
-                game.distributeMoney()
-
-                winners = game.winners[:]
-                winners.sort()
-                packet.serials.sort()
-                if winners != packet.serials:
-                    raise UserWarning, "game.winners %s != packet.serials %s" % (winners, packet.serials)
-                if not self.no_display_packets:
-                    forward_packets.extend(self.packetsShowdown(game))
-                    forward_packets.extend(self.packetsPot2Player(game))
-                game.endTurn()
-            forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
-            
-        elif packet.type == PACKET_POKER_REBUY:
-            forward_packets.remove(packet)
-            game.rebuy(packet.serial, packet.amount)
-            player = game.getPlayer(packet.serial)
-            chips = PacketPokerPlayerChips(game_id = game.id,
-                                           serial = packet.serial,
-                                           money = self.normalizeChips(game, player.money.chips),
-                                           bet = self.normalizeChips(game, player.bet.chips))
-            forward_packets.append(chips)
-            
-        elif packet.type == PACKET_POKER_PLAYER_CHIPS:
-            forward_packets.remove(packet)
-            player = game.getPlayer(packet.serial)
-            if player.buy_in_payed:
-                bet = PokerChips(game.chips_values, packet.bet)
-                if player.bet.toint() != bet.toint():
-                    if self.factory.verbose > 1:
-                        self.error("server says player %d has a bet of %d chips and client thinks it has %d" % ( packet.serial, bet.toint(), player.bet.toint()))
-                    player.bet.set(packet.bet)
-                money = PokerChips(game.chips_values, packet.money)
-                if player.money.toint() != money.toint():
-                    if self.factory.verbose > 1:
-                        self.error("server says player %d has a money of %d chips and client thinks it has %d" % ( packet.serial, money.toint(), player.money.toint()))
-                    player.money.set(packet.money)
-            else:
-                #
-                # If server sends chips amount for a player that did not yet pay the buy in
-                # 
-                player.bet.set(packet.bet)
-                player.money.set(packet.money)
-                if player.money.toint() > 0:
-                    player.buy_in_payed = True
-
-            chips = PacketPokerPlayerChips(game_id = game.id,
-                                           serial = packet.serial,
-                                           money = self.normalizeChips(game, packet.money),
-                                           bet = self.normalizeChips(game, packet.bet))
-            forward_packets.append(chips)
-
-        elif packet.type == PACKET_POKER_FOLD:
-            game.fold(packet.serial)
-            if game.isSitOut(packet.serial):
-                forward_packets.append(PacketPokerSitOut(game_id = game.id,
-                                                         serial = packet.serial))
-            
-        elif packet.type == PACKET_POKER_CALL:
-            game.call(packet.serial)
-
-        elif packet.type == PACKET_POKER_RAISE:
-            game.callNraise(packet.serial, packet.amount)
-
-        elif packet.type == PACKET_POKER_CHECK:
-            game.check(packet.serial)
-
-        elif packet.type == PACKET_POKER_BLIND:
-            player = game.getPlayer(packet.serial)
-            game.blind(packet.serial, packet.amount, packet.dead)
-            if not self.no_display_packets:
-                if packet.dead > 0:
-                    forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.dead))
-                    forward_packets.extend(self.chipsBet2Pot(game, player, packet.dead, 0))
-                forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
-
-        elif packet.type == PACKET_POKER_BLIND_REQUEST:
-            game.setPlayerBlind(packet.serial, packet.state)
-                
-        elif packet.type == PACKET_POKER_ANTE:
-            player = game.getPlayer(packet.serial)
-            game.ante(packet.serial, packet.amount)
-            if not self.no_display_packets:
-                forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
-                forward_packets.extend(self.chipsBet2Pot(game, player, packet.amount, 0))
-
-        elif packet.type == PACKET_POKER_STATE:
-            self.position_info[POSITION_OBSOLETE] = True
-
-            if game.isBlindAnteRound():
-                game.blindAnteRoundEnd()
-
-            if packet.string == "end":
-                game.endState()
-                
-            #
-            # A state change is received at the begining of each
-            # betting round. No state change is received when
-            # reaching showdown or otherwise terminating the hand.
-            #
-            if game.isFirstRound():
-                game.initRound()
-            else:
-                if not self.no_display_packets:
-                    if ( packet.string == "end" and
-                         game.isSingleUncalledBet(game.side_pots) ):
-                        forward_packets.extend(self.moveBet2Player(game))
-                    else:
-                        forward_packets.extend(self.moveBet2Pot(game))
-                    
-                if packet.string != "end":
-                    game.initRound()
-
-            if not self.no_display_packets:
-                if game.isRunning() and game.cardsDealt() and game.downCardsDealtThisRoundCount() > 0:
-                    forward_packets.append(PacketPokerDealCards(game_id = game.id,
-                                                                numberOfCards = game.downCardsDealtThisRoundCount(),
-                                                                serials = game.serialsNotFold()))
-
-            if game.isRunning() and game.cardsDealt() and game.cardsDealtThisRoundCount() :
-                for player in game.playersNotFold():
-                    cards = player.hand.toRawList()
-                    forward_packets.append(PacketPokerPlayerCards(game_id = game.id,
-                                                                  serial = player.serial,
-                                                                  cards = cards))
-
-            if ( packet.string != "end" and not game.isBlindAnteRound() ):
-                if not self.no_display_packets:
-                    forward_packets.extend(self.updateBetLimit(game))
-                forward_packets.append(PacketPokerBeginRound(game_id = game.id))
-
-            if game.state != packet.string:
-                self.error("state = %s, expected %s instead " % ( game.state, packet.string ))
-
+        #
+        # It is possible to receive packets related to a game that we know nothing
+        # about after quitting a table. When quitting a table the client deletes
+        # all information related to the game without waiting confirmation from
+        # the server. Therefore the server may keep sending packets related to
+        # the game before noticing TABLE_QUIT packet.
+        #
         if game:
+            if packet.type == PACKET_POKER_START:
+                if packet.hand_serial == 0:
+                    self.error("game start was refused")
+                    forward_packets.remove(packet)
+                elif game.isRunning():
+                    raise UserWarning, "you should not be here (state: %s)" % game.state
+                else:
+                    game.setTime(packet.time)
+                    game.setHandsCount(packet.hands_count)
+                    game.setLevel(packet.level)
+                    game.beginTurn(packet.hand_serial)
+                    self.position_info[POSITION_OBSOLETE] = True
+                    if not self.no_display_packets:
+                        forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
+                        for serial in game.player_list:
+                            forward_packets.append(self.updatePlayerChips(game, game.serial2player[serial]))
+                        forward_packets.extend(self.updatePotsChips(game, []))
+
+            elif packet.type == PACKET_POKER_TABLE_DESTROY:
+                self.scheduleTableQuit(game)
+
+            elif packet.type == PACKET_POKER_CANCELED:
+                if not self.no_display_packets and packet.amount > 0:
+                    player = game.getPlayer(packet.serial)
+                    bet = player.bet.toint()
+                    if bet > 0:
+                        forward_packets.extend(self.chipsBet2Pot(game, player, player.bet, 0))
+                    if packet.amount > 0:
+                        forward_packets.append(self.chipsPot2Player(game, player, packet.amount, 0, "canceled"))
+                game.canceled(packet.serial, packet.amount)
+                forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
+
+            elif packet.type == PACKET_POKER_PLAYER_INFO:
+                pass
+
+            elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
+                game.addPlayer(packet.serial)
+                player = game.getPlayer(packet.serial)
+                player.name = packet.name
+                player.url = packet.url
+                player.outfit = packet.outfit
+                player.auto_blind_ante = packet.auto_blind_ante
+                player.wait_for = packet.wait_for
+                player.auto = packet.auto
+
+            elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
+                   packet.type == PACKET_POKER_TABLE_MOVE ) :
+                game.removePlayer(packet.serial)
+
+            elif packet.type == PACKET_POKER_POSITION:
+                game.setPosition(packet.serial)
+                forward_packets.remove(packet)
+
+            elif packet.type == PACKET_POKER_SEAT:
+                if packet.seat == -1:
+                    self.error("This seat is busy")
+                else:
+                    if game.isTournament():
+                        self.sendPacket(PacketPokerSit(serial = self.getSerial(),
+                                                       game_id = game.id))
+
+            elif packet.type == PACKET_POKER_LOOK_CARDS:
+                pass
+
+            elif packet.type == PACKET_POKER_SEATS:
+                game.setSeats(packet.seats)
+
+            elif packet.type == PACKET_POKER_PLAYER_CARDS:
+                player = game.getPlayer(packet.serial)
+                player.hand.set(packet.cards)
+                if not self.no_display_packets:
+                    forward_packets.remove(packet)
+
+            elif packet.type == PACKET_POKER_BOARD_CARDS:
+                game.board.set(packet.cards)
+
+            elif packet.type == PACKET_POKER_DEALER:
+                game.setDealer(packet.dealer)
+
+            elif packet.type == PACKET_POKER_SIT_OUT:
+                game.sitOut(packet.serial)
+
+            elif packet.type == PACKET_POKER_AUTO_FOLD:
+                game.autoPlayer(packet.serial)
+
+            elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
+                game.autoBlindAnte(packet.serial)
+
+            elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
+                game.noAutoBlindAnte(packet.serial)
+
+            elif packet.type == PACKET_POKER_SIT:
+                game.sit(packet.serial)
+
+            elif packet.type == PACKET_POKER_WAIT_FOR:
+                game.getPlayer(packet.serial).wait_for = packet.reason
+                forward_packets.remove(packet)
+
+            elif packet.type == PACKET_POKER_IN_GAME:
+                for serial in game.serialsAll():
+                    if serial in packet.players:
+                        if not game.isSit(serial):
+                            game.sit(serial)
+                            forward_packets.append(PacketPokerSit(game_id = game.id,
+                                                                  serial = serial))
+                    else:
+                        if game.isSit(serial):
+                            wait_for = game.getPlayer(serial).wait_for
+                            game.sitOut(serial)
+                            if wait_for:
+                                forward_packets.append(PacketPokerWaitFor(game_id = game.id,
+                                                                          serial = serial,
+                                                                          reason = wait_for))
+                            else:
+                                forward_packets.append(PacketPokerSitOut(game_id = game.id,
+                                                                         serial = serial))
+
+            elif packet.type == PACKET_POKER_WIN:
+                if not self.no_display_packets:
+                    for serial in packet.serials:
+                        forward_packets.append(PacketPokerPlayerWin(serial = serial, game_id = game.id))
+
+                if game.winners:
+                    #
+                    # If the knows the winners before an explicit call to the distributeMoney
+                    # method, it means that there is no showdown.
+                    #
+                    if not self.no_display_packets:
+                        forward_packets.extend(self.packetsPot2Player(game))
+                else:
+                    game.distributeMoney()
+
+                    winners = game.winners[:]
+                    winners.sort()
+                    packet.serials.sort()
+                    if winners != packet.serials:
+                        raise UserWarning, "game.winners %s != packet.serials %s" % (winners, packet.serials)
+                    if not self.no_display_packets:
+                        forward_packets.extend(self.packetsShowdown(game))
+                        forward_packets.extend(self.packetsPot2Player(game))
+                    game.endTurn()
+                forward_packets.append(PacketPokerPosition(game_id = game.id, serial = 0))
+
+            elif packet.type == PACKET_POKER_REBUY:
+                forward_packets.remove(packet)
+                game.rebuy(packet.serial, packet.amount)
+                player = game.getPlayer(packet.serial)
+                chips = PacketPokerPlayerChips(game_id = game.id,
+                                               serial = packet.serial,
+                                               money = self.normalizeChips(game, player.money.chips),
+                                               bet = self.normalizeChips(game, player.bet.chips))
+                forward_packets.append(chips)
+
+            elif packet.type == PACKET_POKER_PLAYER_CHIPS:
+                forward_packets.remove(packet)
+                player = game.getPlayer(packet.serial)
+                if player.buy_in_payed:
+                    bet = PokerChips(game.chips_values, packet.bet)
+                    if player.bet.toint() != bet.toint():
+                        if self.factory.verbose > 1:
+                            self.error("server says player %d has a bet of %d chips and client thinks it has %d" % ( packet.serial, bet.toint(), player.bet.toint()))
+                        player.bet.set(packet.bet)
+                    money = PokerChips(game.chips_values, packet.money)
+                    if player.money.toint() != money.toint():
+                        if self.factory.verbose > 1:
+                            self.error("server says player %d has a money of %d chips and client thinks it has %d" % ( packet.serial, money.toint(), player.money.toint()))
+                        player.money.set(packet.money)
+                else:
+                    #
+                    # If server sends chips amount for a player that did not yet pay the buy in
+                    # 
+                    player.bet.set(packet.bet)
+                    player.money.set(packet.money)
+                    if player.money.toint() > 0:
+                        player.buy_in_payed = True
+
+                chips = PacketPokerPlayerChips(game_id = game.id,
+                                               serial = packet.serial,
+                                               money = self.normalizeChips(game, packet.money),
+                                               bet = self.normalizeChips(game, packet.bet))
+                forward_packets.append(chips)
+
+            elif packet.type == PACKET_POKER_FOLD:
+                game.fold(packet.serial)
+                if game.isSitOut(packet.serial):
+                    forward_packets.append(PacketPokerSitOut(game_id = game.id,
+                                                             serial = packet.serial))
+
+            elif packet.type == PACKET_POKER_CALL:
+                game.call(packet.serial)
+
+            elif packet.type == PACKET_POKER_RAISE:
+                game.callNraise(packet.serial, packet.amount)
+
+            elif packet.type == PACKET_POKER_CHECK:
+                game.check(packet.serial)
+
+            elif packet.type == PACKET_POKER_BLIND:
+                player = game.getPlayer(packet.serial)
+                game.blind(packet.serial, packet.amount, packet.dead)
+                if not self.no_display_packets:
+                    if packet.dead > 0:
+                        forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.dead))
+                        forward_packets.extend(self.chipsBet2Pot(game, player, packet.dead, 0))
+                    forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
+
+            elif packet.type == PACKET_POKER_BLIND_REQUEST:
+                game.setPlayerBlind(packet.serial, packet.state)
+
+            elif packet.type == PACKET_POKER_ANTE:
+                player = game.getPlayer(packet.serial)
+                game.ante(packet.serial, packet.amount)
+                if not self.no_display_packets:
+                    forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
+                    forward_packets.extend(self.chipsBet2Pot(game, player, packet.amount, 0))
+
+            elif packet.type == PACKET_POKER_STATE:
+                self.position_info[POSITION_OBSOLETE] = True
+
+                if game.isBlindAnteRound():
+                    game.blindAnteRoundEnd()
+
+                if packet.string == "end":
+                    game.endState()
+
+                #
+                # A state change is received at the begining of each
+                # betting round. No state change is received when
+                # reaching showdown or otherwise terminating the hand.
+                #
+                if game.isFirstRound():
+                    game.initRound()
+                else:
+                    if not self.no_display_packets:
+                        if ( packet.string == "end" and
+                             game.isSingleUncalledBet(game.side_pots) ):
+                            forward_packets.extend(self.moveBet2Player(game))
+                        else:
+                            forward_packets.extend(self.moveBet2Pot(game))
+
+                    if packet.string != "end":
+                        game.initRound()
+
+                if not self.no_display_packets:
+                    if game.isRunning() and game.cardsDealt() and game.downCardsDealtThisRoundCount() > 0:
+                        forward_packets.append(PacketPokerDealCards(game_id = game.id,
+                                                                    numberOfCards = game.downCardsDealtThisRoundCount(),
+                                                                    serials = game.serialsNotFold()))
+
+                if game.isRunning() and game.cardsDealt() and game.cardsDealtThisRoundCount() :
+                    for player in game.playersNotFold():
+                        cards = player.hand.toRawList()
+                        forward_packets.append(PacketPokerPlayerCards(game_id = game.id,
+                                                                      serial = player.serial,
+                                                                      cards = cards))
+
+                if ( packet.string != "end" and not game.isBlindAnteRound() ):
+                    if not self.no_display_packets:
+                        forward_packets.extend(self.updateBetLimit(game))
+                    forward_packets.append(PacketPokerBeginRound(game_id = game.id))
+
+                if game.state != packet.string:
+                    self.error("state = %s, expected %s instead " % ( game.state, packet.string ))
+
+
             ( serial_in_position, position_is_obsolete ) = self.position_info[game.id]
             if game.isRunning():
                 position_changed = serial_in_position != game.getSerialInPosition()
@@ -975,7 +981,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.publishAllPackets()
 
     def resendPackets(self, game_id):
+        self.publishAllPackets()
         game = self.getGame(game_id)
+        self.setCurrentGameId(game.id)
         packets = []
         packet = PacketPokerTable(id = game.id,
                                   name = game.name,
@@ -986,8 +994,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   hands_per_hour = game.stats["hands_per_hour"],
                                   average_pot = game.stats["average_pot"],
                                   percent_flop = game.stats["percent_flop"])
-        self.publishAllPackets()
-        self.setCurrentGameId(game.id)
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
         packets.append(packet)
