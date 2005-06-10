@@ -223,6 +223,7 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
         chat_entry_window_height = position.y;
         position.x = (screen_width - position.x) / 2;
         position.y = screen_height - position.y;
+        g_message("chat: position x = %d, y = %d", position.x, position.y);
         gui_place(g_entry_window, &position, screen);
       }
       {

@@ -170,8 +170,8 @@ static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, 
     int current = (int)gtk_adjustment_get_value(params->adjustment);
     rectangle.x += allocation.x;
     rectangle.y += allocation.y;
-    printf("on_param_expose --- %s\n",params->name);
-    printf("on_param_expose --- current %d\n",current);
+    g_message("on_param_expose --- %s\n",params->name);
+    g_message("on_param_expose --- current %d\n",current);
     if(!gdk_color_parse(params->colors[current], &color)) {
       g_message("param_expose_event color conversion failed for %d/%s", current, params->colors[current]);
       return FALSE;
@@ -194,9 +194,9 @@ static void on_arrow_clicked(GtkAdjustment* adjustment, gdouble increment)
    * check that value is in the range [0,upper]
    */
   if(((value + increment) < 0.1) || ((value + increment) - upper > 0.1)) {
-    printf("ARROW CLICKED ignored %f / %f\n", ((value + increment)), ((value + increment)));
+    g_message("ARROW CLICKED ignored %f / %f\n", ((value + increment)), ((value + increment)));
   } else {
-    printf("ARROW CLICKED value changed %f\n", value + increment);
+    g_message("ARROW CLICKED value changed %f\n", value + increment);
 
     gtk_adjustment_set_value(adjustment, value + increment);
   }
@@ -207,7 +207,7 @@ static void on_slot_left_clicked(GtkToggleButton *button, gpointer user_data)
   struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
   (void) button;
 
-  printf("SLIDER SLOT left clicked\n");
+  g_message("SLIDER SLOT left clicked\n");
 
   on_arrow_clicked(param->adjustment, -1.);
 }
@@ -217,7 +217,7 @@ static void on_slot_right_clicked(GtkToggleButton *button, gpointer user_data)
   struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
   (void) button;
 
-  printf("SLIDER SLOT right clicked\n");
+  g_message("SLIDER SLOT right clicked\n");
 
   on_arrow_clicked(param->adjustment, 1.);
 }
@@ -242,7 +242,7 @@ static void on_slot_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 {
   struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
 
-  printf("SLOT VALUE value changed\n");
+  g_message("SLOT VALUE value changed\n");
 
   gdouble value = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment));
   int vint = (int)(value);
@@ -489,7 +489,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
 
           GtkAdjustment* adjustment = slider_slot_user_data.adjustment;
 
-          printf("SLIDER SLOT value change: %d => %d, max_value = %d\n", (int)gtk_adjustment_get_value(adjustment), value, max_value);
+          g_message("SLIDER SLOT value change: %d => %d, max_value = %d\n", (int)gtk_adjustment_get_value(adjustment), value, max_value);
           g_signal_handler_block((gpointer)adjustment, params_handlers[0]);
           gtk_adjustment_set_value(adjustment, value);
           g_object_set(GTK_OBJECT(adjustment),
