@@ -193,7 +193,7 @@ static void on_arrow_clicked(GtkAdjustment* adjustment, gdouble increment)
   /*
    * check that value is in the range [0,upper]
    */
-  if(((value + increment) < 0.1) || ((value + increment) - upper > 0.1)) {
+  if(((value + increment) < 0.0) || ((value + increment) - upper > 0.1)) {
     g_message("ARROW CLICKED ignored %f / %f\n", ((value + increment)), ((value + increment)));
   } else {
     g_message("ARROW CLICKED value changed %f\n", value + increment);
