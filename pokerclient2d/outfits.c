@@ -494,7 +494,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           gtk_adjustment_set_value(adjustment, value);
           g_object_set(GTK_OBJECT(adjustment),
                        "lower", (gdouble)min_value,
-                       "upper", (gdouble)max_value,
+                       "upper", (gdouble)(max_value - 1),
                        NULL);
           g_signal_handler_unblock((gpointer)adjustment, params_handlers[0]);
         } else {
@@ -597,7 +597,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           gtk_adjustment_set_value(adjustment, value);
           g_object_set(GTK_OBJECT(adjustment),
                        "lower", (gdouble)min_value,
-                       "upper", (gdouble)max_value,
+                       "upper", (gdouble)(max_value - 1),
                        NULL);
           param_update_preview(&params_user_data[i], value);
           g_signal_handler_unblock((gpointer)adjustment, params_handlers[i]);
