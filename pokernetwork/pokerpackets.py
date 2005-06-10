@@ -3513,7 +3513,7 @@ class PacketPokerPythonAnimation(PacketPokerId):
     type = PACKET_POKER_PYTHON_ANIMATION
 
     def __init__(self, *args, **kwargs):
-        self.animation =  kwargs.get("animation", "none"):
+        self.animation =  kwargs.get("animation", "none")
         
         PacketPokerId.__init__(self, *args, **kwargs)
 
