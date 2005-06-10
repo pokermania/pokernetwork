@@ -212,3 +212,7 @@ class PokerChildBrowser(PokerChild):
         if self.verbose:
             print "PokerChildBrowser: command line " + str(self.commandLine)
         return True
+
+    def spawn(self):
+        win32api.ShellExecute(0, "", self.url + path, "", "", 1)
+        return True
