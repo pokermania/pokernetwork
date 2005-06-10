@@ -130,13 +130,14 @@ class PokerInteractors:
 
     def destroy(self):
         protocol = self.protocol
-        protocol.unregisterHandler(True, PACKET_POKER_STREAM_MODE, self._handleConnection)
-        protocol.unregisterHandler(True, PACKET_POKER_END_ROUND, self._handleConnection)
-        protocol.unregisterHandler(True, PACKET_POKER_END_ROUND_LAST, self._handleConnection)
-        protocol.unregisterHandler(True, PACKET_POKER_BEGIN_ROUND, self._handleConnection)
-        protocol.unregisterHandler(True, PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
-        protocol.unregisterHandler(True, PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
-        protocol.unregisterHandler(True, PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
+        if protocol:
+            protocol.unregisterHandler(True, PACKET_POKER_STREAM_MODE, self._handleConnection)
+            protocol.unregisterHandler(True, PACKET_POKER_END_ROUND, self._handleConnection)
+            protocol.unregisterHandler(True, PACKET_POKER_END_ROUND_LAST, self._handleConnection)
+            protocol.unregisterHandler(True, PACKET_POKER_BEGIN_ROUND, self._handleConnection)
+            protocol.unregisterHandler(True, PACKET_POKER_SELF_IN_POSITION, self._handleConnection)
+            protocol.unregisterHandler(True, PACKET_POKER_SELF_LOST_POSITION, self._handleConnection)
+            protocol.unregisterHandler(True, PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
         self.renderer = None
         self.protocol = None
         self.factory = None
@@ -1155,6 +1156,8 @@ class PokerRenderer:
                                                                url = url,
                                                                outfit = outfit
                                                                ))
+                self.factory.settings.headerSet("/settings/skin/@url", url)
+                self.factory.settings.save()
             self.changeState(OUTFIT_DONE)
 
     def handleLobby(self, args):
