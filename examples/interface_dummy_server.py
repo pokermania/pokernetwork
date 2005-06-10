@@ -73,7 +73,7 @@ class Echo(Protocol):
         #self.blind()
         #self.buy_in()
         #self.cashier()
-        #self.chat()
+        self.chat()
         #self.table_list()
         #self.login()
         #self.message_box()
@@ -81,7 +81,7 @@ class Echo(Protocol):
         #self.sit_actions()
         #self.chooser()
         #self.menu()
-        self.outfits()
+        #self.outfits()
         #self.tournaments()
 
     def interfaceSend(self, *args):

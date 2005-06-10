@@ -97,7 +97,7 @@ void create_smiley_array(const char *path, const char *filename)
         g_string_append(filenameStr, "/");
         g_string_append(filenameStr, filenameAttributePtr);
         smiley.filename = g_strdup(filenameStr->str);
-        printf("%s\n", smiley.filename);
+        g_message("%s\n", smiley.filename);
         g_string_free(filenameStr, TRUE);
         g_array_append_val(smiley_array, smiley);
         xmlFree(textAttributePtr);

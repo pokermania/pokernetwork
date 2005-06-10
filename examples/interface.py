@@ -95,10 +95,10 @@ class InterfaceTest:
     def connectionMade(self):
         #self.blind()
         #self.buy_in()
-        #self.cashier()
+        self.cashier()
         #self.chat()
         #self.table_list()
-        self.login()
+        #self.login()
         #self.message_box()
         #self.yesno()
         #self.sit_actions()
