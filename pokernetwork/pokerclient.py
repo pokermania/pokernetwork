@@ -451,6 +451,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
             if not self.no_display_packets:
                 forward_packets.extend(self.chipsPlayer2Bet(game, player, amount.chips))
+
+        elif type == "round_cap_decrease":
+            if not self.no_display_packets:
+                forward_packets.extend(self.updateBetLimit(game))
         
     def _handleConnection(self, packet):
         if self.factory.verbose > 3: self.message("PokerClientProtocol:handleConnection: %s" % packet )
