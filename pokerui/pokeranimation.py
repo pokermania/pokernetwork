@@ -169,7 +169,7 @@ class PokerAnimationPlayer:
 #        print "########################################"
 
             
-    def lookCards(self):
+    def lookCards(self, packet):
         pass
     
     def sitinAction(self):
@@ -326,7 +326,7 @@ class PokerAnimationScheduler:
             PACKET_POKER_PLAYER_LEAVE: self.playerLeave,
 
             PACKET_POKER_LOOK_CARDS: lambda protocol, packet:
-            self.toPlayer(self.PokerAnimationPlayerType.lookCards, packet),
+            self.toPlayer(self.PokerAnimationPlayerType.lookCards, packet, packet),
 
             PACKET_POKER_SEATS: self.tableSeats,
 

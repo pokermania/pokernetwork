@@ -2847,6 +2847,13 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
+    state = "on"
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("state"):
+            self.state = kwargs["state"]
+        PacketPokerId.__init__(self, *args, **kwargs)
+
     type = PACKET_POKER_LOOK_CARDS
 
 PacketFactory[PACKET_POKER_LOOK_CARDS] = PacketPokerLookCards
@@ -3494,4 +3501,21 @@ class PacketPokerEndRoundLast(PacketPokerId):
     type = PACKET_POKER_END_ROUND_LAST
 
 PacketFactory[PACKET_POKER_END_ROUND_LAST] = PacketPokerEndRoundLast
+
+
+######################################## Stop or Start animation
+
+PACKET_POKER_PYTHON_ANIMATION = 224
+PacketNames[PACKET_POKER_PYTHON_ANIMATION] = "POKER_PYTHON_ANIMATION"
+
+class PacketPokerPythonAnimation(PacketPokerId):
+    
+    type = PACKET_POKER_PYTHON_ANIMATION
+
+    def __init__(self, *args, **kwargs):
+        self.animation =  kwargs.get("animation", "none"):
+        
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+PacketFactory[PACKET_POKER_PYTHON_ANIMATION] = PacketPokerPythonAnimation
 
