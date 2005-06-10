@@ -1466,6 +1466,10 @@ class PokerRenderer:
         print "render sendPacket %s" % packet
         return self.protocol.sendPacket(packet)
         
+    def schedulePacket(self, packet):
+        print "render schedulePacket %s" % packet
+        return self.protocol.schedulePacket(packet)
+        
     def getSeat(self, packet):
         print "getSeat %s" % packet
         self.changeState(SEATING, packet)
