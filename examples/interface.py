@@ -73,7 +73,7 @@ class InterfaceTest:
     def __init__(self):
         cpokerinterface.init(callback = self.event,
                             glade = "../pokerclient2d/data/interface/interface2d.glade",
-                            gtkrc = "../pokerclient2d/data/Aero/gtkrc",
+#                            gtkrc = "../pokerclient2d/data/Aero/gtkrc",
                             verbose = 3)
         window = gtk.Window()
         window.set_default_size(1024,768)
@@ -180,7 +180,7 @@ class InterfaceTest:
         
     def message_box(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.command("message_box", "my message!"))
+        reactor.callLater(delay, lambda: self.command("message_box", "my message! This is a long message\nto show how it wraps"))
 
     def blind(self):
         delay = 0

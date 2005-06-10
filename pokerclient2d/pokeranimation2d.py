@@ -187,9 +187,6 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
     def setAnimationCallback(self, animation, callback):
         animation.endCallback(callback)
 
-    def wi(self):
-        return eventbox
-        
     def sitin(self):
         ( name, name_x, name_y ) = self.widget_name
         ( bet, bet_x, bet_y ) = self.widget_bet

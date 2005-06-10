@@ -50,13 +50,14 @@ struct outfit_params {
   GdkRectangle rectangle;
   int has_filename;
   char filename[256];
-  int current;
   GdkGC* gc;
   GtkImage* preview;
+  GtkAdjustment* adjustment;
 };
 
 struct outfit_slider_slot {
-	gdouble previous_value;
+  gdouble previous_value;
+  GtkAdjustment* adjustment;
 };
 
 static struct outfit_slider_slot slider_slot_user_data;
@@ -120,8 +121,6 @@ static void param_update_preview(struct outfit_params* params, int value)
   GdkWindow* window = GTK_WIDGET(preview)->window;
   GtkAllocation allocation = GTK_WIDGET(preview)->allocation;
 
-	params->current = value;
-
   if(params->gc == NULL)
     params->gc = gdk_gc_new(window);
 
@@ -139,21 +138,20 @@ static void param_update_preview(struct outfit_params* params, int value)
   }
 }
 
-static void on_param_slider_value_changed(GtkRange *range, gpointer user_data)
+static void on_param_value_changed(GtkAdjustment *adjustment, gpointer user_data)
 {
   struct outfit_params* params = (struct outfit_params*)user_data;
   /*
    * Output new value
    */
-  int value = (int)(gtk_range_get_value(GTK_RANGE(range)));
-	if(params->current != value) {
-    set_string("outfit");
-    set_string("parameter");
-    set_string(params->name);
-    set_int((int)value);
-    flush_io_channel();
-    param_update_preview(params, value);
-	}
+  int value = (int)(gtk_adjustment_get_value(adjustment));
+
+  set_string("outfit");
+  set_string("parameter");
+  set_string(params->name);
+  set_int((int)value);
+  flush_io_channel();
+  param_update_preview(params, value);
 }
 
 static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, gpointer user_data)
@@ -169,12 +167,13 @@ static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, 
   if(params->has_colors) {
     GdkColor color;
     GdkRectangle rectangle = params->rectangle;
+    int current = (int)gtk_adjustment_get_value(params->adjustment);
     rectangle.x += allocation.x;
     rectangle.y += allocation.y;
-		printf("on_param_expose --- %s\n",params->name);
-		printf("on_param_expose --- current %d\n",params->current);
-    if(!gdk_color_parse(params->colors[params->current], &color)) {
-      g_message("param_expose_event color conversion failed for %d/%s", params->current, params->colors[params->current]);
+    printf("on_param_expose --- %s\n",params->name);
+    printf("on_param_expose --- current %d\n",current);
+    if(!gdk_color_parse(params->colors[current], &color)) {
+      g_message("param_expose_event color conversion failed for %d/%s", current, params->colors[current]);
       return FALSE;
     }
     gdk_gc_set_rgb_fg_color(params->gc, &color);
@@ -183,11 +182,69 @@ static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, 
   return FALSE;
 }
 
-static void on_slot_slider_value_changed(GtkRange *range, gpointer user_data)
+static void on_arrow_clicked(GtkAdjustment* adjustment, gdouble increment)
 {
-	struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
+  gdouble upper;
+  gdouble value;
+  g_object_get(GTK_OBJECT(adjustment),
+               "upper", &upper,
+               "value", &value,
+               NULL);
+  /*
+   * check that value is in the range [0,upper]
+   */
+  if(((value + increment) < 0.1) || ((value + increment) - upper > 0.1)) {
+    printf("ARROW CLICKED ignored %f / %f\n", ((value + increment)), ((value + increment)));
+  } else {
+    printf("ARROW CLICKED value changed %f\n", value + increment);
 
-  gdouble value = gtk_range_get_value(GTK_RANGE(range));
+    gtk_adjustment_set_value(adjustment, value + increment);
+  }
+}
+
+static void on_slot_left_clicked(GtkToggleButton *button, gpointer user_data)
+{
+  struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
+  (void) button;
+
+  printf("SLIDER SLOT left clicked\n");
+
+  on_arrow_clicked(param->adjustment, -1.);
+}
+
+static void on_slot_right_clicked(GtkToggleButton *button, gpointer user_data)
+{
+  struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
+  (void) button;
+
+  printf("SLIDER SLOT right clicked\n");
+
+  on_arrow_clicked(param->adjustment, 1.);
+}
+
+static void on_param_left_clicked(GtkToggleButton *button, gpointer user_data)
+{
+  struct outfit_params* param = (struct outfit_params*)user_data;
+  (void) button;
+
+  on_arrow_clicked(param->adjustment, -1.);
+}
+
+static void on_param_right_clicked(GtkToggleButton *button, gpointer user_data)
+{
+  struct outfit_params* param = (struct outfit_params*)user_data;
+  (void) button;
+
+  on_arrow_clicked(param->adjustment, 1.);
+}
+
+static void on_slot_value_changed(GtkAdjustment* adjustment, gpointer user_data)
+{
+  struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
+
+  printf("SLOT VALUE value changed\n");
+
+  gdouble value = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment));
   int vint = (int)(value);
 	if ((int)param->previous_value == vint)
 		return;
@@ -239,19 +296,31 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
     g_outfit_params_window = glade_xml_get_widget(g_glade_outfit_params_xml, "outfit_params_window");
     if(screen) gtk_layout_put(screen, g_outfit_params_window, 0, 0);
     {
-      GtkObject* object = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_slider"));
-      params_handlers[0] = g_signal_connect(object, "value_changed", (GtkSignalFunc)on_slot_slider_value_changed, (gpointer)&slider_slot_user_data);
+      GtkObject* left = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_left"));
+      g_assert(left);
+      g_signal_connect(left, "clicked", (GtkSignalFunc)on_slot_left_clicked, (gpointer)&slider_slot_user_data);
+      GtkObject* right = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_right"));
+      g_assert(right);
+      g_signal_connect(right, "clicked", (GtkSignalFunc)on_slot_right_clicked, (gpointer)&slider_slot_user_data);
+      slider_slot_user_data.adjustment = GTK_ADJUSTMENT(gtk_adjustment_new(.0, .0, 1., 1., 1., 1.));
+      params_handlers[0] = g_signal_connect(GTK_OBJECT(slider_slot_user_data.adjustment), "value_changed", (GtkSignalFunc)on_slot_value_changed, (gpointer)&slider_slot_user_data);
     }
     int i;
     for(i = 1; i <= 4; i++) {
       char widget_name[32];
-      sprintf(widget_name, "param%d_slider", i);
-      GtkObject* object = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
-      g_assert(object);
-      params_handlers[i] = g_signal_connect(object, "value_changed", (GtkSignalFunc)on_param_slider_value_changed, (gpointer)&params_user_data[i]);
+      sprintf(widget_name, "param%d_left", i);
+      GtkObject* left = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
+      g_assert(left);
+      g_signal_connect(left, "clicked", (GtkSignalFunc)on_param_left_clicked, (gpointer)&params_user_data[i]);
+      sprintf(widget_name, "param%d_right", i);
+      GtkObject* right = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
+      g_assert(right);
+      g_signal_connect(right, "clicked", (GtkSignalFunc)on_param_right_clicked, (gpointer)&params_user_data[i]);
+      params_user_data[i].adjustment = GTK_ADJUSTMENT(gtk_adjustment_new(.0, .0, .1, 1., 1., 1.));
+      params_handlers[i] = g_signal_connect(GTK_OBJECT(params_user_data[i].adjustment), "value_changed", (GtkSignalFunc)on_param_value_changed, (gpointer)&params_user_data[i]);
 
       sprintf(widget_name, "param%d_image", i);
-      object = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
+      GtkObject* object = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
       g_assert(object);
       g_signal_connect(object, "expose_event", (GtkSignalFunc)on_param_expose_event, (gpointer)&params_user_data[i]);
     }
@@ -402,8 +471,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
        * Slot value
        */
 
-      int slot_slider_has_changed = 0;
-			int slot_cant_be_displayed = 0;
+      int slot_cant_be_displayed = 0;
       GtkWidget* container = GTK_WIDGET(glade_xml_get_widget(g_glade_outfit_params_xml, "slot"));
       g_assert(container);
       {
@@ -419,29 +487,20 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           g_assert(label);
           gtk_label_set_text(label, title);
 
-          GtkRange* range = GTK_RANGE(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_slider"));
-          g_assert(range);
+          GtkAdjustment* adjustment = slider_slot_user_data.adjustment;
 
-
-          // get current value of rangein order to avoid a reset
-          gdouble current_value = gtk_range_get_value(GTK_RANGE(range));
-					slider_slot_user_data.previous_value = current_value;
-          int vint = (int)(current_value);
-          g_signal_handler_block((gpointer)range, params_handlers[0]);
-          gtk_range_set_range(range, min_value, max_value - 1);
-          if (value != vint) {
-            slot_slider_has_changed = 1;
-            //printf("SLIDER SLOT current value %d / %d\n",vint,value);
-            gtk_range_set_value(range, value);
-            gtk_range_set_increments(range, 1.0f, 0.0f);
-          }
-					printf("SLIDER SLOT current value %d - %d\n",(int)gtk_range_get_value(GTK_RANGE(range)),value);
-          g_signal_handler_unblock((gpointer)range, params_handlers[0]);
+          printf("SLIDER SLOT value change: %d => %d, max_value = %d\n", (int)gtk_adjustment_get_value(adjustment), value, max_value);
+          g_signal_handler_block((gpointer)adjustment, params_handlers[0]);
+          gtk_adjustment_set_value(adjustment, value);
+          g_object_set(GTK_OBJECT(adjustment),
+                       "lower", (gdouble)min_value,
+                       "upper", (gdouble)max_value,
+                       NULL);
+          g_signal_handler_unblock((gpointer)adjustment, params_handlers[0]);
         } else {
           gtk_widget_set_child_visible(container, FALSE);
           slot_cant_be_displayed = 1;
         }
-
 
         g_free(title);
       }
@@ -529,24 +588,19 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           gtk_label_set_text(label, title);
 
           sprintf(widget_name, "param%d_slider", i);
-          GtkRange* range = GTK_RANGE(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
-          g_assert(range);
+          GtkAdjustment* adjustment = params_user_data[i].adjustment;
 
           strcpy(params_user_data[i].name, tag);
 
-          // get current value of rangein order to avoid a reset
-          gdouble current_value = gtk_range_get_value(GTK_RANGE(range));
-          int vint = (int)(current_value);
-          g_signal_handler_block((gpointer)range, params_handlers[i]);
-          gtk_range_set_range(range, min_value, max_value - 1);
-          if (value != vint || slot_slider_has_changed) {
-            gtk_range_set_value(range, value);
-            gtk_range_set_increments(range, 1.0f, 0.0f);
-          }
-          printf("SLIDER PARAM %d current value %d - %d\n",i,(int)gtk_range_get_value(GTK_RANGE(range)),value);
+          printf("SLIDER PARAM value change: %d => %d, max_value %d\n", (int)gtk_adjustment_get_value(adjustment), value, max_value);
+          g_signal_handler_block((gpointer)adjustment, params_handlers[i]);
+          gtk_adjustment_set_value(adjustment, value);
+          g_object_set(GTK_OBJECT(adjustment),
+                       "lower", (gdouble)min_value,
+                       "upper", (gdouble)max_value,
+                       NULL);
           param_update_preview(&params_user_data[i], value);
-          g_signal_handler_unblock((gpointer)range, params_handlers[i]);
-
+          g_signal_handler_unblock((gpointer)adjustment, params_handlers[i]);
 
           g_free(tag);
           g_free(title);

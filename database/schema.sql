@@ -28,6 +28,7 @@ drop table if exists users;
 create table users (
 	serial int unsigned not null auto_increment,
 	name varchar(32),
+	email varchar(128),
 	skin_url varchar(32) default "default",
 	skin_outfit text,
 	password varchar(32),
@@ -42,14 +43,14 @@ create table users (
 	games_count int default 0,
 	
 	primary key (serial),
-        unique key name_idx (name)
+        unique key name_idx (name),
+        unique key email_idx (email)
 );
 
 drop table if exists users_private;
 
 create table users_private (
 	serial int unsigned not null,
-	email varchar(128),
 	addr_street varchar(255) default "",
 	addr_zip varchar(64) default "",
 	addr_town varchar(64) default "",
@@ -57,8 +58,7 @@ create table users_private (
 	addr_country varchar(64) default "",
 	phone varchar(64) default "",
 
-	primary key (serial),
-        unique key email_idx (email)
+	primary key (serial)
 );
 
 drop table if exists user2table;
@@ -268,17 +268,17 @@ INSERT INTO `hands` VALUES (3, 'Straight Flush Omaha8', '[(\'game\',\n  1,\n  24
 --
 -- Default admin users
 --
-INSERT INTO users VALUES (1,'admin','default','default','fakefake',2,500000,200,500000,1000,1000,0);
-INSERT INTO `users_private` ( `serial` , `email` , `addr_street` , `addr_zip` , `addr_town` , `addr_state` , `addr_country` , `phone` )
+INSERT INTO users VALUES (1,'admin',NULL,'default','default','fakefake',2,500000,200,500000,1000,1000,0);
+INSERT INTO `users_private` ( `serial` , `addr_street` , `addr_zip` , `addr_town` , `addr_state` , `addr_country` , `phone` )
 VALUES (
-1, NULL , '', '', '', '', '', ''
+1, '', '', '', '', '', ''
 );
-INSERT INTO `users` ( `serial` , `name` , `skin_url` , `skin_outfit` , `password` , `privilege` , `play_money` , `real_money` , `point_money` , `rating` , `future_rating` , `games_count` )
+INSERT INTO `users` ( `serial` , `name` , `email`, `skin_url` , `skin_outfit` , `password` , `privilege` , `play_money` , `real_money` , `point_money` , `rating` , `future_rating` , `games_count` )
 VALUES (
-2, 'admin_web', 'default', NULL , 'fakefake', '1', '5000', '0', '5000', '1000', '1000', '0'
+2, 'admin_web', NULL, 'default', NULL , 'fakefake', '1', '5000', '0', '5000', '1000', '1000', '0'
 );
-INSERT INTO `users_private` ( `serial` , `email` , `addr_street` , `addr_zip` , `addr_town` , `addr_state` , `addr_country` , `phone` )
+INSERT INTO `users_private` ( `serial`, `addr_street` , `addr_zip` , `addr_town` , `addr_state` , `addr_country` , `phone` )
 VALUES (
-2, NULL , '', '', '', '', '', ''
+2, '', '', '', '', '', ''
 );
 
