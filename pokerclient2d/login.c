@@ -38,7 +38,7 @@ static GtkWidget*	g_login_entry;
 static GtkWidget*	g_password_entry;
 static GtkWidget*	g_remember_password;
 
-void	on_password_entry_activate(GtkWidget *widget, gpointer user_data)
+static void	on_password_entry_activate(GtkWidget *widget, gpointer user_data)
 {
   (void) widget;
   (void) user_data;
@@ -56,7 +56,7 @@ void	on_password_entry_activate(GtkWidget *widget, gpointer user_data)
   gtk_widget_hide_all(g_login_window);
 }
 
-void	on_login_cancel_button_clicked(GtkWidget *widget, gpointer user_data)
+static void	on_login_cancel_button_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) widget;
   (void) user_data;
@@ -70,7 +70,21 @@ void	on_login_cancel_button_clicked(GtkWidget *widget, gpointer user_data)
   gtk_widget_hide_all(g_login_window);
 }
 
-void	on_login_entry_activate(GtkWidget *widget, gpointer user_data)
+static void	on_create_account_clicked(GtkWidget *widget, gpointer user_data)
+{
+  (void) widget;
+  (void) user_data;
+
+  set_string("login");
+  set_string("create");
+  set_string(gtk_entry_get_text(GTK_ENTRY(g_login_entry)));
+  set_string(gtk_entry_get_text(GTK_ENTRY(g_password_entry)));
+  set_int(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g_remember_password)));
+  flush_io_channel();
+  gtk_widget_hide_all(g_login_window);
+}
+
+static void	on_login_entry_activate(GtkWidget *widget, gpointer user_data)
 {
   (void) widget;
   (void) user_data;
@@ -98,6 +112,7 @@ int	handle_login(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GUI_BRANCH(g_glade_xml, on_password_entry_activate);
       GUI_BRANCH(g_glade_xml, on_login_entry_activate);
       GUI_BRANCH(g_glade_xml, on_login_cancel_button_clicked);
+      GUI_BRANCH(g_glade_xml, on_create_account_clicked);
       GUI_BRANCH(g_glade_xml, gtk_widget_grab_focus);
       gtk_widget_hide_all(g_login_window);
     }

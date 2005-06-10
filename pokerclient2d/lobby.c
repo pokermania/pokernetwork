@@ -392,7 +392,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     {
       static position_t position;
       position.x = top_left_x;
-      position.y = top_left_y + 430;
+      position.y = top_left_y + 400;
       gui_place(s_cashier_button_window, &position, screen);
     }
 

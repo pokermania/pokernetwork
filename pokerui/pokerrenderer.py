@@ -488,6 +488,12 @@ class PokerRenderer:
                                                  message = line))
     
     def interfaceCallbackLogin(self, ok_or_cancel, name, password, remember):
+        if ok_or_cancel == "create" :
+            if self.factory.settings.headerGet("/settings/web"):
+                self.factory.browseWeb("create_account.php?login=%s" % name)
+            else:
+                ok_or_cancel = "ok"
+
         if ok_or_cancel != "ok":
             self.changeState(LOGIN_DONE, False)
             return
@@ -1086,6 +1092,8 @@ class PokerRenderer:
             self.changeState(CASHIER)
         elif name == "outfits":
             self.changeState(OUTFIT)
+        elif name == "edit_account":
+            self.factory.browseWeb("edit_account.php?id=%d" % self.protocol.getSerial())
         elif name == "hand_history":
             self.changeState(HAND_LIST)
         elif name == "quit":

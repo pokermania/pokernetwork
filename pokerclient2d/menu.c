@@ -50,6 +50,7 @@ void on_##WHAT##_activate(GtkWidget* widget, gpointer data) \
 on_item_activate(cashier)
 on_item_activate(outfits)
 on_item_activate(hand_history)
+on_item_activate(edit_account)
 on_item_activate(quit)
 on_item_activate(tables_list)
 on_item_activate(tournaments)
@@ -113,6 +114,7 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     branch(cashier);
     branch(outfits);
     branch(hand_history);
+    branch(edit_account);
     branch(quit);
     branch(tables_list);
     branch(tournaments);

@@ -190,4 +190,25 @@ class PokerChildren:
             status = child.kill() and status
         return status
 
+class PokerChildBrowser(PokerChild):
+    def __init__(self, config, settings, path):
+        PokerChild.__init__(self, config, settings)
+        self.verbose = settings.headerGetInt("/settings/@verbose")
+        self.browser = settings.headerGet("/settings/web/@browser") or "firefox"
+        self.url = settings.headerGet("/settings/web")
+        self.ready = self.configure(path)
+        if self.ready:
+            self.spawn()
+        else:
+            print "PokerChildBrowser: no URL in /settings/web, cannot browse web"
 
+    def configure(self, path):
+        if not self.url:
+            return False
+
+        self.commandLine = [ self.browser, self.url + path ]
+        self.commandName = split(self.commandLine[0],"/").pop()
+        self.pidFile = self.commandName
+        if self.verbose:
+            print "PokerChildBrowser: command line " + str(self.commandLine)
+        return True

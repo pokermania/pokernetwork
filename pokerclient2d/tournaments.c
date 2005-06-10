@@ -395,7 +395,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     {
       static position_t position;
       position.x = top_left_x;
-      position.y = top_left_y + 430;
+      position.y = top_left_y + 400;
       gui_place(s_cashier_button_window, &position, screen);
     }
 

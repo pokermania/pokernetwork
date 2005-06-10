@@ -38,7 +38,7 @@ from pokerengine.pokerchips import PokerChips
 
 from pokernetwork.config import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
-from pokernetwork.pokerchildren import PokerChildren
+from pokernetwork.pokerchildren import PokerChildren, PokerChildBrowser
 from pokernetwork.pokerpackets import *
 
 class PokerSkin:
@@ -239,6 +239,9 @@ class PokerClientFactory(UGAMEClientFactory):
     def gameExists(self, game_id):
         return self.games.has_key(game_id)
 
+    def browseWeb(self, path):
+        PokerChildBrowser(self.config, self.settings, path)
+        
 SERIAL_IN_POSITION = 0
 POSITION_OBSOLETE = 1
 

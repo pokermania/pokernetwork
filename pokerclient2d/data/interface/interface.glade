@@ -155,46 +155,6 @@
 		  <property name="spacing">0</property>
 
 		  <child>
-		    <widget class="GtkHButtonBox" id="dialog-action_area2">
-		      <property name="visible">True</property>
-		      <property name="layout_style">GTK_BUTTONBOX_EDGE</property>
-		      <property name="spacing">0</property>
-
-		      <child>
-			<widget class="GtkButton" id="login_validate_button">
-			  <property name="visible">True</property>
-			  <property name="can_default">True</property>
-			  <property name="can_focus">True</property>
-			  <property name="label">OK</property>
-			  <property name="use_underline">True</property>
-			  <property name="relief">GTK_RELIEF_NONE</property>
-			  <property name="focus_on_click">True</property>
-			  <signal name="clicked" handler="on_password_entry_activate" last_modification_time="Wed, 21 Jul 2004 15:44:54 GMT"/>
-			</widget>
-		      </child>
-
-		      <child>
-			<widget class="GtkButton" id="login_cancel_button">
-			  <property name="visible">True</property>
-			  <property name="can_default">True</property>
-			  <property name="can_focus">True</property>
-			  <property name="label">CANCEL</property>
-			  <property name="use_underline">True</property>
-			  <property name="relief">GTK_RELIEF_NONE</property>
-			  <property name="focus_on_click">True</property>
-			  <signal name="clicked" handler="on_login_cancel_button_clicked" last_modification_time="Wed, 21 Jul 2004 14:02:15 GMT"/>
-			</widget>
-		      </child>
-		    </widget>
-		    <packing>
-		      <property name="padding">0</property>
-		      <property name="expand">False</property>
-		      <property name="fill">True</property>
-		      <property name="pack_type">GTK_PACK_END</property>
-		    </packing>
-		  </child>
-
-		  <child>
 		    <widget class="GtkFrame" id="frame1">
 		      <property name="border_width">2</property>
 		      <property name="visible">True</property>
@@ -331,6 +291,62 @@
 		      <property name="active">False</property>
 		      <property name="inconsistent">False</property>
 		      <property name="draw_indicator">True</property>
+		    </widget>
+		    <packing>
+		      <property name="padding">0</property>
+		      <property name="expand">False</property>
+		      <property name="fill">False</property>
+		    </packing>
+		  </child>
+
+		  <child>
+		    <widget class="GtkHButtonBox" id="dialog-action_area2">
+		      <property name="visible">True</property>
+		      <property name="layout_style">GTK_BUTTONBOX_EDGE</property>
+		      <property name="spacing">0</property>
+
+		      <child>
+			<widget class="GtkButton" id="login_validate_button">
+			  <property name="visible">True</property>
+			  <property name="can_default">True</property>
+			  <property name="can_focus">True</property>
+			  <property name="label">OK</property>
+			  <property name="use_underline">True</property>
+			  <property name="relief">GTK_RELIEF_NONE</property>
+			  <property name="focus_on_click">True</property>
+			  <signal name="clicked" handler="on_password_entry_activate" last_modification_time="Wed, 21 Jul 2004 15:44:54 GMT"/>
+			</widget>
+		      </child>
+
+		      <child>
+			<widget class="GtkButton" id="login_cancel_button">
+			  <property name="visible">True</property>
+			  <property name="can_default">True</property>
+			  <property name="can_focus">True</property>
+			  <property name="label">CANCEL</property>
+			  <property name="use_underline">True</property>
+			  <property name="relief">GTK_RELIEF_NONE</property>
+			  <property name="focus_on_click">True</property>
+			  <signal name="clicked" handler="on_login_cancel_button_clicked" last_modification_time="Wed, 21 Jul 2004 14:02:15 GMT"/>
+			</widget>
+		      </child>
+		    </widget>
+		    <packing>
+		      <property name="padding">0</property>
+		      <property name="expand">False</property>
+		      <property name="fill">True</property>
+		    </packing>
+		  </child>
+
+		  <child>
+		    <widget class="GtkButton" id="create_account">
+		      <property name="visible">True</property>
+		      <property name="can_focus">True</property>
+		      <property name="label" translatable="yes">Create Account</property>
+		      <property name="use_underline">True</property>
+		      <property name="relief">GTK_RELIEF_NONE</property>
+		      <property name="focus_on_click">True</property>
+		      <signal name="clicked" handler="on_create_account_clicked" last_modification_time="Fri, 10 Jun 2005 13:34:49 GMT"/>
 		    </widget>
 		    <packing>
 		      <property name="padding">0</property>
@@ -2710,6 +2726,15 @@
 		    <widget class="GtkMenu" id="requests_menu">
 
 		      <child>
+			<widget class="GtkMenuItem" id="edit_account">
+			  <property name="visible">True</property>
+			  <property name="label" translatable="yes"> _Edit Account</property>
+			  <property name="use_underline">True</property>
+			  <signal name="activate" handler="on_edit_account_activate" last_modification_time="Fri, 10 Jun 2005 15:09:12 GMT"/>
+			</widget>
+		      </child>
+
+		      <child>
 			<widget class="GtkMenuItem" id="outfits">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes"> _Change Outfit</property>
@@ -2764,7 +2789,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> _Auto Select</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <signal name="activate" handler="on_auto_select_activate" last_modification_time="Wed, 16 Mar 2005 11:38:39 GMT"/>
 				</widget>
 			      </child>
@@ -2785,7 +2810,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 12_80x1024</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x1024_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -2796,7 +2821,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_400x1050</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1400x1050_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -2807,7 +2832,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1600x1_200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1600x1200_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -2818,7 +2843,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_920x1200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1920x1200_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -2863,7 +2888,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> _2D</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <signal name="activate" handler="on_2d_activate" last_modification_time="Fri, 27 May 2005 09:15:49 GMT"/>
 				</widget>
 			      </child>
