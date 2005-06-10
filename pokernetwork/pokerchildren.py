@@ -214,5 +214,8 @@ class PokerChildBrowser(PokerChild):
         return True
 
     def spawn(self):
-        win32api.ShellExecute(0, "", self.url + path, "", "", 1)
-        return True
+        if os.name != "posix" :
+            win32api.ShellExecute(0, "", self.commandLine[1], "", "", 1)
+            return True
+        else:
+            return PokerChild.spawn(self)
