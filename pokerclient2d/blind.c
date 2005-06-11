@@ -80,6 +80,7 @@ int	handle_blind(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       g_blind_window = glade_xml_get_widget(g_glade_xml,
                                             "blind_window");
       g_assert(g_blind_window);
+      set_nil_draw_focus(g_blind_window);
       if(screen) gtk_layout_put(screen, g_blind_window, 0, 0);
       g_blind_message = glade_xml_get_widget(g_glade_xml,
                                              "post_blind_message");

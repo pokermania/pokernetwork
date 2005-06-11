@@ -178,6 +178,7 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       g_history_window = glade_xml_get_widget(g_history_xml,
                                               "chat_history_window");
       g_assert(g_history_window);
+      set_nil_draw_focus(g_history_window);
       if(screen) gtk_layout_put(screen, g_history_window, 0, 0);
       g_entry_window = glade_xml_get_widget(g_entry_xml,
                                             "chat_entry_window");

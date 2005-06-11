@@ -229,6 +229,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     s_tournaments_xml = g_tournaments_xml;
     s_tournaments_window = gui_get_widget(g_tournaments_xml, "tournaments_window");
     g_assert(s_tournaments_window);
+    set_nil_draw_focus(s_tournaments_window);
     if(screen) gtk_layout_put(screen, s_tournaments_window, 0, 0);
     s_notebook = GTK_NOTEBOOK(gui_get_widget(g_tournaments_xml, "notebook"));
     g_assert(s_notebook);

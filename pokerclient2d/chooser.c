@@ -65,6 +65,7 @@ int	handle_chooser(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       g_chooser_window = glade_xml_get_widget(g_glade_xml,
 					      "chooser_window");
       g_assert(g_chooser_window);
+      set_nil_draw_focus(g_chooser_window);
       if(screen) gtk_layout_put(screen, g_chooser_window, 0, 0);
       g_chooser_label = glade_xml_get_widget(g_glade_xml,
 					     "chooser_label");

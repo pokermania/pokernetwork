@@ -22,6 +22,7 @@
  *
  * Authors:
  *  Henry Prêcheur <henry at precheur dot org>
+ *  Loic Dachary <loic@gnu.org>
  *
  */
 
@@ -86,6 +87,7 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
 				gui_get_widget(s_glade_personal_information_xml,
 											 "personal_information_window");
       g_assert(s_personal_information_window);
+      set_nil_draw_focus(s_personal_information_window);
       if(screen) gtk_layout_put(screen, s_personal_information_window, 0, 0);
       s_account_status_window =
 				gui_get_widget(s_glade_account_status_xml,

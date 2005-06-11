@@ -54,6 +54,7 @@ int	handle_message_box(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       g_message_window = glade_xml_get_widget(g_glade_xml,
 					      "message_window");
       g_assert(g_message_window);
+      set_nil_draw_focus(g_message_window);
       if(screen) gtk_layout_put(screen, g_message_window, 0, 0);
       g_message_label = glade_xml_get_widget(g_glade_xml,
 					     "message_label");

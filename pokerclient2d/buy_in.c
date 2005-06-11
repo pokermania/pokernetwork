@@ -95,6 +95,7 @@ int	handle_buy_in(GladeXML*	g_glade_xml, GtkLayout* screen, int init)
       g_buy_in_window = glade_xml_get_widget(g_glade_xml,
 					     "buy_in_window");
       g_assert(g_buy_in_window);
+      set_nil_draw_focus(g_buy_in_window);
       if(screen) gtk_layout_put(screen, g_buy_in_window, 0, 0);
       g_max_radio = glade_xml_get_widget(g_glade_xml,
 					 "max_radio");

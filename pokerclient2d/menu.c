@@ -93,9 +93,12 @@ void on_##WHAT##_activate(GtkWidget* widget, gpointer data) \
 
 on_radio_activate(resolution, resolution_auto)
 on_radio_activate(resolution, 1024x768)
+on_radio_activate(resolution, 1280x800)
 on_radio_activate(resolution, 1280x1024)
+on_radio_activate(resolution, 1366x1024)
 on_radio_activate(resolution, 1400x1050)
 on_radio_activate(resolution, 1600x1200)
+on_radio_activate(resolution, 1680x1050)
 on_radio_activate(resolution, 1920x1200)
 on_radio_activate(display, 2d)
 on_radio_activate(display, 3d)
@@ -108,6 +111,7 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     g_menu_window = glade_xml_get_widget(g_glade_xml,
                                          "menu_window");
     g_assert(g_menu_window);
+    set_nil_draw_focus(g_menu_window);
     if(screen) gtk_layout_put(screen, g_menu_window, 0, 0);
 
 #define branch(WHAT) GUI_BRANCH(g_glade_xml, on_##WHAT##_activate)
@@ -129,9 +133,12 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     branch(muck);
     branch(resolution_auto);
     branch(1024x768);
+    branch(1280x800);
     branch(1280x1024);
+    branch(1366x1024);
     branch(1400x1050);
     branch(1600x1200);
+    branch(1680x1050);
     branch(1920x1200);
 
     static position_t	menu_position;

@@ -188,17 +188,23 @@ void	gui_place(GtkWidget* window, position_t* position, GtkLayout* screen)
   gui_move(window, screen, position->x, position->y);
 }
 
-void nil_draw_focus      (GtkStyle        *style,
-                          GdkWindow       *window,
-                          GtkStateType    state_type,
-                          GdkRectangle    *area,
-                          GtkWidget       *widget,
-                          const gchar     *detail,
-                          gint            x,
-                          gint            y,
-                          gint            width,
-                          gint            height)
+static void nil_draw_focus(GtkStyle        *style,
+                           GdkWindow       *window,
+                           GtkStateType    state_type,
+                           GdkRectangle    *area,
+                           GtkWidget       *widget,
+                           const gchar     *detail,
+                           gint            x,
+                           gint            y,
+                           gint            width,
+                           gint            height)
 {}
+
+void set_nil_draw_focus(GtkWidget* widget) {
+  GtkStyle* style = gtk_widget_get_style(widget);
+  g_assert(style);
+  GTK_STYLE_GET_CLASS(style)->draw_focus = nil_draw_focus;
+}
 
 int gui_width(GtkLayout* screen) {
   if(screen) {

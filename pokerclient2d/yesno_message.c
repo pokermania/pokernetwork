@@ -65,6 +65,7 @@ int	handle_yesno(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       g_yesno_window = glade_xml_get_widget(g_glade_xml,
 					    "yesno_window");
       g_assert(g_yesno_window);
+      set_nil_draw_focus(g_yesno_window);
       if(screen) gtk_layout_put(screen, g_yesno_window, 0, 0);
       g_yesno_message = glade_xml_get_widget(g_glade_xml,
 					     "yesno_message");

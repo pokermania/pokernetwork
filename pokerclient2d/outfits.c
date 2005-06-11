@@ -264,6 +264,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
     g_assert(g_glade_outfit_sex_xml);
     g_outfit_sex_window = glade_xml_get_widget(g_glade_outfit_sex_xml, "outfit_sex_window");
     g_assert(g_outfit_sex_window);
+    set_nil_draw_focus(g_outfit_sex_window);
     if(screen) gtk_layout_put(screen, g_outfit_sex_window, 0, 0);
     GUI_BRANCH(g_glade_outfit_sex_xml, on_sex_toggled);
     gtk_widget_hide_all(g_outfit_sex_window);

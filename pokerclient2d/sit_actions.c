@@ -90,6 +90,7 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       g_sit_actions_window = glade_xml_get_widget(g_glade_xml,
                                                   "sit_actions_window");
       g_assert(g_sit_actions_window);
+      set_nil_draw_focus(g_sit_actions_window);
       if(screen) gtk_layout_put(screen, g_sit_actions_window, 0, 0);
       GUI_BRANCH(g_glade_xml, on_auto_post_blinds_toggled);
       GUI_BRANCH(g_glade_xml, on_sit_out_next_hand_toggled);

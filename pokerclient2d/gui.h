@@ -53,15 +53,6 @@ GtkWidget*  gui_create_image(GladeXML* xml, GType widget_type, GladeWidgetInfo* 
 
 #define GUI_BRANCH(xml, p)	glade_xml_signal_connect(xml, #p, (void*)p);
 
-void nil_draw_focus(GtkStyle        *style,
-                    GdkWindow       *window,
-                    GtkStateType     state_type,
-                    GdkRectangle    *area,
-                    GtkWidget       *widget,
-                    const gchar     *detail,
-                    gint             x,
-                    gint             y,
-                    gint             width,
-                    gint             height);
+void set_nil_draw_focus(GtkWidget* widget);
 
 #endif /* _GUI_H_ */

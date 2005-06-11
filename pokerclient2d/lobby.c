@@ -243,6 +243,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     s_lobby_xml = g_lobby_xml;
     s_lobby_window = gui_get_widget(g_lobby_xml, "lobby_window");
     g_assert(s_lobby_window);
+    set_nil_draw_focus(s_lobby_window);
     if(screen) gtk_layout_put(screen, s_lobby_window, 0, 0);
     s_notebook = GTK_NOTEBOOK(gui_get_widget(g_lobby_xml, "notebook"));
     g_assert(s_notebook);
@@ -333,11 +334,6 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 
     s_lobby_tabs_window = gui_get_widget(g_lobby_tabs_xml, "lobby_tabs_window");
     g_assert(s_lobby_tabs_window);
-    {
-      GtkStyle* style = gtk_widget_get_style(s_lobby_tabs_window);
-      g_assert(style);
-      GTK_STYLE_GET_CLASS(style)->draw_focus = nil_draw_focus;
-    }
     gtk_widget_set_size_request(s_lobby_tabs_window, gui_width(screen), -1);
     if(screen) gtk_layout_put(screen, s_lobby_tabs_window, 0, 0);
     

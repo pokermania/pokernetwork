@@ -100,6 +100,7 @@ int	handle_login(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     {
       g_login_window = glade_xml_get_widget(g_glade_xml, "login_window");
       g_assert(g_login_window);
+      set_nil_draw_focus(g_login_window);
       if(screen) gtk_layout_put(screen, g_login_window, 0, 0);
       g_login_entry = glade_xml_get_widget(g_glade_xml, "login_entry");
       g_assert(g_login_entry);
