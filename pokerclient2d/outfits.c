@@ -299,10 +299,10 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
     {
       GtkObject* left = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_left"));
       g_assert(left);
-      g_signal_connect(left, "clicked", (GtkSignalFunc)on_slot_left_clicked, (gpointer)&slider_slot_user_data);
+      g_signal_connect(left, "pressed", (GtkSignalFunc)on_slot_left_clicked, (gpointer)&slider_slot_user_data);
       GtkObject* right = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_right"));
       g_assert(right);
-      g_signal_connect(right, "clicked", (GtkSignalFunc)on_slot_right_clicked, (gpointer)&slider_slot_user_data);
+      g_signal_connect(right, "pressed", (GtkSignalFunc)on_slot_right_clicked, (gpointer)&slider_slot_user_data);
       slider_slot_user_data.adjustment = GTK_ADJUSTMENT(gtk_adjustment_new(.0, .0, 1., 1., 1., 1.));
       params_handlers[0] = g_signal_connect(GTK_OBJECT(slider_slot_user_data.adjustment), "value_changed", (GtkSignalFunc)on_slot_value_changed, (gpointer)&slider_slot_user_data);
     }
@@ -312,11 +312,11 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
       sprintf(widget_name, "param%d_left", i);
       GtkObject* left = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
       g_assert(left);
-      g_signal_connect(left, "clicked", (GtkSignalFunc)on_param_left_clicked, (gpointer)&params_user_data[i]);
+      g_signal_connect(left, "pressed", (GtkSignalFunc)on_param_left_clicked, (gpointer)&params_user_data[i]);
       sprintf(widget_name, "param%d_right", i);
       GtkObject* right = GTK_OBJECT(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
       g_assert(right);
-      g_signal_connect(right, "clicked", (GtkSignalFunc)on_param_right_clicked, (gpointer)&params_user_data[i]);
+      g_signal_connect(right, "pressed", (GtkSignalFunc)on_param_right_clicked, (gpointer)&params_user_data[i]);
       params_user_data[i].adjustment = GTK_ADJUSTMENT(gtk_adjustment_new(.0, .0, .1, 1., 1., 1.));
       params_handlers[i] = g_signal_connect(GTK_OBJECT(params_user_data[i].adjustment), "value_changed", (GtkSignalFunc)on_param_value_changed, (gpointer)&params_user_data[i]);
 
