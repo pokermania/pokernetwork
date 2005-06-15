@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004 Mekensleep
+# Copyright (C) 2004, 2005 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple

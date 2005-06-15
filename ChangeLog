@@ -1,6 +1,10 @@
-Mon Jun 06 17:00:04 2005  Loic Dachary  <loic@gnu.org>
+Wed Jun 15 21:05:46 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.1
+
+	* debian/*: more robust installation process
+
+Mon Jun 06 17:00:04 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.hold): hold if in
 	  stream mode only. Also hold when observing a table.

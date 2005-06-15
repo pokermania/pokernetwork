@@ -1,5 +1,5 @@
 /* *
- * Copyright (C) 2004 Mekensleep
+ * Copyright (C) 2004, 2005 Mekensleep
  *
  *	Mekensleep
  *	24 rue vieille du temple
@@ -80,7 +80,7 @@ static void show_version (FILE *stream, struct argp_state *state)
 {
   (void) state;
   fputs("poker3d-interface\n", stream);
-  fprintf(stream, "Copyright (C) %s %s\n", "2004", "Mekensleep");
+  fprintf(stream, "Copyright (C) %s %s\n", "2004, 2005", "Mekensleep");
   fputs("\
 This program is free software; you may redistribute it under the terms of\n\
 the GNU General Public License.  This program has absolutely no warranty.\n",
