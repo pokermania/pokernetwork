@@ -16,7 +16,7 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 #
-
+DH_VERBOSE=1
 . /usr/share/debconf/confmodule
 db_version 2.0
 
@@ -65,9 +65,16 @@ case "$1" in
 	    echo "done."
 	fi
 
-	db_get "python2.3-poker-network/db/skip"
+	db_get "python2.3-poker-network/skip"
+        tmpfile=`mktemp`
 	if [ $RET = "false" ]; then
-	    echo "passing DB configuration (cancelled by user)"
+            db_get "python2.3-poker-network/host"
+            poker_network_host="$RET"
+            for conf_file in /etc/poker-network/poker.client.xml /etc/poker-network/poker.bot.xml 
+            do
+              sed -e "s/\%HOST\%/$poker_network_host/" $conf_file > $tmpfile
+              mv  $tmpfile $conf_file
+            done
 	    touch /etc/poker-network/lockfile
 	else
 	    get_db_params
@@ -77,10 +84,9 @@ case "$1" in
  	    if ! eval $mysqlcmd -h "$dbserver" -f -e "\"use $dbname; show tables;\"" | grep -e "user2table" > /dev/null 2>&1 ; then
  		$mysqlcmd  -h "$dbserver" --password="$dbpass" -u $dbuser $dbname < /usr/share/poker-network/schema.sql
  	    fi
-	    # change config file
-	    tmpfile=`mktemp`
 	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
 	    mv  $tmpfile /etc/poker-network/poker.server.xml
+            rm -f /etc/poker-network/lockfile
 	fi
     ;;
 

@@ -21,7 +21,7 @@ python=/usr/bin/python2.3
 
 poker_home=/var/lib/poker-network
 
-lockfile=/etc/poker-network/lock
+lockfile=/etc/poker-network/lockfile
 
 serverpidfile=/var/run/poker-network-server.pid
 serverlogfile=/var/log/poker-network-server.log
@@ -43,7 +43,7 @@ case "$1" in
   start)
 	echo -n "Starting ${desc}: "
 	if [ -f $lockfile ]; then
-	    echo "$lockfile present, not starting poker server and bots"
+	    echo " not configured, abort."
 	    exit 0;
 	fi
 	${python} ${twistd} \
@@ -57,12 +57,26 @@ case "$1" in
 	echo ${name}
 	;;
   stop)
-	echo -n "Stopping poker bots ..."
-	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
-	echo "done"
 	echo -n "Stopping poker server ..."
 	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${serverpidfile} || true
 	echo " done."
+	echo -n "Stopping poker bots ..."
+	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
+	echo "done"
+	;;
+  rebot)
+	echo -n "Stopping poker bots ..."
+	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
+	echo "done"
+	echo -n "Wait 10 minutes ..."
+        sleep 600
+	echo "done"
+	echo -n "Starting poker bots ..."
+	${python} ${twistd} \
+	    --pidfile=${botpidfile} --python ${botscript} \
+	    --logfile=${botlogfile} --quiet ${more_args} \
+	    --reactor=${reactor}
+	echo "done"
 	;;
   restart|force-reload)
 	#
@@ -75,7 +89,7 @@ case "$1" in
 	;;
   *)
 	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload|rebot}" >&2
 	exit 1
 	;;
 esac

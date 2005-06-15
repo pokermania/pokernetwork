@@ -276,7 +276,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         print self._prefix + string
         
     def setCurrentGameId(self, game_id):
-        if not hasattr(self, 'factory') or self.factory.verbose > 2: self.message("setCurrentGameId(%s)" % game_id)
+        if hasattr(self, 'factory') and self.factory.verbose > 2: self.message("setCurrentGameId(%s)" % game_id)
         self.hold(0)
         self.currentGameId = game_id
 

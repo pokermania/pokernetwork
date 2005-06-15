@@ -79,7 +79,7 @@ class StringGenerator:
 
     def getString(self):
         while len(self.pool) == 0:
-            input = popen("/usr/bin/apg -m 5 -x 10 -M ncl -q -c 'foobaralsdkjfalsdkjfalsdkjfalsdjkfal;dskfjasdf'")
+            input = popen("/usr/bin/apg -m 5 -x 10 -M ncl -q -n 500")
             self.pool = filter(lambda string: checkName(string)[0], map(lambda string: string[:-1], input.readlines()))
             input.close()
         return self.pool.pop()
@@ -204,6 +204,11 @@ class PokerBot:
             if giveup:
                 protocol.transport.loseConnection()
             
+        elif packet.type == PACKET_POKER_BLIND_REQUEST:
+            if packet.serial == protocol.getSerial():
+                protocol.sendPacket(PacketPokerBlind(game_id = packet.game_id,
+                                                     serial = packet.serial))
+
         elif packet.type == PACKET_POKER_PLAYER_LEAVE:
             if packet.serial == protocol.getSerial():
                 if self.factory.join_info['tournament']:
@@ -380,6 +385,7 @@ class PokerBotFactory(PokerClientFactory):
         protocol.registerHandler(True, PACKET_POKER_WIN, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_PLAYER_LEAVE, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_SEAT, pokerbot._handleConnection)
+        protocol.registerHandler(True, PACKET_POKER_BLIND_REQUEST, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_SELF_IN_POSITION, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_SELF_LOST_POSITION, pokerbot._handleConnection)
         return protocol

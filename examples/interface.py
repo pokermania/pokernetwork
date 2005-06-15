@@ -95,7 +95,7 @@ class InterfaceTest:
     def connectionMade(self):
         #self.blind()
         #self.buy_in()
-        self.cashier()
+        #self.cashier()
         #self.chat()
         #self.table_list()
         #self.login()
@@ -104,7 +104,7 @@ class InterfaceTest:
         #self.sit_actions()
         #self.chooser()
         #self.menu()
-        #self.outfits()
+        self.outfits()
         #self.tournaments()
 
     def tournaments(self):

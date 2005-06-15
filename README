@@ -1,7 +1,94 @@
-poker-network is a python poker server and client library. The server
-runs the games, deals the cards and controls the game. The client
-library provides a packet based API to join the ring games or
-tournaments and play the most common poker variants (holdem, omaha,
-7stud). A simple minded poker bot is provided as an example
-application based on the client library and is used to stress test the
-server.
+======================================================================
+What is it ?
+
+poker-network includes a poker server, a client library, an abstract
+user interface library and a client based on it.
+
+The server deals the cards and checks the user actions using a poker
+engine (poker-engine). It listens on a TCP/IP port and understands a
+poker-network specific protocol. The persistent informations
+(accounts, hand history etc.) are stored in a MySQL database. The
+server was designed and tested to gracefully handle 1000 simultaneous
+players on a single machine also running the MySQL server.
+
+The client library implements the poker-network protocol for
+the client. It runs a poker-engine identical to the one used by
+the server and uses it to simplify the implementation of a client.
+For instance it creates an event indicating that the player lost
+position although the server does not send such a packet. A simple
+minded bot is provided as an example usage of the client library.
+
+The abstract user interface library provides a framework based on the
+client library and suited to implement a user friendly client. A
+display is fed with events such as give seat S to player P or get
+amount A from side pot P to player P so that the rendering part of the
+user interface does not need to maintain contextual game
+information. A toolkit is fed with high level interaction actions such
+as ask login and password or display the following holdem tables. An
+animation module is fed with events that can trigger animations or
+sounds such as player P timeouted or player P wins the pot.
+
+The client based on the user interface library uses GTK. 
+
+======================================================================
+Download
+http://sf.net/projects/pokersource/
+
+======================================================================
+Installation
+
+Debian GNU/Linux : use the sid package
+Other GNU/Linux or Unices : ./bootstrap ; ./configure ; make ; make install
+Others : the client part is known to work but don't ask how it's done
+
+======================================================================
+Usage
+
+Server: /etc/init.d/poker-network start
+Client: /usr/games/poker2d
+
+======================================================================
+Requirements
+
+python 2.3
+twisted 1.3.0
+python GTK 2.0
+
+======================================================================
+Documentation
+
+There is no documentation and one will have to read the code
+
+======================================================================
+License
+
+All code and data included in this distributions are available under
+the terms of the GNU GPL.
+
+#
+# Copyright (C) 2004, 2005 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+======================================================================
+Contact
+
+Loic Dachary <loic@gnu.org>

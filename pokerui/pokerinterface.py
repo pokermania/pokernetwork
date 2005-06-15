@@ -154,8 +154,8 @@ class PokerInterface(dispatch.EventDispatcher):
                     packet[selected_index] = str(current_tournament)
             self.command(*packet)
             
-    def showTournaments(self, page, real_money):
-        self.command("tournaments", "show", page, real_money)
+    def showTournaments(self, page, custom_money):
+        self.command("tournaments", "show", page, custom_money)
                 
     def hideTournaments(self):
         self.command("tournaments", "hide")
@@ -200,8 +200,8 @@ class PokerInterface(dispatch.EventDispatcher):
 
         self.command('lobby', 'info', "Players: %d" % players_count, "Tables: %d" % tables_count)
             
-    def showLobby(self, page, real_money):
-        self.command("lobby", "show", page, real_money)
+    def showLobby(self, page, custom_money):
+        self.command("lobby", "show", page, custom_money)
                 
     def hideLobby(self):
         self.command("lobby", "hide")
@@ -406,6 +406,12 @@ class PokerInterface(dispatch.EventDispatcher):
 
     def chatHistory(self, message):
         self.command("chat", "line", message)
+        
+    def chatHistoryShow(self):
+        self.command("chat", "history", "show")
+        
+    def chatHistoryHide(self):
+        self.command("chat", "history", "hide")
         
     def handleChat(self, data):
         if data[0] == "history":

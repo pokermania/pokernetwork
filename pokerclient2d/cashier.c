@@ -121,9 +121,9 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
 						"play_money_available",
 						"play_money_in_game",
 						"play_money_total",
-						"real_money_available",
-						"real_money_in_game",
-						"real_money_total"
+						"custom_money_available",
+						"custom_money_in_game",
+						"custom_money_total"
 					};
 				int	i;
 

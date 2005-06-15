@@ -246,6 +246,18 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       gtk_widget_hide_all(g_entry_window); 
       gtk_widget_hide_all(g_history_window); 
     }
+  else if(!strcmp(tag, "history"))
+    {
+      char *action = get_string();
+      if(!strcmp(action, "show")) {
+        gtk_widget_show_all(g_history_window); 
+      } else if(!strcmp(action, "hide")) {
+        gtk_widget_hide_all(g_history_window); 
+      } else {
+        g_critical("chat history: unknow action %s ignored", action);
+      }
+      g_free(action);
+    }
   else if(!strcmp(tag, "line"))
     {
       

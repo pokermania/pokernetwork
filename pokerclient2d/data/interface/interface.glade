@@ -2103,7 +2103,7 @@
 						      </child>
 
 						      <child>
-							<widget class="GtkLabel" id="real_money_available">
+							<widget class="GtkLabel" id="custom_money_available">
 							  <property name="visible">True</property>
 							  <property name="label" translatable="yes">0$</property>
 							  <property name="use_underline">False</property>
@@ -2190,7 +2190,7 @@
 						      </child>
 
 						      <child>
-							<widget class="GtkLabel" id="real_money_in_game">
+							<widget class="GtkLabel" id="custom_money_in_game">
 							  <property name="visible">True</property>
 							  <property name="label" translatable="yes">0$</property>
 							  <property name="use_underline">False</property>
@@ -2271,7 +2271,7 @@
 						  </child>
 
 						  <child>
-						    <widget class="GtkLabel" id="real_money_total">
+						    <widget class="GtkLabel" id="custom_money_total">
 						      <property name="visible">True</property>
 						      <property name="label" translatable="yes">0$</property>
 						      <property name="use_underline">False</property>
@@ -2335,7 +2335,7 @@
 					  <child>
 					    <widget class="GtkLabel" id="label32">
 					      <property name="visible">True</property>
-					      <property name="label" translatable="yes">REAL MONEY</property>
+					      <property name="label" translatable="yes">CUSTOM MONEY</property>
 					      <property name="use_underline">False</property>
 					      <property name="use_markup">False</property>
 					      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2409,7 +2409,7 @@
 				  <child>
 				    <widget class="GtkLabel" id="label55">
 				      <property name="visible">True</property>
-				      <property name="label" translatable="yes">Poker3D points:</property>
+				      <property name="label" translatable="yes">Points:</property>
 				      <property name="use_underline">False</property>
 				      <property name="use_markup">False</property>
 				      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4944,10 +4944,10 @@
 			  </child>
 
 			  <child>
-			    <widget class="GtkRadioButton" id="real_money_radio">
+			    <widget class="GtkRadioButton" id="custom_money_radio">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes">real money</property>
+			      <property name="label" translatable="yes">custom money</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4955,7 +4955,7 @@
 			      <property name="inconsistent">False</property>
 			      <property name="draw_indicator">True</property>
 			      <property name="group">all_radio</property>
-			      <signal name="clicked" handler="on_real_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
+			      <signal name="clicked" handler="on_custom_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
 			    </widget>
 			    <packing>
 			      <property name="padding">0</property>
@@ -5580,10 +5580,10 @@
 			  </child>
 
 			  <child>
-			    <widget class="GtkRadioButton" id="real_money_radio">
+			    <widget class="GtkRadioButton" id="custom_money_radio">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes">real money</property>
+			      <property name="label" translatable="yes">custom money</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -5591,7 +5591,7 @@
 			      <property name="inconsistent">False</property>
 			      <property name="draw_indicator">True</property>
 			      <property name="group">all_radio</property>
-			      <signal name="clicked" handler="on_real_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
+			      <signal name="clicked" handler="on_custom_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
 			    </widget>
 			    <packing>
 			      <property name="padding">0</property>
@@ -6344,52 +6344,6 @@
 		<packing>
 		  <property name="x">600</property>
 		  <property name="y">0</property>
-		</packing>
-	      </child>
-
-	      <child>
-		<widget class="GtkTextView" id="chat_history">
-		  <property name="width_request">250</property>
-		  <property name="height_request">150</property>
-		  <property name="visible">True</property>
-		  <property name="can_focus">True</property>
-		  <property name="editable">True</property>
-		  <property name="overwrite">False</property>
-		  <property name="accepts_tab">True</property>
-		  <property name="justification">GTK_JUSTIFY_LEFT</property>
-		  <property name="wrap_mode">GTK_WRAP_NONE</property>
-		  <property name="cursor_visible">False</property>
-		  <property name="pixels_above_lines">0</property>
-		  <property name="pixels_below_lines">0</property>
-		  <property name="pixels_inside_wrap">0</property>
-		  <property name="left_margin">0</property>
-		  <property name="right_margin">0</property>
-		  <property name="indent">0</property>
-		  <property name="text" translatable="yes"></property>
-		</widget>
-		<packing>
-		  <property name="x">552</property>
-		  <property name="y">416</property>
-		</packing>
-	      </child>
-
-	      <child>
-		<widget class="GtkEntry" id="chat_entry">
-		  <property name="width_request">250</property>
-		  <property name="height_request">30</property>
-		  <property name="visible">True</property>
-		  <property name="can_focus">True</property>
-		  <property name="editable">True</property>
-		  <property name="visibility">True</property>
-		  <property name="max_length">0</property>
-		  <property name="text" translatable="yes"></property>
-		  <property name="has_frame">True</property>
-		  <property name="invisible_char">*</property>
-		  <property name="activates_default">False</property>
-		</widget>
-		<packing>
-		  <property name="x">552</property>
-		  <property name="y">568</property>
 		</packing>
 	      </child>
 

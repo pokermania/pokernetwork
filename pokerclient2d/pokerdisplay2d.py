@@ -178,8 +178,6 @@ class PokerTable2D:
                 seat.show()
         self.glade.get_widget("quit").show()
         self.glade.get_widget("rebuy").show()
-        self.glade.get_widget("chat_history").show()
-        self.glade.get_widget("chat_entry").show()
         self.updateTableStatus()
         self.glade.get_widget("table_status").show()
         
@@ -330,8 +328,8 @@ class PokerDisplay2D(PokerDisplay):
         gtkrc = self.datadir + "/interface/gtkrc"
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
-        self.glade = gtk.glade.XML(fname = self.datadir + "/interface/interface2d.glade",
-                                   root = "game_window")
+        glade_file = self.datadir + "/interface/interface2d.glade"
+        self.glade = gtk.glade.XML(fname = glade_file, root = "game_window")
         self.actions = {
             "call": self.glade.get_widget("call"),
             "raise": self.glade.get_widget("raise"),
@@ -490,6 +488,12 @@ class PokerDisplay2D(PokerDisplay):
                 self.switch.hide()
             else:
                 self.switch.show()
+
+        elif packet.type == PACKET_POKER_CHAT_HISTORY:
+            if packet.show == "yes":
+                self.renderer.chatHistoryShow()
+            else:
+                self.renderer.chatHistoryHide()
 
         elif packet.type == PACKET_QUIT:
             reactor.stop()

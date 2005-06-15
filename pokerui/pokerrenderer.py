@@ -229,15 +229,15 @@ class PokerInteractors:
         if interactor.game_id == self.protocol.getCurrentGameId():
             game = self.factory.getGame(interactor.game_id)
             if game and interactor.stateHasChanged():
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
+                self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
+                self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
         
     def interactorDisplayShadowStacks(self, interactor):
         if interactor.game_id == self.protocol.getCurrentGameId():
             game = self.factory.getGame(interactor.game_id)
             if game and interactor.hasChanged():
                 print "interactorDisplayShadowStacks"
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
+                self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
 
     def interactorsSyncDisplay(self, game_id):
         print "interactorsSyncDisplay"
@@ -247,9 +247,9 @@ class PokerInteractors:
         interactors = interactor_set.items
         for (name, interactor) in interactors.iteritems():
             print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
-            self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
+            self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
             if interactor.name != "shadowstacks":
-                self.render(game, PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
+                self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
                 
     def interactorAction(self, interactor):
         self.cancelAllInteractorButThisOne(interactor)
@@ -287,14 +287,20 @@ class PokerInteractors:
             interactor.update()
             
 
-    def render(self, game, packet):
-        self.renderer.render(game, packet)
+    def render(self, packet):
+        self.renderer.render(packet)
         
 class PokerRenderer:
 
     def __init__(self, factory):
         self.replayStepping = True
         self.replayGameId = None
+        self.custom_money = factory.config.headerGetProperties("/sequence/custom_money")
+        if not self.custom_money:
+            self.custom_money = { 'unit': 'C',
+                                  'cent': 'cts' }
+        else:
+            self.custom_money = self.custom_money[0]
         self.state = IDLE
         self.state_buy_in = ()
         self.state_login = ()
@@ -474,11 +480,23 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             interface.chatHide()
-            
+
+    def chatShow(self):
+        interface = self.factory.interface
+        if interface:
+            interface.chatShow()
+            self.render(PacketPokerChatHistory(show = "no"))
+
+    def chatHistoryHide(self):
+        self.factory.interface.chatHistoryHide()
+        
+    def chatHistoryShow(self):
+        self.factory.interface.chatHistoryShow()
+        
     def chatHistory(self, yesno):
         game_id = self.protocol.getCurrentGameId()
         game = self.factory.getGame(game_id)        
-        self.render(game, PacketPokerChatHistory(show = yesno))
+        self.render(PacketPokerChatHistory(show = yesno))
 
     def chatLine(self, line):
         serial = self.protocol.getSerial()
@@ -538,15 +556,16 @@ class PokerRenderer:
         print "updateCashier"
         interface = self.factory.interface
         if interface:
+            unit = self.custom_money['unit']
             interface.updateCashier(self.protocol.getName(),
                                     packet.email,
                                     "%s\n%s %s %s\n%s" % ( packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country ),
                                     str(packet.play_money),
                                     str(packet.play_money_in_game),
                                     str(packet.play_money + packet.play_money_in_game),
-                                    str(packet.real_money) + "$",
-                                    str(packet.real_money_in_game) + "$",
-                                    str(packet.real_money + packet.real_money_in_game) + "$",
+                                    str(packet.custom_money) + unit,
+                                    str(packet.custom_money_in_game) + unit,
+                                    str(packet.custom_money + packet.custom_money_in_game) + unit,
                                     )
 
     def handleSerial(self, packet):
@@ -576,23 +595,23 @@ class PokerRenderer:
              packet.type == PACKET_POKER_CHIPS_POT_MERGE or
              packet.type == PACKET_POKER_CHIPS_POT_RESET or
              (packet.type == PACKET_POKER_DEAL_CARDS and self.stream_mode) ):
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_USER_INFO:
             self.changeState(USER_INFO_DONE)
 
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.stream_mode = True
-            self.render(game, packet)
+            self.render(packet)
             self.restoreGameSate(game)
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
             self.stream_mode = False
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
             self.bet_step = packet.step
-            self.render(game, packet)
+            self.render(packet)
             
         elif packet.type == PACKET_POKER_HAND_LIST:
             if self.state == HAND_LIST:
@@ -668,12 +687,12 @@ class PokerRenderer:
                     self.protocol._lagmax = 0
                     self.replayGameId = game.id
                 packet.seats_all = game.seats_all
-                self.render(game, packet)
-                self.factory.interface.chatShow()
+                self.render(packet)
+                self.chatShow()
             self.changeState(JOINING_DONE)
 
         elif packet.type == PACKET_POKER_CURRENT_GAMES:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_TABLE_QUIT:
             self.deleteGame(game.id)
@@ -711,13 +730,13 @@ class PokerRenderer:
             
         if packet.type == PACKET_POKER_START:
             self.resetLagmax()
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_CANCELED:
             self.changeState(CANCELED)
 
         elif packet.type == PACKET_POKER_PLAYER_INFO:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             if packet.serial == self.protocol.getSerial():
@@ -726,43 +745,43 @@ class PokerRenderer:
                 self.sitActionsUpdate()
             else:
                 ( packet.url, packet.outfit ) = self.factory.getSkin().interpret(packet.url, packet.outfit)
-            self.render(game, packet)
+            self.render(packet)
 
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsShow()
 
         elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                packet.type == PACKET_POKER_TABLE_MOVE ) :
-            self.render(game, PacketPokerPlayerLeave(game_id = packet.game_id,
+            self.render(PacketPokerPlayerLeave(game_id = packet.game_id,
                                                      serial = packet.serial,
                                                      seat = packet.seat))
             if packet.serial == self.protocol.getSerial():
                 self.changeState(LEAVING_DONE)
 
         elif packet.type == PACKET_POKER_END_ROUND:
-            self.render(game, packet)
+            self.render(packet)
             self.delay(game, "end_round")
 
         elif packet.type == PACKET_POKER_END_ROUND_LAST:
-            self.render(game, packet)
+            self.render(packet)
             self.delay(game, "end_round_last")
 
         elif packet.type == PACKET_POKER_BEGIN_ROUND:
-            self.render(game, packet)
+            self.render(packet)
             self.delay(game, "begin_round")
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
             self.resetLagmax()
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_SELF_LOST_POSITION:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_HIGHEST_BET_INCREASE:
-            self.render(game, packet)
+            self.render(packet)
                
         elif packet.type == PACKET_POKER_POSITION:
-            self.render(game, packet)
+            self.render(packet)
             if packet.serial != 0:
                 self.delay(game, game.isBlindAnteRound() and "blind_ante_position" or "position")
 
@@ -778,7 +797,7 @@ class PokerRenderer:
                                          serial = packet.serial,
                                          message = message)
             if chatPacket.message.strip() != "":
-                self.render(game, chatPacket)
+                self.render(chatPacket)
 
         elif packet.type == PACKET_POKER_BLIND_REQUEST:
             if ( game.getSerialInPosition() == self.protocol.getSerial() ):
@@ -797,24 +816,24 @@ class PokerRenderer:
                     self.changeState(USER_INFO, BUY_IN, game)
             
         elif packet.type == PACKET_POKER_SEATS:
-            self.render(game, packet)
+            self.render(packet)
             
         elif packet.type == PACKET_POKER_PLAYER_CARDS:
             if game.variant == "7stud":
                 packet.visibles = "best"
             else:
                 packet.visibles = "hole"
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_BOARD_CARDS:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_DEALER:
-            self.render(game, packet)
+            self.render(packet)
             self.delay(game,"dealer")
             
         elif packet.type == PACKET_POKER_SIT_OUT:
-            self.render(game, packet)
+            self.render(packet)
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
                 self.changeState(SIT_OUT)
@@ -824,15 +843,15 @@ class PokerRenderer:
                 self.sitActionsUpdate()
 
         elif packet.type == PACKET_POKER_SIT:
-            self.render(game, packet)
+            self.render(packet)
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
             
         elif packet.type == PACKET_POKER_TIMEOUT_WARNING:
-            self.render(game, packet)
+            self.render(packet)
             
         elif packet.type == PACKET_POKER_TIMEOUT_NOTICE:
-            self.render(game, packet)
+            self.render(packet)
             self.changeState(CANCELED)
             
         elif packet.type == PACKET_POKER_WAIT_FOR:
@@ -841,38 +860,38 @@ class PokerRenderer:
                     self.factory.interface.sitActionsSitOut("yes", "wait for %s blind" % packet.reason)
             
         elif packet.type == PACKET_POKER_IN_GAME:
-            self.render(game, packet)
+            self.render(packet)
             
         elif packet.type == PACKET_POKER_WIN:
-            self.render(game, packet)
+            self.render(packet)
             self.delay(game, "showdown")
             
         elif packet.type == PACKET_POKER_PLAYER_CHIPS:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_POT_CHIPS:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_FOLD:
             self.handleFold(game, packet)
-            self.render(game, packet)
+            self.render(packet)
             
         elif packet.type == PACKET_POKER_CALL:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_RAISE:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_CHECK:
-            self.render(game, packet)
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_BLIND:
-            self.render(game, packet)
+            self.render(packet)
             if packet.serial == self.protocol.getSerial():
                 self.changeState(PAY_BLIND_ANTE_DONE)
 
         elif packet.type == PACKET_POKER_ANTE:
-            self.render(game, packet)
+            self.render(packet)
             if packet.serial == self.protocol.getSerial():
                 self.changeState(PAY_BLIND_ANTE_DONE)
 
@@ -1013,7 +1032,7 @@ class PokerRenderer:
             packets[index].amount = chips.chips
         self.protocol.sendPacket(packets[index])
         
-    def render(self, game, packet):
+    def render(self, packet):
         display = self.factory.display
         display.render(packet)
         
@@ -1181,11 +1200,11 @@ class PokerRenderer:
 
         elif action == "refresh":
             if value == "play":
-                self.state_lobby['real_money'] = 'n'
-            elif value == "real":
-                self.state_lobby['real_money'] = 'y'
+                self.state_lobby['custom_money'] = 'n'
+            elif value == "custom":
+                self.state_lobby['custom_money'] = 'y'
             elif value == "all":
-                self.state_lobby['real_money'] = ''
+                self.state_lobby['custom_money'] = ''
             else:
                 self.state_lobby['type'] = value
             self.queryLobby()
@@ -1200,7 +1219,7 @@ class PokerRenderer:
 
     def queryLobby(self):
         if self.state == LOBBY:
-            criterion = self.state_lobby['real_money'] + "\t" + self.state_lobby['type']
+            criterion = self.state_lobby['custom_money'] + "\t" + self.state_lobby['type']
             self.protocol.sendPacket(PacketPokerTableSelect(string = criterion))
             timer = self.state_lobby.get('timer', None)
             if not timer or not timer.active():
@@ -1209,7 +1228,7 @@ class PokerRenderer:
     def saveLobbyState(self):
         settings = self.factory.settings
         state = self.state_lobby
-        settings.headerSet("/settings/lobby/@real_money", state['real_money'])
+        settings.headerSet("/settings/lobby/@custom_money", state['custom_money'])
         settings.headerSet("/settings/lobby/@type", state['type'])
         settings.headerSet("/settings/lobby/@sort", state['sort'])
         settings.save()
@@ -1239,7 +1258,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             type = type or self.state_lobby['type']
-            interface.showLobby(type, self.state_lobby['real_money'])
+            interface.showLobby(type, self.state_lobby['custom_money'])
         
     def hideLobby(self):
         interface = self.factory.interface
@@ -1263,11 +1282,11 @@ class PokerRenderer:
 
         elif action == "refresh":
             if value == "play":
-                self.state_tournaments['real_money'] = 'n'
-            elif value == "real":
-                self.state_tournaments['real_money'] = 'y'
+                self.state_tournaments['custom_money'] = 'n'
+            elif value == "custom":
+                self.state_tournaments['custom_money'] = 'y'
             elif value == "all":
-                self.state_tournaments['real_money'] = ''
+                self.state_tournaments['custom_money'] = ''
             else:
                 self.state_tournaments['type'] = value
             self.queryTournaments()
@@ -1281,7 +1300,7 @@ class PokerRenderer:
 
     def queryTournaments(self):
         if self.state == TOURNAMENTS:
-            criterion = self.state_tournaments['real_money'] + "\t" + self.state_tournaments['type']
+            criterion = self.state_tournaments['custom_money'] + "\t" + self.state_tournaments['type']
             self.protocol.sendPacket(PacketPokerTourneySelect(string = criterion))
             timer = self.state_tournaments.get('timer', None)
             if not timer or not timer.active():
@@ -1290,7 +1309,7 @@ class PokerRenderer:
     def saveTournamentsState(self):
         settings = self.factory.settings
         state = self.state_tournaments
-        settings.headerSet("/settings/tournaments/@real_money", state['real_money'])
+        settings.headerSet("/settings/tournaments/@custom_money", state['custom_money'])
         settings.headerSet("/settings/tournaments/@type", state['type'])
         settings.headerSet("/settings/tournaments/@sort", state['sort'])
         settings.save()
@@ -1324,7 +1343,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             type = type or self.state_tournaments['type']
-            interface.showTournaments(type, self.state_tournaments['real_money'])
+            interface.showTournaments(type, self.state_tournaments['custom_money'])
         
     def hideTournaments(self):
         interface = self.factory.interface

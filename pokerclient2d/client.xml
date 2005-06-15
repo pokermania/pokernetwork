@@ -3,6 +3,8 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="poker.sequence.xsd">
 
+  <custom_money unit="C" cent="cts" />
+
   <interactors2d>
     <check>
       <map enabled_default="Check"

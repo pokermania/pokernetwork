@@ -436,7 +436,7 @@ class PokerServer(UGAMEServer):
             "variant": packet.variant,
             "betting_structure": packet.betting_structure,
             "timeout": packet.timeout,
-            "real_money": packet.real_money,
+            "custom_money": packet.custom_money,
             "transient": True })
         if not table:
             self.sendPacket(PacketPokerTable())
@@ -495,7 +495,7 @@ class PokerServer(UGAMEServer):
             # If a player reconnects, his serial number will match
             # the serial of some packets, for instance the cards
             # of his hand. We rely on private2public to turn the
-            # packet containing cards real cards into placeholders
+            # packet containing cards custom cards into placeholders
             # in this case.
             #
             for past_packet in table.history2packets(game.historyGet(), game.id, table.createCache()):
@@ -613,7 +613,7 @@ class PokerTable:
         game.setVariant(description["variant"])
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
-        self.real_money = int(description.get("real_money", 0))
+        self.custom_money = int(description.get("custom_money", 0))
         self.playerTimeout = int(description["timeout"])
         self.transient = description.has_key("transient")
         self.tourney = description.get("tourney", None)
@@ -1116,7 +1116,7 @@ class PokerTable:
             elif type == "leave":
                 (type, quitters) = event
                 for (serial, seat) in quitters:
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
+                    self.factory.leavePlayer(serial, game.id, self.custom_money)
                     if self.serial2client.has_key(serial):
                         self.seated2observer(self.serial2client[serial])
 
@@ -1272,7 +1272,7 @@ class PokerTable:
             if self.isOpen():
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
+                    self.factory.leavePlayer(serial, game.id, self.custom_money)
                 else:
                     self.update()
             else:
@@ -1297,7 +1297,7 @@ class PokerTable:
             print " *ERROR* kickPlayer did not succeed in removing player %d from game %d" % ( serial, game.id )
             return
 
-        self.factory.leavePlayer(serial, game.id, self.real_money)
+        self.factory.leavePlayer(serial, game.id, self.custom_money)
 
         if self.serial2client.has_key(serial):
             self.seated2observer(self.serial2client[serial])
@@ -1316,7 +1316,7 @@ class PokerTable:
                 #
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
+                    self.factory.leavePlayer(serial, game.id, self.custom_money)
                 else:
                     self.update()
             else:
@@ -1349,7 +1349,7 @@ class PokerTable:
             if self.isOpen():
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
-                    self.factory.leavePlayer(serial, game.id, self.real_money)
+                    self.factory.leavePlayer(serial, game.id, self.custom_money)
                 else:
                     self.update()
             else:
@@ -1503,7 +1503,7 @@ class PokerTable:
         if self.transient:
             amount = game.buyIn()
             
-        if not self.factory.seatPlayer(serial, game.id, self.real_money, amount):
+        if not self.factory.seatPlayer(serial, game.id, self.custom_money, amount):
             return False
 
         self.observer2seated(client)
@@ -1571,7 +1571,7 @@ class PokerTable:
             client.error("player %d can't bring money to a transient table" % client.getSerial())
             return False
 
-        amount = self.factory.buyInPlayer(client.getSerial(), game.id, self.real_money, max(amount, game.buyIn()))
+        amount = self.factory.buyInPlayer(client.getSerial(), game.id, self.custom_money, max(amount, game.buyIn()))
         return client.setMoney(self, amount)
         
     def rebuyPlayerRequest(self, client, amount):
@@ -1598,7 +1598,7 @@ class PokerTable:
         if amount == 0:
             amount = game.buyIn()
             
-        amount = self.factory.buyInPlayer(serial, game.id, self.real_money, min(amount, maximum))
+        amount = self.factory.buyInPlayer(serial, game.id, self.custom_money, min(amount, maximum))
 
         if amount == 0:
             client.error("player %d is broke and cannot rebuy" % serial)
@@ -1767,7 +1767,7 @@ class PokerServerFactory(UGAMEServerFactory):
     def spawnTourney(self, schedule):
         cursor = self.db.cursor()
         cursor.execute("insert into tourneys "
-                       " (schedule_serial, name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, real_money, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay )"
+                       " (schedule_serial, name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, custom_money, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay )"
                        " values"
                        " (%s,              %s,   %s,                %s,               %s,            %s,      %s,                %s,             %s,         %s,     %s,   %s,       %s,              %s,          %s,     %s )",
                        ( schedule['serial'],
@@ -1778,7 +1778,7 @@ class PokerServerFactory(UGAMEServerFactory):
                          schedule['variant'],
                          schedule['betting_structure'],
                          schedule['seats_per_game'],
-                         schedule['real_money'],
+                         schedule['custom_money'],
                          schedule['buy_in'],
                          schedule['rake'],
                          schedule['sit_n_go'],
@@ -1800,7 +1800,7 @@ class PokerServerFactory(UGAMEServerFactory):
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
         tourney.schedule_serial = schedule['serial']
-        tourney.real_money = schedule['real_money']
+        tourney.custom_money = schedule['custom_money']
         tourney.callback_new_state = self.tourneyNewState
         tourney.callback_create_game = self.tourneyCreateTable
         tourney.callback_game_filled = self.tourneyGameFilled
@@ -1839,7 +1839,7 @@ class PokerServerFactory(UGAMEServerFactory):
         prizes = tourney.prizes(tourney_schedule['buy_in'])
         winners = tourney.winners[:len(prizes)]
         cursor = self.db.cursor()
-        base = tourney_schedule['real_money'] == 'y' and "real" or "play"
+        base = tourney_schedule['custom_money'] == 'y' and "custom" or "play"
         while prizes:
             prize = prizes.pop(0)
             serial = winners.pop(0)
@@ -1874,7 +1874,7 @@ class PokerServerFactory(UGAMEServerFactory):
                                       'variant': tourney.variant,
                                       'betting_structure': tourney.betting_structure,
                                       'seats': tourney.seats_per_game,
-                                      'real_money': ( tourney_schedule['real_money'] == 'y' and 1 or 0 ),
+                                      'custom_money': ( tourney_schedule['custom_money'] == 'y' and 1 or 0 ),
                                       'timeout': 60,
                                       'transient': True,
                                       'tourney': tourney,
@@ -1928,10 +1928,10 @@ class PokerServerFactory(UGAMEServerFactory):
         if string == '':
             return tourneys
         elif len(criterion) > 1:
-            ( real_money, type ) = criterion
+            ( custom_money, type ) = criterion
             sit_n_go = type == 'sit_n_go' and 'y' or 'n'
-            if real_money:
-                return filter(lambda tourney: tourney['real_money'] == real_money and tourney['sit_n_go'] == sit_n_go, tourneys)
+            if custom_money:
+                return filter(lambda tourney: tourney['custom_money'] == custom_money and tourney['sit_n_go'] == sit_n_go, tourneys)
             else:
                 return filter(lambda tourney: tourney['sit_n_go'] == sit_n_go, tourneys)
         else:
@@ -1972,7 +1972,7 @@ class PokerServerFactory(UGAMEServerFactory):
         # Buy in
         #
         schedule = self.tourneys_schedule[tourney.schedule_serial]
-        base = schedule['real_money'] == 'y' and "real" or "play"
+        base = schedule['custom_money'] == 'y' and "custom" or "play"
         withdraw = schedule['buy_in'] + schedule['rake']
         sql = ( "update users set "
                 " users." + str(base) + "_money = users." + str(base) + "_money - " + str(withdraw) + " "
@@ -2040,7 +2040,7 @@ class PokerServerFactory(UGAMEServerFactory):
         # Refund buy in
         #
         schedule = self.tourneys_schedule[tourney.schedule_serial]
-        base = schedule['real_money'] == 'y' and "real" or "play"
+        base = schedule['custom_money'] == 'y' and "custom" or "play"
         withdraw = schedule['buy_in'] + schedule['rake']
         sql = ( "update users set "
                 " users." + str(base) + "_money = users." + str(base) + "_money + " + str(withdraw) + " "
@@ -2194,14 +2194,14 @@ class PokerServerFactory(UGAMEServerFactory):
         elif string == 'my':
             return filter(lambda table: serial in table.game.serialsAll(), self.tables)
         elif string == 'play':
-            return filter(lambda table: table.real_money == 0, self.tables)
-        elif string == 'real':
-            return filter(lambda table: table.real_money == 1, self.tables)
+            return filter(lambda table: table.custom_money == 0, self.tables)
+        elif string == 'custom':
+            return filter(lambda table: table.custom_money == 1, self.tables)
         elif len(criterion) > 1:
-            ( real_money, variant ) = criterion
-            if real_money:
-                real_money = real_money == 'y' and 1 or 0
-                return filter(lambda table: table.game.variant == variant and table.real_money == real_money, self.tables)
+            ( custom_money, variant ) = criterion
+            if custom_money:
+                custom_money = custom_money == 'y' and 1 or 0
+                return filter(lambda table: table.game.variant == variant and table.custom_money == custom_money, self.tables)
             else:
                 return filter(lambda table: table.game.variant == variant, self.tables)
         else:
@@ -2259,17 +2259,17 @@ class PokerServerFactory(UGAMEServerFactory):
     def getUserInfo(self, serial):
         cursor = self.db.cursor()
         
-        sql = ( "select play_money,real_money,point_money,rating from users where serial = " + str(serial) )
+        sql = ( "select play_money,custom_money,point_money,rating,email from users where serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getUserInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerUserInfo(serial = serial)
-        (play_money,real_money,point_money,rating) = cursor.fetchone()
+        (play_money,custom_money,point_money,rating,email) = cursor.fetchone()
 
         sql = ( "select sum(user2table.bet) + sum(user2table.money) from user2table,pokertables "
                 "  where user2table.user_serial = " + str(serial) + " and "
                 "        user2table.table_serial = pokertables.serial and "
-                "        pokertables.real_money = \"n\" ")
+                "        pokertables.custom_money = \"n\" ")
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getUserInfo(%d) play money expected one row got %d" % ( serial, cursor.rowcount )
@@ -2282,50 +2282,50 @@ class PokerServerFactory(UGAMEServerFactory):
         sql = ( "select sum(user2table.bet) + sum(user2table.money) from user2table,pokertables "
                 "  where user2table.user_serial = " + str(serial) + " and "
                 "        user2table.table_serial = pokertables.serial and "
-                "        pokertables.real_money = \"y\" ")
+                "        pokertables.custom_money = \"y\" ")
         cursor.execute(sql)
         if cursor.rowcount != 1:
-            print " *ERROR* getUserInfo(%d) real money expected one row got %d" % ( serial, cursor.rowcount )
+            print " *ERROR* getUserInfo(%d) custom money expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerUserInfo(serial = serial)
         else:
-            (real_money_in_game,) = cursor.fetchone()
-            if not real_money_in_game:
-                real_money_in_game = 0
+            (custom_money_in_game,) = cursor.fetchone()
+            if not custom_money_in_game:
+                custom_money_in_game = 0
         
         cursor.close()
         
-        return PacketPokerUserInfo(serial = serial,
-                                   play_money = play_money,
-                                   play_money_in_game = play_money_in_game,
-                                   real_money = real_money,
-                                   real_money_in_game = real_money_in_game,
-                                   point_money = point_money,
-                                   rating = rating)
+        packet = PacketPokerUserInfo(serial = serial,
+                                     play_money = play_money,
+                                     play_money_in_game = play_money_in_game,
+                                     custom_money = custom_money,
+                                     custom_money_in_game = custom_money_in_game,
+                                     point_money = point_money,
+                                     rating = rating)
+        packet.email = email or ""
+        return packet
 
     def getPersonalInfo(self, serial):
         user_info = self.getUserInfo(serial)
         packet = PacketPokerPersonalInfo(serial = user_info.serial,
                                          play_money = user_info.play_money,
                                          play_money_in_game = user_info.play_money_in_game,
-                                         real_money = user_info.real_money,
-                                         real_money_in_game = user_info.real_money_in_game,
+                                         custom_money = user_info.custom_money,
+                                         custom_money_in_game = user_info.custom_money_in_game,
                                          point_money = user_info.point_money,
                                          rating = user_info.rating)
         cursor = self.db.cursor()
-        sql = ( "select email,addr_street,addr_zip,addr_town,addr_state,addr_country,phone from users_private where serial = " + str(serial) )
+        sql = ( "select addr_street,addr_zip,addr_town,addr_state,addr_country,phone from users_private where serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerPersonalInfo(serial = serial)
-        (packet.email, packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
-        if packet.email == None: packet.email = ""
+        (packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
         cursor.close()
         return packet
 
     def setPersonalInfo(self, personal_info):
         cursor = self.db.cursor()
         sql = ( "update users_private set "
-                " email = '" + personal_info.email + "', "
                 " addr_street = '" + personal_info.addr_street + "', "
                 " addr_zip = '" + personal_info.addr_zip + "', "
                 " addr_town = '" + personal_info.addr_town + "', "
@@ -2370,8 +2370,8 @@ class PokerServerFactory(UGAMEServerFactory):
         cursor.close()
         return name
 
-    def buyInPlayer(self, serial, table_id, real_money, amount):
-        base = real_money and "real" or "play"
+    def buyInPlayer(self, serial, table_id, custom_money, amount):
+        base = custom_money and "custom" or "play"
         withdraw = min(self.getMoney(serial, base), amount)
         cursor = self.db.cursor()
         sql = ( "update users,user2table set "
@@ -2387,12 +2387,12 @@ class PokerServerFactory(UGAMEServerFactory):
             print " *ERROR* modified %d rows (expected 0 or 2): %s " % ( cursor.rowcount, sql )
         return withdraw
 
-    def seatPlayer(self, serial, table_id, real_money, amount):
-        real_money = real_money and "y" or "n"
+    def seatPlayer(self, serial, table_id, custom_money, amount):
+        custom_money = custom_money and "y" or "n"
         status = True
         cursor = self.db.cursor()
-        sql = ( "insert user2table ( user_serial, table_serial, money, real_money) values "
-                " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + ", \"" + real_money + "\" )" )
+        sql = ( "insert user2table ( user_serial, table_serial, money, custom_money) values "
+                " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + ", \"" + custom_money + "\" )" )
         if self.verbose > 1:
             print "seatPlayer: %s" % sql
         cursor.execute(sql)
@@ -2441,8 +2441,8 @@ class PokerServerFactory(UGAMEServerFactory):
         
         return money
         
-    def leavePlayer(self, serial, table_id, real_money):
-        base = real_money and "real" or "play"
+    def leavePlayer(self, serial, table_id, custom_money):
+        base = custom_money and "custom" or "play"
         status = True
         cursor = self.db.cursor()
         sql = ( "update users,user2table set "
@@ -2602,11 +2602,11 @@ class PokerServerFactory(UGAMEServerFactory):
         id = self.table_serial
         table = PokerTable(self, id, description)
         table.owner = owner
-        real_money = table.real_money and "y" or "n"
+        custom_money = table.custom_money and "y" or "n"
 
         cursor = self.db.cursor()
-        sql = ( "insert pokertables ( serial, name, real_money ) values "
-                " ( " + str(id) + ", \"" + description["name"] + "\", \"" + real_money + "\" ) " )
+        sql = ( "insert pokertables ( serial, name, custom_money ) values "
+                " ( " + str(id) + ", \"" + description["name"] + "\", \"" + custom_money + "\" ) " )
         if self.verbose > 1:
             print "createTable: %s" % sql
         cursor.execute(sql)
@@ -2625,11 +2625,11 @@ class PokerServerFactory(UGAMEServerFactory):
     def cleanupCrashedTables(self):
         cursor = self.db.cursor()
 
-        sql = ( "select user_serial,table_serial,real_money from user2table " )
+        sql = ( "select user_serial,table_serial,custom_money from user2table " )
         cursor.execute(sql)
         for i in xrange(cursor.rowcount):
-            (user_serial, table_serial, real_money) = cursor.fetchone()
-            self.leavePlayer(user_serial, table_serial, real_money == "y")
+            (user_serial, table_serial, custom_money) = cursor.fetchone()
+            self.leavePlayer(user_serial, table_serial, custom_money == "y")
 
         cursor.close()
         self.shutdownTables()
