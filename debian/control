@@ -2,7 +2,7 @@ Source: poker-network
 Section: libs
 Priority: optional
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends-Indep: debhelper (>= 4.0.0), po-debconf, python2.3, python, python2.3-twisted, python2.3-poker-engine (>= 1.0.1), automaken, debconf, python2.3-glade2, libglade2-dev, libtool, python2.3-dev, perl
+Build-Depends-Indep: debhelper (>= 4.0.0), po-debconf, python2.3, python, python2.3-twisted, python2.3-poker-engine (>= 1.0.1), automake1.7 | automake1.9, debconf, python2.3-glade2, libglade2-dev, libtool, python2.3-dev, perl
 Standards-Version: 3.6.1.1
 
 Package: python2.3-poker-network
@@ -10,21 +10,26 @@ Section: libs
 Architecture: all
 Suggests: mysql-server
 Depends: python2.3-poker-engine (>= 1.0.1), python2.3-twisted, libxml2-python2.3, python2.3-mysqldb, debconf, wwwconfig-common, mysql-client, apg
-Description: multiplayer poker client library and server
- poker-network is a python poker server and client library. The server
- runs the games, deals the cards and controls the game. The client
- library provides a packet based API to join the ring games or
- tournaments and play the most common poker variants (holdem, omaha,
- 7stud). A simple minded poker bot is provided as an example
- application based on the client library and is used to stress test the
- server.
+Description: multiplayer poker server and client library
+ The server deals the cards and checks the user actions using a poker
+ game engine (poker-engine). It can handle all the poker variants
+ implemented by the poker game engine (holdem, omaha, omaha high/low,
+ stud 7 ...) in ring games, sit and go or multitables tournaments.
+ The client library can be used to implement simple clients such as
+ robots (<1000 LOC example robot provided) or a graphical user
+ interface.
+ .
+ The poker server has its own TCP/IP based protocol. The client
+ library decodes the protocol. An abstract user interface library
+ provides a framework to implement graphical clients.
 
 Package: python2.3-poker2d
 Section: libs
 Architecture: any
 Depends: python, python2.3, python2.3-poker-network, python2.3-glade2
-Description: GTK poker client for poker-network
- poker2d is a GTK client for poker-network. It shows the
- list of available tables and tournaments from the server.
- It allows to create a new account and to participate to
- multiple games at the same time.
+Description: GTK poker client to play on a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. poker2d will automaticaly reconnect to
+ the table if the connection is lost and allows playing on multiple
+ tables simultaneously.

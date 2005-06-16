@@ -5,6 +5,8 @@
 
   <custom_money unit="C" cent="cts" />
 
+  <cashier enter="Cashier" exit="Exit Cashier" />
+
   <interactors2d>
     <check>
       <map enabled_default="Check"

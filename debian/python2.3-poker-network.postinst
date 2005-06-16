@@ -74,6 +74,7 @@ case "$1" in
             do
               sed -e "s/\%HOST\%/$poker_network_host/" $conf_file > $tmpfile
               mv  $tmpfile $conf_file
+              chmod 644 $conf_file
             done
 	    touch /etc/poker-network/lockfile
 	else
@@ -86,6 +87,7 @@ case "$1" in
  	    fi
 	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
 	    mv  $tmpfile /etc/poker-network/poker.server.xml
+            chmod 600 /etc/poker-network/poker.server.xml
             rm -f /etc/poker-network/lockfile
 	fi
     ;;

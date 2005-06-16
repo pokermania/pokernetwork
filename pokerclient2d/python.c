@@ -84,6 +84,7 @@ int	get_int(void) {
 void	set_string(const char* str) {
   PyObject* item = PyString_FromString(str);
   PyList_Append(out_stream, item);
+  Py_DECREF(item);
 }
 
 void	set_int(int i) {
@@ -143,11 +144,10 @@ command(PyObject* self, PyObject *args)
       }
     }
     {
-      int stream_size = PyList_Size(in_stream);
       g_assert(PyList_Size(in_stream) == 0);
-      if(PyList_SetSlice(in_stream, stream_size, stream_size, args))
+      if(PyList_SetSlice(in_stream, 0, 0, args))
         return NULL;
-      if(PyList_SetSlice(in_stream, stream_size, stream_size + 1, NULL))
+      if(PyList_SetSlice(in_stream, 0, 1, NULL))
         return NULL;
     }
   }
@@ -167,9 +167,9 @@ uninit(PyObject* self, PyObject *args)
 {
   (void)self;
   (void)args;
-  if(in_stream) { Py_DECREF(in_stream); }
-  if(out_stream) { Py_DECREF(out_stream); }
-  if(callback) { Py_DECREF(callback); }
+  if(in_stream) { Py_DECREF(in_stream); in_stream = 0; }
+  if(out_stream) { Py_DECREF(out_stream); out_stream = 0; }
+  if(callback) { Py_DECREF(callback); callback = 0; }
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -198,9 +198,7 @@ init(PyObject* self, PyObject *args, PyObject *keywds)
   Py_INCREF(callback);
   
   in_stream = PyList_New(0);
-  Py_INCREF(in_stream);
   out_stream = PyList_New(0);
-  Py_INCREF(out_stream);
 
   set_verbose(verbose);
   if(gtkrc && g_file_test(gtkrc, G_FILE_TEST_EXISTS))

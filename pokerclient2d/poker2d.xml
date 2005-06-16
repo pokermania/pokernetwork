@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="5"
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="0"
           display2d="yes" display3d="no"
           delays="true" tcptimeout="2000">
   <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="5" lag="15"/>
@@ -9,8 +9,8 @@
   <remember>yes</remember>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <chat max_chars="40" line_length="20"/>
-  <servers>%HOST%:19378</servers>
+  <chat max_chars="160" line_length="20"/>
+  <servers>%HOST%:19381</servers>
   <sound>yes</sound>
   <tournaments custom_money="n" type="sit_n_go" sort="name"/>
   <lobby custom_money="n" type="holdem" sort="name"/>

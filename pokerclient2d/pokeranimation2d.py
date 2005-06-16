@@ -132,7 +132,7 @@ class AnimationMoveWidget(Animation):
                          self.start_to_end[1] * self.fraction_from_start )
         position = ( self.position_start[0] + start_to_end[0],
                      self.position_start[1] + start_to_end[1] )
-        self.fixed.move(self.widget, position[0], position[1])
+        self.fixed.move(self.widget, int(position[0]), int(position[1]))
     
     def end(self, *args, **kwargs):
         self.fixed.remove(self.widget)
@@ -176,13 +176,13 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         for animation in self.animations: animation.stop()
 
     def initStateAnimation(self):
-        print "PokerAnimationPlayer2D:initStateAnimation: not implemented"
+        if self.verbose > 1: self.message(":initStateAnimation: not implemented")
         
     def playerArrive(self):
-        print "PokerAnimationPlayer2D:playerArrive: not implemented"
+        if self.verbose > 1: self.message(":playerArrive: not implemented")
 
     def isInPosition(self):
-        print "PokerAnimationPlayer2D:isInPosition: not implemented"
+        if self.verbose > 1: self.message(":isInPosition: not implemented")
     
     def setAnimationCallback(self, animation, callback):
         animation.endCallback(callback)
@@ -224,16 +224,16 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         return animation
 
     def check(self):
-        print "PokerAnimationPlayer2D:check: not implemented"
+        if self.verbose > 1: self.message(":check: not implemented")
 
     def bet(self,game_id,chips):
-        print "PokerAnimationPlayer2D:bet: not implemented"
+        if self.verbose > 1: self.message(":bet: not implemented")
 
     def timeoutWarning(self):
-        print "PokerAnimationPlayer2D:timeoutWarning: not implemented"
+        if self.verbose > 1: self.message(":timeoutWarning: not implemented")
 
     def pot2player(self, packet):
-        print "pot2player: move %s from %s to %s" % ( packet.chips, str(self.table.widget_pots[packet.pot]), str(self.widget_bet))
+        if self.verbose > 2: self.message("pot2player: move %s from %s to %s" % ( packet.chips, str(self.table.widget_pots[packet.pot]), str(self.widget_bet)))
         value = 0
         while packet.chips:
             chip_value = packet.chips.pop(0)
@@ -261,10 +261,10 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         pass
     
     def fold(self, game_id):
-        print "PokerAnimationPlayer2D:fold: not implemented"
+        if self.verbose > 1: self.message(":fold: not implemented")
     
     def chat(self, packet):
-        print "PokerAnimationPlayer2D:chat: not implemented"
+        if self.verbose > 1: self.message(":chat: not implemented")
 
 class PokerAnimationTable2D(PokerAnimationTable):
 

@@ -103,8 +103,7 @@ class PokerInterface(dispatch.EventDispatcher):
     def handleLogin(self, data):
         (ok_or_cancel, name, password, remember) = data[:4]
         remember = remember == "1"
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol: login %s, password %s, remember %s\n" % (name, password, remember)
+        if self.verbose > 1: print "PokerInterfaceProtocol: login %s, password %s, remember %s\n" % (name, password, remember)
         self.publishEvent(INTERFACE_LOGIN, ok_or_cancel, name, password, remember)
         self.clearCallbacks(INTERFACE_LOGIN)
         return data[4:]
@@ -112,8 +111,7 @@ class PokerInterface(dispatch.EventDispatcher):
     def requestLogin(self, name, password, remember):
         remember = remember and "1" or "0"
         packet = ("login", name, password, remember)
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:requestLogin" + str(packet)
+        if self.verbose > 1: print "PokerInterfaceProtocol:requestLogin" + str(packet)
         self.command(*packet)
 
     def hideLogin(self):
@@ -154,8 +152,8 @@ class PokerInterface(dispatch.EventDispatcher):
                     packet[selected_index] = str(current_tournament)
             self.command(*packet)
             
-    def showTournaments(self, page, custom_money):
-        self.command("tournaments", "show", page, custom_money)
+    def showTournaments(self, cashier_label, page, custom_money):
+        self.command("tournaments", "show", cashier_label, page, custom_money)
                 
     def hideTournaments(self):
         self.command("tournaments", "hide")
@@ -200,8 +198,8 @@ class PokerInterface(dispatch.EventDispatcher):
 
         self.command('lobby', 'info', "Players: %d" % players_count, "Tables: %d" % tables_count)
             
-    def showLobby(self, page, custom_money):
-        self.command("lobby", "show", page, custom_money)
+    def showLobby(self, cashier_label, page, custom_money):
+        self.command("lobby", "show", cashier_label, page, custom_money)
                 
     def hideLobby(self):
         self.command("lobby", "hide")
@@ -238,8 +236,7 @@ class PokerInterface(dispatch.EventDispatcher):
             packet.append(definition['preview_type'])
             packet.append(str(len(definition['preview'])))
             packet.extend(definition['preview'])
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:showOutfits " + str(packet)
+        if self.verbose > 1: print "PokerInterfaceProtocol:showOutfits " + str(packet)
         self.command(*packet)
 
     def handleOutfit(self, data):
@@ -270,8 +267,7 @@ class PokerInterface(dispatch.EventDispatcher):
         packet = [ "hand_history", "show", str(start), str(count), str(total), str(len(hands)) ]
         for hand in hands:
             packet.append("#%d" % hand)
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:showHands " + str(packet)
+        if self.verbose > 1: print "PokerInterfaceProtocol:showHands " + str(packet)
         self.command(*packet)
 
     def showHandMessages(self, hand_serial, messages):
@@ -297,46 +293,39 @@ class PokerInterface(dispatch.EventDispatcher):
     def chooser(self, title, alternatives):
         packet = [ "chooser", title, str(len(alternatives)) ]
         packet.extend(alternatives)
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:chooser %s : %s" % ( str(alternatives), packet )
+        if self.verbose > 1: print "PokerInterfaceProtocol:chooser %s : %s" % ( str(alternatives), packet )
         self.command(*packet)
 
     def handleChooser(self, data):
         (alternative,) = data[:1]
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:chooser"
+        if self.verbose > 1: print "PokerInterfaceProtocol:chooser"
         if self.callbacks.has_key(INTERFACE_CHOOSER):
             self.publishEvent(INTERFACE_CHOOSER, alternative)
             self.clearCallbacks(INTERFACE_CHOOSER)
         return data[1:]
         
     def messageBox(self, message):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:messageBox %s" % message
+        if self.verbose > 1: print "PokerInterfaceProtocol:messageBox %s" % message
         self.command("message_box", message)
 
     def handleMessageBox(self, data):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:handleMessageBox"
+        if self.verbose > 1: print "PokerInterfaceProtocol:handleMessageBox"
         if self.callbacks.has_key(INTERFACE_MESSAGE_BOX):
             self.publishEvent(INTERFACE_MESSAGE_BOX)
             self.clearCallbacks(INTERFACE_MESSAGE_BOX)
             
     def blindShow(self):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:blind show"
+        if self.verbose > 1: print "PokerInterfaceProtocol:blind show"
         self.command("blind", "show")
 
     def blindHide(self):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:blind hide"
+        if self.verbose > 1: print "PokerInterfaceProtocol:blind hide"
         self.command("blind", "hide")
 
     def blindMessage(self, message, wait_blind):
         self.blindShow()
         packet = [ "blind", "blind message", message, wait_blind ]
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:blindMessage " + str(packet)
+        if self.verbose > 1: print "PokerInterfaceProtocol:blindMessage " + str(packet)
         self.command(*packet)
 
     def handleBlind(self, data):
@@ -350,23 +339,19 @@ class PokerInterface(dispatch.EventDispatcher):
         return data
 
     def sitActionsShow(self):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:sitActions show"
+        if self.verbose > 1: print "PokerInterfaceProtocol:sitActions show"
         self.command("sit_actions", "show")
 
     def sitActionsHide(self):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:sitActions hide"
+        if self.verbose > 1: print "PokerInterfaceProtocol:sitActions hide"
         self.command("sit_actions", "hide")
 
     def sitActionsAuto(self, auto):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:sitActions auto"
+        if self.verbose > 1: print "PokerInterfaceProtocol:sitActions auto"
         self.command("sit_actions", "auto", str(auto))
 
     def sitActionsSitOut(self, status, message):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:sitActions sit_out"
+        if self.verbose > 1: print "PokerInterfaceProtocol:sitActions sit_out"
         self.command("sit_actions", "sit_out", status, message)
 
     def handleSitActions(self, data):
@@ -381,8 +366,7 @@ class PokerInterface(dispatch.EventDispatcher):
         return data[2:]
 
     def yesnoBox(self, message):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:yesnoBox %s" % message
+        if self.verbose > 1: print "PokerInterfaceProtocol:yesnoBox %s" % message
         self.clearCallbacks(INTERFACE_YESNO)
         self.command("yesno", message)
 
@@ -428,12 +412,11 @@ class PokerInterface(dispatch.EventDispatcher):
         
     def buyInParams(self, minimum, maximum, legend, max_label):
         packet = [ "buy_in", "params", str(minimum), str(maximum), legend, max_label ]
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:requestBuyIn " + str(packet)
+        if self.verbose > 1: print "PokerInterfaceProtocol:requestBuyIn " + str(packet)
         self.command(*packet)
         
     def handleBuyIn(self, data):
-        print "handleBuyIn: " + str(data)
+        if self.verbose > 1: print "handleBuyIn: " + str(data)
         value = data[0]
         self.publishEvent(INTERFACE_BUY_IN, value)
         self.clearCallbacks(INTERFACE_BUY_IN)
@@ -442,16 +425,15 @@ class PokerInterface(dispatch.EventDispatcher):
     def updateCashier(self, *messages):
         packet = [ "cashier", "update", str(len(messages)) ]
         packet.extend(messages)
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol:updateCashier " + str(packet)
+        if self.verbose > 1: print "PokerInterfaceProtocol:updateCashier " + str(packet)
         self.command(*packet)
  
     def handleCashier(self, data):
         self.publishEvent(INTERFACE_CASHIER, data[0])
         return data[1:]
 
-    def showCashier(self):
-        self.command("cashier", "show", "0")
+    def showCashier(self, exit_label):
+        self.command("cashier", "show", "0", exit_label)
         
     def hideCashier(self):
         self.command("cashier", "hide", "0")
@@ -478,7 +460,7 @@ class PokerInterface(dispatch.EventDispatcher):
         packet.extend(("menu", "set", "auto_post", auto_post))
         packet.extend(("menu", "set", "remember_me", remember_me))
         packet.extend(("menu", "set", "muck", muck))
-        print "updateMenu: " + str(packet)
+        if self.verbose > 1: print "updateMenu: " + str(packet)
         self.command(*packet)
         
     def showMenu(self):
@@ -509,8 +491,7 @@ class PokerInterfaceProtocol(Protocol, PokerInterface):
         self.factory.clearCallbacks(INTERFACE_GONE)
         
     def dataReceived(self, data):
-        if self.verbose > 1:
-            print "PokerInterfaceProtocol: dataReceived %s " % data
+        if self.verbose > 1: print "PokerInterfaceProtocol: dataReceived %s " % data
         args = split(rstrip(data, "\0"), "\0")
         self.event(*args)
 

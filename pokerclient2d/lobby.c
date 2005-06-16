@@ -53,17 +53,18 @@ static char* s_variants_names[VARIANTS_COUNT] = {
   "omaha8",
   "7stud"
 };
-static GtkNotebook* s_notebook = 0;
+static GtkNotebook*	s_notebook = 0;
 
 static GtkWidget*	s_table_info_window = 0;
-static GtkListStore* s_players_store = 0;
-static int s_disable_buttons = 0;
+static GtkListStore*	s_players_store = 0;
+static int		s_disable_buttons = 0;
 static GtkWidget*	s_lobby_tabs_window = 0;
 
-static GtkWidget*	s_cashier_button_window;
+static GtkWidget*	s_cashier_button_window = 0;
+static GtkButton*	s_cashier_button = 0;
 
-static GtkWidget*	s_clock_window;
-static GtkWidget*	s_clock_label;
+static GtkWidget*	s_clock_window = 0;
+static GtkWidget*	s_clock_label = 0;
 
 static void clear_stores(void) {
   int i;
@@ -343,6 +344,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     s_cashier_button_window = gui_get_widget(g_cashier_button_xml, "cashier_button_window");
     g_assert(s_cashier_button_window);
     if(screen) gtk_layout_put(screen, s_cashier_button_window, 0, 0);
+    s_cashier_button = GTK_BUTTON(gui_get_widget(g_cashier_button_xml, "cashier_button"));
+    g_assert(s_cashier_button);
     GUI_BRANCH(g_cashier_button_xml, on_cashier_button_pressed);
 
     s_clock_window = gui_get_widget(g_clock_xml, "clock_window");
@@ -385,6 +388,11 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       gui_place(s_lobby_tabs_window, &position, screen);
     }
 
+    {
+      char* label = get_string();
+      gtk_button_set_label(s_cashier_button, label);
+      g_free(label);
+    }
     {
       static position_t position;
       position.x = top_left_x;

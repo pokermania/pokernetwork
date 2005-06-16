@@ -40,6 +40,7 @@ class PokerAnimationPlayer:
         self.myself = kwargs.get('myself', False)
         self.animation_renderer = kwargs.get('animation_renderer', None)
         self.table = kwargs.get('table', None)
+        self.verbose = self.table.verbose
         self.config = kwargs.get('config', None)
         self.serial = kwargs.get('serial', 0)
         self.seat = kwargs.get('seat', -1)

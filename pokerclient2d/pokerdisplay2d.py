@@ -93,7 +93,7 @@ class PokerPlayer2D:
         player = game.getPlayer(self.serial)
         cards_numbers = player.hand.tolist(True)
         cards_names = game.eval.card2string(cards_numbers)
-        self.message("updateCards " + str(cards_names))
+        if self.verbose > 2: self.message("updateCards " + str(cards_names))
         cards_count = len(cards_numbers)
         for card_index in xrange(len(self.table.cards_slots)):
             card_slot = self.table.cards_slots[card_index]
@@ -101,9 +101,9 @@ class PokerPlayer2D:
                 self.cards[card_slot].hide()
             else:
                 if cards_numbers[card_index] == 255:
-                    self.cards[card_slot].set_from_file(glade.relative_file("cards/small-back.jpg"))
+                    self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-back.jpg"))
                 else:
-                    self.cards[card_slot].set_from_file(glade.relative_file("cards/small-%s.jpg" % cards_names[card_index]))
+                    self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-%s.jpg" % cards_names[card_index]))
                 self.cards[card_slot].show()
 
     def hideCards(self):
@@ -199,7 +199,7 @@ class PokerTable2D:
     
     def resetCardsSlots(self):
         max_hand_size = self.game.getMaxHandSize()
-        self.message("max hand size = %d" % max_hand_size)
+        if self.verbose > 2: self.message("max hand size = %d" % max_hand_size)
         if max_hand_size == 2:
             self.cards_slots = ( 2, 4 )
         elif max_hand_size == 4:
@@ -214,7 +214,7 @@ class PokerTable2D:
         self.display.deleteTable(self.game.id)
 
     def render(self, packet):
-        if self.verbose > 3: print "PokerTable2D::render: " + str(packet)
+        if self.verbose > 3: self.message("render: " + str(packet))
 
         if packet.type == PACKET_POKER_TABLE_DESTROY:
             self.deleteTable()
@@ -246,7 +246,7 @@ class PokerTable2D:
                 if i >= board_length:
                     self.board[i].hide()
                 else:
-                    self.board[i].set_from_file(self.glade.relative_file("cards/small-%s.jpg" % board[i]))
+                    self.board[i].set_from_file(self.glade.relative_file("pixmaps/cards/small-%s.jpg" % board[i]))
                     self.board[i].show()
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
@@ -302,6 +302,8 @@ class PokerTable2D:
 class PokerDisplay2D(PokerDisplay):
     def __init__(self, *args, **kwargs):
         PokerDisplay.__init__(self, *args, **kwargs)
+        self.verbose = self.settings.headerGetInt("/settings/@verbose")
+        self.datadir = self.settings.headerGet("/settings/data/@path")
         self.id2table = {}
 
     def message(self, string):
@@ -323,8 +325,6 @@ class PokerDisplay2D(PokerDisplay):
     def init(self):
         settings = self.settings
         config = self.config
-        self.verbose = settings.headerGet("/settings/@verbose")
-        self.datadir = settings.headerGet("/settings/data/@path")
         gtkrc = self.datadir + "/interface/gtkrc"
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
@@ -432,7 +432,7 @@ class PokerDisplay2D(PokerDisplay):
                 elif packet.style == "scheduled" and packet.selection.type == PACKET_POKER_CALL:
                     action.set_label("(Call)")
                 else:
-                    print "ERROR: updateAction call: unexpected style " + packet.style
+                    self.error("updateAction call: unexpected style " + packet.style)
             else:
                 action.hide()
 

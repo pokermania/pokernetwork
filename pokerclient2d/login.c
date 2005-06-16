@@ -44,9 +44,11 @@ static void	on_password_entry_activate(GtkWidget *widget, gpointer user_data)
   (void) user_data;
 
   g_message("login ok");
+#if 0
   g_printf("login: %s\npass: %s\n",
 	   gtk_entry_get_text(GTK_ENTRY(g_login_entry)),
 	   gtk_entry_get_text(GTK_ENTRY(g_password_entry)));
+#endif
   set_string("login");
   set_string("ok");
   set_string(gtk_entry_get_text(GTK_ENTRY(g_login_entry)));

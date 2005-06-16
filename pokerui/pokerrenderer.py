@@ -99,8 +99,7 @@ class PokerInteractors:
             protocol.registerHandler(True, PACKET_POKER_HIGHEST_BET_INCREASE, self._handleConnection)
 
     def _handleConnection(self, protocol, packet):
-        if self.factory.verbose > 3:
-            print "PokerInteractors::_handleConnection: " + str(packet)
+        if self.factory.verbose > 3: print "PokerInteractors::_handleConnection: " + str(packet)
 
         game = self.factory.packet2game(packet)
         
@@ -236,17 +235,15 @@ class PokerInteractors:
         if interactor.game_id == self.protocol.getCurrentGameId():
             game = self.factory.getGame(interactor.game_id)
             if game and interactor.hasChanged():
-                print "interactorDisplayShadowStacks"
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
 
     def interactorsSyncDisplay(self, game_id):
-        print "interactorsSyncDisplay"
-        
+        if self.factory.verbose > 2: print "interactorsSyncDisplay"
         game = self.factory.getGame(game_id)
         interactor_set = self.getOrCreateInteractorSet(game_id)
         interactors = interactor_set.items
         for (name, interactor) in interactors.iteritems():
-            print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
+            if self.factory.verbose > 2: print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
             self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
             if interactor.name != "shadowstacks":
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
@@ -293,6 +290,7 @@ class PokerInteractors:
 class PokerRenderer:
 
     def __init__(self, factory):
+        self.verbose = factory.verbose
         self.replayStepping = True
         self.replayGameId = None
         self.custom_money = factory.config.headerGetProperties("/sequence/custom_money")
@@ -302,21 +300,31 @@ class PokerRenderer:
         else:
             self.custom_money = self.custom_money[0]
         self.state = IDLE
+
         self.state_buy_in = ()
+
         self.state_login = ()
+
         self.state_tournaments = factory.settings.headerGetProperties("/settings/tournaments")
         if not self.state_tournaments:
             print "CRITICAL: missing /settings/tournaments"
         else:
             self.state_tournaments = self.state_tournaments[0]
+        self.state_tournaments['cashier_label'] = factory.config.headerGet("/sequence/cashier/@enter")
         self.state_tournaments["current"] = 0
+
         self.state_lobby = factory.settings.headerGetProperties("/settings/lobby")
         if not self.state_lobby:
             print "CRITICAL: missing /settings/lobby"
         else:
             self.state_lobby = self.state_lobby[0]
+        self.state_lobby['cashier_label'] = factory.config.headerGet("/sequence/cashier/@enter")
         self.state_lobby["current"] = 0
+
         self.state_joining_my = 0
+
+        self.state_cashier = { 'exit_label': factory.config.headerGet("/sequence/cashier/@exit") }
+        
         self.factory = factory
         self.protocol = None
         self.stream_mode = True
@@ -458,12 +466,10 @@ class PokerRenderer:
         interface.updateMenu(self.factory.settings)
         if self.factory.remember:
             if self.protocol:
-                if self.factory.verbose:
-                    print "connection ready, ask for password"
+                if self.verbose: print "connection ready, ask for password"
                 self.changeState(LOGIN)
             else:
-                if self.factory.verbose:
-                    print "connection not established, will ask password later"
+                if self.verbose: print "connection not established, will ask password later"
 
     def chatFormatMessage(self, message):
         config = self.factory.chat_config
@@ -533,8 +539,7 @@ class PokerRenderer:
             interface.messageBox(message)
             if callback:
                 interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, callback)
-        if self.factory.verbose:
-            print message
+        if self.verbose: print message
 
     def handleCashier(self, yesno = "yes"):
         if yesno == "yes":
@@ -545,7 +550,7 @@ class PokerRenderer:
     def showCashier(self):
         interface = self.factory.interface
         if interface:
-            interface.showCashier()
+            interface.showCashier(self.state_cashier['exit_label'])
 
     def hideCashier(self):
         interface = self.factory.interface
@@ -553,7 +558,7 @@ class PokerRenderer:
             interface.hideCashier()
 
     def updateCashier(self, packet):
-        print "updateCashier"
+        if self.verbose > 1: print "updateCashier"
         interface = self.factory.interface
         if interface:
             unit = self.custom_money['unit']
@@ -569,8 +574,7 @@ class PokerRenderer:
                                     )
 
     def handleSerial(self, packet):
-        if self.factory.verbose:
-            print "handleSerial: we now have serial %d" % packet.serial
+        if self.verbose: print "handleSerial: we now have serial %d" % packet.serial
         self.protocol.user.serial = packet.serial
         display = self.factory.display
         display.render(packet)
@@ -617,13 +621,13 @@ class PokerRenderer:
             if self.state == HAND_LIST:
                 self.showHands(packet.hands, packet.total)
             else:
-                print "handleGame: unexpected state for POKER_HAND_LIST " + self.state
+                print "*CRITICAL* handleGame: unexpected state for POKER_HAND_LIST " + self.state
 
         elif packet.type == PACKET_POKER_HAND_HISTORY:
             if self.state == HAND_LIST:
                 self.showHandHistory(packet.game_id, eval(packet.history), eval(packet.serial2name))
             else:
-                print "handleGame: unexpected state for POKER_HAND_HISTORY " + self.state
+                print "*CRITICAL* handleGame: unexpected state for POKER_HAND_HISTORY " + self.state
 
         elif packet.type == PACKET_BOOTSTRAP:
             self.bootstrap()
@@ -638,7 +642,7 @@ class PokerRenderer:
             elif self.state == SEARCHING_MY:
                 self.choseTable(packet.packets)
             else:
-                print "handleGame: unexpected state for TABLE_LIST: " + self.state
+                print "*CRITICAL* handleGame: unexpected state for TABLE_LIST: " + self.state
 
         elif packet.type == PACKET_POKER_PLAYERS_LIST:
             self.updateLobbyPlayersList(packet)
@@ -657,7 +661,7 @@ class PokerRenderer:
                 self.changeState(LEAVING_CANCEL)
                 self.showMessage(packet.message, None)
             else:
-                print "ERROR: unexpected error"
+                print "*CRITICAL*: unexpected error"
             
         elif packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST:
             self.updateTournamentsPlayersList(packet)
@@ -706,15 +710,14 @@ class PokerRenderer:
                                                      password = self.factory.password))
 
         elif packet.type == PACKET_AUTH_EXPIRES:
-            print "server timeout waiting for our login packet"
+            print "*CRITICAL* server timeout waiting for our login packet"
             self.showMessage("Server timed out waiting for login", lambda: self.changeState(LOGIN_DONE, False))
 
         elif packet.type == PACKET_AUTH_REFUSED:
             self.showMessage("Invalid login or passwd", lambda: self.changeState(LOGIN_DONE, False))
 
         elif packet.type == PACKET_AUTH_OK:
-            if self.factory.verbose:
-                print "login accepted"
+            if self.verbose: print "login accepted"
 
         elif packet.type == PACKET_SERIAL:
             self.handleSerial(packet)
@@ -993,7 +996,7 @@ class PokerRenderer:
         self.changeState(REBUY_DONE)
 
     def resetLagmax(self):
-        if self.factory.verbose > 2: print "resetLagmax: %d" % ABSOLUTE_LAGMAX
+        if self.verbose > 2: print "resetLagmax: %d" % ABSOLUTE_LAGMAX
         self.protocol._lagmax = ABSOLUTE_LAGMAX
 
     def updateLagmax(self, packet):
@@ -1001,7 +1004,7 @@ class PokerRenderer:
             if ( packet.type == PACKET_POKER_START or
                  ( packet.type == PACKET_POKER_POSITION and
                    packet.serial == self.protocol.getSerial() ) ):
-                if self.factory.verbose > 2: print "updateLagmax: %d" % self.protocol.lag
+                if self.verbose > 2: print "updateLagmax: %d" % self.protocol.lag
                 self.protocol._lagmax = self.protocol.lag
 
     def hold(self, delay, id = None):
@@ -1187,7 +1190,7 @@ class PokerRenderer:
             self.changeState(OUTFIT_DONE)
 
     def handleLobby(self, args):
-        if self.factory.verbose > 2: print "handleLobby: " + str(args)
+        if self.verbose > 2: print "handleLobby: " + str(args)
         (action, value) = args
         if action == "details":
             game_id = int(value)
@@ -1215,7 +1218,7 @@ class PokerRenderer:
             else:
                 self.changeState(TOURNAMENTS, value)
         else:
-            print "ERROR: handleLobby: unknown action " + action
+            print "*CRITICAL*: handleLobby: unknown action " + action
 
     def queryLobby(self):
         if self.state == LOBBY:
@@ -1258,7 +1261,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             type = type or self.state_lobby['type']
-            interface.showLobby(type, self.state_lobby['custom_money'])
+            interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['custom_money'])
         
     def hideLobby(self):
         interface = self.factory.interface
@@ -1267,7 +1270,7 @@ class PokerRenderer:
         self.saveLobbyState()
 
     def handleTournaments(self, args):
-        if self.factory.verbose > 2: print "handleTournaments: " + str(args)
+        if self.verbose > 2: print "handleTournaments: " + str(args)
         (action, value) = args
         if action == "details":
             tourney_id = int(value)
@@ -1296,7 +1299,7 @@ class PokerRenderer:
             else:
                 self.changeState(LOBBY, value)
         else:
-            print "ERROR: handleTournaments: unknown action " + action
+            print "*CRITICAL* : handleTournaments: unknown action " + action
 
     def queryTournaments(self):
         if self.state == TOURNAMENTS:
@@ -1343,7 +1346,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             type = type or self.state_tournaments['type']
-            interface.showTournaments(type, self.state_tournaments['custom_money'])
+            interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['custom_money'])
         
     def hideTournaments(self):
         interface = self.factory.interface
@@ -1364,7 +1367,7 @@ class PokerRenderer:
             if self.state == HAND_LIST and value != None:
                 self.handReplay(value)
             elif hand != None:
-                print "selectHand: ignored because not in HAND_LIST state"
+                print "*CRITICAL* selectHand: ignored because not in HAND_LIST state"
         elif action == "show":
             ( action, game_id ) = args
             self.protocol.sendPacket(PacketPokerHandHistory(game_id = game_id,
@@ -1382,7 +1385,7 @@ class PokerRenderer:
         elif action == "quit":
             self.changeState(LOBBY)
         else:
-            print "CRITICAL: selectHands unexpected action " + action
+            print "*CRITICAL*: selectHands unexpected action " + action
     
     def showHands(self, hands, total):
         interface = self.factory.interface
@@ -1431,7 +1434,7 @@ class PokerRenderer:
         game_ids = self.factory.games.keys()
         current = game_ids.index(self.protocol.getCurrentGameId())
         game_ids = game_ids[current:] + game_ids[:current]
-        print "rotateTable: %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1])
+        if self.verbose > 1: print "rotateTable: %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1])
         self.connectTable(game_ids[1])
         
     def connectTable(self, game_id):
@@ -1481,26 +1484,24 @@ class PokerRenderer:
         self.factory.interface.sitActionsSitOut("no", "sit out")
         
     def sendPacket(self, packet):
-        print "render sendPacket %s" % packet
+        if self.verbose > 2: print "render sendPacket %s" % packet
         return self.protocol.sendPacket(packet)
         
     def schedulePacket(self, packet):
-        print "render schedulePacket %s" % packet
+        if self.verbose > 2: print "render schedulePacket %s" % packet
         return self.protocol.schedulePacket(packet)
         
     def getSeat(self, packet):
-        print "getSeat %s" % packet
+        if self.verbose > 2: print "getSeat %s" % packet
         self.changeState(SEATING, packet)
 
     def bootstrap(self):
         if self.factory.remember:
             if self.factory.interface:
-                if self.factory.verbose:
-                    print "interface ready, ask for password"
+                if self.verbose: print "interface ready, ask for password"
                 self.changeState(LOGIN)
             else:
-                if self.factory.verbose:
-                    print "interface not ready, will ask password later"
+                if self.verbose: print "interface not ready, will ask password later"
         else:
             self.changeState(LOBBY)
         self.factory.display.setRenderer(self)
@@ -1515,7 +1516,7 @@ class PokerRenderer:
         if not self.stream_mode:
             return
         
-        if self.factory.verbose > 2: print "changeState %s => %s (args = %s, kwargs = %s)" % ( self.state, state, str(args), str(kwargs) )
+        if self.verbose > 2: print "changeState %s => %s (args = %s, kwargs = %s)" % ( self.state, state, str(args), str(kwargs) )
         
         if state == LOGOUT:
             if ( self.state == IDLE or self.state == SEARCHING ) and self.protocol.user.isLogged():
@@ -1538,7 +1539,7 @@ class PokerRenderer:
                      self.state == REBUY ):
                     self.factory.interface.buyInHide()
                 else:
-                    print "ERROR unexpected state " + self.state
+                    print "*CRITICAL*  unexpected state " + self.state
                     return
             what = args[0]
             args = args[1:]
@@ -1547,7 +1548,7 @@ class PokerRenderer:
             elif what == 'blind':
                 self.payBlind(*args)
             else:
-                print "ERROR unknow what " + what
+                print "*CRITICAL*  unknow what " + what
             self.state = state
 
         elif state == PAY_BLIND_ANTE_SEND and self.state == PAY_BLIND_ANTE:
@@ -1559,7 +1560,7 @@ class PokerRenderer:
                 status = self.confirmPayBlind(*args)
             else:
                 status = False
-                print "ERROR unknow what " + what
+                print "*CRITICAL*  unknow what " + what
             self.state = status and state or IDLE
 
         elif state == PAY_BLIND_ANTE_DONE:

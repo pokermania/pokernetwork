@@ -26,6 +26,14 @@
 import sys
 sys.path.insert(0, "..")
 
+#
+# Workaround for the bug 
+# http://twistedmatrix.com/bugs/issue1083
+#
+import gobject
+if hasattr(gobject, "threads_init"):
+    del gobject.threads_init
+
 import os
 from string import split, lower
 from os import makedirs

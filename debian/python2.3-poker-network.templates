@@ -17,28 +17,28 @@ _Description: Skipping poker-network server installation.
 
 Template: python2.3-poker-network/host
 Type: string
-_Default: poker.mekensleep.org
+Default: localhost
 _Description: Please enter the hostname or IP of the default poker-network server.
  The clients based on poker-network installed on the same machine will be
  able to use this poker-network server host as a default, if needed.
 
 Template: python2.3-poker-network/db/host
 Type: string
-_Default: localhost
+Default: localhost
 _Description: Please enter the MySQL server host name:
  This must be the host-name or IP address where the MySQL server is
  running.
 
 Template: python2.3-poker-network/db/name
 Type: string
-_Default: pokernetwork
+Default: pokernetwork
 _Description: Please enter poker-network database name:
  This is the name of the database that poker-network will use. A new
  database of that name will be created on the MySQL server.
 
 Template: python2.3-poker-network/db/user/name
 Type: string
-_Default: pokernetwork
+Default: pokernetwork
 _Description: Please choose a MySQL user name dedicated to poker-network:
  This is the user name that poker-network will use to access the database.
  A MySQL user of that name will be created on the MySQL server, with
@@ -64,7 +64,7 @@ _Description: Passwords mismatch.
 
 Template: python2.3-poker-network/db/admin/name
 Type: string
-_Default: root
+Default: root
 _Description: Please enter the MySQL server administrator user name:
  The MySQL server administrator user will be used only during
  the installation process to do the following:

@@ -39,7 +39,7 @@
   <table name="Thirty"	variant="7stud" betting_structure="ante-10-15-pot-limit" seats="8" timeout="60" custom_money="0" />
   <table name="Fourty"	variant="7stud" betting_structure="ante-5-10-limit" seats="8" timeout="60" custom_money="0" />
 
-  <port>19378</port>
+  <port>19381</port>
   <database name="%DATABASE%" host="%DBHOST%" user="%USER%" password="%PASS%" />
   <path>/etc/poker-engine</path> 
   <users temporary="BOT" />

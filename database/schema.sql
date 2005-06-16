@@ -34,7 +34,7 @@ create table users (
 	password varchar(32),
 	privilege int default 1,
 
-	play_money int default 100000,
+	play_money int default 10000,
         custom_money int default 0,
 	point_money int default 5000,
 
@@ -300,95 +300,3 @@ create table users_wins (
         primary key (from_serial,to_serial,hand_serial)
 );
 
-drop table if exists users_money;
---
--- User information related to custom money
---
-create table users_money (
-        user_serial int unsigned not null,
-        blocked char default 'y',
-        blocked_reason text,
-        blocked_time int default 0,
-        max_per_month int default 500,
-
-        primary key (user_serial)
-);
-
-drop table if exists user2bank;
---
--- User preferences and status related to a given bank
---
-create table user2bank (
-        user_serial int unsigned not null,
-        bank_serial int unsigned not null,
-        blocked char default 'y',
-        blocked_reason text,
-        blocked_time int default 0,
-        info0 varchar(255),
-        info1 varchar(255),
-        info2 varchar(255),
-        info3 varchar(255),
-        info4 varchar(255),
-        info5 varchar(255),
-        info6 varchar(255),
-        info7 varchar(255),
-        info8 varchar(255),
-        info9 varchar(255),
-
-        primary key (user_serial,bank_serial)
-);
-
-drop table if exists bank;
---
--- Bank description
---
-create table bank (
-      	serial int unsigned not null auto_increment,
-        description_short varchar(64) default 'no short description',
-        description_long text,
-        logo blob,
-        url_home varchar(255),
-        url_register varchar(255),
-        url_cash_in varchar(255),
-        max_cash_in varchar(255),
-        fee_cash_in varchar(255),
-        fee_percent_cash_in varchar(255),
-        url_cash_out varchar(255),
-        max_cash_out varchar(255),
-        fee_cash_out varchar(255),
-        fee_percent_cash_out varchar(255),
-        delay_cash_out int default 3,
-        info0 varchar(255),
-        info1 varchar(255),
-        info2 varchar(255),
-        info3 varchar(255),
-        info4 varchar(255),
-        info5 varchar(255),
-        info6 varchar(255),
-        info7 varchar(255),
-        info8 varchar(255),
-        info9 varchar(255),
-
-        primary key (serial)
-);
-
-drop table if exists bank_transactions;
----
---- Status of each transaction
----
-create table bank_transactions (
-        user_serial int unsigned not null,
-        bank_serial int unsigned not null,
-        created int default 0,
-        -- i = in, o = out
-        direction char default 'i', 
-        -- i = in progress, y = accepted, n = refused
-        status char default 'i',
-        status_time int default 0,
-        amount int default 0,
-        info0 varchar(255),
-        info1 varchar(255),
-
-        primary key (user_serial,bank_serial)
-        
-);

@@ -34,9 +34,10 @@
 #include "interface_io.h"
 #include "dispatcher.h"
 
-static GtkWidget*	s_personal_information_window;
-static GtkWidget*	s_account_status_window;
-static GtkWidget*	s_exit_cashier_window;
+static GtkWidget*	s_personal_information_window = 0;
+static GtkWidget*	s_account_status_window = 0;
+static GtkWidget*	s_exit_cashier_window = 0;
+static GtkButton*	s_exit_button = 0;
 
 #define ENTRIES_CNT	2
 static GtkWidget*	s_entries[ENTRIES_CNT];
@@ -65,7 +66,7 @@ static void	hide_cashier(void)
 void	close_cashier(void)
 {
   g_message("close user info");
-/*   gtk_container_foreach(GTK_CONTAINER(g_cashier_vbox), close_callback, g_cashier_vbox); */
+  /*   gtk_container_foreach(GTK_CONTAINER(g_cashier_vbox), close_callback, g_cashier_vbox); */
   set_string("cashier");
   set_string("no");
   flush_io_channel();
@@ -84,52 +85,51 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
   if (init)
     {
       s_personal_information_window =
-				gui_get_widget(s_glade_personal_information_xml,
-											 "personal_information_window");
+        gui_get_widget(s_glade_personal_information_xml,
+                       "personal_information_window");
       g_assert(s_personal_information_window);
       set_nil_draw_focus(s_personal_information_window);
       if(screen) gtk_layout_put(screen, s_personal_information_window, 0, 0);
       s_account_status_window =
-				gui_get_widget(s_glade_account_status_xml,
-											 "account_status_window");
+        gui_get_widget(s_glade_account_status_xml,
+                       "account_status_window");
       g_assert(s_account_status_window);
       if(screen) gtk_layout_put(screen, s_account_status_window, 0, 0);
-      s_exit_cashier_window =
-				gui_get_widget(s_glade_exit_cashier_xml,
-											 "exit_cashier_window");
+      s_exit_cashier_window = gui_get_widget(s_glade_exit_cashier_xml, "exit_cashier_window");
       g_assert(s_exit_cashier_window);
       if(screen) gtk_layout_put(screen, s_exit_cashier_window, 0, 0);
+      s_exit_button = GTK_BUTTON(gui_get_widget(s_glade_exit_cashier_xml, "exit_cashier"));
+      g_assert(s_exit_button);
 
-      /* FIXME entries */
+
       {
-				static const char*	entries[ENTRIES_CNT] =
-					{
-						"entry_player_id",
-						"entry_email",
-					};
-				int	i;
+        static const char*	entries[ENTRIES_CNT] =
+          {
+            "entry_player_id",
+            "entry_email",
+          };
+        int	i;
 
-				for (i = 0; i < ENTRIES_CNT; i++)
-					s_entries[i] = gui_get_widget(s_glade_personal_information_xml,
-																				entries[i]);
+        for (i = 0; i < ENTRIES_CNT; i++)
+          s_entries[i] = gui_get_widget(s_glade_personal_information_xml,
+                                        entries[i]);
       }
 
-      /* FIXME labels */
       {
-				static const char*	labels[LABELS_CNT] =
-					{
-						"play_money_available",
-						"play_money_in_game",
-						"play_money_total",
-						"custom_money_available",
-						"custom_money_in_game",
-						"custom_money_total"
-					};
-				int	i;
+        static const char*	labels[LABELS_CNT] =
+          {
+            "play_money_available",
+            "play_money_in_game",
+            "play_money_total",
+            "custom_money_available",
+            "custom_money_in_game",
+            "custom_money_total"
+          };
+        int	i;
 
-				for (i = 0; i < LABELS_CNT; i++)
-					s_labels[i] = gui_get_widget(s_glade_account_status_xml,
-																			 labels[i]);
+        for (i = 0; i < LABELS_CNT; i++)
+          s_labels[i] = gui_get_widget(s_glade_account_status_xml,
+                                       labels[i]);
       }
 
       GUI_BRANCH(s_glade_exit_cashier_xml, on_exit_cashier_clicked);
@@ -202,9 +202,16 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
     s_exit_cashier_position.x = top_left_x;
     s_exit_cashier_position.y = exit_cashier_y;
 
+    {
+      char* label = get_string();
+      gtk_button_set_label(s_exit_button, label);
+      g_free(label);
+    }
+
     gui_place(s_personal_information_window, &s_personal_information_position, screen);
     gui_place(s_account_status_window, &s_account_status_position, screen);
     gui_place(s_exit_cashier_window, &s_exit_cashier_position, screen);
+    
   } else {
 
     hide_cashier();

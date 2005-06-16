@@ -28,4 +28,5 @@
 from os import environ
 if not environ.has_key('GTK2_RC_FILES'):
     environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network/poker2d/Aero/gtkrc"
+
 from pokerclient2d import poker2d

@@ -5,11 +5,12 @@ poker-network includes a poker server, a client library, an abstract
 user interface library and a client based on it.
 
 The server deals the cards and checks the user actions using a poker
-engine (poker-engine). It listens on a TCP/IP port and understands a
-poker-network specific protocol. The persistent informations
-(accounts, hand history etc.) are stored in a MySQL database. The
-server was designed and tested to gracefully handle 1000 simultaneous
-players on a single machine also running the MySQL server.
+game engine (poker-engine). It listens on a TCP/IP port and
+understands a poker-network specific protocol. The persistent
+informations (accounts, hand history etc.) are stored in a MySQL
+database. The server was designed and tested to gracefully handle 1000
+simultaneous players on a single machine also running the MySQL
+server.
 
 The client library implements the poker-network protocol for
 the client. It runs a poker-engine identical to the one used by
@@ -31,7 +32,24 @@ sounds such as player P timeouted or player P wins the pot.
 The client based on the user interface library uses GTK. 
 
 ======================================================================
-Download
+Rationale
+
+The decision to include a graphical client in this distribution was
+made because it lacks documentation and user base. Without a proper
+documention one can hardly figure out how the client libraries are
+supposed to be used. And without an working client or an existing user
+base one could question the usability of the server and the protocol.
+
+======================================================================
+Development status : Alpha
+
+Features will be added
+The protocol will be modified
+The classes API is not stable
+
+======================================================================
+Download, feedback and bug reports
+
 http://sf.net/projects/pokersource/
 
 ======================================================================
@@ -39,7 +57,8 @@ Installation
 
 Debian GNU/Linux : use the sid package
 Other GNU/Linux or Unices : ./bootstrap ; ./configure ; make ; make install
-Others : the client part is known to work but don't ask how it's done
+        If the GTK client is not wanted, ./configure --disable-poker2d
+Others : the client part is known to work
 
 ======================================================================
 Usage
@@ -62,8 +81,8 @@ There is no documentation and one will have to read the code
 ======================================================================
 License
 
-All code and data included in this distributions are available under
-the terms of the GNU GPL.
+All code and data included in this distributions are released under
+the GNU GPL.
 
 #
 # Copyright (C) 2004, 2005 Mekensleep
@@ -87,6 +106,9 @@ the terms of the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+
+pokerclient2d/data/Aero is also released under the GNU GPL and
+Copyright Marcus Petzoldt <m.petzoldt@gmx.de>
 
 ======================================================================
 Contact
