@@ -40,6 +40,7 @@ import operator
 from traceback import print_exc, print_stack
 
 from MySQLdb.cursors import DictCursor
+import MySQLdb
 
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
@@ -49,9 +50,30 @@ if not sys.modules.has_key('twisted.internet.reactor'):
     pollreactor.install()
 else:
     print "poll reactor already installed"
-from twisted.internet import reactor, defer
+from twisted.internet import protocol, reactor, defer
+try:
+    # twisted-2.0
+    from zope.interface import Interface, implements
+except ImportError:
+    # twisted-1.3 forwards compatibility
+    def implements(interface):
+        frame = sys._getframe(1)
+        locals = frame.f_locals
 
-from pokernetwork.server import UGAMEServer, UGAMEServerFactory
+        # Try to make sure we were called from a class def
+        if (locals is frame.f_globals) or ('__module__' not in locals):
+            raise TypeError(" can be used only from a class definition.")
+
+        if '__implements__' in locals:
+            raise TypeError(" can be used only once in a class definition.")
+
+        locals['__implements__'] = interface
+
+    from twisted.python.components import Interface
+
+from twisted.python import components
+
+from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import User
 from pokernetwork.config import Config
 
@@ -60,14 +82,26 @@ from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 from pokerengine.pokertournament import *
 from pokernetwork.pokerpackets import *
+from pokernetwork.user import User
 
-class PokerServer(UGAMEServer):
+AUTH_TIMEOUT = 180
+
+class PokerAvatar:
     """Poker server"""
 
-    def __init__(self):
+    def __init__(self, service):
+        self.protocol = None
+        self.service = service
         self.tables = {}
-        UGAMEServer.__init__(self)
+        self.user = User()
+        self.__login_timer = None
+        self._context = []
+        self._packets_queue = []
+        self.noqueuePackets()
 
+    def setProtocol(self, protocol):
+        self.protocol = protocol
+        
     def __del__(self):
         print "PokerServer instance deleted"
 
@@ -77,14 +111,124 @@ class PokerServer(UGAMEServer):
     def message(self, string):
         print string
         
+    def isAuthorized(self, type):
+        return self.user.hasPrivilege(self.service.auth.GetLevel(type))
+
+    def askAuth(self, packet):
+        self.sendPacketVerbose(PacketAuthRequest())
+        self._context = [ packet ]
+        self.__login_timer = reactor.callLater(AUTH_TIMEOUT, self.__auth_expires)
+        self._handler = self.auth
+
+    def __auth_expires(self):
+        self.sendPacketVerbose(PacketAuthExpires())
+        self.__login_timer = None
+        self._handler = self._handleConnection
+        self.flushContext()
+
+    def login(self, info):
+        (serial, name, privilege) = info
+        self.user.serial = serial
+        self.user.name = name
+        self.user.privilege = privilege
+        self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
+        self.service.serial2client[serial] = self
+        if self.service.verbose:
+            print "user %s/%d logged in" % ( self.user.name, self.user.serial )
+
+    def logout(self):
+        if self.user.serial:
+            del self.service.serial2client[self.user.serial]
+            self.user.logout()
+        
+    def auth(self, packet):
+        if ( packet.type != PACKET_LOGIN and
+             packet.type != PACKET_AUTH_CANCEL ):
+            if self.service.verbose:
+                print "packet prepended to backlog"
+            self._context.append(packet)
+            return
+
+        if self.__login_timer and self.__login_timer.active():
+            self.__login_timer.cancel()
+        self.__login_timer = None
+
+        if packet.type == PACKET_AUTH_CANCEL:
+            self._handler = self._handleConnection
+            return
+            
+        if self.user.checkNameAndPassword(packet.name, packet.password):
+            info = self.service.auth.auth(packet.name, packet.password)
+        else:
+            info = False
+        if info:
+            self.sendPacketVerbose(PacketAuthOk())
+            self.login(info)
+        else:
+            self.sendPacketVerbose(PacketAuthRefused())
+        self.flushContext()
+
+    def flushContext(self):
+        for packet in self._context:
+            print "PACKET %s " % packet
+            self._handler = self._handleConnection
+            if packet and self.isAuthorized(packet.type):
+                if hasattr(packet, "serial"):
+                    packet.serial = self.getSerial()
+                self._handler(packet)
+        self._context = []
+
+    def getSerial(self):
+        return self.user.serial
+
+    def getName(self):
+        return self.user.name
+
+    def getUrl(self):
+        return self.user.url
+
+    def getOutfit(self):
+        return self.user.outfit
+    
+    def isLogged(self):
+        return self.user.isLogged()
+
+    def queuePackets(self):
+        self._queue_packets = True
+
+    def noqueuePackets(self):
+        self._queue_packets = False
+
+    def resetPacketsQueue(self):
+        queue = self._packets_queue
+        self._packets_queue = []
+        return queue
+    
+    def sendPacket(self, packet):
+        if self._queue_packets:
+            self._packets_queue.append(packet)
+        else:
+            self.protocol.sendPacket(packet)
+
+    def sendPacketVerbose(self, packet):
+        if self.service.verbose > 1:
+            print "sendPacket: %s" % str(packet)
+        self.sendPacket(packet)
+        
     def packet2table(self, packet):
         if hasattr(packet, "game_id") and self.tables.has_key(packet.game_id):
             return self.tables[packet.game_id]
         else:
             return False
 
-    def _handleConnection(self, packet):
-        if self.factory.verbose > 2: print "handleConnection: " + str(packet) 
+    def handlePacket(self, packet):
+        self.queuePackets()
+        self.handlePacketLogic(packet)
+        self.noqueuePackets()
+        return self.resetPacketsQueue()
+        
+    def handlePacketLogic(self, packet):
+        if self.service.verbose > 2: print "handleConnection: " + str(packet) 
         if not self.isAuthorized(packet.type):
             self.askAuth(packet)
             return
@@ -127,28 +271,28 @@ class PokerServer(UGAMEServer):
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
-            ( players, tourneys ) = self.factory.tourneyStats()
+            ( players, tourneys ) = self.service.tourneyStats()
             tourneys = PacketPokerTourneyList(players = players,
                                               tourneys = tourneys)
-            for tourney in self.factory.tourneySelect(packet.string):
+            for tourney in self.service.tourneySelect(packet.string):
                 tourneys.packets.append(PacketPokerTourney(**tourney))
             self.sendPacketVerbose(tourneys)
             return
         
         elif packet.type == PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST:
-            self.sendPacketVerbose(self.factory.tourneyPlayersList(packet.game_id))
+            self.sendPacketVerbose(self.service.tourneyPlayersList(packet.game_id))
             return
 
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             if self.getSerial() == packet.serial:
-                self.factory.tourneyRegister(packet)
+                self.service.tourneyRegister(packet)
             else:
                 print "attempt to register in tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() )
             return
             
         elif packet.type == PACKET_POKER_TOURNEY_UNREGISTER:
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.factory.tourneyUnregister(packet))
+                self.sendPacketVerbose(self.service.tourneyUnregister(packet))
             else:
                 print "attempt to unregister from tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() )
             return
@@ -167,7 +311,7 @@ class PokerServer(UGAMEServer):
 
         elif packet.type == PACKET_POKER_HAND_HISTORY:
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.factory.getHandHistory(packet.game_id, packet.serial))
+                self.sendPacketVerbose(self.service.getHandHistory(packet.game_id, packet.serial))
             else:
                 print "attempt to get history of player %d by player %d" % ( packet.serial, self.getSerial() )
             return
@@ -185,7 +329,7 @@ class PokerServer(UGAMEServer):
                 if game.isRunning():
                     print "player %d tried to start a new game while in game " % self.getSerial()
                     self.sendPacketVerbose(PacketPokerStart(game_id = game.id))
-                elif self.factory.shutting_down:
+                elif self.service.shutting_down:
                     print "server shutting down"
                 elif table.owner != 0:
                     if self.getSerial() != table.owner:
@@ -324,19 +468,19 @@ class PokerServer(UGAMEServer):
             table.update()
 
 #         if packet.type == PACKET_POKER_TABLE_GROUP:
-#             serial = self.factory.setTableGroup(self.getSerial(), packet.game_ids)
+#             serial = self.service.setTableGroup(self.getSerial(), packet.game_ids)
 #             self.sendPacketVerbose(PacketPokerTableGroupSerial(serial = serial))
 
 #         elif packet.type == PACKET_POKER_TABLE_UNGROUP:
-#             serial = self.factory.unsetTableGroup(self.getSerial(), packet.serial)
+#             serial = self.service.unsetTableGroup(self.getSerial(), packet.serial)
 #             self.sendPacketVerbose(PacketPokerTableUngroup(serial = serial))
             
 #         elif packet.type == PACKET_POKER_TABLE_GROUP_BALANCE:
-#             result = self.factory.balance(self.getSerial(), packet.serial)
+#             result = self.service.balance(self.getSerial(), packet.serial)
 #             self.sendPacketVerbose(PacketPokerTableGroupBalance(serial = result))
             
         elif packet.type == PACKET_POKER_TABLE_JOIN:
-            table = self.factory.getTable(packet.game_id)
+            table = self.service.getTable(packet.game_id)
             if table:
                 if not table.joinPlayer(self, self.getSerial()):
                     self.sendPacketVerbose(PacketPokerTable())
@@ -363,11 +507,11 @@ class PokerServer(UGAMEServer):
     def setPlayerInfo(self, packet):
         self.user.url = packet.url
         self.user.outfit = packet.outfit
-        return self.factory.setPlayerInfo(packet)
+        return self.service.setPlayerInfo(packet)
 
     def setPersonalInfo(self, packet):
         self.personal_info = packet
-        self.factory.setPersonalInfo(packet)
+        self.service.setPersonalInfo(packet)
 
     def getPlayerInfo(self):
         return PacketPokerPlayerInfo(serial = self.getSerial(),
@@ -376,7 +520,7 @@ class PokerServer(UGAMEServer):
                                      outfit = self.user.outfit)
     
     def listPlayers(self, packet):
-        table = self.factory.getTable(packet.game_id)
+        table = self.service.getTable(packet.game_id)
         if table:
             players = table.listPlayers()
             self.sendPacketVerbose(PacketPokerPlayersList(game_id = packet.game_id,
@@ -384,7 +528,7 @@ class PokerServer(UGAMEServer):
         
     def listTables(self, packet):
         packets = []
-        for table in self.factory.listTables(packet.string, self.getSerial()):
+        for table in self.service.listTables(packet.string, self.getSerial()):
             game = table.game
             packet = PacketPokerTable(id = game.id,
                                       name = game.name,
@@ -399,7 +543,7 @@ class PokerServer(UGAMEServer):
                                       observers = len(table.observers),
                                       waiting = len(table.waiting))
             packets.append(packet)
-        ( players, tables ) = self.factory.statsTables()
+        ( players, tables ) = self.service.statsTables()
         self.sendPacketVerbose(PacketPokerTableList(players = players,
                                                     tables = tables,
                                                     packets = packets))
@@ -422,7 +566,7 @@ class PokerServer(UGAMEServer):
                 where = "where " + packet.string
         where += " order by hands.serial desc"
         limit = " limit %d,%d " % ( start, count )
-        (total, hands) = self.factory.listHands(select_list + where + limit, select_total + where)
+        (total, hands) = self.service.listHands(select_list + where + limit, select_total + where)
         self.sendPacketVerbose(PacketPokerHandList(string = packet.string,
                                                    start = packet.start,
                                                    count = packet.count,
@@ -430,7 +574,7 @@ class PokerServer(UGAMEServer):
                                                    total = total))
 
     def createTable(self, packet):
-        table = self.factory.createTable(self.getSerial(), {
+        table = self.service.createTable(self.getSerial(), {
             "seats": packet.seats,
             "name": packet.name,
             "variant": packet.variant,
@@ -508,17 +652,17 @@ class PokerServer(UGAMEServer):
         table.sendNewPlayerInformation(serial)
         
     def connectionLost(self, reason):
-        if self.factory.verbose:
+        if self.service.verbose:
             print "Connection lost for %s/%d" % ( self.getName(), self.getSerial() )
         for table in self.tables.values():
             table.disconnectPlayer(self, self.getSerial())
-        UGAMEServer.connectionLost(self, reason)
+        self.logout()
 
     def getUserInfo(self, serial):
-        self.sendPacketVerbose(self.factory.getUserInfo(serial))
+        self.sendPacketVerbose(self.service.getUserInfo(serial))
 
     def getPersonalInfo(self, serial):
-        self.sendPacketVerbose(self.factory.getPersonalInfo(serial))
+        self.sendPacketVerbose(self.service.getPersonalInfo(serial))
 
     def removePlayer(self, table, serial):
         game = table.game
@@ -1678,16 +1822,58 @@ class PokerTable:
             # If the game is not running, cancel the previous timeout
             #
             self.cancelTimers()
-        
-class PokerServerFactory(UGAMEServerFactory):
-    """server factory"""
+
+class IPokerService(Interface):
+
+    def createAvatar(self):
+        """ """
+
+    def destroyAvatar(self, avatar):
+        """ """
+
+class IPokerFactory(Interface):
+
+    def createAvatar(self):
+        """ """
+
+    def destroyAvatar(self, avatar):
+        """ """
+
+    def buildProtocol(self, addr):
+        """ """
+
+class PokerFactoryFromPokerService(protocol.ServerFactory):
+
+    implements(IPokerFactory)
+
+    protocol = PokerServerProtocol
+
+    def __init__(self, service):
+        self.service = service
+        self.verbose = service.verbose
+
+    def createAvatar(self):
+        """ """
+        return self.service.createAvatar()
+
+    def destroyAvatar(self, avatar):
+        """ """
+        return self.service.destroyAvatar(avatar)
+
+components.registerAdapter(PokerFactoryFromPokerService,
+                           IPokerService,
+                           IPokerFactory)
+
+class PokerService(service.Service):
+
+    implements(IPokerService)
 
     def __init__(self, settings):
-        database = settings.headerGetProperties("/server/database")[0]
-        UGAMEServerFactory.__init__(self, database = database)
-        self.protocol = PokerServer
+        self.db = PokerDatabase(settings)
+        self.auth = PokerAuth(self.db, settings)
         self.settings = settings
         self.dirs = split(settings.headerGet("/server/path"))
+        self.serial2client = {}
         self.tables = []
         self.groups = {}
         self.table_serial = 100
@@ -1703,13 +1889,21 @@ class PokerServerFactory(UGAMEServerFactory):
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
         self.updateTourneysSchedule()
-        self.authSetLevel(PACKET_POKER_SEAT, User.REGULAR)
-        self.authSetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
-        self.authSetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
-        self.authSetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
-        self.authSetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
-        self.authSetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
+        self.auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
+        self.auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
+        self.auth.SetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
+        self.auth.SetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
+        self.auth.SetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
+        self.auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
 
+    def stopServiceFinish(self, x):
+        service.Service.stopService(self)
+
+    def stopService(self):
+        deferred = self.shutdown()
+        deferred.addCallback(self.stopServiceFinish)
+        return deferred
+    
     def shutdown(self):
         self.shutting_down = True
         self.shutdown_deferred = defer.Deferred()
@@ -1725,7 +1919,7 @@ class PokerServerFactory(UGAMEServerFactory):
             if table.game.isRunning():
                 playing += 1
         if self.verbose and playing > 0:
-            print "Shutting %d games still running" % playing
+            print "Shutting down %d games still running" % playing
         if playing <= 0:
             if self.verbose:
                 print "Shutdown immediately"
@@ -1740,6 +1934,12 @@ class PokerServerFactory(UGAMEServerFactory):
     def stopFactory(self):
         pass
 
+    def createAvatar(self):
+        return PokerAvatar(self)
+
+    def destroyAvatar(self, avatar):
+        avatar.connectionLost("Disconnected")
+    
     def updateTourneysSchedule(self):
         cursor = self.db.cursor(DictCursor)
 
@@ -2724,17 +2924,75 @@ class PokerServerFactory(UGAMEServerFactory):
         else:
             return 0
 
-class PokerService(internet.TCPServer):
+class PokerDatabase:
 
-    def stopServiceFinish(self, x):
-        internet.TCPServer.stopService(self)
+    def __init__(self, settings):
+        database = settings.headerGetProperties("/server/database")[0]
+        self.db = MySQLdb.connect(host = database["host"],
+                                  user = database["user"],
+                                  passwd = database["password"],
+                                  db = database["name"])
+        print "Database connection to %s/%s open" % ( database["host"], database["name"] )        
+        self.verbose = settings.headerGetInt("/server/@verbose")
 
-    def stopService(self):
-        if self._port.factory.verbose: print "stopService"
-        deferred = self._port.factory.shutdown()
-        deferred.addCallback(self.stopServiceFinish)
-        return deferred
+    def cursor(self, *args, **kwargs):
+        return self.db.cursor(*args, **kwargs)
+
+class PokerAuth:
+
+    def __init__(self, db, settings):
+        self.db = db
+        self.type2auth = {}
+        self.verbose = settings.headerGetInt("/server/@verbose")
+
+    def SetLevel(self, type, level):
+        self.type2auth[type] = level
+
+    def GetLevel(self, type):
+        return self.type2auth.has_key(type) and self.type2auth[type]
     
+    def auth(self, name, password):
+        cursor = self.db.cursor()
+        cursor.execute("select serial, password, privilege from users "
+                       "where name = '%s'" % name)
+        numrows = int(cursor.rowcount)
+        serial = 0
+        privilege = User.REGULAR
+        if numrows <= 0:
+            if self.verbose > 1:
+                print "user %s does not exist, create it" % name
+            serial = self.userCreate(name, password)
+        elif numrows > 1:
+            print "more than one row for %s" % name
+            return False
+        else: 
+            (serial, password_sql, privilege) = cursor.fetchone()
+            cursor.close()
+            if password_sql != password:
+                print "password mismatch for %s" % name
+                return False
+
+        return (serial, name, privilege)
+
+    def userCreate(self, name, password):
+        if self.verbose:
+            print "creating user %s" % name,
+        cursor = self.db.cursor()
+        cursor.execute("insert into users (name, password) values ('%s', '%s')" %
+                       (name, password))
+        #
+        # Accomodate for MySQLdb versions < 1.1
+        #
+        if hasattr(cursor, "lastrowid"):
+            serial = cursor.lastrowid
+        else:
+            serial = cursor.insert_id()
+        if self.verbose:
+            print "create user with serial %s" % serial
+        cursor.execute("insert into users_private (serial) values ('%d')" % serial)
+        cursor.close()
+        return int(serial)
+
 def run(argv):
     configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.server.xml"
     settings = Config([''])
@@ -2744,15 +3002,17 @@ def run(argv):
 
     application = service.Application('poker')
     serviceCollection = service.IServiceCollection(application)
+    poker_service = PokerService(settings)
+    poker_service.cleanUp(temporary_users = settings.headerGet("/server/users/@temporary"))
+    poker_service.setServiceParent(serviceCollection)
 
-    poker_factory = PokerServerFactory(settings)
-    poker_factory.cleanUp(temporary_users = settings.headerGet("/server/users/@temporary"))
-    poker_port = settings.headerGetInt("/server/port")
-    PokerService(poker_port, poker_factory).setServiceParent(serviceCollection)
-    reactor.addSystemEventTrigger('after', 'shutdown', poker_factory.shutdownTables)
-    application.verbose = poker_factory.verbose
+    tcp_port = settings.headerGetInt("/server/port")
+    internet.TCPServer(tcp_port, IPokerFactory(poker_service)
+                       ).setServiceParent(serviceCollection)    
+
+    application.verbose = poker_service.verbose
+#    reactor.addSystemEventTrigger('before', 'shutdown', poker_service.shutdown)
     return application
-        
         
 application = run(sys.argv)
 
