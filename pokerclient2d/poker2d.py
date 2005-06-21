@@ -200,12 +200,25 @@ class PokerClientFactory2D(PokerClientFactory):
             
     def selectServer(self, server):
         (self.host, self.port) = split(server, ":")
+        if ";" in self.port:
+            (self.port, want_ssl) = split(self.port, ";")
+        else:
+            want_ssl = None
         self.port = int(self.port)
         settings = self.settings
-        reactor.connectTCP(self.host,
-                           self.port,
-                           self,
-                           settings.headerGetInt("/settings/@tcptimeout"))
+        timeout = settings.headerGetInt("/settings/@tcptimeout")
+        if want_ssl:
+            from twisted.internet import ssl
+            reactor.connectSSL(self.host,
+                               self.port,
+                               self,
+                               ssl.ClientContextFactory(),
+                               timeout)
+        else:
+            reactor.connectTCP(self.host,
+                               self.port,
+                               self,
+                               timeout)
         
 
     def buildProtocol(self, addr):

@@ -56,7 +56,8 @@ pkgsysconfdir = ${sysconfdir}/${PACKAGE}
 dist_pkgsysconf_DATA = \
 	conf/poker.client.xml \
 	conf/poker.bot.xml \
-	conf/poker.server.xml
+	conf/poker.server.xml \
+	conf/poker.pem
 
 pokernetworkdir = ${pyexecdir}/pokernetwork
 pokernetwork_PYTHON = \
@@ -95,6 +96,7 @@ EXTRA_DIST = \
 	examples/poker.server-monotone.xml \
 	examples/interface_dummy_server.py \
 	examples/interface.py \
+	examples/xmlrpc-soap.py \
 	examples/run-example
 
 clean-local:

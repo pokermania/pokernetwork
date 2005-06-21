@@ -26,29 +26,53 @@
 #
 from re import match
 
-def checkName(name):
-    if not match("^[a-zA-Z][a-zA-Z0-9]{4,9}$", name):
-        if len(name) > 10:
-            return (False, "login name must be at most 10 characters long")
-        elif len(name) < 5:
-            return (False, "login name must be at least 5 characters long")
-        elif not match("^[a-zA-Z]", name):
-            return (False, "login name must start with a letter")
-        else:
-            return (False, "login name must be all letters and digits")
+NAME_TOO_SHORT = 1
+NAME_TOO_LONG = 2
+NAME_MUST_START_WITH_LETTER = 20
+NAME_NOT_ALNUM = 21
+PASSWORD_TOO_SHORT = 3
+PASSWORD_TOO_LONG = 4
+PASSWORD_NOT_ALNUM = 30
+INVALID_EMAIL = 5
+ALREADY_EXISTS = 7
+SERVER_ERROR = 8
 
-    return (True, None)
+NAME_LENGTH_MAX = 20
+NAME_LENGTH_MIN = 5
+
+PASSWORD_LENGTH_MAX = 15
+PASSWORD_LENGTH_MIN = 5
+
+def checkName(name):
+    if not match("^[a-zA-Z][a-zA-Z0-9]{" + str(NAME_LENGTH_MIN - 1) + "," + str(NAME_LENGTH_MAX - 1) + "}$", name):
+        if len(name) > NAME_LENGTH_MAX:
+            return (False, NAME_TOO_LONG, "login name must be at most %d characters long" % NAME_LENGTH_MAX)
+        elif len(name) < NAME_LENGTH_MIN:
+            return (False, NAME_TOO_SHORT, "login name must be at least %d characters long" % NAME_LENGTH_MIN)
+        elif not match("^[a-zA-Z]", name):
+            return (False, NAME_MUST_START_WITH_LETTER, "login name must start with a letter")
+        else:
+            return (False, NAME_NOT_ALNUM, "login name must be all letters and digits")
+
+    return (True, None, None)
 
 def checkPassword(password):
-    if not match("^[a-zA-Z0-9]{5,9}$", password):
-        if len(password) > 10:
-            return (False, "password must be at most 10 characters long")
-        elif len(password) < 5:
-            return (False, "password must be at least 5 characters long")
+    if not match("^[a-zA-Z0-9]{" + str(PASSWORD_LENGTH_MIN) + "," + str(PASSWORD_LENGTH_MAX) + "}$", password):
+        if len(password) > PASSWORD_LENGTH_MAX:
+            return (False, PASSWORD_TOO_LONG, "password must be at most %d characters long" % PASSWORD_LENGTH_MAX)
+        elif len(password) < PASSWORD_LENGTH_MIN:
+            return (False, PASSWORD_TOO_SHORT, "password must be at least %d characters long" % PASSWORD_LENGTH_MIN)
         else:
-            return (False, "password must be all letters and digits")
+            return (False, PASSWORD_NOT_ALNUM, "password must be all letters and digits")
 
-    return (True, None)
+    return (True, None, None)
+
+def checkNameAndPassword(name, password):
+    status = checkName(name)
+    if status[0]:
+        return checkPassword(password)
+    else:
+        return status
 
 class User:
     REGULAR = 1
@@ -76,13 +100,6 @@ class User:
             return True
         
         return self.privilege >= privilege
-
-    def checkNameAndPassword(self, name, password):
-        status = checkName(name)
-        if status[0]:
-            return checkPassword(password)
-        else:
-            return status
 
     def __str__(self):
         return "serial = %d, name = %s, url = %s, outfit = %s, privilege = %d" % ( self.serial, self.name, self.url, self.outfit, self.privilege )

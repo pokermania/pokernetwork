@@ -31,6 +31,8 @@ create table users (
 	email varchar(128),
 	skin_url varchar(32) default "default",
 	skin_outfit text,
+        skin_image blob,
+        skin_image_type varchar(32),
 	password varchar(32),
 	privilege int default 1,
 

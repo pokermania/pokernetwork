@@ -1,3 +1,19 @@
+Tue Jun 21 10:05:13 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.2
+
+	* pokernetwork/pokerserver.py (PokerXML): base class and
+	  derived classes PokerXMLRPC and PokerSOAP to support 
+	  XML-RPC and SOAP
+
+	* examples/xmlrpc-soap.py: XML-RPC and SOAP client test
+	
+Mon Jun 20 21:52:46 2005  Loic Dachary  <loic@gnu.org>
+
+	* conf/poker.pem: self signed certificate
+	* pokerclient2d/poker2d.py: support SSL connections
+	* pokernetwork/pokerserver.py: allow SSL connections
+
 Mon Jun 20 09:21:42 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerserver.py: restructure to allow multiple

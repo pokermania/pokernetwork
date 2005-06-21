@@ -6,7 +6,7 @@
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15" />
   <name>username</name>
   <passwd>password</passwd>
-  <servers>%HOST%:19381</servers>
+  <servers>%HOST%:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <chat max_chars="40" line_length="20" />

@@ -38,6 +38,7 @@ from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclient import ABSOLUTE_LAGMAX
+from pokernetwork.user import checkNameAndPassword
 from pokerui import pokerinterface
 from pokerui.pokerinteractor import PokerInteractor, PokerInteractorSet
 from pokerui.pokerchat import PokerChat
@@ -523,7 +524,7 @@ class PokerRenderer:
             return
         
         interface = self.factory.interface
-        (ok, reason) = self.protocol.user.checkNameAndPassword(name, password)
+        (ok, code, reason) = checkNameAndPassword(name, password)
         if ok:
             self.protocol.sendPacket(PacketLogin(name = name,
                                                  password = password))

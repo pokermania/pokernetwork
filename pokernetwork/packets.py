@@ -258,14 +258,10 @@ class PacketLogin(Packet):
     """
 
     type = PACKET_LOGIN
-    name = ""
-    password = ""
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("name"):
-            self.name = kwargs["name"]
-        if kwargs.has_key("password"):
-            self.password = kwargs["password"]
+        self.name = kwargs.get("name", "unknown")
+        self.password = kwargs.get("password", "unknown")
 
     def pack(self):
         return Packet.pack(self) + self.packstring(self.name) + self.packstring(self.password)
@@ -407,9 +403,6 @@ class PacketError(Packet):
     """
 
     type = PACKET_ERROR
-    other_type = 0
-    code = 0
-    message = ""
 
     format = "!IB"
     format_size = calcsize(format)

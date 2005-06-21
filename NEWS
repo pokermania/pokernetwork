@@ -1,3 +1,12 @@
+Release 1.0.2
+
+Server can be made to listen on SSL or regular TCP ports.
+
+XML-RPC and SOAP support, either with cookie based sessions
+or stateless.
+
+Server and client SSL support.
+
 Release 1.0.1
 
 Initial release as a standalone project after extraction from 

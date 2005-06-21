@@ -30,6 +30,7 @@ import sys
 sys.path.insert(0, ".")
 sys.path.insert(0, "..")
 
+from os.path import exists
 from re import match
 from types import *
 from string import split, lower, join
@@ -37,10 +38,13 @@ from pprint import pprint, pformat
 import time
 import os
 import operator
+import re
 from traceback import print_exc, print_stack
 
 from MySQLdb.cursors import DictCursor
 import MySQLdb
+
+from OpenSSL import SSL
 
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
@@ -74,7 +78,7 @@ except ImportError:
 from twisted.python import components
 
 from pokernetwork.server import PokerServerProtocol
-from pokernetwork.user import User
+from pokernetwork.user import User, checkNameAndPassword, checkName, checkPassword
 from pokernetwork.config import Config
 
 from pokerengine.pokergame import PokerGameServer, PokerPlayer, history2messages
@@ -103,7 +107,7 @@ class PokerAvatar:
         self.protocol = protocol
         
     def __del__(self):
-        print "PokerServer instance deleted"
+        print "PokerAvatar instance deleted"
 
     def error(self, string):
         self.message("ERROR " + string)
@@ -156,10 +160,12 @@ class PokerAvatar:
         if packet.type == PACKET_AUTH_CANCEL:
             self._handler = self._handleConnection
             return
-            
-        if self.user.checkNameAndPassword(packet.name, packet.password):
+
+        status = checkNameAndPassword(packet.name, packet.password)
+        if status[0]:
             info = self.service.auth.auth(packet.name, packet.password)
         else:
+            print "PokerAvatar::auth: failure " + str(status)
             info = False
         if info:
             self.sendPacketVerbose(PacketAuthOk())
@@ -268,6 +274,12 @@ class PokerAvatar:
                 self.setPersonalInfo(packet)
             else:
                 print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
+            return
+
+        elif packet.type == PACKET_POKER_SET_ACCOUNT:
+            if self.getSerial() != packet.serial:
+                packet.serial = 0
+            self.sendPacketVerbose(self.service.setAccount(packet))
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
@@ -1919,7 +1931,7 @@ class PokerService(service.Service):
             if table.game.isRunning():
                 playing += 1
         if self.verbose and playing > 0:
-            print "Shutting down %d games still running" % playing
+            print "Shutting down, waiting for %d games to finish" % playing
         if playing <= 0:
             if self.verbose:
                 print "Shutdown immediately"
@@ -2459,19 +2471,20 @@ class PokerService(service.Service):
     def getUserInfo(self, serial):
         cursor = self.db.cursor()
         
-        sql = ( "select play_money,custom_money,point_money,rating,email from users where serial = " + str(serial) )
+        sql = ( "select play_money,custom_money,point_money,rating,email,name from users where serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getUserInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerUserInfo(serial = serial)
-        (play_money,custom_money,point_money,rating,email) = cursor.fetchone()
+        (play_money,custom_money,point_money,rating,email,name) = cursor.fetchone()
+        if email == None: email = ""
 
         sql = ( "select sum(user2table.bet) + sum(user2table.money) from user2table,pokertables "
                 "  where user2table.user_serial = " + str(serial) + " and "
                 "        user2table.table_serial = pokertables.serial and "
                 "        pokertables.custom_money = \"n\" ")
         cursor.execute(sql)
-        if cursor.rowcount != 1:
+        if cursor.rowcount < 1:
             print " *ERROR* getUserInfo(%d) play money expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerUserInfo(serial = serial)
         else:
@@ -2484,7 +2497,7 @@ class PokerService(service.Service):
                 "        user2table.table_serial = pokertables.serial and "
                 "        pokertables.custom_money = \"y\" ")
         cursor.execute(sql)
-        if cursor.rowcount != 1:
+        if cursor.rowcount < 1:
             print " *ERROR* getUserInfo(%d) custom money expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerUserInfo(serial = serial)
         else:
@@ -2495,18 +2508,22 @@ class PokerService(service.Service):
         cursor.close()
         
         packet = PacketPokerUserInfo(serial = serial,
+                                     name = name,
+                                     email = email,
                                      play_money = play_money,
                                      play_money_in_game = play_money_in_game,
                                      custom_money = custom_money,
                                      custom_money_in_game = custom_money_in_game,
                                      point_money = point_money,
                                      rating = rating)
-        packet.email = email or ""
         return packet
 
     def getPersonalInfo(self, serial):
         user_info = self.getUserInfo(serial)
+        print "getPersonalInfo %s" % str(user_info)
         packet = PacketPokerPersonalInfo(serial = user_info.serial,
+                                         name = user_info.name,
+                                         email = user_info.email,
                                          play_money = user_info.play_money,
                                          play_money_in_game = user_info.play_money_in_game,
                                          custom_money = user_info.custom_money,
@@ -2531,15 +2548,109 @@ class PokerService(service.Service):
                 " addr_town = '" + personal_info.addr_town + "', "
                 " addr_state = '" + personal_info.addr_state + "', "
                 " addr_country = '" + personal_info.addr_country + "', "
-                " phone = '" + personal_info.phone + "', "
+                " phone = '" + personal_info.phone + "' "
                 " where serial = " + str(personal_info.serial) )
         if self.verbose > 1:
             print "setPersonalInfo: %s" % sql
         cursor.execute(sql)
         if cursor.rowcount != 1 and cursor.rowcount != 0:
             print " *ERROR* setPersonalInfo: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
-        
-        
+            return False
+        else:
+            return True
+
+    def setAccount(self, packet):
+        #
+        # Sanity checks
+        #
+        status = checkName(packet.name)
+        if not status[0]:
+            return PacketError(code = status[1],
+                               message = status[2],
+                               other_type = PACKET_POKER_SET_ACCOUNT)
+        status = checkPassword(packet.password)
+        if not status[0]:
+            return PacketError(code = status[1],
+                               message = status[2],
+                               other_type = PACKET_POKER_SET_ACCOUNT)
+        email_regexp = ".*.@.*\..*$"
+        if not re.match(email_regexp, packet.email):
+            return PacketError(code = PacketPokerSetAccount.INVALID_EMAIL,
+                               message = "email %s does not match %s " % ( packet.email, email_regexp ),
+                               other_type = PACKET_POKER_SET_ACCOUNT)
+        #
+        # Look for user
+        #
+        cursor = self.db.cursor()
+        cursor.execute("select serial from users where name = '%s'" % packet.name)
+        numrows = int(cursor.rowcount)
+        if numrows == 0:
+            cursor.execute("select serial from users where email = '%s' " % packet.email)
+            numrows = int(cursor.rowcount)
+            if numrows > 0:
+                return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
+                                   message = "there already is another account with the email %s" % packet.email,
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+            #
+            # User does not exists, create it
+            #
+            sql = "insert into users (name, password, email) values ('%s', '%s', '%s')" % (packet.name, packet.password, packet.email)
+            cursor.execute(sql)
+            if cursor.rowcount != 1:
+                print " *ERROR* setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "inserted %d rows (expected 1)" % cursor.rowcount,
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+            #
+            # Accomodate for MySQLdb versions < 1.1
+            #
+            if hasattr(cursor, "lastrowid"):
+                packet.serial = cursor.lastrowid
+            else:
+                packet.serial = cursor.insert_id()
+            cursor.execute("insert into users_private (serial) values ('%d')" % packet.serial)
+            if int(cursor.rowcount) == 0:
+                print " *ERROR* setAccount: unable to create user_private entry for serial %d" % packet.serial
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "unable to create user_private entry for serial %d" % packet.serial,
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+        else:
+            #
+            # User exists, update name, password and email
+            #
+            (serial,) = cursor.fetchone()
+            if serial != packet.serial:
+                return PacketError(code = PacketPokerSetAccount.NAME_ALREADY_EXISTS,
+                                   message = "user name %s already exists" % packet.name,
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+            cursor.execute("select serial from users where email = '%s' and serial != %d" % ( packet.email, serial ))
+            numrows = int(cursor.rowcount)
+            if numrows > 0:
+                return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
+                                   message = "there already is another account with the email %s" % packet.email,
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+            sql = ( "update users set "
+                    " name = '" + packet.name + "', "
+                    " email = '" + packet.email + "', "
+                    " password = '" + packet.password + "' "
+                    " where serial = " + str(packet.serial) )
+            if self.verbose > 1:
+                print "setAccount: %s" % sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1 and cursor.rowcount != 0:
+                print " *ERROR* setAccount: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "modified %d rows (expected 1 or 0)" % cursor.rowcount,
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+        #
+        # Set personal information
+        #
+        if not self.setPersonalInfo(packet):
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "unable to set personal information",
+                                   other_type = PACKET_POKER_SET_ACCOUNT)
+        return self.getPersonalInfo(packet.serial)
+
     def setPlayerInfo(self, player_info):
         cursor = self.db.cursor()
         sql = ( "update users set "
@@ -2993,6 +3104,150 @@ class PokerAuth:
         cursor.close()
         return int(serial)
 
+class SSLContextFactory:
+
+    def __init__(self, settings):
+        self.pem_file = None
+        for dir in split(settings.headerGet("/server/path")):
+            if exists(dir + "/poker.pem"):
+                self.pem_file = dir + "/poker.pem"
+        
+    def getContext(self):
+        ctx = SSL.Context(SSL.SSLv23_METHOD)
+        ctx.use_certificate_file(self.pem_file)
+        ctx.use_privatekey_file(self.pem_file)
+        return ctx
+
+from twisted.web import resource, server
+
+class PokerTree(resource.Resource):
+
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.putChild("RPC2", PokerXMLRPC(self.service))
+        self.putChild("SOAP", PokerSOAP(self.service))
+        self.putChild("", self)
+
+    def render_GET(self, request):
+        return "Use /RPC2"
+
+components.registerAdapter(PokerTree, IPokerService, resource.IResource)
+
+class PokerXML(resource.Resource):
+
+    encoding = "ISO8859-1"
+    
+    def __init__(self, service):
+        self.service = service
+        self.verbose = service.verbose
+
+    def sessionExpires(self, session):
+        self.service.destroyAvatar(session.avatar)
+        del session.avatar
+
+    def render(self, request):
+        request.content.seek(0, 0)
+        if self.encoding is not None:
+            mimeType = 'text/xml; charset="%s"' % self.encoding
+        else:
+            mimeType = "text/xml"
+        request.setHeader("Content-type", mimeType)
+        args = self.getArguments(request)
+        if self.verbose > 2:
+            print "PokerXML: " + str(args)
+        session = None
+        use_sessions = args[0]
+        args = args[1:]
+        if use_sessions == "use sessions":
+            session = request.getSession()
+            if not hasattr(session, "avatar"):
+                session.avatar = self.service.createAvatar()
+                session.notifyOnExpire(lambda: self.sessionExpires(session))
+# For test : trigger session expiration in the next 4 seconds
+# see http://twistedmatrix.com/bugs/issue1090
+#                session.lastModified -= 900
+#                reactor.callLater(4, session.checkExpired)
+            avatar = session.avatar
+        else:
+            avatar = self.service.createAvatar()
+
+        result_packets = []
+        for packet in self.args2packets(args):
+            if isinstance(packet, PacketError):
+                result_packets.append(packet)
+                break
+            else:
+                result_packets.extend(avatar.handlePacket(packet))
+        result_maps = self.packets2maps(result_packets)
+
+        if use_sessions != "use sessions":
+            self.service.destroyAvatar(avatar)
+
+        result_string = self.maps2result(result_maps)
+        request.setHeader("Content-length", str(len(result_string)))
+        return result_string
+
+    def args2packets(self, args):
+        packets = []
+        for arg in args:
+            if re.match("^[a-zA-Z]+$", arg['type']):
+                try:
+                    packets.append(eval(arg['type'] + '(**arg)'))
+                except:
+                    packets.append(PacketError(message = "Unable to instantiate %s(%s)" % ( arg['type'], arg )))
+            else:
+                packets.append(PacketError(message = "Invalid type name %s" % arg['type']))
+        return packets
+
+    def packets2maps(self, packets):
+        maps = []
+        for packet in packets:
+            attributes = packet.__dict__.copy()
+            attributes['type'] = packet.__class__.__name__
+            maps.append(attributes)
+        return maps
+
+    def getArguments(self, request):
+        pass
+    
+    def maps2result(self, maps):
+        pass
+
+import xmlrpclib
+
+class PokerXMLRPC(PokerXML):
+
+    def getArguments(self, request):
+        ( args, functionPath ) = xmlrpclib.loads(request.content.read())
+        return args
+    
+    def maps2result(self, maps):
+        return xmlrpclib.dumps((maps, ), methodresponse = 1)
+
+import SOAPpy
+
+class PokerSOAP(PokerXML):
+
+    def getArguments(self, request):
+        data = request.content.read()
+
+        p, header, body, attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
+
+        methodName, args, kwargs, ns = p._name, p._aslist, p._asdict, p._ns
+        
+        # deal with changes in SOAPpy 0.11
+        if callable(args):
+            args = args()
+        if callable(kwargs):
+            kwargs = kwargs()
+
+        return SOAPpy.simplify(args)
+    
+    def maps2result(self, maps):
+        return SOAPpy.buildSOAP(kw = {'Result': maps},
+                                encoding = self.encoding)
+
 def run(argv):
     configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.server.xml"
     settings = Config([''])
@@ -3006,12 +3261,25 @@ def run(argv):
     poker_service.cleanUp(temporary_users = settings.headerGet("/server/users/@temporary"))
     poker_service.setServiceParent(serviceCollection)
 
-    tcp_port = settings.headerGetInt("/server/port")
-    internet.TCPServer(tcp_port, IPokerFactory(poker_service)
+    poker_factory = IPokerFactory(poker_service)
+    
+    tcp_port = settings.headerGetInt("/server/listen/@tcp")
+    internet.TCPServer(tcp_port, poker_factory
                        ).setServiceParent(serviceCollection)    
 
-    application.verbose = poker_service.verbose
-#    reactor.addSystemEventTrigger('before', 'shutdown', poker_service.shutdown)
+    tcp_ssl_port = settings.headerGetInt("/server/listen/@tcp_ssl")
+    internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
+                       ).setServiceParent(serviceCollection)
+
+    site = server.Site(resource.IResource(poker_service))
+
+    http_port = settings.headerGetInt("/server/listen/@http")
+    internet.TCPServer(http_port, site
+                       ).setServiceParent(serviceCollection)
+
+    http_ssl_port = settings.headerGetInt("/server/listen/@http_ssl")
+    internet.SSLServer(http_ssl_port, site, SSLContextFactory(settings)
+                       ).setServiceParent(serviceCollection)
     return application
         
 application = run(sys.argv)

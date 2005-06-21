@@ -2196,6 +2196,9 @@ serial: integer uniquely identifying a player.
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
+        self.name = kwargs.get("name", "unknown")
+        self.password = kwargs.get("password", "")
+        self.email = kwargs.get("email", "")
         self.play_money = kwargs.get("play_money", -1)
         self.play_money_in_game = kwargs.get("play_money_in_game", -1)
         self.custom_money = kwargs.get("custom_money", -1)
@@ -2205,18 +2208,22 @@ serial: integer uniquely identifying a player.
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
-        return PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.play_money, self.play_money_in_game, self.custom_money, self.custom_money_in_game, self.point_money, self.rating)
+        return PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.play_money, self.play_money_in_game, self.custom_money, self.custom_money_in_game, self.point_money, self.rating) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
         
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
         (self.play_money, self.play_money_in_game, self.custom_money, self.custom_money_in_game, self.point_money, self.rating) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
-        return block[PacketPokerUserInfo.format_size:]
+        block = block[PacketPokerUserInfo.format_size:]
+        (block, self.name) = self.unpackstring(block)
+        (block, self.password) = self.unpackstring(block)
+        (block, self.email) = self.unpackstring(block)
+        return block
 
     def calcsize(self):
-        return PacketSerial.calcsize(self) + PacketPokerUserInfo.format_size
+        return PacketSerial.calcsize(self) + PacketPokerUserInfo.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.password) + self.calcsizestring(self.email)
 
     def __str__(self):
-        return PacketSerial.__str__(self) + " play_money = %d, play_money_in_game = %d, custom_money = %d, custom_money_in_game = %d, point_money = %d, rating = %d" % ( self.play_money, self.play_money_in_game, self.custom_money,  self.custom_money_in_game, self.point_money, self.rating )
+        return PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, play_money = %d, play_money_in_game = %d, custom_money = %d, custom_money_in_game = %d, point_money = %d, rating = %d" % ( self.name, self.password, self.email, self.play_money, self.play_money_in_game, self.custom_money,  self.custom_money_in_game, self.point_money, self.rating )
 
 PacketFactory[PACKET_POKER_USER_INFO] = PacketPokerUserInfo
 
@@ -3023,7 +3030,6 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
     type = PACKET_POKER_PERSONAL_INFO
 
     def __init__(self, *args, **kwargs):
-        self.email = kwargs.get("email", "")
         self.addr_street = kwargs.get("addr_street", "")
         self.addr_zip = kwargs.get("addr_zip", "")
         self.addr_town = kwargs.get("addr_town", "")
@@ -3034,7 +3040,6 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
 
     def pack(self):
         packet = PacketPokerUserInfo.pack(self)
-        packet += self.packstring(self.email)
         packet += self.packstring(self.addr_street)
         packet += self.packstring(self.addr_zip)
         packet += self.packstring(self.addr_town)
@@ -3045,7 +3050,6 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
         
     def unpack(self, block):
         block = PacketPokerUserInfo.unpack(self, block)
-        (block, self.email) = self.unpackstring(block)
         (block, self.addr_street) = self.unpackstring(block)
         (block, self.addr_zip) = self.unpackstring(block)
         (block, self.addr_town) = self.unpackstring(block)
@@ -3056,7 +3060,6 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
 
     def calcsize(self):
         return ( PacketPokerUserInfo.calcsize(self) +
-                 self.calcsizestring(self.email) +
                  self.calcsizestring(self.addr_street) +
                  self.calcsizestring(self.addr_zip) +
                  self.calcsizestring(self.addr_town) +
@@ -3065,7 +3068,7 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
                  self.calcsizestring(self.phone) )
 
     def __str__(self):
-        return PacketPokerUserInfo.__str__(self) + " email = %s, addr_street = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s" % ( self.email, self.addr_street, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone )
+        return PacketPokerUserInfo.__str__(self) + " addr_street = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s" % ( self.addr_street, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone )
 
 PacketFactory[PACKET_POKER_PERSONAL_INFO] = PacketPokerPersonalInfo
 
@@ -3502,7 +3505,6 @@ class PacketPokerEndRoundLast(PacketPokerId):
 
 PacketFactory[PACKET_POKER_END_ROUND_LAST] = PacketPokerEndRoundLast
 
-
 ######################################## Stop or Start animation
 
 PACKET_POKER_PYTHON_ANIMATION = 224
@@ -3518,4 +3520,38 @@ class PacketPokerPythonAnimation(PacketPokerId):
         PacketPokerId.__init__(self, *args, **kwargs)
 
 PacketFactory[PACKET_POKER_PYTHON_ANIMATION] = PacketPokerPythonAnimation
+
+######################################## 
+
+PACKET_POKER_SET_ACCOUNT = 225
+PacketNames[PACKET_POKER_SET_ACCOUNT] = "POKER_SET_ACCOUNT"
+
+class PacketPokerSetAccount(PacketPokerPersonalInfo):
+
+    NAME_TOO_SHORT = 1
+    NAME_TOO_LONG = 2
+    NAME_MUST_START_WITH_LETTER = 3
+    NAME_NOT_ALNUM = 4
+    PASSWORD_TOO_SHORT = 5
+    PASSWORD_TOO_LONG = 6
+    PASSWORD_NOT_ALNUM = 7
+    INVALID_EMAIL = 8
+    NAME_ALREADY_EXISTS = 9
+    EMAIL_ALREADY_EXISTS = 10
+    SERVER_ERROR = 11
+    
+    type = PACKET_POKER_SET_ACCOUNT
+
+PacketFactory[PACKET_POKER_SET_ACCOUNT] = PacketPokerSetAccount
+
+######################################## 
+
+PACKET_POKER_CREATE_ACCOUNT = 226
+PacketNames[PACKET_POKER_CREATE_ACCOUNT] = "POKER_CREATE_ACCOUNT"
+
+class PacketPokerCreateAccount(PacketPokerSetAccount):
+
+    type = PACKET_POKER_CREATE_ACCOUNT
+
+PacketFactory[PACKET_POKER_CREATE_ACCOUNT] = PacketPokerCreateAccount
 
