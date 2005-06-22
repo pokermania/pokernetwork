@@ -489,16 +489,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         elif packet.type == PACKET_POKER_PLAYERS_LIST:
             pass
 
-        elif packet.type == PACKET_AUTH_REQUEST:
-            pass
-
-        elif packet.type == PACKET_AUTH_EXPIRES:
-            pass
-
         elif packet.type == PACKET_AUTH_REFUSED:
-            pass
-
-        elif packet.type == PACKET_AUTH_CANCEL:
             pass
 
         elif packet.type == PACKET_AUTH_OK:

@@ -246,7 +246,7 @@ class PokerClientFactory2D(PokerClientFactory):
             print message
             if self.interface:
                 self.interface.messageBox("Lost connection to poker\nserver at %s:%d" % ( self.host, self.port ))
-                self.interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, self.showServers)
+                self.interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, self.quit)
     
 if client.configOk():
     try:

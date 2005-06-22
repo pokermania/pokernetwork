@@ -88,8 +88,6 @@ from pokerengine.pokertournament import *
 from pokernetwork.pokerpackets import *
 from pokernetwork.user import User
 
-AUTH_TIMEOUT = 180
-
 class PokerAvatar:
     """Poker server"""
 
@@ -98,8 +96,6 @@ class PokerAvatar:
         self.service = service
         self.tables = {}
         self.user = User()
-        self.__login_timer = None
-        self._context = []
         self._packets_queue = []
         self.noqueuePackets()
 
@@ -118,18 +114,6 @@ class PokerAvatar:
     def isAuthorized(self, type):
         return self.user.hasPrivilege(self.service.auth.GetLevel(type))
 
-    def askAuth(self, packet):
-        self.sendPacketVerbose(PacketAuthRequest())
-        self._context = [ packet ]
-        self.__login_timer = reactor.callLater(AUTH_TIMEOUT, self.__auth_expires)
-        self._handler = self.auth
-
-    def __auth_expires(self):
-        self.sendPacketVerbose(PacketAuthExpires())
-        self.__login_timer = None
-        self._handler = self._handleConnection
-        self.flushContext()
-
     def login(self, info):
         (serial, name, privilege) = info
         self.user.serial = serial
@@ -146,21 +130,6 @@ class PokerAvatar:
             self.user.logout()
         
     def auth(self, packet):
-        if ( packet.type != PACKET_LOGIN and
-             packet.type != PACKET_AUTH_CANCEL ):
-            if self.service.verbose:
-                print "packet prepended to backlog"
-            self._context.append(packet)
-            return
-
-        if self.__login_timer and self.__login_timer.active():
-            self.__login_timer.cancel()
-        self.__login_timer = None
-
-        if packet.type == PACKET_AUTH_CANCEL:
-            self._handler = self._handleConnection
-            return
-
         status = checkNameAndPassword(packet.name, packet.password)
         if status[0]:
             info = self.service.auth.auth(packet.name, packet.password)
@@ -172,17 +141,6 @@ class PokerAvatar:
             self.login(info)
         else:
             self.sendPacketVerbose(PacketAuthRefused())
-        self.flushContext()
-
-    def flushContext(self):
-        for packet in self._context:
-            print "PACKET %s " % packet
-            self._handler = self._handleConnection
-            if packet and self.isAuthorized(packet.type):
-                if hasattr(packet, "serial"):
-                    packet.serial = self.getSerial()
-                self._handler(packet)
-        self._context = []
 
     def getSerial(self):
         return self.user.serial
@@ -236,7 +194,7 @@ class PokerAvatar:
     def handlePacketLogic(self, packet):
         if self.service.verbose > 2: print "handleConnection: " + str(packet) 
         if not self.isAuthorized(packet.type):
-            self.askAuth(packet)
+            self.sendPacketVerbose(PacketAuthRequest())
             return
 
         if packet.type == PACKET_LOGIN:

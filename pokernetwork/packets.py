@@ -287,26 +287,12 @@ PacketNames[PACKET_AUTH_REQUEST] = "AUTH_REQUEST"
 
 class PacketAuthRequest(Packet):
     """
-    Packet to asck authentification from the client
+    Packet to ask authentification from the client
     """
 
     type = PACKET_AUTH_REQUEST
 
 PacketFactory[PACKET_AUTH_REQUEST] = PacketAuthRequest
-
-########################################
-
-PACKET_AUTH_EXPIRES = 9
-PacketNames[PACKET_AUTH_EXPIRES] = "AUTH_EXPIRES"
-
-class PacketAuthExpires(Packet):
-    """
-    The server gave up waiting for auth packets.
-    """
-
-    type = PACKET_AUTH_EXPIRES
-
-PacketFactory[PACKET_AUTH_EXPIRES] = PacketAuthExpires
 
 ########################################
 
@@ -375,20 +361,6 @@ class PacketLogout(Packet):
     type = PACKET_LOGOUT
 
 PacketFactory[PACKET_LOGOUT] = PacketLogout
-
-########################################
-
-PACKET_AUTH_CANCEL = 13
-PacketNames[PACKET_AUTH_CANCEL] = "AUTH_CANCEL"
-
-class PacketAuthCancel(Packet):
-    """
-    Authentication canceled by client
-    """
-
-    type = PACKET_AUTH_CANCEL
-
-PacketFactory[PACKET_AUTH_CANCEL] = PacketAuthCancel
 
 ########################################
 

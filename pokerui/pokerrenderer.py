@@ -468,7 +468,7 @@ class PokerRenderer:
         if self.factory.remember:
             if self.protocol:
                 if self.verbose: print "connection ready, ask for password"
-                self.changeState(LOGIN)
+                self.changeState(LOGIN, lambda success: self.changeState(LOBBY))
             else:
                 if self.verbose: print "connection not established, will ask password later"
 
@@ -703,17 +703,6 @@ class PokerRenderer:
             self.deleteGame(game.id)
             self.protocol.setCurrentGameId(None)
             
-        elif packet.type == PACKET_AUTH_REQUEST:
-            if self.factory.interface:
-                self.changeState(LOGIN)
-            else:
-                self.protocol.sendPacket(PacketLogin(name = self.factory.name,
-                                                     password = self.factory.password))
-
-        elif packet.type == PACKET_AUTH_EXPIRES:
-            print "*CRITICAL* server timeout waiting for our login packet"
-            self.showMessage("Server timed out waiting for login", lambda: self.changeState(LOGIN_DONE, False))
-
         elif packet.type == PACKET_AUTH_REFUSED:
             self.showMessage("Invalid login or passwd", lambda: self.changeState(LOGIN_DONE, False))
 
@@ -859,9 +848,8 @@ class PokerRenderer:
             self.changeState(CANCELED)
             
         elif packet.type == PACKET_POKER_WAIT_FOR:
-            if self.factory.interface:
-                if packet.serial == self.protocol.getSerial():
-                    self.factory.interface.sitActionsSitOut("yes", "wait for %s blind" % packet.reason)
+            if packet.serial == self.protocol.getSerial():
+                self.sitActionsUpdate()
             
         elif packet.type == PACKET_POKER_IN_GAME:
             self.render(packet)
@@ -924,8 +912,10 @@ class PokerRenderer:
             game = self.factory.getGame(self.protocol.getCurrentGameId())
             player = game.getPlayer(self.protocol.getSerial())
 
-            if player.wait_for:
-                interface.sitActionsSitOut("yes", "wait for %s blind" % player.wait_for)
+            if player.wait_for == "big":
+                interface.sitActionsSitOut("yes", "wait for big blind")
+            elif player.wait_for:
+                interface.sitActionsSitOut("yes", "wait for %s blind" % player.wait_for, "insensitive")
             elif player.auto:
                 interface.sitActionsSitOut("yes", "sit out")
             elif player.sit_out:
@@ -978,7 +968,7 @@ class PokerRenderer:
         interface.registerHandler(pokerinterface.INTERFACE_BUY_IN, callback)
         return True
         
-    def buyIn(self, game, value):
+    def buyIn(self, game, value, *args):
         interface = self.factory.interface
         interface.clearCallbacks(pokerinterface.INTERFACE_BUY_IN)
         self.protocol.sendPacket(PacketPokerBuyIn(serial = self.protocol.getSerial(),
@@ -994,7 +984,7 @@ class PokerRenderer:
         self.protocol.sendPacket(PacketPokerRebuy(serial = self.protocol.getSerial(),
                                                   game_id = game.id,
                                                   amount = int(float(value))))
-        self.changeState(REBUY_DONE)
+        self.changeState(REBUY_DONE, game)
 
     def resetLagmax(self):
         if self.verbose > 2: print "resetLagmax: %d" % ABSOLUTE_LAGMAX
@@ -1106,10 +1096,19 @@ class PokerRenderer:
             status = False
         return status
 
+    def canHideInterface(self):
+        return ( self.state == LOBBY or
+                 self.state == HAND_LIST or
+                 self.state == TOURNAMENTS or
+                 self.state == CASHIER or
+                 self.state == IDLE )
+        
     def handleMenu(self, name, value):
         settings = self.factory.settings
         if name == "login":
-            self.changeState(LOGIN)
+            if self.canHideInterface():
+                current_state = self.state
+                self.changeState(LOGIN, lambda success: self.changeState(current_state))
         elif name == "cashier":
             self.changeState(CASHIER)
         elif name == "outfits":
@@ -1500,7 +1499,7 @@ class PokerRenderer:
         if self.factory.remember:
             if self.factory.interface:
                 if self.verbose: print "interface ready, ask for password"
-                self.changeState(LOGIN)
+                self.changeState(LOGIN, lambda success: self.changeState(LOBBY))
             else:
                 if self.verbose: print "interface not ready, will ask password later"
         else:
@@ -1574,36 +1573,36 @@ class PokerRenderer:
             if self.protocol.user.isLogged():
                 self.showMessage("Already logged in", None)
             else:
-                if kwargs.has_key("restore_state"):
-                    self.state_login = kwargs
-                else:
-                    self.state_login = None
-                    self.state2hide()
+                self.state2hide()
+                self.state_login = args[0]
                 self.requestLogin()
                 self.state = state
 
         elif state == LOGIN_DONE:
             self.factory.interface.hideLogin()
-            success = args[0]
-            if success and self.state_login:
-                self.state = self.state_login['done_state']
-                args = self.state_login.get('restore_args', ())
-                self.changeState(self.state_login['restore_state'], *args)
-            elif success and self.state == JOINING_DONE:
-                self.state = IDLE
-            elif success:
-                self.changeState(LOBBY)
-            else:
-                self.state = IDLE
+            previous_state = self.state
+            self.state = IDLE
+            if previous_state != JOINING_DONE:
+                self.state_login(args[0])
 
-        elif state == CASHIER and self.state2hide():
+        elif state == CASHIER:
             if self.protocol.user.isLogged():
-                self.protocol.sendPacket(PacketPokerGetPersonalInfo(serial = self.protocol.getSerial()))
-                self.state = state
+                if self.state2hide():
+                    self.protocol.sendPacket(PacketPokerGetPersonalInfo(serial = self.protocol.getSerial()))
+                    self.state = state
+
+            elif self.canHideInterface():
+                state = self.state
+                def login_callback(success):
+                    if success:
+                        self.changeState(CASHIER, *args, **kwargs)
+                    else:
+                        self.changeState(state)
+                self.changeState(LOGIN, login_callback)
+
             else:
-                self.changeState(LOGIN,
-                                 done_state = IDLE,
-                                 restore_state = CASHIER)
+                print "*CRITICAL*; should not be here"
+                self.showMessage("You cannot do that now", None)
 
         elif state == USER_INFO:
             self.state2hide()
@@ -1625,7 +1624,7 @@ class PokerRenderer:
             self.changeState(IDLE)
             
         elif state == REBUY and self.state == USER_INFO:
-            if self.requestBuyIn(args[0]):
+            if self.requestBuyIn(*args):
                 self.state = state
             else:
                 self.state = IDLE
@@ -1663,10 +1662,13 @@ class PokerRenderer:
                                                                     serial = serial))
                 self.state = TOURNAMENTS_REGISTER
             else:
-                self.changeState(LOGIN,
-                                 done_state = TOURNAMENTS,
-                                 restore_state = TOURNAMENTS_REGISTER,
-                                 restore_args = args)
+                def login_callback(success):
+                    if success:
+                        self.state = TOURNAMENTS
+                        self.changeState(TOURNAMENTS_REGISTER, *args, **kwargs)
+                    else:
+                        self.changeState(TOURNAMENTS)
+                self.changeState(LOGIN, login_callback)
             
         elif state == TOURNAMENTS_REGISTER_DONE and self.state == TOURNAMENTS_REGISTER:
             self.state = IDLE
@@ -1683,21 +1685,31 @@ class PokerRenderer:
             self.state = IDLE
             self.changeState(TOURNAMENTS)
 
-        elif state == SEATING and self.state2hide():
+        elif state == SEATING:
             if self.protocol.user.isLogged():
-                packet = args[0]
-                packet.serial = self.protocol.getSerial()
-                self.state_buy_in = self.factory.getGame(packet.game_id)
-                self.protocol.sendPacket(packet)
-                if self.factory.settings.headerGet("/settings/auto_post") == "yes":
-                    self.protocol.sendPacket(PacketPokerAutoBlindAnte(game_id = packet.game_id,
-                                                                      serial = packet.serial))
-                self.state = state
+                if self.state2hide():
+                    packet = args[0]
+                    packet.serial = self.protocol.getSerial()
+                    self.state_buy_in = self.factory.getGame(packet.game_id)
+                    self.protocol.sendPacket(packet)
+                    if self.factory.settings.headerGet("/settings/auto_post") == "yes":
+                        self.protocol.sendPacket(PacketPokerAutoBlindAnte(game_id = packet.game_id,
+                                                                          serial = packet.serial))
+                    self.state = state
+                else:
+                    self.showMessage("You cannot do that now", None)
+                    
+            elif self.canHideInterface():
+                def login_callback(success):
+                    if success:
+                        self.changeState(SEATING, *args, **kwargs)
+                    else:
+                        self.showMessage("You must be logged in to get a seat", None)
+                self.changeState(LOGIN, login_callback)
+
             else:
-                self.changeState(LOGIN,
-                                 done_state = IDLE,
-                                 restore_state = SEATING,
-                                 restore_args = args)
+                print "*CRITICAL*; should not be here"
+                self.showMessage("You cannot do that now", None)
 
         elif state == LEAVING_DONE and self.state == LEAVING:
             self.hideBlind()
@@ -1745,13 +1757,27 @@ class PokerRenderer:
                 self.state = IDLE
 
         elif state == OUTFIT:
-            if self.isSeated():
-                self.showMessage("You must leave the table to change your outfit", None)
+            if self.protocol.user.isLogged():
+                if self.isSeated():
+                    self.showMessage("You must leave the table to change your outfit", None)
+                else:
+                    if self.state2hide():
+                        self.factory.getSkin().showOutfitEditor(self.selectOutfit)
+                        self.factory.interface.hideMenu()
+                        self.state = state
+
+            elif self.canHideInterface():
+                state = self.state
+                def login_callback(success):
+                    if success:
+                        self.changeState(OUTFIT, *args, **kwargs)
+                    else:
+                        self.changeState(state)
+                self.changeState(LOGIN, login_callback)
+
             else:
-                if self.state2hide():
-                    self.factory.getSkin().showOutfitEditor(self.selectOutfit)
-                    self.factory.interface.hideMenu()
-                    self.state = state
+                print "*CRITICAL*; should not be here"
+                self.showMessage("You cannot do that now", None)
 
         elif state == OUTFIT_DONE and self.state == OUTFIT:
             self.factory.getSkin().hideOutfitEditor()
@@ -1765,10 +1791,21 @@ class PokerRenderer:
                     self.state = state
                     self.state_hands = { "start": 0, "count": 100 }
                     self.queryHands()
+                else:
+                    self.showMessage("You cannot do that now", None)
+
+            elif self.canHideInterface():
+                state = self.state
+                def login_callback(success):
+                    if success:
+                        self.changeState(HAND_LIST, *args, **kwargs)
+                    else:
+                        self.changeState(state)
+                self.changeState(LOGIN, login_callback)
+
             else:
-                self.changeState(LOGIN,
-                                 done_state = IDLE,
-                                 restore_state = HAND_LIST)
+                print "*CRITICAL*; should not be here"
+                self.showMessage("You cannot do that now", None)
 
         elif state == QUIT:
             if self.state == OUTFIT:
