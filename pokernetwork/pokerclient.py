@@ -992,7 +992,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
                                                 serial = self.getSerial()))
         self.schedulePacket(self.currentGames(game.id))
-        #self.publishAllPackets()
+        self.publishAllPackets()
 
     def resendPackets(self, game_id):
         self.publishAllPackets()
@@ -1175,6 +1175,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.publish_timer = reactor.callLater(delay, self.publishPackets)
 
     def publishPacket(self):
+        if not self.established:
+            if self.factory.verbose > 2:
+                print "publishPacket: skip because connection not established"
+            return
         packet = self.publish_packets.pop(0)
         what = 'outbound'
         if hasattr(packet, "game_id"):

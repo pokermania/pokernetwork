@@ -8767,7 +8767,7 @@
 		      <property name="spacing">2</property>
 
 		      <child>
-			<widget class="GtkLabel" id="label61">
+			<widget class="GtkLabel" id="holdem_label">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">Holdem</property>
 			  <property name="use_underline">False</property>
@@ -8825,7 +8825,7 @@
 		      <property name="spacing">2</property>
 
 		      <child>
-			<widget class="GtkLabel" id="label62">
+			<widget class="GtkLabel" id="omaha_label">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">Omaha</property>
 			  <property name="use_underline">False</property>
@@ -8883,7 +8883,7 @@
 		      <property name="spacing">2</property>
 
 		      <child>
-			<widget class="GtkLabel" id="label63">
+			<widget class="GtkLabel" id="omaha8_label">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">Omaha H/L</property>
 			  <property name="use_underline">False</property>
@@ -8941,7 +8941,7 @@
 		      <property name="spacing">2</property>
 
 		      <child>
-			<widget class="GtkLabel" id="label64">
+			<widget class="GtkLabel" id="7stud_label">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">Stud</property>
 			  <property name="use_underline">False</property>
@@ -8999,7 +8999,7 @@
 		      <property name="spacing">2</property>
 
 		      <child>
-			<widget class="GtkLabel" id="label65">
+			<widget class="GtkLabel" id="sit_n_go_label">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">Sit &amp; Go</property>
 			  <property name="use_underline">False</property>
@@ -9057,7 +9057,7 @@
 		      <property name="spacing">2</property>
 
 		      <child>
-			<widget class="GtkLabel" id="label66">
+			<widget class="GtkLabel" id="regular_label">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">Regular</property>
 			  <property name="use_underline">False</property>

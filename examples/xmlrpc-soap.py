@@ -5,18 +5,20 @@
 # python xmlrpc-soap.py XML-RPC
 #
 import sys
+from pprint import pprint
+from re import match
 from twisted.web.xmlrpc import Proxy
 from twisted.internet import reactor
 import SOAPpy
 from twisted.web import server, resource, client
 
+data = {}
+
 def printValue(value):
-    print repr(value)
-    reactor.stop()
+    pprint(value)
 
 def printError(error):
     print 'error', error
-    reactor.stop()
 
 class SOAPProxy:
     """A Proxy for making remote SOAP calls.
@@ -29,19 +31,19 @@ class SOAPProxy:
     """
 
     # at some point this should have encoding etc. kwargs
-    def __init__(self, url, namespace=None, header=None):
+    def __init__(self, url, namespace=None):
         self.url = url
-        self.namespace = namespace
-        self.header = header
 
     def _cbGotResult(self, result):
         return SOAPpy.simplify(SOAPpy.parseSOAPRPC(result))
         
     def callRemote(self, method, *args, **kwargs):
+        print "callRemote: " + str(args)
+        kwargs.setdefault('headers', {})['Content-Type'] = 'text/xml'
         payload = SOAPpy.buildSOAP(args=args, kw=kwargs, method=method,
-                                   header=self.header, namespace=self.namespace)
+                                   header=None, namespace=None)
         return client.getPage(self.url, postdata=payload, method="POST",
-                              headers={'content-type': 'text/xml'}
+                              headers = kwargs['headers']
                               ).addCallback(self._cbGotResult)
 
 
@@ -51,10 +53,42 @@ if sys.argv[1] == 'SOAP':
 else:
     print "XML-RPC"
     proxy = Proxy('http://localhost:19482/RPC2')
-proxy.callRemote('packets', "use sessions",
-                 {'type': 'PacketLogin', 'name': 'dachary2', 'password': 'dachary1' },
-                 {'type': 'PacketPokerSetAccount', 'serial': 222, 'name': 'dachary2', 'password': 'dachary1', 'email': 'loicj@senga.org'},
-                 
-                 ).addCallbacks(printValue, printError)
+
+def accountCreated(value):
+    printValue(value)
+    data['serial'] = value['Result'][0]['serial']
+    print "Account created, got serial %d" % data['serial']
+    
+    proxy.callRemote('packets', ("use sessions",
+                                 { 'type': 'PacketLogin', 'name': 'dachary11', 'password': 'dachary1' }
+                                 )).addCallbacks(loggedIn, printError)
+
+def loggedIn(value):
+    printValue(value)
+#    data['cookie'] = { 'TWISTED_SESSION': match("TWISTED_SESSION=(.*);", value['Result'][1]['cookie']).group(1) }
+    data['cookie'] = { 'Cookie': value['Result'][1]['cookie'] }
+    print "Logged in, session " + str(data['cookie'])
+    
+    proxy.callRemote('packets', ("use sessions",
+                                 { 'type': 'PacketPokerTourneySelect', 'string': 'n\tsit_n_go' }
+                                 ), headers = data['cookie']).addCallbacks(tableList, printError)
+
+def tableList(value):
+    printValue(value)
+
+    proxy.callRemote('packets', ("use sessions",
+                                 { 'type': 'PacketLogout' }
+                                 ), headers = data['cookie']).addCallbacks(printValue, printError)
+    
+#
+# The arguments MUST be in a list. If they are not the server will
+# bark. When using the nusoap php module, this inclusion is implicit.
+#
+proxy.callRemote('packets', ("no sessions",
+                 {'type': 'PacketPokerCreateAccount', 'name': 'dachary11', 'password': 'dachary1', 'email': 'loi@senga.org'}
+                 )).addCallbacks(accountCreated, printError)
+
+
+reactor.callLater(10, reactor.stop)
 reactor.run()
 

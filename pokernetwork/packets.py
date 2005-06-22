@@ -176,18 +176,18 @@ PacketNames[PACKET_SERIAL] = "SERIAL"
 
 class PacketSerial(Packet):
     """
-    Serial Number
+    Serial Number and optional session cookie for other
+    communication protocols.
     """
 
     type = PACKET_SERIAL
 
-    serial = 0
     format = "!I"
     format_size = calcsize(format)
     
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("serial"):
-            self.serial = kwargs["serial"]
+        self.serial = kwargs.get("serial", 0)
+        self.cookie = kwargs.get("cookie", "")
 
     def pack(self):
         return Packet.pack(self) + pack(PacketSerial.format, self.serial)
@@ -358,6 +358,8 @@ class PacketLogout(Packet):
     Login out
     """
 
+    NOT_LOGGED_IN = 1
+    
     type = PACKET_LOGOUT
 
 PacketFactory[PACKET_LOGOUT] = PacketLogout

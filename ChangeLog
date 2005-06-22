@@ -1,10 +1,18 @@
-Tue Jun 21 10:05:13 2005  Loic Dachary  <loic@gnu.org>
+Thu Jun 23 00:28:55 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.2
 
+	* pokernetwork/pokerserver.py (PokerAvatar.handlePacketLogic): issue 
+	  an error if trying to logout without being logged in.
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.publishPacket): when 
+	  connection is lost, notify user and exit the client.
+
+Tue Jun 21 10:05:13 2005  Loic Dachary  <loic@gnu.org>
+
 	* pokernetwork/pokerserver.py (PokerXML): base class and
 	  derived classes PokerXMLRPC and PokerSOAP to support 
-	  XML-RPC and SOAP
+	  XML-RPC and SOAP. With optional session management.
 
 	* examples/xmlrpc-soap.py: XML-RPC and SOAP client test
 	

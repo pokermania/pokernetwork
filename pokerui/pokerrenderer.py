@@ -1631,6 +1631,11 @@ class PokerRenderer:
             
         elif state == REBUY_DONE:
             self.factory.interface.buyInHide()
+            game = args[0]
+            serial = self.protocol.getSerial()
+            if not game.isSit(serial):
+                self.sendPacket(PacketPokerSit(game_id = game.id,
+                                               serial = serial))
             self.changeState(IDLE)
             
         elif state == JOINING and self.state == LOBBY:

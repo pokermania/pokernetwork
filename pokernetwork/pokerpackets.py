@@ -1159,9 +1159,12 @@ The answer is a possibly empty PACKET_POKER_TABLE_LIST packet.
 
 Direction: server <=  client
 
-string: a valid SQL WHERE expression. The specials value "my"
-        restricts the search to the tables in which the player id
-        attached to the connection is playing. 
+string: (y/n)<tabulation>variant
+        Examples: y holdem selects all holdem tables using custom money
+                  n holdem selects all holdem tables using play money
+                  n omaha selects all omaha tables using play money
+        The specials value "my" restricts the search to the tables
+        in which the player id attached to the connection is playing.
 """
     
     type = PACKET_POKER_TABLE_SELECT
