@@ -26,17 +26,7 @@
 #
 from re import match
 
-NAME_TOO_SHORT = 1
-NAME_TOO_LONG = 2
-NAME_MUST_START_WITH_LETTER = 3
-NAME_NOT_ALNUM = 4
-PASSWORD_TOO_SHORT = 5
-PASSWORD_TOO_LONG = 6
-PASSWORD_NOT_ALNUM = 7
-INVALID_EMAIL = 8
-NAME_ALREADY_EXISTS = 9
-EMAIL_ALREADY_EXISTS = 10
-SERVER_ERROR = 11
+from pokernetwork.pokerpackets import PacketPokerSetAccount
 
 NAME_LENGTH_MAX = 20
 NAME_LENGTH_MIN = 5
@@ -47,24 +37,24 @@ PASSWORD_LENGTH_MIN = 5
 def checkName(name):
     if not match("^[a-zA-Z][a-zA-Z0-9]{" + str(NAME_LENGTH_MIN - 1) + "," + str(NAME_LENGTH_MAX - 1) + "}$", name):
         if len(name) > NAME_LENGTH_MAX:
-            return (False, NAME_TOO_LONG, "login name must be at most %d characters long" % NAME_LENGTH_MAX)
+            return (False, PacketPokerSetAccount.NAME_TOO_LONG, "login name must be at most %d characters long" % NAME_LENGTH_MAX)
         elif len(name) < NAME_LENGTH_MIN:
-            return (False, NAME_TOO_SHORT, "login name must be at least %d characters long" % NAME_LENGTH_MIN)
+            return (False, PacketPokerSetAccount.NAME_TOO_SHORT, "login name must be at least %d characters long" % NAME_LENGTH_MIN)
         elif not match("^[a-zA-Z]", name):
-            return (False, NAME_MUST_START_WITH_LETTER, "login name must start with a letter")
+            return (False, PacketPokerSetAccount.NAME_MUST_START_WITH_LETTER, "login name must start with a letter")
         else:
-            return (False, NAME_NOT_ALNUM, "login name must be all letters and digits")
+            return (False, PacketPokerSetAccount.NAME_NOT_ALNUM, "login name must be all letters and digits")
 
     return (True, None, None)
 
 def checkPassword(password):
     if not match("^[a-zA-Z0-9]{" + str(PASSWORD_LENGTH_MIN) + "," + str(PASSWORD_LENGTH_MAX) + "}$", password):
         if len(password) > PASSWORD_LENGTH_MAX:
-            return (False, PASSWORD_TOO_LONG, "password must be at most %d characters long" % PASSWORD_LENGTH_MAX)
+            return (False, PacketPokerSetAccount.PASSWORD_TOO_LONG, "password must be at most %d characters long" % PASSWORD_LENGTH_MAX)
         elif len(password) < PASSWORD_LENGTH_MIN:
-            return (False, PASSWORD_TOO_SHORT, "password must be at least %d characters long" % PASSWORD_LENGTH_MIN)
+            return (False, PacketPokerSetAccount.PASSWORD_TOO_SHORT, "password must be at least %d characters long" % PASSWORD_LENGTH_MIN)
         else:
-            return (False, PASSWORD_NOT_ALNUM, "password must be all letters and digits")
+            return (False, PacketPokerSetAccount.PASSWORD_NOT_ALNUM, "password must be all letters and digits")
 
     return (True, None, None)
 
