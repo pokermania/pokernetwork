@@ -249,7 +249,7 @@ static void on_slot_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 
   set_string("outfit");
   set_string("slot");
-  set_int(value);
+  set_int((int)value);
   flush_io_channel();
 }
 
@@ -577,14 +577,17 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
             g_free(preview_type);
           }
           
+#if 0
           /*
            * Slider
            */
-          if ( !slot_cant_be_displayed) {
+          if (1 ||  !slot_cant_be_displayed) {
             gtk_widget_set_child_visible(container, TRUE);
           } else {
             gtk_widget_set_child_visible(container, FALSE);
           }
+#endif
+
 
           sprintf(widget_name, "param%d_label", i);
           GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
