@@ -228,7 +228,7 @@ class PokerInterface(dispatch.EventDispatcher):
             count += 1
             definition = outfit['DEFINITIONS'][xpath]
             if self.verbose > 1:
-                print "vlaue %s " % value['value']
+                print "value %s - %s " % (xpath, value['value'])
                 print "definition %s" % definition['ids']
                 print "slot_type %s" % slot_type
             index = definition['ids'].index(value['value'])
