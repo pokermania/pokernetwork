@@ -249,7 +249,7 @@ static void on_slot_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 
   set_string("outfit");
   set_string("slot");
-  set_int(vint);
+  set_int(value);
   flush_io_channel();
 }
 
