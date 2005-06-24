@@ -56,7 +56,6 @@ struct outfit_params {
 };
 
 struct outfit_slider_slot {
-  gdouble previous_value;
   GtkAdjustment* adjustment;
 };
 
@@ -247,9 +246,6 @@ static void on_slot_value_changed(GtkAdjustment* adjustment, gpointer user_data)
   g_message("SLOT VALUE value changed\n");
 
   gdouble value = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment));
-  int vint = (int)(value);
-	if ((int)param->previous_value == vint)
-		return;
 
   set_string("outfit");
   set_string("slot");
