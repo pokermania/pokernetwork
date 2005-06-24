@@ -1,12 +1,14 @@
 poker-network (1.0.2-1) unstable; urgency=low
 
+  * Fill ITP  (closes: #308576)
+
   * upstream version
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 21 Jun 2005 10:09:40 +0200
 
 poker-network (1.0.1-1) unstable; urgency=low
 
-  * Fill ITP  (closes: #308576)
+  * upstream version
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 11 May 2005 17:53:08 +0200
 

@@ -261,6 +261,7 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         pass
     
     def fold(self, game_id):
+        PokerAnimationPlayer.fold(self, game_id)
         if self.verbose > 1: self.message(":fold: not implemented")
     
     def chat(self, packet):

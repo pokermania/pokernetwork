@@ -27,7 +27,7 @@ import sys
 sys.path.insert(0, "..")
 
 #
-# Workaround for the bug 
+# Workaround for the twisted-2.0 bug 
 # http://twistedmatrix.com/bugs/issue1083
 #
 import gobject
@@ -125,6 +125,15 @@ client = Main(configfile, settingsfile)
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
 from twisted.internet import reactor
+#
+# Workaround for the twisted-2.0 bug 
+# http://twistedmatrix.com/bugs/issue1083
+#
+try:
+    from twisted.internet.base import BlockingResolver
+    reactor.installResolver(BlockingResolver())
+except:
+    pass
 from twisted.internet import error
 
 from pokernetwork.pokerclient import PokerClientFactory, PokerSkin

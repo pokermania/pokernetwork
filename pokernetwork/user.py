@@ -35,7 +35,7 @@ PASSWORD_LENGTH_MAX = 15
 PASSWORD_LENGTH_MIN = 5
 
 def checkName(name):
-    if not match("^[a-zA-Z][a-zA-Z0-9]{" + str(NAME_LENGTH_MIN - 1) + "," + str(NAME_LENGTH_MAX - 1) + "}$", name):
+    if not match("^[a-zA-Z][a-zA-Z0-9_]{" + str(NAME_LENGTH_MIN - 1) + "," + str(NAME_LENGTH_MAX - 1) + "}$", name):
         if len(name) > NAME_LENGTH_MAX:
             return (False, PacketPokerSetAccount.NAME_TOO_LONG, "login name must be at most %d characters long" % NAME_LENGTH_MAX)
         elif len(name) < NAME_LENGTH_MIN:
@@ -43,7 +43,7 @@ def checkName(name):
         elif not match("^[a-zA-Z]", name):
             return (False, PacketPokerSetAccount.NAME_MUST_START_WITH_LETTER, "login name must start with a letter")
         else:
-            return (False, PacketPokerSetAccount.NAME_NOT_ALNUM, "login name must be all letters and digits")
+            return (False, PacketPokerSetAccount.NAME_NOT_ALNUM, "login name must be all letters, digits or underscore ")
 
     return (True, None, None)
 

@@ -620,22 +620,22 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
             elif packet.type == PACKET_POKER_IN_GAME:
                 for serial in game.serialsAll():
-                    if serial in packet.players:
+                    player = game.getPlayer(serial)
+                    wait_for = player.wait_for
+                    if serial in packet.players or wait_for:
                         if not game.isSit(serial):
                             game.sit(serial)
                             forward_packets.append(PacketPokerSit(game_id = game.id,
                                                                   serial = serial))
+                        if wait_for:
+                            player.wait_for = wait_for
+                            forward_packets.append(PacketPokerWaitFor(game_id = game.id,
+                                                                      serial = serial,
+                                                                      reason = wait_for))
                     else:
                         if game.isSit(serial):
-                            wait_for = game.getPlayer(serial).wait_for
-                            game.sitOut(serial)
-                            if wait_for:
-                                forward_packets.append(PacketPokerWaitFor(game_id = game.id,
-                                                                          serial = serial,
-                                                                          reason = wait_for))
-                            else:
-                                forward_packets.append(PacketPokerSitOut(game_id = game.id,
-                                                                         serial = serial))
+                            forward_packets.append(PacketPokerSitOut(game_id = game.id,
+                                                                     serial = serial))
 
             elif packet.type == PACKET_POKER_WIN:
                 if not self.no_display_packets:
@@ -1082,6 +1082,18 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def sendPacket(self, packet):
         if packet.type == PACKET_POKER_TABLE_QUIT:
             self.scheduleTableAbort(self.getGame(packet.game_id))
+        elif packet.type == PACKET_POKER_SIT_OUT:
+            game = self.getGame(packet.game_id)
+            if game:
+                game.sitOutNextTurn(packet.serial)
+            self.schedulePacket(PacketPokerSitOutNextTurn(game_id = packet.game_id,
+                                                          serial = packet.serial))
+        elif packet.type == PACKET_POKER_SIT:
+            game = self.getGame(packet.game_id)
+            if game:
+                game.sitRequested(packet.serial)
+            self.schedulePacket(PacketPokerSitRequest(game_id = packet.game_id,
+                                                      serial = packet.serial))
         elif packet.type == PACKET_QUIT:
             self.ignoreIncomingData()
             self.publishQuit()
@@ -1176,7 +1188,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def publishPacket(self):
         if not self.established:
-            if self.factory.verbose > 2:
+            if self.factory.verbose > 5:
                 print "publishPacket: skip because connection not established"
             return
         packet = self.publish_packets.pop(0)

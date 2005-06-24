@@ -1316,6 +1316,17 @@ PacketFactory[PACKET_POKER_SIT] = PacketPokerSit
 
 ########################################
 
+PACKET_POKER_SIT_REQUEST = 143
+PacketNames[PACKET_POKER_SIT_REQUEST] = "POKER_SIT_REQUEST"
+
+class PacketPokerSitRequest(PacketPokerSit):
+
+    type = PACKET_POKER_SIT_REQUEST
+
+PacketFactory[PACKET_POKER_SIT_REQUEST] = PacketPokerSitRequest
+
+########################################
+
 PACKET_POKER_TABLE_DESTROY = 146
 PacketNames[PACKET_POKER_TABLE_DESTROY] = "POKER_TABLE_DESTROY"
 
@@ -3110,10 +3121,11 @@ class PacketPokerAnimationPlayerBet(PacketPokerId):
     type = PACKET_POKER_ANIMATION_PLAYER_BET
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("animation"):
-            self.animation = kwargs["animation"]
-        if kwargs.has_key("chips"):
-            self.chips = kwargs["chips"]
+        self.animation = kwargs.get("animation", "")
+        self.chips = kwargs.get("chips", [])
+        self.amount = 0
+        for i in xrange(len(self.chips) / 2):
+            self.amount += self.chips[i*2] * self.chips[i*2 + 1]
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -3132,13 +3144,12 @@ class PacketPokerAnimationPlayerChips(PacketPokerId):
     type = PACKET_POKER_ANIMATION_PLAYER_CHIPS
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("animation"):
-            self.animation = kwargs["animation"]
-        if kwargs.has_key("chips"):
-            self.chips = kwargs["chips"]
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
-        
+        self.animation = kwargs.get("animation", "")
+        self.chips = kwargs.get("chips", [])
+        self.state = kwargs.get("state", "")
+        self.amount = 0
+        for i in xrange(len(self.chips) / 2):
+            self.amount += self.chips[i*2] * self.chips[i*2 + 1]
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -3557,4 +3568,16 @@ class PacketPokerCreateAccount(PacketPokerSetAccount):
     type = PACKET_POKER_CREATE_ACCOUNT
 
 PacketFactory[PACKET_POKER_CREATE_ACCOUNT] = PacketPokerCreateAccount
+
+
+########################################
+
+PACKET_POKER_SIT_OUT_NEXT_TURN = 227
+PacketNames[PACKET_POKER_SIT_OUT_NEXT_TURN] = "POKER_SIT_OUT_NEXT_TURN"
+
+class PacketPokerSitOutNextTurn(PacketPokerSitOut):
+
+    type = PACKET_POKER_SIT_OUT_NEXT_TURN
+
+PacketFactory[PACKET_POKER_SIT_OUT_NEXT_TURN] = PacketPokerSitOutNextTurn
 

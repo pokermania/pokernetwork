@@ -8,7 +8,7 @@
   <muck>yes</muck>
   <auto_post>no</auto_post>
   <chat max_chars="40" line_length="20"/>
-  <servers>localhost:19480 localhost:19481;ssl localhost:19378 game1-test:19380</servers>
+  <servers>localhost:19480 localhost:19481;ssl localhost:19380 test.mekensleep.org:19380</servers>
   <web browser="/usr/bin/firefox">http://www.pok3d.com/</web>
   <sound>yes</sound>
   <tournaments custom_money="n" type="regular" sort="name"/>

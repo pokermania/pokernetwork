@@ -375,11 +375,11 @@ class PokerRenderer:
     def sitOut(self, yesno):
         serial = self.protocol.getSerial()
         game_id = self.protocol.getCurrentGameId()
+        game = self.factory.getGame(game_id)
         if yesno:
             self.protocol.sendPacket(PacketPokerSitOut(game_id = game_id,
                                                        serial = serial))
         else:
-            game = self.factory.getGame(game_id)
             if game.isBroke(serial):
                 self.changeState(USER_INFO, REBUY, game)
             else:
@@ -795,10 +795,12 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_BLIND_REQUEST:
             if ( game.getSerialInPosition() == self.protocol.getSerial() ):
                 self.changeState(PAY_BLIND_ANTE, 'blind', game, packet.amount, packet.dead, packet.state)
+                self.sitActionsUpdate()
                 
         elif packet.type == PACKET_POKER_ANTE_REQUEST:
             if ( game.getSerialInPosition() == self.protocol.getSerial() ):
                 self.changeState(PAY_BLIND_ANTE, 'ante', game, packet.amount)
+                self.sitActionsUpdate()
                 
         elif packet.type == PACKET_POKER_SEAT:
             if packet.seat == 255:
@@ -825,7 +827,8 @@ class PokerRenderer:
             self.render(packet)
             self.delay(game,"dealer")
             
-        elif packet.type == PACKET_POKER_SIT_OUT:
+        elif ( packet.type == PACKET_POKER_SIT_OUT or
+               packet.type == PACKET_POKER_SIT_OUT_NEXT_TURN ):
             self.render(packet)
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
@@ -835,7 +838,8 @@ class PokerRenderer:
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
 
-        elif packet.type == PACKET_POKER_SIT:
+        elif ( packet.type == PACKET_POKER_SIT or
+               packet.type == PACKET_POKER_SIT_REQUEST ):
             self.render(packet)
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
@@ -867,6 +871,8 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_FOLD:
             self.handleFold(game, packet)
             self.render(packet)
+            if packet.serial == self.protocol.getSerial():
+                self.sitActionsUpdate()
             
         elif packet.type == PACKET_POKER_CALL:
             self.render(packet)
@@ -912,16 +918,29 @@ class PokerRenderer:
             game = self.factory.getGame(self.protocol.getCurrentGameId())
             player = game.getPlayer(self.protocol.getSerial())
 
+            if self.verbose > 2:
+                print "sitActionsUpdate: " + str(player)
+                
             if player.wait_for == "big":
                 interface.sitActionsSitOut("yes", "wait for big blind")
             elif player.wait_for:
                 interface.sitActionsSitOut("yes", "wait for %s blind" % player.wait_for, "insensitive")
+            elif player.sit_out_next_turn:
+                if game.isInGame(player.serial):
+                    interface.sitActionsSitOut("yes", "sit out next turn")
+                else:
+                    interface.sitActionsSitOut("yes", "sit out")
+            elif player.sit_requested:
+                if game.isInGame(player.serial):
+                    interface.sitActionsSitOut("no", "sit out next turn")
+                else:
+                    interface.sitActionsSitOut("no", "sit out")
             elif player.auto:
                 interface.sitActionsSitOut("yes", "sit out")
             elif player.sit_out:
                 interface.sitActionsSitOut("yes", "sit out")
             else:
-                interface.sitActionsSitOut("no", "sit out next hand")
+                interface.sitActionsSitOut("no", "sit out next turn")
 
             if game.isTournament():
                 interface.sitActionsAuto(None)
@@ -943,6 +962,7 @@ class PokerRenderer:
         if player.isBuyInPayed():
             if self.protocol.play_money <= 0:
                 self.showMessage("You have no money left", None)
+                self.sitActionsUpdate()
                 return False
 
             legend = "How much do you want to rebuy ?"

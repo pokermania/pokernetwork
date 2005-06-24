@@ -1,6 +1,24 @@
-Thu Jun 23 00:28:55 2005  Loic Dachary  <loic@gnu.org>
+Fri Jun 24 10:57:06 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.2
+
+	* pokerclient2d/poker2d.py: workarounds for the twisted-2.0 bug 
+	  http://twistedmatrix.com/bugs/issue1083
+
+Thu Jun 23 18:05:29 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerui/pokeranimation.py (PokerAnimationPlayer.sitoutIfNotInGame): arrange
+	  for sitout and sitin animations feedback to be immediate.
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.sendPacket): build new client
+	  side packets SIT_OUT_NEXT_HAND and SIT_REQUEST
+
+Thu Jun 23 16:34:40 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerpackets.py: client <=> packets SIT_OUT_NEXT_TURN
+	  and SIT_REQUEST
+
+Thu Jun 23 00:28:55 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerserver.py (PokerAvatar.handlePacketLogic): issue 
 	  an error if trying to logout without being logged in.

@@ -134,7 +134,7 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GtkWidget* sit_out_next_hand = glade_xml_get_widget(g_glade_xml,
                                                           "sit_out_next_hand");
       gboolean is_insensitive = !strcmp(insensitive, "insensitive");
-      g_message("sit_actions: sit_out %d", is_insensitive);
+      g_message("sit_actions: sit_out %s %d", insensitive, is_insensitive);
       gtk_button_set_label(GTK_BUTTON(sit_out_next_hand), message);
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sit_out_next_hand), bool_state);
       gtk_widget_set_sensitive(sit_out_next_hand, !is_insensitive);

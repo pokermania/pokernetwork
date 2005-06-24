@@ -2525,22 +2525,12 @@ class PokerService(service.Service):
 
     def setAccount(self, packet):
         #
-        # Sanity checks
+        # name constraints check
         #
         status = checkName(packet.name)
         if not status[0]:
             return PacketError(code = status[1],
                                message = status[2],
-                               other_type = packet.type)
-        status = checkPassword(packet.password)
-        if not status[0]:
-            return PacketError(code = status[1],
-                               message = status[2],
-                               other_type = packet.type)
-        email_regexp = ".*.@.*\..*$"
-        if not re.match(email_regexp, packet.email):
-            return PacketError(code = PacketPokerSetAccount.INVALID_EMAIL,
-                               message = "email %s does not match %s " % ( packet.email, email_regexp ),
                                other_type = packet.type)
         #
         # Look for user
@@ -2548,6 +2538,23 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         cursor.execute("select serial from users where name = '%s'" % packet.name)
         numrows = int(cursor.rowcount)
+        #
+        # password constraints check
+        #
+        if ( numrows == 0 or ( numrows > 0 and packet.password != "" )):
+            status = checkPassword(packet.password)
+            if not status[0]:
+                return PacketError(code = status[1],
+                                   message = status[2],
+                                   other_type = packet.type)
+        #
+        # email constraints check
+        #
+        email_regexp = ".*.@.*\..*$"
+        if not re.match(email_regexp, packet.email):
+            return PacketError(code = PacketPokerSetAccount.INVALID_EMAIL,
+                               message = "email %s does not match %s " % ( packet.email, email_regexp ),
+                               other_type = packet.type)
         if numrows == 0:
             cursor.execute("select serial from users where email = '%s' " % packet.email)
             numrows = int(cursor.rowcount)
@@ -2593,10 +2600,11 @@ class PokerService(service.Service):
                 return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
                                    message = "there already is another account with the email %s" % packet.email,
                                    other_type = packet.type)
+            set_password = packet.password and ", password = '" + packet.password + "' " or ""
             sql = ( "update users set "
                     " name = '" + packet.name + "', "
-                    " email = '" + packet.email + "', "
-                    " password = '" + packet.password + "' "
+                    " email = '" + packet.email + "' " + 
+                    set_password +
                     " where serial = " + str(packet.serial) )
             if self.verbose > 1:
                 print "setAccount: %s" % sql

@@ -219,10 +219,17 @@ class PokerAnimationPlayer:
         pass
     
     def fold(self, game_id):
-        pass
-    
+        player = self.table.game.getPlayer(self.serial)
+        if self.myself and player.sit_out_next_turn:
+            self.sitoutAction()
+
+    def sitoutIfNotInGame(self):
+        game = self.table.game
+        if self.myself and not game.isInGame(self.serial):
+            self.sitoutAction()
+        
     def playerChips(self,chips):
-        self.player_bet_stack=chips
+        self.player_bet_stack = chips
 
     def chat(self, packet):
         pass
@@ -311,6 +318,12 @@ class PokerAnimationScheduler:
     pokerclient.py:PokerClientProtocol instance talking to the server.
     """
     def __init__(self, *args, **kwargs):
+        def sitinActionsCallback(protocol, packet):
+            self.toPlayer(self.PokerAnimationPlayerType.sitinAction, packet)
+
+        def sitoutActionsCallback(protocol, packet):
+            self.toPlayer(self.PokerAnimationPlayerType.sitoutAction, packet)
+
         self.received2function = {
             PACKET_POKER_STREAM_MODE: lambda protocol, packet: self.setStream(packet, True),
 
@@ -331,11 +344,15 @@ class PokerAnimationScheduler:
 
             PACKET_POKER_SEATS: self.tableSeats,
 
-            PACKET_POKER_SIT: lambda protocol, packet:
-            self.toPlayer(self.PokerAnimationPlayerType.sitinAction, packet),
+            PACKET_POKER_SIT: sitinActionsCallback,
+
+            PACKET_POKER_SIT_REQUEST: sitinActionsCallback,
 
             PACKET_POKER_SIT_OUT: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.sitoutAction, packet),
+
+            PACKET_POKER_SIT_OUT_NEXT_TURN: lambda protocol, packet:
+            self.toPlayer(self.PokerAnimationPlayerType.sitoutIfNotInGame, packet),
 
             PACKET_POKER_FOLD: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.fold, packet, packet.game_id),
