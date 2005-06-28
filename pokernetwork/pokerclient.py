@@ -98,7 +98,6 @@ class PokerClientFactory(UGAMEClientFactory):
                 self.chat_config[key] = int(value)
         else:
             self.chat_config = {}
-
         self.dirs = split(self.settings.headerGet("/settings/path"))
         self.verbose = self.settings.headerGetInt("/settings/@verbose")
         self.delays = self.settings.headerGetProperties("/settings/delays")

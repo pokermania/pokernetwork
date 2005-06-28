@@ -3581,3 +3581,13 @@ class PacketPokerSitOutNextTurn(PacketPokerSitOut):
 
 PacketFactory[PACKET_POKER_SIT_OUT_NEXT_TURN] = PacketPokerSitOutNextTurn
 
+PACKET_POKER_CHAT_WORD = 228
+PacketNames[PACKET_POKER_CHAT_WORD] = "POKER_CHAT_WORD"
+class PacketPokerChatWord(PacketPokerId):
+    type = PACKET_POKER_CHAT_WORD
+
+    def __init__(self, *args, **kwargs):
+        self.word = kwargs.get("word", "no word")
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+PacketFactory[PACKET_POKER_CHAT_WORD] = PacketPokerChatWord

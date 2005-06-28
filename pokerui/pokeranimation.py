@@ -23,6 +23,7 @@
 # Authors:
 #  Cedric Pinson <cpinson@freesheep.org>
 #  Loic Dachary <loic@gnu.org>
+#  Johan Euphrosine <johan@mekensleep.com>
 #
 from pprint import pprint
 from twisted.internet import reactor
@@ -374,7 +375,7 @@ class PokerAnimationScheduler:
             PACKET_POKER_PLAYER_CHIPS: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.playerChips, packet,packet.bet),
 
-            PACKET_POKER_CHAT: lambda protocol, packet:
+            PACKET_POKER_CHAT_WORD: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.chat, packet, packet),
             }
 

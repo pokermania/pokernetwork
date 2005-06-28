@@ -295,7 +295,7 @@ class PokerRenderer:
         self.verbose = factory.verbose
         self.replayStepping = True
         self.replayGameId = None
-        self.custom_money = factory.config.headerGetProperties("/sequence/custom_money")
+        self.custom_money = factory.config.headerGetProperties("/sequence/custom_money")        
         if not self.custom_money:
             self.custom_money = { 'unit': 'C',
                                   'cent': 'cts' }
@@ -332,6 +332,9 @@ class PokerRenderer:
         self.stream_mode = True
         self.bet_step = 1 # else if a human is already here we don't receive a packet POKER_BET_LIMIT and if we don't receive this packet bet_step is not defined
         self.interactors = PokerInteractors(factory, self)
+        
+        self.chat_words = factory.config.headerGetProperties("/sequence/chatwords/word")
+
 
     def setProtocol(self, protocol):
         self.protocol = protocol
@@ -474,15 +477,31 @@ class PokerRenderer:
                 if self.verbose: print "connection not established, will ask password later"
 
     def chatFormatMessage(self, message):
-        config = self.factory.chat_config
+        from pprint import pprint
+        if self.factory.verbose: pprint(self.chat_words)
+        for word in self.chat_words:
+            import string
+            if string.find(message, word["in"]) != -1:
+                serial = self.protocol.getSerial()
+                game_id = self.protocol.getCurrentGameId()
+                if self.factory.verbose: print "chat word (%s) found => sending (%s) event" % (word["in"], word["event"])
+                self.schedulePacket(PacketPokerChatWord(word = word["event"], game_id = game_id, serial = serial))
+                message = string.replace(message, word["in"], word["out"])
+            else:
+                if self.factory.verbose: print "chat word (%s) not found" % word["in"]
+
         #
         # This is crude but is only meant to cope with a server that
         # would insist on sending more chars than the client wants.
         #
+
+        config = self.factory.chat_config
         message = message[:config['max_chars']] 
         format = DumbWriter(StringIO(), config['line_length'])
         format.send_flowing_data(message)
-        return format.file.getvalue()
+        message = format.file.getvalue()
+        
+        return message
         
     def chatHide(self):
         interface = self.factory.interface
