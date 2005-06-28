@@ -355,6 +355,10 @@ class PokerInterface(dispatch.EventDispatcher):
         if self.verbose > 1: print "PokerInterfaceProtocol:sitActions sit_out"
         self.command("sit_actions", "sit_out", status, message, insensitive)
 
+    def sitActionsToggleSitOut(self):
+        if self.verbose > 1: print "PokerInterfaceProtocol:sitActions toggle_sit_out"
+        self.command("sit_actions", "toggle_sit_out")
+
     def handleSitActions(self, data):
         if data[0] == "auto":
             answer = data[1]

@@ -1,3 +1,16 @@
+Tue Jun 28 19:39:17 2005  proppy  <euphro_j@epitech.net>
+
+	* pokerui/pokerrenderer.py (PokerRenderer.clickSitOut): 
+	called when click occured on the sitout interactor
+	send toggleSitOut to PokerInterface layer
+	
+	* pokerui/pokerinterface.py (PokerInterface.sitActionsToggleSitOut): 
+	send toggle_sit_out command to poker-interface process
+
+	* pokerclient2d/sit_actions.c (handle_sit_actions): 
+	handling toggle_sit_out added : toggle sit_out_next_hand active state	
+	smartified g_sit_actions_disable flag usage
+
 Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
@@ -9,8 +22,10 @@ Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>
 	* pokerui/pokerrenderer.py (PokerRenderer.chatFormatMessage): 
 	chat words (defined in /sequence/chatwords) are filtered from POKER_CHAT message
 	POKER_CHAT_WORD packet are scheduled for further response to matched chatwords
+	
 	* pokerui/pokeranimation.py (PokerAnimationScheduler.__init__): 
 	pokeranimation registers chat handler on PACKET_POKER_CHAT_WORD event
+	
 	* pokernetwork/pokerpackets.py (PacketPokerChatWord.type): 
 	PACKET_POKER_CHAT_WORD added
 

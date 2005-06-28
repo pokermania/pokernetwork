@@ -1104,13 +1104,20 @@ class PokerRenderer:
         if ( self.protocol.getCurrentGameId() and
              self.protocol.getCurrentGameId() == self.replayGameId ):
             self.protocol.sendPacket(PacketPokerTableDestroy(game_id = self.replayGameId))
-            return
+            return True
 
         game_id = self.protocol.getCurrentGameId()
         game = self.factory.getGame(game_id)
         serial = self.protocol.getSerial()
 
         self.changeState(LEAVING_CONFIRM, game, serial)
+        return True
+
+    def clickSitOut(self):
+        if self.factory.verbose: print "clickSitOut python"
+        interface = self.factory.interface
+        interface.sitActionsToggleSitOut()
+        return True
 
     def state2hide(self):
         interface = self.factory.interface

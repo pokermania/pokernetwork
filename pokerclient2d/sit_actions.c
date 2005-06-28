@@ -62,8 +62,12 @@ void	on_sit_out_next_hand_toggled(GtkWidget *widget, gpointer user_data)
 {
   (void) user_data;
 
+	g_message("on_sit_out_next_hand_toggled");
   if(g_sit_actions_disable)
-    return;
+		{
+			g_message("g_sit_actions_disable");
+			return;
+		}
 
   set_string("sit_actions");
   set_string("sit_out");
@@ -96,7 +100,6 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GUI_BRANCH(g_glade_xml, on_sit_out_next_hand_toggled);
     }
 
-  g_sit_actions_disable = TRUE;
   if(!strcmp(tag, "show"))
     {
       gui_bottom_left(g_sit_actions_window, screen);
@@ -105,25 +108,31 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     {
       GtkWidget* sit_out_next_hand = glade_xml_get_widget(g_glade_xml,
                                                           "sit_out_next_hand");
+
+			g_sit_actions_disable = TRUE;
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sit_out_next_hand), FALSE);
 
       gtk_widget_hide_all(g_sit_actions_window); 
+			g_sit_actions_disable = FALSE;
     }
   else if(!strcmp(tag, "auto"))
     {
+			g_sit_actions_disable = TRUE;
       char*	state = get_string();
       gboolean bool_state = !strcmp(state, "yes");
       gboolean show = strcmp(state, "None");
       GtkWidget* auto_blind = glade_xml_get_widget(g_glade_xml,
                                                    "auto_post_blinds");
+
+			g_sit_actions_disable = TRUE;
       if(show) {
         gtk_widget_show(auto_blind);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(auto_blind), bool_state);
       } else {
         gtk_widget_hide(auto_blind);
       }
-
       g_free(state);
+			g_sit_actions_disable = FALSE;
     }
   else if(!strcmp(tag, "sit_out"))
     {
@@ -134,6 +143,8 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GtkWidget* sit_out_next_hand = glade_xml_get_widget(g_glade_xml,
                                                           "sit_out_next_hand");
       gboolean is_insensitive = !strcmp(insensitive, "insensitive");
+
+			g_sit_actions_disable = TRUE;
       g_message("sit_actions: sit_out %s %d", insensitive, is_insensitive);
       gtk_button_set_label(GTK_BUTTON(sit_out_next_hand), message);
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sit_out_next_hand), bool_state);
@@ -142,8 +153,16 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       g_free(state);
       g_free(message);
       g_free(insensitive);
+			g_sit_actions_disable = FALSE;
     }
-  g_sit_actions_disable = FALSE;
+	else if (!strcmp(tag, "toggle_sit_out"))
+		{
+			g_message("toggle_sit_out");
+      GtkWidget* sit_out_next_hand = glade_xml_get_widget(g_glade_xml,
+                                                          "sit_out_next_hand");
+			gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sit_out_next_hand), 
+																	 !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(sit_out_next_hand)));
+		}
   
   g_free(tag);
 
