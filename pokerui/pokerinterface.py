@@ -23,6 +23,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #  Henry Precheur <henry@precheur.org>
+#  Cedric Pinson <cpinson@freesheep.org>
 #
 #
 from twisted.internet.protocol import Protocol, Factory
