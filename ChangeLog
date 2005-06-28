@@ -1,3 +1,16 @@
+Tue Jun 28 13:26:17 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.4
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.resendPackets): check
+	  that all players involved in a showdown still have a seat before 
+	  displaying the showdown.
+
+Tue Jun 28 12:35:19 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerui/pokerrenderer.py (PokerRenderer.changeState): immediate feedback
+	  and confirmation when leaving the table.
+
 Tue Jun 28 10:00:42 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.3

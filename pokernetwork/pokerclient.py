@@ -930,6 +930,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return packets
         
     def packetsShowdown(self, game):
+        if not game.isGameEndInformationValid():
+            return []
+        
         packets = []
         if game.variant == "7stud":
             for player in game.playersAll():
@@ -942,32 +945,23 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     packet.visibles = "hole"
                     packets.append(packet)
 
-        if game.winners:
-            #
-            # If some winners left the game, we can't accurately
-            # display the showdown.
-            #
-            for serial in game.winners:
-                if serial not in game.serial2player.keys():
-                    return packets
-
-            for (serial, best) in game.serial2best.iteritems():
-                for (side, (value, bestcards)) in best.iteritems():
-                    if serial in game.side2winners[side]:
-                        if len(bestcards) > 1:
-                            side = game.isHighLow() and side or ""
-                            if side == "low":
-                                hand = ""
-                            else:
-                                hand = game.readableHandValueShort(side, bestcards[0], bestcards[1:])
-                            cards = game.getPlayer(serial).hand.toRawList()
-                            packets.append(PacketPokerBestCards(game_id = game.id,
-                                                                serial = serial,
-                                                                side = side,
-                                                                cards = cards,
-                                                                bestcards = bestcards[1:],
-                                                                board = game.board.tolist(True),
-                                                                hand = hand))
+        for (serial, best) in game.serial2best.iteritems():
+            for (side, (value, bestcards)) in best.iteritems():
+                if serial in game.side2winners[side]:
+                    if len(bestcards) > 1:
+                        side = game.isHighLow() and side or ""
+                        if side == "low":
+                            hand = ""
+                        else:
+                            hand = game.readableHandValueShort(side, bestcards[0], bestcards[1:])
+                        cards = game.getPlayer(serial).hand.toRawList()
+                        packets.append(PacketPokerBestCards(game_id = game.id,
+                                                            serial = serial,
+                                                            side = side,
+                                                            cards = cards,
+                                                            bestcards = bestcards[1:],
+                                                            board = game.board.tolist(True),
+                                                            hand = hand))
         return packets
 
     def publishQuit(self):
@@ -1038,13 +1032,21 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                         seats = game.seats()))
         packets.append(PacketPokerStart(game_id = game.id,
                                         hand_serial = game.hand_serial))
-        for player in game.playersNotFold():
-            packet = PacketPokerPlayerCards(game_id = game.id,
-                                            serial = player.serial,
-                                            cards = player.hand.toRawList())
-            packets.append(packet)
-        packets.append(PacketPokerBoardCards(game_id = game.id,
-                                             cards = game.board.tolist(False)))
+        if game.isRunning():
+            players_with_cards = game.playersNotFold()
+        elif  game.isGameEndInformationValid():
+            players_with_cards = game.playersWinner()
+        else:
+            players_with_cards = []
+
+        if players_with_cards:
+            for player in players_with_cards:
+                packet = PacketPokerPlayerCards(game_id = game.id,
+                                                serial = player.serial,
+                                                cards = player.hand.toRawList())
+                packets.append(packet)
+            packets.append(PacketPokerBoardCards(game_id = game.id,
+                                                 cards = game.board.tolist(False)))
         if game.isRunning():
             if not self.no_display_packets:
                 packets.extend(self.updatePotsChips(game, game.getPots()))

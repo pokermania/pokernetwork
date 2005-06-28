@@ -75,6 +75,7 @@ JOINING_DONE = "joining_done"
 LEAVING = "leaving"
 LEAVING_DONE = "leaving_done"
 LEAVING_CANCEL = "leaving_cancel"
+LEAVING_CONFIRM = "leaving_confirm"
 CANCELED = "canceled"
 SIT_OUT = "sit_out"
 QUIT = "quit"
@@ -748,8 +749,6 @@ class PokerRenderer:
             self.render(PacketPokerPlayerLeave(game_id = packet.game_id,
                                                      serial = packet.serial,
                                                      seat = packet.seat))
-            if packet.serial == self.protocol.getSerial():
-                self.changeState(LEAVING_DONE)
 
         elif packet.type == PACKET_POKER_END_ROUND:
             self.render(packet)
@@ -1092,7 +1091,7 @@ class PokerRenderer:
         game = self.factory.getGame(game_id)
         serial = self.protocol.getSerial()
 
-        self.changeState(LEAVING, game, serial)
+        self.changeState(LEAVING_CONFIRM, game, serial)
 
     def state2hide(self):
         interface = self.factory.interface
@@ -1766,8 +1765,27 @@ class PokerRenderer:
                 packet = PacketPokerPlayerLeave(game_id = game.id,
                                                 serial = serial)
                 self.protocol.sendPacket(packet)
+            self.changeState(LEAVING_DONE)
+
+        elif state == LEAVING_CONFIRM:
+            ( game, serial ) = args
+
+            def confirm(response):
+                if response:
+                    self.changeState(LEAVING, *args)
+                else:
+                    self.state = IDLE
+
+            interface = self.factory.interface
+            if game.getPlayer(serial):
+                if game.isInGame(serial):
+                    interface.yesnoBox("Do you really want to fold your hand\nand leave the table ?")
+                    interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
+                else:
+                    interface.yesnoBox("Do you really want to leave the table ?")
+                    interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
             else:
-                self.changeState(LEAVING_DONE)
+                self.changeState(LEAVING, *args)
 
         elif state == CANCELED:
             self.hideBlind()
