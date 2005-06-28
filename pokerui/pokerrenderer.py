@@ -1025,9 +1025,6 @@ class PokerRenderer:
         
     def delay(self, game, event):
 
-        if self.state != IDLE:
-            return
-        
         if ( game.id == self.replayGameId and
              self.replayStepping ):
             self.hold(120, game.id)

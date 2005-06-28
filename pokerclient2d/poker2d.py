@@ -30,9 +30,9 @@ sys.path.insert(0, "..")
 # Workaround for the twisted-2.0 bug 
 # http://twistedmatrix.com/bugs/issue1083
 #
-import gobject
-if hasattr(gobject, "threads_init"):
-    del gobject.threads_init
+#import gobject
+#if hasattr(gobject, "threads_init"):
+#    del gobject.threads_init
 
 import os
 from string import split, lower

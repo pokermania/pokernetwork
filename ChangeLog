@@ -1,3 +1,10 @@
+Tue Jun 28 10:00:42 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.3
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): sitout if
+	  not in player list.
+
 Fri Jun 24 10:57:06 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.2

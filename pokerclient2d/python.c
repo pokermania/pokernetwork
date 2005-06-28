@@ -99,7 +99,9 @@ void flush_io_channel(void) {
   g_assert(tuple);
   g_assert(PyList_SetSlice(out_stream, 0, PyList_Size(out_stream), NULL) == 0);
   {
+    PyGILState_STATE state = PyGILState_Ensure();
     PyObject* result = PyObject_Call(callback, tuple, NULL);
+    PyGILState_Release(state);
     if(result) { Py_DECREF(result); }
   }
   Py_DECREF(tuple);

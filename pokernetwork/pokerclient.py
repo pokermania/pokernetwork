@@ -634,6 +634,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                                       reason = wait_for))
                     else:
                         if game.isSit(serial):
+                            game.sitOut(serial)                            
                             forward_packets.append(PacketPokerSitOut(game_id = game.id,
                                                                      serial = serial))
 
