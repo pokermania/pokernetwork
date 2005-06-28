@@ -1,3 +1,7 @@
+Release 1.0.4
+
+Python thread safety bug solved.
+
 Release 1.0.3
 
 Major bug fix in the client library.

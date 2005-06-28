@@ -26,7 +26,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.54)
-AC_INIT(poker-network, 1.0.3)
+AC_INIT(poker-network, 1.0.4)
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE()
 AM_CONFIG_HEADER([config.h])
