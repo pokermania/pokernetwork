@@ -1,3 +1,13 @@
+Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>
+
+	* pokerui/pokerrenderer.py (PokerRenderer.chatFormatMessage): 
+	chat words (defined in /sequence/chatwords) are filtered from POKER_CHAT message
+	POKER_CHAT_WORD packet are scheduled for further response to matched chatwords
+	* pokerui/pokeranimation.py (PokerAnimationScheduler.__init__): 
+	pokeranimation registers chat handler on PACKET_POKER_CHAT_WORD event
+	* pokernetwork/pokerpackets.py (PacketPokerChatWord.type): 
+	PACKET_POKER_CHAT_WORD added
+
 Tue Jun 28 13:26:17 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
