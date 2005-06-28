@@ -169,10 +169,8 @@ static gboolean on_param_expose_event(GtkImage *preview, GdkEventExpose *event, 
     int current = (int)gtk_adjustment_get_value(params->adjustment);
     rectangle.x += allocation.x;
     rectangle.y += allocation.y;
-/*      printf("on_param_expose --- %s\n",params->name); */
-/* 		 printf("on_param_expose --- current %d\n",current); */
-		g_message("on_param_expose --- %s\n",params->name);
-		g_message("on_param_expose --- current %d\n",current);
+    g_message("on_param_expose --- %s\n",params->name);
+    g_message("on_param_expose --- current %d\n",current);
     if(!gdk_color_parse(params->colors[current], &color)) {
       g_message("param_expose_event color conversion failed for %d/%s", current, params->colors[current]);
       return FALSE;
@@ -192,15 +190,20 @@ static void on_arrow_clicked(GtkAdjustment* adjustment, gdouble increment)
                "value", &value,
                NULL);
   /*
-   * check that value is in the range [0,upper]
+   * check that value is in the range [0,upper] and wrap around
    */
-  if(((value + increment) < 0.0) || ((value + increment) - upper > 0.1)) {
-/*     g_message("ARROW CLICKED ignored %f / %f\n", ((value + increment)), ((value + increment))); */
+  if((value + increment) < 0.0) {
+    value = upper;
+    g_message("ARROW CLICKED wrap %f", value);
+  } else if((value + increment) - upper > 0.0) {
+    value = 0.0;
+    g_message("ARROW CLICKED wrap 0");
   } else {
-/*     g_message("ARROW CLICKED value changed %f\n", value + increment); */
-
-    gtk_adjustment_set_value(adjustment, value + increment);
+    g_message("ARROW CLICKED value changed %f\n", value + increment);
+    value += increment;
   }
+
+  gtk_adjustment_set_value(adjustment, value);
 }
 
 static void on_slot_left_clicked(GtkToggleButton *button, gpointer user_data)
@@ -208,7 +211,7 @@ static void on_slot_left_clicked(GtkToggleButton *button, gpointer user_data)
   struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
   (void) button;
 
-/*   g_message("SLIDER SLOT left clicked\n"); */
+  /*   g_message("SLIDER SLOT left clicked\n"); */
 
   on_arrow_clicked(param->adjustment, -1.);
 }
@@ -218,7 +221,7 @@ static void on_slot_right_clicked(GtkToggleButton *button, gpointer user_data)
   struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
   (void) button;
 
-/*   g_message("SLIDER SLOT right clicked\n"); */
+  /*   g_message("SLIDER SLOT right clicked\n"); */
 
   on_arrow_clicked(param->adjustment, 1.);
 }
@@ -363,9 +366,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
       {
         static position_t position;
         gtk_widget_get_size_request(g_outfit_sex_window, &window_width, &window_height);
-/*         position.x = center_x + 5; */
-/*         position.y = center_y - 365; */
-				position.x = center_x - 5;
+        position.x = center_x - 5;
         position.y = center_y - 336;
         gui_place(g_outfit_sex_window, &position, screen);
         gtk_widget_show_all(g_outfit_sex_window);
@@ -373,8 +374,6 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
       {
         static position_t position;
         gtk_widget_get_size_request(g_outfit_ok_window, &window_width, &window_height);
-/*         position.x = center_x - 450; */
-/*         position.y = center_y + 313; */
         position.x = center_x + 414;
         position.y = center_y + 310;
         gui_place(g_outfit_ok_window, &position, screen);
@@ -424,7 +423,6 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           static position_t position;
           gtk_widget_get_size_request(g_outfit_slots_female_window, &window_width, &window_height);
           position.x = center_x + 50;
-/*           position.y = center_y - 270; */
           position.y = center_y - 246;
           gui_place(g_outfit_slots_female_window, &position, screen);
           gtk_widget_show_all(g_outfit_slots_female_window);
@@ -433,7 +431,6 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           static position_t position;
           gtk_widget_get_size_request(g_outfit_slots_male_window, &window_width, &window_height);
           position.x = center_x + 50;
-/*           position.y = center_y - 270; */
           position.y = center_y - 246;
           gui_place(g_outfit_slots_male_window, &position, screen);
           gtk_widget_show_all(g_outfit_slots_male_window);
@@ -526,8 +523,6 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
             char* preview_type = get_string();
             char image_name[1024];
 
-/* 						printf("PARAM: %s - %d - PREVIEW %s\n",title,value,preview_type); */
-
             sprintf(widget_name, "param%d_image", i);
             GtkImage* image = GTK_IMAGE(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
             params_user_data[i].preview = image;
@@ -540,12 +535,10 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
               for(j = 0; j < preview_count; j++) {
                 char* info = get_string();
                 strcpy(params_user_data[i].colors[j], info);
-/* 								printf("INFO: %s\n",info); */
                 g_free(info);
               }
               if(!strcmp(preview_type, "basecolor")) {
                 sprintf(image_name, "%s/parameters/%s.png", g_data_dir, preview_type);
-/* 								printf("IMAGENAME: %s\n",image_name); */
                 gtk_image_set_from_file(image, image_name);
                 GdkRectangle r;
                 r.x = 14;
@@ -577,18 +570,6 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
             g_free(preview_type);
           }
           
-#if 0
-          /*
-           * Slider
-           */
-          if (1 ||  !slot_cant_be_displayed) {
-            gtk_widget_set_child_visible(container, TRUE);
-          } else {
-            gtk_widget_set_child_visible(container, FALSE);
-          }
-#endif
-
-
           sprintf(widget_name, "param%d_label", i);
           GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
           g_assert(label);
@@ -599,7 +580,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
 
           strcpy(params_user_data[i].name, tag);
 
-					g_message("SLIDER PARAM value change: %d => %d, max_value %d", (int)gtk_adjustment_get_value(adjustment), value, max_value);
+          g_message("SLIDER PARAM value change: %d => %d, max_value %d", (int)gtk_adjustment_get_value(adjustment), value, max_value);
           g_signal_handler_block((gpointer)adjustment, params_handlers[i]);
           g_object_set(GTK_OBJECT(adjustment),
                        "lower", (gdouble)min_value,

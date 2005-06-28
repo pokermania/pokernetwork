@@ -1,3 +1,9 @@
+Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.4
+	
+	* pokerclient2d/outfits.c (on_arrow_clicked): outfit arrow wrap around
+
 Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.chatFormatMessage): 
@@ -8,9 +14,14 @@ Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>
 	* pokernetwork/pokerpackets.py (PacketPokerChatWord.type): 
 	PACKET_POKER_CHAT_WORD added
 
-Tue Jun 28 13:26:17 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 15:24:59 2005  Loic Dachary  <loic@gnu.org>
 
-	* Release 1.0.4
+	* pokernetwork/pokerpackets.py: poker packet renderer
+
+	* pokerui/pokerrenderer.py (PokerRenderer.changeState): notify display
+	  when state changes
+
+Tue Jun 28 13:26:17 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerclient.py (PokerClientProtocol.resendPackets): check
 	  that all players involved in a showdown still have a seat before 

@@ -3581,8 +3581,25 @@ class PacketPokerSitOutNextTurn(PacketPokerSitOut):
 
 PacketFactory[PACKET_POKER_SIT_OUT_NEXT_TURN] = PacketPokerSitOutNextTurn
 
-PACKET_POKER_CHAT_WORD = 228
+########################################
+
+PACKET_POKER_RENDERER_STATE = 228
+PacketNames[PACKET_POKER_RENDERER_STATE] = "POKER_RENDERER_STATE"
+
+class PacketPokerRendererState(Packet):
+
+    type = PACKET_POKER_RENDERER_STATE
+
+    def __init__(self, *args, **kwargs):
+        self.state =  kwargs.get("state", "idle")
+
+PacketFactory[PACKET_POKER_RENDERER_STATE] = PacketPokerRendererState
+
+########################################
+
+PACKET_POKER_CHAT_WORD = 229
 PacketNames[PACKET_POKER_CHAT_WORD] = "POKER_CHAT_WORD"
+
 class PacketPokerChatWord(PacketPokerId):
     type = PACKET_POKER_CHAT_WORD
 

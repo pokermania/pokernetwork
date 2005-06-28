@@ -1129,6 +1129,8 @@ class PokerRenderer:
             pass
         else:
             status = False
+        if status:
+            self.chatHide()
         return status
 
     def canHideInterface(self):
@@ -1476,7 +1478,10 @@ class PokerRenderer:
         serial = self.protocol.getSerial()
         current_game_id = self.protocol.getCurrentGameId()
         done = False
-        if current_game_id != game_id:
+        if current_game_id == game_id:
+            self.changeState(IDLE)
+            self.chatShow()
+        else:
             current_game = self.factory.getGame(current_game_id)
             if current_game and not current_game.isSeated(serial):
                 #
@@ -1552,6 +1557,7 @@ class PokerRenderer:
             return
         
         if self.verbose > 2: print "changeState %s => %s (args = %s, kwargs = %s)" % ( self.state, state, str(args), str(kwargs) )
+        current_state = self.state
         
         if state == LOGOUT:
             if ( self.state == IDLE or self.state == SEARCHING ) and self.protocol.user.isLogged():
@@ -1562,6 +1568,7 @@ class PokerRenderer:
         elif state == LOBBY and ( self.state2hide() or self.state == SEARCHING_MY ):
             self.state = state
             self.showLobby(*args)
+            self.factory.interface.showMenu()
             self.queryLobby()
 
         elif state == SEARCHING_MY and ( self.state2hide() or self.state == LOGIN ):
@@ -1609,6 +1616,7 @@ class PokerRenderer:
                 self.showMessage("Already logged in", None)
             else:
                 self.state2hide()
+                self.factory.interface.showMenu()
                 self.state_login = args[0]
                 self.requestLogin()
                 self.state = state
@@ -1816,7 +1824,7 @@ class PokerRenderer:
                 self.state = IDLE
 
         elif state == OUTFIT:
-            if self.protocol.user.isLogged():
+            if self.protocol and self.protocol.user.isLogged():
                 if self.isSeated():
                     self.showMessage("You must leave the table to change your outfit", None)
                 else:
@@ -1874,3 +1882,6 @@ class PokerRenderer:
         elif state == IDLE:
             self.state2hide()
             self.state = state
+
+        if current_state != self.state:
+            self.render(PacketPokerRendererState(state = self.state))

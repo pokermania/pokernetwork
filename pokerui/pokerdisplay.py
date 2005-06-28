@@ -52,3 +52,6 @@ class PokerDisplay:
         else:
             self.finish = True
             return True
+
+    def render(self, packet):
+        pass
