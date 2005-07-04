@@ -63,8 +63,8 @@ Others : the client part is known to work
 ======================================================================
 Usage
 
-Server: /etc/init.d/poker-network start
-Client: /usr/games/poker2d
+Server: /usr/local/sbin/pokerserver
+Client: /usr/local/games/poker2d
 
 ======================================================================
 Requirements

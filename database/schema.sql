@@ -267,7 +267,7 @@ INSERT INTO users (serial, name, privilege) VALUES (1, ' rake ', 0);
 INSERT INTO users (serial, name, password, privilege) VALUES (2, 'admin', 'REPLACE', 2);
 INSERT INTO users_private (serial) VALUES (2);
 
-INSERT INTO users (serial, name, password, privilege) VALUES (3, 'admin_web', 'REPLACE', 0);
+INSERT INTO users (serial, name, password, privilege) VALUES (3, 'admin_web', 'REPLACE', 1);
 INSERT INTO users_private (serial) VALUES (3);
 
 drop table if exists users_transactions;

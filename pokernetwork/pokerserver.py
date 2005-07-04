@@ -102,8 +102,8 @@ class PokerAvatar:
     def setProtocol(self, protocol):
         self.protocol = protocol
         
-    def __del__(self):
-        print "PokerAvatar instance deleted"
+#    def __del__(self):
+#	print "PokerAvatar instance deleted"
 
     def error(self, string):
         self.message("ERROR " + string)
@@ -3119,6 +3119,8 @@ class PokerXML(resource.Resource):
         del session.avatar
 
     def render(self, request):
+        if self.verbose > 5:
+            print "PokerXML::render " + request.content.read()
         request.content.seek(0, 0)
         if self.encoding is not None:
             mimeType = 'text/xml; charset="%s"' % self.encoding
@@ -3235,8 +3237,8 @@ class PokerSOAP(PokerXML):
                                 method = 'returnPacket',
                                 encoding = self.encoding)
 
-def run(argv):
-    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.server.xml"
+def makeApplication(argv):
+    configuration = argv[-1][-4:] == ".xml" and argv[-1] or "/etc/poker-network/poker.server.xml"
     settings = Config([''])
     settings.load(configuration)
     if not settings.header:
@@ -3275,9 +3277,9 @@ def run(argv):
                        ).setServiceParent(serviceCollection)
     return application
         
-application = run(sys.argv)
+application = makeApplication(sys.argv)
 
-if __name__ == '__main__':
+def run():
     try:
         app.startApplication(application, None)
         reactor.run()
@@ -3286,3 +3288,6 @@ if __name__ == '__main__':
             print_exc()
         else:
             print sys.exc_value
+
+if __name__ == '__main__':
+    run()

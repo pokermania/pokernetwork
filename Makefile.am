@@ -74,6 +74,10 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerbot.py \
 	pokernetwork/user.py
 
+man_MANS = pokernetwork/pokerserver.8
+
+sbin_SCRIPTS = pokernetwork/pokerserver
+
 pokeruidir = ${pyexecdir}/pokerui
 pokerui_PYTHON = \
 	pokerui/pokerrenderer.py \
@@ -89,6 +93,7 @@ dist_pokerdb_DATA = \
 	database/schema.sql
 
 EXTRA_DIST = \
+	NIHPHOBIA \
 	bootstrap \
 	config/python.m4 \
 	examples/poker.bot.xml \

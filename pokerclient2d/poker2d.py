@@ -48,18 +48,6 @@ from random import choice, uniform, randint
 
 from pokernetwork.config import Config
 
-default_settingsfile = "/usr/share/poker-network/poker2d/poker2d.xml"
-user_dir = expanduser("~/.poker2d")
-settingsfile = len(sys.argv) > 1 and sys.argv[1] or user_dir + "/poker2d.xml"
-configfile = len(sys.argv) > 2 and sys.argv[2] or "client.xml"
-
-if os.name == "posix":
-    conf_file = user_dir + "/poker2d.xml"
-    if not exists(conf_file) and exists(default_settingsfile):
-        if not exists(user_dir):
-            makedirs(user_dir)
-        copy(default_settingsfile, user_dir)
-
 class Main:
     "Poker gameplay"
 
@@ -119,8 +107,6 @@ Using current directory instead.
         poker_factory.children.killall()
         poker_factory.display.finish()
         poker_factory.display = None
-
-client = Main(configfile, settingsfile)
 
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
@@ -257,21 +243,38 @@ class PokerClientFactory2D(PokerClientFactory):
                 self.interface.messageBox("Lost connection to poker\nserver at %s:%d" % ( self.host, self.port ))
                 self.interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, self.quit)
     
-if client.configOk():
-    try:
-        client.run()
-#        import profile
-#        profile.run('client.run()', 'bar')
-#        import pstats
-#        pstats.Stats('bar').sort_stats().print_stats()
-    except:
-        if client.verbose:
-            print_exc()
-        else:
-            print sys.exc_value
+def run(argv, default_settingsfile):
+    user_dir = expanduser("~/.poker2d")
+    settingsfile = len(argv) > 1 and argv[1] or user_dir + "/poker2d.xml"
+    configfile = len(argv) > 2 and argv[2] or "client.xml"
 
+    if os.name == "posix":
+        conf_file = user_dir + "/poker2d.xml"
+        if not exists(conf_file) and exists(default_settingsfile):
+            if not exists(user_dir):
+                makedirs(user_dir)
+            copy(default_settingsfile, user_dir)
+
+
+    client = Main(configfile, settingsfile)
+
+    if client.configOk():
+        try:
+            client.run()
+    #        import profile
+    #        profile.run('client.run()', 'bar')
+    #        import pstats
+    #        pstats.Stats('bar').sort_stats().print_stats()
+        except:
+            if client.verbose:
+                print_exc()
+            else:
+                print sys.exc_value
+
+if __name__ == "__main__":
+    run(sys.argv, "")
 #
 # Emacs debug:
 # M-x pdb
-# pdb poker2d.py poker2d.xml
+# pdb poker2d.py poker2d-test.xml
 #

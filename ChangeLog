@@ -1,3 +1,10 @@
+Mon Jul 04 10:15:57 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.4
+	
+	* README (Client): fix install paths as pointed out by
+	  Jeff Schoby <ssrjazz@gmail.com>
+
 Tue Jun 28 19:39:17 2005  proppy  <euphro_j@epitech.net>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.clickSitOut): 
@@ -13,8 +20,14 @@ Tue Jun 28 19:39:17 2005  proppy  <euphro_j@epitech.net>
 
 Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
 
-	* Release 1.0.4
-	
+	* configure.ac: substitutions for local configuration
+
+	* {conf,pokerclient2d}/*.xml: moved to .xml.in with values from configure
+
+	* debian/rules: set the configuration variables to debconf variables
+
+Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
+
 	* pokerclient2d/outfits.c (on_arrow_clicked): outfit arrow wrap around
 
 Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>

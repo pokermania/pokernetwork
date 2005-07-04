@@ -1,0 +1,198 @@
+Crash therapy for nihphobia* for windows developers with Q&A
+
+Nihphobia is a variant of agoraphobia where the subject (usually an
+experienced windows developer) feels increasingly incofortable when
+surrounded by more than two software maker. The symptoms are as
+follows:
+
+        - Avoid calling other processes or otherwise communicate with
+          them.
+        - Compile every project in static mode to kick out all dynamic
+          libraries.
+        - No project depends on more than two software makers.
+        - Pre-allocate all resources before entering a time critical 
+          function.
+
+The name nihphobia is a neologism rooted in the NIH (Not Implemented
+Here) syndrom which is the subject of another study. 
+
+----------------------------------------------------------------------
+Level 1: You can surf the net with a specific web browser or with the 
+         preferred browser, as defined in the system preferences.
+
+Question: Which function instructs the default browser to display a given URL ?
+
+Answer: ShellExecute
+
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/reference/functions/shellexecute.asp?frame=true&hidetoc=true
+Performs an operation on a specified file.
+
+Example: ShellExecute(0, "", "http://nmp.microsoft.com/", "", "", SW_SHOWNORMAL)
+
+as explained in the documentation of argument three ("Pointer to a
+null-terminated string that specifies the file or object on which to
+execute the specified verb. To specify a Shell namespace object, pass
+the fully qualified parse name. Note that not all verbs are supported
+on all objects"). The verb being the second argument, in this case the
+empty string, as specified in the documentation ("Generally, the
+actions available from an object's shortcut menu are available verbs") 
+and because the "shortcut menu" of any given URL is indeed empty.
+
+----------------------------------------------------------------------
+Level 2: The pipes on Windows come in two flavors : named and anonymous.
+
+Question: Which function returns the number of bytes available to the
+reader of an anonymous pipe ? 
+
+Answer: PeekNamedPipe
+
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/ipc/base/peeknamedpipe.asp
+The PeekNamedPipe function copies data from a named or anonymous pipe
+into a buffer without removing it from the pipe. It also returns
+information about data in the pipe.
+
+----------------------------------------------------------------------
+Level 3: A program can allocate resources from the heap, using malloc (C)
+         or new (C++).
+
+Question: How do you free such a resource when returned by a dynamic library
+function ?
+
+Answer: You recompile all dynamic libs with the option FOOBAR
+(intentionaly left blank as it may change depending on the
+compiler). If you don't, your program will crash because each dynamic
+library has its own stack. And your program has yet another. This
+default behaviour is prominently documented in Heap: Pleasures and
+Pains (Murali R. Krishnan, Microsoft Corporation)
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dngenlib/html/heap3.asp
+
+----------------------------------------------------------------------
+Level 4: Allocators are designed to minimize the fragmentation of the heap.
+
+Question: How do you avoid hysteresis when the heap is too fragmented ?
+
+Answer: You can't. 
+Corrolary: Don't use use allocation in time critical code or you
+will randomly experience severe drop of performance. Carefully design
+your code and architecture your projects to avoid dynamic allocation.
+This has a major impact on the architecture and should therefore be
+made at a very early stage. Alternatively you can replace the standard
+windows allocator with another which is not subject to the same flaws,
+such as the "Malloc implementation for multiple threads without lock contention"
+(Wolfram Gloger <wg@malloc.de> and Doug Lea <dl@cs.oswego.edu>, 1996-2002).
+
+----------------------------------------------------------------------
+Level 5: A process can run another process in the background
+
+Question: Knowing the ID of a process, how do you kill it ?
+
+Answer: You can't
+
+----------------------------------------------------------------------
+Level 6: A process can control another process
+
+Question: Knowing the name of a process, how do you kill it ?
+
+Answer: Use the following function, equivalent to the killall NAME
+command on GNU/Linux (killit is cuter though) :
+
+bool killit(const char *name)
+{
+  std::string exeName(name);
+  HANDLE hProcessSnap;
+  PROCESSENTRY32 pe32;
+
+  hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if(hProcessSnap == INVALID_HANDLE_VALUE)
+  {
+    std::cerr << "CreateToolhelp32Snapshot (of processes)" << std::endl;
+    return false;
+  }
+
+  pe32.dwSize = sizeof(PROCESSENTRY32);
+
+  if(!Process32First(hProcessSnap, &pe32))
+  {
+    std::cerr << "Process32First" << std::endl;
+    CloseHandle(hProcessSnap);
+    return false;
+  }
+
+  do
+  {
+    std::string processName(pe32.szExeFile);
+    if (processName == exeName)
+    {
+      HANDLE hProcess;
+      hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
+      if(hProcess == NULL)
+        std::cerr << "OpenProcess" << std::endl;
+      else
+      {
+        std::cout << "TerminateProcess " << processName << ":" << hProcess << std::endl;
+        TerminateProcess(hProcess, -1);
+        WaitForSingleObject(hProcess, INFINITE);
+        CloseHandle(hProcess);
+      }
+    }
+  } while(Process32Next(hProcessSnap, &pe32));
+
+  CloseHandle(hProcessSnap);
+  return true;
+}
+
+
+----------------------------------------------------------------------
+Level 7: A software package does not depend on anything
+
+Question: How do you manage the dependency graph of the packages installed
+  on the machine ?
+
+Answer: You run windows update and you manually download the new version
+of the other software maker you depend on.
+
+----------------------------------------------------------------------
+Conclusion:
+
+We realize that our therapy is not perfect and that some dark corners
+of the windows developer psyche remain to be discovered. However, we
+do hope that after thinking about the questions and studying the
+answers, the nihphobic will be partially cured and be more self
+confident when approached by remote processes, knowing that he can
+launch his own or kill the intruder. Because he now knows how to free
+the resources pointer returned by the dynamic libraries, he won't be
+frustrated because he has to return them to the library or die in
+pain. He can keep the pointer for as long as he wants, and free it as
+if it was his own. He will identify himself to a handsome slim person
+instead of a fat repulsive static executable.
+
+Our research for the next decade will focus on the analysis and the
+history of the packstration. We will leave the inner self of the
+windows developer and interview his mother substitute, the Microsoft
+corporation. We hope to find out why the developer is not allowed to
+go out and play with his friends. Deprived from any packaging tool, he
+is confined in an exclusive relationship instead of navigating in a
+web of thousands of software. Stay tune and learn more about
+packstration in our next issue.
+
+Our best readers reviews:
+
+Igor Kravtchenko: tu te fous de ma gueule ou quoi ?
+Omar Cornut: all-in, je muck le flop
+Cedric Pinson: c'est quoi windows ?
+Johan Euphrosine: croque, croque, croque
+Philippe Nouhra: la couleur de fond c'est #141414
+Philippe Lamoureux: il avance mon export unifié ?
+Roland Sfeir: tu as pris un jour de congé pour écrire cette merde ?
+Olivier Lejade: ce serait bien que tu changes la fonte du texte
+Thierry Delamare: finalement j'aurais peut-être du accepter d'aller
+        bosser pour les militaires à saint-quentin en yvelines
+Maud Daujean: WOW !
+Arlette Lejade: les garcons vous avez fragmenté l'allocation des
+        tasses dans l'évier
+Amélie: qui a bouffé mon stylo ?
+Morgan Manach: j'ai pas entendu, j'avais la tête dans le climatiseur
+Benjamin Fiquet: ./^\.
+
+
+

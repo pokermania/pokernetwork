@@ -25,14 +25,12 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-from os import environ
-if not environ.has_key('GTK2_RC_FILES'):
-    environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network/poker2d/Aero/gtkrc"
-
 import sys
 sys.path.insert(0, "@POKER_PYTHONDIR@")
 
-from pokerclient2d.poker2d import run
+if(sys.argv[-1][-4:] != ".xml"):
+    sys.argv.append("@POKER_NETWORK_PKGSYSCONFDIR@/poker.server.xml")
 
-run(sys.argv, "@POKER2D_PKGDATADIR@/poker2d.xml")
+from pokernetwork.pokerserver import run
+run()
 

@@ -4,13 +4,13 @@
           delays="true" tcptimeout="2000">
   <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="5" lag="15"/>
   <screen fullscreen="no" width="1024" height="768"/>
-  <name>foobar1</name>
-  <passwd>foobar</passwd>
+  <name>YOURNAME</name>
+  <passwd></passwd>
   <remember>yes</remember>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <chat max_chars="160" line_length="20"/>
-  <servers>%HOST%:19380</servers>
+  <servers>@POKER_SERVER_HOST@:19380</servers>
   <sound>yes</sound>
   <tournaments custom_money="n" type="sit_n_go" sort="name"/>
   <lobby custom_money="n" type="holdem" sort="name"/>
@@ -18,6 +18,7 @@
   <vprogram>no</vprogram>
   <skin url="random" outfit="random"/>
   <user path="~/.poker2d"/>
-  <path>/usr/share//poker-network/poker2d /etc/poker-engine /etc/poker-network</path> 
-  <data path="/usr/share/poker-network/poker2d" sounds="/usr/share/poker-network/poker2d/sounds" />
+  <rsync>echo @RSYNC@ --delete -avz @POKER_SERVER_HOST@::%version% @POKER_PREFIX@</rsync>
+  <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <data path="@POKER2D_PKGDATADIR@" sounds="@POKER2D_PKGDATADIR@/sounds" />
 </settings>

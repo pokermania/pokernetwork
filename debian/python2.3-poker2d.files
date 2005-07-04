@@ -2,4 +2,5 @@ usr/lib/python2.3/site-packages/pokerclient2d
 usr/lib/poker-network
 usr/share/poker-network/poker2d
 usr/games/poker2d
-usr/share/man
+usr/share/man/man6
+

@@ -7,7 +7,7 @@
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15" />
   <name>test</name>
   <passwd>test</passwd>
-  <servers>localhost:19380</servers>
+  <servers>@POKER_SERVER_HOST@:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <path>/etc/poker-engine</path> 

@@ -2,3 +2,5 @@ usr/lib/python2.3/site-packages/pokernetwork
 usr/lib/python2.3/site-packages/pokerui
 usr/share/poker-network/schema.sql
 etc
+usr/sbin
+usr/share/man/man8

@@ -39,8 +39,13 @@ configure: configure.ac
 config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --enable-maintainer-mode --sysconfdir=/etc --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
-
+	./configure --enable-maintainer-mode --sysconfdir=/etc --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
+		--host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+		--with-poker-server-host=%HOST% \
+		--with-poker-database=%DATABASE% \
+		--with-poker-dbhost=%DBHOST% \
+		--with-poker-dbuser=%USER% \
+		--with-poker-dbuser-password=%PASS%
 
 build: build-stamp
 build-stamp:  config.status
