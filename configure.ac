@@ -138,6 +138,7 @@ then
         ])
 fi
 AC_CONFIG_FILES([
+        poker-network.pc
         pokernetwork/pokerserver
         pokernetwork/pokerserver.8
         conf/poker.bot.xml

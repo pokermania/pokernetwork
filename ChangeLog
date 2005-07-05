@@ -1,7 +1,11 @@
-Mon Jul 04 10:15:57 2005  Loic Dachary  <loic@gnu.org>
+Tue Jul 05 12:58:05 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
 	
+	* poker-network.pc.in: pkg-config compatibility
+
+Mon Jul 04 10:15:57 2005  Loic Dachary  <loic@gnu.org>
+
 	* README (Client): fix install paths as pointed out by
 	  Jeff Schoby <ssrjazz@gmail.com>
 

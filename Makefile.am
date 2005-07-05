@@ -92,6 +92,9 @@ pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
 	database/schema.sql
 
+pkgconfigdir = ${libdir}/pkgconfig
+pkgconfig_DATA = poker-network.pc
+
 EXTRA_DIST = \
 	NIHPHOBIA \
 	bootstrap \

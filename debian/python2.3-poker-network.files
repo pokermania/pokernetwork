@@ -4,3 +4,4 @@ usr/share/poker-network/schema.sql
 etc
 usr/sbin
 usr/share/man/man8
+usr/lib/pkgconfig

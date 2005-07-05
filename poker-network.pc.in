@@ -1,0 +1,11 @@
+# pkg-config source file
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+pkgsysconfdir=@sysconfdir@/poker-network
+
+Name: poker-engine
+Description: python poker server and client library
+Version: @PACKAGE_VERSION@
+Requires: poker-engine
+Conflicts:
