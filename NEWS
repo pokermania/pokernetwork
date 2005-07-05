@@ -2,6 +2,12 @@ Release 1.0.4
 
 Python thread safety bug solved.
 
+pkg-config compatibility.
+
+Installation without packages made easy.
+
+Tables where the player is seated are marked in poker2d.
+
 Release 1.0.3
 
 Major bug fix in the client library.

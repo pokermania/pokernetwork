@@ -226,6 +226,9 @@ class PokerClientFactory(UGAMEClientFactory):
 
         return self.games[game_id]
 
+    def getGameIds(self):
+        return self.games.keys()
+    
     def deleteGame(self, game_id):
         del self.games[game_id]
 

@@ -11,7 +11,7 @@
   <servers>localhost:19480 localhost:19481;ssl localhost:19380 test.mekensleep.org:19380</servers>
   <web browser="/usr/bin/firefox">http://www.pok3d.com/</web>
   <sound>yes</sound>
-  <tournaments custom_money="n" type="regular" sort="name"/>
+  <tournaments custom_money="n" type="sit_n_go" sort="name"/>
   <lobby custom_money="" type="holdem" sort="name"/>
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>

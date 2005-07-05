@@ -1299,7 +1299,7 @@ class PokerRenderer:
         if not tables_map.has_key(game_id):
             game_id = 0
         if interface:
-            interface.updateLobby(packet.players, packet.tables, game_id, self.factory.translateFile2Name, packet.packets)
+            interface.updateLobby(packet.players, packet.tables, game_id, self.factory.translateFile2Name, self.factory.getGameIds(), packet.packets)
 
     def showLobby(self, type = None):
         interface = self.factory.interface

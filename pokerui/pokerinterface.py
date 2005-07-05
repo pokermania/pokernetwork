@@ -169,7 +169,7 @@ class PokerInterface(dispatch.EventDispatcher):
             map(lambda player: packet.extend(map(lambda value: str(value), player)), players)
         self.command(*packet)
 
-    def updateLobby(self, players_count, tables_count, game_id, file2name, tables):
+    def updateLobby(self, players_count, tables_count, game_id, file2name, my_tables, tables):
         selected_variant = ""
         variant2tables = {}
         for table in tables:
@@ -177,7 +177,9 @@ class PokerInterface(dispatch.EventDispatcher):
                 variant2tables[table.variant] = []
             if table.id == game_id:
                 selected_variant = table.variant
+            my = table.id in my_tables and "yes" or "no"
             info = ( str(table.id),
+                     my,
                      table.name,
                      file2name(table.betting_structure),
                      str(table.seats),

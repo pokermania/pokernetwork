@@ -66,6 +66,8 @@ static GtkButton*	s_cashier_button = 0;
 static GtkWidget*	s_clock_window = 0;
 static GtkWidget*	s_clock_label = 0;
 
+static GdkPixbuf*	pixbuf_table_my = 0;
+
 static void clear_stores(void) {
   int i;
   for(i = 0; i < VARIANTS_COUNT; i++) {
@@ -250,11 +252,11 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     g_assert(s_notebook);
     for(i = 0; i < VARIANTS_COUNT; i++) {
       char tmp[32];
-      s_variants_store[i] = gtk_list_store_new(11, G_TYPE_INT,
+      s_variants_store[i] = gtk_list_store_new(12, G_TYPE_INT,
+                                               GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING,
                                                G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
                                                G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-                                               G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-                                               G_TYPE_STRING
+                                               G_TYPE_STRING, G_TYPE_STRING
                                                );
       snprintf(tmp, 32, "%s_treeview", s_variants_names[i]);
       GtkTreeView* treeview = GTK_TREE_VIEW(gui_get_widget(g_lobby_xml, tmp));
@@ -266,6 +268,36 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(s_variants_store[i]));
       GtkCellRenderer*	text_renderer = gtk_cell_renderer_text_new();
 
+#define TABLE_COLUMN_ID 0
+#define TABLE_COLUMN_MY 1
+      { 
+        GtkTreeViewColumn* column = gtk_tree_view_column_new();
+        GtkCellRenderer* pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
+        gtk_tree_view_append_column(treeview, column);
+        gtk_tree_view_column_set_title(column, "My");
+        gtk_tree_view_column_pack_start(column, pixbuf_renderer, TRUE);
+        gtk_tree_view_column_add_attribute(column, pixbuf_renderer, "pixbuf", TABLE_COLUMN_MY);
+      }
+      {
+        GError* error = 0;
+        gchar* filename;
+
+        filename = glade_xml_relative_file(g_lobby_xml, "table_bullet_my.png");
+        pixbuf_table_my = gdk_pixbuf_new_from_file(filename, &error);
+        if(pixbuf_table_my == NULL) {
+          GtkIconTheme* theme = gtk_icon_theme_get_default();
+          error = 0;
+          pixbuf_table_my = gtk_icon_theme_load_icon(theme, 
+                                               "stock_book_open",
+                                               16,
+                                               0,
+                                               &error);
+          if (!pixbuf_table_my) {
+            g_warning ("Couldn't load icon: %s", error->message);
+          }
+        }
+
+      }
 #define SET_COLUMN(TITLE, INDEX) \
       { \
         GtkTreeViewColumn* column = gtk_tree_view_column_new(); \
@@ -274,24 +306,23 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE); \
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", INDEX); \
       }
-#define TABLE_COLUMN_ID 0
-#define TABLE_COLUMN_NAME 1
+#define TABLE_COLUMN_NAME 2
       SET_COLUMN("Name", TABLE_COLUMN_NAME);
-#define TABLE_COLUMN_STRUCTURE 2
+#define TABLE_COLUMN_STRUCTURE 3
       SET_COLUMN("Structure", TABLE_COLUMN_STRUCTURE);
-#define TABLE_COLUMN_SEATS 3
+#define TABLE_COLUMN_SEATS 4
       SET_COLUMN("Seats", TABLE_COLUMN_SEATS);
-#define TABLE_COLUMN_AVG_POT 4
+#define TABLE_COLUMN_AVG_POT 5
       SET_COLUMN("Avg.pot", TABLE_COLUMN_AVG_POT);
-#define TABLE_COLUMN_HANDS_PER_HOUR 5
+#define TABLE_COLUMN_HANDS_PER_HOUR 6
       SET_COLUMN("Hands/h", TABLE_COLUMN_HANDS_PER_HOUR);
-#define TABLE_COLUMN_PERCENT_FLOP 6
+#define TABLE_COLUMN_PERCENT_FLOP 7
       SET_COLUMN("Flop%", TABLE_COLUMN_PERCENT_FLOP);
-#define TABLE_COLUMN_PLAYING 7
+#define TABLE_COLUMN_PLAYING 8
       SET_COLUMN("Playing", TABLE_COLUMN_PLAYING);
-#define TABLE_COLUMN_OBSERVING 8
-#define TABLE_COLUMN_WAITING 9
-#define TABLE_COLUMN_TIMEOUT 10
+#define TABLE_COLUMN_OBSERVING 9
+#define TABLE_COLUMN_WAITING 10
+#define TABLE_COLUMN_TIMEOUT 11
 #undef SET_COLUMN
     }
     s_players_label = GTK_LABEL(gui_get_widget(g_lobby_xml, "players_label"));
@@ -480,6 +511,14 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       gtk_list_store_set(s_variants_store[variant_index], &iter, TABLE_COLUMN_ID, id, -1);
       if(selected == id)
         gtk_tree_selection_select_iter(s_variants_selection[variant_index], &iter);
+      {
+        char* my = get_string();
+        GdkPixbuf* pixbuf = 0;
+        if(!strcmp(my, "yes")) {
+          pixbuf = pixbuf_table_my;
+        }
+        gtk_list_store_set(s_variants_store[variant_index], &iter, TABLE_COLUMN_MY, pixbuf, -1);
+      }
 
 #define SET_COLUMN(INDEX) \
       { \
