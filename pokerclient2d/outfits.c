@@ -509,6 +509,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
         GtkWidget* container = GTK_WIDGET(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
         g_assert(container);
         if(i <= params_count) {
+          gtk_widget_set_child_visible(container, TRUE);
           char* title = get_string();
           char* tag = get_string();
           int min_value = get_int();
