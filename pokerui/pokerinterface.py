@@ -217,7 +217,7 @@ class PokerInterface(dispatch.EventDispatcher):
         packet.extend((slot_type, "0" ,str(len(slot)), str(slot_value_index)))
         nparams = min(len(outfit['VALUES']), 4)
 
-        key = 'global_skin_hue/hue_set'
+        key = 'global_skin_hue/color_set'
         if slot_type != 'head' and outfit['VALUES'].has_key(key) :
             nparams = nparams - 1
 
