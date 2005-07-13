@@ -1,6 +1,14 @@
-Tue Jul 05 17:00:05 2005  Loic Dachary  <loic@gnu.org>
+Wed Jul 13 14:29:26 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
+
+	* pokerui/pokerrenderer.py (PokerRenderer.changeState): reset state to IDLE
+	  when switching to CANCELED state only if in PAY_BLIND state
+
+	* pokerui/pokerrenderer.py (PokerRenderer.changeState): show chat bar if
+	  in IDLE state only.
+
+Tue Jul 05 17:00:05 2005  Loic Dachary  <loic@gnu.org>
 	
 	* pokerclient2d/lobby.c (handle_lobby): show icon marking
 	  tables where player is seated.

@@ -713,7 +713,6 @@ class PokerRenderer:
                     self.replayGameId = game.id
                 packet.seats_all = game.seats_all
                 self.render(packet)
-                self.chatShow()
             self.changeState(JOINING_DONE)
 
         elif packet.type == PACKET_POKER_CURRENT_GAMES:
@@ -1138,8 +1137,6 @@ class PokerRenderer:
             pass
         else:
             status = False
-        if status:
-            self.chatHide()
         return status
 
     def canHideInterface(self):
@@ -1489,7 +1486,6 @@ class PokerRenderer:
         done = False
         if current_game_id == game_id:
             self.changeState(IDLE)
-            self.chatShow()
         else:
             current_game = self.factory.getGame(current_game_id)
             if current_game and not current_game.isSeated(serial):
@@ -1824,8 +1820,9 @@ class PokerRenderer:
                 self.changeState(LEAVING, *args)
 
         elif state == CANCELED:
-            self.hideBlind()
-            self.state = IDLE
+            if self.state == PAY_BLIND_ANTE:
+                self.hideBlind()
+                self.state = IDLE
 
         elif state == SIT_OUT:
             if self.state == PAY_BLIND_ANTE:
@@ -1892,5 +1889,9 @@ class PokerRenderer:
             self.state2hide()
             self.state = state
 
+        if self.state == IDLE:
+            self.chatShow()
+        else:
+            self.chatHide()
         if current_state != self.state:
             self.render(PacketPokerRendererState(state = self.state))

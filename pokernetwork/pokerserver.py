@@ -1267,12 +1267,12 @@ class PokerTable:
             return
         if self.isRunning():
             if self.factory.verbose > 3:
-                print "Not autodealing because game is running"
+                print "Not autodealing %d because game is running" % self.game.id
             return
         game = self.game
         if game.sitCount() < 2:
             if self.factory.verbose > 2:
-                print "Not autodealing because less than 2 players willing to play"
+                print "Not autodealing %d because less than 2 players willing to play" % self.game.id
             return
         if not game.isTournament():
             #
