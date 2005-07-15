@@ -326,6 +326,14 @@ class PokerRenderer:
         self.state_joining_my = 0
 
         self.state_cashier = { 'exit_label': factory.config.headerGet("/sequence/cashier/@exit") }
+
+        state_hands = factory.settings.headerGetProperties("/settings/handlist")
+        if not state_hands:
+            self.state_hands = { "start": 0, "count": 100 }
+        else:
+            self.state_hands = {}
+            for (key, value) in state_hands[0].iteritems():
+                self.state_hands[key] = int(value)
         
         self.factory = factory
         self.protocol = None
@@ -1862,7 +1870,7 @@ class PokerRenderer:
             if self.protocol.user.isLogged():
                 if self.state2hide():
                     self.state = state
-                    self.state_hands = { "start": 0, "count": 100 }
+                    self.state_hands["start"] = 0
                     self.queryHands()
                 else:
                     self.showMessage("You cannot do that now", None)

@@ -117,6 +117,8 @@ static void on_selection_changed(GtkTreeSelection *treeselection,
 int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 {
   static GtkWidget*	hand_history_window = NULL;
+  static GtkWidget*	previous_widget = NULL;
+  static GtkWidget*	next_widget = NULL;
 
   if(init) {
     hand_history_window = glade_xml_get_widget(g_glade_xml, "hand_history_window");
@@ -151,6 +153,13 @@ int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GtkTextView* messages = GTK_TEXT_VIEW(gui_get_widget(g_glade_xml, "hand_messages"));
       s_hand_messages = gtk_text_view_get_buffer(messages);
     }
+
+    previous_widget = glade_xml_get_widget(g_glade_xml, "previous");
+    g_assert(previous_widget);
+
+    next_widget = glade_xml_get_widget(g_glade_xml, "next");
+    g_assert(next_widget);
+
   }
 
   if(!g_glade_xml)
@@ -182,8 +191,23 @@ int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
         gtk_list_store_set_value(store, &iter, 0, &value);
         g_free(hand);
       }
+
       gui_center(hand_history_window, screen);
+
+      if(start == 0) {
+	gtk_widget_hide_all(previous_widget);
+      } else {
+	gtk_widget_show_all(previous_widget);
+      }
+
+      if(start + count >= total) {
+	gtk_widget_hide_all(next_widget);
+      } else {
+	gtk_widget_show_all(next_widget);
+      }
+
       gtk_text_buffer_set_text(s_hand_messages, "", -1);
+
     } else if(!strcmp(tag, "messages")) {
       int hand_serial = get_int();
       char* messages = get_string();

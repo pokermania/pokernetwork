@@ -19,4 +19,6 @@
   <user path="~/.poker2d"/>
   <path>/etc/poker-engine /etc/poker-network .</path> 
   <data path="data" sounds="data/sounds"/>
+  <handlist start="0" count="10"/>
+<!--  <handlist start="0" count="100"/> -->
 </settings>

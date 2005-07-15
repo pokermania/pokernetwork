@@ -17,6 +17,7 @@
   <shadow>no</shadow>
   <vprogram>no</vprogram>
   <skin url="random" outfit="random"/>
+  <handlist start="0" count="100"/>
   <user path="~/.poker2d"/>
   <rsync>echo @RSYNC@ --delete -avz @POKER_SERVER_HOST@::%version% @POKER_PREFIX@</rsync>
   <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
