@@ -1,3 +1,9 @@
+Sat Jul 16 11:12:41 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.5
+	
+	* debian/control (Section): s/libs/python/ in sections.
+
 Sat Jul 16 09:31:34 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
