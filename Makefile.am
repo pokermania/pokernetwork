@@ -96,6 +96,7 @@ pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = poker-network.pc
 
 EXTRA_DIST = \
+	HACKING \
 	NIHPHOBIA \
 	bootstrap \
 	config/python.m4 \

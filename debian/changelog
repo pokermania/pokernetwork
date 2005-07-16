@@ -1,8 +1,10 @@
 poker-network (1.0.4-1) unstable; urgency=low
 
   * upstream version
+  
+  * s/Build-Depends-Indep/Build-Depends/ in control (closes: #318355)
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 28 Jun 2005 11:50:59 +0200
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 16 Jul 2005 08:59:41 +0200
 
 poker-network (1.0.3-1) unstable; urgency=low
 

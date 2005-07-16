@@ -1,6 +1,11 @@
-ven jui 15 10:03:05 2005  Thierry Delamare  <thy@mekensleep.com>
+Sat Jul 16 09:31:34 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
+
+	* debian/python2.3-poker-network.postinst (pokernetwork_dir): substitute
+	  %HOST% in clients regardless of server installation.
+
+Fri Jul 15 10:03:05 2005  Thierry Delamare  <thy@mekensleep.com>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.__init__): show or not
 	show next and previous label depending on start count and
