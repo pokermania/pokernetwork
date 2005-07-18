@@ -3,7 +3,7 @@
 <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	  xsi:noNamespaceSchemaLocation="poker-client.xsd"
 	  verbose="0" delays="true" >
-  <delays sit="1" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="5" lag="15"/>
+  <delays sit="1" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="6" lag="15"/>
   <name>username</name>
   <passwd>password</passwd>
   <servers>@POKER_SERVER_HOST@:19380</servers>
