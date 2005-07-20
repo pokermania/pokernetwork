@@ -105,6 +105,9 @@ class PokerAnimationPlayer:
         print "player arrive run stand animation"
         self.enable()
 
+    def lose(self):
+        pass
+
     def isInPosition(self):
         return self.serial == self.table.game.getSerialInPosition()
     
@@ -371,6 +374,9 @@ class PokerAnimationScheduler:
 
             PACKET_POKER_CHIPS_POT2PLAYER: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.pot2player, packet,packet),
+
+            PACKET_POKER_PLAYER_LOSE: lambda protocol, packet:
+            self.toPlayer(self.PokerAnimationPlayerType.lose, packet),
 
             PACKET_POKER_PLAYER_CHIPS: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.playerChips, packet,packet.bet),
