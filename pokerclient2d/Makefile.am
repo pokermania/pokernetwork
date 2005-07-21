@@ -112,7 +112,7 @@ dist_poker2d_DATA = \
 # cope with a directory hierarchy including a .libs
 #
 all-local:
-	rm -f *.so ; ln -s .libs/*.so .
+	-rm -f *.so ; ln -s .libs/*.so .
 
 clean-local:
 	rm -f *.so *.pyc
