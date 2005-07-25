@@ -590,6 +590,8 @@ cards: list of integers describing the player cards:
 bestcards: list of integers describing the winning combination cards:
 board: list of integers describing the community cards:
 hand: readable string of the name best hand
+besthand: 0 if it's not the best hand and 1 if it's the best hand
+         best hand is the hand that win the most money
        
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
