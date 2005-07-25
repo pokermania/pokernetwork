@@ -602,10 +602,11 @@ game_id: integer uniquely identifying a game.
         self.hand = kwargs.get("hand", "")
         self.bestcards = kwargs.get("bestcards", [])
         self.board = kwargs.get("board", [])
+        self.besthand = kwargs.get("besthand", 0)
         PacketPokerCards.__init__(self, *args, **kwargs)
         
     def __str__(self):
-        return PacketPokerCards.__str__(self) + " side = %s, hand = %s, bestcards = %s, board = %s" % ( self.side, self.hand, str(self.bestcards), str(self.board) )
+        return PacketPokerCards.__str__(self) + " side = %s, hand = %s, bestcards = %s, board = %s , besthand %s" % ( self.side, self.hand, str(self.bestcards), str(self.board), str(self.besthand) )
 
 PacketFactory[PACKET_POKER_BEST_CARDS] = PacketPokerBestCards
 

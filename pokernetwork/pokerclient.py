@@ -657,13 +657,17 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     game.distributeMoney()
 
                     winners = game.winners[:]
+                    print "WINNERS "
+                    print winners
                     winners.sort()
                     packet.serials.sort()
                     if winners != packet.serials:
                         raise UserWarning, "game.winners %s != packet.serials %s" % (winners, packet.serials)
                     if not self.no_display_packets:
-                        forward_packets.extend(self.packetsShowdown(game))
-                        forward_packets.extend(self.packetsPot2Player(game))
+                        packets = []
+                        player_state = self.getWinStatePlayer(game, packets) # parse stack to get more data
+                        forward_packets.extend(self.packetsShowdown(game, player_state))
+                        forward_packets.extend(self.packetsPot2Player(game, player_state, packets))
                     game.endTurn()
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
 
@@ -892,7 +896,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 pass
             elif frame['type'] == 'uncalled':
                 player = game.getPlayer(frame['serial'])
-                player_state[player] = 'win'
+                player_state[player] = {'state': 'win', 'gain': 0 }
+                
             elif frame['type'] == 'resolve':
                 for (serial, share) in frame['serial2share'].iteritems():
                     if serial in player_paid:
@@ -900,18 +905,20 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
                 for serial in frame['serials']:
                     if serial in player_get:
-                        if player_get[serial] - player_paid[serial] >= 0:
-                            player_state[serial] = 'win'
+                        gain = player_get[serial] - player_paid[serial]
+                        player_state[serial] = {'state': 'lose', 'gain': 0}
+                        if gain >= 0:
+                            player_state[serial]['state'] = 'win'
                         else:
-                            player_state[serial] = 'lose'
+                            player_state[serial]['state'] = 'lose'
+                        player_state[serial]['gain'] = gain
                     else:
                         # here we should send a packet lose only one time
                         if serial not in player_state:
                             packet = PacketPokerPlayerLose(game_id = game.id,
                                                            serial = serial)
                             packets.append(packet)
-                        player_state[serial] = 'lose'
-                        
+                        player_state[serial] = {'state': 'lose', 'gain': 0 }
                         
             elif frame['type'] == 'game_state':
                 for (round_key,round) in frame['side_pots']['contributions'].iteritems():
@@ -923,9 +930,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         return player_state
 
-    def packetsPot2Player(self, game):
-        packets = []
-        player_state = self.getWinStatePlayer(game, packets)
+    def packetsPot2Player(self, game, player_state, packets):
         current_pot = 0
         game_state = game.showdown_stack[0]
         pots = game_state['side_pots']['pots']
@@ -961,13 +966,13 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     # we use the exact chips layout saved in game_state.
                     #
                     serial = frame['serial2share'].keys()[0]
-                    packets.append(self.chipsPot2Player(game, game.getPlayer(serial), game_state['pot'], merged_pot, "win", player_state[serial]))
+                    packets.append(self.chipsPot2Player(game, game.getPlayer(serial), game_state['pot'], merged_pot, "win", player_state[serial]['state']))
                 else:
                     #
                     # Possibly complex showdown, cannot avoid breaking chip stacks
                     #
                     for (serial, share) in frame['serial2share'].iteritems():
-                        packets.append(self.chipsPot2Player(game, game.getPlayer(serial), share, merged_pot, "win",player_state[serial]))
+                        packets.append(self.chipsPot2Player(game, game.getPlayer(serial), share, merged_pot, "win",player_state[serial]['state']))
                 current_pot = next_pot
             else:
                 pass
@@ -977,9 +982,18 @@ class PokerClientProtocol(UGAMEClientProtocol):
         packets.extend(self.updatePotsChips(game, []))
         return packets
         
-    def packetsShowdown(self, game):
+    def packetsShowdown(self, game, player_state):
         if not game.isGameEndInformationValid():
             return []
+
+        serial_winner = 0
+        gain_winner = -1
+        for serial in player_state.keys():
+            if player_state[serial]['state'] != 'lose':
+                if player_state[serial]['gain'] > gain_winner:
+                    serial_winner = serial
+                    gain_winner = player_state[serial]['gain']
+                    
         
         packets = []
         if game.variant == "7stud":
@@ -993,6 +1007,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     packet.visibles = "hole"
                     packets.append(packet)
 
+        print "SHOWDOWN PACKET"
         for (serial, best) in game.serial2best.iteritems():
             for (side, (value, bestcards)) in best.iteritems():
                 if serial in game.side2winners[side]:
@@ -1003,13 +1018,18 @@ class PokerClientProtocol(UGAMEClientProtocol):
                         else:
                             hand = game.readableHandValueShort(side, bestcards[0], bestcards[1:])
                         cards = game.getPlayer(serial).hand.toRawList()
+                        print "Serial %d HAND %s" % (serial,hand)
+                        best_hand = 0
+                        if serial == serial_winner:
+                            best_hand = 1
                         packets.append(PacketPokerBestCards(game_id = game.id,
                                                             serial = serial,
                                                             side = side,
                                                             cards = cards,
                                                             bestcards = bestcards[1:],
                                                             board = game.board.tolist(True),
-                                                            hand = hand))
+                                                            hand = hand,
+                                                            besthand = best_hand))
         return packets
 
     def publishQuit(self):
