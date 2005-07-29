@@ -234,6 +234,9 @@ class PokerInterface(dispatch.EventDispatcher):
                 print "value %s - %s " % (xpath, value['value'])
                 print "definition %s" % definition['ids']
                 print "slot_type %s" % slot_type
+            if value['value'] not in definition['ids']:
+                print "WARNING Changing default value for %s because the default value is masked" % value['parameter']
+                value['value'] = definition['ids'][0]
             index = definition['ids'].index(value['value'])
             packet.extend((definition['text'], xpath, "0", str(len(definition['ids'])), str(index)))
             packet.append(definition['preview_type'])
