@@ -1,4 +1,12 @@
+Release 1.0.6
+
 Release 1.0.5
+
+PacketPokerShowdown packet sent to the client with the complete
+showdown stack. 
+
+In poker2d client, showdown notification logic where players run 
+specific animations based on their net income on a given hand.
 
 Release 1.0.4
 

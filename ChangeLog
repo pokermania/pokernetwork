@@ -1,7 +1,20 @@
-Sat Jul 16 11:12:41 2005  Loic Dachary  <loic@gnu.org>
+Fri Aug 05 19:46:07 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.5
+
+	* pokerui/pokeranimation.py (PokerAnimationTable.showdown): call showdownDelta for
+	  each player at showdown 
 	
+	* pokerclient2d/pokeranimation2d.py (PokerAnimationPlayer2D.showdownDelta): show up
+	  and down arrows according to the net income of the player
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.packetsShowdown): send full
+	  showdown stack to all consumers.
+
+	* pokernetwork/pokerpackets.py (PacketPokerShowdown.__init__): new packet
+
+Sat Jul 16 11:12:41 2005  Loic Dachary  <loic@gnu.org>
+
 	* debian/control (Section): s/libs/python/ in sections.
 
 Sat Jul 16 09:31:34 2005  Loic Dachary  <loic@gnu.org>
