@@ -131,8 +131,7 @@ class PokerClientFactory(UGAMEClientFactory):
         import sys
         import os
         if os.name != "posix" :
-            os.execv("poker3d.exe", ["poker3d.exe"])
-            sys.exit(0)
+            os.execv("pok3d.exe", ["pok3d.exe"])
         else:
             argv = [ sys.executable ]
             argv.extend(sys.argv)
