@@ -2,7 +2,11 @@ poker-network (1.0.5-1) unstable; urgency=low
 
   * upstream version
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 16 Jul 2005 10:54:07 +0200
+  * French translation courtesy Guilhelm <guilhelm.panaget@free.fr> (closes: #319766)
+  
+  * Czech translation courtesy  Miroslav Kure <kurem@upcase.inf.upol.cz> (closes: #318925)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Fri,  5 Aug 2005 19:18:55 +0200
 
 poker-network (1.0.4-1) unstable; urgency=low
 
