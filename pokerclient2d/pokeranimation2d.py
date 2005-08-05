@@ -112,6 +112,7 @@ class Animation:
                 callback()
 
 class AnimationMoveWidget(Animation):
+
     def __init__(self, *args, **kwargs):
         Animation.__init__(self, *args, **kwargs)
         self.widget = kwargs.get("widget", None)
@@ -136,6 +137,34 @@ class AnimationMoveWidget(Animation):
     
     def end(self, *args, **kwargs):
         self.fixed.remove(self.widget)
+    
+class AnimationBlinkWidget(Animation):
+
+    blink_time = 0.5
+    
+    def __init__(self, *args, **kwargs):
+        Animation.__init__(self, *args, **kwargs)
+        self.widget = kwargs.get("widget", None)
+        self.elapsed = 0.0
+
+    def start(self, *args, **kwargs):
+        self.widget.show()
+        self.visible = True
+
+    def run(self, delta, *args, **kwargs):
+        self.elapsed += delta
+        if self.elapsed > self.blink_time:
+            self.elapsed -= self.blink_time
+            if self.visible:
+                self.visible = False
+                self.widget.hide()
+            else:
+                self.visible = True
+                self.widget.show()
+    
+    def end(self, *args, **kwargs):
+        self.visible = True
+        self.widget.show()
     
 class PokerAnimationPlayer2D(PokerAnimationPlayer):
     
@@ -257,6 +286,35 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         animation.schedule(0, 2)
         return animation
 
+    def showdownDelta(self, delta, is_delta_max, is_delta_min):
+        self.message("delta %d, is_delta_max %s, is_delta_min %s" % (delta, is_delta_max, is_delta_min))
+        if is_delta_max:
+            animation = AnimationBlinkWidget(widget = self.widget_name[0],
+                                             verbose = self.table.verbose)
+            self.animationRegister(animation)
+            animation.schedule(0, 3)
+        ( bet, bet_x, bet_y ) = self.widget_bet
+        if delta < 0:
+            down = gtk.Image()
+            down.set_from_stock(gtk.STOCK_GOTO_BOTTOM, gtk.ICON_SIZE_SMALL_TOOLBAR)
+            animation = AnimationMoveWidget(fixed = self.table.screen,
+                                            position_start = ( bet_x, bet_y ),
+                                            position_end = ( bet_x, bet_y + 10 ),
+                                            widget = down,
+                                            verbose = self.table.verbose)
+            self.animationRegister(animation)
+            animation.schedule(0, 3)
+        else:
+            up = gtk.Image()
+            up.set_from_stock(gtk.STOCK_GOTO_TOP, gtk.ICON_SIZE_SMALL_TOOLBAR)
+            animation = AnimationMoveWidget(fixed = self.table.screen,
+                                            position_start = ( bet_x, bet_y ),
+                                            position_end = ( bet_x, bet_y - 10 ),
+                                            widget = up,
+                                            verbose = self.table.verbose)
+            self.animationRegister(animation)
+            animation.schedule(0, 3)
+
     def pot2playerAnimate(self):
         pass
     
@@ -277,7 +335,7 @@ class PokerAnimationTable2D(PokerAnimationTable):
         self.widget_pots = []
         for pot in map(lambda x: renderer.get_widget("pot%d" % x), xrange(9)):
             self.widget_pots.append((pot, self.screen.child_get_property(pot, "x"), self.screen.child_get_property(pot, "y")))
-        
+
 class PokerAnimationScheduler2D(PokerAnimationScheduler):
     def __init__(self, *args, **kwargs):
         PokerAnimationScheduler.__init__(self, *args, **kwargs)

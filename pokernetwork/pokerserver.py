@@ -993,7 +993,7 @@ class PokerTable:
                                                    amount = amount))
                 
             elif type == "end":
-                (type, winners, winner2share, showdown_stack) = event
+                (type, winners, showdown_stack) = event
                 packets.append(PacketPokerState(game_id = game_id,
                                                 string = "end"))
                 packets.append(PacketPokerWin(game_id = game_id,
@@ -1099,8 +1099,9 @@ class PokerTable:
                     updates[serial] += amount
                 
             elif type == "end":
-                (type, winners, winner2share, showdown_stack) = event
-                for (serial, share) in winner2share.iteritems():
+                (type, winners, showdown_stack) = event
+                game_state = showdown_stack[0]
+                for (serial, share) in game_state['serial2share'].iteritems():
                     if not updates.has_key(serial):
                         updates[serial] = 0
                     updates[serial] += share
@@ -1189,7 +1190,7 @@ class PokerTable:
                 new_history.append(event)
 
             elif type == "end":
-                (type, winners, winner2share, showdown_stack) = event
+                (type, winners, showdown_stack) = event
                 new_history.append(event)
 
             elif type == "sitOut":

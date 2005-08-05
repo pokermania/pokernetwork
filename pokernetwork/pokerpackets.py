@@ -1920,9 +1920,6 @@ it starts at 0 and because there cannot be more pots than players.
 The creation of side pots is inferred by the client when a player
 is all-in and it is guaranteed that pots are numbered sequentially.
 
-player_state: may be one of "win", "lose", "none"  it means if the player
-             win money or loose, none mean no signifiant gain. Typically
-             if the player get a left-over chip
 reason: may be one of "win", "uncalled", "left-over"
 pot: the pot index in the range [0,9].
 chips: list of integers counting the number of chips to move.
@@ -1939,10 +1936,9 @@ game_id: integer uniquely identifying a game.
         self.chips = kwargs.get("chips", [])
         self.pot = kwargs.get("pot", -1)
         self.reason = kwargs.get("reason", "")
-        self.player_state = kwargs.get("player_state", "none")
         
     def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s, pot = %d, reason = %s, player_state = %s" % ( self.chips, self.pot, self.reason, self.player_state )
+        return PacketPokerId.__str__(self) + " chips = %s, pot = %d, reason = %s" % ( self.chips, self.pot, self.reason )
     
 PacketFactory[PACKET_POKER_CHIPS_POT2PLAYER] = PacketPokerChipsPot2Player
 
@@ -3618,13 +3614,14 @@ PacketFactory[PACKET_POKER_CHAT_WORD] = PacketPokerChatWord
 
 ########################################
 
-PACKET_POKER_PLAYER_LOSE = 230
-PacketNames[PACKET_POKER_PLAYER_LOSE] = "POKER_PLAYER_LOSE"
+PACKET_POKER_SHOWDOWN = 230
+PacketNames[PACKET_POKER_SHOWDOWN] = "POKER_SHOWDOWN"
 
-class PacketPokerPlayerLose(PacketPokerId):
-    type = PACKET_POKER_PLAYER_LOSE
+class PacketPokerShowdown(PacketPokerId):
+    type = PACKET_POKER_SHOWDOWN
 
     def __init__(self, *args, **kwargs):
+        self.showdown_stack = kwargs.get("showdown_stack", {})
         PacketPokerId.__init__(self, *args, **kwargs)
 
-PacketFactory[PACKET_POKER_PLAYER_LOSE] = PacketPokerPlayerLose
+PacketFactory[PACKET_POKER_SHOWDOWN] = PacketPokerShowdown

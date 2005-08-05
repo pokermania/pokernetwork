@@ -105,9 +105,6 @@ class PokerAnimationPlayer:
         print "player arrive run stand animation"
         self.enable()
 
-    def lose(self):
-        pass
-
     def isInPosition(self):
         return self.serial == self.table.game.getSerialInPosition()
     
@@ -290,6 +287,27 @@ class PokerAnimationTable:
             if self.seats[self.dealer] is not None and self.seats[self.dealer] == packet.serial:
                 self.dealer = None
 
+    def showdown(self, protocol, packet):
+        serials = None
+        serial2delta = None
+        for frame in packet.showdown_stack:
+            if frame['type'] == 'game_state':
+                serial2delta = frame['serial2delta']
+            elif frame['type'] == 'resolve':
+                serials = frame['serials']
+        delta_max = -1
+        delta_min = 0x0FFFFFFF
+        for serial in serials:
+            delta = serial2delta[serial]
+            if delta >= delta_max:
+                delta_max = delta
+            if delta_min >= delta:
+                delta_min = delta
+        for serial in serials:
+            delta = serial2delta[serial]
+            player = self.serial2player[serial]
+            player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min)
+
     def endRound(self):
         for serial in self.serial2player.keys():
             self.serial2player[serial].endRound()
@@ -373,13 +391,12 @@ class PokerAnimationScheduler:
             PACKET_POKER_END_ROUND: self.endRound,
 
             PACKET_POKER_CHIPS_POT2PLAYER: lambda protocol, packet:
-            self.toPlayer(self.PokerAnimationPlayerType.pot2player, packet,packet),
+            self.toPlayer(self.PokerAnimationPlayerType.pot2player, packet, packet),
 
-            PACKET_POKER_PLAYER_LOSE: lambda protocol, packet:
-            self.toPlayer(self.PokerAnimationPlayerType.lose, packet),
+            PACKET_POKER_SHOWDOWN: self.showdown,
 
             PACKET_POKER_PLAYER_CHIPS: lambda protocol, packet:
-            self.toPlayer(self.PokerAnimationPlayerType.playerChips, packet,packet.bet),
+            self.toPlayer(self.PokerAnimationPlayerType.playerChips, packet, packet.bet),
 
             PACKET_POKER_CHAT_WORD: lambda protocol, packet:
             self.toPlayer(self.PokerAnimationPlayerType.chat, packet, packet),
@@ -438,6 +455,11 @@ class PokerAnimationScheduler:
             print "PokerAnimationScheduler::tableSeats unknown game id (%d) " % packet.game_id
         self.id2table[packet.game_id].tableSeats(protocol, packet)
 
+    def showdown(self, protocol, packet):
+        if not self.id2table.has_key(packet.game_id):
+            print "PokerAnimationScheduler::showdown unknown game id (%d) " % packet.game_id
+        self.id2table[packet.game_id].showdown(protocol, packet)
+        
     def endRound(self,protocol,packet):
         self.id2table[packet.game_id].endRound()
 
