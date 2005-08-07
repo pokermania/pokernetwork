@@ -3,7 +3,7 @@
 <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	  xsi:noNamespaceSchemaLocation="poker-bot.xsd"
 	  delays="false" wait="0" reconnect="yes" watch="no" level="1" verbose="3" no_display_packets="yes"
-          name_prefix="" > <!-- disconnect_delay="1,280" reconnect_delay="60,60" -->
+          name_prefix="BOT" > <!-- disconnect_delay="1,280" reconnect_delay="60,60" -->
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="15" />
   <name>test</name>
   <passwd>test</passwd>

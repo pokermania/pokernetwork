@@ -3625,3 +3625,16 @@ class PacketPokerShowdown(PacketPokerId):
         PacketPokerId.__init__(self, *args, **kwargs)
 
 PacketFactory[PACKET_POKER_SHOWDOWN] = PacketPokerShowdown
+
+########################################
+
+PACKET_POKER_PLAYER_SELF = 231
+PacketNames[PACKET_POKER_PLAYER_SELF] = "POKER_PLAYER_SELF"
+
+class PacketPokerPlayerSelf(PacketPokerId):
+    type = PACKET_POKER_PLAYER_SELF
+
+    def __init__(self, *args, **kwargs):
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+PacketFactory[PACKET_POKER_PLAYER_SELF] = PacketPokerPlayerSelf

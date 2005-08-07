@@ -471,7 +471,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         elif packet.type == PACKET_POKER_TABLE:
             if packet.id == 0:
-                self.error("server refused our request")
+                self.error("Too many open tables")
             else:
                 new_game = self.factory.getOrCreateGame(packet.id)
                 new_game.prefix = self._prefix
@@ -567,6 +567,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 if not self.no_display_packets:
                     self.forward_packets.append(PacketPokerSeats(game_id = game.id,
                                                                  seats = game.seats()))
+
+            elif packet.type == PACKET_POKER_PLAYER_SELF:
+                ( serial_in_position, position_is_obsolete ) = self.position_info[game.id]
+                if serial_in_position == self.getSerial():
+                    self.position_info[game.id] = (0, True)
+                forward_packets.extend(self.updateBetLimit(game))
 
             elif packet.type == PACKET_POKER_POSITION:
                 if game.isBlindAnteRound():

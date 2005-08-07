@@ -1,3 +1,21 @@
+Sat Aug 06 19:46:07 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): PACKET_POKER_PLAYER_SELF
+	  will send PacketPokerSelfInPosition if necessary.
+
+	* pokernetwork/pokerserver.py (PokerTable.possibleObserverLoggedIn): if an observer
+	  turns out to be seated at the table, change its status.
+
+	* pokernetwork/pokerserver.py (PokerAvatar.login): after successful login,
+	  check if the player is already seated at the table. If this is the case,
+	  update hole cards, send notification and blind/ante requests if necessary.
+	
+	* pokernetwork/pokerpackets.py (PACKET_POKER_PLAYER_SELF): new packet
+	  notifying that a given player at the table is our avatar.
+
+	* pokernetwork/pokerclient.py (PACKET_POKER_TABLE): too many
+	  open tables.
+
 Fri Aug 05 19:46:07 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.5

@@ -123,6 +123,32 @@ class PokerAvatar:
         self.service.serial2client[serial] = self
         if self.service.verbose:
             print "user %s/%d logged in" % ( self.user.name, self.user.serial )
+	#
+	# Send player updates if it turns out that the player was already
+	# seated at a known table.
+	#
+	for table in self.tables.values():
+	    if table.possibleObserverLoggedIn(self, serial):
+                game = table.game
+                self.sendPacketVerbose(PacketPokerPlayerCards(game_id = game.id,
+                                                              serial = serial,
+                                                              cards = game.getPlayer(serial).hand.toRawList()))
+                self.sendPacketVerbose(PacketPokerPlayerSelf(game_id = game.id,
+                                                             serial = serial))
+                pending_blind_request = game.isBlindRequested(serial)
+                pending_ante_request = game.isAnteRequested(serial)
+                if pending_blind_request or pending_ante_request:
+                    if pending_blind_request:
+                        (amount, dead, state) = game.blindAmount(serial)
+                        self.sendPacketVerbose(PacketPokerBlindRequest(game_id = game.id,
+                                                                       serial = serial,
+                                                                       amount = amount,
+                                                                       dead = dead,
+                                                                       state = state))
+                    if pending_ante_request:
+                        self.sendPacketVerbose(PacketPokerAnteRequest(game_id = game.id,
+                                                                      serial = serial,
+                                                                      amount = game.ante_info["value"]))
 
     def logout(self):
         if self.user.serial:
@@ -607,7 +633,6 @@ class PokerAvatar:
 
         self.sendPacketVerbose(PacketPokerSeats(game_id = game.id,
                                                 seats = game.seats()))
-        cache = table.createCache()
         if game.isRunning():
             #
             # If a game is running, replay it.
@@ -1568,6 +1593,14 @@ class PokerTable:
         game.removePlayer(serial)
         return sit_out
 
+    def possibleObserverLoggedIn(self, client, serial):
+        game = self.game
+        if not game.getPlayer(serial):
+            return False
+        self.observer2seated(client)
+        game.comeBack(serial)
+        return True
+            
     def joinPlayer(self, client, serial):
         game = self.game
         #
