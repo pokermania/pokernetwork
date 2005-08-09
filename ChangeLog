@@ -1,3 +1,16 @@
+Mon Aug 08 17:04:29 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.6
+
+	* pokernetwork/protocol.py (UGAMEProtocol._handleVersion): protocol number is based on version
+
+	* pokernetwork/version.py.in: package version number
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): AUTH_REFUSED: print the reason of
+	  the failure as provided by the server
+
+	* pokernetwork/packets.py (PacketAuthRefused): can now carry the reason of the failure
+
 Sat Aug 06 19:46:07 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): PACKET_POKER_PLAYER_SELF

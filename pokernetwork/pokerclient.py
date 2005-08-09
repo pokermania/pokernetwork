@@ -40,6 +40,7 @@ from pokernetwork.config import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
 from pokernetwork.pokerchildren import PokerChildren, PokerChildBrowser
 from pokernetwork.pokerpackets import *
+from pokernetwork import upgrade
 
 class PokerSkin:
     """Poker Skin"""
@@ -120,10 +121,18 @@ class PokerClientFactory(UGAMEClientFactory):
         self.file2name = {}
 
         self.children = PokerChildren(self.config, self.settings)
+        self.upgrader = upgrade.Upgrader(self.config, self.settings)
+        self.upgrader.registerHandler(upgrade.TICK, self.upgradeTick)
+        self.upgrader.registerHandler(upgrade.CLIENT_VERSION_OK, self.clientVersionOk)
+        self.upgrader.registerHandler(upgrade.NEED_UPGRADE, self.needUpgrade)
+        self.upgrader.registerHandler(upgrade.UPGRADE_READY, self.upgradeReady)
         self.interface = None
 
     def __del__(self):
         del self.games
+
+    def upgradeTick(self, ratio, message):
+        self.display.tickProgressBar(ratio, message)
 
     def restart(self):
         self.children.killall()
@@ -242,7 +251,30 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def browseWeb(self, path):
         PokerChildBrowser(self.config, self.settings, path)
-        
+
+    def checkClientVersion(self, version):
+        self.upgrader.checkClientVersion(version)
+
+    def clientVersionOk(self):
+        pass
+
+    def needUpgrade(self, version):
+        pass
+
+    def upgrade(self, version, excludes):
+        self.display.showProgressBar()
+        self.upgrader.getUpgrade(version, excludes)
+
+    def upgradeReady(self, target_dir, upgrades_dir):
+        self.children.killall()
+        reactor.disconnectAll()
+        import sys
+        import os
+        if os.name != "posix" :
+            os.execv("pok3d.exe", ["pok3d.exe"])
+        else:
+            os.execv("/bin/sh", [ upgrades_dir + "/upgrade", upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)
+
 SERIAL_IN_POSITION = 0
 POSITION_OBSOLETE = 1
 
@@ -1165,7 +1197,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             return 0
         
     def protocolInvalid(self, server, client):
-        self.schedulePacket(PacketProtocolError(message = "Upgrade the client from\nhttp://mekensleep.org/\nSever version is %s\nClient version is %s" % ( server, client ) ))
+        self.schedulePacket(PacketProtocolError(message = "Upgrade the client from\nhttp://mekensleep.org/\nServer version is %s\nClient version is %s" % ( server, client ) ))
 
     def publishDelay(self, delay):
         if self.factory.verbose > 2: self.message("publishDelay: %f delay" % delay)

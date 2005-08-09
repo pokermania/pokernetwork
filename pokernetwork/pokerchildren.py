@@ -37,8 +37,9 @@ from shutil import copy
 
 import libxml2
 
-from twisted.internet import reactor
+from twisted.python.failure import Failure
 from twisted.python import dispatch
+from twisted.internet import reactor
 
 def killProcName(procname_ori):
     print "killing " + procname_ori
@@ -219,3 +220,126 @@ class PokerChildBrowser(PokerChild):
             return True
         else:
             return PokerChild.spawn(self)
+
+
+from twisted.internet.protocol import ProcessProtocol
+
+RSYNC_DONE = "//event/pokernetwork/pokerchildren/rsync_done"
+
+class PokerRsync(PokerChild, ProcessProtocol):
+
+    def __init__(self, config, settings, rsync):
+        PokerChild.__init__(self, config, settings)
+        self.verbose = settings.headerGetInt("/settings/@verbose")
+        self.ready = self.configure(rsync)
+        self.chunks = []
+
+    def configure(self, rsync):
+        settings = self.settings
+        source = settings.headerGet("/settings/rsync/@source")
+        target = settings.headerGet("/settings/rsync/@target")
+        self.rsync = [ settings.headerGet("/settings/rsync/@path") ] + map(lambda x:
+                                                                           reduce(lambda a, b: replace(a, b[0], b[1]), [x,
+                                                                                                                        ( "@SOURCE@", source ),
+                                                                                                                        ( "@TARGET@", target )]
+                                                                                  ),
+                                                                           rsync)
+        # configure with datapath and such
+        return True
+
+    def spawn(self):
+        if self.verbose > 1:
+            print "PokerRsync::spawn: %s" % self.rsync
+        if os.name != "posix":
+            childFDs = { 1: 'r' }
+        else:
+            childFDs = { 1: 'r', 2: 'r' }
+        dir = self.settings.headerGet("/settings/rsync/@dir")
+        self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir,
+                                         childFDs = childFDs)
+
+    def errReceived(self, chunk):
+        print "ERROR: PokerRsync " + chunk
+        
+    def outReceived(self, chunk):
+        self.chunks.append(chunk)
+        if "\n" in chunk:
+            lines = join(self.chunks).split("\n")
+            self.chunks = []
+            last = lines.pop()
+            if last != '':
+                self.chunks.append(last)
+            for line in lines:
+                self.line(line)
+
+    def outConnectionLost(self):
+        self.done()
+
+    def done(self):
+        self.publishEvent(RSYNC_DONE)
+
+    def processEnded(self, reason):
+        if isinstance(reason, Failure) and reason.frames:
+            print "PokerRsync::processEnded: " + str(reason)
+
+#from popen2 import popen2
+#from process.abstract import FileDescriptor
+#from process import fdesc
+#
+#RSYNC_OUTPUT = "//event/pokernetwork/pokerchildren/rsync"
+#
+#class PokerRsync(PokerChild, FileDescriptor):
+#
+#    def __init__(self, config, settings, rsync):
+#        PokerChild.__init__(self, config, settings)
+#        FileDescriptor.__init__(self, reactor)
+#        self.verbose = settings.headerGetInt("/settings/@verbose")
+#        self.ready = self.configure(rsync)
+#
+#    def configure(self, rsync):
+#        self.rsync = rsync
+#        # configure with datapath and such
+#        return True
+#
+#    def spawn(self):
+#        ( stdout, stdin ) = popen2(self.rsync, 2048)
+#        if os.name == "posix" :
+#            fdesc.setNonBlocking(stdout)
+#        self.fd = stdout
+#        self.startReading()
+#        
+#    def fileno(self):
+#        return self.fd
+#
+#    def writeSomeData(self, data):
+#        # the only time this is actually called is after .loseConnection Any
+#        # actual write attempt would fail, so we must avoid that. This hack
+#        # allows us to use .loseConnection on both readers and writers.
+#        assert data == ""
+#        return CONNECTION_LOST
+#
+#    def doRead(self):
+#        """This is called when the pipe becomes readable.
+#        """
+#        if os.name == "posix" :
+#            return fdesc.readFromFD(self.fd, self.dataReceived)
+#        else:
+#            pass # PeekNamedPipe            
+#
+#    def dataReceived(self, data):
+#        print "PokerRsync::dataReceived " + data
+#
+#    def loseConnection(self):
+#        if self.connected and not self.disconnecting:
+#            self.disconnecting = 1
+#            self.stopReading()
+#            self.reactor.callLater(0, self.connectionLost, failure.Failure(CONNECTION_DONE))
+#    
+#    def connectionLost(self, reason):
+#        """Close my end of the pipe, signal the Process (which signals the
+#        ProcessProtocol).
+#        """
+#        FileDescriptor.connectionLost(self, reason)
+#        os.close(self.fd)
+#        self.proc.childConnectionLost(self.name, reason)
+#

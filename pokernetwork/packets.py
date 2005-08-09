@@ -236,7 +236,7 @@ PacketFactory[PACKET_AUTH_OK] = PacketAuthOk
 PACKET_AUTH_REFUSED = 6
 PacketNames[PACKET_AUTH_REFUSED] = "AUTH_REFUSED"
 
-class PacketAuthRefused(Packet):
+class PacketAuthRefused(PacketString):
     """
     Authentication failed
     """

@@ -112,7 +112,7 @@ class PokerAvatar:
         print string
         
     def isAuthorized(self, type):
-        return self.user.hasPrivilege(self.service.auth.GetLevel(type))
+        return self.user.hasPrivilege(self.service.poker_auth.GetLevel(type))
 
     def login(self, info):
         (serial, name, privilege) = info
@@ -158,7 +158,7 @@ class PokerAvatar:
     def auth(self, packet):
         status = checkNameAndPassword(packet.name, packet.password)
         if status[0]:
-            info = self.service.auth.auth(packet.name, packet.password)
+            ( info, reason ) = self.service.auth(packet.name, packet.password)
         else:
             print "PokerAvatar::auth: failure " + str(status)
             info = False
@@ -166,7 +166,7 @@ class PokerAvatar:
             self.sendPacketVerbose(PacketAuthOk())
             self.login(info)
         else:
-            self.sendPacketVerbose(PacketAuthRefused())
+            self.sendPacketVerbose(PacketAuthRefused(string = reason))
 
     def getSerial(self):
         return self.user.serial
@@ -1880,7 +1880,7 @@ class PokerService(service.Service):
 
     def __init__(self, settings):
         self.db = PokerDatabase(settings)
-        self.auth = PokerAuth(self.db, settings)
+        self.poker_auth = PokerAuth(self.db, settings)
         self.settings = settings
         self.dirs = split(settings.headerGet("/server/path"))
         self.serial2client = {}
@@ -1899,12 +1899,12 @@ class PokerService(service.Service):
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
         self.updateTourneysSchedule()
-        self.auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
-        self.auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
-        self.auth.SetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
-        self.auth.SetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
-        self.auth.SetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
-        self.auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
+        self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
 
     def stopServiceFinish(self, x):
         service.Service.stopService(self)
@@ -1949,7 +1949,14 @@ class PokerService(service.Service):
 
     def destroyAvatar(self, avatar):
         avatar.connectionLost("Disconnected")
-    
+
+    def auth(self, name, password):
+        for (serial, client) in self.serial2client.iteritems():
+            if client.getName() == name:
+                if self.verbose: print "PokerService::auth: %s attempt to login more than once" % name
+                return ( False, "Already logged in from somewhere else" ) 
+        return self.poker_auth.auth(name, password)
+            
     def updateTourneysSchedule(self):
         cursor = self.db.cursor(DictCursor)
 
@@ -3081,15 +3088,15 @@ class PokerAuth:
             serial = self.userCreate(name, password)
         elif numrows > 1:
             print "more than one row for %s" % name
-            return False
+            return ( False, "Invalid login or password" )
         else: 
             (serial, password_sql, privilege) = cursor.fetchone()
             cursor.close()
             if password_sql != password:
                 print "password mismatch for %s" % name
-                return False
+                return ( False, "Invalid login or password" )
 
-        return (serial, name, privilege)
+        return ( (serial, name, privilege), None )
 
     def userCreate(self, name, password):
         if self.verbose:

@@ -55,3 +55,13 @@ class PokerDisplay:
 
     def render(self, packet):
         pass
+
+    def showProgressBar(self):
+        pass
+    
+    def hideProgressBar(self):
+        print "\n"
+
+    def tickProgressBar(self, ratio, message):
+        if message: print "\n" + message + " "
+        if ratio > 0: print str(int(ratio * 100)) + "% "

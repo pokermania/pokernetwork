@@ -26,7 +26,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.54)
-AC_INIT(poker-network, 1.0.5)
+AC_INIT(poker-network, 1.0.6)
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE()
 AM_CONFIG_HEADER([config.h])
@@ -53,6 +53,15 @@ AC_ARG_ENABLE(debug,
     [  --enable-debug          build in debug mode (the default is to build in optimized mode)],
     [enable_debug=yes])
     
+AC_ARG_ENABLE(upgrades,
+    [  --enable-upgrades       upgrades are automatically installed from the specified server (default off)],
+    [enable_upgrades=yes],
+    [enable_upgrades=no])
+AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
+AC_SUBST(UPGRADES_SOURCE, $enableval)
+
+echo "TARGET OS is $target_os"
+
 AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION
 ], [
@@ -141,6 +150,7 @@ AC_CONFIG_FILES([
         poker-network.pc
         pokernetwork/pokerserver
         pokernetwork/pokerserver.8
+        pokernetwork/version.py
         conf/poker.bot.xml
         conf/poker.client.xml
         conf/poker.server.xml

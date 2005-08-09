@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="iso-8859-1"?> <!-- -*- nxml -*- -->
 <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="0"
-          display2d="yes" display3d="no"
+          display2d="yes" display3d="no" upgrades="@UPGRADES_ENABLE@"
           delays="true" tcptimeout="2000">
   <delays sit="1" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="5" lag="15"/>
   <screen fullscreen="no" width="1024" height="768"/>
@@ -19,7 +19,7 @@
   <skin url="random" outfit="random"/>
   <handlist start="0" count="100"/>
   <user path="~/.poker2d"/>
-  <rsync>echo @RSYNC@ --delete -avz @POKER_SERVER_HOST@::%version% @POKER_PREFIX@</rsync>
+  <rsync path="@RSYNC@" dir="." source="@UPGRADES_SOURCE@/@target_os@" target="@prefix@" upgrades="share/poker-network/upgrades" />
   <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <data path="@POKER2D_PKGDATADIR@" sounds="@POKER2D_PKGDATADIR@/sounds" />
 </settings>

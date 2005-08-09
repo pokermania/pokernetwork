@@ -30,9 +30,10 @@ from time import time
 from twisted.internet import reactor, protocol
 
 from pokernetwork.packets import Packet, PacketFactory, PacketNames
+from pokernetwork import version
 
-PROTOCOL_MAJOR = 0
-PROTOCOL_MINOR = 3
+PROTOCOL_MAJOR = "%03d" % version.major
+PROTOCOL_MINOR = "%d%02d" % ( version.medium, version.minor )
 
 class Queue:
     def __init__(self):
@@ -69,7 +70,7 @@ class UGAMEProtocol(protocol.Protocol):
         self.established = 0
         
     def _sendVersion(self):
-        self.transport.write('CGI %03d.%03d\n' % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ) )
+        self.transport.write('CGI %s.%s\n' % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ) )
 
     def _handleConnection(self):
         pass
@@ -82,9 +83,9 @@ class UGAMEProtocol(protocol.Protocol):
         buffer = ''.join(self._packet)
         if '\n' in buffer:
             if buffer[:3] == 'CGI':
-                major, minor = [int(x) for x in buffer[4:11].split('.')]
+                major, minor = buffer[4:11].split('.')
                 if (major, minor) != ( PROTOCOL_MAJOR, PROTOCOL_MINOR ):
-                    self.protocolInvalid("%03d.%03d" % ( major, minor ), "%03d.%03d" % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ))
+                    self.protocolInvalid(major + "." + minor, PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
                     self.transport.loseConnection()
                     return
             buffer = buffer[12:]

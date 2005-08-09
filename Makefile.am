@@ -72,7 +72,9 @@ pokernetwork_PYTHON = \
 	pokernetwork/packets.py \
 	pokernetwork/pokerpackets.py \
 	pokernetwork/pokerbot.py \
-	pokernetwork/user.py
+	pokernetwork/upgrade.py \
+	pokernetwork/user.py \
+	pokernetwork/version.py
 
 man_MANS = pokernetwork/pokerserver.8
 
@@ -91,6 +93,10 @@ pokerui_PYTHON = \
 pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
 	database/schema.sql
+
+pokerupgradesdir=${pkgdatadir}/upgrades
+dist_pokerupgrades_DATA = \
+	upgrade
 
 pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = poker-network.pc

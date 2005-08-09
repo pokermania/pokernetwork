@@ -731,7 +731,7 @@ class PokerRenderer:
             self.protocol.setCurrentGameId(None)
             
         elif packet.type == PACKET_AUTH_REFUSED:
-            self.showMessage("Invalid login or passwd", lambda: self.changeState(LOGIN_DONE, False))
+            self.showMessage(packet.string, lambda: self.changeState(LOGIN_DONE, False))
 
         elif packet.type == PACKET_AUTH_OK:
             if self.verbose: print "login accepted"

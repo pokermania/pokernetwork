@@ -47,6 +47,7 @@ from time import sleep
 from random import choice, uniform, randint
 
 from pokernetwork.config import Config
+from pokernetwork import version
 
 class Main:
     "Poker gameplay"
@@ -173,9 +174,26 @@ class PokerClientFactory2D(PokerClientFactory):
         self.initDisplay()
 
         self.interface = PokerInterface2D(self.settings)
-        self.showServers()
         self.skin.interfaceReady(self.interface, self.display)
         self.renderer.interfaceReady(self.interface)
+        if self.settings.headerGet("/settings/@upgrades") == "yes":
+            self.checkClientVersion((version.major, version.medium, version.minor))
+        else:
+            self.clientVersionOk()
+
+    def clientVersionOk(self):
+        self.showServers()
+
+    def needUpgrade(self, version):
+        interface = self.interface
+        interface.yesnoBox("A new client version is available, do you want to upgrade now ?")
+        interface.registerHandler(pokerinterface.INTERFACE_YESNO, lambda result: self.upgradeConfirmed(result, version))
+
+    def upgradeConfirmed(self, confirmed, version):
+        if confirmed:
+            self.upgrade(version, ("poker2d.xml", ))
+        else:
+            self.quit()
 
     def initDisplay(self):
         self.display = PokerDisplay2D(settings = self.settings,
