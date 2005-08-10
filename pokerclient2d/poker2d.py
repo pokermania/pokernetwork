@@ -278,6 +278,7 @@ def run(argv, default_settingsfile):
 
     if client.configOk():
         try:
+            reactor.startRunning()
             client.run()
     #        import profile
     #        profile.run('client.run()', 'bar')

@@ -44,7 +44,7 @@ AC_PATH_PROG(RSYNC, [rsync])
 
 AM_PATH_PYTHON([2.3])
 
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.3, [], [AC_MSG_ERROR(poker-engine is a mandatory library)])
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.6, [], [AC_MSG_ERROR(poker-engine is a mandatory library)])
 
 #
 # G++ specific debug and optimization flags
@@ -59,8 +59,6 @@ AC_ARG_ENABLE(upgrades,
     [enable_upgrades=no])
 AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
 AC_SUBST(UPGRADES_SOURCE, $enableval)
-
-echo "TARGET OS is $target_os"
 
 AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION

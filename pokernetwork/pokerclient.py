@@ -271,7 +271,7 @@ class PokerClientFactory(UGAMEClientFactory):
         import sys
         import os
         if os.name != "posix" :
-            os.execv("pok3d.exe", ["pok3d.exe"])
+            os.execv(upgrades_dir + "/upgrade.exe", [ upgrades_dir + "/upgrade.exe", '"' + target_dir + '"', '"' + sys.executable + '"' ])
         else:
             os.execv("/bin/sh", [ upgrades_dir + "/upgrade", upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)
 

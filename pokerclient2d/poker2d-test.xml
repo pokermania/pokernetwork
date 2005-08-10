@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" display2d="yes" display3d="no" verbose="5" delays="true" tcptimeout="2000" upgrades="yes" >
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" display2d="yes" display3d="no" verbose="5" delays="true" tcptimeout="2000" upgrades="yes">
   <delays sit="1" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="1" lag="15"/> 
 <!--  <delays sit="0" blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="7" lag="15"/> -->
   <screen fullscreen="no" width="1024" height="768"/>
-  <name>foobar</name>
-  <passwd>foobar</passwd>
+  <name>ldachary</name>
+  <passwd>rouge1</passwd>
   <remember>yes</remember>
   <muck>yes</muck>
   <auto_post>no</auto_post>
   <chat max_chars="40" line_length="20"/>
-  <servers>localhost:19480 localhost:19481;ssl localhost:19380 test.mekensleep.org:19380</servers>
+  <servers>localhost:19480 localhost:19481;ssl localhost:19380 test.mekensleep.org:19380 poker.pok3d.com:19380</servers>
   <web browser="/usr/bin/firefox">http://www.pok3d.com/</web>
   <sound>yes</sound>
   <tournaments custom_money="n" type="sit_n_go" sort="name"/>
@@ -19,7 +19,7 @@
   <skin url="random" outfit="random"/>
   <user path="~/.poker2d"/>
   <path>/etc/poker-engine /etc/poker-network .</path> 
-  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades" />
+  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 <!--  <handlist start="0" count="100"/> -->

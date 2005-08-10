@@ -249,7 +249,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
 
     def spawn(self):
         if self.verbose > 1:
-            print "PokerRsync::spawn: %s" % self.rsync
+            print "PokerRsync::spawn: " + join(self.rsync)
         if os.name != "posix":
             childFDs = { 1: 'r' }
         else:
@@ -282,64 +282,3 @@ class PokerRsync(PokerChild, ProcessProtocol):
         if isinstance(reason, Failure) and reason.frames:
             print "PokerRsync::processEnded: " + str(reason)
 
-#from popen2 import popen2
-#from process.abstract import FileDescriptor
-#from process import fdesc
-#
-#RSYNC_OUTPUT = "//event/pokernetwork/pokerchildren/rsync"
-#
-#class PokerRsync(PokerChild, FileDescriptor):
-#
-#    def __init__(self, config, settings, rsync):
-#        PokerChild.__init__(self, config, settings)
-#        FileDescriptor.__init__(self, reactor)
-#        self.verbose = settings.headerGetInt("/settings/@verbose")
-#        self.ready = self.configure(rsync)
-#
-#    def configure(self, rsync):
-#        self.rsync = rsync
-#        # configure with datapath and such
-#        return True
-#
-#    def spawn(self):
-#        ( stdout, stdin ) = popen2(self.rsync, 2048)
-#        if os.name == "posix" :
-#            fdesc.setNonBlocking(stdout)
-#        self.fd = stdout
-#        self.startReading()
-#        
-#    def fileno(self):
-#        return self.fd
-#
-#    def writeSomeData(self, data):
-#        # the only time this is actually called is after .loseConnection Any
-#        # actual write attempt would fail, so we must avoid that. This hack
-#        # allows us to use .loseConnection on both readers and writers.
-#        assert data == ""
-#        return CONNECTION_LOST
-#
-#    def doRead(self):
-#        """This is called when the pipe becomes readable.
-#        """
-#        if os.name == "posix" :
-#            return fdesc.readFromFD(self.fd, self.dataReceived)
-#        else:
-#            pass # PeekNamedPipe            
-#
-#    def dataReceived(self, data):
-#        print "PokerRsync::dataReceived " + data
-#
-#    def loseConnection(self):
-#        if self.connected and not self.disconnecting:
-#            self.disconnecting = 1
-#            self.stopReading()
-#            self.reactor.callLater(0, self.connectionLost, failure.Failure(CONNECTION_DONE))
-#    
-#    def connectionLost(self, reason):
-#        """Close my end of the pipe, signal the Process (which signals the
-#        ProcessProtocol).
-#        """
-#        FileDescriptor.connectionLost(self, reason)
-#        os.close(self.fd)
-#        self.proc.childConnectionLost(self.name, reason)
-#

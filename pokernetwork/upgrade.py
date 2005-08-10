@@ -23,6 +23,12 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
+
+import os
+
+if os.name != "posix":
+    import win32api
+
 from re import match
 
 from twisted.python import dispatch
@@ -32,7 +38,7 @@ from pokernetwork.pokerchildren import PokerRsync, RSYNC_DONE
 class Constants:
     EXCLUDES = []
     UPGRADES_DIR = None
-    BANDWIDTH = [ "--bwlimit=128" ]
+    BANDWIDTH = [ ] # [ "--bwlimit=128" ]
     
 TICK = "//event/pokernetwork/upgrade/tick"
 NEED_UPGRADE = "//event/pokernetwork/upgrade/need_upgrade"
@@ -123,6 +129,10 @@ class Upgrader(dispatch.EventDispatcher):
         self.config = config
         self.settings = settings
         self.target = self.settings.headerGet("/settings/rsync/@target")
+        if os.name != "posix" and self.target == "@FROM_REGISTRY@":
+            self.target = win32api.RegQueryValue( 0x80000001L, "Game\\Pok3d")
+            self.settings.headerSet("/settings/rsync/@target", self.target)
+            
         self.upgrades = self.settings.headerGet("/settings/rsync/@upgrades")
         Constants.UPGRADES_DIR = self.target + "/" + self.upgrades
         source = self.settings.headerGet("/settings/rsync/@source")
