@@ -306,6 +306,7 @@ class PokerRenderer:
         self.state_buy_in = ()
 
         self.state_login = ()
+        self.state_outfit = None
 
         self.state_tournaments = factory.settings.headerGetProperties("/settings/tournaments")
         if not self.state_tournaments:
@@ -1144,6 +1145,8 @@ class PokerRenderer:
             self.hideCashier()
         elif self.state == IDLE:
             pass
+        elif self.state == SEARCHING_MY:
+            status = True
         else:
             status = False
         return status
@@ -1709,7 +1712,11 @@ class PokerRenderer:
             self.state = state
 
         elif state == SEARCHING_MY_CANCEL:
-            self.changeState(LOGIN_DONE, True)
+            if self.factory.first_time:
+                self.state_outfit = lambda: self.changeState(LOGIN_DONE, True)
+                self.changeState(OUTFIT)
+            else:
+                self.changeState(LOGIN_DONE, True)
             
         elif state == TOURNAMENTS and self.state2hide():
             self.state = state
@@ -1861,11 +1868,16 @@ class PokerRenderer:
                 print "*CRITICAL*; should not be here"
                 self.showMessage("You cannot do that now", None)
 
-        elif state == OUTFIT_DONE and self.state == OUTFIT:
+        elif state == OUTFIT_DONE and self.state == OUTFIT:            
             self.factory.getSkin().hideOutfitEditor()
             self.factory.interface.showMenu()
-            self.state = IDLE            
-            self.changeState(LOBBY)
+            self.state = IDLE
+            if self.state_outfit != None:
+                state_outfit = self.state_outfit
+                self.state_outfit = None
+                state_outfit()
+            else:
+                self.changeState(LOBBY)
             
         elif state == HAND_LIST:
             if self.protocol.user.isLogged():

@@ -119,6 +119,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.protocol = PokerClientProtocol
         self.games = {}
         self.file2name = {}
+        self.first_time = self.settings.headerGet("/settings/name") == "username"
 
         self.children = PokerChildren(self.config, self.settings)
         self.upgrader = upgrade.Upgrader(self.config, self.settings)
