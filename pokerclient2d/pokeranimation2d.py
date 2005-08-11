@@ -286,7 +286,7 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         animation.schedule(0, 2)
         return animation
 
-    def showdownDelta(self, delta, is_delta_max, is_delta_min):
+    def showdownDelta(self, delta, is_delta_max, is_delta_min, chips):
         self.message("delta %d, is_delta_max %s, is_delta_min %s" % (delta, is_delta_max, is_delta_min))
         if is_delta_max:
             animation = AnimationBlinkWidget(widget = self.widget_name[0],

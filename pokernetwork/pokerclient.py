@@ -689,6 +689,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     # method, it means that there is no showdown.
                     #
                     if not self.no_display_packets:
+                        forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
                         forward_packets.extend(self.packetsPot2Player(game))
                 else:
                     game.distributeMoney()
@@ -702,6 +703,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                         raise UserWarning, "game.winners %s != packet.serials %s" % (winners, packet.serials)
                     if not self.no_display_packets:
                         forward_packets.extend(self.packetsShowdown(game))
+                        forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
+
                         forward_packets.extend(self.packetsPot2Player(game))
                     game.endTurn()
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
@@ -1016,8 +1019,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                             board = game.board.tolist(True),
                                                             hand = hand,
                                                             besthand = best_hand))
-        packets.append(PacketPokerShowdown(game_id = game.id,
-                                           showdown_stack = game.showdown_stack))
         return packets
 
     def publishQuit(self):
@@ -1113,6 +1114,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         else:
             if not self.no_display_packets:
                 packets.extend(self.packetsShowdown(game))
+                packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
         packets.append(PacketPokerStreamMode(game_id = game.id))
 
         for packet in packets:

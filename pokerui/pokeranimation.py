@@ -290,9 +290,13 @@ class PokerAnimationTable:
     def showdown(self, protocol, packet):
         serials = None
         serial2delta = None
+        serial2share = None
         for frame in packet.showdown_stack:
             if frame['type'] == 'game_state':
                 serial2delta = frame['serial2delta']
+                serial2share = frame['serial2share']
+                if frame.has_key('foldwin'):
+                    print "plop"
             elif frame['type'] == 'resolve':
                 serials = frame['serials']
         delta_max = -1
@@ -305,8 +309,13 @@ class PokerAnimationTable:
                 delta_min = delta
         for serial in serials:
             delta = serial2delta[serial]
+            chips = 0
+            if serial in serial2share.keys():
+                chips = serial2share[serial]
             player = self.serial2player[serial]
-            player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min)
+            #player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min)
+            player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min, chips)
+            
 
     def endRound(self):
         for serial in self.serial2player.keys():
