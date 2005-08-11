@@ -484,14 +484,15 @@ class PokerRenderer:
             else:
                 if self.verbose: print "connection not established, will ask password later"
 
-    def chatFormatMessage(self, message):
+    def chatFormatMessage(self, packet):
+        message = packet.message        
         from pprint import pprint
         if self.factory.verbose: pprint(self.chat_words)
         for word in self.chat_words:
             import string
             if string.find(message, word["in"]) != -1:
-                serial = self.protocol.getSerial()
-                game_id = self.protocol.getCurrentGameId()
+                serial = packet.serial
+                game_id = packet.game_id
                 if self.factory.verbose: print "chat word (%s) found => sending (%s) event" % (word["in"], word["event"])
                 self.schedulePacket(PacketPokerChatWord(word = word["event"], game_id = game_id, serial = serial))
                 message = string.replace(message, word["in"], word["out"])
@@ -809,7 +810,7 @@ class PokerRenderer:
                 interface.chatHistory(packet.message)
             # duplicate PacketPokerChat
             # in order to preseve integrity of original packet
-            message = self.chatFormatMessage(packet.message)
+            message = self.chatFormatMessage(packet)
             #message = PokerChat.filterChatTrigger(message)
             chatPacket = PacketPokerChat(game_id = packet.game_id,
                                          serial = packet.serial,
