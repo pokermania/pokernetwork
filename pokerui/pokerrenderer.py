@@ -1713,6 +1713,7 @@ class PokerRenderer:
 
         elif state == SEARCHING_MY_CANCEL:
             if self.factory.first_time:
+                self.factory.first_time = False
                 self.state_outfit = lambda: self.changeState(LOGIN_DONE, True)
                 self.changeState(OUTFIT)
             else:
