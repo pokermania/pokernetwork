@@ -238,6 +238,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
         settings = self.settings
         source = settings.headerGet("/settings/rsync/@source")
         target = settings.headerGet("/settings/rsync/@target")
+        
         self.rsync = [ settings.headerGet("/settings/rsync/@path") ] + map(lambda x:
                                                                            reduce(lambda a, b: replace(a, b[0], b[1]), [x,
                                                                                                                         ( "@SOURCE@", source ),
