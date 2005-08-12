@@ -244,6 +244,8 @@ class PokerRsync(PokerChild, ProcessProtocol):
                                                                                                                         ( "@TARGET@", target )]
                                                                                   ),
                                                                            rsync)
+        if os.name != "posix":
+            self.rsync = map(lambda x: '"' + x + '"', self.rsync[1:])
         # configure with datapath and such
         return True
 
