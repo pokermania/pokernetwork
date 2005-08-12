@@ -295,10 +295,9 @@ class PokerAnimationTable:
             if frame['type'] == 'game_state':
                 serial2delta = frame['serial2delta']
                 serial2share = frame['serial2share']
-                if frame.has_key('foldwin'):
-                    print "plop"
             elif frame['type'] == 'resolve':
                 serials = frame['serials']
+                break
         delta_max = -1
         delta_min = 0x0FFFFFFF
         for serial in serials:
@@ -313,7 +312,6 @@ class PokerAnimationTable:
             if serial in serial2share.keys():
                 chips = serial2share[serial]
             player = self.serial2player[serial]
-            #player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min)
             player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min, chips)
             
 
