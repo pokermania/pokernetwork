@@ -154,7 +154,7 @@ class Upgrader(dispatch.EventDispatcher):
             self.publishEvent(CLIENT_VERSION_OK)
 
     def getUpgrade(self, version, excludes):
-        Constants.EXCLUDES = map(lambda pattern: "--exclude=" + pattern, (self.upgrades, "poker.client.xml") + excludes)        
+        Constants.EXCLUDES = map(lambda pattern: "--exclude=" + pattern, (self.upgrades, "poker.client.xml", "Uninstall.exe", "Pok3d.lnk", "Pok3d.ico", "License.txt") + excludes)        
         self.upgradeStage1(version)
 
     def upgradeStage1(self, version):
