@@ -133,7 +133,7 @@ class Upgrader(dispatch.EventDispatcher):
         self.settings = settings
         self.target = self.settings.headerGet("/settings/rsync/@target")
         if os.name != "posix" and self.target == "@FROM_REGISTRY@":
-            self.target = win32api.RegQueryValue( int(0x80000001L), "Game\\Pok3d")
+            self.target = win32api.RegQueryValue( 0x80000001, "Game\\Pok3d")
             self.settings.headerSet("/settings/rsync/@target", self.target)
             
         self.upgrades = self.settings.headerGet("/settings/rsync/@upgrades")
