@@ -58,6 +58,7 @@ class CheckClientVersion(PokerRsync):
         self.need_upgrade = False
 
     def line(self, line):
+        if self.verbose > 2: print line
         result = match(".* (\d+).(\d+).(\d+)$", line)
         if result:
             result = tuple(map(int, result.groups()))
@@ -76,7 +77,7 @@ DRY_RUN_DONE = "//event/pokernetwork/upgrade/dry_run_done"
 class DryrunUpgrade(PokerRsync):
 
     def __init__(self, config, settings, version):
-        PokerRsync.__init__(self, config, settings, [ "rsync" ] + Constants.EXCLUDES + [ "--dry-run", "-av", "--delete", "--progress", "--log-format=FILE:%f", "@SOURCE@/" + version, "@TARGET@" ])
+        PokerRsync.__init__(self, config, settings, [ "rsync" ] + Constants.EXCLUDES + [ "--dry-run", "-av", "--delete", "--progress", "--log-format=FILE:%f", "@SOURCE@/" + version + "/*", "@TARGET@/" ])
         self.files_count = 0
         self.files_total = 0.0
 
@@ -85,6 +86,7 @@ class DryrunUpgrade(PokerRsync):
         PokerRsync.spawn(self)
         
     def line(self, line):
+        if self.verbose > 2: print line
         if match("^FILE:", line):
             self.files_count += 1
             if self.files_total > 0.0:
@@ -112,6 +114,7 @@ class GetPatch(PokerRsync):
         PokerRsync.spawn(self)
         
     def line(self, line):
+        if self.verbose > 2: print line
         if match("^FILE:", line):
             self.files_count += 1
             if self.files_total > 0.0:
