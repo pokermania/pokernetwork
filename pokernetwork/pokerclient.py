@@ -138,6 +138,7 @@ class PokerClientFactory(UGAMEClientFactory):
     def restart(self):
         self.children.killall()
         reactor.disconnectAll()
+        self.display.underware.Uninit()
         import sys
         import os
         if os.name != "posix" :
@@ -269,6 +270,7 @@ class PokerClientFactory(UGAMEClientFactory):
     def upgradeReady(self, target_dir, upgrades_dir):
         self.children.killall()
         reactor.disconnectAll()
+        self.display.underware.Uninit()
         import sys
         import os
         if os.name != "posix" :
