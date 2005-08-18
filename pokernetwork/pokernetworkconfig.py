@@ -23,17 +23,17 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-from pokerengine import config
+from pokerengine import pokerengineconfig
 from pokernetwork.version import version
 import libxml2
 
-class Config(config.Config):
+class Config(pokerengineconfig.Config):
 
     upgrades_repository = None
     verbose = 0
 
     def __init__(self, *args, **kwargs):
-        config.Config.__init__(self, *args, **kwargs)
+        pokerengineconfig.Config.__init__(self, *args, **kwargs)
         self.version = version
 
     def loadFromString(self, string):
@@ -42,7 +42,7 @@ class Config(config.Config):
         self.header = self.doc.xpathNewContext()
 
     def load(self, path):
-        status = config.Config.load(self, path)
+        status = pokerengineconfig.Config.load(self, path)
         if Config.upgrades_repository:
             if self.checkVersion("poker_network_version", version, Config.upgrades_repository):
                 return status

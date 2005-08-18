@@ -40,7 +40,7 @@ from twisted.internet import reactor, error
 from pokerengine.pokerchips import PokerChips
 from pokerengine.pokertournament import *
 
-from pokernetwork.config import Config
+from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
 from pokernetwork.user import checkName
@@ -472,7 +472,7 @@ class Bot(internet.TCPClient):
 def run(argv):
     configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.bot.xml"
 
-    settings = Config([''])
+    settings = pokernetworkconfig.Config([''])
     settings.load(configuration)
 
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))

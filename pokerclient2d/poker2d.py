@@ -46,7 +46,7 @@ from shutil import copy
 from time import sleep
 from random import choice, uniform, randint
 
-from pokernetwork.config import Config
+from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.version import version
 
 class Main:

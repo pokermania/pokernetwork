@@ -85,7 +85,7 @@ from pokerengine.pokertournament import *
 
 from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import User, checkNameAndPassword, checkName, checkPassword
-from pokernetwork.config import Config
+from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
 from pokernetwork.user import User

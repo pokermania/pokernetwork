@@ -30,7 +30,7 @@ import sys
 sys.path.insert(0, ".")
 sys.path.insert(0, "@top_srcdir@")
 
-from pokernetwork.config import Config
+from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerdatabase import PokerDatabase
 
 def usage():

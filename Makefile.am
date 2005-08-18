@@ -71,7 +71,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerclient.py \
 	pokernetwork/pokerchildren.py \
-	pokernetwork/config.py \
+	pokernetwork/pokernetworkconfig.py \
 	pokernetwork/__init__.py \
 	pokernetwork/packets.py \
 	pokernetwork/pokerpackets.py \
@@ -132,7 +132,7 @@ install-data-local:
 	${POKERCONFIGUPGRADE} --verbose=1 --reference=${srcdir}/conf "${DESTDIR}${pkgsysconfdir}"
 	for file in bot client server ; do \
 		export PYTHONPATH=${srcdir} ; \
-		${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork --upgrades=${srcdir}/upgrades/poker.$$file "${DESTDIR}${pkgsysconfdir}/poker.$$file.xml" ; \
+		${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.$$file "${DESTDIR}${pkgsysconfdir}/poker.$$file.xml" ; \
 	done
 	chmod 600 "${DESTDIR}${pkgsysconfdir}/poker.server.xml"
 	chmod u+w "${DESTDIR}${pkgsysconfdir}"

@@ -39,7 +39,7 @@ rm -fr conftest ; mkdir -p conftest
 export PYTHONPATH=$srcdir/..
 @POKERCONFIGUPGRADE@ --verbose=1 --reference=$srcdir/conf conftest
 chmod u+w conftest
-@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../upgrades/poker.bot conftest/poker.bot.xml.in
-@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../upgrades/poker.client conftest/poker.client.xml.in
-@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
-@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../pokerclient2d/upgrades conftest/poker2d.xml.in conftest/client.xml
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.bot conftest/poker.bot.xml.in
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.client conftest/poker.client.xml.in
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../pokerclient2d/upgrades conftest/poker2d.xml.in conftest/client.xml

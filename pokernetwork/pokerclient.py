@@ -36,7 +36,7 @@ from pokerengine.pokergame import PokerGameClient, PokerPlayer
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 
-from pokernetwork.config import Config
+from pokerengine.pokerengineconfig import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
 from pokernetwork.pokerchildren import PokerChildren, PokerChildBrowser
 from pokernetwork.pokerpackets import *
