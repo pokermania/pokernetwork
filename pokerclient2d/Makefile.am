@@ -101,9 +101,10 @@ pokerclient2d_PYTHON = \
 	pokerinterface2d.py
 
 poker2ddir = ${pkgdatadir}/poker2d
-dist_poker2d_DATA = \
+nobase_dist_poker2d_DATA = \
 	poker2d.xml \
-	client.xml
+	client.xml \
+	upgrades/1.0.5-1.0.6.xsl
 
 #
 # The python interpreter needs to find the binary modules immediately

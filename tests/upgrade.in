@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# Copyright (C) 2004, 2005 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+set -e 
+
+: ${srcdir:=.}
+
+SCHEMA=$srcdir/schema.sql
+
+. $srcdir/createdatabase
+
+@PYTHON@ ../database/pokerdatabaseupgrade --dry-run --upgrades=$srcdir/../database $srcdir/poker.server.xml
+@PYTHON@ ../database/pokerdatabaseupgrade --upgrades=$srcdir/../database $srcdir/poker.server.xml
+trap "rm -fr conftest" EXIT
+rm -fr conftest ; mkdir -p conftest
+export PYTHONPATH=$srcdir/..
+@POKERCONFIGUPGRADE@ --verbose=1 --reference=$srcdir/conf conftest
+chmod u+w conftest
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../upgrades/poker.bot conftest/poker.bot.xml.in
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../upgrades/poker.client conftest/poker.client.xml.in
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
+@POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork --upgrades=$srcdir/../pokerclient2d/upgrades conftest/poker2d.xml.in conftest/client.xml

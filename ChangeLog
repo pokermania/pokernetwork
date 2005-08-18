@@ -1,4 +1,54 @@
-Tue Aug 09 18:09:59 2005  Loic Dachary  <loic@gnu.org>
+Wed Aug 17 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.6
+
+	* upgrades: upgrade files for poker.{bot,client,server}.xml
+
+	* pokerclient2d/upgrades: poker2d.xml and client.xml upgrades
+
+	* tests/upgrade.in: run .xml files upgrades
+
+	* tests/conf: 1.0.5 configuration files archives.
+
+	* pokernetwork/{config,version}.py: derive from equivalent files
+	  from poker-engine
+
+	* configure.ac: take the version number from pokernetwork/__init__.py
+	
+	* pokernetwork/__init__.py: version_number is the source of the version.
+
+Sun Aug 14 2005  Loic Dachary  <loic@gnu.org>
+
+	* database/pokerdatabaseupgrade.8.in: manual page for database
+	  upgrade utility
+
+	* database/pokerdatabaseupgrade.in: run database upgrades stored
+	  in .sql files to reach the current software version number
+	
+	* database/1.0.5-1.0.6.sql: database upgrade to 1.0.6
+
+	* ChangeLog: remove hour stamp
+	
+	* Makefile.am: run tests, add pokerdatabaseupgrade utility, 
+	  migration file from 1.0.5 to 1.0.6
+
+	* configure.ac: detect mysql client program, substitute pkgdatadir, 
+	  configure tests and upgrade programs. Substitute prefix early
+	  so that path are accurate if --prefix is not specified.
+
+Sat Aug 13 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/version.py.in (version): stores the string of the
+	  version in addition to the major/medium/minor numbers
+
+Fri Aug 12 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerserver.py (PokerXML.walk): walk a datastructure
+	  and convert any unicode object to/from the desired encoding. Cope with
+	  deficiencies of SOAP/XMLRPC python libraries and/or unfriendly 
+	  clients.
+
+Tue Aug 09 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerclient.py (PokerClientFactory.__init__): bind upgrade support
 	  to clientVersionOk,needUpgrade,upgrade,upgradeReady designed to be overloaded
@@ -19,9 +69,7 @@ Tue Aug 09 18:09:59 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/upgrade.py: implement inplace upgrade system
 
-Mon Aug 08 17:04:29 2005  Loic Dachary  <loic@gnu.org>
-
-	* Release 1.0.6
+Mon Aug 08 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/protocol.py (UGAMEProtocol._handleVersion): protocol number is based on version
 
@@ -32,7 +80,7 @@ Mon Aug 08 17:04:29 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/packets.py (PacketAuthRefused): can now carry the reason of the failure
 
-Sat Aug 06 19:46:07 2005  Loic Dachary  <loic@gnu.org>
+Sat Aug 06 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): PACKET_POKER_PLAYER_SELF
 	  will send PacketPokerSelfInPosition if necessary.
@@ -50,7 +98,7 @@ Sat Aug 06 19:46:07 2005  Loic Dachary  <loic@gnu.org>
 	* pokernetwork/pokerclient.py (PACKET_POKER_TABLE): too many
 	  open tables.
 
-Fri Aug 05 19:46:07 2005  Loic Dachary  <loic@gnu.org>
+Fri Aug 05 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.5
 
@@ -65,18 +113,18 @@ Fri Aug 05 19:46:07 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerpackets.py (PacketPokerShowdown.__init__): new packet
 
-Sat Jul 16 11:12:41 2005  Loic Dachary  <loic@gnu.org>
+Sat Jul 16 2005  Loic Dachary  <loic@gnu.org>
 
 	* debian/control (Section): s/libs/python/ in sections.
 
-Sat Jul 16 09:31:34 2005  Loic Dachary  <loic@gnu.org>
+Sat Jul 16 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.4
 
 	* debian/python2.3-poker-network.postinst (pokernetwork_dir): substitute
 	  %HOST% in clients regardless of server installation.
 
-Fri Jul 15 10:03:05 2005  Thierry Delamare  <thy@mekensleep.com>
+Fri Jul 15 2005  Thierry Delamare  <thy@mekensleep.com>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.__init__): show or not
 	show next and previous label depending on start count and
@@ -86,7 +134,7 @@ Fri Jul 15 10:03:05 2005  Thierry Delamare  <thy@mekensleep.com>
 	* pokerclient2d/poker2d.xml.in: 
 	* conf/poker.client.xml.in: 
 
-Wed Jul 13 14:29:26 2005  Loic Dachary  <loic@gnu.org>
+Wed Jul 13 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.changeState): reset state to IDLE
 	  when switching to CANCELED state only if in PAY_BLIND state
@@ -94,21 +142,21 @@ Wed Jul 13 14:29:26 2005  Loic Dachary  <loic@gnu.org>
 	* pokerui/pokerrenderer.py (PokerRenderer.changeState): show chat bar if
 	  in IDLE state only.
 
-Tue Jul 05 17:00:05 2005  Loic Dachary  <loic@gnu.org>
+Tue Jul 05 2005  Loic Dachary  <loic@gnu.org>
 	
 	* pokerclient2d/lobby.c (handle_lobby): show icon marking
 	  tables where player is seated.
 
-Tue Jul 05 12:58:05 2005  Loic Dachary  <loic@gnu.org>
+Tue Jul 05 2005  Loic Dachary  <loic@gnu.org>
 
 	* poker-network.pc.in: pkg-config compatibility
 
-Mon Jul 04 10:15:57 2005  Loic Dachary  <loic@gnu.org>
+Mon Jul 04 2005  Loic Dachary  <loic@gnu.org>
 
 	* README (Client): fix install paths as pointed out by
 	  Jeff Schoby <ssrjazz@gmail.com>
 
-Tue Jun 28 19:39:17 2005  proppy  <euphro_j@epitech.net>
+Tue Jun 28 2005  proppy  <euphro_j@epitech.net>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.clickSitOut): 
 	called when click occured on the sitout interactor
@@ -121,7 +169,7 @@ Tue Jun 28 19:39:17 2005  proppy  <euphro_j@epitech.net>
 	handling toggle_sit_out added : toggle sit_out_next_hand active state	
 	smartified g_sit_actions_disable flag usage
 
-Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* configure.ac: substitutions for local configuration
 
@@ -129,11 +177,11 @@ Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
 
 	* debian/rules: set the configuration variables to debconf variables
 
-Tue Jun 28 18:30:03 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/outfits.c (on_arrow_clicked): outfit arrow wrap around
 
-Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>
+Tue Jun 28 2005  proppy  <euphro_j@epitech.net>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.chatFormatMessage): 
 	chat words (defined in /sequence/chatwords) are filtered from POKER_CHAT message
@@ -145,39 +193,39 @@ Tue Jun 28 15:35:14 2005  proppy  <euphro_j@epitech.net>
 	* pokernetwork/pokerpackets.py (PacketPokerChatWord.type): 
 	PACKET_POKER_CHAT_WORD added
 
-Tue Jun 28 15:24:59 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerpackets.py: poker packet renderer
 
 	* pokerui/pokerrenderer.py (PokerRenderer.changeState): notify display
 	  when state changes
 
-Tue Jun 28 13:26:17 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerclient.py (PokerClientProtocol.resendPackets): check
 	  that all players involved in a showdown still have a seat before 
 	  displaying the showdown.
 
-Tue Jun 28 12:35:19 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.changeState): immediate feedback
 	  and confirmation when leaving the table.
 
-Tue Jun 28 10:00:42 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.3
 
 	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): sitout if
 	  not in player list.
 
-Fri Jun 24 10:57:06 2005  Loic Dachary  <loic@gnu.org>
+Fri Jun 24 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.2
 
 	* pokerclient2d/poker2d.py: workarounds for the twisted-2.0 bug 
 	  http://twistedmatrix.com/bugs/issue1083
 
-Thu Jun 23 18:05:29 2005  Loic Dachary  <loic@gnu.org>
+Thu Jun 23 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokeranimation.py (PokerAnimationPlayer.sitoutIfNotInGame): arrange
 	  for sitout and sitin animations feedback to be immediate.
@@ -185,12 +233,12 @@ Thu Jun 23 18:05:29 2005  Loic Dachary  <loic@gnu.org>
 	* pokernetwork/pokerclient.py (PokerClientProtocol.sendPacket): build new client
 	  side packets SIT_OUT_NEXT_HAND and SIT_REQUEST
 
-Thu Jun 23 16:34:40 2005  Loic Dachary  <loic@gnu.org>
+Thu Jun 23 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerpackets.py: client <=> packets SIT_OUT_NEXT_TURN
 	  and SIT_REQUEST
 
-Thu Jun 23 00:28:55 2005  Loic Dachary  <loic@gnu.org>
+Thu Jun 23 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerserver.py (PokerAvatar.handlePacketLogic): issue 
 	  an error if trying to logout without being logged in.
@@ -198,7 +246,7 @@ Thu Jun 23 00:28:55 2005  Loic Dachary  <loic@gnu.org>
 	* pokernetwork/pokerclient.py (PokerClientProtocol.publishPacket): when 
 	  connection is lost, notify user and exit the client.
 
-Tue Jun 21 10:05:13 2005  Loic Dachary  <loic@gnu.org>
+Tue Jun 21 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerserver.py (PokerXML): base class and
 	  derived classes PokerXMLRPC and PokerSOAP to support 
@@ -206,33 +254,33 @@ Tue Jun 21 10:05:13 2005  Loic Dachary  <loic@gnu.org>
 
 	* examples/xmlrpc-soap.py: XML-RPC and SOAP client test
 	
-Mon Jun 20 21:52:46 2005  Loic Dachary  <loic@gnu.org>
+Mon Jun 20 2005  Loic Dachary  <loic@gnu.org>
 
 	* conf/poker.pem: self signed certificate
 	* pokerclient2d/poker2d.py: support SSL connections
 	* pokernetwork/pokerserver.py: allow SSL connections
 
-Mon Jun 20 09:21:42 2005  Loic Dachary  <loic@gnu.org>
+Mon Jun 20 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerserver.py: restructure to allow multiple
 	  protocols.
 
-Wed Jun 15 21:05:46 2005  Loic Dachary  <loic@gnu.org>
+Wed Jun 15 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.1
 
 	* debian/*: more robust installation process
 
-Mon Jun 06 17:00:04 2005  Loic Dachary  <loic@gnu.org>
+Mon Jun 06 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.hold): hold if in
 	  stream mode only. Also hold when observing a table.
 
-Sun Jun 05 12:09:59 2005  Loic Dachary  <loic@gnu.org>
+Sun Jun 05 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerbot.py (PokerBotFactory.__init__): name generation
 
-Fri Jun 03 21:16:42 2005  Loic Dachary  <loic@gnu.org>
+Fri Jun 03 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/lobby.c (handle_lobby): s/stud7/7stud/
 
@@ -252,6 +300,6 @@ Fri Jun 03 21:16:42 2005  Loic Dachary  <loic@gnu.org>
 	* pokernetwork/pokerclient.py (PokerClientProtocol.resendPackets): fill all game
 	  information.
 
-Fri May 06 10:31:37 2005  Loic Dachary  <loic@gnu.org>
+Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.0

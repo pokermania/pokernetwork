@@ -1,0 +1,69 @@
+#!@PYTHON@ 
+# -*- coding: iso-8859-1, mode: python -*-
+#
+# Copyright (C) 2004, 2005 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+import getopt
+import sys
+sys.path.insert(0, ".")
+sys.path.insert(0, "@top_srcdir@")
+
+from pokernetwork.config import Config
+from pokernetwork.pokerdatabase import PokerDatabase
+
+def usage():
+    print """
+pokerdatabaseupgrade [--help] [--dry-run] [--upgrades=directory] [configuration.xml]
+"""
+    
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hdu", ["help", "dry-run", "upgrades=" ])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    directory = "@POKER_NETWORK_PKGDATADIR@"
+    settings_file = "@POKER_NETWORK_PKGSYSCONFDIR@/poker.server.xml"
+    dry_run = False
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        if o in ("-d", "--dry-run"):
+            dry_run = True
+        if o in ("-u", "--upgrades"):
+            directory = a
+
+    if len(args) > 0:
+        (settings_file, ) = args
+
+    settings = Config([''])
+    settings.load(settings_file)
+    db = PokerDatabase(settings)
+    db.upgrade(directory, dry_run)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

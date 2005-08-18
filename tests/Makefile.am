@@ -1,4 +1,3 @@
-#!/bin/sh
 #
 # Copyright (C) 2005 Mekensleep
 #
@@ -24,32 +23,16 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
+MAINTAINERCLEANFILES = Makefile.in
 
-SCHEMA=../database/schema.sql
+EXTRA_DIST = \
+	createdatabase \
+	schema.sql \
+	poker.server.xml \
+	conf/poker.bot.xml.in \
+	conf/poker.client.xml.in \
+	conf/poker.server.xml.in \
+	conf/poker2d.xml.in \
+	conf/client.xml
 
-. ../tests/createdatabase
-
-python -u ../pokernetwork/pokerserver.py poker.server.xml > pokerserver.log 2>&1 &
-server_pid=$!
-echo "Server now running as process $server_pid with logs in pokerserver.log"
-sleep 1
-while : 
-do
-  python -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
-  bot_pid=$!
-  trap "kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
-  echo "Bots now running as process $bot_pid with logs in pokerbot.log"
-  wait $bot_pid
-exit 0
-  if wait $bot_pid
-  then
-    if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
-    then
-      exit -1
-    fi
-    sleep 1
-  else
-    break
-  fi
-done
-
+TESTS = upgrade

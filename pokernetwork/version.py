@@ -25,7 +25,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 # 
-from string import split
+from pokerengine.version import Version
+from pokernetwork import version_number
 
-( major, medium, minor ) = map(int, split("1.0.6", "."))
-
+version = Version(version_number)

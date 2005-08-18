@@ -26,7 +26,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.54)
-AC_INIT(poker-network, 1.0.6)
+AC_INIT(poker-network, [esyscmd(perl -n -e "print if(s/^version_number = \"(.*)\".*/\1/s)" pokernetwork/__init__.py)])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE()
 AM_CONFIG_HEADER([config.h])
@@ -41,10 +41,12 @@ AC_PROG_LIBTOOL
 AM_MAINTAINER_MODE
 
 AC_PATH_PROG(RSYNC, [rsync])
+AC_PATH_PROG(MYSQL, [mysql])
 
 AM_PATH_PYTHON([2.3])
 
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.6, [], [AC_MSG_ERROR(poker-engine is a mandatory library)])
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.6, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(poker-engine is a mandatory library)])
+AC_SUBST(POKERCONFIGUPGRADE, [`pkg-config --variable=pokerconfigupgrade poker-engine`])
 
 #
 # G++ specific debug and optimization flags
@@ -83,8 +85,8 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     
     AM_CC_PYTHON(2.3, yes)
     
-    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, [], [AC_MSG_ERROR(glib2 is a mandatory library)])
-    PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, [], [AC_MSG_ERROR(glade2 is a mandatory library)])
+    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(glib2 is a mandatory library)])
+    PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(glade2 is a mandatory library)])
 
     AC_SUBST(POKER2D_PKGDATADIR, [`eval echo $datadir/$PACKAGE/poker2d`])
 
@@ -93,8 +95,11 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
 
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 
+test x$prefix = xNONE && prefix="$ac_default_prefix"
+
 AC_SUBST(POKER_PREFIX, [$prefix])
 AC_SUBST(POKER_PYTHONDIR, [`eval echo $pythondir`])
+AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval echo $datadir/$PACKAGE`])
 AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $sysconfdir/$PACKAGE`])
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine`])
 
@@ -123,14 +128,14 @@ AC_SUBST(POKER_DBHOST)
 AC_ARG_WITH(poker-dbuser,
 [  --with-poker-dbuser=<user>    user name to connect to the database (default poker3d). ],
     [ POKER_DBUSER=$with_poker_dbuser ],
-    [ POKER_DBUSER=poker3d ] )
+    [ POKER_DBUSER=pokernetwork ] )
 AC_SUBST(POKER_DBUSER)
 
 AC_ARG_WITH(poker-dbuser-password,
 [  --with-poker-dbuser-password=<password>    password for the user used to 
                                               connect to the database (default poker3d). ],
     [ POKER_DBUSER_PASSWORD=$with_poker_dbuser_password ],
-    [ POKER_DBUSER_PASSWORD=poker3d ] )
+    [ POKER_DBUSER_PASSWORD=pokernetwork ] )
 AC_SUBST(POKER_DBUSER_PASSWORD)
 
 # Generate files
@@ -144,24 +149,34 @@ then
         pokerclient2d/data/Makefile
         ])
 fi
+AC_CONFIG_FILES([tests/upgrade], [chmod +x tests/upgrade])
 AC_CONFIG_FILES([
         poker-network.pc
         pokernetwork/pokerserver
         pokernetwork/pokerserver.8
-        pokernetwork/version.py
+        database/schema.sql
+        database/pokerdatabaseupgrade
+        database/pokerdatabaseupgrade.8
         conf/poker.bot.xml
         conf/poker.client.xml
         conf/poker.server.xml
+        tests/Makefile
         Makefile
 ])
 AC_OUTPUT
 
 cat <<!
 
-Unless you already have a poker database already configured, you will have
-to manually create the database $POKER_DATABASE, create the MySQL user
-$POKER_DBUSER with password $POKER_DBUSER_PASSWORD and populate the
-database with 
+If this is your first installation, you will have to manually create
+the MySQL database $POKER_DATABASE, create the MySQL user
+$POKER_DBUSER with password $POKER_DBUSER_PASSWORD, give it permissions
+on the $POKER_DATABASE database and populate the $POKER_DATABASE database with
+
 mysql -u root -p -h $POKER_DBHOST $POKER_DATABASE < database/schema.sql
+
+After ./configure ; make, and if you already have a previous version
+installed, you must upgrade your database using:
+
+database/pokerdatabaseupgrade --upgrades database conf/poker.server.xml
 
 !

@@ -1,4 +1,3 @@
-# -*- python -*-
 #
 # Copyright (C) 2005 Mekensleep
 #
@@ -24,8 +23,33 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-# 
-from string import split
+echo "Preparing the pokernetworktest database, enter the root user password."
+( 
 
-( major, medium, minor ) = map(int, split("@PACKAGE_VERSION@", "."))
+cat <<EOF
+
+USE mysql;
+
+DELETE FROM user WHERE User = 'pokernetworktest' AND Host = 'localhost';
+
+DELETE FROM db WHERE User = 'pokernetworktest' AND Host = 'localhost';
+
+DELETE FROM tables_priv WHERE User = 'pokernetworktest' AND Host = 'localhost';
+
+DELETE FROM columns_priv WHERE User = 'pokernetworktest' AND Host = 'localhost';
+
+GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , FILE , INDEX , ALTER , CREATE TEMPORARY TABLES ON * . * TO 'pokernetworktest'@'localhost'
+IDENTIFIED BY 'pokernetwork'
+WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;
+
+DROP DATABASE IF EXISTS pokernetworktest;
+CREATE DATABASE pokernetworktest;
+USE pokernetworktest;
+EOF
+
+cat $SCHEMA
+
+echo "$INIT_SQL"
+
+) | mysql -u root -p 
 

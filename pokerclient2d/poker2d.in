@@ -34,5 +34,5 @@ sys.path.insert(0, "@POKER_PYTHONDIR@")
 
 from pokerclient2d.poker2d import run
 
-run(sys.argv, "@POKER2D_PKGDATADIR@/poker2d.xml")
+run(sys.argv, "@POKER2D_PKGDATADIR@")
 

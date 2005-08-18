@@ -30,10 +30,10 @@ from time import time
 from twisted.internet import reactor, protocol
 
 from pokernetwork.packets import Packet, PacketFactory, PacketNames
-from pokernetwork import version
+from pokernetwork.version import version
 
-PROTOCOL_MAJOR = "%03d" % version.major
-PROTOCOL_MINOR = "%d%02d" % ( version.medium, version.minor )
+PROTOCOL_MAJOR = "%03d" % version.major()
+PROTOCOL_MINOR = "%d%02d" % ( version.medium(), version.minor() )
 
 class Queue:
     def __init__(self):

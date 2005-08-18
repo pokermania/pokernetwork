@@ -1,4 +1,6 @@
 #
+# -*- coding: iso-8859-1 -*-
+#
 # Copyright (C) 2004, 2005 Mekensleep
 #
 # Mekensleep
@@ -42,7 +44,6 @@ import re
 from traceback import print_exc, print_stack
 
 from MySQLdb.cursors import DictCursor
-import MySQLdb
 
 from OpenSSL import SSL
 
@@ -77,14 +78,15 @@ except ImportError:
 
 from twisted.python import components
 
-from pokernetwork.server import PokerServerProtocol
-from pokernetwork.user import User, checkNameAndPassword, checkName, checkPassword
-from pokernetwork.config import Config
-
 from pokerengine.pokergame import PokerGameServer, PokerPlayer, history2messages
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 from pokerengine.pokertournament import *
+
+from pokernetwork.server import PokerServerProtocol
+from pokernetwork.user import User, checkNameAndPassword, checkName, checkPassword
+from pokernetwork.config import Config
+from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
 from pokernetwork.user import User
 
@@ -3048,20 +3050,6 @@ class PokerService(service.Service):
         else:
             return 0
 
-class PokerDatabase:
-
-    def __init__(self, settings):
-        database = settings.headerGetProperties("/server/database")[0]
-        self.db = MySQLdb.connect(host = database["host"],
-                                  user = database["user"],
-                                  passwd = database["password"],
-                                  db = database["name"])
-        print "Database connection to %s/%s open" % ( database["host"], database["name"] )        
-        self.verbose = settings.headerGetInt("/server/@verbose")
-
-    def cursor(self, *args, **kwargs):
-        return self.db.cursor(*args, **kwargs)
-
 class PokerAuth:
 
     def __init__(self, db, settings):
@@ -3160,7 +3148,7 @@ class PokerXML(resource.Resource):
         del session.avatar
 
     def render(self, request):
-        if self.verbose > 5:
+        if self.verbose > 2:
             print "PokerXML::render " + request.content.read()
         request.content.seek(0, 0)
         if self.encoding is not None:
@@ -3243,13 +3231,35 @@ class PokerXML(resource.Resource):
     def maps2result(self, maps):
         pass
 
+    def fromutf8(self, tree):
+        return self.walk(tree, lambda x: x.encode(self.encoding))
+
+    def toutf8(self, tree):
+        return self.walk(tree, lambda x: unicode(x, self.encoding))
+
+    def walk(self, tree, convert):
+        if type(tree) is TupleType or type(tree) is ListType:
+            result = map(lambda x: self.walk(x, convert), tree)
+            if type(tree) is TupleType:
+                return tuple(result)
+            else:
+                return result
+        elif type(tree) is DictionaryType:
+            for (key, value) in tree.iteritems():
+                tree[key] = self.walk(value, convert)
+            return tree
+        elif ( type(tree) is UnicodeType or type(tree) is StringType ):
+            return convert(tree)
+        else:
+            return tree
+
 import xmlrpclib
 
 class PokerXMLRPC(PokerXML):
 
     def getArguments(self, request):
         ( args, functionPath ) = xmlrpclib.loads(request.content.read())
-        return args
+        return self.fromutf8(args)
     
     def maps2result(self, maps):
         return xmlrpclib.dumps((maps, ), methodresponse = 1)
@@ -3271,10 +3281,10 @@ class PokerSOAP(PokerXML):
         if callable(kwargs):
             kwargs = kwargs()
 
-        return SOAPpy.simplify(args[0])
+        return self.fromutf8(SOAPpy.simplify(args[0]))
     
     def maps2result(self, maps):
-        return SOAPpy.buildSOAP(kw = {'Result': maps},
+        return SOAPpy.buildSOAP(kw = {'Result': self.toutf8(maps)},
                                 method = 'returnPacket',
                                 encoding = self.encoding)
 

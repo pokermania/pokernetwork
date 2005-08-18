@@ -247,7 +247,6 @@ class PokerRsync(PokerChild, ProcessProtocol):
                                                                            rsync)
         if os.name != "posix":
             self.rsync = map(lambda x: '"' + x + '"', self.rsync)
-        # configure with datapath and such
         return True
 
     def spawn(self):

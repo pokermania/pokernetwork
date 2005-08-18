@@ -23,6 +23,14 @@
 -- Authors:
 --  Loic Dachary <loic@gnu.org>
 --
+drop table if exists server;
+
+create table server (
+        version varchar(16) not null
+);
+
+insert into server (version) values ("@PACKAGE_VERSION@");
+
 drop table if exists users;
 
 create table users (
@@ -36,7 +44,7 @@ create table users (
 	password varchar(32),
 	privilege int default 1,
 
-	play_money int default 10000,
+	play_money int default 1000000,
         custom_money int default 0,
 	point_money int default 5000,
 

@@ -1,8 +1,8 @@
-Crash therapy for nihphobia* for windows developers with Q&A
+Crash therapy for nihphobia for windows developers with Q&A
 
 Nihphobia is a variant of agoraphobia where the subject (usually an
 experienced windows developer) feels increasingly incofortable when
-surrounded by more than two software maker. The symptoms are as
+surrounded by more than two software makers. The symptoms are as
 follows:
 
         - Avoid calling other processes or otherwise communicate with
@@ -58,7 +58,7 @@ Level 3: A program can allocate resources from the heap, using malloc (C)
 Question: How do you free such a resource when returned by a dynamic library
 function ?
 
-Answer: You recompile all dynamic libs with the option FOOBAR
+Answer: You recompile all dynamic libs with the option BLANK
 (intentionaly left blank as it may change depending on the
 compiler). If you don't, your program will crash because each dynamic
 library has its own stack. And your program has yet another. This
@@ -72,8 +72,9 @@ Level 4: Allocators are designed to minimize the fragmentation of the heap.
 Question: How do you avoid hysteresis when the heap is too fragmented ?
 
 Answer: You can't. 
+
 Corrolary: Don't use use allocation in time critical code or you
-will randomly experience severe drop of performance. Carefully design
+will randomly experience a severe drop of performance. Carefully design
 your code and architecture your projects to avoid dynamic allocation.
 This has a major impact on the architecture and should therefore be
 made at a very early stage. Alternatively you can replace the standard
@@ -143,7 +144,7 @@ bool killit(const char *name)
 
 
 ----------------------------------------------------------------------
-Level 7: A software package does not depend on anything
+Level 7: A software package does not depend on anything.
 
 Question: How do you manage the dependency graph of the packages installed
   on the machine ?

@@ -1,7 +1,8 @@
 usr/lib/python2.3/site-packages/pokernetwork
 usr/lib/python2.3/site-packages/pokerui
-usr/share/poker-network/schema.sql
-etc
+usr/share/poker-network/*.sql
 usr/sbin
+usr/share/poker-network/conf
+usr/share/poker-network/upgrades
 usr/share/man/man8
 usr/lib/pkgconfig

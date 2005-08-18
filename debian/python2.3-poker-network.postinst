@@ -76,22 +76,37 @@ case "$1" in
 	    . /usr/share/wwwconfig-common/mysql-createdb.sh
 	    . /usr/share/wwwconfig-common/mysql-createuser.sh
 	    . /usr/share/wwwconfig-common/mysql.get
+
+	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
+            if diff $tmpfile /etc/poker-network/poker.server.xml > /dev/null
+            then
+                mv  $tmpfile /etc/poker-network/poker.server.xml
+                chmod 600 /etc/poker-network/poker.server.xml
+            else
+                rm $tmpfile
+            fi
+
  	    if ! eval $mysqlcmd -h "$dbserver" -f -e "\"use $dbname; show tables;\"" | grep -e "user2table" > /dev/null 2>&1 ; then
  		$mysqlcmd  -h "$dbserver" --password="$dbpass" -u $dbuser $dbname < /usr/share/poker-network/schema.sql
+            else
+                /usr/sbin/pokerdatabaseupgrade /etc/poker-network/poker.server.xml
  	    fi
-	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
-	    mv  $tmpfile /etc/poker-network/poker.server.xml
-            chmod 600 /etc/poker-network/poker.server.xml
             poker_network_host=localhost
             rm -f /etc/poker-network/lockfile
 	fi
 
-        for conf_file in /etc/poker-network/poker.client.xml /etc/poker-network/poker.bot.xml 
-        do
-            sed -e "s/\%HOST\%/$poker_network_host/" $conf_file > $tmpfile
-            mv  $tmpfile $conf_file
-            chmod 644 $conf_file
+        for conf_file in /etc/poker-network/poker.client.xml /etc/poker-network/poker.bot.xml ; do
+            if grep '%HOST%' $conf_file > /dev/null ; then
+                sed -e "s/\%HOST\%/$poker_network_host/" $conf_file > $tmpfile
+                mv $tmpfile $conf_file
+                chmod 644 $conf_file
+            fi
         done
+
+        /usr/sbin/pokerconfigupgrade --verbose=1 --module=pokernetwork --reference=/usr/share/poker-network/conf /etc/poker-network 
+	for file in bot client server ; do
+            /usr/sbin/pokerconfigupgrade --verbose=1 --module=pokernetwork --upgrades=/usr/share/poker-network/upgrades/poker.$file /etc/poker-network/poker.$file.xml
+	done
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

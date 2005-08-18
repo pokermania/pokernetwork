@@ -1,16 +1,15 @@
 Template: python2.3-poker-network/skip
 Type: boolean
 Default: true
-_Description: poker-network server installation.
- Do you want to configure and run the poker-network server ? If you do,
- make sure you already have administrative rights on a running MySQL
- server. If you do not want to run the poker-network server on this
- machine, you will be prompted for the hostname or the IP of a running
- poker-network server.
+_Description: Do you want to configure and run the poker-network server ?
+ If you want to configure and run a poker-network server, make sure you
+ have administrative rights on a running MySQL server. If you do not want
+ to run the poker-network server on this machine, you will be prompted for
+ the hostname or the IP of a running poker-network server.
 
 Template: python2.3-poker-network/abort
 Type: note
-_Description: Skipping poker-network server installation.
+_Description: Skipping poker-network server installation
  If you want to run poker-network at a later time, you will need to
  configure it by hand or by running dpkg-reconfigure
  python2.3-poker-network.
@@ -18,54 +17,54 @@ _Description: Skipping poker-network server installation.
 Template: python2.3-poker-network/host
 Type: string
 Default: localhost
-_Description: Please enter the hostname or IP of the default poker-network server.
+_Description: Hostname or IP of the default poker-network server:
  The clients based on poker-network installed on the same machine will be
  able to use this poker-network server host as a default, if needed.
 
 Template: python2.3-poker-network/db/host
 Type: string
 Default: localhost
-_Description: Please enter the MySQL server host name:
+_Description: MySQL server host name:
  This must be the host-name or IP address where the MySQL server is
  running.
 
 Template: python2.3-poker-network/db/name
 Type: string
 Default: pokernetwork
-_Description: Please enter poker-network database name:
+_Description: poker-network database name:
  This is the name of the database that poker-network will use. A new
  database of that name will be created on the MySQL server.
 
 Template: python2.3-poker-network/db/user/name
 Type: string
 Default: pokernetwork
-_Description: Please choose a MySQL user name dedicated to poker-network:
+_Description: MySQL user name dedicated to poker-network:
  This is the user name that poker-network will use to access the database.
  A MySQL user of that name will be created on the MySQL server, with
  permissions restricted to the database dedicated to poker-network.
 
 Template: python2.3-poker-network/db/user/password
 Type: password
-_Description: Please enter a password for the poker-network MySQL user:
+_Description: Password for the poker-network MySQL user:
  This is the password that poker-network will use, along with the MySQL
  user name you chose, to access the poker-network database.
 
 Template: python2.3-poker-network/db/user/password/confirm
 Type: password
-_Description: Please retype the password of the poker-network MySQL user:
+_Description: Retype the password of the poker-network MySQL user:
  This is the password that poker-network will use, along with the MySQL
  user name you chose, to access the poker-network database.
 
 Template: python2.3-poker-network/db/user/password/mismatch
 Type: text
-_Description: Passwords mismatch.
+_Description: Passwords mismatch
  The poker-network MySQL user passwords you entered do not match. Please
  try again.
 
 Template: python2.3-poker-network/db/admin/name
 Type: string
 Default: root
-_Description: Please enter the MySQL server administrator user name:
+_Description: MySQL server administrator user name:
  The MySQL server administrator user will be used only during
  the installation process to do the following:
  .
@@ -77,7 +76,7 @@ _Description: Please enter the MySQL server administrator user name:
 
 Template: python2.3-poker-network/db/admin/password
 Type: password
-_Description: Please enter the MySQL server administrator password (if any):
+_Description: MySQL server administrator password (if any):
  This is the password that will be used along with the MySQL server
  administrator name.
  .

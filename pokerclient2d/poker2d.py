@@ -47,13 +47,14 @@ from time import sleep
 from random import choice, uniform, randint
 
 from pokernetwork.config import Config
-from pokernetwork import version
+from pokernetwork.version import version
 
 class Main:
     "Poker gameplay"
 
     def __init__(self, configfile, settingsfile):
         self.settings = Config([''])
+#        self.settings.verbose = 1
         self.settings.load(settingsfile)
         self.shutting_down = False
         if self.settings.header:
@@ -177,7 +178,7 @@ class PokerClientFactory2D(PokerClientFactory):
         self.skin.interfaceReady(self.interface, self.display)
         self.renderer.interfaceReady(self.interface)
         if self.settings.headerGet("/settings/@upgrades") == "yes":
-            self.checkClientVersion((version.major, version.medium, version.minor))
+            self.checkClientVersion((version.major(), version.medium(), version.minor()))
         else:
             self.clientVersionOk()
 
@@ -261,13 +262,16 @@ class PokerClientFactory2D(PokerClientFactory):
                 self.interface.messageBox("Lost connection to poker\nserver at %s:%d" % ( self.host, self.port ))
                 self.interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, self.quit)
     
-def run(argv, default_settingsfile):
+def run(argv, datadir):
     user_dir = expanduser("~/.poker2d")
     settingsfile = len(argv) > 1 and argv[1] or user_dir + "/poker2d.xml"
     configfile = len(argv) > 2 and argv[2] or "client.xml"
 
+    Config.upgrades_repository = datadir + "/upgrades"
+    
     if os.name == "posix":
         conf_file = user_dir + "/poker2d.xml"
+        default_settingsfile = datadir + "/poker2d.xml"
         if not exists(conf_file) and exists(default_settingsfile):
             if not exists(user_dir):
                 makedirs(user_dir)
@@ -291,7 +295,7 @@ def run(argv, default_settingsfile):
                 print sys.exc_value
 
 if __name__ == "__main__":
-    run(sys.argv, "")
+    run(sys.argv, ".")
 #
 # Emacs debug:
 # M-x pdb

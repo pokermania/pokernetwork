@@ -32,7 +32,7 @@ else
   POKER2D_SUBDIRS = 
 endif
 
-SUBDIRS = ${POKER2D_SUBDIRS}
+SUBDIRS = ${POKER2D_SUBDIRS} tests
 
 MAINTAINERCLEANFILES = \
 	INSTALL \
@@ -53,17 +53,21 @@ MAINTAINERCLEANFILES = \
 	py-compile
 
 pkgsysconfdir = ${sysconfdir}/${PACKAGE}
-dist_pkgsysconf_DATA = \
+nobase_dist_pkgdata_DATA = \
 	conf/poker.client.xml \
 	conf/poker.bot.xml \
 	conf/poker.server.xml \
-	conf/poker.pem
+	conf/poker.pem \
+	upgrades/poker.bot/1.0.5-1.0.6.xsl \
+	upgrades/poker.client/1.0.5-1.0.6.xsl \
+	upgrades/poker.server/1.0.5-1.0.6.xsl
 
 pokernetworkdir = ${pyexecdir}/pokernetwork
 pokernetwork_PYTHON = \
 	pokernetwork/client.py \
 	pokernetwork/protocol.py \
 	pokernetwork/server.py \
+	pokernetwork/pokerdatabase.py \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerclient.py \
 	pokernetwork/pokerchildren.py \
@@ -76,9 +80,13 @@ pokernetwork_PYTHON = \
 	pokernetwork/user.py \
 	pokernetwork/version.py
 
-man_MANS = pokernetwork/pokerserver.8
+man_MANS = \
+	pokernetwork/pokerserver.8 \
+	database/pokerdatabaseupgrade.8
 
-sbin_SCRIPTS = pokernetwork/pokerserver
+sbin_SCRIPTS = \
+	pokernetwork/pokerserver \
+	database/pokerdatabaseupgrade
 
 pokeruidir = ${pyexecdir}/pokerui
 pokerui_PYTHON = \
@@ -92,7 +100,8 @@ pokerui_PYTHON = \
 
 pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
-	database/schema.sql
+	database/schema.sql \
+	database/1.0.5-1.0.6.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \
@@ -118,5 +127,15 @@ clean-local:
 	rm -f */*.py[co]
 	rm -f examples/*.log
 
-install-data-hook:
-	chmod 600 ${DESTDIR}${pkgsysconfdir}/poker.server.xml
+install-data-local:
+	mkdir -p "${DESTDIR}${pkgsysconfdir}"
+	${POKERCONFIGUPGRADE} --verbose=1 --reference=${srcdir}/conf "${DESTDIR}${pkgsysconfdir}"
+	for file in bot client server ; do \
+		export PYTHONPATH=${srcdir} ; \
+		${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork --upgrades=${srcdir}/upgrades/poker.$$file "${DESTDIR}${pkgsysconfdir}/poker.$$file.xml" ; \
+	done
+	chmod 600 "${DESTDIR}${pkgsysconfdir}/poker.server.xml"
+	chmod u+w "${DESTDIR}${pkgsysconfdir}"
+
+uninstall-local:
+	rm -fr "${DESTDIR}${pkgsysconfdir}"
