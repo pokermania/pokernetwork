@@ -697,8 +697,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     game.distributeMoney()
 
                     winners = game.winners[:]
-                    print "WINNERS "
-                    print winners
                     winners.sort()
                     packet.serials.sort()
                     if winners != packet.serials:
@@ -998,7 +996,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     packet.visibles = "hole"
                     packets.append(packet)
 
-        print "SHOWDOWN PACKET"
         for (serial, best) in game.serial2best.iteritems():
             for (side, (value, bestcards)) in best.iteritems():
                 if serial in game.side2winners[side]:
