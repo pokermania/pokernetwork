@@ -62,6 +62,8 @@ AC_ARG_ENABLE(upgrades,
 AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
 AC_SUBST(UPGRADES_SOURCE, $enableval)
 
+test x$prefix = xNONE && prefix="$ac_default_prefix"
+
 AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION
 ], [
@@ -94,8 +96,6 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
 ])
 
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
-
-test x$prefix = xNONE && prefix="$ac_default_prefix"
 
 AC_SUBST(POKER_PREFIX, [$prefix])
 AC_SUBST(POKER_PYTHONDIR, [`eval echo $pythondir`])
