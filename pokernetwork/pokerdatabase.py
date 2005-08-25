@@ -73,9 +73,9 @@ class PokerDatabase:
         
     def checkVersion(self):
         if version != self.version:
-            print "ERROR: PokerDatabase: database version %s must be the same as the poker-network version %s" % ( self.version, version )
+            print "PokerDatabase: database version %s must be the same as the poker-network version %s" % ( self.version, version )
             if version > self.version:
-                print "ERROR: PokerDatabase: upgrade the database with pokerdatabaseupgrade"
+                print "PokerDatabase: upgrade the database with pokerdatabaseupgrade"
                 raise ExceptionDatabaseTooOld
             else:
                 print "ERROR: PokerDatabase: upgrade poker-network to version %s or better" % self.version
@@ -94,6 +94,7 @@ class PokerDatabase:
                 if not dry_run:
                     if os.system(mysql + " < " + file):
                         raise ExceptionUpgradeFailed, "upgrade failed"
+            print "PokerDatabase: upgraded database to version %s" % version
             if not dry_run:
                 self.setVersionInDatabase(version)
                 self.version = Version(self.getVersionFromDatabase())

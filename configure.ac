@@ -154,7 +154,10 @@ then
         pokerclient2d/data/Makefile
         ])
 fi
-AC_CONFIG_FILES([tests/upgrade], [chmod +x tests/upgrade])
+AC_CONFIG_FILES([
+        tests/upgrade
+        database/pokerdatabaseupgrade
+], [chmod +x $ac_file])
 AC_CONFIG_FILES([
         poker-network.pc
         pokernetwork/pokerserver
@@ -162,7 +165,6 @@ AC_CONFIG_FILES([
         pokernetwork/pokerbot
         pokernetwork/pokerbot.8
         database/schema.sql
-        database/pokerdatabaseupgrade
         database/pokerdatabaseupgrade.8
         conf/poker.bot.xml
         conf/poker.client.xml
@@ -177,13 +179,16 @@ cat <<!
 If this is your first installation, you will have to manually create
 the MySQL database $POKER_DATABASE, create the MySQL user
 $POKER_DBUSER with password $POKER_DBUSER_PASSWORD, give it permissions
-on the $POKER_DATABASE database and populate the $POKER_DATABASE database with
+on the $POKER_DATABASE database and populate the $POKER_DATABASE database.
 
-mysql -u root -p -h $POKER_DBHOST $POKER_DATABASE < database/schema.sql
+        mysqladmin -h $POKER_DBHOST -u root -p create $POKER_DATABASE
+        mysql -h $POKER_DBHOST -u root -p $POKER_DATABASE < database/schema.sql 
+        mysql -h $POKER_DBHOST -u root -p -e "insert into user (Host, User, Password, Select_priv, Insert_priv, Update_priv, Delete_priv) values ('YOUR_HOSTNAME', '$POKER_DBUSER', password('$POKER_DBUSER_PASSWORD'), 'Y', 'Y', 'Y', 'Y')" mysql
+        mysqladmin -h $POKER_DBHOST -u root -p reload
 
-After ./configure ; make, and if you already have a previous version
-installed, you must upgrade your database using:
+If you already have a previous version installed, you must upgrade
+your database using:
 
-database/pokerdatabaseupgrade --upgrades database conf/poker.server.xml
+database/pokerdatabaseupgrade --upgrades=database conf/poker.server.xml
 
 !

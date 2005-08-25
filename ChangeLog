@@ -1,5 +1,8 @@
 Thu Aug 25 2005  Loic Dachary  <loic@gnu.org>
 
+	* pokernetwork/pokerdatabase.py (PokerDatabase.upgrade): do not report
+	  obsolete database as an error and display upgrade success
+
 	* pokernetwork/__init__.py (protocol_number): 
 	* pokernetwork/protocol.py: protocol version is independent from the
 	  package version
