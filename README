@@ -56,14 +56,28 @@ http://sf.net/projects/pokersource/
 Installation
 
 Debian GNU/Linux : use the sid package
-Other GNU/Linux or Unices : ./bootstrap ; ./configure ; make ; make install
+
+Other GNU/Linux or Unices : 
+        ./bootstrap
+        ./configure 
+        make ; make install
         If the GTK client is not wanted, ./configure --disable-poker2d
-Others : the client part is known to work
+
+        Create a mysql database for the server, a mysql user and populate the database:
+
+        mysqladmin -u root -p create pokernetwork
+        mysql -u root -p pokernetwork < /usr/local/share/poker-network/schema.sql 
+        mysql -u root -p -e "insert into user (Host, User, Password, Select_priv, Insert_priv, Update_priv, Delete_priv) values ('localhost', 'pokernetwork', password('pokernetwork'), 'Y', 'Y', 'Y', 'Y')" mysql
+        mysql -u root -p -e "insert into db (Host, Db, User, Select_priv, Insert_priv, Update_priv, Delete_priv) values ('localhost', 'pokernetwork', password('pokernetwork'), 'Y', 'Y', 'Y', 'Y')" mysql
+        mysqladmin -u root -p reload
+
+Others : the client part is known to work but there is no howto
 
 ======================================================================
 Usage
 
 Server: /usr/local/sbin/pokerserver
+Poker Bot to practice: /usr/local/sbin/pokerbot
 Client: /usr/local/games/poker2d
 
 ======================================================================

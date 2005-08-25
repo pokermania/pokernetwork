@@ -469,7 +469,7 @@ class Bot(internet.TCPClient):
                 self._connection.transport.protocol.sendPacket(PacketQuit())
         return internet.TCPClient.stopService(self)
 
-def run(argv):
+def makeApplication(argv):
     configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.bot.xml"
 
     settings = pokernetworkconfig.Config([''])
@@ -503,9 +503,9 @@ def run(argv):
             bot.setServiceParent(services)
     return bots
 
-application = run(sys.argv[1:])
+application = makeApplication(sys.argv[1:])
 
-if __name__ == '__main__':
+def run():
     try:
         app.startApplication(application, None)
         reactor.run()
@@ -514,3 +514,6 @@ if __name__ == '__main__':
             print_exc()
         else:
             print sys.exc_value
+
+if __name__ == '__main__':
+    run()

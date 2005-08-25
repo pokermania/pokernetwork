@@ -3638,3 +3638,15 @@ class PacketPokerPlayerSelf(PacketPokerId):
         PacketPokerId.__init__(self, *args, **kwargs)
 
 PacketFactory[PACKET_POKER_PLAYER_SELF] = PacketPokerPlayerSelf
+
+########################################
+
+PACKET_POKER_GET_PLAYER_INFO = 232
+PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
+
+class PacketPokerGetPlayerInfo(Packet):
+
+    type = PACKET_POKER_GET_PLAYER_INFO
+
+PacketFactory[PACKET_POKER_GET_PLAYER_INFO] = PacketPokerGetPlayerInfo
+

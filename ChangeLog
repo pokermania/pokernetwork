@@ -1,3 +1,24 @@
+Thu Aug 25 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/__init__.py (protocol_number): 
+	* pokernetwork/protocol.py: protocol version is independent from the
+	  package version
+
+	* Makefile.am (sbin_SCRIPTS): pokerbot man page / program installation.
+
+	* pokernetwork/pokerbot.in: standalone bot program.
+
+	* pokernetwork/pokerbot.8.in: manual page for standalone bot program.
+
+	* pokernetwork/pokerbot.py (makeApplication): make run function to
+	  ease launch as a standalone program instead of a twisted daemon.
+
+Wed Aug 24 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerpackets.py: GetPlayerInfo packet
+
+	* configure.ac (UPGRADES_SOURCE): set default before it is used.
+
 Wed Aug 17 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.6

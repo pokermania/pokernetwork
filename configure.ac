@@ -104,36 +104,41 @@ AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $sysconfdir/$PACKAGE`])
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine`])
 
 AC_ARG_WITH(poker-server-host,
-[  --with-poker-server-host=<hostname>    fully qualified host name of the 
-                                          default poker server to which the
-                                          poker client will connect (default localhost). ],
+[  --with-poker-server-host=<hostname>
+                          fully qualified host name of the 
+                          default poker server to which the
+                          poker client will connect (default localhost). ],
     [ POKER_SERVER_HOST=$with_poker_server_host ],
     [ POKER_SERVER_HOST=localhost ] )
 AC_SUBST(POKER_SERVER_HOST)
 
 AC_ARG_WITH(poker-database,
-[  --with-poker-database=<name>    name of the MySQL database the poker
-                                   server will use to store information. 
-                                   (default pokernetwork)],
+[  --with-poker-database=<name>
+                          name of the MySQL database the poker
+                          server will use to store information. 
+                          (default pokernetwork)],
     [ POKER_DATABASE=$with_poker_database ],
     [ POKER_DATABASE=pokernetwork ] )
 AC_SUBST(POKER_DATABASE)
 
 AC_ARG_WITH(poker-dbhost,
-[  --with-poker-dbhost=<hostname>    hostname of the MySQL server (default localhost). ],
+[  --with-poker-dbhost=<hostname>
+                          hostname of the MySQL server (default localhost). ],
     [ POKER_DBHOST=$with_poker_dbhost ],
     [ POKER_DBHOST=localhost ] )
 AC_SUBST(POKER_DBHOST)
 
 AC_ARG_WITH(poker-dbuser,
-[  --with-poker-dbuser=<user>    user name to connect to the database (default poker3d). ],
+[  --with-poker-dbuser=<user>
+                          user name to connect to the database (default pokernetwork). ],
     [ POKER_DBUSER=$with_poker_dbuser ],
     [ POKER_DBUSER=pokernetwork ] )
 AC_SUBST(POKER_DBUSER)
 
 AC_ARG_WITH(poker-dbuser-password,
-[  --with-poker-dbuser-password=<password>    password for the user used to 
-                                              connect to the database (default poker3d). ],
+[  --with-poker-dbuser-password=<password>
+                          password for the user used to 
+                          connect to the database (default pokernetwork). ],
     [ POKER_DBUSER_PASSWORD=$with_poker_dbuser_password ],
     [ POKER_DBUSER_PASSWORD=pokernetwork ] )
 AC_SUBST(POKER_DBUSER_PASSWORD)
@@ -154,6 +159,8 @@ AC_CONFIG_FILES([
         poker-network.pc
         pokernetwork/pokerserver
         pokernetwork/pokerserver.8
+        pokernetwork/pokerbot
+        pokernetwork/pokerbot.8
         database/schema.sql
         database/pokerdatabaseupgrade
         database/pokerdatabaseupgrade.8

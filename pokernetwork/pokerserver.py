@@ -236,6 +236,13 @@ class PokerAvatar:
                 print "attempt to get user info for user %d by user %d" % ( packet.serial, self.getSerial() )
             return
 
+        if packet.type == PACKET_POKER_GET_USER_INFO:
+            if self.getSerial() == packet.serial:
+                self.getUserInfo(packet.serial)
+            else:
+                print "attempt to get user info for user %d by user %d" % ( packet.serial, self.getSerial() )
+            return
+
         elif packet.type == PACKET_POKER_GET_PERSONAL_INFO:
             if self.getSerial() == packet.serial:
                 self.getPersonalInfo(packet.serial)

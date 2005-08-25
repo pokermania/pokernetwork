@@ -5,7 +5,7 @@ _Description: Do you want to configure and run the poker-network server ?
  If you want to configure and run a poker-network server, make sure you
  have administrative rights on a running MySQL server. If you do not want
  to run the poker-network server on this machine, you will be prompted for
- the hostname or the IP of a running poker-network server.
+ the hostname or the IP address of a running poker-network server.
 
 Template: python2.3-poker-network/abort
 Type: note
@@ -17,7 +17,7 @@ _Description: Skipping poker-network server installation
 Template: python2.3-poker-network/host
 Type: string
 Default: localhost
-_Description: Hostname or IP of the default poker-network server:
+_Description: Hostname or IP address of the default poker-network server:
  The clients based on poker-network installed on the same machine will be
  able to use this poker-network server host as a default, if needed.
 
@@ -25,8 +25,8 @@ Template: python2.3-poker-network/db/host
 Type: string
 Default: localhost
 _Description: MySQL server host name:
- This must be the host-name or IP address where the MySQL server is
- running.
+ Please enter the the hostname or the IP address of the machine
+ where the MySQL server is running.
 
 Template: python2.3-poker-network/db/name
 Type: string

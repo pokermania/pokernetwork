@@ -82,10 +82,12 @@ pokernetwork_PYTHON = \
 
 man_MANS = \
 	pokernetwork/pokerserver.8 \
+	pokernetwork/pokerbot.8 \
 	database/pokerdatabaseupgrade.8
 
 sbin_SCRIPTS = \
 	pokernetwork/pokerserver \
+	pokernetwork/pokerbot \
 	database/pokerdatabaseupgrade
 
 pokeruidir = ${pyexecdir}/pokerui
