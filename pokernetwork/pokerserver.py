@@ -121,6 +121,11 @@ class PokerAvatar:
         self.user.serial = serial
         self.user.name = name
         self.user.privilege = privilege
+
+        player_info = self.service.getPlayerInfo(serial)
+        self.user.url = player_info.url
+        self.user.outfit = player_info.outfit
+        
         self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
         self.service.serial2client[serial] = self
         if self.service.verbose:
@@ -227,6 +232,10 @@ class PokerAvatar:
 
         if packet.type == PACKET_LOGIN:
             self.auth(packet)
+            return
+
+        if packet.type == PACKET_POKER_GET_PLAYER_INFO:
+            self.sendPacketVerbose(self.getPlayerInfo())
             return
 
         if packet.type == PACKET_POKER_GET_USER_INFO:
@@ -525,10 +534,15 @@ class PokerAvatar:
         self.service.setPersonalInfo(packet)
 
     def getPlayerInfo(self):
-        return PacketPokerPlayerInfo(serial = self.getSerial(),
-                                     name = self.getName(),
-                                     url = self.user.url,
-                                     outfit = self.user.outfit)
+        if self.user.isLogged():
+            return PacketPokerPlayerInfo(serial = self.getSerial(),
+                                         name = self.getName(),
+                                         url = self.user.url,
+                                         outfit = self.user.outfit)
+        else:
+            return PacketError(code = PacketPokerGetPlayerInfo.NOT_LOGGED,
+                               message = "Not logged in",
+                               other_type = PACKET_POKER_GET_PLAYER_INFO)
     
     def listPlayers(self, packet):
         table = self.service.getTable(packet.game_id)
@@ -2115,7 +2129,7 @@ class PokerService(service.Service):
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
         from_table = self.getTable(from_game_id)
-        from_table.movePlayer(from_table.serial2client[serial], serial, to_game_id)
+        from_table.movePlayer(from_table.serial2client.get(serial, None), serial, to_game_id)
         cursor = self.db.cursor()
         sql = "update user2tourney set table_serial = %d where user_serial = %d and tourney_serial = %d" % ( to_game_id, serial, tourney.serial ) 
         if self.verbose > 4: print "tourneyMovePlayer: " + sql
@@ -2464,8 +2478,8 @@ class PokerService(service.Service):
     def getPlayerInfo(self, serial):
         placeholder = PacketPokerPlayerInfo(serial = serial,
                                             name = "anonymous",
-                                            url= "default",
-                                            outfit = "default")
+                                            url= "random",
+                                            outfit = "random")
         if serial == 0:
             return placeholder
         
@@ -2476,6 +2490,8 @@ class PokerService(service.Service):
             print " *ERROR* getPlayerInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return placeholder
         (name,skin_url,skin_outfit) = cursor.fetchone()
+        if skin_outfit == None:
+            skin_outfit = "random"
         cursor.close()
         return PacketPokerPlayerInfo(serial = serial,
                                      name = name,

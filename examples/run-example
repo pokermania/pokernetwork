@@ -25,14 +25,15 @@
 #  Loic Dachary <loic@gnu.org>
 #
 
+SERVER_CONFIG=${1:-poker.server.xml}
 SCHEMA=../database/schema.sql
 
 . ../tests/createdatabase
 
-python -u ../pokernetwork/pokerserver.py poker.server.xml > pokerserver.log 2>&1 &
+python -u ../pokernetwork/pokerserver.py ${SERVER_CONFIG} > pokerserver.log 2>&1 &
 server_pid=$!
 echo "Server now running as process $server_pid with logs in pokerserver.log"
-sleep 1
+sleep 3 # wait for server to bootstrap
 while : 
 do
   python -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &

@@ -47,8 +47,7 @@ class PokerSkin:
 
     def __init__(self, *args, **kwargs):
         self.settings = kwargs['settings']
-        self.url = self.settings.headerGet("/settings/skin/@url") or "random"
-        self.outfit = self.settings.headerGet("/settings/skin/@outfit") or "random"
+        ( self.url, self.outfit ) = self.interpret("random", "random")
 
     def destroy(self):
         pass
@@ -452,6 +451,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.user.serial = packet.serial
         self.sendPacket(PacketPokerGetUserInfo(serial = packet.serial))
 
+    def handlePlayerInfo(self, packet):
+        skin = self.factory.getSkin()
+        ( url, outfit ) = skin.interpret(packet.url, packet.outfit)
+        skin.setUrl(url)
+        skin.setOutfit(outfit)
+
     def logout(self):
         self.sendPacket(PacketLogout())
         self.user.logout()
@@ -533,10 +538,14 @@ class PokerClientProtocol(UGAMEClientProtocol):
         
         elif packet.type == PACKET_SERIAL:
             self.handleSerial(packet)
-            self.sendPacket(PacketPokerPlayerInfo(serial = self.getSerial(),
-                                                  name = self.getName(),
-                                                  url = self.factory.getUrl(),
-                                                  outfit = self.factory.getOutfit()))
+            self.sendPacket(PacketPokerGetPlayerInfo())
+
+        elif packet.type == PACKET_POKER_PLAYER_INFO:
+            self.handlePlayerInfo(packet)
+
+        elif packet.type == PACKET_ERROR:
+            self.error("Server reported error : %s" % packet)
+            return
 
         game = self.factory.packet2game(packet)
 
@@ -579,9 +588,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                         forward_packets.append(self.chipsPot2Player(game, player, packet.amount, 0, "canceled"))
                 game.canceled(packet.serial, packet.amount)
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
-
-            elif packet.type == PACKET_POKER_PLAYER_INFO:
-                pass
 
             elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
                 game.addPlayer(packet.serial, packet.seat)

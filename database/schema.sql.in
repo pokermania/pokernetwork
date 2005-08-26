@@ -37,7 +37,7 @@ create table users (
 	serial int unsigned not null auto_increment,
 	name varchar(32),
 	email varchar(128),
-	skin_url varchar(32) default "default",
+	skin_url varchar(32) default "random",
 	skin_outfit text,
         skin_image blob,
         skin_image_type varchar(32),

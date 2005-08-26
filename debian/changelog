@@ -1,3 +1,9 @@
+poker-network (1.0.7-1) unstable; urgency=low
+
+  * upstream version
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 25 Aug 2005 19:04:25 +0200
+
 poker-network (1.0.6-1) unstable; urgency=low
 
   * upstream version

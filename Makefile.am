@@ -103,7 +103,8 @@ pokerui_PYTHON = \
 pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
 	database/schema.sql \
-	database/1.0.5-1.0.6.sql
+	database/1.0.5-1.0.6.sql \
+	database/1.0.6-1.0.7.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \
@@ -128,6 +129,14 @@ EXTRA_DIST = \
 clean-local:
 	rm -f */*.py[co]
 	rm -f examples/*.log
+
+all-local:
+	export PYTHONPATH=${srcdir} ; \
+	for file in bot client server ; do \
+		${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.$$file ${srcdir}/conf/poker.$$file.xml.in ; \
+	done ; \
+	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/examples/poker.server.xml ${srcdir}/examples/poker.server-monotone.xml ; \
+	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.bot ${srcdir}/examples/poker.bot.xml
 
 install-data-local:
 	mkdir -p "${DESTDIR}${pkgsysconfdir}"

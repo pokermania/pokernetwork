@@ -104,7 +104,8 @@ poker2ddir = ${pkgdatadir}/poker2d
 nobase_dist_poker2d_DATA = \
 	poker2d.xml \
 	client.xml \
-	upgrades/1.0.5-1.0.6.xsl
+	upgrades/1.0.5-1.0.6.xsl \
+	upgrades/1.0.6-1.0.7.xsl
 
 #
 # The python interpreter needs to find the binary modules immediately
@@ -114,6 +115,8 @@ nobase_dist_poker2d_DATA = \
 #
 all-local:
 	-rm -f *.so ; ln -s .libs/*.so .
+	export PYTHONPATH=${top_srcdir} ; \
+	${POKERCONFIGUPGRADE} --verbose=1  --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades ${srcdir}/poker2d.xml.in
 
 clean-local:
 	rm -f *.so *.pyc

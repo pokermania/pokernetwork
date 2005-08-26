@@ -143,7 +143,6 @@ class PokerSkin2D(PokerSkin):
         color.cancel_button.connect("clicked", self.colorSelectionCanceled)
         self.color_dialog = color
         self.select_callback = None
-        ( self.url, self.outfit ) = self.interpret(self.url, self.outfit)
 
     def interpret(self, url, outfit):
         if outfit == "random" or "<?xml" in outfit:
@@ -155,6 +154,8 @@ class PokerSkin2D(PokerSkin):
 
     def showOutfitEditor(self, select_callback):
         self.select_callback = select_callback
+        color = gtk.gdk.color_parse(self.outfit)
+        self.color_dialog.colorsel.set_current_color(color)
         self.color_dialog.show()
 
     def colorSelected(self, *args):

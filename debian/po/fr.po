@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-18 01:54+0200\n"
+"POT-Creation-Date: 2005-08-25 19:05+0200\n"
 "PO-Revision-Date: 2005-07-18 19:19+0200\n"
 "Last-Translator: Guilhelm Panaget <guilhelm.panaget@free.fr>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
@@ -37,7 +37,7 @@ msgid ""
 "If you want to configure and run a poker-network server, make sure you have "
 "administrative rights on a running MySQL server. If you do not want to run "
 "the poker-network server on this machine, you will be prompted for the "
-"hostname or the IP of a running poker-network server."
+"hostname or the IP address of a running poker-network server."
 msgstr ""
 "Vous allez configurer et démarrer le serveur poker-network. Assurez-vous de "
 "posséder les droits d'administration sur un serveur MySQL opérationnel. Si "
@@ -67,7 +67,7 @@ msgstr ""
 #. Description
 #: ../python2.3-poker-network.templates:20
 #, fuzzy
-msgid "Hostname or IP of the default poker-network server:"
+msgid "Hostname or IP address of the default poker-network server:"
 msgstr "Nom d'hôte ou adresse IP du serveur poker-network par défaut :"
 
 #. Type: string
@@ -90,8 +90,10 @@ msgstr "Nom d'hôte du serveur MySQL :"
 #. Type: string
 #. Description
 #: ../python2.3-poker-network.templates:27
+#, fuzzy
 msgid ""
-"This must be the host-name or IP address where the MySQL server is running."
+"Please enter the the hostname or the IP address of the machine where the "
+"MySQL server is running."
 msgstr "Veuillez indiquer le nom d'hôte ou l'adresse IP du serveur MySQL."
 
 #. Type: string

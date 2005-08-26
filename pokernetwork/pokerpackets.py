@@ -3646,6 +3646,8 @@ PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
 
 class PacketPokerGetPlayerInfo(Packet):
 
+    NOT_LOGGED = 1
+
     type = PACKET_POKER_GET_PLAYER_INFO
 
 PacketFactory[PACKET_POKER_GET_PLAYER_INFO] = PacketPokerGetPlayerInfo

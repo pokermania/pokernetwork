@@ -762,11 +762,12 @@ class PokerRenderer:
 
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             if packet.serial == self.protocol.getSerial():
-                packet.url = self.factory.getUrl()
-                packet.outfit = self.factory.getOutfit()
+                if packet.url != self.factory.getUrl():
+                    print "*CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server url is %s, local url is %s " % ( packet.url, self.factory.getUrl() )
+                if packet.outfit != self.factory.getOutfit():
+                    print "*CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server outfit is %s, local outfit is %s " % ( packet.url, self.factory.getUrl() )
                 self.sitActionsUpdate()
-            else:
-                ( packet.url, packet.outfit ) = self.factory.getSkin().interpret(packet.url, packet.outfit)
+            ( packet.url, packet.outfit ) = self.factory.getSkin().interpret(packet.url, packet.outfit)
             self.render(packet)
 
             if packet.serial == self.protocol.getSerial():
@@ -1240,8 +1241,6 @@ class PokerRenderer:
                                                                url = url,
                                                                outfit = outfit
                                                                ))
-                self.factory.settings.headerSet("/settings/skin/@url", url)
-                self.factory.settings.save()
             self.changeState(OUTFIT_DONE)
 
     def handleLobby(self, args):

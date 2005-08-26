@@ -31,9 +31,9 @@ from twisted.internet import reactor, protocol
 
 from pokernetwork.packets import Packet, PacketFactory, PacketNames
 from pokernetwork import protocol_number
-from pokernetwork.version import version
+from pokernetwork.version import Version
 
-protocol_version = Version(version_number)
+protocol_version = Version(protocol_number)
 
 PROTOCOL_MAJOR = "%03d" % protocol_version.major()
 PROTOCOL_MINOR = "%d%02d" % ( protocol_version.medium(), protocol_version.minor() )

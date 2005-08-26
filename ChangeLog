@@ -1,5 +1,43 @@
 Thu Aug 25 2005  Loic Dachary  <loic@gnu.org>
 
+	* Release 1.0.7
+
+	* examples/poker.server-monotone.xml: set delay to 0 for maximum speed (this configuration
+	  is designed to run as fast as possible anyways). update permissions to access the database.
+
+	* examples/run-example: server configuration can be given in argument
+
+	* pokernetwork/pokerserver.py (PokerService.tourneyMovePlayer): do not crash
+	  if player is disconnected.
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): PACKET_POKER_PLAYER_ARRIVE
+	  convert set into sanity check on url/outfit members
+
+	* pokerclient2d/Makefile.am (all-local): upgrade poker2d.xml.in
+
+	* Makefile.am (all-local): upgrade conf/*.xml.in
+
+	* pokerclient2d/poker2d.py (PokerSkin2D.showOutfitEditor): display the
+	  current outfit color
+
+	* database/1.0.5-1.0.7.sql: default users.skin_url is now random
+
+	* database/schema.sql.in: field users.skin_url default is random
+
+	* pokernetwork/pokerserver.py (PokerAvatar.login): set url and outfit
+	  attributes
+	  (PokerService.getPlayerInfo): default is random
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): 
+	  PACKET_POKER_PLAYER_INFO sets the outfit
+	  (PokerSkin.__init__): interpret the random default 
+
+	* pokerclient2d/poker2d.py (PokerSkin2D.__init__): skin url and outfit
+	  is not set until the connection to the server is established
+
+	* pokernetwork/pokerserver.py (PokerAvatar.getPlayerInfo): return error
+	  if player is not logged in
+
 	* pokernetwork/pokerdatabase.py (PokerDatabase.upgrade): do not report
 	  obsolete database as an error and display upgrade success
 
