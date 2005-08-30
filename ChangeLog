@@ -1,3 +1,23 @@
+Tue Aug 30 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.render): silently ignore render
+	  requests when no game is current.
+	  (PokerDisplay2D.render): quit when asked to
+	  Fixes https://gna.org/bugs/index.php?func=detailitem&item_id=2754
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.abortAllTables): rename publishQuit
+	(PokerClientProtocol.connectionLost): destroy all tables when connection is lost
+
+Mon Aug 29 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): index self.position_info
+	  with game.id before setting POSITION_OBSOLETE
+
+	  (PokerClientProtocol._handleConnection): TABLE_DESTROY reset the game as it no longer exists.
+	  When the function called when recieving TABLE_DESTROY completes, everything related to the
+	  game has been destroyed, including data in objects recieving messages from pokerclient.
+	  Fixes https://gna.org/bugs/index.php?func=detailitem&item_id=2583
+
 Thu Aug 25 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.7

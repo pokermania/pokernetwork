@@ -468,6 +468,13 @@ class PokerDisplay2D(PokerDisplay):
     def render(self, packet):
         if self.verbose > 3: print "PokerDisplay2D::render: " + str(packet)
 
+        if packet.type == PACKET_QUIT:
+            reactor.stop()
+            return
+
+        if not self.protocol.getCurrentGameId():
+            return
+        
         game = self.factory.packet2game(packet)
         if game:
             self.id2table[game.id].render(packet)
@@ -497,7 +504,4 @@ class PokerDisplay2D(PokerDisplay):
                 self.renderer.chatHistoryShow()
             else:
                 self.renderer.chatHistoryHide()
-
-        elif packet.type == PACKET_QUIT:
-            reactor.stop()
 

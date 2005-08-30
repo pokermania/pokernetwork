@@ -149,7 +149,7 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def quit(self):
         #
-        # !!! The order MATTERS here !!! underware must be notified last
+        # !!! The order MATTERS here !!! the renderer must be notified last
         # otherwise leak detection won't be happy. Inverting the two
         # is not fatal and the data will be freed eventually. However,
         # debugging is made much harder because leak detection can't
@@ -524,7 +524,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.registerCallback(self.gameEvent)
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
-                self.position_info[new_game.id] = ( 0, 0 )
+                self.position_info[new_game.id] = [ 0, 0 ]
                 self.forward_packets.append(self.currentGames())
 
         elif packet.type == PACKET_POKER_PLAYERS_LIST:
@@ -549,6 +549,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         game = self.factory.packet2game(packet)
 
+        if game and packet.type == PACKET_POKER_TABLE_DESTROY:
+            self.scheduleTableQuit(game)
+            game = None
+
         #
         # It is possible to receive packets related to a game that we know nothing
         # about after quitting a table. When quitting a table the client deletes
@@ -568,15 +572,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     game.setHandsCount(packet.hands_count)
                     game.setLevel(packet.level)
                     game.beginTurn(packet.hand_serial)
-                    self.position_info[POSITION_OBSOLETE] = True
+                    self.position_info[game.id][POSITION_OBSOLETE] = True
                     if not self.no_display_packets:
                         forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
                         for serial in game.player_list:
                             forward_packets.append(self.updatePlayerChips(game, game.serial2player[serial]))
                         forward_packets.extend(self.updatePotsChips(game, []))
-
-            elif packet.type == PACKET_POKER_TABLE_DESTROY:
-                self.scheduleTableQuit(game)
 
             elif packet.type == PACKET_POKER_CANCELED:
                 if not self.no_display_packets and packet.amount > 0:
@@ -612,7 +613,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_PLAYER_SELF:
                 ( serial_in_position, position_is_obsolete ) = self.position_info[game.id]
                 if serial_in_position == self.getSerial():
-                    self.position_info[game.id] = (0, True)
+                    self.position_info[game.id] = [ 0, True ]
                 forward_packets.extend(self.updateBetLimit(game))
 
             elif packet.type == PACKET_POKER_POSITION:
@@ -789,7 +790,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     forward_packets.extend(self.chipsBet2Pot(game, player, packet.amount, 0))
 
             elif packet.type == PACKET_POKER_STATE:
-                self.position_info[POSITION_OBSOLETE] = True
+                self.position_info[game.id][POSITION_OBSOLETE] = True
 
                 if game.isBlindAnteRound():
                     game.blindAnteRoundEnd()
@@ -864,7 +865,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                                        serial = self.getSerial()))
                     serial_in_position = 0
             position_is_obsolete = False
-            self.position_info[game.id] = ( serial_in_position, position_is_obsolete )
+            self.position_info[game.id] = [ serial_in_position, position_is_obsolete ]
 
         for forward_packet in forward_packets:
             self.schedulePacket(forward_packet)
@@ -1026,7 +1027,11 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                             besthand = best_hand))
         return packets
 
-    def publishQuit(self):
+    def connectionLost(self, reason):
+        self.abortAllTables()
+        UGAMEClientProtocol.connectionLost(self, reason)
+        
+    def abortAllTables(self):
         for game in self.factory.games.values():
             self.scheduleTableAbort(game)
 
@@ -1162,7 +1167,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                       serial = packet.serial))
         elif packet.type == PACKET_QUIT:
             self.ignoreIncomingData()
-            self.publishQuit()
+            self.abortAllTables()
         UGAMEClientProtocol.sendPacket(self, packet)
 
     def protocolEstablished(self):

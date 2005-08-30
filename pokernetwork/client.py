@@ -84,3 +84,6 @@ class UGAMEClientFactory(protocol.ClientFactory):
         instance.factory = self
         self.protocol_instance = instance
         return instance
+
+    def clientConnectionLost(self, connector, reason):
+        pass
