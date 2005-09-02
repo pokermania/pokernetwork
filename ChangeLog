@@ -1,3 +1,50 @@
+Fri Sep 02 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/pokerdisplay2d.py (PokerTable2D.run,finish): remove
+
+	* pokerclient2d/poker2d.py (Poker2DReactor): dedicated reactor that 
+	  exits on error.
+	  (Main.shutdown): directly call reactor.stop instead of relying
+	  on pokerdisplay (meaningless in the case of the poker2d interface).
+	  (Main.run): call reactor.run instead of delegating to display for
+	  because it would be meaningless.
+	  (run): remove useless friendly error reporting at this level
+
+	* pokerui/pokerdisplay.py (PokerDisplay.finish): s/finish/finished/ for
+	  flag.
+
+	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.render): exit if
+	  protocol not set.
+	  (PokerDisplay2D.run): call iterate as long as no error occurred
+	  instead of calling reactor.run that runs forever even if a traceback
+	  occurs.
+
+	* pokernetwork/pokerclient.py(err): set a flag (log.error_occurred)
+	  when an error is logged thru log.err or log.deferr. This allows
+	  each iteration of the reactor.run to check it and stop the reactor
+	  if this is the desired behaviour.
+
+Wed Aug 31 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerclient.py (PokerClientFactory.__init__): 
+          Make sure the attributes exists, should an exception occur before
+          it is initialized with an instance of PokerChildren and such. This is done
+          so that the caller does not have to check the existence of the
+          attribute when catching an exception.
+
+	* pokerclient2d/poker2d.py (Main.run): PokerClientFactory2D constructor 
+	  exceptions catched. The existence of each attribute used is guaranteed by 
+	  the PokerClientFactory class. 
+	  (PokerClientFactory2D.__init__): display attribute has a default value of None
+
+	* pokernetwork/pokerchildren.py (PokerRsync.processEnded): if process terminates
+	  on error, raise an exception.
+
+	* pokernetwork/upgrade.py (Constants.RSYNC): timeout if no activity I/O during more
+	  than 60 seconds. Rsync is stored in a RSYNC variable with default options. Would
+	  be good to also timeout on connection (DNS fails to resolve and such) but 
+	  there is no option to do that at present.
+
 Tue Aug 30 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.render): silently ignore render

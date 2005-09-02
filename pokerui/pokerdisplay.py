@@ -47,10 +47,10 @@ class PokerDisplay:
         self.renderer = renderer
 
     def finish(self):
-        if self.finish:
+        if self.finished:
             return False
         else:
-            self.finish = True
+            self.finished = True
             return True
 
     def render(self, packet):

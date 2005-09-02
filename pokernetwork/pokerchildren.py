@@ -223,6 +223,7 @@ class PokerChildBrowser(PokerChild):
 
 
 from twisted.internet.protocol import ProcessProtocol
+from twisted.internet import error
 
 RSYNC_DONE = "//event/pokernetwork/pokerchildren/rsync_done"
 
@@ -281,6 +282,6 @@ class PokerRsync(PokerChild, ProcessProtocol):
         self.publishEvent(RSYNC_DONE)
 
     def processEnded(self, reason):
-        if isinstance(reason, Failure) and reason.frames:
-            print "PokerRsync::processEnded: " + str(reason)
-
+        if not isinstance(reason.value, error.ProcessDone):
+            if self.verbose > 2: print "PokerRsync::processEnded: " + str(reason)
+            raise reason

@@ -46,15 +46,51 @@ from shutil import copy
 from time import sleep
 from random import choice, uniform, randint
 
+from twisted.python import log
+
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.version import version
+
+from twisted.internet.gtk2reactor import Gtk2Reactor
+
+class Poker2DReactor(Gtk2Reactor):
+    
+    def simulate(self):
+        if log.error_occurred:
+            reactor.stop()
+        Gtk2Reactor.simulate(self)
+        
+from twisted.internet.main import installReactor
+reactor = Poker2DReactor()
+installReactor(reactor)
+
+#
+# Workaround for the twisted-2.0 bug 
+# http://twistedmatrix.com/bugs/issue1083
+#
+try:
+    from twisted.internet.base import BlockingResolver
+    reactor.installResolver(BlockingResolver())
+except:
+    pass
+from twisted.internet import error
+
+from pokernetwork.pokerclient import PokerClientFactory, PokerSkin
+from pokernetwork.pokerpackets import *
+
+from pokerui import pokerinterface
+from pokerui.pokerrenderer import PokerRenderer
+
+from pokerclient2d.pokerdisplay2d import PokerDisplay2D
+from pokerclient2d.pokerinterface2d import PokerInterface2D
+
+import gtk
 
 class Main:
     "Poker gameplay"
 
     def __init__(self, configfile, settingsfile):
         self.settings = Config([''])
-#        self.settings.verbose = 1
         self.settings.load(settingsfile)
         self.shutting_down = False
         if self.settings.header:
@@ -64,7 +100,6 @@ class Main:
             self.config.load(configfile)
             self.verbose = self.settings.headerGetInt("/settings/@verbose")
             self.poker_factory = None
-#            sleep(12) # we would like this feature on windows (in dev)
 
     def configOk(self):
         return self.settings.header and self.config.header
@@ -72,6 +107,7 @@ class Main:
     def shutdown(self, signal, stack_frame):
         self.shutting_down = True
         self.poker_factory.display.finish()
+        reactor.stop()
         if self.verbose:
             print "received signal %s, exiting" % signal
             
@@ -97,43 +133,26 @@ Using current directory instead.
             signal.signal(signal.SIGQUIT, self.shutdown)
         signal.signal(signal.SIGTERM, self.shutdown)
 
-        poker_factory = PokerClientFactory2D(settings = settings,
-                                             config = config)
-        self.poker_factory = poker_factory
-
+        poker_factory = None
+        
         try:
-            poker_factory.display.run()
+            poker_factory = PokerClientFactory2D(settings = settings,
+                                                 config = config)
+            self.poker_factory = poker_factory
+
+            if poker_factory.display:
+                reactor.run()
+            else:
+                raise Exception, "PokerClientFactory2D instance has no display" 
         except:
             print_exc()
 
-        poker_factory.children.killall()
-        poker_factory.display.finish()
-        poker_factory.display = None
-
-from twisted.internet import gtk2reactor
-gtk2reactor.install()
-from twisted.internet import reactor
-#
-# Workaround for the twisted-2.0 bug 
-# http://twistedmatrix.com/bugs/issue1083
-#
-try:
-    from twisted.internet.base import BlockingResolver
-    reactor.installResolver(BlockingResolver())
-except:
-    pass
-from twisted.internet import error
-
-from pokernetwork.pokerclient import PokerClientFactory, PokerSkin
-from pokernetwork.pokerpackets import *
-
-from pokerui import pokerinterface
-from pokerui.pokerrenderer import PokerRenderer
-
-from pokerclient2d.pokerdisplay2d import PokerDisplay2D
-from pokerclient2d.pokerinterface2d import PokerInterface2D
-
-import gtk
+        if poker_factory:
+            if poker_factory.children:
+                poker_factory.children.killall()
+            if poker_factory.display:
+                poker_factory.display.finish()
+                poker_factory.display = None
 
 class PokerSkin2D(PokerSkin):
     def __init__(self, *args, **kwargs):
@@ -170,9 +189,9 @@ class PokerClientFactory2D(PokerClientFactory):
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
+        ab.ac
         self.skin = PokerSkin2D(settings = self.settings)
         self.renderer = PokerRenderer(self)
-        self.interface = None
         self.initDisplay()
 
         self.interface = PokerInterface2D(self.settings)
@@ -282,18 +301,7 @@ def run(argv, datadir):
     client = Main(configfile, settingsfile)
 
     if client.configOk():
-        try:
-            reactor.startRunning()
-            client.run()
-    #        import profile
-    #        profile.run('client.run()', 'bar')
-    #        import pstats
-    #        pstats.Stats('bar').sort_stats().print_stats()
-        except:
-            if client.verbose:
-                print_exc()
-            else:
-                print sys.exc_value
+        client.run()
 
 if __name__ == "__main__":
     run(sys.argv, ".")

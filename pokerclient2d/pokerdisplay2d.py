@@ -393,13 +393,6 @@ class PokerDisplay2D(PokerDisplay):
             value -= remainder
             raise_range.set_value(value)
 
-    def finish(self):
-        if PokerDisplay.finish(self):
-            reactor.stop()
-
-    def run(self):
-        reactor.run()
-
     def deleteTable(self, game_id):
         table = self.id2table[game_id]
         del table.display
@@ -472,7 +465,7 @@ class PokerDisplay2D(PokerDisplay):
             reactor.stop()
             return
 
-        if not self.protocol.getCurrentGameId():
+        if not self.protocol or not self.protocol.getCurrentGameId():
             return
         
         game = self.factory.packet2game(packet)

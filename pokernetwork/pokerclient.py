@@ -76,6 +76,22 @@ class PokerSkin:
     def showOutfitEditor(self, select_callback):
         pass
 
+#
+# Set a flag when an error is logged
+#
+from twisted.python import log
+
+log.error_occurred = False
+log_err = log.err
+
+def err(*args, **kwargs):
+    global log_err
+    log_err(*args, **kwargs)
+    log.error_occurred = True
+
+log.err = err
+log.deferr = err
+
 class PokerClientFactory(UGAMEClientFactory):
     "client factory"
 
@@ -83,6 +99,15 @@ class PokerClientFactory(UGAMEClientFactory):
         UGAMEClientFactory.__init__(self, *args, **kwargs)
         self.settings = kwargs["settings"]
         self.config = kwargs.get("config", None)
+        #
+        # Make sure the attributes exists, should an exception occur before
+        # it is initialized with an instance of PokerChildren and such. This is done
+        # so that the caller does not have to check the existence of the
+        # attribute when catching an exception.
+        #
+        self.interface = None
+        self.display = None
+        self.children = None
 
         settings = self.settings
         self.no_display_packets = settings.headerGet("/settings/@no_display_packets")
