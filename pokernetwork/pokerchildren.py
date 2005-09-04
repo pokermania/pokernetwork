@@ -275,13 +275,9 @@ class PokerRsync(PokerChild, ProcessProtocol):
             for line in lines:
                 self.line(line)
 
-    def outConnectionLost(self):
-        self.done()
-
-    def done(self):
-        self.publishEvent(RSYNC_DONE)
-
     def processEnded(self, reason):
-        if not isinstance(reason.value, error.ProcessDone):
+        if isinstance(reason.value, error.ProcessDone):
+            self.publishEvent(RSYNC_DONE)
+        else:
             if self.verbose > 2: print "PokerRsync::processEnded: " + str(reason)
             raise reason

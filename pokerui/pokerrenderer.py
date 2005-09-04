@@ -1199,6 +1199,7 @@ class PokerRenderer:
         elif name == "graphics":
             settings.headerSet("/settings/shadow", value)
             settings.headerSet("/settings/vprogram", value)
+            settings.headerSet("/settings/glow", value)
             settings.save()
             self.queryRestart("Graphics quality changed")
         elif name == "sound":

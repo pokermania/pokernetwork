@@ -104,7 +104,8 @@ pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
 	database/schema.sql \
 	database/1.0.5-1.0.6.sql \
-	database/1.0.6-1.0.7.sql
+	database/1.0.6-1.0.7.sql \
+	database/1.0.7-1.0.8.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \

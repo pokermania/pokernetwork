@@ -1,3 +1,8 @@
+Release 1.0.8
+
+Bug fixes related to error handling, exit conditions and
+verbosity.
+
 Release 1.0.7
 
 The poker2d outfit is stored on the server, the skin element
