@@ -278,6 +278,13 @@ class PokerRsync(PokerChild, ProcessProtocol):
     def done(self):
         self.publishEvent(RSYNC_DONE)
         
+    def outConnectionLost(self):
+        #
+        # spawnprocess on non posix never calls processEnded with python-twisted 2.0.1
+        #
+        if os.name != "posix":
+            self.done()
+
     def processEnded(self, reason):
         if isinstance(reason.value, error.ProcessDone):
             self.done()
