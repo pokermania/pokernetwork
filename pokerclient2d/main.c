@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
-#include <argp.h>
+#include <getopt.h>
 #include <unistd.h>
 #include "interface_io.h"
 #include "dispatcher.h"
@@ -49,110 +49,89 @@ void destroy_smiley_array(void);
 /*
  * Command line parsing
  */
-int	g_want_verbose;
-int	g_port_number;
-char*	g_display;
-char*	g_hostname;
-char*	g_gtk_rc_file;
-char*	g_data_dir;
-char*	g_smiley_path;
+int   g_want_verbose = 0;
+int   g_port_number = 19379;
+char* g_display = 0;
+char* g_hostname = 0;
+char* g_gtk_rc_file = 0;
+char* g_data_dir = 0;
+char* g_smiley_path = 0;
 
-static struct argp_option options[] =
-{
-  { "port",	'p',	"PORT-NUMBER",	0,
-    "Specify port number of the server",	0 },
-  { "display",	'd',	"DISPLAY",	0,
-    "Display to connect to",	0 },
-  { "datadir",	'D',	"DATADIR",	0,
-    "Directory containing data",	0 },
-  { "glade",	'g',	"GLADE",	0,
-    "Glade file",	0 },
-  { "verbose",	'v',	"VERBOSE-LEVEL",	0,
-    "Print more information",	0 },
-  { "gtkrc",	'r',	"GTK-RC-FILE",	0,
-    "Specify gtk+2 recourse file",	0 },
-  { "smiley",	's',	"SMILEY-PATH",	0,
-    "Specify smiley's image and xml path",	0 },
-  { NULL, 0, NULL, 0, NULL, 0 }
-};
+static const char short_options[] = "p:d:D:g:v:r:s:";
+enum option_e
+  {
+    opt_port = 'p',
+    opt_display = 'd',
+    opt_datadir = 'D',
+    opt_glade = 'g',
+    opt_verbose = 'v',
+    opt_gtkrc = 'r',
+    opt_smiley = 's'
+  };
 
-static void show_version (FILE *stream, struct argp_state *state)
-{
-  (void) state;
-  fputs("poker3d-interface\n", stream);
-  fprintf(stream, "Copyright (C) %s %s\n", "2004, 2005", "Mekensleep");
-  fputs("\
-This program is free software; you may redistribute it under the terms of\n\
-the GNU General Public License.  This program has absolutely no warranty.\n",
-	stream);
-}
+static struct option  long_options[] =
+  {
+    { "port",         required_argument,      0,      opt_port },
+    { "display",      required_argument,      0,      opt_display },
+    { "datadir",      required_argument,      0,      opt_datadir },
+    { "glade",                required_argument,      0,      opt_glade },
+    { "verbose",      required_argument,      0,      opt_verbose },
+    { "gtkrc",                required_argument,      0,      opt_gtkrc },
+    { "smiley",               required_argument,      0,      opt_smiley },
+    { 0,              0,                      0,      0 }
+  };
 
-/* Parse a single option.  */
-static error_t
-parse_opt (int key, char *arg, struct argp_state *state)
+static int
+parse_command_line(int argc, char* argv[])
 {
-  switch (key)
+  int c;
+  int option_index = 0;
+
+  while ((c = getopt_long (argc, argv, short_options, long_options,
+                         &option_index)) != -1)
     {
-    case ARGP_KEY_INIT:
-      g_want_verbose = 0;
-      g_port_number = 19379;
-      g_hostname = 0;
-      g_display = 0;
-      g_gtk_rc_file = 0;
-      g_smiley_path = 0;
-      break;
-
-    case 'p':			/* --port */
-      g_port_number = atoi(arg);
-      break;
-    case 'v':			/* --verbose */
-      g_want_verbose = atoi(arg);
-      break;
-    case 'd':			/* --display */
-      g_display = g_strdup(arg);
-      break;
-    case 'r':
-      g_gtk_rc_file = g_strdup(arg);
-      break;
-    case 'D':
-      g_data_dir = g_strdup(arg);
-      break;
-    case 'g':
-      gui_set_glade_file(arg);
-      break;
-    case 's':			/* -s smiley */
-      g_smiley_path = g_strdup(arg);
-      break;
-    case ARGP_KEY_ARG:		/* [FILE]... */
-      /* TODO: Do something with ARG, or remove this case and make
-         main give argp_parse a non-NULL fifth argument.  */
-      if (g_hostname)
-	argp_failure (state, 1, errno,
-		      "More than one hostname specified");
-      else
-	g_hostname = g_strdup(arg);
-      break;
-
-    default:
-      return ARGP_ERR_UNKNOWN;
+      switch (c)
+      {
+      case opt_port:
+        g_port_number = atoi(optarg);
+        break;
+      case opt_verbose:
+        g_want_verbose = atoi(optarg);
+        break;
+      case opt_display:
+        g_display = g_strdup(optarg);
+        break;
+      case opt_gtkrc:
+        g_gtk_rc_file = g_strdup(optarg);
+        break;
+      case opt_datadir:
+        g_data_dir = g_strdup(optarg);
+        break;
+      case opt_glade:
+        gui_set_glade_file(optarg);
+        break;
+      case opt_smiley:
+        g_smiley_path = g_strdup(optarg);
+        break;
+      default:
+        abort();
+      }
     }
-  return 0;
+  if (argc - optind > 1)
+    {
+      fprintf(stderr, "usage: %s [options] [hostname]\n", argv[0]);
+      return -1;
+    }
+  else
+    {
+      g_hostname = g_strdup(argv[optind]);
+      return 0;
+    }
 }
-
-/* The argp functions examine these global variables.  */
-const char *argp_program_bug_address = "<henry@mekensleep.org>";
-void (*argp_program_version_hook) (FILE *, struct argp_state *) = show_version;
-
-static struct argp argp =
-{
-  options, parse_opt, "[HOSTNAME]",
-  "Poker3D lobby",
-  NULL, NULL, NULL
-};
 
 gboolean	handle_network(GIOChannel *source,
-                         GIOCondition condition,
-                         gpointer data)
+                             GIOCondition condition,
+                             gpointer data)
 {
   (void) source;
   (void) condition;
@@ -168,7 +147,7 @@ int main(int   argc,
   if(setpgrp() < 0)
     perror("setpgrp()");
 
-  if (argp_parse(&argp, argc, argv, 0, NULL, NULL) != 0)
+  if (parse_command_line(argc, argv) != 0)
     return 1;
 
   if (g_display)
