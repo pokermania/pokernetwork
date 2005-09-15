@@ -493,6 +493,7 @@ class PokerInterfaceProtocol(Protocol, PokerInterface):
         PokerInterface.__init__(self)
 
     def connectionMade(self):
+        self.transport.setTcpNoDelay(1)
         self.factory.publishEvent(INTERFACE_READY, self, self.factory)
         self.factory.clearCallbacks(INTERFACE_READY)
 
