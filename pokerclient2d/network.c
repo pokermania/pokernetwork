@@ -123,6 +123,9 @@ int	init_interface_io(const char* address)
   my_addr.sin_addr.s_addr = inet_addr(address);
   memset(&(my_addr.sin_zero), 0, 8);
 
+  int on = 1;
+  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+
   if (connect(fd,
 	      (struct sockaddr*)&my_addr,
 	      sizeof(struct sockaddr)) == -1)
