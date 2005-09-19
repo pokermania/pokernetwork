@@ -73,7 +73,7 @@ class Echo(Protocol):
         #self.blind()
         #self.buy_in()
         #self.cashier()
-        self.chat()
+        #self.chat()
         #self.table_list()
         #self.login()
         #self.message_box()
@@ -83,6 +83,7 @@ class Echo(Protocol):
         #self.menu()
         #self.outfits()
         #self.tournaments()
+        self.lobby()
 
     def interfaceSend(self, *args):
         self.transport.write("\000".join(args) + "\000")
@@ -200,6 +201,26 @@ class Echo(Protocol):
         reactor.callLater(delay, lambda: self.interfaceSend("buy_in", "hide"))
         delay += step
         reactor.callLater(delay, lambda: self.interfaceSend("buy_in", "show"))
+
+    def lobby(self):
+        info = ( '1',	#str(table.id),
+        'yes',			#my,
+        'One',			#table.name,
+        'limit 2/4',	#file2name(table.betting_structure),
+        '2',			#str(table.seats),
+        '3',			#str(table.average_pot),
+        '4',			#str(table.hands_per_hour),
+        '5',			#str(table.percent_flop),
+        '6',			#str(table.players),
+        '7',			#str(table.observers),
+        '8',			#str(table.waiting),
+        '9',			#str(table.timeout)
+        )
+        packet = ['lobby', 'holdem', '0', '1']
+        packet.extend(info)
+        self.interfaceSend(*packet)
+        self.interfaceSend('lobby', 'info', "Players: %d" % 10, "Tables: %d" % 11)
+        self.interfaceSend("lobby", "show", "Cashier", "holdem", "n")
 
     def table_list(self):
         packet = makeTables([
