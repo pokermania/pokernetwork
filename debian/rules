@@ -37,6 +37,8 @@ include debian/rules.mk
 # the table if the connection is lost and allows playing on multiple
 # tables simultaneously.
 
+export PYTHON_VERSION_CONSTRAINT='=2.3'
+
 DEB_BUILDDIR_python2.3-poker2d := python2.3-build
 DEB_BUILDDIR_python2.3-poker-network := python2.3-build
 DEB_BUILDDIR_python2.4-poker2d := python2.4-build
