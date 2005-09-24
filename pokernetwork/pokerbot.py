@@ -28,6 +28,7 @@ import sys
 sys.path.insert(0, "..")
 
 from os import popen
+from os.path import exists
 from string import split
 from random import randint
 from traceback import print_exc
@@ -470,7 +471,10 @@ class Bot(internet.TCPClient):
         return internet.TCPClient.stopService(self)
 
 def makeApplication(argv):
-    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or "/etc/poker-network/poker.bot.xml"
+    default_path = "/etc/poker-network" + sys.version[:3] + "/poker.bot.xml"
+    if not exists(default_path):
+        default_path = "/etc/poker-network/poker.bot.xml"
+    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or default_path
 
     settings = pokernetworkconfig.Config([''])
     settings.load(configuration)

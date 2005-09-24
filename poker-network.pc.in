@@ -2,11 +2,12 @@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-pkgsysconfdir=@sysconfdir@/poker-network
-pkgdatadir=@datadir@/poker-network
+pkgsysconfdir=@POKER_NETWORK_PKGSYSCONFDIR@
+pkgdatadir=@POKER_NETWORK_PKGDATADIR@
+pythonpath=@pythonpath@
 
 Name: poker-network
 Description: python poker server and client library
 Version: @PACKAGE_VERSION@
-Requires: poker-engine
+Requires: poker-engine@MAYBE_PYTHON_VERSION@
 Conflicts:

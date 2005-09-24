@@ -16,6 +16,6 @@
           http_ssl="19483" />
 
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork" />
-  <path>/etc/poker-engine ../conf</path> 
+  <path>/etc/poker-engine2.3 /etc/poker-engine ../conf</path> 
   <users temporary="BOT" />
 </server>

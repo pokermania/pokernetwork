@@ -23,6 +23,7 @@
  *
  * Authors:
  * Henry Precheur	<henry at precheur dot org>
+ * Loic Dachary <loic@gnu.org>
  *
  */
 
@@ -32,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <assert.h>

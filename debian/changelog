@@ -2,7 +2,11 @@ poker-network (1.0.8-1) unstable; urgency=low
 
   * upstream version
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 26 Aug 2005 18:27:06 +0200
+  * swtich to cdbs
+  
+  * fr.po update from Guilhelm <guilhelm.panaget@free.fr> (closes: #329445)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 22 Sep 2005 15:55:48 +0200
 
 poker-network (1.0.7-1) unstable; urgency=low
 

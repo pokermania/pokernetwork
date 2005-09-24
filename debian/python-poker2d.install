@@ -1,0 +1,5 @@
+debian/tmp/usr/lib/python@PYTHON_VERSION@/site-packages/pokerclient2d
+debian/tmp/usr/lib/poker-network@PYTHON_VERSION@
+debian/tmp/usr/share/poker-network@PYTHON_VERSION@/poker2d
+debian/tmp/usr/games/poker2d@PYTHON_VERSION@
+debian/tmp/usr/share/man/man6/*@PYTHON_VERSION@*

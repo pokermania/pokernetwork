@@ -1,41 +1,29 @@
 #! /bin/sh
-#
-# skeleton	example file to build /etc/init.d/ scripts.
-#		This file should be used to construct scripts for /etc/init.d.
-#
-#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-#		Modified for Debian 
-#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
-#
-# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
-#
 
-twistd=/usr/bin/twistd2.3
+twistd=/usr/bin/twistd@PYTHON_VERSION@
 reactor=poll
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-name=poker-network
-desc='poker server'
+name=poker-network@PYTHON_VERSION@
+desc='poker server @PYTHON_VERSION@'
 
-python=/usr/bin/python2.3
+python=/usr/bin/python@PYTHON_VERSION@
 
-poker_home=/var/lib/poker-network
+lockfile=/etc/poker-network@PYTHON_VERSION@/lockfile
 
-lockfile=/etc/poker-network/lockfile
+serverpidfile=/var/run/poker-network-server@PYTHON_VERSION@.pid
+serverlogfile=/var/log/poker-network-server@PYTHON_VERSION@.log
+serverscript=/usr/lib/python@PYTHON_VERSION@/site-packages/pokernetwork/pokerserver.py
 
-serverpidfile=/var/run/poker-network-server.pid
-serverlogfile=/var/log/poker-network-server.log
-serverscript=/usr/lib/python2.3/site-packages/pokernetwork/pokerserver.py
-
-botpidfile=/var/run/poker-network-bot.pid
-botlogfile=/var/log/poker-network-bot.log
-botscript=/usr/lib/python2.3/site-packages/pokernetwork/pokerbot.py
+botpidfile=/var/run/poker-network-bot@PYTHON_VERSION@.pid
+botlogfile=/var/log/poker-network-bot@PYTHON_VERSION@.log
+botscript=/usr/lib/python@PYTHON_VERSION@/site-packages/pokernetwork/pokerbot.py
 
 more_args=--no_save
 
-test -x ${daemon} || exit 0
 test -x ${twistd} || exit 0
-test -r ${file} || exit 0
+test -r ${serverscript} || exit 0
+test -r ${botscript} || exit 0
 
 set -e
 

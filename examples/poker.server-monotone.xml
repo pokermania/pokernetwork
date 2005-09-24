@@ -41,6 +41,6 @@
   <listen tcp="19480" tcp_ssl="19481" http="19482" http_ssl="19483"/>
 
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"/>
-  <path>/etc/poker-engine ../conf</path> 
+  <path>/etc/poker-engine /etc/poker-engine2.3 ../conf</path> 
   <users temporary="BOT"/>
 </server>

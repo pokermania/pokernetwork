@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1"?><!-- -*- nxml -*- -->
+
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:func="http://exslt.org/functions"
+                xmlns:str="http://exslt.org/strings"
+                extension-element-prefixes="str func"
+                exclude-result-prefixes="str">
+
+ <xsl:import href="str.replace.function.xsl" />
+
+ <xsl:preserve-space elements="*" />
+
+ <xsl:output method="xml" indent="yes"
+	     encoding="ISO-8859-1"
+ />
+
+ <!--
+     Add versioned paths if the python version is not already somewhere in the strings
+ --> 
+
+ <xsl:template match="/settings/path/text()|/settings/data/@*">
+   <xsl:choose>
+     <xsl:when test="'@MAYBE_PYTHON_VERSION@' != '' and not(contains(., '@MAYBE_PYTHON_VERSION@'))">
+       <xsl:variable name='path1' select="str:replace(., '/poker-network', '/poker-network@MAYBE_PYTHON_VERSION@')" />
+       <xsl:variable name='path2' select="str:replace($path1, '/poker-engine', '/poker-engine@MAYBE_PYTHON_VERSION@')" />
+       <xsl:choose>
+         <xsl:when test="name() = ''">
+           <xsl:copy-of select='$path2' />
+         </xsl:when>
+         <xsl:otherwise>
+           <xsl:attribute name="{name()}"><xsl:value-of select="$path2"/></xsl:attribute>
+         </xsl:otherwise>
+       </xsl:choose>
+     </xsl:when>
+     <xsl:otherwise>
+       <xsl:copy />
+     </xsl:otherwise>
+   </xsl:choose>
+ </xsl:template>
+ 
+ <!-- copy the rest verbatim -->
+ <xsl:template match="@*|node()">
+  <xsl:copy>
+   <xsl:apply-templates select="@*|node()"/>
+  </xsl:copy>
+ </xsl:template>
+
+</xsl:stylesheet>

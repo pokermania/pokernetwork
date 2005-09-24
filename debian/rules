@@ -1,117 +1,54 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 to 1999 by Joey Hess.
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+include debian/rules.mk
 
+#
+# python2.4 packages are on hold, waiting for python2.4-soappy and python2.4-glade2
+#
+# Build-Depends: python2.4, python2.4-dev, python2.4-glade2, python2.4-twisted, python2.4-poker-engine (>= 1.0.8)
+#
+#Package: python2.4-poker-network
+#Section: python
+#Architecture: all
+#Suggests: mysql-server
+#Depends: python, python2.4, python2.4-poker-engine (>= 1.0.8), python2.4-twisted, python2.4-mysqldb, python2.4-pyopenssl, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+#Description: multiplayer poker server and client library
+# The server deals the cards and checks the user actions using a poker
+# game engine (poker-engine). It can handle all the poker variants
+# implemented by the poker game engine (holdem, omaha, omaha high/low,
+# stud 7 ...) in ring games, sit and go or multitables tournaments.
+# The client library can be used to implement simple clients such as
+# robots (<1000 LOC example robot provided) or a graphical user
+# interface.
+# .
+# The poker server has its own TCP/IP based protocol. The client
+# library decodes the protocol. An abstract user interface library
+# provides a framework to implement graphical clients.
+#
+#Package: python2.4-poker2d
+#Section: python
+#Architecture: any
+#Depends: python, python2.4, python2.4-poker-network, python2.4-pyopenssl, python2.4-glade2, rsync
+#Description: GTK poker client to play on a poker-network server
+# Play poker with other players connected on a poker-network server
+# (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+# or multitables tournaments. poker2d will automaticaly reconnect to
+# the table if the connection is lost and allows playing on multiple
+# tables simultaneously.
 
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_BUILDDIR_python2.3-poker2d := python2.3-build
+DEB_BUILDDIR_python2.3-poker-network := python2.3-build
+DEB_BUILDDIR_python2.4-poker2d := python2.4-build
+DEB_BUILDDIR_python2.4-poker-network := python2.4-build
 
+install/python2.3-poker-network install/python2.4-poker-network :: 
+	for man in pokerdatabaseupgrade pokerbot pokerserver ; do \
+		cp -a $(DEB_DESTDIR)/usr/share/man/man8/$$man.8 $(DEB_DESTDIR)/usr/share/man/man8/$$man$(python_version).8 ; \
+	done
 
-CFLAGS = -Wall -g
+install/python2.3-poker2d install/python2.4-poker2d ::
+	for man in poker2d ; do \
+		cp -a $(DEB_DESTDIR)/usr/share/man/man6/$$man.6 $(DEB_DESTDIR)/usr/share/man/man6/$$man$(python_version).6 ; \
+	done
 
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O2
-endif
-ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-	INSTALL_PROGRAM += -s
-endif
-
-# shared library versions, option 1
-version=2.0.5
-major=2
-# option 2, assuming the library is created as src/.libs/libfoo.so.2.0.5 or so
-#version=`ls src/.libs/lib*.so.* | \
-# awk '{if (match($$0,/[0-9]+\.[0-9]+\.[0-9]+$$/)) print substr($$0,RSTART)}'`
-#major=`ls src/.libs/lib*.so.* | \
-# awk '{if (match($$0,/\.so\.[0-9]+$$/)) print substr($$0,RSTART+4)}'`
-
-configure: configure.ac
-	sh bootstrap
-
-config.status: configure
-	dh_testdir
-	# Add here commands to configure the package.
-	./configure --enable-maintainer-mode --sysconfdir=/etc --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-		--host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
-		--with-poker-server-host=%HOST% \
-		--with-poker-database=%DATABASE% \
-		--with-poker-dbhost=%DBHOST% \
-		--with-poker-dbuser=%USER% \
-		--with-poker-dbuser-password=%PASS%
-
-build: build-stamp
-build-stamp:  config.status
-	dh_testdir
-
-	# Add here commands to compile the package.
-	$(MAKE)
-
-	touch build-stamp
-
-clean: config.status
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp 
-
-	# Add here commands to clean up after the build process.
-	$(MAKE) maintainer-clean
-
-	dh_clean 
-	rm -f configure-stamp
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-	dh_installdirs
-
-	# Add here commands to install the package into debian/tmp
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-
-
-# Build architecture-independent files here.
-binary-indep: build install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs ChangeLog
-	dh_installdocs
-#	dh_installexamples
-#	dh_install
-#	dh_installmenu
-	dh_installdebconf	
-#	dh_installlogrotate
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installmime
-	dh_installinit --update-rcd-params="defaults 30" --name=poker-network
-#	dh_installcron
-#	dh_installinfo
-	dh_installman
-	dh_movefiles
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-#	dh_perl
-	dh_python
-#	dh_makeshlibs
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install 

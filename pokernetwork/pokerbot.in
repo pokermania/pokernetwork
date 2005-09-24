@@ -26,7 +26,8 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import sys
-sys.path.insert(0, "@POKER_PYTHONDIR@")
+sys.path = "@pythonpath@".split(":") + sys.path
+sys.path.insert(0, "@top_srcdir@")
 
 if(sys.argv[-1][-4:] != ".xml"):
     sys.argv.append("@POKER_NETWORK_PKGSYSCONFDIR@/poker.bot.xml")

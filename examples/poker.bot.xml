@@ -6,7 +6,7 @@
   <servers>localhost:19480</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <path>/etc/poker-engine</path> 
+  <path>/etc/poker-engine2.3 /etc/poker-engine</path> 
 
   <table name="One" count="4"/>
   <table name="Two" count="4"/>

@@ -42,11 +42,43 @@ AM_MAINTAINER_MODE
 
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(MYSQL, [mysql])
+AC_PATH_PROG(PERL, [perl])
 
-AM_PATH_PYTHON([2.3])
+test x$prefix = xNONE && prefix="$ac_default_prefix"
+test x$exec_prefix = xNONE && exec_prefix="$prefix"
 
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.6, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(poker-engine is a mandatory library)])
-AC_SUBST(POKERCONFIGUPGRADE, [`pkg-config --variable=pokerconfigupgrade poker-engine`])
+if test -z "$PYTHON_VERSION_CONSTRAINT" ; then PYTHON_VERSION_CONSTRAINT='>=2.3' ; fi
+
+m4_define([_AM_PYTHON_INTERPRETER_LIST], [python2.4 python2.3 python])
+AM_PATH_PYTHON([$PYTHON_VERSION_CONSTRAINT])
+eval pythonpath=$pythondir
+if eval test "$pythondir" != "$pyexecdir" ; then
+   eval pythonpath=$pythonpath:$pyexecdir
+fi
+AC_SUBST(pythonpath, [$pythonpath])
+
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine$PYTHON_VERSION >= 1.0.8, [
+  MAYBE_PYTHON_VERSION=$PYTHON_VERSION
+] , [
+  PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.8,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
+])
+pythonpath=`pkg-config --variable=pythonpath pypoker-engine$MAYBE_PYTHON_VERSION`:$pythonpath
+
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES twisted"
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES MySQLdb"
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES OpenSSL"
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES SOAPpy"
+
+AC_SUBST(MAYBE_PYTHON_VERSION, [$MAYBE_PYTHON_VERSION])
+VERSIONED_PACKAGE=$PACKAGE$MAYBE_PYTHON_VERSION
+pkglibdir=$libdir/$PACKAGE$MAYBE_PYTHON_VERSION
+AC_SUBST(pkglibdir, [$pkglibdir])
+pkgdatadir=$datadir/$PACKAGE$MAYBE_PYTHON_VERSION
+AC_SUBST(pkgdatadir, [$pkgdatadir])
+pkgsysconfdir=$sysconfdir/$PACKAGE$MAYBE_PYTHON_VERSION
+AC_SUBST(pkgsysconfdir, [$pkgsysconfdir])
+
+AC_SUBST(POKERCONFIGUPGRADE, [`pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION`])
 
 #
 # G++ specific debug and optimization flags
@@ -62,10 +94,9 @@ AC_ARG_ENABLE(upgrades,
 AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
 AC_SUBST(UPGRADES_SOURCE, $enableval)
 
-test x$prefix = xNONE && prefix="$ac_default_prefix"
-
 AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION
+
 ], [
     if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then
       if test "$enable_debug" = "yes" ; then
@@ -85,23 +116,34 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     
     AC_LANG(C)
     
-    AM_CC_PYTHON(2.3, yes)
+    AM_CC_PYTHON([$PYTHON_VERSION_CONSTRAINT])
     
     PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(glib2 is a mandatory library)])
     PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(glade2 is a mandatory library)])
 
-    AC_SUBST(POKER2D_PKGDATADIR, [`eval echo $datadir/$PACKAGE/poker2d`])
+    AC_SUBST(POKER2D_PKGDATADIR, [`eval echo $datadir/$VERSIONED_PACKAGE/poker2d`])
+
+    PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk"
+    PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk.glade"
 
     poker2d=true			# for AM_CONDITION
 ])
 
+for module in $PYTHON_DEPENDENCIES ; do
+    AC_MSG_CHECKING([wether python module $module is available])
+    if $PYTHON -c "import $module" >/dev/null 2>&1 ; then       
+       AC_MSG_RESULT([yes])
+    else
+       AC_MSG_ERROR([failed])
+    fi
+done
+
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 
 AC_SUBST(POKER_PREFIX, [$prefix])
-AC_SUBST(POKER_PYTHONDIR, [`eval echo $pythondir`])
-AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval echo $datadir/$PACKAGE`])
-AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $sysconfdir/$PACKAGE`])
-AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine`])
+AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval echo $datadir/$VERSIONED_PACKAGE`])
+AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $sysconfdir/$VERSIONED_PACKAGE`])
+AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION`])
 
 AC_ARG_WITH(poker-server-host,
 [  --with-poker-server-host=<hostname>
@@ -152,6 +194,7 @@ then
         pokerclient2d/poker2d
         pokerclient2d/poker2d.xml
         pokerclient2d/data/Makefile
+        pokerclient2d/upgrades/1.0.7-1.0.8.xsl
         ])
 fi
 AC_CONFIG_FILES([

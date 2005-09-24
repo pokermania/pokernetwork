@@ -221,7 +221,8 @@ nobase_dist_poker2d_DATA = \
 	Aero/ext-right-active.png
 
 interface/interface2d.glade: interface/interface.glade
-	perl root2window.pl < interface/interface.glade > interface/interface2d.glade
+	mkdir -p interface
+	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
 
 clean-local:
 	rm -f interface/interface2d.glade

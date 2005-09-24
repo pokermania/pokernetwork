@@ -3312,7 +3312,10 @@ class PokerSOAP(PokerXML):
                                 encoding = self.encoding)
 
 def makeApplication(argv):
-    configuration = argv[-1][-4:] == ".xml" and argv[-1] or "/etc/poker-network/poker.server.xml"
+    default_path = "/etc/poker-network" + sys.version[:3] + "/poker.server.xml"
+    if not exists(default_path):
+        default_path = "/etc/poker-network/poker.server.xml"
+    configuration = argv[-1][-4:] == ".xml" and argv[-1] or default_path
     settings = Config([''])
     settings.load(configuration)
     if not settings.header:

@@ -33,7 +33,8 @@ SUBDIRS = data
 
 EXTRA_DIST = \
 	poker2d-test.xml \
-	Makefile.cygwin
+	Makefile.cygwin \
+	upgrades/1.0.7-1.0.8.xsl.in
 
 man_MANS = poker2d.6
 
@@ -105,7 +106,11 @@ nobase_dist_poker2d_DATA = \
 	poker2d.xml \
 	client.xml \
 	upgrades/1.0.5-1.0.6.xsl \
-	upgrades/1.0.6-1.0.7.xsl
+	upgrades/1.0.6-1.0.7.xsl \
+	upgrades/str.replace.function.xsl
+
+nobase_poker2d_DATA = \
+	upgrades/1.0.7-1.0.8.xsl
 
 #
 # The python interpreter needs to find the binary modules immediately
@@ -117,6 +122,11 @@ all-local:
 	-rm -f *.so ; ln -s .libs/*.so .
 	export PYTHONPATH=${top_srcdir} ; \
 	${POKERCONFIGUPGRADE} --verbose=1  --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades ${srcdir}/poker2d.xml.in
+
+install-data-hook:
+	if [ "${MAYBE_PYTHON_VERSION}" ] ; then \
+		cp -a $(DESTDIR)$(gamesdir)/poker2d $(DESTDIR)$(gamesdir)/poker2d${PYTHON_VERSION} ; \
+	fi
 
 clean-local:
 	rm -f *.so *.pyc

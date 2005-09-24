@@ -1,6 +1,18 @@
-Sun Sep 04 2005  Loic Dachary  <loic@gnu.org>
+Sat Sep 24 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.8
+
+	* pokerclient2d/upgrades/str.replace.function.xsl: str:replace XSL function
+	  implementation
+
+	* pokerclient2d/upgrades/1.0.7-1.0.8.xsl.in: upgrade installed poker2d.xml
+	  to add python version suffixes if relevant.
+
+Fri Sep 23 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/network.c: TCP_NODELAY on connection
+
+Sun Sep 04 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerchildren.py (PokerRsync.processEnded): fire
 	  RSYNC_DONE event only if process exited on success.

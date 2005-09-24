@@ -25,9 +25,8 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-import getopt
-import sys
-sys.path.insert(0, ".")
+import getopt, sys
+sys.path = "@pythonpath@".split(":") + sys.path
 sys.path.insert(0, "@top_srcdir@")
 
 from pokernetwork.pokernetworkconfig import Config
