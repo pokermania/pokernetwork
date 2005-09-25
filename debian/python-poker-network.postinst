@@ -16,7 +16,6 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 #
-DH_VERBOSE=1
 . /usr/share/debconf/confmodule
 db_version 2.0
 
@@ -92,12 +91,13 @@ case "$1" in
 	    . /usr/share/wwwconfig-common/mysql.get
 
 	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network@PYTHON_VERSION@/poker.server.xml > $tmpfile
+            cat $tmpfile
             if diff $tmpfile /etc/poker-network@PYTHON_VERSION@/poker.server.xml > /dev/null
             then
+                rm $tmpfile
+            else
                 mv  $tmpfile /etc/poker-network@PYTHON_VERSION@/poker.server.xml
                 chmod 600 /etc/poker-network@PYTHON_VERSION@/poker.server.xml
-            else
-                rm $tmpfile
             fi
 
  	    if ! eval $mysqlcmd -h "$dbserver" -f -e "\"use $dbname; show tables;\"" | grep -e "user2table" > /dev/null 2>&1 ; then

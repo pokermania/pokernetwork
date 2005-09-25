@@ -42,6 +42,13 @@ DEB_BUILDDIR_python2.3-poker-network := python2.3-build
 DEB_BUILDDIR_python2.4-poker2d := python2.4-build
 DEB_BUILDDIR_python2.4-poker-network := python2.4-build
 
+DEB_CONFIGURE_EXTRA_FLAGS += \
+		--with-poker-server-host=%HOST% \
+		--with-poker-database=%DATABASE% \
+		--with-poker-dbhost=%DBHOST% \
+		--with-poker-dbuser=%USER% \
+		--with-poker-dbuser-password=%PASS%
+
 install/python2.3-poker-network install/python2.4-poker-network :: 
 	for man in pokerdatabaseupgrade pokerbot pokerserver ; do \
 		cp -a $(DEB_DESTDIR)/usr/share/man/man8/$$man.8 $(DEB_DESTDIR)/usr/share/man/man8/$$man$(python_version).8 ; \
