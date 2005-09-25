@@ -155,7 +155,7 @@ install-data-hook:
 	if [ "${MAYBE_PYTHON_VERSION}" ] ; then \
 		cp ${DESTDIR}${pkgconfigdir}/poker-network.pc ${DESTDIR}${pkgconfigdir}/poker-network${PYTHON_VERSION}.pc ; \
 		for file in pokerserver pokerbot pokerdatabaseupgrade ; do \
-			cp -a ${DESTDIR}${sbindir}/$$file ${DESTDIR}${sbindir)/$${file}${PYTHON_VERSION} ; \
+			cp -a ${DESTDIR}${sbindir}/$$file ${DESTDIR}${sbindir}/$${file}${PYTHON_VERSION} ; \
 		done ; \
 	fi
 
