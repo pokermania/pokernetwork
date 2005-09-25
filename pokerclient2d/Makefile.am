@@ -34,6 +34,8 @@ SUBDIRS = data
 EXTRA_DIST = \
 	poker2d-test.xml \
 	Makefile.cygwin \
+	Makefile.cygwin-sh \
+	$(wildcard cygwin/*.sh) \
 	upgrades/1.0.7-1.0.8.xsl.in
 
 man_MANS = poker2d.6
