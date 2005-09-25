@@ -29,6 +29,8 @@ MAINTAINERCLEANFILES = \
 EXTRA_DIST = \
 	root2window.pl
 
+pkgdatadir=@pkgdatadir@
+
 poker2ddir = ${pkgdatadir}/poker2d
 nobase_dist_poker2d_DATA = \
 	interface/pixmaps/cards/small-2c.jpg \
