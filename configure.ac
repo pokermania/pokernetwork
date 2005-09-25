@@ -129,14 +129,7 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=true			# for AM_CONDITION
 ])
 
-for module in $PYTHON_DEPENDENCIES ; do
-    AC_MSG_CHECKING([wether python module $module is available])
-    if $PYTHON -c "import $module" >/dev/null 2>&1 ; then       
-       AC_MSG_RESULT([yes])
-    else
-       AC_MSG_ERROR([failed])
-    fi
-done
+AM_PYTHON_DEPENDS([$PYTHON_DEPENDENCIES])
 
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 

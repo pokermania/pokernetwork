@@ -20,7 +20,6 @@
 
 AC_DEFUN([AM_CC_PYTHON],
 [ 
-AM_PATH_PYTHON($1)
 AC_REQUIRE_CPP()
 
 AC_CACHE_CHECK([for $am_display_PYTHON include directory],

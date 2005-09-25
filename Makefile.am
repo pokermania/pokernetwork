@@ -119,6 +119,7 @@ EXTRA_DIST = \
 	bootstrap \
 	config/python.m4 \
 	config/ccpython.m4 \
+	config/python-depends.m4 \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \

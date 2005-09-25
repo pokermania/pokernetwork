@@ -59,7 +59,7 @@ $(patsubst %,config-status/%,$(DEB_PACKAGES)):: $(DEB_SRCDIR)/configure
 $(DEB_SRCDIR)/config.status:: $(DEB_SRCDIR)/configure
 	./configure --enable-maintainer-mode
 
-$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/bootstrap
+$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/bootstrap $(DEB_SRCDIR)/configure.ac
 	sh bootstrap
 	chmod a+x $@
 
