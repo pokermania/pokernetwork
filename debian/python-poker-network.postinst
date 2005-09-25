@@ -74,6 +74,11 @@ case "$1" in
             /usr/bin/perl -pi -e 's/\bpoker-(network|engine)\b/$&@PYTHON_VERSION@/g' /etc/poker-network2.3/*.xml
         fi
 
+        /usr/sbin/pokerconfigupgrade@PYTHON_VERSION@ --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network@PYTHON_VERSION@/conf /etc/poker-network@PYTHON_VERSION@ 
+	for file in bot client server ; do
+            /usr/sbin/pokerconfigupgrade@PYTHON_VERSION@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network@PYTHON_VERSION@/upgrades/poker.$file /etc/poker-network@PYTHON_VERSION@/poker.$file.xml
+	done
+
 	db_get "python@PYTHON_VERSION@-poker-network/skip"
         tmpfile=`mktemp`
 	if [ $RET = "false" ]; then
@@ -112,10 +117,6 @@ case "$1" in
             fi
         done
 
-        /usr/sbin/pokerconfigupgrade@PYTHON_VERSION@ --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network@PYTHON_VERSION@/conf /etc/poker-network@PYTHON_VERSION@ 
-	for file in bot client server ; do
-            /usr/sbin/pokerconfigupgrade@PYTHON_VERSION@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network@PYTHON_VERSION@/upgrades/poker.$file /etc/poker-network@PYTHON_VERSION@/poker.$file.xml
-	done
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
