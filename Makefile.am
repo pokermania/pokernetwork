@@ -34,6 +34,10 @@ endif
 
 SUBDIRS = ${POKER2D_SUBDIRS} tests
 
+pkglibdir=@pkglibdir@
+pkgdatadir=@pkgdatadir@
+pkgsysconfdir=@pkgsysconfdir@
+
 MAINTAINERCLEANFILES = \
 	INSTALL \
 	ABOUT-NLS \

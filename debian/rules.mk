@@ -71,10 +71,6 @@ $(DEB_SRCDIR)/configure:: $(DEB_PYTHON_PACKAGE_FILES)
 $(DEB_PYTHON_PACKAGE_FILES):: $(patsubst %,debian/python-%,$(DEB_PYTHON_FILES))
 	python_file=debian/python-`expr $@ : 'debian/python...-\(.*\)'` ; \
 	sed -e 's/@PYTHON_VERSION@/'$(python_version)'/g' < $$python_file > $@ 
-	if [ "`basename $@ .init`" != "$@" ] ; then \
-		package=`expr $@ : 'debian/python...-\(.*\).init'` ; \
-		cp $@ debian/python$(python_version)-$$package.$$package$(python_version).init ; \
-	fi
 
 clean:: $(DEB_SRCDIR)/config.status
 	for python_file in $(DEB_PYTHON_FILES) ; do \
@@ -82,7 +78,6 @@ clean:: $(DEB_SRCDIR)/config.status
 			rm -f debian/python?.?-*$$python_file ; \
 		fi ; \
 	done
-	rm -f debian/python?.?-*.init
 	rm -fr config-status
 	$(MAKE) maintainer-clean
 

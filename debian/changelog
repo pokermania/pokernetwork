@@ -6,7 +6,9 @@ poker-network (1.0.8-1) unstable; urgency=low
   
   * fr.po update from Guilhelm <guilhelm.panaget@free.fr> (closes: #329445)
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Thu, 22 Sep 2005 15:55:48 +0200
+  * install files in /etc before attempting to patch them (closes: #329968)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 25 Sep 2005 14:35:58 +0200
 
 poker-network (1.0.7-1) unstable; urgency=low
 
