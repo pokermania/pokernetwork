@@ -130,7 +130,19 @@ EXTRA_DIST = \
 	examples/interface_dummy_server.py \
 	examples/interface.py \
 	examples/xmlrpc-soap.py \
-	examples/run-example
+	examples/run-example \
+	tests/upgrade.in \
+	database/pokerdatabaseupgrade.in \
+        poker-network.pc.in \
+        pokernetwork/pokerserver.in \
+        pokernetwork/pokerserver.8.in \
+        pokernetwork/pokerbot.in \
+        pokernetwork/pokerbot.8.in \
+        database/schema.sql.in \
+        database/pokerdatabaseupgrade.8.in \
+        conf/poker.bot.xml.in \
+        conf/poker.client.xml.in \
+        conf/poker.server.xml.in
 
 clean-local:
 	rm -f */*.py[co]

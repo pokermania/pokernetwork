@@ -40,7 +40,10 @@ EXTRA_DIST = \
 	Makefile.cygwin-sh \
 	cygwin/setup.hint \
 	$(wildcard cygwin/*.sh) \
-	upgrades/1.0.7-1.0.8.xsl.in
+	upgrades/1.0.7-1.0.8.xsl.in \
+	poker2d.6.in \
+	poker2d.in \
+	poker2d.xml.in
 
 man_MANS = poker2d.6
 
