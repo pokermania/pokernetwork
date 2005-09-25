@@ -47,12 +47,6 @@ AC_PATH_PROG(PERL, [perl])
 test x$prefix = xNONE && prefix="$ac_default_prefix"
 test x$exec_prefix = xNONE && exec_prefix="$prefix"
 
-#
-# When python-soappy and python-glade2 are available for python-2.4, 
-# remove or comment out the following line.
-#
-PYTHON_VERSION_CONSTRAINT='=2.3'
-
 if test -z "$PYTHON_VERSION_CONSTRAINT" ; then PYTHON_VERSION_CONSTRAINT='>=2.3' ; fi
 
 m4_define([_AM_PYTHON_INTERPRETER_LIST], [python2.4 python2.3 python])
