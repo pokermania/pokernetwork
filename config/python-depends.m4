@@ -20,6 +20,12 @@
 
 AC_DEFUN([AM_PYTHON_DEPENDS],
 [ 
+
+AC_ARG_ENABLE(python-depends,
+[  --disable-python-depends
+                          disable python dependencies check (enabled by default). ],[],
+[
+
 python_script="
 import imp
 import sys
@@ -39,4 +45,7 @@ for module in $1 ; do
        AC_MSG_ERROR([failed])
     fi
 done
+
+])
+
 ])
