@@ -91,7 +91,6 @@ case "$1" in
 	    . /usr/share/wwwconfig-common/mysql.get
 
 	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network@PYTHON_VERSION@/poker.server.xml > $tmpfile
-            cat $tmpfile
             if diff $tmpfile /etc/poker-network@PYTHON_VERSION@/poker.server.xml > /dev/null
             then
                 rm $tmpfile
