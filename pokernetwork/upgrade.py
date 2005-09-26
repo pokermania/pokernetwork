@@ -136,15 +136,15 @@ class Upgrader(dispatch.EventDispatcher):
         self.target = self.settings.headerGet("/settings/rsync/@target")
         if os.name != "posix" and self.target == "@FROM_REGISTRY@":
 
-          try:
-            old_key = win32api.RegOpenKeyEx(win32con.HKEY_CURRENT_USER, "Game\Pok3d", win32con.KEY_ALL_ACCESS)
-          except:
-            pass
-          else:
-            val = win32api.RegQueryValue(old_key, "")
-            win32api.RegSetValue(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d", 1, val)
-            win32api.RegDeleteKey(old_key, "")
-            win32api.RegCloseKey(old_key)
+#          try:
+#            old_key = win32api.RegOpenKeyEx(win32con.HKEY_CURRENT_USER, "Game\Pok3d", win32con.KEY_ALL_ACCESS)
+#          except:
+#            pass
+#          else:
+#            val = win32api.RegQueryValue(old_key, "")
+#            win32api.RegSetValue(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d", 1, val)
+#            win32api.RegDeleteKey(old_key, "")
+#            win32api.RegCloseKey(old_key)
 
           try:
             reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
