@@ -510,6 +510,9 @@ class PokerAnimationScheduler:
         tmp = protocol.callbacks['current'][PACKET_POKER_TABLE_QUIT]
         tmp.remove(self.tableQuit)
         tmp.insert(0, self.tableQuit)
+        tmp = protocol.callbacks['current'][PACKET_POKER_SEATS]
+        tmp.remove(self.tableSeats)
+        tmp.insert(0, self.tableSeats)
 
     def unsetProtocol(self):
         for (type, function) in self.received2function.iteritems():
