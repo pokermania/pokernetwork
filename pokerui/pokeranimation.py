@@ -288,6 +288,9 @@ class PokerAnimationTable:
                 self.dealer = None
 
     def showdown(self, protocol, packet):
+        if self.game.id != packet.game_id:
+            print "PokerAnimationScheduler::showdown unexpected packet.game_id (%d) != self.game.id (%d) " % ( packet.game_id, self.game.id )
+
         serials = None
         serial2delta = None
         serial2share = None
@@ -298,6 +301,11 @@ class PokerAnimationTable:
             elif frame['type'] == 'resolve':
                 serials = frame['serials']
                 break
+
+        if serials == None:
+            print "showdown problem on game id %d" % self.game.id
+            print packet
+            
         delta_max = -1
         delta_min = 0x0FFFFFFF
         for serial in serials:
@@ -311,6 +319,13 @@ class PokerAnimationTable:
             chips = 0
             if serial in serial2share.keys():
                 chips = serial2share[serial]
+            # to find a bug
+            if serial not in self.serial2player.keys():
+                print "showdown problem on game id %d" % self.game.id
+                print "serials on table:"
+                print self.serial2player.keys()
+                print "serials from showdown packet:"
+                print serials
             player = self.serial2player[serial]
             player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min, chips)
             
