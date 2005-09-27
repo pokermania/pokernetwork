@@ -338,7 +338,13 @@ class PokerAnimationTable:
         return -1
 
     def tableSeats(self,protocol,packet):
-        self.seats=packet.seats
+        self.seats = packet.seats
+        # check that all player are here, if there are players that have been removed
+        # typically during a table switch we remove the player
+        for serial in self.serial2player.keys():
+            if serial not in self.seats:
+                self.serial2player[serial].destroy()
+                del self.serial2player[serial]
 
 class PokerAnimationScheduler:
     """Packet receiver (see pokerpackets.py for the list of packets
