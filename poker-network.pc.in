@@ -4,6 +4,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 pkgsysconfdir=@POKER_NETWORK_PKGSYSCONFDIR@
 pkgdatadir=@POKER_NETWORK_PKGDATADIR@
+pkglibdir=@POKER_NETWORK_PKGLIBDIR@
 pythonpath=@pythonpath@
 
 Name: poker-network

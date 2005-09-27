@@ -71,11 +71,11 @@ PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES SOAPpy"
 
 AC_SUBST(MAYBE_PYTHON_VERSION, [$MAYBE_PYTHON_VERSION])
 VERSIONED_PACKAGE=$PACKAGE$MAYBE_PYTHON_VERSION
-pkglibdir=$libdir/$PACKAGE$MAYBE_PYTHON_VERSION
+pkglibdir=$libdir/$VERSIONED_PACKAGE
 AC_SUBST(pkglibdir, [$pkglibdir])
-pkgdatadir=$datadir/$PACKAGE$MAYBE_PYTHON_VERSION
+pkgdatadir=$datadir/$VERSIONED_PACKAGE
 AC_SUBST(pkgdatadir, [$pkgdatadir])
-pkgsysconfdir=$sysconfdir/$PACKAGE$MAYBE_PYTHON_VERSION
+pkgsysconfdir=$sysconfdir/$VERSIONED_PACKAGE
 AC_SUBST(pkgsysconfdir, [$pkgsysconfdir])
 
 AC_SUBST(POKERCONFIGUPGRADE, [`pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION`])
@@ -134,8 +134,9 @@ AM_PYTHON_DEPENDS([$PYTHON_DEPENDENCIES])
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 
 AC_SUBST(POKER_PREFIX, [$prefix])
-AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval echo $datadir/$VERSIONED_PACKAGE`])
-AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $sysconfdir/$VERSIONED_PACKAGE`])
+AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval echo $pkgdatadir`])
+AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval echo $pkglibdir`])
+AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $pkgsysconfdir`])
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION`])
 
 AC_ARG_WITH(poker-server-host,
