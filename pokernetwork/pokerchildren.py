@@ -253,13 +253,13 @@ class PokerRsync(PokerChild, ProcessProtocol):
     def spawn(self):
         if self.verbose > 1:
             print "PokerRsync::spawn: " + join(self.rsync)
+        dir = self.settings.headerGet("/settings/rsync/@dir")
         if os.name != "posix":
-            childFDs = { 1: 'r' }
+            self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir)
         else:
             childFDs = { 1: 'r', 2: 'r' }
-        dir = self.settings.headerGet("/settings/rsync/@dir")
-        self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir,
-                                         childFDs = childFDs)
+            self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir,
+                                             childFDs = childFDs)
 
     def errReceived(self, chunk):
         print "ERROR: PokerRsync " + chunk
@@ -279,11 +279,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
         self.publishEvent(RSYNC_DONE)
         
     def outConnectionLost(self):
-        #
-        # spawnprocess on non posix never calls processEnded with python-twisted 2.0.1
-        #
-        if os.name != "posix":
-            self.done()
+        pass
 
     def processEnded(self, reason):
         if isinstance(reason.value, error.ProcessDone):
