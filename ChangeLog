@@ -2,6 +2,8 @@ Tue Sep 27 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.10
 
+	* pokerui/pokeranimation.py (PokerAnimationScheduler.setProtocol): POKER_SEATS has priority
+
 	* poker-network.pc.in (pkglibdir): add pkg-libdir
 
 Sun Sep 25 2005  Loic Dachary  <loic@gnu.org>
