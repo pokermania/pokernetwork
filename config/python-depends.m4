@@ -23,8 +23,9 @@ AC_DEFUN([AM_PYTHON_DEPENDS],
 
 AC_ARG_ENABLE(python-depends,
 [  --disable-python-depends
-                          disable python dependencies check (enabled by default). ],[],
+                          disable python dependencies check (enabled by default). ],[python_depends=/bin/false],
 [
+python_depends=/bin/true
 
 python_script="
 import imp

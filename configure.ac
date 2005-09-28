@@ -57,10 +57,18 @@ if eval test "$pythondir" != "$pyexecdir" ; then
 fi
 AC_SUBST(pythonpath, [$pythonpath])
 
+AM_PYTHON_DEPENDS()
+
 PKG_CHECK_MODULES(POKER_ENGINE, poker-engine$PYTHON_VERSION >= 1.0.8, [
   MAYBE_PYTHON_VERSION=$PYTHON_VERSION
 ] , [
-  PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.8,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
+  PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.8,, [
+    if $python_depends ; then
+      AC_MSG_ERROR([poker-engine is a mandatory library])
+    else
+      AC_MSG_RESULT([not found, ignored])
+    fi
+  ])
 ])
 pythonpath=`pkg-config --variable=pythonpath pypoker-engine$MAYBE_PYTHON_VERSION`:$pythonpath
 
