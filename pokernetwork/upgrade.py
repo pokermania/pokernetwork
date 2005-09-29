@@ -178,7 +178,7 @@ class Upgrader(dispatch.EventDispatcher):
             upgrades = "/upgrades"
         else:
             upgrades = self.upgrades
-        Constants.EXCLUDES = map(lambda pattern: "--exclude=" + pattern, (upgrades, "poker.client.xml", "Pok3d.lnk", "Pok3d.ico", "License.txt") + excludes)        
+        Constants.EXCLUDES = map(lambda pattern: "--exclude=" + pattern, (upgrades, "poker.client.xml", "Pok3d.lnk") + excludes)        
         self.upgradeStage1(version)
 
     def upgradeStage1(self, version):
