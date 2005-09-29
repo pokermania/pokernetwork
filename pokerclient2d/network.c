@@ -126,7 +126,11 @@ int	init_interface_io(const char* address)
   memset(&(my_addr.sin_zero), 0, 8);
 
   int on = 1;
-  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+  if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == -1)
+    {
+      g_critical("unable to setsocketport TCP_NODELAY");
+      return FALSE;
+    }
 
   if (connect(fd,
 	      (struct sockaddr*)&my_addr,
