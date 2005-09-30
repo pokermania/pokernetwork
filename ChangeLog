@@ -1,3 +1,15 @@
+Fri Sep 30 2005  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.11	
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): POKER_IN_GAME
+	  deals with the case when the server sends it a list of players that does not include
+	  the players waiting for something (wait_for late, big, ). These players are marked
+	  to wait_for the "first_round", i.e. will not participate to the blind/ante round.
+	  This typically happens when the server sends a hand history when a arriving at 
+	  a new table, because the state of the game is already past the blind/ante round
+	  and the game history has been reduced.
+
 Tue Sep 27 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.10

@@ -696,13 +696,24 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 for serial in game.serialsAll():
                     player = game.getPlayer(serial)
                     wait_for = player.wait_for
-                    if serial in packet.players or wait_for:
+                    in_game = serial in packet.players 
+                    if in_game or wait_for:
                         if not game.isSit(serial):
                             game.sit(serial)
                             forward_packets.append(PacketPokerSit(game_id = game.id,
                                                                   serial = serial))
                         if wait_for:
-                            player.wait_for = wait_for
+                            if wait_for == True and not in_game and not game.isRunning():
+                                #
+                                # A player is waiting for the blind (big, late...)
+                                # and the server says it will not participate to the
+                                # blindAnte round. This only happens when the anteRound
+                                # is already finished on the server (i.e. when connecting
+                                # to a table in the middle of a game). 
+                                #
+                                player.wait_for = "first_round"
+                            else:
+                                player.wait_for = wait_for
                             forward_packets.append(PacketPokerWaitFor(game_id = game.id,
                                                                       serial = serial,
                                                                       reason = wait_for))
