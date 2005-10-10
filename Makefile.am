@@ -130,8 +130,10 @@ EXTRA_DIST = \
 	examples/interface_dummy_server.py \
 	examples/interface.py \
 	examples/xmlrpc-soap.py \
-	examples/run-example \
+	examples/run-pokerserver \
+	examples/test-pokerweb \
 	tests/upgrade.in \
+	tests/pokerweb \
 	database/pokerdatabaseupgrade.in \
         poker-network.pc.in \
         pokernetwork/pokerserver.in \
@@ -144,9 +146,10 @@ EXTRA_DIST = \
         conf/poker.client.xml.in \
         conf/poker.server.xml.in \
 	$(wildcard pokerweb/pages/*.php) \
+	$(wildcard pokerweb/pages/*.txt) \
 	pokerweb/conf/constants.php.in \
 	pokerweb/conf/htaccess \
-	pokerweb/conf/poker-web.conf
+	pokerweb/conf/apache.conf
 
 clean-local:
 	rm -f */*.py[co]
