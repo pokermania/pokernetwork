@@ -47,11 +47,6 @@ function validate() {
   $del_avatar = _post_numeric('del_avatar', 0);
 
   if (strlen($password2) > 0) {
-    if (strtolower($password) != strtolower($infos->password)) {
-      $poker_error = 'Invalid password';
-      return false;
-    }
-    
 
     if (strtolower($password2) != strtolower($password3)) {
       $poker_error = 'Password and confirmation must be the same.';
