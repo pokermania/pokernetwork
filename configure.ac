@@ -126,8 +126,8 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     
     AM_CC_PYTHON([$PYTHON_VERSION_CONSTRAINT])
     
-    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(glib2 is a mandatory library)])
-    PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, [AC_MSG_RESULT([ok])], [AC_MSG_ERROR(glade2 is a mandatory library)])
+    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, , [AC_MSG_ERROR(glib2 is a mandatory library)])
+    PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, , [AC_MSG_ERROR(glade2 is a mandatory library)])
 
     AC_SUBST(POKER2D_PKGDATADIR, [`eval echo $datadir/$VERSIONED_PACKAGE/poker2d`])
 
@@ -209,6 +209,7 @@ AC_CONFIG_FILES([
         pokernetwork/pokerserver.8
         pokernetwork/pokerbot
         pokernetwork/pokerbot.8
+        pokerweb/conf/constants.php
         database/schema.sql
         database/pokerdatabaseupgrade.8
         conf/poker.bot.xml

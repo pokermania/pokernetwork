@@ -24,33 +24,24 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
+set -e
 
-SERVER_CONFIG=${1:-poker.server.xml}
-SCHEMA=../database/schema.sql
+COOKIES=$0.cookies
+rm -f ${COOKIES}
+#DUMP_HEADERS='--dump-header /dev/tty'
+touch run-pokerserver.launching
+MYSQL_ROOT_PASSWORD=--password='' sh run-pokerserver &
+pokerserver_pid=$!
+trap "kill $pokerserver_pid ; rm -f $0.{cookies,out}" EXIT INT QUIT
+lockfile run-pokerserver.launching
+rm -f run-pokerserver.launching
 
-. ../tests/createdatabase
+if [ "$(chase /var/www/test-poker-web)" != "$(chase ../pokerweb/pages)" ] ; then
+    rm -f /var/www/test-poker-web
+    ln -s $(chase ../pokerweb/pages) /var/www/test-poker-web
+fi
 
-python -u ../pokernetwork/pokerserver.py ${SERVER_CONFIG} > pokerserver.log 2>&1 &
-server_pid=$!
-echo "Server now running as process $server_pid with logs in pokerserver.log"
-sleep 3 # wait for server to bootstrap
-while : 
-do
-  python -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
-  bot_pid=$!
-  trap "kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
-  echo "Bots now running as process $bot_pid with logs in pokerbot.log"
-  wait $bot_pid
-exit 0
-  if wait $bot_pid
-  then
-    if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
-    then
-      exit -1
-    fi
-    sleep 1
-  else
-    break
-  fi
-done
+rm -f ../pokerweb/pages/constants.php
+sed -e 's/@POKER_SERVER_HOST@:19382/localhost:19482/' < ../pokerweb/conf/constants.php.in > ../pokerweb/pages/constants.php
 
+. ../tests/pokerweb

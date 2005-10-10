@@ -1,0 +1,144 @@
+#!/bin/sh
+#
+# Copyright (C) 2005 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+#
+# Unit tests (check ../examples/test-pokerweb for a simple way
+# to setup a server + web and run it). 
+#
+# URL_BASE=http://www.foo.com/poker pokerweb 
+#
+# Will run the test on the poker server available at http://www.foo.com/poker but 
+# will *not* cleanup the created users and therefore cannot be run twice.
+#
+set -e
+
+: ${URL_BASE:=http://localhost/test-poker-web}
+: ${COOKIES:=$0.cookies}
+
+function try() {
+    pattern="$1"
+    shift
+    if "$@" > $0.out 2>&1 ; then
+        echo -n "search $pattern in " "$@"
+        if grep "$pattern" $0.out > /dev/null ; then
+            echo ' : OK'
+        else
+            echo ' : FAIL'
+            cat $0.out
+        fi
+    else
+        cat $0.out
+    fi
+    rm -f $0.out
+}
+
+#
+#                                                                            (2)
+#                                                  +--------------------------<----------------------------+
+#                                                  |                 Login successful without referer      |
+#                                                  |                                                       |
+#                                                  |            (4)                                        |
+#                                          (1)     |             v                                         |
+#                                           v      |             |                 (3)                     |
+#                                           |      |    name=foo |      +-----------<------------+         |
+#                                           |      |             |      |         Error          |         |
+#                                           |      |             |      |                        |         |
+#       +------------------+       +--------+------+--+        +-+------+---------+              |         |
+#       |                  |  (5)  |                  |        |                  +--------------+         |
+#       |      Logout      +--->---+     Home page    |        |     Login form   +---->-------------------+
+#       |                  |       |                  |        |                  +---->--------------+
+#       +------------------+       +--+------+--------+        +---------+--------+                   |
+#                                     |      |                           |                            |
+#                                     |      |                           | Not                        |
+#                                     |      |                       (6) ^ Logged in                  |
+#                                     |      |                           |                            | Login successful
+#                             Success ^      |                  +--------+---------+                  | with referer == Info form
+#       +------------------+    (12)  |      |                  |                  |                  |
+#  (10) |                  |          |      +------<<----------+    Info form     +--------<---------+
+#   >---+  Create account  +----------+          (9) Success    |                  |                 (7)
+#       | (implies login)  |                                     --+------------+--+
+#       +---+---------+----+                                       |            |
+#           |         |                                            |            |
+#           |         |                                            +---->>------+
+#           |  (11)   |                                              Error (8)
+#           +--->>----+
+#             Error
+#
+#
+#
+#
+#
+#
+#
+#
+# (1) First time in, not logged in
+#
+try 'HOME NOT LOGGED IN' curl ${DUMP_HEADERS} --cookie-jar ${COOKIES} ${URL_BASE}/
+#
+# (2) Success login without referer
+#
+name=user000
+try 'HOME IS LOGGED IN' curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} --data submit=1 --data login=$name --data password=pass000 ${URL_BASE}/login.php
+serial=$(perl -ne 'print $1 if(/serial\s+(\d+)/)' ${COOKIES})
+#
+# (3) Fail to login
+#
+try 'ERROR PAGE' curl ${DUMP_HEADERS} --cookie-jar ${COOKIES} --cookie ${COOKIES} --data submit=1 --data login=$name --data password=pass001 ${URL_BASE}/login.php
+#
+# (4) Login form called with name preset
+#
+try 'PRESETNAME' curl ${DUMP_HEADERS} --cookie-jar ${COOKIES} --cookie ${COOKIES} ${URL_BASE}/login.php?name=PRESETNAME
+#
+# (5) Logout
+#
+try 'HOME NOT LOGGED IN' curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} ${URL_BASE}/logout.php
+#
+# (6) Information form and not logged in, with name preset
+#
+try "LOGIN FORM $name" curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} "${URL_BASE}/edit_account.php?name=$name&serial=$serial"
+#
+# (7) Login successful and back to information form
+#
+try 'INFORMATION FORM' curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} --data submit=1 --data referer=edit_account.php --data login=$name --data password=pass000 ${URL_BASE}/login.php
+#
+# (8) Information form submitted with errors goes back to the original form
+#
+try 'foo@bar does not match' curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} --data submit=1 --data email=foo@bar --data name=$name ${URL_BASE}/edit_account.php
+#
+# (9) Information form submitted with success goes back to the home page
+#
+try 'HOME IS LOGGED IN' curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} --data submit=1 --data email=foo@bar.com --data name=$name ${URL_BASE}/edit_account.php
+#
+# (10) Create account form
+#
+try 'HOME NOT LOGGED IN' curl ${DUMP_HEADERS} --location --cookie-jar ${COOKIES} --cookie ${COOKIES} ${URL_BASE}/logout.php
+try 'CREATE ACCOUNT foobar' curl ${DUMP_HEADERS} --cookie-jar ${COOKIES} --cookie ${COOKIES} ${URL_BASE}/create_account.php?name=foobar
+#
+# (11) Create account form not properly filled
+#
+try 'CREATE ACCOUNT ERROR PAGE' curl ${DUMP_HEADERS} --cookie-jar ${COOKIES} --cookie ${COOKIES} --data submit=1 ${URL_BASE}/create_account.php
+
+rm -f ${COOKIES}

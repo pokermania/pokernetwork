@@ -3652,3 +3652,53 @@ class PacketPokerGetPlayerInfo(Packet):
 
 PacketFactory[PACKET_POKER_GET_PLAYER_INFO] = PacketPokerGetPlayerInfo
 
+########################################
+
+PACKET_POKER_ROLES = 233
+PacketNames[PACKET_POKER_ROLES] = "POKER_ROLES"
+
+class PacketPokerRoles(PacketSerial):
+
+    PLAY = "PLAY"
+    EDIT = "EDIT"
+    ROLES = [ PLAY, EDIT ]
+
+    type = PACKET_POKER_ROLES
+
+    roles = ""
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("roles"):
+            self.roles = kwargs["roles"]
+        PacketSerial.__init__(self, *args, **kwargs)
+        
+    def pack(self):
+        return PacketSerial.pack(self) + self.packstring(self.roles)
+
+    def unpack(self, block):
+        block = PacketSerial.unpack(self, block)
+        (block, self.roles) = self.unpackstring(block)
+        return block
+    
+    def calcsize(self):
+        return PacketSerial.calcsize(self) + self.calcsizestring(self.roles)
+
+    def __str__(self):
+        return PacketSerial.__str__(self) + " roles = %s" % self.roles
+
+PacketFactory[PACKET_POKER_ROLES] = PacketPokerRoles
+
+########################################
+
+PACKET_POKER_SET_ROLE = 234
+PacketNames[PACKET_POKER_SET_ROLE] = "POKER_SET_ROLE"
+
+class PacketPokerSetRole(PacketPokerRoles):
+
+    UNKNOWN_ROLE = 1
+    NOT_AVAILABLE = 2
+    
+    type = PACKET_POKER_SET_ROLE
+
+PacketFactory[PACKET_POKER_SET_ROLE] = PacketPokerSetRole
+

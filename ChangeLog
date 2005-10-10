@@ -1,6 +1,58 @@
-Fri Sep 30 2005  Loic Dachary  <loic@gnu.org>
+Mon Oct 10 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.11	
+
+	* debian/poker-web: standalone package for web interface
+
+Wed Oct 05 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerui/pokerrenderer.py (PokerRenderer.interfaceCallbackLogin): change
+	  login= to name=.
+
+	* pokerui/pokerrenderer.py (PokerRenderer.handleMenu):
+	  edit_account: Set name and serial.  The name is used to pre-fill
+	  the login form if the user is not logged in already.
+
+	* pokernetwork/pokerserver.py (PokerService.auth): pass roles to discriminate
+	  avatars with the same login name. 
+
+	* pokernetwork/pokerserver.py (PokerAvatar.login): restrict registration
+	  in service to avatars with role PLAY. It follows that there can only
+	  be one avatar with role PLAY while there can be many avatars with other
+	  roles.
+
+	* pokernetwork/server.py (PokerServerProtocol.protocolEstablished): keepalive
+	  set to get rid of idle connections
+
+	* pokernetwork/pokerserver.py (PokerService.auth): allow multiple avatars
+	  with the same name as long as they do not have the same role.
+
+	* pokernetwork/pokerbot.py (PokerBot._handleConnection): 
+	  pokerui/pokerrenderer.py (PokerRenderer.bootstrap): default role is PLAY
+
+	* pokernetwork/packets.py: PACKET_ACK when all is needed is acknowledgement
+
+	* pokernetwork/pokerserver.py (PokerAvatar.setRole): on PACKET_POKER_SET_ROLE
+	  add the role to the avatar (can be PLAY for poker client and EDIT for 
+	  web client).
+
+	* pokernetwork/pokerpackets.py: PACKET_POKER_ROLES, PACKET_POKER_SET_ROLE
+
+Tue Oct 04 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerserver.py (PokerSOAP.getArguments): simplify args instead
+	  of args[0]
+
+	* pokernetwork/pokerserver.py (PokerAvatar.auth): set reason when checkNameAndPassword
+	  fails
+
+	* pokernetwork/poker{bot,server}.py (run): always show stack trace on error
+
+	* pokerweb: PHP based web part for the poker server, initial import
+	
+	* configure.ac: kill ok messages
+
+Fri Sep 30 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): POKER_IN_GAME
 	  deals with the case when the server sends it a list of players that does not include

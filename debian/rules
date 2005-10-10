@@ -1,41 +1,9 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-include debian/rules.mk
+DEB_AUTO_PACKAGES = python2.3-poker-network python2.3-poker2d python2.4-poker-network python2.4-poker2d
 
-#
-# python2.4 packages are on hold, waiting for python2.4-soappy and python2.4-glade2
-#
-# Build-Depends: python2.4, python2.4-dev, python2.4-glade2, python2.4-twisted, python2.4-poker-engine (>= 1.0.8)
-#
-#Package: python2.4-poker-network
-#Section: python
-#Architecture: all
-#Suggests: mysql-server
-#Depends: python, python2.4, python2.4-poker-engine (>= 1.0.8), python2.4-twisted, python2.4-mysqldb, python2.4-pyopenssl, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
-#Description: multiplayer poker server and client library
-# The server deals the cards and checks the user actions using a poker
-# game engine (poker-engine). It can handle all the poker variants
-# implemented by the poker game engine (holdem, omaha, omaha high/low,
-# stud 7 ...) in ring games, sit and go or multitables tournaments.
-# The client library can be used to implement simple clients such as
-# robots (<1000 LOC example robot provided) or a graphical user
-# interface.
-# .
-# The poker server has its own TCP/IP based protocol. The client
-# library decodes the protocol. An abstract user interface library
-# provides a framework to implement graphical clients.
-#
-#Package: python2.4-poker2d
-#Section: python
-#Architecture: any
-#Depends: python, python2.4, python2.4-poker-network, python2.4-pyopenssl, python2.4-glade2, rsync
-#Description: GTK poker client to play on a poker-network server
-# Play poker with other players connected on a poker-network server
-# (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
-# or multitables tournaments. poker2d will automaticaly reconnect to
-# the table if the connection is lost and allows playing on multiple
-# tables simultaneously.
+include debian/rules.mk
 
 DEB_BUILDDIR_python2.3-poker2d := python2.3-build
 DEB_BUILDDIR_python2.3-poker-network := python2.3-build
@@ -59,3 +27,10 @@ install/python2.3-poker2d install/python2.4-poker2d ::
 		cp -a $(DEB_DESTDIR)/usr/share/man/man6/$$man.6 $(DEB_DESTDIR)/usr/share/man/man6/$$man$(python_version).6 ; \
 	done
 
+common-configure-arch common-configure-indep:: $(DEB_SRCDIR)/config.status
+
+install/poker-web ::
+	ln -fs /etc/poker-web/htaccess pokerweb/pages/.htaccess
+	ln -fs /etc/poker-web/constants.php pokerweb/pages/constants.php
+	mkdir -p debian/poker-web/var/www
+	ln -fs /usr/share/poker-web debian/poker-web/var/www/poker-web

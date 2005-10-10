@@ -1,8 +1,16 @@
 poker-network (1.0.11-1) unstable; urgency=low
 
+  * poker2d and poker-network fake packages
+  
+  * dependency to adduser for *poker-network
+  
+  * python2.4 packages
+  
   * upstream version
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 28 Sep 2005 21:02:33 +0200
+  * depend on debconf-2.0 (closes: #332072)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Wed,  5 Oct 2005 10:24:41 +0200
 
 poker-network (1.0.10-1) unstable; urgency=low
 

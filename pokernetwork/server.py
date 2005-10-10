@@ -45,6 +45,7 @@ class PokerServerProtocol(UGAMEProtocol):
         self.transport.write(packet.pack())
 
     def protocolEstablished(self):
+        self.transport.setTcpKeepAlive(True)
         self.avatar = self.factory.createAvatar()
         self.avatar.setProtocol(self)
 

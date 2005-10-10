@@ -142,11 +142,16 @@ EXTRA_DIST = \
         database/pokerdatabaseupgrade.8.in \
         conf/poker.bot.xml.in \
         conf/poker.client.xml.in \
-        conf/poker.server.xml.in
+        conf/poker.server.xml.in \
+	$(wildcard pokerweb/pages/*.php) \
+	pokerweb/conf/constants.php.in \
+	pokerweb/conf/htaccess \
+	pokerweb/conf/poker-web.conf
 
 clean-local:
 	rm -f */*.py[co]
 	rm -f examples/*.log
+	rm -f pokerweb/pages/constants.php pokerweb/pages/.htaccess
 
 all-local:
 	export PYTHONPATH=${srcdir} ; \

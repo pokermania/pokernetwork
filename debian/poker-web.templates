@@ -1,0 +1,16 @@
+Template: poker-web/reconfigure-webserver
+Type: multiselect
+Choices: apache, apache-ssl, apache-perl, apache2
+Default:
+_Description: Which web server would you like to reconfigure automatically?
+ poker-web supports any web server that PHP does, but this automatic
+ configuration process only supports Apache.
+
+Template: poker-web/restart-webserver
+Type: boolean
+Default: false
+_Description: Do you want me to restart ${webserver} now?
+ Remember that in order to activate the new configuration
+ ${webserver} has to be restarted. You can also restart ${webserver}
+ manually executing /etc/init.d/${webserver} restart
+

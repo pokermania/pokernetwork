@@ -2,14 +2,43 @@ Source: poker-network
 Section: python
 Priority: optional
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf, po-debconf, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.8), libglade2-dev, libtool, perl
+Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf | debconf-2.0, po-debconf, python-dev, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python2.3-soappy, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.8), python2.4, python2.4-dev, python2.4-mysqldb, python2.4-pyopenssl, python2.4-soappy, python2.4-glade2, python2.4-twisted, python2.4-poker-engine (>= 1.0.8), libglade2-dev, libtool, perl
 Standards-Version: 3.6.2.1
+
+Package: python2.4-poker-network
+Section: python
+Architecture: all
+Suggests: mysql-server
+Depends: python, adduser, python2.4, python2.4-poker-engine (>= 1.0.8), python2.4-twisted, python2.4-mysqldb, python2.4-pyopenssl, python2.4-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Description: multiplayer poker server and client library
+ The server deals the cards and checks the user actions using a poker
+ game engine (poker-engine). It can handle all the poker variants
+ implemented by the poker game engine (holdem, omaha, omaha high/low,
+ stud 7 ...) in ring games, sit and go or multitables tournaments.
+ The client library can be used to implement simple clients such as
+ robots (<1000 LOC example robot provided) or a graphical user
+ interface.
+ .
+ The poker server has its own TCP/IP based protocol. The client
+ library decodes the protocol. An abstract user interface library
+ provides a framework to implement graphical clients.
+
+Package: python2.4-poker2d
+Section: python
+Architecture: any
+Depends: python, python2.4, python2.4-poker-network, python2.4-glade2, rsync
+Description: GTK poker client to play on a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. poker2d will automaticaly reconnect to
+ the table if the connection is lost and allows playing on multiple
+ tables simultaneously.
 
 Package: python2.3-poker-network
 Section: python
 Architecture: all
 Suggests: mysql-server
-Depends: python, python2.3, python2.3-poker-engine (>= 1.0.8), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Depends: python, adduser, python2.3, python2.3-poker-engine (>= 1.0.8), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python2.3-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
@@ -28,6 +57,45 @@ Section: python
 Architecture: any
 Depends: python, python2.3, python2.3-poker-network, python2.3-glade2, rsync
 Description: GTK poker client to play on a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. poker2d will automaticaly reconnect to
+ the table if the connection is lost and allows playing on multiple
+ tables simultaneously.
+
+Package: poker-network
+Section: python
+Architecture: all
+Depends: python (>= 2.3), python (<< 2.3+1), python2.3-poker-network
+Description: multiplayer poker server and client library
+ The server deals the cards and checks the user actions using a poker
+ game engine (poker-engine). It can handle all the poker variants
+ implemented by the poker game engine (holdem, omaha, omaha high/low,
+ stud 7 ...) in ring games, sit and go or multitables tournaments.
+ The client library can be used to implement simple clients such as
+ robots (<1000 LOC example robot provided) or a graphical user
+ interface.
+ .
+ The poker server has its own TCP/IP based protocol. The client
+ library decodes the protocol. An abstract user interface library
+ provides a framework to implement graphical clients.
+
+Package: poker2d
+Section: python
+Architecture: any
+Depends: python (>= 2.3), python (<< 2.3+1), python2.3-poker2d
+Description: GTK poker client to play on a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. poker2d will automaticaly reconnect to
+ the table if the connection is lost and allows playing on multiple
+ tables simultaneously.
+
+Package: poker-web
+Section: web
+Architecture: all
+Depends: debconf (>= 0.2.26), php4 | php4-cgi | php5 | php5-cgi, apache2 | httpd
+Description: Web interface to a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
  or multitables tournaments. poker2d will automaticaly reconnect to

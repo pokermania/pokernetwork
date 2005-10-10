@@ -105,6 +105,7 @@ class PokerBot:
 
         if packet.type == PACKET_BOOTSTRAP:
             user = protocol.user
+            protocol.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
             protocol.sendPacket(PacketLogin(name = user.name,
                                             password = user.password))
             protocol.sendPacket(PacketPokerTableSelect(string = "my"))
@@ -510,14 +511,8 @@ def makeApplication(argv):
 application = makeApplication(sys.argv[1:])
 
 def run():
-    try:
-        app.startApplication(application, None)
-        reactor.run()
-    except:
-        if application.verbose:
-            print_exc()
-        else:
-            print sys.exc_value
+    app.startApplication(application, None)
+    reactor.run()
 
 if __name__ == '__main__':
     run()

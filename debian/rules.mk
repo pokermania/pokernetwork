@@ -35,6 +35,8 @@ ifneq (ccache,$(findstring ccache,$(DEB_BUILD_OPTIONS)))
         DEB_CONFIGURE_EXTRA_FLAGS += --without-ccache
 endif
 
+DEB_AUTO_PACKAGES ?= $(DEB_PACKAGES)
+
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
 DEB_MAKE_INSTALL_TARGET = install DESTDIR=$(DEB_DESTDIR)
@@ -49,8 +51,8 @@ DEB_PYTHON_PACKAGES := $(strip $(filter $(patsubst %,python%%,$(DEB_PYTHON_VERSI
 
 DEB_DH_MAKESHLIBS_ARGS = -n
 
-common-configure-arch common-configure-indep:: $(patsubst %,config-status/%,$(DEB_PYTHON_PACKAGES)) 
-$(patsubst %,config-status/%,$(DEB_PACKAGES)):: $(DEB_SRCDIR)/configure
+common-configure-arch common-configure-indep:: $(patsubst %,config-status/%,$(DEB_PYTHON_PACKAGES))
+$(patsubst %,config-status/%,$(DEB_AUTO_PACKAGES)):: $(DEB_SRCDIR)/configure
 	if [ ! -f $(if $(DEB_BUILDDIR_$(cdbs_curpkg)),$(DEB_BUILDDIR_$(cdbs_curpkg)),$(DEB_BUILDDIR))/config.status ] ; then \
 		$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS) ; \
 	fi
@@ -81,18 +83,18 @@ clean:: $(DEB_SRCDIR)/config.status
 	rm -fr config-status
 	$(MAKE) maintainer-clean
 
-$(patsubst %,cleanbuilddir/%,$(DEB_PACKAGES))::
+$(patsubst %,cleanbuilddir/%,$(DEB_AUTO_PACKAGES))::
 	-if test -n "$(DEB_BUILDDIR_$(cdbs_curpkg))" && test "$(DEB_BUILDDIR_$(cdbs_curpkg))" != "$(DEB_SRCDIR)"; then rm -fr "$(DEB_BUILDDIR_$(cdbs_curpkg))"; fi
 
 DEB_MAKE_INVOKE = $(DEB_MAKE_ENVVARS) make -C $(if $(DEB_BUILDDIR_$(cdbs_curpkg)),$(DEB_BUILDDIR_$(cdbs_curpkg)),$(DEB_BUILDDIR)) CFLAGS=$(if $(CFLAGS_$(cdbs_curpkg)),"$(CFLAGS_$(cdbs_curpkg))","$(CFLAGS)") CXXFLAGS=$(if $(CXXFLAGS_$(cdbs_curpkg)),"$(CXXFLAGS_$(cdbs_curpkg))","$(CXXFLAGS)") 
 
-$(patsubst %,build/%,$(DEB_PACKAGES)) :: 
+$(patsubst %,build/%,$(DEB_AUTO_PACKAGES)) :: 
 	$(DEB_MAKE_INVOKE) $(DEB_MAKE_BUILD_TARGET)
 
 DEB_MAKE_INSTALL_TARGET = install DESTDIR=$(DEB_DESTDIR)
 
-common-install-arch common-install-indep:: $(patsubst %,install/%,$(DEB_PACKAGES))
-$(patsubst %,install/%,$(DEB_PACKAGES)) :: 
+common-install-arch common-install-indep:: $(patsubst %,install/%,$(DEB_AUTO_PACKAGES))
+$(patsubst %,install/%,$(DEB_AUTO_PACKAGES)) :: 
 	$(DEB_MAKE_ENVVARS) make -C $(if $(DEB_BUILDDIR_$(cdbs_curpkg)),$(DEB_BUILDDIR_$(cdbs_curpkg)),$(DEB_BUILDDIR)) $(DEB_MAKE_INSTALL_TARGET)
 
 $(patsubst %,binary-install/%,$(DEB_PYTHON_PACKAGES)) :: binary-install/%:

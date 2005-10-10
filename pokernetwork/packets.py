@@ -409,7 +409,7 @@ PACKET_BOOTSTRAP = 15
 PacketNames[PACKET_BOOTSTRAP] = "BOOTSTRAP"
 
 class PacketBootstrap(Packet):
-    "Client tells the server it will leave"
+    ""
 
     type = PACKET_BOOTSTRAP
 
@@ -428,4 +428,16 @@ class PacketProtocolError(PacketError):
     type = PACKET_PROTOCOL_ERROR
 
 PacketFactory[PACKET_PROTOCOL_ERROR] = PacketProtocolError
+
+########################################
+
+PACKET_ACK = 17
+PacketNames[PACKET_ACK] = "ACK"
+
+class PacketAck(Packet):
+    ""
+
+    type = PACKET_ACK
+
+PacketFactory[PACKET_ACK] = PacketAck
 

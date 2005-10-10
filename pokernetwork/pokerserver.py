@@ -37,6 +37,7 @@ from re import match
 from types import *
 from string import split, lower, join
 from pprint import pprint, pformat
+import sets
 import time
 import os
 import operator
@@ -95,6 +96,7 @@ class PokerAvatar:
 
     def __init__(self, service):
         self.protocol = None
+        self.roles = sets.Set()
         self.service = service
         self.tables = {}
         self.user = User()
@@ -127,7 +129,8 @@ class PokerAvatar:
         self.user.outfit = player_info.outfit
         
         self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
-        self.service.serial2client[serial] = self
+        if PacketPokerRoles.PLAY in self.roles:
+            self.service.serial2client[serial] = self
         if self.service.verbose:
             print "user %s/%d logged in" % ( self.user.name, self.user.serial )
 	#
@@ -159,15 +162,17 @@ class PokerAvatar:
 
     def logout(self):
         if self.user.serial:
-            del self.service.serial2client[self.user.serial]
+            if PacketPokerRoles.PLAY in self.roles:
+                del self.service.serial2client[self.user.serial]
             self.user.logout()
         
     def auth(self, packet):
         status = checkNameAndPassword(packet.name, packet.password)
         if status[0]:
-            ( info, reason ) = self.service.auth(packet.name, packet.password)
+            ( info, reason ) = self.service.auth(packet.name, packet.password, self.roles)
         else:
             print "PokerAvatar::auth: failure " + str(status)
+            reason = status[2]
             info = False
         if info:
             self.sendPacketVerbose(PacketAuthOk())
@@ -257,6 +262,7 @@ class PokerAvatar:
                 self.getPersonalInfo(packet.serial)
             else:
                 print "attempt to get personal info for user %d by user %d" % ( packet.serial, self.getSerial() )
+                self.sendPacketVerbose(PacketAuthRequest())
             return
 
         elif packet.type == PACKET_POKER_PLAYER_INFO:
@@ -277,6 +283,10 @@ class PokerAvatar:
             else:
                 print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
             return
+
+        elif packet.type == PACKET_POKER_SET_ROLE:
+            self.sendPacketVerbose(self.setRole(packet))
+            return 
 
         elif ( packet.type == PACKET_POKER_SET_ACCOUNT or
                packet.type == PACKET_POKER_CREATE_ACCOUNT ):
@@ -533,6 +543,20 @@ class PokerAvatar:
         self.personal_info = packet
         self.service.setPersonalInfo(packet)
 
+    def setRole(self, packet):
+        if packet.roles not in PacketPokerRoles.ROLES:
+            return PacketError(code = PacketPokerSetRole.UNKNOWN_ROLE,
+                               message = "role %s is unknown (roles = %s)" % ( packet.roles, PacketPokerRoles.ROLES),
+                               other_type = PACKET_POKER_SET_ROLE)
+
+        if packet.roles in self.roles:
+            return PacketError(code = PacketPokerSetRole.NOT_AVAILABLE,
+                               message = "another client already has role %s" % packet.roles,
+                               other_type = PACKET_POKER_SET_ROLE)
+        self.roles.add(packet.roles)
+        return PacketPokerRoles(serial = packet.serial,
+                                roles = join(self.roles, " "))
+            
     def getPlayerInfo(self):
         if self.user.isLogged():
             return PacketPokerPlayerInfo(serial = self.getSerial(),
@@ -1973,10 +1997,10 @@ class PokerService(service.Service):
     def destroyAvatar(self, avatar):
         avatar.connectionLost("Disconnected")
 
-    def auth(self, name, password):
+    def auth(self, name, password, roles):
         for (serial, client) in self.serial2client.iteritems():
-            if client.getName() == name:
-                if self.verbose: print "PokerService::auth: %s attempt to login more than once" % name
+            if client.getName() == name and roles.intersection(client.roles):
+                if self.verbose: print "PokerService::auth: %s attempt to login more than once with similar roles %s" % ( name, roles.intersection(client.roles) )
                 return ( False, "Already logged in from somewhere else" ) 
         return self.poker_auth.auth(name, password)
             
@@ -3154,15 +3178,22 @@ class PokerTree(resource.Resource):
         self.putChild("", self)
 
     def render_GET(self, request):
-        return "Use /RPC2"
+        return "Use /RPC2 or /SOAP"
 
 components.registerAdapter(PokerTree, IPokerService, resource.IResource)
+
+def _getRequestCookie(request):
+    if request.cookies:
+        return request.cookies[0]
+    else:
+        return request.getCookie(join(['TWISTED_SESSION'] + request.sitepath, '_'))
 
 class PokerXML(resource.Resource):
 
     encoding = "ISO-8859-1"
     
     def __init__(self, service):
+        resource.Resource.__init__(self)
         self.service = service
         self.verbose = service.verbose
 
@@ -3180,12 +3211,12 @@ class PokerXML(resource.Resource):
             mimeType = "text/xml"
         request.setHeader("Content-type", mimeType)
         args = self.getArguments(request)
-        if self.verbose > 2:
-            print "PokerXML: " + str(args)
+        if self.verbose > 2: print "PokerXML: " + str(args)
         session = None
         use_sessions = args[0]
         args = args[1:]
         if use_sessions == "use sessions":
+            if self.verbose > 2: print "PokerXML: Receive session cookie %s " % _getRequestCookie(request)
             session = request.getSession()
             if not hasattr(session, "avatar"):
                 session.avatar = self.service.createAvatar()
@@ -3209,9 +3240,8 @@ class PokerXML(resource.Resource):
                 if use_sessions == "use sessions" and len(results) > 1:
                     for result in results:
                         if isinstance(result, PacketSerial):
-                            if self.verbose > 2:
-                                print "PokerXML: Session cookie " + str(request.cookies)
-                            result.cookie = request.cookies[0]
+                            result.cookie = _getRequestCookie(request)
+                            if self.verbose > 2: print "PokerXML: Send session cookie " + result.cookie
                             break
                 result_packets.extend(results)
                 if isinstance(packet, PacketLogout):
@@ -3304,8 +3334,8 @@ class PokerSOAP(PokerXML):
         if callable(kwargs):
             kwargs = kwargs()
 
-        return self.fromutf8(SOAPpy.simplify(args[0]))
-    
+        return self.fromutf8(SOAPpy.simplify(args))
+
     def maps2result(self, maps):
         return SOAPpy.buildSOAP(kw = {'Result': self.toutf8(maps)},
                                 method = 'returnPacket',
@@ -3357,14 +3387,8 @@ def makeApplication(argv):
 application = makeApplication(sys.argv)
 
 def run():
-    try:
-        app.startApplication(application, None)
-        reactor.run()
-    except:
-        if application.verbose:
-            print_exc()
-        else:
-            print sys.exc_value
+    app.startApplication(application, None)
+    reactor.run()
 
 if __name__ == '__main__':
     run()

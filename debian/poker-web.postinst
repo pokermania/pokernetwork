@@ -1,0 +1,120 @@
+#!/bin/bash
+
+set -e
+if [ "${DH_VERBOSE:-0}" -gt 0 ] ; then set -x ; fi
+
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+if [ "$1" = "configure" ]; then
+    db_get poker-web/reconfigure-webserver
+    webservers="$RET"
+    restart=""
+
+    for webserver in $webservers; do
+        webserver=${webserver%,}
+        test -x /usr/sbin/$webserver || continue
+
+        case "$webserver" in
+            apache|apache-perl|apache-ssl)
+                if [ -x /usr/sbin/modules-config ]; then
+                    if [ -f /usr/lib/apache/1.3/libphp4.so ]; then
+                        if ! grep -qs "^LoadModule php4_module " /etc/$webserver/modules.conf && \
+                           ! grep -qs "^LoadModule php5_module " /etc/$webserver/modules.conf; then
+                            modules-config $webserver enable mod_php4
+                        fi
+                    elif [ -f /usr/lib/apache/1.3/mod_php5.so ]; then
+                        if ! grep -qs "^LoadModule php4_module " /etc/$webserver/modules.conf && \
+                           ! grep -qs "^LoadModule php5_module " /etc/$webserver/modules.conf; then
+                            modules-config $webserver enable mod_php5
+                        fi
+                    else
+                        if [ -f /usr/lib/apache/1.3/mod_actions.so ]; then
+                            if ! grep -qs "^LoadModule action_module " /etc/$webserver/modules.conf; then
+                                modules-config $webserver enable mod_actions
+                            fi
+                        fi
+                        if [ -f /usr/lib/apache/1.3/mod_cgi.so ]; then
+                            if ! grep -qs "^LoadModule cgi_module " /etc/$webserver/modules.conf && \
+                               ! grep -qs "^LoadModule fastcgi_module " /etc/$webserver/modules.conf; then
+                                modules-config $webserver enable mod_cgi
+                            fi
+                        fi
+                    fi
+                fi
+                ;;
+            apache2)
+                if [ -d /etc/$webserver/mods-enabled ]; then
+                    if [ ! -f /etc/$webserver/mods-enabled/actions.load -a ! -h /etc/$webserver/mods-enabled/actions.load ]; then
+                        ln -s /etc/$webserver/mods-available/actions.load /etc/$webserver/mods-enabled/actions.load
+                    fi
+                    if [ -f /etc/apache2/mods-available/php4.load -a -f /usr/lib/apache2/modules/libphp4.so ]; then
+                        if [ ! -f /etc/$webserver/mods-enabled/php4.load -a ! -h /etc/$webserver/mods-enabled/php4.load -a \
+                             ! -f /etc/$webserver/mods-enabled/php5.load -a ! -h /etc/$webserver/mods-enabled/php5.load -a \
+                             ! -f /etc/$webserver/mods-enabled/php5_filter.load -a ! -h /etc/$webserver/mods-enabled/php5_filter.load -a \
+                             ! -f /etc/$webserver/mods-enabled/fcgid.load -a ! -h /etc/$webserver/mods-enabled/fcgid.load -a \
+                             ! -f /etc/$webserver/mods-enabled/fastcgi.load -a ! -h /etc/$webserver/mods-enabled/fastcgi.load ]; then
+                            ln -s /etc/$webserver/mods-available/php4.conf /etc/$webserver/mods-enabled/php4.conf
+                            ln -s /etc/$webserver/mods-available/php4.load /etc/$webserver/mods-enabled/php4.load
+                        fi
+                    elif [ -f /etc/apache2/mods-available/php5.load -a -f /usr/lib/apache2/modules/mod_php5.so ]; then
+                        if [ ! -f /etc/$webserver/mods-enabled/php4.load -a ! -h /etc/$webserver/mods-enabled/php4.load -a \
+                             ! -f /etc/$webserver/mods-enabled/php5.load -a ! -h /etc/$webserver/mods-enabled/php5.load -a \
+                             ! -f /etc/$webserver/mods-enabled/php5_filter.load -a ! -h /etc/$webserver/mods-enabled/php5_filter.load -a \
+                             ! -f /etc/$webserver/mods-enabled/fcgid.load -a ! -h /etc/$webserver/mods-enabled/fcgid.load -a \
+                             ! -f /etc/$webserver/mods-enabled/fastcgi.load -a ! -h /etc/$webserver/mods-enabled/fastcgi.load ]; then
+                            ln -s /etc/$webserver/mods-available/php5.conf /etc/$webserver/mods-enabled/php5.conf
+                            ln -s /etc/$webserver/mods-available/php5.load /etc/$webserver/mods-enabled/php5.load
+                        fi
+                    else
+                        if [ ! -f /etc/$webserver/mods-enabled/cgi.load -a ! -h /etc/$webserver/mods-enabled/cgi.load -a \
+                             ! -f /etc/$webserver/mods-enabled/fastcgi.load -a ! -h /etc/$webserver/mods-enabled/fastcgi.load -a \
+                             ! -f /etc/$webserver/mods-enabled/fcgid.load -a ! -h /etc/$webserver/mods-enabled/fcgid.load ]; then
+                            ln -s /etc/$webserver/mods-available/cgi.load /etc/$webserver/mods-enabled/cgi.load
+                        fi
+                    fi
+                fi
+                ;;
+        esac
+
+        case "$webserver" in
+            apache|apache-perl|apache-ssl|apache2)
+                newfile=false
+                if [ -d /etc/$webserver/conf.d ] && [ ! -f /etc/$webserver/conf.d/poker-web.conf ] && [ ! -h /etc/$webserver/conf.d/poker-web.conf ]; then
+                    ln -s /etc/poker-web/apache.conf /etc/$webserver/conf.d/poker-web.conf
+                    newfile=true
+                fi
+                if $newfile = true  || ! md5sum -c /etc/poker-web/apache.conf.dpkg-md5sum >/dev/null 2>&1; then
+                    db_reset poker-web/restart-webserver || true
+                    db_subst poker-web/restart-webserver webserver "$webserver"
+                    db_input high poker-web/restart-webserver || true
+                    db_go
+                    db_get poker-web/restart-webserver
+                    if [ "$RET" = "true" ]; then
+                        restart="$restart $webserver"
+                    fi
+                fi
+                ;;
+        esac
+    done
+
+    for webserver in $restart; do
+        webserver=${webserver%,}
+        if [ -x /usr/sbin/invoke-rc.d ]; then
+            invoke-rc.d $webserver restart
+        else
+            /etc/init.d/$webserver restart
+        fi
+    done
+
+    rm -f /etc/poker-web/apache.conf.dpkg-md5sum
+fi
+
+# dh_installdeb will replace this with shell code automatically
+# generated by other debhelper scripts.
+
+#DEBHELPER#
+
+db_stop
+
+exit 0

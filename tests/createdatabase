@@ -1,4 +1,4 @@
-#
+# -*- sh -*-
 # Copyright (C) 2005 Mekensleep
 #
 # Mekensleep
@@ -23,7 +23,12 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-echo "Preparing the pokernetworktest database, enter the root user password."
+
+if [ -z "${MYSQL_ROOT_PASSWORD}" ] ; then
+    echo "Preparing the pokernetworktest database, enter the root user password."
+    MYSQL_ROOT_PASSWORD=-p
+fi
+
 ( 
 
 cat <<EOF
@@ -51,5 +56,4 @@ cat $SCHEMA
 
 echo "$INIT_SQL"
 
-) | mysql -u root -p 
-
+) | mysql -u root ${MYSQL_ROOT_PASSWORD}
