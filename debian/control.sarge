@@ -34,3 +34,42 @@ Description: GTK poker client to play on a poker-network server
  the table if the connection is lost and allows playing on multiple
  tables simultaneously.
 
+Package: poker-network
+Section: python
+Architecture: all
+Depends: python (>= 2.3), python (<< 2.3+1), python2.3-poker-network
+Description: multiplayer poker server and client library
+ The server deals the cards and checks the user actions using a poker
+ game engine (poker-engine). It can handle all the poker variants
+ implemented by the poker game engine (holdem, omaha, omaha high/low,
+ stud 7 ...) in ring games, sit and go or multitables tournaments.
+ The client library can be used to implement simple clients such as
+ robots (<1000 LOC example robot provided) or a graphical user
+ interface.
+ .
+ The poker server has its own TCP/IP based protocol. The client
+ library decodes the protocol. An abstract user interface library
+ provides a framework to implement graphical clients.
+
+Package: poker2d
+Section: python
+Architecture: any
+Depends: python (>= 2.3), python (<< 2.3+1), python2.3-poker2d
+Description: GTK poker client to play on a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. poker2d will automaticaly reconnect to
+ the table if the connection is lost and allows playing on multiple
+ tables simultaneously.
+
+Package: poker-web
+Section: web
+Architecture: all
+Depends: debconf (>= 0.2.26), php4 | php4-cgi | php5 | php5-cgi, apache2 | httpd
+Description: Web interface to a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. poker2d will automaticaly reconnect to
+ the table if the connection is lost and allows playing on multiple
+ tables simultaneously.
+
