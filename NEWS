@@ -2,6 +2,9 @@ Release 1.0.11
 
 Major bug fixes.
 
+PHP based web interface (account creation, editing personal settings)
+using the server SOAP interface.
+
 Release 1.0.10
 
 Minor distributions fix.
