@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-DEB_AUTO_PACKAGES = $(filter python2., $(DEB_ALL_PACKAGES))
+DEB_AUTO_PACKAGES = $(filter python2.%, $(DEB_ALL_PACKAGES))
 
 include debian/rules.mk
 
