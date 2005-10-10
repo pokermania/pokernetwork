@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-DEB_AUTO_PACKAGES = python2.3-poker-network python2.3-poker2d python2.4-poker-network python2.4-poker2d
+DEB_AUTO_PACKAGES = $(filter python2., $(DEB_ALL_PACKAGES))
 
 include debian/rules.mk
 
