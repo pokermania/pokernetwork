@@ -1,10 +1,11 @@
-Mon Oct 10 2005  Loic Dachary  <loic@gnu.org>
+Tue Oct 11 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.11	
 
-	* debian/poker-web: standalone package for web interface
+	* pokerclient2d/chat.c (on_history_clicked): do not use custom images (use
+	  style)
 
-	* Fixe bug with the chat history button
+	* debian/poker-web: standalone package for web interface
 
 Wed Oct 05 2005  Loic Dachary  <loic@gnu.org>
 
