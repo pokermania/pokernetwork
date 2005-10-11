@@ -65,6 +65,7 @@ case "$1" in
 	fi
 
         if [ "@PYTHON_VERSION@" = "2.3" ] && [ -d /etc/poker-network ] ; then
+            /etc/init.d/poker-network stop
             echo "Moving /etc/poker-network to /etc/poker-network2.3"
             update-rc.d -f poker-network remove
             mv /etc/poker-network2.3 /etc/poker-network2.3.old
