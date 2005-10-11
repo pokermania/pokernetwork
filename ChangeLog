@@ -4,6 +4,8 @@ Mon Oct 10 2005  Loic Dachary  <loic@gnu.org>
 
 	* debian/poker-web: standalone package for web interface
 
+	* Fixe bug with the chat history button
+
 Wed Oct 05 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.interfaceCallbackLogin): change
