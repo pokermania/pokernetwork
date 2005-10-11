@@ -23,6 +23,7 @@
  * Authors:
  *  Loic Dachary <loic@gnu.org>
  *
+ *	Nicolas Albert <nicolas_albert_85@yahoo.fr>
  */
 
 #include <gtk/gtk.h>
@@ -39,9 +40,6 @@
 static GtkWidget*	g_history_window = 0;
 static GtkWidget*	g_entry_window = 0;
 static gboolean		chat_history_visible = FALSE;
-
-static GtkWidget*	s_icon_up = 0;
-static GtkWidget*	s_icon_down = 0;
 
 typedef struct smiley_s
 {
@@ -134,26 +132,17 @@ int find_smiley(const char *str)
   return -1;
 }
 
-static void	change_button_icon(GtkWidget* button, GtkWidget* new_icon)
-{
-  g_assert(GTK_IS_IMAGE(new_icon));
-  gtk_container_remove(GTK_CONTAINER(button), gtk_bin_get_child(GTK_BIN(button)));
-  gtk_container_add(GTK_CONTAINER(button), new_icon);
-  gtk_widget_show(new_icon);
-}
-
 void	on_history_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) user_data;
   (void) widget;
 
   chat_history_visible = !chat_history_visible;
-
   set_string("chat");
   set_string("history");
   set_string(chat_history_visible ? "yes" : "no");
   flush_io_channel();
-  change_button_icon(widget, (chat_history_visible ? s_icon_down : s_icon_up));
+  gtk_widget_set_state(widget, (chat_history_visible ? GTK_STATE_ACTIVE : GTK_STATE_NORMAL));
 }
 
 void	on_chat_done(GtkWidget *widget, gpointer user_data)
@@ -195,19 +184,10 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       // with a
       // "show"
       // packet
-      s_icon_up = gtk_image_new_from_stock(GTK_STOCK_GO_UP, GTK_ICON_SIZE_BUTTON);
-      g_assert(s_icon_up);
-      g_object_ref(s_icon_up);
-      s_icon_down = gtk_image_new_from_stock(GTK_STOCK_GO_DOWN, GTK_ICON_SIZE_BUTTON);
-      g_assert(s_icon_down);
-      g_object_ref(s_icon_down);
-
       {
         GtkWidget*	button = glade_xml_get_widget(g_entry_xml, "history_button");
         g_assert(button);
-        gtk_container_remove(GTK_CONTAINER(button), gtk_bin_get_child(GTK_BIN(button)));
-        gtk_container_add(GTK_CONTAINER(button), s_icon_up);
-        gtk_widget_show(s_icon_up);
+		gtk_widget_set_state(button,GTK_STATE_NORMAL);
       }
     }
 
