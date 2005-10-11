@@ -1,5 +1,7 @@
 poker-network (1.0.11-1) unstable; urgency=low
 
+  * poker-web package for www interface to poker server
+  
   * poker2d and poker-network fake packages
   
   * dependency to adduser for *poker-network
