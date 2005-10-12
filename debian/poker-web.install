@@ -1,2 +1,2 @@
-pokerweb/pages/*.php pokerweb/pages/*.txt pokerweb/pages/.htaccess usr/share/poker-web
+pokerweb/pages/*.php pokerweb/pages/*.ref pokerweb/pages/*.txt pokerweb/pages/.htaccess usr/share/poker-web
 pokerweb/conf/apache.conf pokerweb/conf/htaccess pokerweb/conf/constants.php etc/poker-web

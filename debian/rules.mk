@@ -59,7 +59,7 @@ $(patsubst %,config-status/%,$(DEB_AUTO_PACKAGES)):: $(DEB_SRCDIR)/configure
 	mkdir -p config-status && touch config-status/$(cdbs_curpkg)
 
 $(DEB_SRCDIR)/config.status:: $(DEB_SRCDIR)/configure
-	./configure --enable-maintainer-mode --disable-python-depends
+	./configure $(DEB_CONFIGURE_EXTRA_FLAGS) --enable-maintainer-mode --disable-python-depends
 
 $(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/bootstrap $(DEB_SRCDIR)/configure.ac
 	sh bootstrap

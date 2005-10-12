@@ -24,13 +24,7 @@ case "$1" in
     configure)
         db_get "python@PYTHON_VERSION@-poker-network/host"
         poker_network_host="$RET"
-        tmpfile=`mktemp`
-        for conf_file in /usr/share/poker-network@PYTHON_VERSION@/poker2d/poker2d.xml
-        do
-          sed -e "s/\%HOST\%/$poker_network_host/" $conf_file > $tmpfile
-          mv  $tmpfile $conf_file
-          chmod 644 $conf_file
-        done
+        sed -e "s/\%HOST\%/$poker_network_host/" < /usr/share/poker-network@PYTHON_VERSION@/poker2d/poker2d.xml.ref > /usr/share/poker-network@PYTHON_VERSION@/poker2d/poker2d.xml
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

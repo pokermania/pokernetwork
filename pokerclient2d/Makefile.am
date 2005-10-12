@@ -137,6 +137,7 @@ install-data-hook:
 	if [ "${MAYBE_PYTHON_VERSION}" ] ; then \
 		cp -a $(DESTDIR)$(gamesdir)/poker2d $(DESTDIR)$(gamesdir)/poker2d${PYTHON_VERSION} ; \
 	fi
+	cp poker2d.xml $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
 
 clean-local:
 	rm -f *.so *.pyc

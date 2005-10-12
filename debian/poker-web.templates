@@ -14,3 +14,9 @@ _Description: Do you want me to restart ${webserver} now?
  ${webserver} has to be restarted. You can also restart ${webserver}
  manually executing /etc/init.d/${webserver} restart
 
+Template: poker-web/host
+Type: string
+Default: localhost
+_Description: Hostname or IP address of the poker-network server:
+ The poker-network server for which poker-web provides a web
+ based interface. It will be queried via its SOAP interface.

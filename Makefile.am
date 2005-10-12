@@ -154,7 +154,7 @@ EXTRA_DIST = \
 clean-local:
 	rm -f */*.py[co]
 	rm -f examples/*.log
-	rm -f pokerweb/pages/constants.php pokerweb/pages/.htaccess
+	rm -f pokerweb/pages/constants.php pokerweb/pages/constants.php.ref pokerweb/pages/.htaccess
 
 all-local:
 	export PYTHONPATH=${srcdir} ; \

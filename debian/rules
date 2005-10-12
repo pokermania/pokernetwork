@@ -32,5 +32,6 @@ common-configure-arch common-configure-indep:: $(DEB_SRCDIR)/config.status
 install/poker-web ::
 	ln -fs /etc/poker-web/htaccess pokerweb/pages/.htaccess
 	ln -fs /etc/poker-web/constants.php pokerweb/pages/constants.php
+	cp pokerweb/conf/constants.php pokerweb/pages/constants.php.ref
 	mkdir -p debian/poker-web/var/www
 	ln -fs /usr/share/poker-web debian/poker-web/var/www/poker-web

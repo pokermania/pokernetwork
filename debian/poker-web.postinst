@@ -108,6 +108,11 @@ if [ "$1" = "configure" ]; then
     done
 
     rm -f /etc/poker-web/apache.conf.dpkg-md5sum
+
+    db_get "poker-web/host"
+    poker_network_host="$RET"
+    sed -e "s/\%HOST\%/$poker_network_host/" < /usr/share/poker-web/constants.php.ref > /etc/poker-web/constants.php
+    
 fi
 
 # dh_installdeb will replace this with shell code automatically
