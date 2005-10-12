@@ -79,11 +79,12 @@ case "$1" in
             /usr/sbin/pokerconfigupgrade@PYTHON_VERSION@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network@PYTHON_VERSION@/upgrades/poker.$file /etc/poker-network@PYTHON_VERSION@/poker.$file.xml
 	done
 
+        db_get "python@PYTHON_VERSION@-poker-network/host"
+        poker_network_host="$RET"
+
 	db_get "python@PYTHON_VERSION@-poker-network/skip"
         tmpfile=`mktemp`
 	if [ $RET = "false" ]; then
-            db_get "python@PYTHON_VERSION@-poker-network/host"
-            poker_network_host="$RET"
 	    touch /etc/poker-network@PYTHON_VERSION@/lockfile
 	else
 	    get_db_params
@@ -105,7 +106,6 @@ case "$1" in
             else
                 /usr/sbin/pokerdatabaseupgrade@PYTHON_VERSION@ /etc/poker-network@PYTHON_VERSION@/poker.server.xml
  	    fi
-            poker_network_host=localhost
             rm -f /etc/poker-network@PYTHON_VERSION@/lockfile
 	fi
 
