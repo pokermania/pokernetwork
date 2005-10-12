@@ -139,5 +139,9 @@ install-data-hook:
 	fi
 	cp poker2d.xml $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
 
+uninstall-local:
+	rm -f $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
+	rm -f $(DESTDIR)$(gamesdir)/poker2d${PYTHON_VERSION}
+
 clean-local:
 	rm -f *.so *.pyc
