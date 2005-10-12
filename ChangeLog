@@ -1,6 +1,11 @@
-Tue Oct 11 2005  Loic Dachary  <loic@gnu.org>
+Wed Oct 12 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.11	
+
+	* pokerclient2d/upgrades/1.0.10-1.0.11.xsl: add URL of the poker server web part,
+	  if not present.
+
+Tue Oct 11 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/chat.c (on_history_clicked): do not use custom images (use
 	  style)

@@ -22,8 +22,8 @@
  *
  * Authors:
  *  Loic Dachary <loic@gnu.org>
+ *  Nicolas Albert <nicolas_albert_85@yahoo.fr>
  *
- *	Nicolas Albert <nicolas_albert_85@yahoo.fr>
  */
 
 #include <gtk/gtk.h>

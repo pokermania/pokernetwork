@@ -116,6 +116,7 @@ nobase_dist_poker2d_DATA = \
 	client.xml \
 	upgrades/1.0.5-1.0.6.xsl \
 	upgrades/1.0.6-1.0.7.xsl \
+	upgrades/1.0.10-1.0.11.xsl \
 	upgrades/str.replace.function.xsl
 
 nobase_poker2d_DATA = \

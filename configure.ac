@@ -43,6 +43,7 @@ AM_MAINTAINER_MODE
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(MYSQL, [mysql])
 AC_PATH_PROG(PERL, [perl])
+AC_PATH_PROGS(WWWBROWSER, [x-www-browser firefox mozilla konqueror epiphany dillo links])
 
 test x$prefix = xNONE && prefix="$ac_default_prefix"
 test x$exec_prefix = xNONE && exec_prefix="$prefix"
