@@ -41,6 +41,8 @@ static GtkWidget*	g_history_window = 0;
 static GtkWidget*	g_entry_window = 0;
 static gboolean		chat_history_visible = FALSE;
 
+GtkStateType current_state;
+
 typedef struct smiley_s
 {
   char* text;
@@ -136,13 +138,27 @@ void	on_history_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) user_data;
   (void) widget;
-
   chat_history_visible = !chat_history_visible;
   set_string("chat");
   set_string("history");
   set_string(chat_history_visible ? "yes" : "no");
   flush_io_channel();
-  gtk_widget_set_state(widget, (chat_history_visible ? GTK_STATE_ACTIVE : GTK_STATE_NORMAL));
+  current_state = chat_history_visible ? GTK_STATE_ACTIVE : GTK_STATE_NORMAL;
+  gtk_widget_set_state(widget,current_state);
+}
+
+void	on_history_focus(GtkWidget *widget, gpointer user_data)
+{
+  (void) user_data;
+  (void) widget;
+  gtk_widget_grab_focus(g_entry_window);
+}
+
+void	on_history_state_changed(GtkWidget *widget, gpointer user_data)
+{
+  (void) user_data;
+  (void) widget;
+  gtk_widget_set_state(widget,current_state);
 }
 
 void	on_chat_done(GtkWidget *widget, gpointer user_data)
@@ -175,6 +191,8 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       if(screen) gtk_layout_put(screen, g_entry_window, 0, 0);
 
       GUI_BRANCH(g_entry_xml, on_history_clicked);
+	  GUI_BRANCH(g_entry_xml, on_history_state_changed);
+	  GUI_BRANCH(g_entry_xml, on_history_focus);
       GUI_BRANCH(g_entry_xml, on_chat_done);
 
       gtk_widget_hide_all(GTK_WIDGET(g_entry_window)); // chat bar
@@ -188,6 +206,7 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
         GtkWidget*	button = glade_xml_get_widget(g_entry_xml, "history_button");
         g_assert(button);
 		gtk_widget_set_state(button,GTK_STATE_NORMAL);
+		current_state = GTK_WIDGET_STATE(button);
       }
     }
 
