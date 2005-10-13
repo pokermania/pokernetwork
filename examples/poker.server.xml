@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" verbose="3" chat="yes" poker_network_version="1.0.11">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" verbose="3" chat="yes" poker_network_version="1.0.12">
 
   <delays autodeal="3" round="2" position="1" showdown="7" finish="3"/>
   

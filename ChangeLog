@@ -2,6 +2,20 @@ Thu Oct 13 2005  Loic Dachary  <loic@gnu.org>
 
  	* Release 1.0.12
 
+	* pokernetwork/pokerclient.py (PokerClientFactory.isConnectionLess): true if
+	  the packet given in argument can/must be handled even when the connection is
+	  down (pre-protocol validation packets for instance)
+	  (PokerClientProtocol.publishPacket): handle packets that are connectionLess
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): confirmQuit is
+	  not a pokerfactor method
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.publishPacket): 
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.protocolInvalid): publish the packet
+	  immediately so that it is displayed before the connection is lost. Otherwise the 
+	  connection lost event will be handled before the scheduled packet.
+
 Wed Oct 12 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.11	

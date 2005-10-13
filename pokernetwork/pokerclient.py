@@ -239,6 +239,10 @@ class PokerClientFactory(UGAMEClientFactory):
                  packet.type == PACKET_POKER_TOURNEY_UNREGISTER or
                  packet.type == PACKET_POKER_TOURNEY_REGISTER )
         
+    def isConnectionLess(self, packet):
+        return ( packet.type == PACKET_PROTOCOL_ERROR or
+                 packet.type == PACKET_QUIT )
+
     def getGame(self, game_id):
         if not hasattr(self, "games") or not self.games.has_key(game_id):
             return False
@@ -1247,6 +1251,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         
     def protocolInvalid(self, server, client):
         self.schedulePacket(PacketProtocolError(message = "Upgrade the client from\nhttp://mekensleep.org/\nServer version is %s\nClient version is %s" % ( server, client ) ))
+        self.publishAllPackets()
 
     def publishDelay(self, delay):
         if self.factory.verbose > 2: self.message("publishDelay: %f delay" % delay)
@@ -1294,11 +1299,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.publish_timer = reactor.callLater(delay, self.publishPackets)
 
     def publishPacket(self):
-        if not self.established:
+        packet = self.publish_packets[0]
+        if not self.established and not self.factory.isConnectionLess(packet):
             if self.factory.verbose > 5:
                 print "publishPacket: skip because connection not established"
             return
-        packet = self.publish_packets.pop(0)
+        self.publish_packets.pop(0)
         what = 'outbound'
         if hasattr(packet, "game_id"):
             if self.factory.isOutbound(packet):

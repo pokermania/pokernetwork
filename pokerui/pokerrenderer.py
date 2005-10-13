@@ -664,7 +664,7 @@ class PokerRenderer:
             self.bootstrap()
             
         elif packet.type == PACKET_PROTOCOL_ERROR:
-            self.showMessage(packet.message, lambda: self.factory.confirmQuit(True))
+            self.showMessage(packet.message, lambda: self.confirmQuit(True))
             self.factory.reconnect = False
             
         elif packet.type == PACKET_POKER_TABLE_LIST:
