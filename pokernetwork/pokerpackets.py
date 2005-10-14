@@ -3624,6 +3624,9 @@ class PacketPokerShowdown(PacketPokerId):
         self.showdown_stack = kwargs.get("showdown_stack", {})
         PacketPokerId.__init__(self, *args, **kwargs)
 
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " showdown_stack = %s" % self.showdown_stack
+
 PacketFactory[PACKET_POKER_SHOWDOWN] = PacketPokerShowdown
 
 ########################################

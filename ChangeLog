@@ -1,6 +1,30 @@
-Thu Oct 13 2005  Loic Dachary  <loic@gnu.org>
+Fri Oct 14 2005  Loic Dachary  <loic@gnu.org>
 
  	* Release 1.0.12
+
+	* pokerui/pokerrenderer.py (PokerRenderer.rotateTable): if the current game is none,
+	  switch to the first available table. Happens when a table is destroyed, for instance
+	  at the end of a tournament.
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.resendPackets): do not send showdown
+	  information if none is available.
+
+	* pokernetwork/pokerpackets.py (PacketPokerShowdown.__str__): print showdown stack
+
+Thu Oct 13 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerclient.py
+	  (PokerClientProtocol.handlePlayerInfo): if the player outfit
+	  read from the server does not match the software version, upload
+	  a new one (possibly a random one, at the discretion of the
+	  implementation of the interpret method of the Skin class).
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): remove
+	  handling of outbound packet PLAYER_INFO (never happens).
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
+	 Check that the implementation of the outfit is still valid. If it
+	 needs upgrade, send it back to the server.
 
 	* pokernetwork/pokerclient.py (PokerClientFactory.isConnectionLess): true if
 	  the packet given in argument can/must be handled even when the connection is

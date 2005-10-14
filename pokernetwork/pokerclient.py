@@ -482,7 +482,26 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def handlePlayerInfo(self, packet):
         skin = self.factory.getSkin()
+        #
+        # Check that the implementation of the outfit is still valid. If it
+        # needs upgrade, send it back to the server.
+        #
         ( url, outfit ) = skin.interpret(packet.url, packet.outfit)
+        if url != packet.url or outfit != packet.outfit:
+            ( url_check, outfit_check ) = self.factory.getSkin().interpret(url, outfit)
+            #
+            # Make sure that we wont loop indefinitely because of an instability of the interpret
+            # function. In normal operation the url and outfit returned by interpret must be
+            # returned as is when fed to interpret again. If the implementation of interpret
+            # fails to implement this stability, don't enter a loop because sending PokerPlayerInfo
+            # will return us a PokerPlayerInfo for confirmation of the success.
+            #
+            if url_check != url or outfit_check != outfit:
+                print "*CRITICAL*: PACKET_POKER_PLAYER_INFO: may enter loop packet.url = %s\n url = %s\n url_check = %s\npacket.outfit = %s\n outfit = %s\n outfit_check = %s" % ( packet.url, url, url_check, packet.outfit, outfit, outfit_check )
+            else:
+                packet.url = url
+                packet.outfit = outfit
+                self.sendPacket(packet)
         skin.setUrl(url)
         skin.setOutfit(outfit)
 
@@ -738,7 +757,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     # method, it means that there is no showdown.
                     #
                     if not self.no_display_packets:
-                        forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
+                        if game.isGameEndInformationValid():
+                            forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
                         forward_packets.extend(self.packetsPot2Player(game))
                 else:
                     game.distributeMoney()
@@ -749,8 +769,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     if winners != packet.serials:
                         raise UserWarning, "game.winners %s != packet.serials %s" % (winners, packet.serials)
                     if not self.no_display_packets:
-                        forward_packets.extend(self.packetsShowdown(game))
-                        forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
+                        if game.isGameEndInformationValid():
+                            forward_packets.extend(self.packetsShowdown(game))
+                            forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
 
                         forward_packets.extend(self.packetsPot2Player(game))
                     game.endTurn()
@@ -1162,7 +1183,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if not self.no_display_packets:
                 packets.extend(self.updateBetLimit(game))
         else:
-            if not self.no_display_packets:
+            if not self.no_display_packets and game.isGameEndInformationValid():
                 packets.extend(self.packetsShowdown(game))
                 packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
         packets.append(PacketPokerStreamMode(game_id = game.id))

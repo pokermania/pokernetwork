@@ -757,9 +757,6 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_CANCELED:
             self.changeState(CANCELED)
 
-        elif packet.type == PACKET_POKER_PLAYER_INFO:
-            self.render(packet)
-
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             if packet.serial == self.protocol.getSerial():
                 if packet.url != self.factory.getUrl():
@@ -1486,11 +1483,16 @@ class PokerRenderer:
             self.changeState(JOINING_MY, *tables)
 
     def rotateTable(self, dummy = None):
+        if not self.factory.games:
+            return
         game_ids = self.factory.games.keys()
-        current = game_ids.index(self.protocol.getCurrentGameId())
-        game_ids = game_ids[current:] + game_ids[:current]
-        if self.verbose > 1: print "rotateTable: %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1])
-        self.connectTable(game_ids[1])
+        if self.protocol.getCurrentGameId():
+            current = game_ids.index(self.protocol.getCurrentGameId())
+            game_ids = game_ids[current:] + game_ids[:current]
+            if self.verbose > 1: print "rotateTable: %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1])
+            self.connectTable(game_ids[1])
+        else:
+            self.connectTable(game_ids[0])
         
     def connectTable(self, game_id):
         serial = self.protocol.getSerial()
