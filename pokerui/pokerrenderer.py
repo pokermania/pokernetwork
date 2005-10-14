@@ -733,7 +733,7 @@ class PokerRenderer:
             self.protocol.setCurrentGameId(None)
             
         elif packet.type == PACKET_AUTH_REFUSED:
-            self.showMessage(packet.string, lambda: self.changeState(LOGIN_DONE, False))
+            self.showMessage(packet.message, lambda: self.changeState(LOGIN_DONE, False))
 
         elif packet.type == PACKET_AUTH_OK:
             if self.verbose: print "login accepted"
@@ -752,6 +752,8 @@ class PokerRenderer:
             
         if packet.type == PACKET_POKER_START:
             self.resetLagmax()
+            self.sendPacket(PacketPokerProcessingHand(game_id = packet.game_id,
+                                                      serial = self.protocol.getSerial()))
             self.render(packet)
 
         elif packet.type == PACKET_POKER_CANCELED:
@@ -887,8 +889,9 @@ class PokerRenderer:
             
         elif packet.type == PACKET_POKER_WIN:
             self.render(packet)
-            self.delay(game, "showdown")
-            
+            delay = self.delay(game, "showdown")
+            reactor.callLater(delay, lambda: self.readyToPlay(packet.game_id))
+
         elif packet.type == PACKET_POKER_PLAYER_CHIPS:
             self.render(packet)
 
@@ -922,6 +925,11 @@ class PokerRenderer:
 
         elif packet.type == PACKET_POKER_STATE:
             pass
+
+    def readyToPlay(self, game_id):
+        if self.factory.getGame(game_id):
+            self.sendPacket(PacketPokerReadyToPlay(game_id = game_id,
+                                                   serial = self.protocol.getSerial()))
 
     def interactorSelected(self, packet):
         self.interactors.interactorSelected(packet)
@@ -1057,7 +1065,9 @@ class PokerRenderer:
             self.hold(120, game.id)
             return
 
-        self.hold(self.factory.delays.get(event, 1), game.id)
+        delay = self.factory.delays.get(event, 1)
+        self.hold(delay, game.id)
+        return delay
 
     def handleFold(self, game, packet):
         pass

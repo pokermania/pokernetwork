@@ -2,6 +2,60 @@ Fri Oct 14 2005  Loic Dachary  <loic@gnu.org>
 
  	* Release 1.0.12
 
+	* pokernetwork/pokerserver.py (PokerTable.autoDeal): All clients
+	that fail to send a PokerReadyToPlay packet within imposed delays
+	after sending a PokerProcessingHand are marked as bugous and their
+	next PokerProcessingHand request will be ignored.
+	(PokerTable.scheduleAutoDeal): next hand is dealt either when all players
+	agree or after a time estimated in proportion of the action.
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): 
+	  on PACKET_POKER_START tell the server that the renderer is
+	  processing the hand (PROCESSING_HAND packet).
+	  (PokerRenderer.readyToPlay): called after the showdown delay (WIN
+	  packet) to notify the server that the renderer is ready to process
+	  a new hand.
+
+	* pokernetwork/pokerpackets.py (PacketPokerProcessingHand): client
+	  is still processing the data related to the previous hand
+	  (PacketPokerReadyToPlay): player is ready to begin a new hand 
+
+	* pokernetwork/packets.py: renumber all packets. Add PACKET_PING.
+
+	* pokernetwork/pokerserver.py (PokerAvatar.__init__): bugous_processing_hand
+	  flag to remember if a client fails to properly implement PROCESSING_HAND
+	  and READY_TO_PLAY protocols.
+
+	* conf/poker.server.xml.in: The delays become maximum delays, in
+	  case a buggy client fails to send a POKER_READY_TO_PLAY packet
+	  after sending a POKER_PROCESSING_HAND packet. Otherwise the
+	  server would block indefinitely and be unable to deal a hand
+	  until the bugous client deconnects itself.
+
+	* pokerui/pokerrenderer.py (PokerRenderer.delay): return the delay imposed
+	  on packets
+
+	* pokernetwork/pokerserver.py (PokerTable.readyToPlay): announce that player
+	  is ready to play update the PokerTable accordingly (possibly dealing the
+	  hand).
+
+	* pokernetwork/pokerserver.py (PokerAvatar.addPlayer): set user data
+	(PokerTable.movePlayerTo): set user data
+	(PokerTable.DEFAULT_PLAYER_USER_DATA): per player table specific data structure
+	by default all players are ready to play.
+
+	* pokernetwork/pokerserver.py (PokerAvatar.auth): build AuthRefused using
+	  error code instead of just the error string.
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): AUTH_REFUSED 
+	  use field message instead of string.
+
+	* pokernetwork/packets.py (PacketAuthRefused): derived from PacketError instead
+	  of PacketString so that code and other_type are sent along.
+
+	* pokernetwork/packets.py: PACKET_PING packet used to keep the
+	  connection alive and implement server timeouts.
+
 	* pokerui/pokerrenderer.py (PokerRenderer.rotateTable): if the current game is none,
 	  switch to the first available table. Happens when a table is destroyed, for instance
 	  at the end of a tournament.

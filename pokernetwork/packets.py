@@ -171,7 +171,69 @@ PacketFactory[PACKET_INT] = PacketInt
 
 ########################################
 
-PACKET_SERIAL = 3
+PACKET_ERROR = 3
+PacketNames[PACKET_ERROR] = "ERROR"
+
+class PacketError(Packet):
+    """
+
+    Packet describing an error
+    
+    """
+
+    type = PACKET_ERROR
+
+    format = "!IB"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.message = kwargs.get("message", "no message")
+        self.code = kwargs.get("code", 0)
+        self.other_type = kwargs.get("other_type", PACKET_ERROR)
+
+    def pack(self):
+        return Packet.pack(self) + self.packstring(self.message) + pack(PacketError.format, self.code, self.other_type)
+
+    def unpack(self, block):
+        block = Packet.unpack(self, block)
+        (block, self.message) = self.unpackstring(block)
+        (self.code, self.other_type) = unpack(PacketError.format, block[:PacketError.format_size])
+        return block[PacketError.format_size:]
+
+    def calcsize(self):
+        return Packet.calcsize(self) + self.calcsizestring(self.message) + PacketError.format_size
+
+    def __str__(self):
+        return Packet.__str__(self) + " message = %s, code = %d, other_type = %s" % (self.message, self.code, PacketNames[self.other_type])
+
+PacketFactory[PACKET_ERROR] = PacketError
+
+########################################
+
+PACKET_ACK = 4
+PacketNames[PACKET_ACK] = "ACK"
+
+class PacketAck(Packet):
+    ""
+
+    type = PACKET_ACK
+
+PacketFactory[PACKET_ACK] = PacketAck
+
+########################################
+
+PACKET_PING = 5
+PacketNames[PACKET_PING] = "PING"
+
+class PacketPing(Packet):
+    ""
+
+    type = PACKET_PING
+
+PacketFactory[PACKET_PING] = PacketPing
+########################################
+
+PACKET_SERIAL = 6
 PacketNames[PACKET_SERIAL] = "SERIAL"
 
 class PacketSerial(Packet):
@@ -207,7 +269,7 @@ PacketFactory[PACKET_SERIAL] = PacketSerial
 
 ########################################
 
-PACKET_QUIT = 4
+PACKET_QUIT = 7
 PacketNames[PACKET_QUIT] = "QUIT"
 
 class PacketQuit(Packet):
@@ -219,7 +281,7 @@ PacketFactory[PACKET_QUIT] = PacketQuit
 
 ########################################
 
-PACKET_AUTH_OK = 5
+PACKET_AUTH_OK = 8
 PacketNames[PACKET_AUTH_OK] = "AUTH_OK"
 
 class PacketAuthOk(Packet):
@@ -233,10 +295,10 @@ PacketFactory[PACKET_AUTH_OK] = PacketAuthOk
 
 ########################################
 
-PACKET_AUTH_REFUSED = 6
+PACKET_AUTH_REFUSED = 9
 PacketNames[PACKET_AUTH_REFUSED] = "AUTH_REFUSED"
 
-class PacketAuthRefused(PacketString):
+class PacketAuthRefused(PacketError):
     """
     Authentication failed
     """
@@ -247,7 +309,7 @@ PacketFactory[PACKET_AUTH_REFUSED] = PacketAuthRefused
 
 ########################################
 
-PACKET_LOGIN = 7
+PACKET_LOGIN = 10
 PacketNames[PACKET_LOGIN] = "LOGIN"
 
 class PacketLogin(Packet):
@@ -282,7 +344,7 @@ PacketFactory[PACKET_LOGIN] = PacketLogin
 
 ########################################
 
-PACKET_AUTH_REQUEST = 8
+PACKET_AUTH_REQUEST = 11
 PacketNames[PACKET_AUTH_REQUEST] = "AUTH_REQUEST"
 
 class PacketAuthRequest(Packet):
@@ -296,7 +358,7 @@ PacketFactory[PACKET_AUTH_REQUEST] = PacketAuthRequest
 
 ########################################
 
-PACKET_LIST = 10
+PACKET_LIST = 12
 PacketNames[PACKET_LIST] = "LIST"
 
 class PacketList(Packet):
@@ -350,7 +412,7 @@ PacketFactory[PACKET_LIST] = PacketList
 
 ########################################
 
-PACKET_LOGOUT = 12
+PACKET_LOGOUT = 13
 PacketNames[PACKET_LOGOUT] = "LOGOUT"
 
 class PacketLogout(Packet):
@@ -366,46 +428,7 @@ PacketFactory[PACKET_LOGOUT] = PacketLogout
 
 ########################################
 
-PACKET_ERROR = 14
-PacketNames[PACKET_ERROR] = "ERROR"
-
-class PacketError(Packet):
-    """
-
-    Packet describing an error
-    
-    """
-
-    type = PACKET_ERROR
-
-    format = "!IB"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.message = kwargs.get("message", "no message")
-        self.code = kwargs.get("code", 0)
-        self.other_type = kwargs.get("other_type", PACKET_ERROR)
-
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.message) + pack(PacketError.format, self.code, self.other_type)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.message) = self.unpackstring(block)
-        (self.code, self.other_type) = unpack(PacketError.format, block[:PacketError.format_size])
-        return block[PacketError.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.message) + PacketError.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " message = %s, code = %d, other_type = %s" % (self.message, self.code, PacketNames[self.other_type])
-
-PacketFactory[PACKET_ERROR] = PacketError
-
-########################################
-
-PACKET_BOOTSTRAP = 15
+PACKET_BOOTSTRAP = 14
 PacketNames[PACKET_BOOTSTRAP] = "BOOTSTRAP"
 
 class PacketBootstrap(Packet):
@@ -417,7 +440,7 @@ PacketFactory[PACKET_BOOTSTRAP] = PacketBootstrap
 
 ########################################
 
-PACKET_PROTOCOL_ERROR = 16
+PACKET_PROTOCOL_ERROR = 15
 PacketNames[PACKET_PROTOCOL_ERROR] = "PROTOCOL_ERROR"
 
 class PacketProtocolError(PacketError):
@@ -429,15 +452,4 @@ class PacketProtocolError(PacketError):
 
 PacketFactory[PACKET_PROTOCOL_ERROR] = PacketProtocolError
 
-########################################
-
-PACKET_ACK = 17
-PacketNames[PACKET_ACK] = "ACK"
-
-class PacketAck(Packet):
-    ""
-
-    type = PACKET_ACK
-
-PacketFactory[PACKET_ACK] = PacketAck
 

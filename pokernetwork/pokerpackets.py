@@ -3705,3 +3705,46 @@ class PacketPokerSetRole(PacketPokerRoles):
 
 PacketFactory[PACKET_POKER_SET_ROLE] = PacketPokerSetRole
 
+########################################
+
+PACKET_POKER_READY_TO_PLAY = 235
+PacketNames[PACKET_POKER_READY_TO_PLAY] = "POKER_READY_TO_PLAY"
+
+class PacketPokerReadyToPlay(PacketPokerId):
+    """\
+Semantics: the "serial" player is ready to begin a new
+hand at table "game_id".
+
+Direction: server <= client
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+"""
+
+    type = PACKET_POKER_READY_TO_PLAY
+
+PacketFactory[PACKET_POKER_READY_TO_PLAY] = PacketPokerReadyToPlay
+
+########################################
+
+PACKET_POKER_PROCESSING_HAND = 236
+PacketNames[PACKET_POKER_PROCESSING_HAND] = "POKER_PROCESSING_HAND"
+
+class PacketPokerProcessingHand(PacketPokerId):
+    """\
+Semantics: the "serial" player is not ready to begin a new
+hand at table "game_id" because the client is still processing
+the data related to the previous hand.
+
+Direction: server <= client
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+"""
+
+    BUGOUS = 0
+    
+    type = PACKET_POKER_PROCESSING_HAND
+
+PacketFactory[PACKET_POKER_PROCESSING_HAND] = PacketPokerProcessingHand
+

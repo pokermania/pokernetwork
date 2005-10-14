@@ -1,5 +1,10 @@
 Release 1.0.12
 
+Protocol has changed.
+
+Client negotiate with server to start the next hand as quickly
+as possible.
+
 Bug fix in protocol detection and error report.
 
 Select a random outfit if the outfit from the server is obsolete.

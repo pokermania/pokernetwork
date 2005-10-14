@@ -138,6 +138,7 @@ class PokerClientFactory(UGAMEClientFactory):
                 self.delays["blind_ante_position"] = self.delays["position"]
         else:
             self.delays = {}
+        if self.verbose > 2: print "PokerClient: delays %s" % self.delays
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
         self.skin = PokerSkin(settings = self.settings)
         self.protocol = PokerClientProtocol
@@ -1229,6 +1230,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         elif packet.type == PACKET_QUIT:
             self.ignoreIncomingData()
             self.abortAllTables()
+
         UGAMEClientProtocol.sendPacket(self, packet)
 
     def protocolEstablished(self):

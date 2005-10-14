@@ -91,6 +91,8 @@ from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
 from pokernetwork.user import User
 
+DEFAULT_PLAYER_USER_DATA = { 'ready': True }
+
 class PokerAvatar:
     """Poker server"""
 
@@ -101,6 +103,7 @@ class PokerAvatar:
         self.tables = {}
         self.user = User()
         self._packets_queue = []
+        self.bugous_processing_hand = False
         self.noqueuePackets()
 
     def setProtocol(self, protocol):
@@ -170,15 +173,19 @@ class PokerAvatar:
         status = checkNameAndPassword(packet.name, packet.password)
         if status[0]:
             ( info, reason ) = self.service.auth(packet.name, packet.password, self.roles)
+            code = 0
         else:
             print "PokerAvatar::auth: failure " + str(status)
             reason = status[2]
+            code = status[1]
             info = False
         if info:
             self.sendPacketVerbose(PacketAuthOk())
             self.login(info)
         else:
-            self.sendPacketVerbose(PacketAuthRefused(string = reason))
+            self.sendPacketVerbose(PacketAuthRefused(message = reason,
+                                                     code = code,
+                                                     other_type = PACKET_LOGIN))
 
     def getSerial(self):
         return self.user.serial
@@ -350,7 +357,24 @@ class PokerAvatar:
         if table:
             game = table.game
 
-            if packet.type == PACKET_POKER_START:
+            if packet.type == PACKET_POKER_READY_TO_PLAY:
+                if self.getSerial() == packet.serial:
+                    self.sendPacketVerbose(table.readyToPlay(packet.serial))
+                else:
+                    print "attempt to set ready to play for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
+
+            elif packet.type == PACKET_POKER_PROCESSING_HAND:
+                if self.getSerial() == packet.serial:
+                    if not self.bugous_processing_hand:
+                        self.sendPacketVerbose(table.processingHand(packet.serial))
+                    else:
+                        self.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                                                                serial = self.getSerial(),
+                                                                other_type = PACKET_POKER_PROCESSING_HAND))
+                else:
+                    print "attempt to set processing hand for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
+
+            elif packet.type == PACKET_POKER_START:
                 if game.isRunning():
                     print "player %d tried to start a new game while in game " % self.getSerial()
                     self.sendPacketVerbose(PacketPokerStart(game_id = game.id))
@@ -696,7 +720,10 @@ class PokerAvatar:
 
     def addPlayer(self, table, seat):
         serial = self.getSerial()
-        table.game.addPlayer(serial, seat)
+        game = table.game
+        if game.addPlayer(serial, seat):
+            player = game.getPlayer(serial)
+            player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
         table.sendNewPlayerInformation(serial)
         
     def connectionLost(self, reason):
@@ -788,6 +815,7 @@ class PokerPredefinedDecks:
             self.index = 0
         
 class PokerTable:
+
     def __init__(self, factory, id = 0, description = None):
         self.factory = factory
         settings = self.factory.settings
@@ -878,6 +906,8 @@ class PokerTable:
             print "Dealing hand %s/%d" % ( game.name, hand_serial )
             game.setTime(time.time())
             game.beginTurn(hand_serial)
+            for player in game.playersAll():
+                player.getUserData()['ready'] = True
         
     def historyReset(self):
         self.history_index = 0
@@ -1304,7 +1334,7 @@ class PokerTable:
                    type == "finish" ):
                 self.game_delay["delay"] += float(self.delays[type])
                 if self.factory.verbose > 2:
-                    print "delayedActions: game minimum duration is now " + str(self.game_delay["delay"])
+                    print "delayedActions: game estimated duration is now " + str(self.game_delay["delay"]) + " and is running since %.02f " % (time.time() - self.game_delay["start"] ) + " seconds"
 
             elif type == "leave":
                 (type, quitters) = event
@@ -1323,6 +1353,20 @@ class PokerTable:
                 self.factory.tourneyEndTurn(self.tourney, game.id)
         
     def autoDeal(self):
+        if not self.allReadyToPlay():
+            #
+            # All clients that fail to send a PokerReadyToPlay packet
+            # within imposed delays after sending a PokerProcessingHand
+            # are marked as bugous and their next PokerProcessingHand
+            # request will be ignored.
+            #
+            for player in self.game.playersAll():
+                if player.getUserData()['ready'] == False:
+                    if self.serial2client.has_key(player.serial):
+                        client = self.serial2client[player.serial]
+                        if self.factory.verbose > 1: print "Player %d marked as having a bugous PokerProcessingHand protocol"
+                        client.bugous_processing_hand = True
+            
         self.beginTurn()
         self.update()
         
@@ -1361,8 +1405,9 @@ class PokerTable:
                 if self.factory.verbose > 2:
                     print "Not autodealing because player names sit in match %s" % self.temporaryPlayersPattern
                 return
+
         delay = self.game_delay["delay"]
-        if delay > 0:
+        if not self.allReadyToPlay() and delay > 0:
             delta = ( self.game_delay["start"] + delay ) - time.time()
             if delta < 0: delta = 0
         else:
@@ -1370,6 +1415,31 @@ class PokerTable:
         if self.factory.verbose > 2:
             print "Autodeal scheduled in %f seconds" % delta
         info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
+
+    def updatePlayerUserData(self, serial, key, value):
+        game = self.game
+        player = game.getPlayer(serial)
+        if player:
+            user_data = player.getUserData()
+            if user_data[key] != value:
+                user_data[key] = value
+                self.update()
+        return True
+
+    def allReadyToPlay(self):
+        game = self.game
+        for player in game.playersAll():
+            if player.getUserData()['ready'] == False:
+                return False
+        return True
+        
+    def readyToPlay(self, serial):
+        self.updatePlayerUserData(serial, 'ready', True)
+        return PacketAck()
+
+    def processingHand(self, serial):
+        self.updatePlayerUserData(serial, 'ready', False)
+        return PacketAck()
         
     def update(self):
         if not self.isValid():
@@ -1622,6 +1692,7 @@ class PokerTable:
         game.open()
         game.addPlayer(serial)
         player = game.getPlayer(serial)
+        player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
         player.money.set(money)
         player.buy_in_payed = True
         game.sit(serial)

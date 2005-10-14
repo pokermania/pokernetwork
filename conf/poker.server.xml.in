@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" verbose="0" chat="yes" poker_network_version="1.0.12">
 
-  <delays autodeal="3" round="2" position="1" showdown="5" finish="3"/>
+  <delays autodeal="6" round="4" position="2" showdown="10" finish="6"/>
   
   <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Two" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
