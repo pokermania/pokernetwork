@@ -430,7 +430,7 @@ class PokerRenderer:
             elif state == "big" or state == "late":
                 message += "big blind (%s)" % PokerChips.tostring(amount)
             else:
-                message += "small blind (%d)" % PokerChips.tostring(amount)
+                message += "small blind (%s)" % PokerChips.tostring(amount)
             message += "?"
             wait_blind = ( state == "late" or state == "big_and_dead" ) and "yes" or "no"
             interface.blindMessage(message, wait_blind)
