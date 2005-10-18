@@ -10,6 +10,8 @@ class poker {
     $this->error_handler = null;
     $this->no_auth_handler = null;
     $this->timeout_cookie = 0;
+    $this->serial = null;
+    $this->twisted_session = null;
   }
 
   function setErrorHandler($error_handler) {
@@ -49,6 +51,7 @@ class poker {
       case 'PacketAuthOk':
         if($packets[1]['type'] == 'PacketSerial') {
           setcookie('serial', $packets[1]['serial'], $this->timeout_cookie, '/');
+	  $this->serial = $packets[1]['serial'];
           $result = true;
         } else
           return $this->error(1000, 0, 'Empty or missing PacketSerial.');
@@ -62,8 +65,10 @@ class poker {
   }
 
   function logout() {
-    setcookie('serial', FALSE, $this->timeout_cookie, '/');
-    setcookie('TWISTED_SESSION', FALSE, $this->timeout_cookie, '/');
+    setcookie('serial', FALSE, time() - 3600, '/');
+    setcookie('TWISTED_SESSION', FALSE, time() - 3600, '/');
+    $this->serial = null;
+    $this->twisted_session = null;
   }
 
   function getPersonalInfo() {
@@ -95,7 +100,10 @@ class poker {
       return $this->error(1000, 2, $err);
     }
 
-    $cookie_serial = _cookie_numeric('serial');
+    if (isset($this->serial))
+      $cookie_serial = $this->serial;
+    else
+      $cookie_serial = _cookie_numeric('serial');
     $param_serial = _get_numeric('serial');
 
     //
@@ -120,7 +128,10 @@ class poker {
     //
     // Set the session cookie to be used over the SOAP call, if any
     //
-    $twisted_session = _cookie_string('TWISTED_SESSION');
+    if (isset($this->twisted_session))
+      $twisted_session = $this->twisted_session;
+    else
+      $twisted_session = _cookie_string('TWISTED_SESSION');
     if($twisted_session) {
       $this->client->cookies[] = array('name' => 'TWISTED_SESSION',
                                  'value' => $twisted_session,
@@ -157,6 +168,8 @@ class poker {
         $cookie = $this->client->cookies[0];
         if($twisted_session != $cookie['value']) {
           setcookie($cookie['name'], $cookie['value'], $this->timeout_cookie, '/');
+	  if ($cookie['name'] == 'TWISTED_SESSION')
+	    $this->twisted_session = $cookie['value'];
         }
         return $result;
       }

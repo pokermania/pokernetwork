@@ -1,6 +1,11 @@
-Tue Oct 18 2005  Loic Dachary  <loic@gnu.org>
+2005-10-18  Loic Dachary  <loic@dachary.org>
 
  	* Release 1.0.12
+
+	* pokerweb/pages/class.poker.php: memorize serial and twisted_session within the
+	  class.
+
+Tue Oct 18 2005  Loic Dachary  <loic@gnu.org>
 
 	* upgrades/poker.server/1.0.11-1.0.12.xsl: Game start negotiations allows to triple the delays
 

@@ -9,8 +9,13 @@
  />
 
  <!-- Game start negotiations allows to triple the delays -->
- <xsl:template match="/server/delays/@*">
+ <xsl:template match="/server/delays/@autodeal|/server/delays/@round|/server/delays/@showdown|/server/delays/@finish">
    <xsl:attribute name="{name()}"><xsl:value-of select=". * 3" /></xsl:attribute>
+ </xsl:template>
+
+ <!-- Game start negotiations allows to set the position delay to match the timeout delay -->
+ <xsl:template match="/server/delays/@position">
+   <xsl:attribute name="position">60</xsl:attribute>
  </xsl:template>
 
  <!-- copy the rest verbatim -->
