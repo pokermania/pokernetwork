@@ -113,6 +113,13 @@ class PokerClientFactory(UGAMEClientFactory):
         self.no_display_packets = settings.headerGet("/settings/@no_display_packets")
         self.name = settings.headerGet("/settings/name")
         self.password = settings.headerGet("/settings/passwd")
+        if self.config:
+            chips_values = self.config.headerGet("/sequence/chips")
+            if not chips_values:
+                raise UserWarning, "PokerClientFactory: no /sequence/chips found in %s" % self.config.path
+            self.chips_values = map(int, chips_values.split())
+        else:
+            self.chips_values = [1]
         self.host = "unknown"
         self.port = 0
         self.remember = settings.headerGet("/settings/remember") == "yes"
@@ -155,7 +162,8 @@ class PokerClientFactory(UGAMEClientFactory):
         self.interface = None
 
     def __del__(self):
-        del self.games
+        if hasattr(self, "games"):
+            del self.games
 
     def upgradeTick(self, ratio, message):
         self.display.tickProgressBar(ratio, message)
@@ -385,23 +393,20 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 callbacks[name].remove(meth)
         
     def normalizeChips(self, game, chips):
-        chips = chips[:]
-        underware_chips = []
-        for chip_value in game.chips_values:
-            count = chips.pop(0)
-            if count > 0:
-                underware_chips.append(chip_value)
-                underware_chips.append(count)
-
-        return underware_chips
+        if game.unit in self.factory.chips_values:
+            values = self.factory.chips_values[self.factory.chips_values.index(game.unit):]
+        else:
+            values = []
+        list = PokerChips(values, chips).tolist()
+        if self.factory.verbose > 4:
+            print "normalizeChips: " + str(list) + " " + str(values)
+        return list
             
     def updatePlayerChips(self, game, player):
         packet = PacketPokerPlayerChips(game_id = game.id,
                                         serial = player.serial,
-                                        bet = self.normalizeChips(game, player.bet.chips),
-                                        money = self.normalizeChips(game, player.money.chips))
-#        if self.factory.verbose > 2:
-#            print "updatePlayerChips: %s" % packet
+                                        bet = player.bet,
+                                        money = player.money)
         return packet
 
     def updatePotsChips(self, game, side_pots):
@@ -413,26 +418,20 @@ class PokerClientProtocol(UGAMEClientProtocol):
         
         index = 0
         for (amount, total) in side_pots['pots']:
-            chips = PokerChips(game.chips_values, amount)
-            bet = self.normalizeChips(game, chips.chips)
+            chips = amount
+            bet = self.normalizeChips(game, chips)
             pot = PacketPokerPotChips(game_id = game.id,
                                       index = index,
                                       bet = bet)
-#            if self.factory.verbose > 1:
-#                print "updatePotsChips: %s " % pot
             packets.append(pot)
             index += 1
         return packets
 
     def chipsPlayer2Bet(self, game, player, chips):
         packets = []
-        money = PokerChips(game.chips_values, chips)
-        chips = self.normalizeChips(game, money.chips)
         packet = PacketPokerChipsPlayer2Bet(game_id = game.id,
                                             serial = player.serial,
-                                            chips = chips)
-#        if self.factory.verbose > 2:
-#            print "chipsPlayer2Bet: %s" % packet
+                                            chips = self.normalizeChips(game, chips))
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
         return packets
@@ -440,34 +439,26 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def chipsBet2Pot(self, game, player, bet, pot_index):
         packets = []
         if ( pot_index == 0 and
-             player.dead.toint() > 0 and
+             player.dead > 0 and
              game.isSecondRound() ):
             #
             # The ante or the dead are already in the pot
             #
-            bet -= player.dead.toint()
-        bet = PokerChips(game.chips_values, bet)
-        chips = self.normalizeChips(game, bet.chips)
+            bet -= player.dead
         packet = PacketPokerChipsBet2Pot(game_id = game.id,
                                          serial = player.serial,
-                                         chips = chips,
+                                         chips = self.normalizeChips(game, bet),
                                          pot = pot_index)
-#        if self.factory.verbose > 2:
-#            print "chipsBet2Pot: %s" % packet
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
         return packets
         
     def chipsPot2Player(self, game, player, bet, pot_index, reason):
-        bet = PokerChips(game.chips_values, bet)
-        chips = self.normalizeChips(game, bet.chips)
         packet = PacketPokerChipsPot2Player(game_id = game.id,
                                             serial = player.serial,
-                                            chips = chips,
+                                            chips = self.normalizeChips(game, bet),
                                             pot = pot_index,
                                             reason = reason)
-#        if self.factory.verbose > 2:
-#            print "chipsPot2Player: %s" % packet
         return packet
         
     def handleUserInfo(self, packet):
@@ -540,7 +531,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     forward_packets.extend(self.updateBetLimit(game))
                 forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
             if not self.no_display_packets:
-                forward_packets.extend(self.chipsPlayer2Bet(game, player, amount.chips))
+                forward_packets.extend(self.chipsPlayer2Bet(game, player, amount))
 
         elif type == "round_cap_decrease":
             if not self.no_display_packets:
@@ -631,8 +622,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_CANCELED:
                 if not self.no_display_packets and packet.amount > 0:
                     player = game.getPlayer(packet.serial)
-                    bet = player.bet.toint()
-                    if bet > 0:
+                    if player.bet > 0:
                         forward_packets.extend(self.chipsBet2Pot(game, player, player.bet, 0))
                     if packet.amount > 0:
                         forward_packets.append(self.chipsPot2Player(game, player, packet.amount, 0, "canceled"))
@@ -784,38 +774,29 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 player = game.getPlayer(packet.serial)
                 chips = PacketPokerPlayerChips(game_id = game.id,
                                                serial = packet.serial,
-                                               money = self.normalizeChips(game, player.money.chips),
-                                               bet = self.normalizeChips(game, player.bet.chips))
+                                               money = player.money,
+                                               bet = player.bet)
                 forward_packets.append(chips)
 
             elif packet.type == PACKET_POKER_PLAYER_CHIPS:
-                forward_packets.remove(packet)
                 player = game.getPlayer(packet.serial)
                 if player.buy_in_payed:
-                    bet = PokerChips(game.chips_values, packet.bet)
-                    if player.bet.toint() != bet.toint():
+                    if player.bet != packet.bet:
                         if self.factory.verbose > 1:
-                            self.error("server says player %d has a bet of %d chips and client thinks it has %d" % ( packet.serial, bet.toint(), player.bet.toint()))
-                        player.bet.set(packet.bet)
-                    money = PokerChips(game.chips_values, packet.money)
-                    if player.money.toint() != money.toint():
+                            self.error("server says player %d has a bet of %d chips and client thinks it has %d" % ( packet.serial, packet.bet, player.bet))
+                        player.bet = packet.bet
+                    if player.money != packet.money:
                         if self.factory.verbose > 1:
-                            self.error("server says player %d has a money of %d chips and client thinks it has %d" % ( packet.serial, money.toint(), player.money.toint()))
-                        player.money.set(packet.money)
+                            self.error("server says player %d has a money of %d chips and client thinks it has %d" % ( packet.serial, packet.money, player.money))
+                        player.money = packet.money
                 else:
                     #
                     # If server sends chips amount for a player that did not yet pay the buy in
                     # 
-                    player.bet.set(packet.bet)
-                    player.money.set(packet.money)
-                    if player.money.toint() > 0:
+                    player.bet = packet.bet
+                    player.money = packet.money
+                    if player.money > 0:
                         player.buy_in_payed = True
-
-                chips = PacketPokerPlayerChips(game_id = game.id,
-                                               serial = packet.serial,
-                                               money = self.normalizeChips(game, packet.money),
-                                               bet = self.normalizeChips(game, packet.bet))
-                forward_packets.append(chips)
 
             elif packet.type == PACKET_POKER_FOLD:
                 game.fold(packet.serial)
@@ -959,7 +940,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         serial = self.getSerial()
         (min_bet, max_bet, to_call) = game.betLimits(serial)
         found = None
-        steps = game.chips_values[:]
+        steps = self.factory.chips_values[:]
         steps.reverse()
         #
         # Search for the lowest chip value by which all amounts can be divided
@@ -975,10 +956,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                max = max_bet,
                                                step = found,
                                                call = to_call,
-                                               allin = game.getPlayer(serial).money.toint(),
+                                               allin = game.getPlayer(serial).money,
                                                pot = game.potAndBetsAmount() + to_call * 2))
         else:
-            self.error("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d" % ( game.chips_values, min_bet, max_bet ))
+            self.error("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d" % ( self.factory.chips_values, min_bet, max_bet ))
         return packets
 
     def currentGames(self, exclude = None):

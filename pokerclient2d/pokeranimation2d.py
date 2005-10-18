@@ -27,6 +27,7 @@ import gtk
 
 from pprint import pprint
 from pokerui.pokeranimation import *
+from pokerengine.pokerchips import PokerChips
 
 class Animation:
     def __init__(self, *args, **kwargs):
@@ -262,7 +263,7 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         if self.verbose > 1: self.message(":timeoutWarning: not implemented")
 
     def pot2player(self, packet):
-        if self.verbose > 2: self.message("pot2player: move %s from %s to %s" % ( packet.chips, str(self.table.widget_pots[packet.pot]), str(self.widget_bet)))
+        if self.verbose > 2: self.message("pot2player: move %s from %s to %s" % ( packet.chips, PokerChips.tostring(self.table.widget_pots[packet.pot]), PokerChips.tostring(self.widget_bet)))
         value = 0
         while packet.chips:
             chip_value = packet.chips.pop(0)
@@ -272,7 +273,7 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         ( pot, pot_x, pot_y ) = self.table.widget_pots[packet.pot]
         ( bet, bet_x, bet_y ) = self.widget_bet
         label = gtk.Label()
-        label.set_text(str(value))
+        label.set_text(PokerChips.tostring(value))
         player_pot = gtk.EventBox()
         player_pot.add(label)
         player_pot.set_name("animation_sit")

@@ -31,7 +31,6 @@ from twisted.internet import defer
 
 from pokernetwork.pokerpackets import *
 from random import choice, uniform, randint
-from pokerengine.pokerchips import PokerChips
 from time import time
 
 class PokerAnimationPlayer:
@@ -199,17 +198,6 @@ class PokerAnimationPlayer:
     def check(self):
         pass
             
-    def normalizeChips(self, game, chips):
-        chips = chips[:]
-        normalized_chips = []
-        for chip_value in game.chips_values:
-            count = chips.pop(0)
-            if count > 0:
-                normalized_chips.append(chip_value)
-                normalized_chips.append(count)
-
-        return normalized_chips
-
     def bet(self,game_id,chips):
         pass
 
@@ -433,6 +421,13 @@ class PokerAnimationScheduler:
         self.animation_renderer = kwargs.get("animation_renderer", None)
         self.config = kwargs.get("config", None)
         self.settings = kwargs.get("settings", None)
+        if self.config:
+            chips_values = self.config.headerGet("/sequence/chips")
+            if not chips_values:
+                raise UserWarning, "PokerAnimationScheduler: no /sequence/chips found in %s" % self.config.path
+            self.chips_values = map(int, chips_values.split())
+        else:
+            self.chips_values = [1]
         self.verbose = self.settings and int(self.settings.headerGet("/settings/@verbose")) or 0
         self.protocol = None
         self.id2table = {}

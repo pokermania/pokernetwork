@@ -31,6 +31,7 @@ from twisted.internet import reactor
 from twisted.python import dispatch
 from string import split, join, rstrip
 from time import time, strftime, gmtime
+from pokerengine.pokerchips import PokerChips
 
 INTERFACE_READY = "//event/poker3d/pokerinterface/ready"
 INTERFACE_GONE = "//event/poker3d/pokerinterface/gone"
@@ -166,7 +167,9 @@ class PokerInterface(dispatch.EventDispatcher):
     def updateLobbyPlayersList(self, players):
         packet = [ "lobby", "players", str(len(players)) ]
         if len(players) > 0:
-            map(lambda player: packet.extend(map(lambda value: str(value), player)), players)
+            for player in players:
+                ( name, chips, flag ) = player
+                packet.extend((name, PokerChips.tostring(chips), str(flag)))
         self.command(*packet)
 
     def updateLobby(self, players_count, tables_count, game_id, file2name, my_tables, tables):
@@ -183,7 +186,7 @@ class PokerInterface(dispatch.EventDispatcher):
                      table.name,
                      file2name(table.betting_structure),
                      str(table.seats),
-                     str(table.average_pot),
+                     PokerChips.tostring(table.average_pot),
                      str(table.hands_per_hour),
                      str(table.percent_flop),
                      str(table.players),
@@ -421,14 +424,14 @@ class PokerInterface(dispatch.EventDispatcher):
         self.command("buy_in", "hide")
         
     def buyInParams(self, minimum, maximum, legend, max_label):
-        packet = [ "buy_in", "params", str(minimum), str(maximum), legend, max_label ]
+        packet = [ "buy_in", "params", str(minimum / 100.0), str(maximum / 100.0), legend, max_label ]
         if self.verbose > 1: print "PokerInterfaceProtocol:requestBuyIn " + str(packet)
         self.command(*packet)
         
     def handleBuyIn(self, data):
         if self.verbose > 1: print "handleBuyIn: " + str(data)
         value = data[0]
-        self.publishEvent(INTERFACE_BUY_IN, value)
+        self.publishEvent(INTERFACE_BUY_IN, int(float(value) * 100))
         self.clearCallbacks(INTERFACE_BUY_IN)
         return data[1:]
 

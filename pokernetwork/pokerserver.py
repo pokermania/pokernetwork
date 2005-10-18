@@ -81,7 +81,6 @@ from twisted.python import components
 
 from pokerengine.pokergame import PokerGameServer, PokerPlayer, history2messages
 from pokerengine.pokercards import PokerCards
-from pokerengine.pokerchips import PokerChips
 from pokerengine.pokertournament import *
 
 from pokernetwork.server import PokerServerProtocol
@@ -677,7 +676,7 @@ class PokerAvatar:
                                                 observers = len(table.observers),
                                                 waiting = len(table.waiting)))
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
-        nochips = PokerChips(game.chips_values).chips
+        nochips = 0
         for player in game.serial2player.values():
             player_info = table.getPlayerInfo(player.serial)
             self.sendPacketVerbose(PacketPokerPlayerArrive(game_id = game.id,
@@ -697,7 +696,7 @@ class PokerAvatar:
                 self.sendPacketVerbose(PacketPokerPlayerChips(game_id = game.id,
                                                               serial = player.serial,
                                                               bet = nochips,
-                                                              money = player.money.chips))
+                                                              money = player.money))
                 if game.isSit(player.serial):
                     self.sendPacketVerbose(PacketPokerSit(game_id = game.id,
                                                           serial = player.serial))
@@ -794,11 +793,11 @@ class PokerAvatar:
 
         if game.payBuyIn(self.getSerial(), amount):
             player = game.getPlayer(self.getSerial())
-            nochips = PokerChips(game.chips_values).chips
+            nochips = 0
             table.broadcast(PacketPokerPlayerChips(game_id = game.id,
                                                    serial = self.getSerial(),
                                                    bet = nochips,
-                                                   money = player.money.chips))
+                                                   money = player.money))
             return True
         else:
             return False
@@ -979,8 +978,7 @@ class PokerTable:
             if type == "game":
                 (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = event
                 if len(serial2chips) > 1:
-                    chips_values = serial2chips['values']
-                    nochips = PokerChips(chips_values).chips
+                    nochips = 0
                     for (serial, chips) in serial2chips.iteritems():
                         if serial == 'values':
                             continue
@@ -1188,7 +1186,6 @@ class PokerTable:
             
             elif type == "raise":
                 (type, serial, amount) = event
-                amount = PokerChips(game.chips_values, amount).toint()
                 if not updates.has_key(serial):
                     updates[serial] = 0
                 updates[serial] -= amount
@@ -1364,7 +1361,7 @@ class PokerTable:
                 if player.getUserData()['ready'] == False:
                     if self.serial2client.has_key(player.serial):
                         client = self.serial2client[player.serial]
-                        if self.factory.verbose > 1: print "Player %d marked as having a bugous PokerProcessingHand protocol"
+                        if self.factory.verbose > 1: print "Player %d marked as having a bugous PokerProcessingHand protocol" % player.serial
                         client.bugous_processing_hand = True
             
         self.beginTurn()
@@ -1480,7 +1477,7 @@ class PokerTable:
         game.hand_serial = hand
         for serial in player_list:
             game.addPlayer(serial)
-            game.getPlayer(serial).money.chips = serial2chips[serial]
+            game.getPlayer(serial).money = serial2chips[serial]
             game.sit(serial)
         if self.isJoined(client):
             client.join(self)
@@ -1644,8 +1641,8 @@ class PokerTable:
             other_table.serial2client[serial] = client
 
         money_check = self.factory.movePlayer(serial, game.id, to_game_id)
-        if money_check != money.toint():
-            print " *ERROR* movePlayer: player %d money %d in database, %d in memory" % ( serial, money_check, money.toint() )
+        if money_check != money:
+            print " *ERROR* movePlayer: player %d money %d in database, %d in memory" % ( serial, money_check, money )
 
         if client:
             client.join(other_table)
@@ -1664,7 +1661,7 @@ class PokerTable:
         player = game.getPlayer(serial)
         if self.factory.verbose > 1:
             print "about player %d" % serial
-        nochips = PokerChips(game.chips_values).chips
+        nochips = 0
         packets = [
             PacketPokerPlayerArrive(game_id = game.id,
                                     serial = serial,
@@ -1683,7 +1680,7 @@ class PokerTable:
             PacketPokerPlayerChips(game_id = game.id,
                                    serial = serial,
                                    bet = nochips,
-                                   money = game.getPlayer(serial).money.chips),
+                                   money = game.getPlayer(serial).money),
             ]
         return packets
 
@@ -1693,7 +1690,7 @@ class PokerTable:
         game.addPlayer(serial)
         player = game.getPlayer(serial)
         player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
-        player.money.set(money)
+        player.money = money
         player.buy_in_payed = True
         game.sit(serial)
         game.autoBlindAnte(serial)
@@ -2188,7 +2185,9 @@ class PokerService(service.Service):
         tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
         table = self.getTable(game.id)
         cursor = self.db.cursor()
-        for serial in game.serialsAll():
+        for player in game.playersAll():
+            serial = player.serial
+            player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
             client = self.serial2client.get(serial, None)
             if client:
                 table.serial2client[serial] = client

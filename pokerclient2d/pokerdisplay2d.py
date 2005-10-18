@@ -27,22 +27,14 @@ from os.path import exists
 
 from twisted.internet import reactor
 
-from pokerengine.pokerchips import *
 from pokernetwork.pokerpackets import *
 from pokerclient2d import pokeranimation2d
+from pokerengine.pokerchips import PokerChips
 
 from pokerui.pokerdisplay import PokerDisplay
 
 import gtk
 import gtk.glade
-
-def chips2int(chips):
-    total = 0
-    while chips:
-        value = chips.pop(0)
-        count = chips.pop(0)
-        total += value * count
-    return total
 
 class PokerPlayer2D:
     def __init__(self, player, table):
@@ -78,14 +70,12 @@ class PokerPlayer2D:
         self.name.modify_fg(gtk.STATE_NORMAL, color)
 
     def updateChips(self, bet, money):
-        bet = chips2int(bet)
-        money = chips2int(money)
         if bet > 0:
-            self.bet.set_text(str(bet))
+            self.bet.set_text(PokerChips.tostring(bet))
             self.bet.show()
         else:
             self.bet.hide()
-        self.money.set_text(str(money))
+        self.money.set_text(PokerChips.tostring(money))
 
     def updateCards(self):
         game = self.table.game
@@ -260,7 +250,7 @@ class PokerTable2D:
         elif packet.type == PACKET_POKER_POT_CHIPS:
             pots = self.game.getPots()
             pot = self.pots[packet.index]
-            pot.set_label(str(pots['pots'][packet.index][0]))
+            pot.set_label(PokerChips.tostring(pots['pots'][packet.index][0]))
             pot.show()
 
         elif packet.type == PACKET_POKER_CHIPS_POT2PLAYER:
@@ -382,16 +372,16 @@ class PokerDisplay2D(PokerDisplay):
         protocol = self.protocol
         self.renderer.interactorSelected(PacketPokerRaise(game_id = protocol.getCurrentGameId(),
                                                           serial = protocol.getSerial(),
-                                                          amount = int(raise_range.get_value())))
+                                                          amount = int(raise_range.get_value() * 100)))
 
     def on_raise_range_value_changed(self, raise_range):
-        value = int(raise_range.get_value())
+        value = int(raise_range.get_value() * 100)
         game_id = self.protocol.getCurrentGameId()
         bet_limit = self.id2table[game_id].bet_limit
         remainder = value % bet_limit.step
         if remainder:
             value -= remainder
-            raise_range.set_value(value)
+            raise_range.set_value(value / 100.0)
 
     def deleteTable(self, game_id):
         table = self.id2table[game_id]
@@ -436,14 +426,14 @@ class PokerDisplay2D(PokerDisplay):
             if game.canRaise(serial):
                 range = self.actions['raise_range']
                 bet_limit = table.bet_limit
-                range.set_value(bet_limit.min)
+                range.set_value(bet_limit.min / 100.0)
                 if bet_limit.min != bet_limit.max:
-                    range.set_range(bet_limit.min, bet_limit.max)
-                    range.set_increments(bet_limit.step, bet_limit.step)
+                    range.set_range(bet_limit.min / 100.0, bet_limit.max / 100.0)
+                    range.set_increments(bet_limit.step / 100.0, bet_limit.step / 100.0)
                     if packet.selection and packet.selection.type == PACKET_POKER_RAISE:
-                        range.set_value(packet.selection.amount)
+                        range.set_value(packet.selection.amount / 100.0)
                     else:
-                        range.set_value(bet_limit.min)
+                        range.set_value(bet_limit.min / 100.0)
                     range.show()
                 else:
                     range.hide()

@@ -63,7 +63,8 @@ nobase_dist_pkgdata_DATA = \
 	conf/poker.pem \
 	upgrades/poker.bot/1.0.5-1.0.6.xsl \
 	upgrades/poker.client/1.0.5-1.0.6.xsl \
-	upgrades/poker.server/1.0.5-1.0.6.xsl
+	upgrades/poker.server/1.0.5-1.0.6.xsl \
+	upgrades/poker.server/1.0.11-1.0.12.xsl
 
 pokernetworkdir = ${pyexecdir}/pokernetwork
 pokernetwork_PYTHON = \
@@ -108,7 +109,8 @@ dist_pokerdb_DATA = \
 	database/schema.sql \
 	database/1.0.5-1.0.6.sql \
 	database/1.0.6-1.0.7.sql \
-	database/1.0.7-1.0.8.sql
+	database/1.0.7-1.0.8.sql \
+	database/1.0.11-1.0.12.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \

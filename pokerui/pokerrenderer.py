@@ -195,7 +195,7 @@ class PokerInteractors:
             player = game.getPlayer(serial)
             updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, [ game.id ])
             updateInteractor(interactors["fold"], True, isInPosition, [ game.id ])
-            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money.toint(), game.highestBetNotFold(), game.id ])
+            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
         else:
             for (name, interactor) in interactors.iteritems():
                 interactor.disable()
@@ -254,10 +254,6 @@ class PokerInteractors:
         self.cancelAllInteractorButThisOne(interactor)
         game = self.factory.getGame(interactor.game_id)
         packet = interactor.getSelectedValue()
-        if packet.type == PACKET_POKER_RAISE:
-            value = packet.amount
-            chips = PokerChips(game.chips_values, value)
-            packet.amount = chips.chips
         self.protocol.sendPacket(packet)
 
     def interactorSelectedCallback(self, interactor):
@@ -430,11 +426,11 @@ class PokerRenderer:
         if interface and not interface.callbacks.has_key(pokerinterface.INTERFACE_POST_BLIND):
             message = "Pay the "
             if dead > 0:
-                message += "big blind (%d) + dead (%d)" % ( amount, dead )
+                message += "big blind (%s) + dead (%s)" % ( PokerChips.tostring(amount), PokerChips.tostring(dead) )
             elif state == "big" or state == "late":
-                message += "big blind (%d)" % amount
+                message += "big blind (%s)" % PokerChips.tostring(amount)
             else:
-                message += "small blind (%d)" % amount
+                message += "small blind (%d)" % PokerChips.tostring(amount)
             message += "?"
             wait_blind = ( state == "late" or state == "big_and_dead" ) and "yes" or "no"
             interface.blindMessage(message, wait_blind)
@@ -596,12 +592,12 @@ class PokerRenderer:
             interface.updateCashier(self.protocol.getName(),
                                     packet.email,
                                     "%s\n%s %s %s\n%s" % ( packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country ),
-                                    str(packet.play_money),
-                                    str(packet.play_money_in_game),
-                                    str(packet.play_money + packet.play_money_in_game),
-                                    str(packet.custom_money) + unit,
-                                    str(packet.custom_money_in_game) + unit,
-                                    str(packet.custom_money + packet.custom_money_in_game) + unit,
+                                    PokerChips.tostring(packet.play_money),
+                                    PokerChips.tostring(packet.play_money_in_game),
+                                    PokerChips.tostring(packet.play_money + packet.play_money_in_game),
+                                    PokerChips.tostring(packet.custom_money) + unit,
+                                    PokerChips.tostring(packet.custom_money_in_game) + unit,
+                                    PokerChips.tostring(packet.custom_money + packet.custom_money_in_game) + unit,
                                     )
 
     def handleSerial(self, packet):
@@ -894,6 +890,10 @@ class PokerRenderer:
 
         elif packet.type == PACKET_POKER_PLAYER_CHIPS:
             self.render(packet)
+            self.render(PacketPokerClientPlayerChips(game_id = packet.game_id,
+                                                     serial = packet.serial,
+                                                     bet = self.protocol.normalizeChips(game, packet.bet),
+                                                     money = self.protocol.normalizeChips(game, packet.money)))
 
         elif packet.type == PACKET_POKER_POT_CHIPS:
             self.render(packet)
@@ -987,8 +987,8 @@ class PokerRenderer:
     def requestBuyIn(self, game):
         player = game.getPlayer(self.protocol.getSerial())
 
-        min_amount = max(0, game.buyIn() - player.money.toint())
-        max_amount = game.maxBuyIn() - player.money.toint()
+        min_amount = max(0, game.buyIn() - player.money)
+        max_amount = game.maxBuyIn() - player.money
 
         if max_amount <= 0:
             self.showMessage("You can't bring more money\nto the table", None)
@@ -1014,7 +1014,8 @@ class PokerRenderer:
             label = "All your bankroll"
         else:
             label = "Maximum buy in"
-        interface.buyInParams(min_amount, min(max_amount, self.protocol.play_money), legend, label)
+        max_amount = min(max_amount, self.protocol.play_money)
+        interface.buyInParams(min_amount, max_amount, legend, label)
         interface.buyInShow()
         if player.isBuyInPayed():
             callback = lambda value: self.rebuy(game, value)
@@ -1028,7 +1029,7 @@ class PokerRenderer:
         interface.clearCallbacks(pokerinterface.INTERFACE_BUY_IN)
         self.protocol.sendPacket(PacketPokerBuyIn(serial = self.protocol.getSerial(),
                                                   game_id = game.id,
-                                                  amount = int(float(value))))
+                                                  amount = value))
         self.protocol.sendPacket(PacketPokerSit(serial = self.protocol.getSerial(),
                                                 game_id = game.id))
         self.changeState(BUY_IN_DONE)
@@ -1038,7 +1039,7 @@ class PokerRenderer:
         interface.clearCallbacks(pokerinterface.INTERFACE_BUY_IN)
         self.protocol.sendPacket(PacketPokerRebuy(serial = self.protocol.getSerial(),
                                                   game_id = game.id,
-                                                  amount = int(float(value))))
+                                                  amount = value))
         self.changeState(REBUY_DONE, game)
 
     def resetLagmax(self):
@@ -1071,15 +1072,7 @@ class PokerRenderer:
 
     def handleFold(self, game, packet):
         pass
-#        if packet.serial == self.protocol.getSerial():
-#            self.scheduledAction[game.id] = None
 
-    def handleInPosition(self, game, packets, index, value):
-        if index == 2:
-            chips = PokerChips(game.chips_values, value)
-            packets[index].amount = chips.chips
-        self.protocol.sendPacket(packets[index])
-        
     def render(self, packet):
         display = self.factory.display
         display.render(packet)
@@ -1089,16 +1082,13 @@ class PokerRenderer:
         if game.isRunning():
             action = False
             if packet.type == PACKET_POKER_RAISE:
-                amount = PokerChips(game.chips_values,
-                                    packet.amount[0] * self.bet_step)
                 action = PacketPokerRaise(game_id = game.id,
                                           serial = self.protocol.getSerial(),
-                                          amount = amount.chips)
+                                          amount = packet.amount[0] * self.bet_step)
             elif packet.action == "raise":
-                amount = PokerChips(game.chips_values)
                 action = PacketPokerRaise(game_id = game.id,
                                           serial = self.protocol.getSerial(),
-                                          amount = amount.chips)
+                                          amount = 0)
             elif packet.action == "fold":
                 action = PacketPokerFold(game_id = game.id,
                                          serial = self.protocol.getSerial())
@@ -1496,7 +1486,7 @@ class PokerRenderer:
         if not self.factory.games:
             return
         game_ids = self.factory.games.keys()
-        if self.protocol.getCurrentGameId():
+        if self.protocol.getCurrentGameId() and len(game_ids) > 1:
             current = game_ids.index(self.protocol.getCurrentGameId())
             game_ids = game_ids[current:] + game_ids[:current]
             if self.verbose > 1: print "rotateTable: %d => %d" % ( self.protocol.getCurrentGameId(), game_ids[1])

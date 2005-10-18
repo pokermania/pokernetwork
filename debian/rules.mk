@@ -65,7 +65,7 @@ $(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/bootstrap $(DEB_SRCDIR)/configure.ac
 	sh bootstrap
 	chmod a+x $@
 
-DEB_PYTHON_FILES = $(patsubst debian/python-%,%,$(shell ls debian/python-*{dirs,docs,postinst,install,templates,config,init} 2>/dev/null || echo))
+DEB_PYTHON_FILES = $(patsubst debian/python-%,%,$(shell ls debian/python-*{dirs,docs,postinst,postrm,install,templates,config,init} 2>/dev/null || echo))
 DEB_PYTHON_PACKAGE_FILES = $(foreach file,$(DEB_PYTHON_FILES),$(foreach version,$(DEB_PYTHON_VERSIONS),debian/python$(version)-$(file)))
 
 $(DEB_SRCDIR)/configure:: $(DEB_PYTHON_PACKAGE_FILES)

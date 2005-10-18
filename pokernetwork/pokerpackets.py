@@ -59,6 +59,7 @@ The documentation is kept terse and emphasizes the non-intuitive
 behaviour associated to each packet.
 """
 from struct import pack, unpack, calcsize
+from types import IntType, LongType
 from pokernetwork.packets import *
 
 ########################################
@@ -251,35 +252,47 @@ PacketFactory[PACKET_POKER_POSITION] = PacketPokerPosition
 
 ########################################
 
-PACKET_POKER_BET = 116
-PacketNames[PACKET_POKER_BET] = "POKER_BET"
+PACKET_POKER_INT = 116
+PacketNames[PACKET_POKER_INT] = "POKER_INT"
 
-class PacketPokerBet(PacketPokerId):
-    """base class for raise"""
+class PacketPokerInt(PacketPokerId):
+    """base class for a int coded amount"""
 
-    type = PACKET_POKER_BET
-    amount = []
+    type = PACKET_POKER_INT
 
-    format_element = "!B"
+    format = "!I"
+    format_size = calcsize(format)
     
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("amount"):
-            self.amount = kwargs["amount"]
+        self.amount = kwargs.get("amount", 0)
+        if not ( type(self.amount) == IntType or type(self.amount) == LongType ): raise UserWarning, "not an int" + str(self.amount)
         PacketPokerId.__init__(self, *args, **kwargs)
         
     def pack(self):
-        return PacketPokerId.pack(self) + self.packlist(self.amount, PacketPokerBet.format_element)
+        return PacketPokerId.pack(self) + pack(PacketPokerInt.format, self.amount)
 
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
-        (block, self.amount) = self.unpacklist(block, PacketPokerBet.format_element)
-        return block
-    
+        (self.amount,) = unpack(PacketPokerInt.format, block[:PacketPokerInt.format_size])
+        return block[PacketPokerInt.format_size:]
+
     def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.amount, PacketPokerBet.format_element)
+        return PacketPokerId.calcsize(self) + PacketPokerInt.format_size
 
     def __str__(self):
-        return PacketPokerId.__str__(self) + " amount = %s" % self.amount
+        return PacketPokerId.__str__(self) + " amount = %d" % self.amount
+
+PacketFactory[PACKET_POKER_INT] = PacketPokerInt
+
+########################################
+
+PACKET_POKER_BET = 117
+PacketNames[PACKET_POKER_BET] = "POKER_BET"
+
+class PacketPokerBet(PacketPokerInt):
+    """base class for raise"""
+
+    type = PACKET_POKER_BET
 
 PacketFactory[PACKET_POKER_BET] = PacketPokerBet
 
@@ -622,32 +635,27 @@ class PacketPokerChips(PacketPokerId):
 
     type = PACKET_POKER_CHIPS
 
-    empty = [0,0,0,0,0,0]
-
-    bet = empty[:]
-
-    format_element = "!B"
-
+    format = "!I"
+    format_size = calcsize(format)
+    
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("bet"):
-            self.bet = kwargs["bet"]
+        self.bet = kwargs.get("bet", 0)
+        if not ( type(self.bet) == IntType or type(self.bet) == LongType ): raise UserWarning, "not an int" + str(self.bet)
         PacketPokerId.__init__(self, *args, **kwargs)
-
+        
     def pack(self):
-        block = PacketPokerId.pack(self)
-        block += self.packlist(self.bet, PacketPokerChips.format_element)
-        return block
+        return PacketPokerId.pack(self) + pack(PacketPokerChips.format, self.bet)
 
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
-        (block, self.bet) = self.unpacklist(block, PacketPokerChips.format_element)
-        return block
+        (self.bet,) = unpack(PacketPokerChips.format, block[:PacketPokerChips.format_size])
+        return block[PacketPokerChips.format_size:]
 
     def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.bet, PacketPokerChips.format_element) 
+        return PacketPokerId.calcsize(self) + PacketPokerChips.format_size
 
     def __str__(self):
-        return PacketPokerId.__str__(self) + " bet = %s" % ( self.bet )
+        return PacketPokerId.__str__(self) + " bet = %d" % self.bet
 
 PacketFactory[PACKET_POKER_CHIPS] = PacketPokerChips
 
@@ -666,61 +674,35 @@ Direction: server  => client
 Context: this packet is infered each time the bet or the chip
 stack of a player is modified.
 
-Notes: the server formats the chip list according to the
-/bet/chips element of the betting structure description.
-For instance if the poker.10-15-pot-limit.xml betting structure
-description contains:
-
-    <chips values="5 10 20 25 50 100 250 500 5000" />
-
-then a "bet" field containing [1, 0, 2, 0, 1, 0, 0, 0, 0]
-means one chips of 5, two chips of 20 and one chip of 50.
-In order to avoid the complexity of refering to the proper
-betting structure, the may normalize the lists so as to
-behave as if all betting structure had the following
-/bet/chips element:
-
-    <chips values="1 2 5 10 20 25 50 100 250 500 1000 2000 5000" />
-
-
-bet: list of integers counting the number of chips wagered by
-     the player for the current betting round. The value of each
-     chip depends on the betting structure as explained above.
-money: list of integers counting the number of chips available
-     to the player for this game. The value of each
-     chip depends on the betting structure as explained above.
+bet: the number of chips wagered by the player for the current betting round.
+money: the number of chips available to the player for this game. 
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_PLAYER_CHIPS
 
-    empty = [0,0,0,0,0,0]
-
-    money = empty[:]
-
-    format_element = "!B"
-
+    format = "!I"
+    format_size = calcsize(format)
+    
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("money"):
-            self.money = kwargs["money"]
+        self.money = kwargs.get("money", 0)
+        if not ( type(self.money) == IntType or type(self.money) == LongType ): raise UserWarning, "not an int" + str(self.money)
         PacketPokerChips.__init__(self, *args, **kwargs)
-
+        
     def pack(self):
-        block = PacketPokerChips.pack(self)
-        block += self.packlist(self.money, PacketPokerPlayerChips.format_element)
-        return block
+        return PacketPokerChips.pack(self) + pack(PacketPokerPlayerChips.format, self.money)
 
     def unpack(self, block):
         block = PacketPokerChips.unpack(self, block)
-        (block, self.money) = self.unpacklist(block, PacketPokerPlayerChips.format_element)
-        return block
+        (self.money,) = unpack(PacketPokerPlayerChips.format, block[:PacketPokerPlayerChips.format_size])
+        return block[PacketPokerPlayerChips.format_size:]
 
     def calcsize(self):
-        return PacketPokerChips.calcsize(self) + self.calcsizelist(self.money, PacketPokerPlayerChips.format_element)
+        return PacketPokerChips.calcsize(self) + PacketPokerPlayerChips.format_size
 
     def __str__(self):
-        return PacketPokerChips.__str__(self) + " money = %s" % ( self.money )
+        return PacketPokerChips.__str__(self) + " money = %d" % self.money
 
 PacketFactory[PACKET_POKER_PLAYER_CHIPS] = PacketPokerPlayerChips
 
@@ -729,11 +711,11 @@ PacketFactory[PACKET_POKER_PLAYER_CHIPS] = PacketPokerPlayerChips
 PACKET_POKER_POT_CHIPS = 125
 PacketNames[PACKET_POKER_POT_CHIPS] = "POKER_POT_CHIPS"
 
-class PacketPokerPotChips(PacketPokerChips):
+class PacketPokerPotChips(Packet):
     """\
 Semantics: the "bet" put in the "index" pot of the "game_id" game.
 
-Direction: server  => client
+Direction: client <=> client
 
 Context: this packet is sent at least each time the pot "index" is
 updated.
@@ -745,29 +727,13 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_POT_CHIPS
 
-    index = 0
-
-    format = "!B"
-    format_size = calcsize(format)
-
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("index"):
-            self.index = kwargs["index"]
-        PacketPokerChips.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerChips.pack(self) + pack(PacketPokerChips.format, self.index)
-
-    def unpack(self, block):
-        block = PacketPokerChips.unpack(self, block)
-        (self.index,) = unpack(PacketPokerPotChips.format, block[:PacketPokerPotChips.format_size])
-        return block[PacketPokerStart.format_size:]
-
-    def calcsize(self):
-        return PacketPokerChips.calcsize(self) + PacketPokerPotChips.format_size
+        self.game_id = kwargs.get("game_id", 0)
+        self.index = kwargs.get("index", 0)
+        self.bet = kwargs.get("bet", [])
 
     def __str__(self):
-        return PacketPokerChips.__str__(self) + " index = %d" % ( self.index )
+        return Packet.__str__(self) + " game_id = %d, pot = %s, index = %d" % ( self.game_id, self.bet, self.index )
 
 PacketFactory[PACKET_POKER_POT_CHIPS] = PacketPokerPotChips
 
@@ -932,7 +898,7 @@ PacketNames[PACKET_POKER_RAISE] = "POKER_RAISE"
 
 class PacketPokerRaise(PacketPokerBet):
     """\
-Semantics: the "serial" player raised "bet" chips in
+Semantics: the "serial" player raised "amount" chips in
 game "game_id".
 
 Direction: server <=> client
@@ -940,28 +906,9 @@ Direction: server <=> client
 Context: the client infers a PACKET_POKER_BET_LIMIT packet each
 time the position changes.
 
-Notes: the server formats the chip list according to the
-/bet/chips element of the betting structure description.
-For instance if the poker.10-15-pot-limit.xml betting structure
-description contains:
-
-    <chips values="5 10 20 25 50 100 250 500 5000" />
-
-then a "bet" field containing [1, 0, 2, 0, 1, 0, 0, 0, 0]
-means one chips of 5, two chips of 20 and one chip of 50.
-In order to avoid the complexity of refering to the proper
-betting structure, the may normalize the lists so as to
-behave as if all betting structure had the following
-/bet/chips element:
-
-    <chips values="1 2 5 10 20 25 50 100 250 500 1000 2000 5000" />
-
-bet: list of integers counting the number of chips for
-     the raise. A value of all 0 means the lowest possible raise.
+amount: the number of chips for the raise. A value of all 0 means the lowest possible raise.
      A value larger than the maximum raise will be clamped by
      the server.
-     The value of each chip depends on the betting structure
-     as explained above.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
@@ -1842,9 +1789,7 @@ to the bet chip stack.
 
 Direction: client <=> client
 
-chips: list of integers counting the number of chips to move.
-     The value of each chip is, respectively:
-     1 2 5 10 20 25 50 100 250 500 1000 2000 5000.
+chips: 
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
@@ -2265,41 +2210,6 @@ serial: integer uniquely identifying a player.
     type = PACKET_POKER_GET_USER_INFO
 
 PacketFactory[PACKET_POKER_GET_USER_INFO] = PacketPokerGetUserInfo
-
-########################################
-
-PACKET_POKER_INT = 178
-PacketNames[PACKET_POKER_INT] = "POKER_INT"
-
-class PacketPokerInt(PacketPokerId):
-    """base class for a int coded amount"""
-
-    type = PACKET_POKER_INT
-
-    amount = 0
-    format = "!I"
-    format_size = calcsize(format)
-    
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("amount"):
-            self.amount = kwargs["amount"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-        
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerInt.format, self.amount)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.amount,) = unpack(PacketPokerInt.format, block[:PacketPokerInt.format_size])
-        return block[PacketPokerInt.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerInt.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " amount = %d" % self.amount
-
-PacketFactory[PACKET_POKER_INT] = PacketPokerInt
 
 ########################################
 
@@ -3748,3 +3658,22 @@ game_id: integer uniquely identifying a game.
 
 PacketFactory[PACKET_POKER_PROCESSING_HAND] = PacketPokerProcessingHand
 
+
+########################################
+
+PACKET_POKER_CLIENT_PLAYER_CHIPS = 237
+PacketNames[PACKET_POKER_CLIENT_PLAYER_CHIPS] = "POKER_CLIENT_PLAYER_CHIPS"
+
+class PacketPokerClientPlayerChips(Packet):
+    type = PACKET_POKER_CLIENT_PLAYER_CHIPS
+
+    def __init__(self, *args, **kwargs):
+        self.game_id = kwargs.get("game_id", 0)
+        self.serial = kwargs.get("serial", 0)
+        self.bet = kwargs.get("bet", [])
+        self.money = kwargs.get("money", [])
+
+    def __str__(self):
+        return Packet.__str__(self) + " game_id = %d, serial = %d, bet = %s, money = %s" % ( self.game_id, self.serial, self.bet, self.money )
+
+PacketFactory[PACKET_POKER_CLIENT_PLAYER_CHIPS] = PacketPokerClientPlayerChips

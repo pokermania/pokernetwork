@@ -4,6 +4,8 @@
 
   <custom_money unit="C" cent="cts"/>
 
+  <chips>1 2 5 10 20 25 50 100 200 500 1000 2000 2500 5000 10000 25000 50000 100000 200000 500000 1000000 2000000 5000000 10000000</chips>
+
   <cashier enter="Cashier" exit="Exit Cashier"/>
 
   <interactors2d>

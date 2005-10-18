@@ -38,7 +38,6 @@ from twisted.python import components
 from twisted.persisted import sob
 from twisted.internet import reactor, error
 
-from pokerengine.pokerchips import PokerChips
 from pokerengine.pokertournament import *
 
 from pokernetwork import pokernetworkconfig
@@ -317,10 +316,9 @@ class PokerBot:
             protocol.sendPacket(PacketPokerCall(game_id = game.id,
                                                 serial = serial))
         elif desired_action == "raise":
-            minimum = PokerChips(game.chips_values)
             protocol.sendPacket(PacketPokerRaise(game_id = game.id,
                                                  serial = serial,
-                                                 amount = minimum.chips))
+                                                 amount = 0))
         else:
             print "=> unexpected actions = %s" % actions
         self.factory.can_disconnect = True

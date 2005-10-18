@@ -96,7 +96,7 @@ class Main:
         if self.settings.header:
             rcdir = self.configureDirectory()
             self.dirs = split(self.settings.headerGet("/settings/path"))
-            self.config = Config(self.dirs)
+            self.config = Config([''] + self.dirs)
             self.config.load(configfile)
             self.verbose = self.settings.headerGetInt("/settings/@verbose")
             self.poker_factory = None
