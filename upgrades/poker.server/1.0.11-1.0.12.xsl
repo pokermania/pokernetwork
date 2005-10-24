@@ -8,6 +8,12 @@
 	     encoding="ISO-8859-1"
  />
 
+ <!-- Application keepalive parameter set to 20 by default -->
+ <xsl:template match="/server/@verbose">
+   <xsl:attribute name="ping">20</xsl:attribute>
+   <xsl:attribute name="verbose"><xsl:value-of select="." /></xsl:attribute>
+ </xsl:template>
+ 
  <!-- Game start negotiations allows to triple the delays -->
  <xsl:template match="/server/delays/@autodeal|/server/delays/@round|/server/delays/@showdown|/server/delays/@finish">
    <xsl:attribute name="{name()}"><xsl:value-of select=". * 3" /></xsl:attribute>

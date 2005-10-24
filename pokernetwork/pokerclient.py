@@ -110,6 +110,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.children = None
 
         settings = self.settings
+        self.ping_delay = settings.headerGetInt("/settings/@ping")
         self.no_display_packets = settings.headerGet("/settings/@no_display_packets")
         self.name = settings.headerGet("/settings/name")
         self.password = settings.headerGet("/settings/passwd")
@@ -1215,11 +1216,13 @@ class PokerClientProtocol(UGAMEClientProtocol):
         UGAMEClientProtocol.sendPacket(self, packet)
 
     def protocolEstablished(self):
+        self.setPingDelay(self.factory.ping_delay)
         self.user.name = self.factory.name
         self.user.password = self.factory.password
         self._packet2id = self.packet2id
         self._packet2front = self.packet2front
         self.schedulePacket(PacketBootstrap())
+        UGAMEClientProtocol.protocolEstablished(self)
 
     def packet2front(self, packet):
         if ( hasattr(packet, "game_id") and

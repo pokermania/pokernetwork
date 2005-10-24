@@ -1,10 +1,36 @@
-Tue Oct 18 2005  Ludovic Heyberger  <heyber.l@gmail.com>
+Mon Oct 24 2005  Loic Dachary  <loic@gnu.org>
 
-	* debian/python-poker-network.postinst: set verbosity
+	* Release 1.0.12
 
-Fri Oct 14 2005  Loic Dachary  <loic@gnu.org>
+	* pokernetwork/pokerserver.py (PokerService.sessionEnd,sessionStart): session records
+	  for each player.
+	  (PokerAvatar.logout): start session
+	  (PokerAvatar.login): end session
+	  (PokerService.cleanUp): crash recovery wipe out bots information and make non closed
+	  session history.
 
- 	* Release 1.0.12
+	* database/1.0.11-1.0.12.sql: session and session_history tables
+
+	* pokerui/pokerrenderer.py (PokerRenderer.queryLobby): only query lobby if protocol is 
+	  active
+
+Fri Oct 21 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/client.py (UGAMEClientProtocol.ping_delay,setPingDelay,getPingDelay): data member
+	(UGAMEClientProtocol.ping): send a PACKET_PING to the other side if nothing was sent within
+	ping_delay seconds.
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.protocolEstablished): call base function
+	  and set the ping time according to configuration
+	  (PokerClientFactory.__init__): get ping time from settings file
+
+	* pokernetwork/server.py: keepalive logic, server side
+
+	* upgrades/poker.{client,server,bot}/1.0.11-1.0.12.xsl: ping interval
+
+Wed Oct 19 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/upgrade.py (Constants.RSYNC): -z3
 
 	* pokerweb/pages/class.poker.php: memorize serial and twisted_session within the
 	  class.
@@ -66,6 +92,8 @@ Mon Oct 17 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerpackets.py (PacketPokerChips, PacketPokerPlayerChips): 
 	  stored as integers instead of chips map
+
+	* debian/python-poker-network.postinst: set verbosity
 
 Fri Oct 14 2005  Loic Dachary  <loic@gnu.org>
 

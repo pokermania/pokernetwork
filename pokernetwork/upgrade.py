@@ -40,7 +40,7 @@ class Constants:
     EXCLUDES = []
     UPGRADES_DIR = None
     BANDWIDTH = [ ] # [ "--bwlimit=128" ]
-    RSYNC = [ "rsync", "--timeout=60" ]
+    RSYNC = [ "rsync", "-z3", "--timeout=60" ]
     
 TICK = "//event/pokernetwork/upgrade/tick"
 NEED_UPGRADE = "//event/pokernetwork/upgrade/need_upgrade"

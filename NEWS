@@ -2,12 +2,16 @@ Release 1.0.12
 
 Protocol has changed.
 
+All amounts are expressed in 1/100 of units or cents.
+
 Client negotiate with server to start the next hand as quickly
 as possible.
 
 Bug fix in protocol detection and error report.
 
 Select a random outfit if the outfit from the server is obsolete.
+
+User sessions archived in database.
 
 Release 1.0.11
 

@@ -107,7 +107,7 @@ class PokerAvatar:
 
     def setProtocol(self, protocol):
         self.protocol = protocol
-        
+
 #    def __del__(self):
 #	print "PokerAvatar instance deleted"
 
@@ -135,6 +135,8 @@ class PokerAvatar:
             self.service.serial2client[serial] = self
         if self.service.verbose:
             print "user %s/%d logged in" % ( self.user.name, self.user.serial )
+        if self.protocol:
+            self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
 	#
 	# Send player updates if it turns out that the player was already
 	# seated at a known table.
@@ -166,6 +168,7 @@ class PokerAvatar:
         if self.user.serial:
             if PacketPokerRoles.PLAY in self.roles:
                 del self.service.serial2client[self.user.serial]
+            self.service.sessionEnd(self.getSerial())
             self.user.logout()
         
     def auth(self, packet):
@@ -219,7 +222,7 @@ class PokerAvatar:
             self.protocol.sendPacket(packet)
 
     def sendPacketVerbose(self, packet):
-        if self.service.verbose > 1:
+        if self.service.verbose > 1 and packet.type != PACKET_PING or self.service.verbose > 5:
             print "sendPacket: %s" % str(packet)
         self.sendPacket(packet)
         
@@ -236,11 +239,15 @@ class PokerAvatar:
         return self.resetPacketsQueue()
         
     def handlePacketLogic(self, packet):
-        if self.service.verbose > 2: print "handleConnection: " + str(packet) 
+        if self.service.verbose > 2: print "handleConnection: " + str(packet)
+        
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
             return
 
+        if packet.type == PACKET_PING:
+            return
+        
         if packet.type == PACKET_LOGIN:
             self.auth(packet)
             return
@@ -2005,6 +2012,7 @@ class PokerService(service.Service):
         self.shutting_down = False
         self.down = False
         self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
+        self._ping_delay = self.settings.headerGetInt("/server/@ping")
         self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.chat = self.settings.headerGet("/server/@chat") == "yes"
         self.cleanupCrashedTables()
@@ -2065,6 +2073,25 @@ class PokerService(service.Service):
     def destroyAvatar(self, avatar):
         avatar.connectionLost("Disconnected")
 
+    def sessionStart(self, serial, ip):
+        if self.verbose > 3: print "PokerService::sessionStart(%d, %s): " % ( serial, ip )
+        cursor = self.db.cursor()
+        sql = "insert into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, time.time(), ip )
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
+        cursor.close()
+        
+    def sessionEnd(self, serial):
+        if self.verbose > 3: print "PokerService::sessionEnd(%d): " % ( serial )
+        cursor = self.db.cursor()
+        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session where user_serial = %d" % ( time.time(), serial )
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* a) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
+        sql = "delete from session where user_serial = %d" % serial
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* b) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
+        cursor.close()
+    
     def auth(self, name, password, roles):
         for (serial, client) in self.serial2client.iteritems():
             if client.getName() == name and roles.intersection(client.roles):
@@ -2545,14 +2572,22 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = "delete from user2table"
         cursor.execute(sql)
-        cursor.close()
 
         if temporary_users:
-            cursor = self.db.cursor()
+            sql = "delete session_history from session_history, users where session_history.user_serial = users.serial and users.name like '" + temporary_users + "%'"
+            cursor.execute(sql)
+            sql = "delete session from session, users where session.user_serial = users.serial and users.name like '" + temporary_users + "%'"
+            cursor.execute(sql)
             sql = "delete from users where name like '" + temporary_users + "%'"
             cursor.execute(sql)
-            cursor.close()
-        
+
+        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session" % time.time()
+        cursor.execute(sql)
+        sql = "delete from session"
+        cursor.execute(sql)
+
+        cursor.close()
+
     def getMoney(self, serial, base):
         cursor = self.db.cursor()
         sql = ( "select " + base + "_money from users where serial = " + str(serial) )

@@ -59,7 +59,14 @@ class UGAMEProtocol(protocol.Protocol):
         self._blocked = False
         self.established = 0
         self._poll = True
+        self._ping_delay = 5
 
+    def setPingDelay(self, ping_delay):
+        self.ping_delay = ping_delay
+
+    def getPingDelay(self):
+        return self.ping_delay
+    
     def getOrCreateQueue(self, id):
         if not self._queues.has_key(id):
             self._queues[id] = Queue()

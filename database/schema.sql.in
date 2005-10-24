@@ -25,8 +25,8 @@
 --
 drop table if exists server;
 
-create table server (
-        version varchar(16) not null
+create table `server` (
+  `version` varchar(16) not null
 );
 
 insert into server (version) values ("@PACKAGE_VERSION@");
@@ -34,90 +34,113 @@ insert into server (version) values ("@PACKAGE_VERSION@");
 drop table if exists users;
 
 create table users (
-	serial int unsigned not null auto_increment,
-	name varchar(32),
-	email varchar(128),
-	skin_url varchar(32) default "random",
-	skin_outfit text,
-        skin_image blob,
-        skin_image_type varchar(32),
-	password varchar(32),
-	privilege int default 1,
+  serial int unsigned not null auto_increment,
+  name varchar(32),
+  email varchar(128),
+  skin_url varchar(32) default "random",
+  skin_outfit text,
+  skin_image blob,
+  skin_image_type varchar(32),
+  password varchar(32),
+  privilege int default 1,
 
-	play_money int default 1000000,
-        custom_money int default 0,
-	point_money int default 5000,
+  play_money int default 1000000,
+  custom_money int default 0,
+  point_money int default 5000,
 
-	rating int default 1000,
-	future_rating float default 1000,
-	games_count int default 0,
-	
-	primary key (serial),
-        unique key name_idx (name),
-        unique key email_idx (email)
+  rating int default 1000,
+  future_rating float default 1000,
+  games_count int default 0,
+  
+  primary key (serial),
+  unique key name_idx (name),
+  unique key email_idx (email)
 );
 
 drop table if exists users_private;
 
 create table users_private (
-	serial int unsigned not null,
-	addr_street varchar(255) default "",
-	addr_zip varchar(64) default "",
-	addr_town varchar(64) default "",
-	addr_state varchar(128) default "",
-	addr_country varchar(64) default "",
-	phone varchar(64) default "",
-        verified char default 'n',
-        verified_time int default 0,
+  serial int unsigned not null,
+  addr_street varchar(255) default "",
+  addr_zip varchar(64) default "",
+  addr_town varchar(64) default "",
+  addr_state varchar(128) default "",
+  addr_country varchar(64) default "",
+  phone varchar(64) default "",
+  verified char default 'n',
+  verified_time int default 0,
 
-	primary key (serial)
+  primary key (serial)
 );
 
 drop table if exists user2table;
 
 create table user2table (
-	user_serial int unsigned not null,
-	table_serial int unsigned not null,
-	money int default 0 not null,
-	bet int default 0 not null,
+  user_serial int unsigned not null,
+  table_serial int unsigned not null,
+  money int default 0 not null,
+  bet int default 0 not null,
   custom_money char default 'n',
 
-	primary key (user_serial,table_serial)
+  primary key (user_serial,table_serial)
 );
 
 drop table if exists pokertables;
 
 create table pokertables (
-	serial int unsigned not null auto_increment,
-	name varchar(32),
+  serial int unsigned not null auto_increment,
+  name varchar(32),
   custom_money char default 'n',
 
-	primary key (serial)
+  primary key (serial)
 );
 
 drop table if exists hands;
 
 create table hands (
-	serial int unsigned not null auto_increment,
-	name varchar(32),
-	description text not null,
+  serial int unsigned not null auto_increment,
+  created timestamp not null,
+  name varchar(32),
+  description text not null,
 
-	primary key (serial)
+  primary key (serial)
 );
 
 drop table if exists user2hand;
 
 create table user2hand (
-	user_serial int not null,
-	hand_serial int not null,
+  user_serial int not null,
+  hand_serial int not null,
 
-	primary key (user_serial, hand_serial)
+  primary key (user_serial, hand_serial)
+);
+
+drop table if exists session;
+
+create table session (
+  user_serial int not null,
+  started int default 0,
+  ended int default 0,
+  ip varchar(16),
+
+  primary key (user_serial, ip)
+);
+
+drop table if exists session_history;
+
+create table session_history (
+  user_serial int not null,
+  started int default 0,
+  ended int default 0,
+  ip varchar(16),
+
+  key session_history_serial (user_serial)
 );
 
 drop table if exists tourneys_schedule;
 
 create table tourneys_schedule (
-	serial int unsigned not null auto_increment,
+  serial int unsigned not null auto_increment,
   name varchar(32),
   description_short varchar(64),
   description_long text,
@@ -139,7 +162,7 @@ create table tourneys_schedule (
   respawn char default 'n',
   respawn_interval int default 0,
 
-	primary key (serial)
+  primary key (serial)
 );
 
 --
@@ -229,7 +252,7 @@ INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `descrip
 drop table if exists tourneys;
 
 create table tourneys (
-      	serial int unsigned not null auto_increment,
+  serial int unsigned not null auto_increment,
   name varchar(32),
   description_short varchar(64),
   description_long text,
@@ -253,18 +276,18 @@ create table tourneys (
   add_on_count int default 0,
   rebuy_count int default 0,
 
-	primary key (serial)
+  primary key (serial)
 );
 
 drop table if exists user2tourney;
 
 create table user2tourney (
-	user_serial int not null,
-	tourney_serial int not null,
+  user_serial int not null,
+  tourney_serial int not null,
   table_serial int,
   rank int default -1,
 
-	primary key (user_serial, tourney_serial)
+  primary key (user_serial, tourney_serial)
 );
 
 --
@@ -283,16 +306,16 @@ drop table if exists users_transactions;
 -- Transactions between users
 --
 create table users_transactions (
-	from_serial int unsigned not null,
-	to_serial int unsigned not null,
-        created int default 0,
-        amount int default 0,
-        custom_money char default 'n',
-        status char default 'n',
-        status_time int default 0,
-        notes text,
+  from_serial int unsigned not null,
+  to_serial int unsigned not null,
+  created int default 0,
+  amount int default 0,
+  custom_money char default 'n',
+  status char default 'n',
+  status_time int default 0,
+  notes text,
 
-        primary key (from_serial,to_serial)
+  primary key (from_serial,to_serial)
 );
 
 drop table if exists users_wins;
@@ -300,13 +323,13 @@ drop table if exists users_wins;
 -- How much a user wins/loses to another player in one hand
 --
 create table users_wins (
-        from_serial int unsigned not null,
-	to_serial int unsigned not null,
-	hand_serial int unsigned not null,
-        created timestamp not null,
-        amount int default 0,
-        custom_money char default 'n',
+  from_serial int unsigned not null,
+  to_serial int unsigned not null,
+  hand_serial int unsigned not null,
+  created timestamp not null,
+  amount int default 0,
+  custom_money char default 'n',
 
-        primary key (from_serial,to_serial,hand_serial)
+  primary key (from_serial,to_serial,hand_serial)
 );
 

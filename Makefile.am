@@ -62,7 +62,9 @@ nobase_dist_pkgdata_DATA = \
 	conf/poker.server.xml \
 	conf/poker.pem \
 	upgrades/poker.bot/1.0.5-1.0.6.xsl \
+	upgrades/poker.bot/1.0.11-1.0.12.xsl \
 	upgrades/poker.client/1.0.5-1.0.6.xsl \
+	upgrades/poker.client/1.0.11-1.0.12.xsl \
 	upgrades/poker.server/1.0.5-1.0.6.xsl \
 	upgrades/poker.server/1.0.11-1.0.12.xsl
 

@@ -36,8 +36,11 @@ class PokerServerProtocol(UGAMEProtocol):
         UGAMEProtocol.__init__(self)
         self._poll = False
         self.avatar = None
+        self._ping_delay = 10
+        self._ping_timer = None
 
     def _handleConnection(self, packet):
+        self.ping()
         for packet in self.avatar.handlePacket(packet):
             self.sendPacket(packet)
 
@@ -46,12 +49,30 @@ class PokerServerProtocol(UGAMEProtocol):
 
     def protocolEstablished(self):
         self.transport.setTcpKeepAlive(True)
+        self._ping_delay = self.factory.service._ping_delay
         self.avatar = self.factory.createAvatar()
         self.avatar.setProtocol(self)
+        self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
 
     def connectionLost(self, reason):
+        if hasattr(self, "_ping_timer") and self._ping_timer and self._ping_timer.active():
+            self._ping_timer.cancel()
+        self._ping_timer = None
         if self.avatar:
             self.factory.destroyAvatar(self.avatar)
         del self.avatar
         UGAMEProtocol.connectionLost(self, reason)
 
+    def ping(self):
+        if not hasattr(self, "_ping_timer") or not self._ping_timer:
+            return
+
+        if self._ping_timer.active():
+            if self.factory.verbose > 6 and hasattr(self, "user") and self.user:
+                print "ping: renew %s/%s" % ( self.user.name, self.user.serial )
+            self._ping_timer.reset(self._ping_delay)
+        else:
+            self._ping_timer = None
+            if self.factory.verbose and hasattr(self, "user") and self.user:
+                print "ping: timeout %s/%s" % ( self.user.name, self.user.serial )
+            self.transport.loseConnection()

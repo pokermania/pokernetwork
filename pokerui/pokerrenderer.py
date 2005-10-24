@@ -1273,7 +1273,7 @@ class PokerRenderer:
             print "*CRITICAL*: handleLobby: unknown action " + action
 
     def queryLobby(self):
-        if self.state == LOBBY:
+        if self.state == LOBBY and self.protocol:
             criterion = self.state_lobby['custom_money'] + "\t" + self.state_lobby['type']
             self.protocol.sendPacket(PacketPokerTableSelect(string = criterion))
             timer = self.state_lobby.get('timer', None)
