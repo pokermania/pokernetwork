@@ -136,6 +136,10 @@ gboolean	handle_network(GIOChannel *source,
   (void) source;
   (void) condition;
   (void) data;
+  if (condition == G_IO_HUP)
+    {
+      gtk_main_quit();
+    }
   g_message("handle_network");
   dispatcher(0);
   return TRUE;

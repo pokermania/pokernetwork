@@ -144,5 +144,6 @@ int	init_interface_io(const char* address)
   g_io_channel_set_encoding(g_channel, 0, 0);
   g_io_channel_set_line_term(g_channel, "\0", 1);
   g_io_add_watch(g_channel, G_IO_IN, handle_network, 0);
+  g_io_add_watch(g_channel, G_IO_HUP, handle_network, 0);
   return TRUE;
 }
