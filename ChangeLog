@@ -1,5 +1,7 @@
 Mon Oct 24 2005  Johan Euphrosine  <johan@mekensleep.com>
 
+	* Release 1.0.12
+
 	* pokerclient2d/main.c: 
 	* pokerclient2d/network.c: 
 	added handling of GIOCondition G_IO_HUP: call gtk_main_quit
@@ -7,7 +9,7 @@ Mon Oct 24 2005  Johan Euphrosine  <johan@mekensleep.com>
 
 Mon Oct 24 2005  Loic Dachary  <loic@gnu.org>
 
-	* Release 1.0.12
+	* database/schema.sql.in: define money generator plugins to load
 
 	* pokernetwork/pokerserver.py (PokerService.sessionEnd,sessionStart): session records
 	  for each player.

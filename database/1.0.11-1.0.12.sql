@@ -28,3 +28,11 @@ create table session_history (
 
   key session_history_serial (user_serial)
 );
+
+drop table if exists users_wins;
+---
+--- Define functions by which a given set of money is created
+---
+alter table server add play_money_generator varchar(64) default "periodic";
+alter table users add play_money_rebuy int default 0;
+alter table server add custom_money_generator varchar(64) default "";

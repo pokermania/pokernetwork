@@ -25,8 +25,10 @@
 --
 drop table if exists server;
 
-create table `server` (
-  `version` varchar(16) not null
+create table server (
+  version varchar(16) not null,
+  play_money_generator varchar(64) default "periodic('daily', 10000000)",
+  custom_money_generator varchar(64) default ""
 );
 
 insert into server (version) values ("@PACKAGE_VERSION@");
@@ -44,7 +46,8 @@ create table users (
   password varchar(32),
   privilege int default 1,
 
-  play_money int default 1000000,
+  play_money int default 100000000,
+  play_money_rebuy int default 0,
   custom_money int default 0,
   point_money int default 5000,
 
@@ -315,21 +318,6 @@ create table users_transactions (
   status_time int default 0,
   notes text,
 
-  primary key (from_serial,to_serial)
-);
-
-drop table if exists users_wins;
---
--- How much a user wins/loses to another player in one hand
---
-create table users_wins (
-  from_serial int unsigned not null,
-  to_serial int unsigned not null,
-  hand_serial int unsigned not null,
-  created timestamp not null,
-  amount int default 0,
-  custom_money char default 'n',
-
-  primary key (from_serial,to_serial,hand_serial)
+  key (from_serial,to_serial)
 );
 
