@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
 #include "gui.h"
 #include "interface_io.h"
 #include "util.h"
@@ -74,10 +75,9 @@ void	on_ok_clicked(GtkWidget *widget, gpointer user_data)
   (void) user_data;
   (void) widget;
   set_string("buy_in");
-
   char tmp[32];
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g_max_radio))) {
-    snprintf(tmp, 32, "%.02f", max_amount);
+    snprintf(tmp, 32, "%.02f", max_amount);  
     set_string(tmp);
   } else {
     set_string(gtk_entry_get_text(GTK_ENTRY(g_custom_amount)));
@@ -92,6 +92,7 @@ int	handle_buy_in(GladeXML*	g_glade_xml, GtkLayout* screen, int init)
   
   if (init)
     {
+  setlocale(LC_NUMERIC, "C");
       g_buy_in_window = glade_xml_get_widget(g_glade_xml,
 					     "buy_in_window");
       g_assert(g_buy_in_window);
