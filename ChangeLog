@@ -1,3 +1,8 @@
+Wed Oct 26 2005  Nicolas Albert  <nicolas_albert_85@yahoo.fr>
+
+	* pokerclient2d/data/interface/interface.glade:
+	add to yesno_window and message_window, head_hbox with 3 subwidgets *_msg_head_left,*_msg_head_middle,*_msg_head_right for don't strech the windows's heads
+
 Mon Oct 24 2005  Johan Euphrosine  <johan@mekensleep.com>
 
 	* Release 1.0.12
