@@ -138,7 +138,10 @@ class UGAMEProtocol(protocol.Protocol):
         if self._queues.has_key(id):
             self._queues[id] = Queue()
             del self._queues[id]
-        
+
+    def canHandlePacket(self, packet):
+        return True
+    
     def _processQueues(self):
         if not self._blocked:
             now = time()
@@ -167,11 +170,18 @@ class UGAMEProtocol(protocol.Protocol):
                 #
                 # If time has come, process one packet
                 #
-                if queue.delay <= now or queue.packets[0].nodelay__:
-                    packet = queue.packets.pop(0)
-                    del packet.time__
-                    del packet.nodelay__
-                    self._handler(packet)
+                if queue.delay <= now:
+                    if queue.packets[0].nodelay__:
+                        ( can_handle, delay ) = ( True, 0 )
+                    else:
+                        ( can_handle, delay ) = self.canHandlePacket(queue.packets[0])
+                    if can_handle:
+                        packet = queue.packets.pop(0)
+                        del packet.time__
+                        del packet.nodelay__
+                        self._handler(packet)
+                    elif delay > now:
+                        queue.delay = delay
                 else:
                     if self.factory.verbose > 5:
                         print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )

@@ -239,7 +239,7 @@ class PokerAvatar:
         return self.resetPacketsQueue()
         
     def handlePacketLogic(self, packet):
-        if self.service.verbose > 2: print "handleConnection: " + str(packet)
+        if self.service.verbose > 2 and packet.type != PACKET_PING: print "handleConnection: " + str(packet)
         
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
@@ -1432,10 +1432,14 @@ class PokerTable:
 
     def allReadyToPlay(self):
         game = self.game
+        status = True
+        notready = []
         for player in game.playersAll():
             if player.getUserData()['ready'] == False:
-                return False
-        return True
+                notready.append(str(player.serial))
+                status = False
+        if notready and self.factory.verbose > 3: print "allReadyToPlay: waiting for " + join(notready, ",")
+        return status
         
     def readyToPlay(self, serial):
         self.updatePlayerUserData(serial, 'ready', True)
@@ -1577,6 +1581,7 @@ class PokerTable:
         game = self.game
 
         if self.isSeated(client):
+            game.getPlayer(serial).getUserData()['ready'] = True
             if self.isOpen():
                 #
                 # If not on a closed table, stand up.
@@ -1826,7 +1831,6 @@ class PokerTable:
         return True
         
     def destroyPlayer(self, client, serial):
-        game = self.game
         if client in self.observers:
             self.observers.remove(client)
         else:
@@ -2074,7 +2078,7 @@ class PokerService(service.Service):
         avatar.connectionLost("Disconnected")
 
     def sessionStart(self, serial, ip):
-        if self.verbose > 3: print "PokerService::sessionStart(%d, %s): " % ( serial, ip )
+        if self.verbose > 2: print "PokerService::sessionStart(%d, %s): " % ( serial, ip )
         cursor = self.db.cursor()
         sql = "insert into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, time.time(), ip )
         cursor.execute(sql)
@@ -2082,7 +2086,7 @@ class PokerService(service.Service):
         cursor.close()
         
     def sessionEnd(self, serial):
-        if self.verbose > 3: print "PokerService::sessionEnd(%d): " % ( serial )
+        if self.verbose > 2: print "PokerService::sessionEnd(%d): " % ( serial )
         cursor = self.db.cursor()
         sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session where user_serial = %d" % ( time.time(), serial )
         cursor.execute(sql)

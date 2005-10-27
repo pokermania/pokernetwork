@@ -42,6 +42,8 @@ from pokernetwork.pokerchildren import PokerChildren, PokerChildBrowser
 from pokernetwork.pokerpackets import *
 from pokernetwork import upgrade
 
+DEFAULT_PLAYER_USER_DATA = { 'delay': 0 }
+
 class PokerSkin:
     """Poker Skin"""
 
@@ -248,7 +250,11 @@ class PokerClientFactory(UGAMEClientFactory):
                  packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST or
                  packet.type == PACKET_POKER_TOURNEY_UNREGISTER or
                  packet.type == PACKET_POKER_TOURNEY_REGISTER )
-        
+
+    def isAlwaysHandled(self, packet):
+        return ( packet.type == PACKET_POKER_PLAYER_CHIPS or
+                 packet.type == PACKET_POKER_CHAT )
+    
     def isConnectionLess(self, packet):
         return ( packet.type == PACKET_PROTOCOL_ERROR or
                  packet.type == PACKET_QUIT )
@@ -537,6 +543,28 @@ class PokerClientProtocol(UGAMEClientProtocol):
         elif type == "round_cap_decrease":
             if not self.no_display_packets:
                 forward_packets.extend(self.updateBetLimit(game))
+
+    def setPlayerDelay(self, game, serial, value):
+        player = game.getPlayer(serial)
+        player.getUserData()['delay'] = time.time() + value
+
+    def getPlayerDelay(self, game, serial):
+        if not game: return 0
+        player = game.getPlayer(serial)
+        if not player: return 0
+        user_data = player.getUserData()
+        if not user_data or not user_data.has_key('delay'): return 0
+        return user_data['delay']
+
+    def canHandlePacket(self, packet):
+        if not self.factory.isAlwaysHandled(packet) and hasattr(packet, "game_id") and hasattr(packet, "serial"):
+            delay = self.getPlayerDelay(self.factory.packet2game(packet), packet.serial) - time.time()
+            if delay <= 0:
+                return ( True, 0 )
+            else:
+                return ( False, delay )
+        else:
+            return ( True, 0 )
         
     def _handleConnection(self, packet):
         if self.factory.verbose > 3: self.message("PokerClientProtocol:handleConnection: %s" % packet )
@@ -633,6 +661,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
                 game.addPlayer(packet.serial, packet.seat)
                 player = game.getPlayer(packet.serial)
+                player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
                 player.name = packet.name
                 player.url = packet.url
                 player.outfit = packet.outfit
@@ -701,6 +730,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 game.noAutoBlindAnte(packet.serial)
 
             elif packet.type == PACKET_POKER_SIT:
+                self.setPlayerDelay(game, packet.serial, self.factory.delays.get('sit', 1))
                 game.sit(packet.serial)
 
             elif packet.type == PACKET_POKER_WAIT_FOR:

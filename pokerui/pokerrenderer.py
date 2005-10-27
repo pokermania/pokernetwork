@@ -864,8 +864,6 @@ class PokerRenderer:
         elif ( packet.type == PACKET_POKER_SIT or
                packet.type == PACKET_POKER_SIT_REQUEST ):
             self.render(packet)
-            if not game.isRunning():
-                self.delay(game,"sit")
             if packet.serial == self.protocol.getSerial():
                 self.sitActionsUpdate()
             

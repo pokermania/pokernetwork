@@ -1,3 +1,26 @@
+Thu Oct 27 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerclient.py (PokerClientFactory.isAlwaysHandled): some packets are never
+	  delayed
+
+	* pokernetwork/pokerserver.py (PokerTable.allReadyToPlay): log players who are not ready
+	(PokerTable.disconnectPlayer): a disconnected player is always ready to play
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection): PACKET_POKER_SIT no longer
+	  imposes a delay
+
+	* pokernetwork/protocol.py (UGAMEProtocol._processQueues): call canHandlePacket to figure
+	  out if it's ok to call the handler on each packet
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.{get,set}PlayerDelay): per player user 
+	  delays
+
+	* pokernetwork/pokerclient.py (PACKET_POKER_SIT): minimum delay from settings/delay/@sit
+	
+Wed Oct 26 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerserver.py (PokerAvatar.handlePacketLogic): limit traces of ping packets
+
 Wed Oct 26 2005  Nicolas Albert  <nicolas_albert_85@yahoo.fr>
 
 	* pokerclient2d/data/interface/interface.glade:

@@ -424,7 +424,7 @@ class PokerInterface(dispatch.EventDispatcher):
         self.command("buy_in", "hide")
         
     def buyInParams(self, minimum, maximum, legend, max_label):
-        packet = [ "buy_in", "params", str(minimum / 100.0), str(maximum / 100.0), legend, max_label ]
+        packet = [ "buy_in", "params", PokerChips.tostring(minimum), PokerChips.tostring(maximum), legend, max_label ]
         if self.verbose > 1: print "PokerInterfaceProtocol:requestBuyIn " + str(packet)
         self.command(*packet)
         

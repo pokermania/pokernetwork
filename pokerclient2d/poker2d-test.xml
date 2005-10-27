@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" display2d="yes" display3d="no" verbose="5" delays="true" tcptimeout="2000" upgrades="no" poker_network_version="1.0.12">
-   <delays sit="1" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="1" lag="15"/> 
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" display2d="yes" display3d="no" verbose="5" delays="true" tcptimeout="2000" upgrades="no" poker_network_version="1.0.13">
+   <delays sit="20" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="1" lag="15"/> 
 <!-- <delays sit="0" blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="15"/> -->
   <screen fullscreen="no" width="1024" height="768"/>
   <name>foobar2</name>

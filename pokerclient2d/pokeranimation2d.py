@@ -263,7 +263,7 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         if self.verbose > 1: self.message(":timeoutWarning: not implemented")
 
     def pot2player(self, packet):
-        if self.verbose > 2: self.message("pot2player: move %s from %s to %s" % ( packet.chips, PokerChips.tostring(self.table.widget_pots[packet.pot]), PokerChips.tostring(self.widget_bet)))
+        if self.verbose > 2: self.message("pot2player: move %s from %s to %s" % ( packet.chips, self.table.widget_pots[packet.pot], self.widget_bet))
         value = 0
         while packet.chips:
             chip_value = packet.chips.pop(0)
