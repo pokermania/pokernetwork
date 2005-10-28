@@ -1,3 +1,10 @@
+Fri Oct 28 2005  Johan Euphrosine  <johan@mekensleep.com>
+
+	* pokerclient2d/network.c: 
+	* pokerclient2d/main.c: 
+	added handling of GIOCondition G_IO_ERR: call gtk_main_quit
+	REALLY fix performance issue (CPU 100%), when interface server disconnect due to a crash
+	
 Thu Oct 27 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.13

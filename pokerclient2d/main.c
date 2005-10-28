@@ -139,9 +139,19 @@ gboolean	handle_network(GIOChannel *source,
   if (condition == G_IO_HUP)
     {
       gtk_main_quit();
+      return FALSE;
+    }
+  else if (condition == G_IO_ERR)
+    {
+      gtk_main_quit();
+      return FALSE;
     }
   g_message("handle_network");
-  dispatcher(0);
+  if (dispatcher(0) == FALSE)
+    {
+      gtk_main_quit();
+      return FALSE;
+    }
   return TRUE;
 }
 
