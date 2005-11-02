@@ -83,7 +83,7 @@ class PokerAnimationPlayer:
         self.is_suspended = False
 
     def setPlayerDelay(self, delay):
-        if not hasattr(self, table): return
+        if not hasattr(self, 'table'): return
         game = self.table.game
         if self.table.scheduler and self.table.scheduler.protocol:
             protocol = self.table.scheduler.protocol
