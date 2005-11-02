@@ -183,6 +183,8 @@ class UGAMEProtocol(protocol.Protocol):
                     elif delay > now:
                         queue.delay = delay
                         self._queues[id].delay = delay
+                        if id in to_delete:
+                            to_delete.remove(id)
                 else:
                     if self.factory.verbose > 5:
                         print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )

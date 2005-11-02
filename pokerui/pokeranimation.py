@@ -81,6 +81,13 @@ class PokerAnimationPlayer:
         designed to be called after a suspend but will also work
         otherwise."""
         self.is_suspended = False
+
+    def setPlayerDelay(self, delay):
+        if not hasattr(self, table): return
+        game = self.table.game
+        if self.table.scheduler and self.table.scheduler.protocol:
+            protocol = self.table.scheduler.protocol
+            protocol.setPlayerDelay(game, self.serial, delay)
         
     def callLater(self, delay, function, *args, **kwargs):
         self.callLaterTagged(function.__name__, delay, function, *args, **kwargs)

@@ -558,8 +558,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def canHandlePacket(self, packet):
         if not self.factory.isAlwaysHandled(packet) and hasattr(packet, "game_id") and hasattr(packet, "serial"):
-            delay = self.getPlayerDelay(self.factory.packet2game(packet), packet.serial) - time.time()
-            if delay <= 0:
+            delay = self.getPlayerDelay(self.factory.packet2game(packet), packet.serial)
+            if delay <= time.time():
                 return ( True, 0 )
             else:
                 return ( False, delay )
@@ -730,7 +730,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 game.noAutoBlindAnte(packet.serial)
 
             elif packet.type == PACKET_POKER_SIT:
-                self.setPlayerDelay(game, packet.serial, self.factory.delays.get('sit', 1))
                 game.sit(packet.serial)
 
             elif packet.type == PACKET_POKER_WAIT_FOR:

@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" ping="20000" verbose="5" chat="yes" poker_network_version="1.0.13">
 
-  <delays autodeal="3" round="2" position="1" showdown="7" finish="3"/>
+  <delays autodeal="3" round="2" position="60" showdown="7" finish="3"/>
   
   <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+
   <table name="Two" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Deux" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
+
   <table name="Three" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Trois" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
+
   <table name="Four" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Antigua" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Cairo" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
@@ -16,9 +22,6 @@
   <table name="Chip" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Relax" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Speed" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Deux" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Trois" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Quatre" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
 
   <table name="Five" variant="omaha" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
