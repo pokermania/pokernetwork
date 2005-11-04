@@ -608,12 +608,19 @@ class PokerRenderer:
 
     def restoreGameSate(self, game):
         serial = self.protocol.getSerial()
+        if game.getPlayer(serial):
+            if game.isRunning():
+                self.sendPacket(PacketPokerProcessingHand(game_id = game.id,
+                                                          serial = serial))
+            else:
+                self.readyToPlay(game.id)
         requested = game.getRequestedAction(serial)
         if requested == "blind_ante":
             ( amount, dead, state ) = game.blindAmount(serial)
             self.changeState(PAY_BLIND_ANTE, 'blind', game, amount, dead, state)
         elif requested == "rebuy":
             self.changeState(USER_INFO, REBUY, game)
+            
     
     def _handleConnection(self, protocol, packet):
         game = self.factory.packet2game(packet)
@@ -748,8 +755,9 @@ class PokerRenderer:
             
         if packet.type == PACKET_POKER_START:
             self.resetLagmax()
-            self.sendPacket(PacketPokerProcessingHand(game_id = packet.game_id,
-                                                      serial = self.protocol.getSerial()))
+            if self.stream_mode:
+                self.sendPacket(PacketPokerProcessingHand(game_id = packet.game_id,
+                                                          serial = self.protocol.getSerial()))
             self.render(packet)
 
         elif packet.type == PACKET_POKER_CANCELED:
@@ -1500,12 +1508,19 @@ class PokerRenderer:
             self.changeState(IDLE)
         else:
             current_game = self.factory.getGame(current_game_id)
-            if current_game and not current_game.isSeated(serial):
-                #
-                # Forget about tables where we do not sit
-                #
-                self.protocol.sendPacket(PacketPokerTableQuit(game_id = current_game_id,
-                                                              serial = serial))
+            if current_game:
+                if not current_game.isSeated(serial):
+                    #
+                    # Forget about tables where we do not sit
+                    #
+                    self.protocol.sendPacket(PacketPokerTableQuit(game_id = current_game_id,
+                                                                  serial = serial))
+                else:
+                    #
+                    # Do not hold a game we do not display
+                    #
+                    self.readyToPlay(current_game_id)
+                    
             game = self.factory.getGame(game_id)
             
             if not game:
