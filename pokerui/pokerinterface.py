@@ -233,18 +233,64 @@ class PokerInterface(dispatch.EventDispatcher):
             if count >= nparams: break
             count += 1
             definition = outfit['DEFINITIONS'][xpath]
+            definition_entries = definition.getEntries()
+            definition_preview = definition.getPreview()
+            definition_preview_type = definition.getPreviewType()
+            definition_text = definition.getText()
             if self.verbose > 1:
                 print "value %s - %s " % (xpath, value['value'])
-                print "definition %s" % definition['ids']
+#before                print "definition %s" % definition['ids']
+                print "definition %s" % definition_entries
                 print "slot_type %s" % slot_type
-            if value['value'] not in definition['ids']:
+            if value['value'] not in definition_entries:
                 print "WARNING Changing default value for %s because the default value is masked" % value['parameter']
-                value['value'] = definition['ids'][0]
-            index = definition['ids'].index(value['value'])
-            packet.extend((definition['text'], xpath, "0", str(len(definition['ids'])), str(index)))
-            packet.append(definition['preview_type'])
-            packet.append(str(len(definition['preview'])))
-            packet.extend(definition['preview'])
+                value['value'] = definition_entries[0]
+            index = definition_entries.index(value['value'])
+            packet.extend((definition_text, xpath, "0", str(len(definition_entries)), str(index)))
+            packet.append(definition_preview_type)
+            packet.append(str(len(definition_preview)))
+            packet.extend(definition_preview)
+        if self.verbose > 1: print "PokerInterfaceProtocol:showOutfits " + str(packet)
+        self.command(*packet)
+
+
+    def showOutfits2(self, sex, slot_number, slot_type, slot, outfit):
+        self.command("outfit", "show")
+        packet = [ "outfit", "set", sex, str(slot_number) ]
+        slot_value_index = slot.keys().index(outfit['NAME'])
+        packet.extend((slot_type, "0" ,str(len(slot)), str(slot_value_index)))
+        nparams = min(len(outfit['VALUES']), 4)
+
+        key = 'global_skin_hue/color_set'
+        if slot_type != 'head' and outfit['VALUES'].has_key(key) :
+            nparams = nparams - 1
+
+        packet.append(str(nparams))
+        count = 0
+        for (xpath, value) in outfit['VALUES'].iteritems():
+            if slot_type != 'head' and xpath == key:
+                continue
+
+            if count >= nparams: break
+            count += 1
+            definition = outfit['DEFINITIONS'][xpath]
+            definition_entries = definition.getEntries()
+            definition_preview = definition.getPreview()
+            definition_preview_type = definition.getPreviewType()
+            definition_text = definition.getText()
+            if self.verbose > 1:
+                print "value %s - %s " % (xpath, value['value'])
+#before                print "definition %s" % definition['ids']
+                print "definition %s" % definition_entries
+                print "slot_type %s" % slot_type
+            if value['value'] not in definition_entries:
+                print "WARNING Changing default value for %s because the default value is masked" % value['parameter']
+                value['value'] = definition_entries[0]
+            index = definition_entries.index(value['value'])
+            packet.extend((definition_text, xpath, "0", str(len(definition_entries)), str(index)))
+            packet.append(definition_preview_type)
+            packet.append(str(len(definition_preview)))
+            packet.extend(definition_preview)
         if self.verbose > 1: print "PokerInterfaceProtocol:showOutfits " + str(packet)
         self.command(*packet)
 
