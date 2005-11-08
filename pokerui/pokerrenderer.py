@@ -847,6 +847,8 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_PLAYER_CARDS:
             if game.variant == "7stud":
                 packet.visibles = "best"
+            else:
+                packet.visibles = ""
             self.render(packet)
 
         elif packet.type == PACKET_POKER_BOARD_CARDS:
