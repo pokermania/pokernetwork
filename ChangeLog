@@ -1,6 +1,20 @@
-Wed Nov 02 2005  Loic Dachary  <loic@gnu.org>
+Mon Nov 14 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.13
+
+	* pokerui/pokerrenderer.py (PokerRenderer.sitOut): avoid race condition
+	  when sitout is called and the player is no longer at the table.
+
+Fri Nov 04 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokerui/pokerrenderer.py (PokerRenderer.restoreGameSate): send the 
+	  appropriate processing/ready packets when switching games
+
+	* conf/poker.server.xml.in: betting structures changed
+
+	* pokerclient2d/menu.c (handle_menu): menu bar as wide as screen
+
+Wed Nov 02 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokeranimation.py (PokerAnimationPlayer.setPlayerDelay): set the
 	  delay for the next incoming packet in order to ensure that the animation
