@@ -477,8 +477,9 @@ class PokerInterface(dispatch.EventDispatcher):
     def handleBuyIn(self, data):
         if self.verbose > 1: print "handleBuyIn: " + str(data)
         value = data[0]
-        self.publishEvent(INTERFACE_BUY_IN, int(float(value) * 100))
-        self.clearCallbacks(INTERFACE_BUY_IN)
+        self.callbacks.has_key(INTERFACE_BUY_IN):
+            self.publishEvent(INTERFACE_BUY_IN, int(float(value) * 100))
+            self.clearCallbacks(INTERFACE_BUY_IN)
         return data[1:]
 
     def updateCashier(self, *messages):
