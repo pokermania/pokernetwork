@@ -1253,6 +1253,8 @@ class PokerRenderer:
 
     def handleLobby(self, args):
         if self.verbose > 2: print "handleLobby: " + str(args)
+        if not self.protocol: return
+
         (action, value) = args
         if action == "details":
             game_id = int(value)
