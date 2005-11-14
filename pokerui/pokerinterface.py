@@ -386,8 +386,9 @@ class PokerInterface(dispatch.EventDispatcher):
     def handleBlind(self, data):
         if data[0] == "post":
             (tag, answer) = data[:2]
-            self.publishEvent(INTERFACE_POST_BLIND, answer)
-            self.clearCallbacks(INTERFACE_POST_BLIND)
+            self.callbacks.has_key(INTERFACE_POST_BLIND):
+                self.publishEvent(INTERFACE_POST_BLIND, answer)
+                self.clearCallbacks(INTERFACE_POST_BLIND)
             data = data[2:]
         else:
             raise Exception("bad packet received from blind")
