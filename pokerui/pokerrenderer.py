@@ -385,6 +385,8 @@ class PokerRenderer:
         serial = self.protocol.getSerial()
         game_id = self.protocol.getCurrentGameId()
         game = self.factory.getGame(game_id)
+        if not game.getPlayer(serial):
+            return
         if yesno:
             self.protocol.sendPacket(PacketPokerSitOut(game_id = game_id,
                                                        serial = serial))
@@ -639,11 +641,13 @@ class PokerRenderer:
             self.changeState(USER_INFO_DONE)
 
         elif packet.type == PACKET_POKER_STREAM_MODE:
+            if self.stream_mode == True: raise UserWarning, "STREAM_MODE while in STREAM_MODE"
             self.stream_mode = True
             self.render(packet)
             self.restoreGameSate(game)
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
+            if self.stream_mode == False: raise UserWarning, "BATCH_MODE while in BATCH_MODE"
             self.stream_mode = False
             self.render(packet)
 
