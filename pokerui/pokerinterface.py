@@ -120,8 +120,8 @@ class PokerInterface(dispatch.EventDispatcher):
         self.command("login", "hide")
 
     def handleTournaments(self, data):
-        self.publishEvent(INTERFACE_TOURNAMENTS, data[:3])
-        return data[3:]
+        self.publishEvent(INTERFACE_TOURNAMENTS, data[:2])
+        return data[2:]
     
     def updateTournamentsPlayersList(self, can_register, players):
         register_map = { True: "1",
