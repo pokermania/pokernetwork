@@ -386,7 +386,7 @@ class PokerInterface(dispatch.EventDispatcher):
     def handleBlind(self, data):
         if data[0] == "post":
             (tag, answer) = data[:2]
-            self.callbacks.has_key(INTERFACE_POST_BLIND):
+            if self.callbacks.has_key(INTERFACE_POST_BLIND):
                 self.publishEvent(INTERFACE_POST_BLIND, answer)
                 self.clearCallbacks(INTERFACE_POST_BLIND)
             data = data[2:]
@@ -478,7 +478,7 @@ class PokerInterface(dispatch.EventDispatcher):
     def handleBuyIn(self, data):
         if self.verbose > 1: print "handleBuyIn: " + str(data)
         value = data[0]
-        self.callbacks.has_key(INTERFACE_BUY_IN):
+        if self.callbacks.has_key(INTERFACE_BUY_IN):
             self.publishEvent(INTERFACE_BUY_IN, int(float(value) * 100))
             self.clearCallbacks(INTERFACE_BUY_IN)
         return data[1:]

@@ -128,7 +128,12 @@ class PokerAnimationPlayer:
         pass
     
     def manageSitinSitout(self):
-#        print "##################"
+        
+        print "#####START#######"
+        for i in self.sitin_stack:
+            print "#### %s" % i
+        print "#####END#######"
+
 #        print "manage Sitin"
 #        print "taille de sitin %d"%len(self.sitin_stack)
 #        for i in self.sitin_stack:
@@ -314,13 +319,13 @@ class PokerAnimationTable:
             chips = 0
             if serial in serial2share.keys():
                 chips = serial2share[serial]
+            # a predicat check that winner are on the table when we use this packet but not the loosers
+            # so it's possible to come on a table with this packet and serials (who loose) missing in the
+            # serial list
             # to find a bug
             if serial not in self.serial2player.keys():
-                print "showdown problem on game id %d" % self.game.id
-                print "serials on table:"
-                print self.serial2player.keys()
-                print "serials from showdown packet:"
-                print serials
+                continue
+            
             player = self.serial2player[serial]
             player.showdownDelta(delta, serial2delta[serial] == delta_max, serial2delta[serial] == delta_min, chips)
             
