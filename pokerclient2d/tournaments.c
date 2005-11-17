@@ -160,15 +160,15 @@ static void	on_tourney_toggled(GtkWidget *widget, gpointer user_data)
 
   if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
     const char* name = gtk_widget_get_name(widget);
+    set_string("tournaments");
+    set_string("refresh");
+    set_string(name);
+    flush_io_channel();
     if(!strcmp(name, "sit_n_go")) {
       gtk_notebook_set_current_page(s_notebook, PAGE_SIT_N_GO);
     } else if(!strcmp(name, "regular")) {
       gtk_notebook_set_current_page(s_notebook, PAGE_REGULAR);
     }
-    set_string("tournaments");
-    set_string("refresh");
-    set_string(name);
-    flush_io_channel();
   }
 }
 
