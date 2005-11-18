@@ -204,6 +204,11 @@ class PokerClientFactory2D(PokerClientFactory):
     def clientVersionOk(self):
         self.showServers()
 
+    def failedUpgrade(self, logs, reason):
+        interface = self.interface
+        interface.messageBox("Unable to upgrade software\n" + logs)
+        interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
+        
     def needUpgrade(self, version):
         interface = self.interface
         interface.yesnoBox("A new client version is available, do you want to upgrade now ?")

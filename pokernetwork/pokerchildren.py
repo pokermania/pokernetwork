@@ -226,6 +226,7 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import error
 
 RSYNC_DONE = "//event/pokernetwork/pokerchildren/rsync_done"
+RSYNC_FAILED = "//event/pokernetwork/pokerchildren/rsync_failed"
 
 class PokerRsync(PokerChild, ProcessProtocol):
 
@@ -234,6 +235,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
         self.verbose = settings.headerGetInt("/settings/@verbose")
         self.ready = self.configure(rsync)
         self.chunks = []
+        self.errors = []
 
     def configure(self, rsync):
         settings = self.settings
@@ -263,6 +265,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
 
     def errReceived(self, chunk):
         print "ERROR: PokerRsync " + chunk
+        self.errors.append(chunk)
         
     def outReceived(self, chunk):
         self.chunks.append(chunk)
@@ -278,6 +281,9 @@ class PokerRsync(PokerChild, ProcessProtocol):
     def done(self):
         self.publishEvent(RSYNC_DONE)
         
+    def failed(self, logs, reason):
+        self.publishEvent(RSYNC_FAILED, logs,reason)
+        
     def outConnectionLost(self):
         pass
 
@@ -286,4 +292,4 @@ class PokerRsync(PokerChild, ProcessProtocol):
             self.done()
         else:
             if self.verbose > 2: print "PokerRsync::processEnded: " + str(reason)
-            raise reason
+            self.failed("".join(self.errors), reason)

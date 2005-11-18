@@ -2577,7 +2577,7 @@ class PokerService(service.Service):
         sql = "delete from user2table"
         cursor.execute(sql)
 
-        if temporary_users:
+        if len(temporary_users) > 2:
             sql = "delete session_history from session_history, users where session_history.user_serial = users.serial and users.name like '" + temporary_users + "%'"
             cursor.execute(sql)
             sql = "delete session from session, users where session.user_serial = users.serial and users.name like '" + temporary_users + "%'"

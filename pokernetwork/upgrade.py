@@ -34,7 +34,7 @@ from re import match
 
 from twisted.python import dispatch
 
-from pokernetwork.pokerchildren import PokerRsync, RSYNC_DONE
+from pokernetwork.pokerchildren import PokerRsync, RSYNC_DONE, RSYNC_FAILED
 
 class Constants:
     EXCLUDES = []
@@ -43,6 +43,7 @@ class Constants:
     # 2005/10 : no -z because not supported on all platforms
     RSYNC = [ "rsync", "--timeout=60" ]
     
+FAILED = "//event/pokernetwork/upgrade/failed"
 TICK = "//event/pokernetwork/upgrade/tick"
 NEED_UPGRADE = "//event/pokernetwork/upgrade/need_upgrade"
 CLIENT_VERSION_OK = "//event/pokernetwork/upgrade/client_version_ok"
@@ -161,10 +162,14 @@ class Upgrader(dispatch.EventDispatcher):
         Constants.UPGRADES_DIR = self.target + "/" + self.upgrades
         source = self.settings.headerGet("/settings/rsync/@source")
 
+    def failed(self, logs, reason):
+        self.publishEvent(FAILED, logs, reason)
+    
     def checkClientVersion(self, version):
         if self.verbose > 1: print "Upgrade::checkClientVersion(" + str(version) + ")" 
         self.publishEvent(TICK, 0.0, "Checking for new client version")
-        CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
+        checker = CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
+        checker.registerHandler(RSYNC_FAILED, self.failed)
 
     def checkClientVersionDone(self, need_upgrade, version):
         if need_upgrade:
@@ -187,12 +192,14 @@ class Upgrader(dispatch.EventDispatcher):
         stage1 = DryrunUpgrade(self.config, self.settings, version)
         stage1.registerHandler(TICK, lambda ratio, message: self.publishEvent(TICK, ratio, message))
         stage1.registerHandler(DRY_RUN_DONE, lambda files_count: self.upgradeStage2(version, files_count))
+        stage1.registerHandler(RSYNC_FAILED, self.failed)
         stage1.spawn()
 
     def upgradeStage2(self, version, files_count):
         self.publishEvent(TICK, 0.0, "Upgrading the upgrade system")
         rsync = PokerRsync(self.config, self.settings, Constants.RSYNC + Constants.EXCLUDES + Constants.BANDWIDTH + [ "--delete", "-a", "@SOURCE@/" + "%s/%s/" % ( version, self.upgrades ), Constants.UPGRADES_DIR + "/" ])
         rsync.registerHandler(RSYNC_DONE, lambda: self.upgradeStage3(version, files_count))
+        rsync.registerHandler(RSYNC_FAILED, self.failed)
         rsync.spawn()
 
     def upgradeStage3(self, version, files_count):
@@ -200,6 +207,7 @@ class Upgrader(dispatch.EventDispatcher):
         stage2 = GetPatch(self.config, self.settings, version, files_count)
         stage2.registerHandler(TICK, lambda ratio, message: self.publishEvent(TICK, ratio, message))
         stage2.registerHandler(GET_PATCH_DONE, self.upgradeReady)
+        stage2.registerHandler(RSYNC_FAILED, self.failed)
         stage2.spawn()
         
     def upgradeReady(self):

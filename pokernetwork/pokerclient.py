@@ -162,6 +162,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.upgrader.registerHandler(upgrade.CLIENT_VERSION_OK, self.clientVersionOk)
         self.upgrader.registerHandler(upgrade.NEED_UPGRADE, self.needUpgrade)
         self.upgrader.registerHandler(upgrade.UPGRADE_READY, self.upgradeReady)
+        self.upgrader.registerHandler(upgrade.FAILED, self.failedUpgrade)
         self.interface = None
 
     def __del__(self):
@@ -302,6 +303,9 @@ class PokerClientFactory(UGAMEClientFactory):
         self.upgrader.checkClientVersion(version)
 
     def clientVersionOk(self):
+        pass
+
+    def failedUpgrade(self, logs, reason):
         pass
 
     def needUpgrade(self, version):
