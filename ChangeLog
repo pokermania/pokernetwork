@@ -2,6 +2,9 @@ Wed Nov 23 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.13
 
+	* pokernetwork/__init__.py (protocol_number): protocol changes because the
+	  server refers to new betting structures.
+
 	* pokerweb/pages/class.poker.php: rename soapclient to nusoapclient to avoid
 	  name conflict in php5
 
