@@ -34,7 +34,7 @@ class poker {
   }
 
   function connect($host) {
-    $this->client = new soapclient($host);
+    $this->client = new nusoapclient($host);
   }
 
   function login($login, $password) {
