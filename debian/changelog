@@ -2,7 +2,11 @@ poker-network (1.0.13-1) unstable; urgency=low
 
   * upstream version
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 26 Oct 2005 19:08:08 +0200
+  * apply patch to po from Thomas Huriaux (closes: #338136)
+
+  * french translation (closes: #340083)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 21 Nov 2005 10:15:29 +0100
 
 poker-network (1.0.12-1) unstable; urgency=low
 

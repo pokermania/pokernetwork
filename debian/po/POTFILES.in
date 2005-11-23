@@ -1,1 +1,2 @@
-[type: gettext/rfc822deb] python2.3-poker-network.templates
+[type: gettext/rfc822deb] poker-web.templates
+[type: gettext/rfc822deb] python-poker-network.templates

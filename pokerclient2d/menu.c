@@ -155,14 +155,7 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
      * calculate windows position
      */
     int	screen_width = gui_width(screen);
-    int	screen_height = gui_height(screen);
-
-		printf ("size in pokerinterface %d %d\n", screen_width, screen_height);
-
-		gtk_widget_set_size_request(g_menu_window,
-																screen_width,
-																-1 ); // -1 because we don't want to change height of menubar
-
+    //    gtk_widget_set_size_request(g_menu_window, screen_width, -1 ); // -1 because we don't want to change height of menubar
     gtk_widget_show_all(g_menu_window);
   } else if(!strcmp(tag, "hide")) {
     gtk_widget_hide_all(g_menu_window);

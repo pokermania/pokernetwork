@@ -2,6 +2,13 @@ Mon Nov 14 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.13
 
+	* pokerui/pokerinterface.py (PokerInterface.handleBuyIn): double click safeguard
+
+	* pokerui/pokerinterface.py (PokerInterface.handleTournaments): all tournaments messages have
+	  only two arguments, not three
+
+	* upgrades/poker.server/1.0.12-1.0.13.xsl: ping time set to 240
+
 	* pokerui/pokerrenderer.py (PokerRenderer.sitOut): avoid race condition
 	  when sitout is called and the player is no longer at the table.
 

@@ -988,7 +988,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             packets.append(PacketPokerBetLimit(game_id = game.id,
                                                min = min_bet,
                                                max = max_bet,
-                                               step = found,
+                                               step = game.getChipUnit(),
                                                call = to_call,
                                                allin = game.getPlayer(serial).money,
                                                pot = game.potAndBetsAmount() + to_call * 2))
