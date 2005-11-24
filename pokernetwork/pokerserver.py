@@ -522,18 +522,6 @@ class PokerAvatar:
 
             table.update()
 
-#         if packet.type == PACKET_POKER_TABLE_GROUP:
-#             serial = self.service.setTableGroup(self.getSerial(), packet.game_ids)
-#             self.sendPacketVerbose(PacketPokerTableGroupSerial(serial = serial))
-
-#         elif packet.type == PACKET_POKER_TABLE_UNGROUP:
-#             serial = self.service.unsetTableGroup(self.getSerial(), packet.serial)
-#             self.sendPacketVerbose(PacketPokerTableUngroup(serial = serial))
-            
-#         elif packet.type == PACKET_POKER_TABLE_GROUP_BALANCE:
-#             result = self.service.balance(self.getSerial(), packet.serial)
-#             self.sendPacketVerbose(PacketPokerTableGroupBalance(serial = result))
-            
         elif packet.type == PACKET_POKER_TABLE_JOIN:
             table = self.service.getTable(packet.game_id)
             if table:
@@ -3139,72 +3127,6 @@ class PokerService(service.Service):
         for groups in self.groups.itervalues():
             if table in groups:
                 groups.remove(table)
-
-    def setTableGroup(self, owner, table_ids):
-        tables = []
-        for table in self.tables:
-            if table.game.id in table_ids:
-                if table.owner != owner:
-                    print "*ERROR* player %d attempted to balance table %d but is not the owner" % ( owner, table.game.id )
-                    return 0
-                tables.append(table)
-
-        serial = self.table_serial
-        self.groups[serial] = tables
-        self.table_serial += 1
-        return serial
-
-    def unsetTableGroup(self, owner, group_id):
-        if not group_id in self.groups.keys():
-            print "*ERROR* not group id %d" % group_id
-            return 0
-        
-        for table in self.groups[group_id]:
-            if table.owner != owner:
-                print "*ERROR* player %d attempted to unset table group %d but is not the owner of the tables it contains" % ( owner, group_id )
-                return 0
-        del self.groups[group_id]
-        return group_id
-        
-    def balance(self, owner, group_id):
-        for table in self.groups[group_id]:
-            if table.owner != owner:
-                print "*ERROR* player %d attempted to balance table group %d but is not the owner of all the tables it contains" % ( owner, group_id )
-                return 0
-
-        balance_packet = PacketPokerTableGroupBalance(serial = group_id)
-        tables = self.groups[group_id]
-
-        games = [ table.game for table in tables ]
-        id2table = dict(zip([ game.id for game in games ], tables))
-        
-        to_break = breakGames(games)
-        tables_broken = {}
-        for (from_id, to_id, serials) in to_break:
-            for serial in serials:
-                table = id2table[from_id]
-                table.movePlayer(table.serial2client[serial], serial, to_id)
-            tables_broken[from_id] = True
-
-        if len(to_break) > 0:
-            for table in self.groups[group_id]:
-                table.broadcast(balance_packet)
-            for table_id in tables_broken.keys():
-                table = id2table[table_id]
-                table.destroy()
-            return group_id
-        
-        to_equalize = equalizeGames(games)
-        for (from_id, to_id, serial) in to_equalize:
-            table = id2table[from_id]
-            table.movePlayer(table.serial2client[serial], serial, to_id)
-            table.broadcast(PacketPokerTableGroupBalance(serial = group_id))
-        if len(to_equalize) > 0:
-            for table in self.groups[group_id]:
-                table.broadcast(balance_packet)
-            return group_id
-        else:
-            return 0
 
 class PokerAuth:
 

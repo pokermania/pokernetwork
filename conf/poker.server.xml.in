@@ -31,7 +31,7 @@
   <table name="Eleven" variant="omaha8" betting_structure="10-20-pot-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Twelve" variant="omaha8" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
 
-  <table name="Thirty" variant="7stud" betting_structure="ante-10-15-pot-limit" seats="8" timeout="60" custom_money="0"/>
+  <table name="Thirty" variant="7stud" betting_structure="ante-10-20-limit" seats="8" timeout="60" custom_money="0"/>
   <table name="Fourty" variant="7stud" betting_structure="ante-5-10-limit" seats="8" timeout="60" custom_money="0"/>
 
   <table name="Lyearnys" variant="holdem" betting_structure=".02-.04-no-limit" seats="10" timeout="60" custom_money="0"/>
