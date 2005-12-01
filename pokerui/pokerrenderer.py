@@ -782,9 +782,7 @@ class PokerRenderer:
 
         elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                packet.type == PACKET_POKER_TABLE_MOVE ) :
-            self.render(PacketPokerPlayerLeave(game_id = packet.game_id,
-                                                     serial = packet.serial,
-                                                     seat = packet.seat))
+            self.render(packet)
 
         elif packet.type == PACKET_POKER_END_ROUND:
             self.render(packet)
