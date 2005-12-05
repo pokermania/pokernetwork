@@ -34,6 +34,7 @@
 
 static GtkWidget*	g_sit_actions_window;
 static gboolean		g_sit_actions_disable = FALSE;
+static gboolean		g_sit_actions_shown = 0;
 
 void	on_auto_post_blinds_toggled(GtkWidget *widget, gpointer user_data)
 {
@@ -102,17 +103,21 @@ int	handle_sit_actions(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 
   if(!strcmp(tag, "show"))
     {
-      gui_bottom_left(g_sit_actions_window, screen);
+			if ((screen != NULL) || (g_sit_actions_shown == 0)) {
+				gui_bottom_left(g_sit_actions_window, screen);
+				g_sit_actions_shown = 1;
+			}
     }
   else if(!strcmp(tag, "hide"))
     {
-      GtkWidget* sit_out_next_hand = glade_xml_get_widget(g_glade_xml,
-                                                          "sit_out_next_hand");
+			GtkWidget* sit_out_next_hand = glade_xml_get_widget(g_glade_xml,
+																													"sit_out_next_hand");
 
 			g_sit_actions_disable = TRUE;
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sit_out_next_hand), FALSE);
+			gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sit_out_next_hand), FALSE);
 
-      gtk_widget_hide_all(g_sit_actions_window); 
+			if (screen != NULL)
+				gtk_widget_hide_all(g_sit_actions_window); 
 			g_sit_actions_disable = FALSE;
     }
   else if(!strcmp(tag, "auto"))

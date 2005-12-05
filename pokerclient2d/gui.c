@@ -178,6 +178,13 @@ static void	gui_place_size_callback(GtkWidget*	widget,
 
 void	gui_place(GtkWidget* window, position_t* position, GtkLayout* screen)
 {
+#if 0
+  position_t current_position;
+  gtk_window_get_position(GTK_WINDOW(window), &current_position.x, &current_position.y);
+  if ((current_position.x == position->x)
+      && (current_position.y == position->y))
+    return;
+#endif
   g_signal_connect(G_OBJECT(window), "show",
                    G_CALLBACK(gui_place_show_callback), position);
   g_signal_connect(G_OBJECT(window), "size-allocate",

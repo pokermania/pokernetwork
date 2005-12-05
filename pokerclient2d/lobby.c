@@ -68,6 +68,9 @@ static GtkWidget*	s_clock_label = 0;
 
 static GdkPixbuf*	pixbuf_table_my = 0;
 
+static int		s_lobby_shown = 0;
+static GtkLayout* s_screen = 0;
+
 static void clear_stores(void) {
   int i;
   for(i = 0; i < VARIANTS_COUNT; i++) {
@@ -76,14 +79,16 @@ static void clear_stores(void) {
   gtk_list_store_clear(s_players_store);
 }
 
-static void	close_lobby(void)
+static void	close_lobby()
 {
-  gtk_widget_hide(s_lobby_window);
-  gtk_widget_hide(s_table_info_window);
-  gtk_widget_hide(s_lobby_tabs_window);
-  gtk_widget_hide(s_cashier_button_window);
-  gtk_widget_hide(s_clock_window);
-  clear_stores();
+	if (s_screen == NULL)
+		return;
+	gtk_widget_hide(s_lobby_window);
+	gtk_widget_hide(s_table_info_window);
+	gtk_widget_hide(s_lobby_tabs_window);
+	gtk_widget_hide(s_cashier_button_window);
+	gtk_widget_hide(s_clock_window);
+	clear_stores();
 }
 
 static void	on_go_to_clicked(GtkWidget *widget, gpointer user_data)
@@ -240,6 +245,7 @@ static void on_cashier_button_pressed(GtkButton* button, gpointer data)
 int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_lobby_tabs_xml, GladeXML* g_cashier_button_xml, GladeXML* g_clock_xml, GtkLayout* screen, int init)
 {
   static int s_selected_table = 0;
+	s_screen = screen;
 
   if(init) {
     int i;
@@ -389,48 +395,54 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 
   char* tag = get_string();
   if(!strcmp(tag, "show")) {
-    /*
-     * calculate windows position
-     */
-    int	screen_width = gui_width(screen);
-    int	screen_height = gui_height(screen);
-
-    int	top_left_x = (screen_width - 900) / 2;
-    int	top_left_y = (screen_height - 500) / 2;
-
-    {
-      static position_t position;
-      position.x = top_left_x + 350;
-      position.y = top_left_y;
-      gui_place(s_lobby_window, &position, screen);
-    }
-
-    {
-      static position_t position;
-      position.x = top_left_x;
-      position.y = top_left_y;
-      gui_place(s_table_info_window, &position, screen);
-    }
-
-    {
-      static position_t position;
-      position.x = 0;
-      position.y = 33;
-      gui_place(s_lobby_tabs_window, &position, screen);
-    }
 
     {
       char* label = get_string();
       gtk_button_set_label(s_cashier_button, label);
       g_free(label);
     }
-    {
-      static position_t position;
-      position.x = top_left_x;
-      position.y = top_left_y + 400;
-      gui_place(s_cashier_button_window, &position, screen);
-    }
 
+    if (screen != NULL || s_lobby_shown == 0)
+      {
+				/*
+				 * calculate windows position
+				 */
+				int	screen_width = gui_width(screen);
+				int	screen_height = gui_height(screen);
+	
+				int	top_left_x = (screen_width - 900) / 2;
+				int	top_left_y = (screen_height - 500) / 2;
+	
+				{
+					static position_t position;
+					position.x = top_left_x + 350;
+					position.y = top_left_y;
+					gui_place(s_lobby_window, &position, screen);
+				}
+	
+				{
+					static position_t position;
+					position.x = top_left_x;
+					position.y = top_left_y;
+					gui_place(s_table_info_window, &position, screen);
+				}
+	
+				{
+					static position_t position;
+					position.x = 0;
+					position.y = 33;
+					gui_place(s_lobby_tabs_window, &position, screen);
+				}
+	
+				{
+					static position_t position;
+					position.x = top_left_x;
+					position.y = top_left_y + 400;
+					gui_place(s_cashier_button_window, &position, screen);
+				}
+				s_lobby_shown = 1;
+      }
+		
     {
       gui_bottom_right(s_clock_window, screen);
     }
@@ -475,8 +487,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       g_free(custom_money);
     }
   } else if(!strcmp(tag, "hide")) {
-    close_lobby();
-
+		close_lobby();
   } else if(!strcmp(tag, "info")) {
     char* players_count = get_string();
     char* tables_count = get_string();

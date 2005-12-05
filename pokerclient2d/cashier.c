@@ -47,6 +47,7 @@ static GtkWidget*	s_labels[LABELS_CNT];
 static position_t	s_personal_information_position;
 static position_t	s_account_status_position;
 static position_t	s_exit_cashier_position;
+static int		s_cashier_shown = 0;
 
 /* static void	close_callback(GtkWidget* w, gpointer data) */
 /* { */
@@ -178,7 +179,6 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
 
   }
 
-
   if(!strcmp(showhide, "show")) {
 
     /*
@@ -207,14 +207,19 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
       gtk_button_set_label(s_exit_button, label);
       g_free(label);
     }
-
-    gui_place(s_personal_information_window, &s_personal_information_position, screen);
-    gui_place(s_account_status_window, &s_account_status_position, screen);
-    gui_place(s_exit_cashier_window, &s_exit_cashier_position, screen);
     
+    if ((screen != NULL) || (s_cashier_shown == 0))
+    {
+      gui_place(s_personal_information_window, &s_personal_information_position, screen);
+      gui_place(s_account_status_window, &s_account_status_position, screen);
+      gui_place(s_exit_cashier_window, &s_exit_cashier_position, screen);
+      s_cashier_shown = 1;
+    }
   } else {
-
-    hide_cashier();
+    if (screen != NULL)
+      {
+	hide_cashier();
+      }
   }
 
   g_free(showhide);

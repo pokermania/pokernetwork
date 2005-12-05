@@ -353,11 +353,18 @@ class PokerRenderer:
     def logout(self):
         self.changeState(LOGOUT)
 
+    def showYesNoBox(self, message):
+        self.factory.interface.yesnoBox(message)
+        self.render(PacketPokerInterfaceCommand(window = "yesno_window", command = "show"))
+
+    def hideYesNoBox(self):
+        self.render(PacketPokerInterfaceCommand(window = "yesno_window", command = "hide"))
+
     def quit(self, dummy = None):
         interface = self.factory.interface
         if interface:
             if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
-                interface.yesnoBox("Do you really want to quit ?")
+                self.showYesNoBox("Do you really want to quit ?")
                 interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
                 self.changeState(QUIT)
         else:
@@ -365,6 +372,7 @@ class PokerRenderer:
 
 
     def confirmQuit(self, response = False):
+        self.hideYesNoBox()
         if response:
             if self.protocol:
                 self.sendPacket(PacketQuit())
@@ -401,7 +409,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface and not interface.callbacks.has_key(pokerinterface.INTERFACE_POST_BLIND):
             message = "Pay the ante (%d) ?" % amount
-            interface.blindMessage(message, "no")
+            self.showBlind(message,"no")
             interface.registerHandler(pokerinterface.INTERFACE_POST_BLIND, lambda *args: self.changeState(PAY_BLIND_ANTE_SEND, 'ante', *args))
             
     def confirmPayAnte(self, response):
@@ -413,7 +421,7 @@ class PokerRenderer:
         else:
             self.protocol.sendPacket(PacketPokerSitOut(game_id = game_id,
                                                        serial = serial))
-        self.factory.interface.blindHide()
+        self.hideBlind()
         self.factory.interface.clearCallbacks(pokerinterface.INTERFACE_POST_BLIND)
         return response == "yes"
 
@@ -422,7 +430,12 @@ class PokerRenderer:
         if interface and interface.callbacks.has_key(pokerinterface.INTERFACE_POST_BLIND):
             interface.blindHide()
             interface.clearCallbacks(pokerinterface.INTERFACE_POST_BLIND)
-                    
+        self.render(PacketPokerInterfaceCommand(window = "blind_window", command = "hide"))
+
+    def showBlind(self, message, what):
+        self.factory.interface.blindMessage(message, what)
+        self.render(PacketPokerInterfaceCommand(window = "blind_window", command = "show"))
+        
     def payBlind(self, game, amount, dead, state):
         interface = self.factory.interface
         if interface and not interface.callbacks.has_key(pokerinterface.INTERFACE_POST_BLIND):
@@ -435,7 +448,7 @@ class PokerRenderer:
                 message += "small blind (%s)" % PokerChips.tostring(amount)
             message += "?"
             wait_blind = ( state == "late" or state == "big_and_dead" ) and "yes" or "no"
-            interface.blindMessage(message, wait_blind)
+            self.showBlind(message, wait_blind)
             interface.registerHandler(pokerinterface.INTERFACE_POST_BLIND, lambda *args: self.changeState(PAY_BLIND_ANTE_SEND, 'blind', *args))
 
     def confirmPayBlind(self, response):
@@ -450,7 +463,7 @@ class PokerRenderer:
         else:
             self.protocol.sendPacket(PacketPokerSitOut(game_id = game_id,
                                                        serial = serial))
-        self.factory.interface.blindHide()
+        self.hideBlind()
         self.factory.interface.clearCallbacks(pokerinterface.INTERFACE_POST_BLIND)
         return response == "yes"
             
@@ -515,23 +528,36 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             interface.chatHide()
+        self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "chat_entry_window", command = "hide"))
 
     def chatShow(self):
         interface = self.factory.interface
         if interface:
             interface.chatShow()
             self.render(PacketPokerChatHistory(show = "no"))
+            # it does not hide chat history because the window is not created (not send yet by xwnc to c++)
+            # so wa can't hide it. we need to fix that
 
     def chatHistoryHide(self):
+        print "CHAT HISTORY HIDE"
         self.factory.interface.chatHistoryHide()
+        self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "hide"))
         
     def chatHistoryShow(self):
+        print "CHAT HISTORY SHOW"
         self.factory.interface.chatHistoryShow()
+        self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "show"))
         
     def chatHistory(self, yesno):
         game_id = self.protocol.getCurrentGameId()
         game = self.factory.getGame(game_id)        
         self.render(PacketPokerChatHistory(show = yesno))
+        if yesno == "yes":
+            self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "show"))
+        elif yesno == "no":
+            self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "hide"))
+            
 
     def chatLine(self, line):
         serial = self.protocol.getSerial()
@@ -580,11 +606,17 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             interface.showCashier(self.state_cashier['exit_label'])
+        self.render(PacketPokerInterfaceCommand(window = "personal_information_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "account_status_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "exit_cashier_window", command = "show"))
 
     def hideCashier(self):
         interface = self.factory.interface
         if interface:
             interface.hideCashier()
+        self.render(PacketPokerInterfaceCommand(window = "personal_information_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "account_status_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "exit_cashier_window", command = "hide"))
 
     def updateCashier(self, packet):
         if self.verbose > 1: print "updateCashier"
@@ -949,11 +981,13 @@ class PokerRenderer:
             if not interface.callbacks.has_key(pokerinterface.INTERFACE_AUTO_BLIND):
                 interface.registerHandler(pokerinterface.INTERFACE_AUTO_BLIND, self.autoBlind)
                 interface.registerHandler(pokerinterface.INTERFACE_SIT_OUT, self.sitOut)
+        self.render(PacketPokerInterfaceCommand(window = "sit_actions_window", command = "show"))
 
     def sitActionsHide(self):
         interface = self.factory.interface
         if interface:
             interface.sitActionsHide()
+        self.render(PacketPokerInterfaceCommand(window = "sit_actions_window", command = "hide"))
 
     def sitActionsUpdate(self):
         interface = self.factory.interface
@@ -1024,14 +1058,22 @@ class PokerRenderer:
             label = "Maximum buy in"
         max_amount = min(max_amount, self.protocol.play_money)
         interface.buyInParams(min_amount, max_amount, legend, label)
-        interface.buyInShow()
+        self.showBuyIn()
         if player.isBuyInPayed():
             callback = lambda value: self.rebuy(game, value)
         else:
             callback = lambda value: self.buyIn(game, value)
         interface.registerHandler(pokerinterface.INTERFACE_BUY_IN, callback)
         return True
-        
+
+    def showBuyIn(self):
+        self.factory.interface.buyInShow()
+        self.render(PacketPokerInterfaceCommand(window = "buy_in_window", command = "show"))
+
+    def hideBuyIn(self):
+        self.factory.interface.buyInHide()
+        self.render(PacketPokerInterfaceCommand(window = "buy_in_window", command = "hide"))
+
     def buyIn(self, game, value, *args):
         interface = self.factory.interface
         interface.clearCallbacks(pokerinterface.INTERFACE_BUY_IN)
@@ -1223,12 +1265,18 @@ class PokerRenderer:
         else:
             print "*CRITICAL* handleMenu unknown name %s" % name
 
+    def wantToRestart(self, status):
+        self.hideYesNoBox()
+        if status:
+            self.factory.restart()
+
     def queryRestart(self, message):
         interface = self.factory.interface
-        interface.yesnoBox(message + "\n" +
-                           "The game must be restarted for this change to take effect\n" +
-                           "Do you want to restart the game now ?")
-        interface.registerHandler(pokerinterface.INTERFACE_YESNO, lambda status: status and self.factory.restart())
+        self.showYesNoBox(message + "\n" +
+                          "The game must be restarted for this change to take effect\n" +
+                          "Do you want to restart the game now ?")
+        interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.wantToRestart)
+
         
     def isSeated(self):
         game_id = self.protocol.getCurrentGameId()
@@ -1324,13 +1372,40 @@ class PokerRenderer:
         if interface:
             type = type or self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['custom_money'])
+        self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "show"))
         
     def hideLobby(self):
         interface = self.factory.interface
         if interface:
             interface.hideLobby()
-        self.saveLobbyState()
+        self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))        
+        self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))                
 
+    def showOutfit(self):
+        self.factory.getSkin().showOutfitEditor(self.selectOutfit)
+        self.render(PacketPokerInterfaceCommand(window = "outfit_sex_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_ok_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_random_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_params", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_slots_male_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_slots_female_window", command = "show"))
+        
+    def hideOutfit(self):
+        self.factory.getSkin().hideOutfitEditor()
+        self.render(PacketPokerInterfaceCommand(window = "outfit_sex_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_ok_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_random_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_params", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_slots_male_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "outfit_slots_female_window", command = "hide"))
+        
     def handleTournaments(self, args):
         if self.verbose > 2: print "handleTournaments: " + str(args)
         (action, value) = args
@@ -1409,12 +1484,21 @@ class PokerRenderer:
         if interface:
             type = type or self.state_tournaments['type']
             interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['custom_money'])
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_info_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
+        
         
     def hideTournaments(self):
         interface = self.factory.interface
         if interface:
             interface.hideTournaments()
         self.saveTournamentsState()
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_info_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))
         
     def handReplay(self, hand):
         self.protocol.sendPacket(PacketPokerHandReplay(serial = hand))
@@ -1616,7 +1700,7 @@ class PokerRenderer:
             if not self.state2hide():
                 if ( self.state == USER_INFO or
                      self.state == REBUY ):
-                    self.factory.interface.buyInHide()
+                    self.hideBuyIn()
                 else:
                     print "*CRITICAL*  unexpected state " + self.state
                     return
@@ -1700,7 +1784,7 @@ class PokerRenderer:
                 self.state = IDLE
 
         elif state == BUY_IN_DONE:
-            self.factory.interface.buyInHide()
+            self.hideBuyIn()
             self.changeState(IDLE)
             
         elif state == REBUY and self.state == USER_INFO:
@@ -1710,7 +1794,7 @@ class PokerRenderer:
                 self.state = IDLE
             
         elif state == REBUY_DONE:
-            self.factory.interface.buyInHide()
+            self.hideBuyIn()
             game = args[0]
             serial = self.protocol.getSerial()
             if not game.isSit(serial):
@@ -1803,7 +1887,7 @@ class PokerRenderer:
 
         elif state == LEAVING_DONE and self.state == LEAVING:
             self.hideBlind()
-            self.factory.interface.buyInHide()
+            self.hideBuyIn()
             self.sitActionsHide()
             self.state = IDLE
             self.changeState(LOBBY)
@@ -1813,7 +1897,7 @@ class PokerRenderer:
             
         elif state == JOINING_DONE:
             self.hideBlind()
-            self.factory.interface.buyInHide()
+            self.hideBuyIn()
             self.sitActionsHide()
             self.hideCashier()
             self.hideLobby()
@@ -1840,6 +1924,7 @@ class PokerRenderer:
             ( game, serial ) = args
 
             def confirm(response):
+                self.hideYesNoBox()
                 if response:
                     self.changeState(LEAVING, *args)
                 else:
@@ -1848,10 +1933,10 @@ class PokerRenderer:
             interface = self.factory.interface
             if game.getPlayer(serial):
                 if game.isInGame(serial):
-                    interface.yesnoBox("Do you really want to fold your hand\nand leave the table ?")
+                    self.showYesNoBox("Do you really want to fold your hand\nand leave the table ?")
                     interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
                 else:
-                    interface.yesnoBox("Do you really want to leave the table ?")
+                    self.showYesNoBox("Do you really want to leave the table ?")
                     interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
             else:
                 self.changeState(LEAVING, *args)
@@ -1872,7 +1957,7 @@ class PokerRenderer:
                     self.showMessage("You must leave the table to change your outfit", None)
                 else:
                     if self.state2hide():
-                        self.factory.getSkin().showOutfitEditor(self.selectOutfit)
+                        self.showOutfit()
                         self.factory.interface.hideMenu()
                         self.state = state
 
@@ -1889,8 +1974,8 @@ class PokerRenderer:
                 print "*CRITICAL*; should not be here"
                 self.showMessage("You cannot do that now", None)
 
-        elif state == OUTFIT_DONE and self.state == OUTFIT:            
-            self.factory.getSkin().hideOutfitEditor()
+        elif state == OUTFIT_DONE and self.state == OUTFIT:
+            self.hideOutfit()
             self.factory.interface.showMenu()
             self.state = IDLE
             if self.state_outfit != None:
@@ -1924,7 +2009,7 @@ class PokerRenderer:
 
         elif state == QUIT:
             if self.state == OUTFIT:
-                self.factory.getSkin().hideOutfitEditor()
+                self.hideOutfit()
                 self.factory.interface.showMenu()
 
         elif state == IDLE:

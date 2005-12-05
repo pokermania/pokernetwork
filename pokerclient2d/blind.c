@@ -34,6 +34,7 @@
 
 static GtkWidget*	g_blind_window;
 static GtkWidget*	g_blind_message;
+static GtkWidget*	g_blind_window_shown;
 
 void	on_blind_no_clicked(GtkWidget *widget, gpointer user_data)
 {
@@ -103,11 +104,16 @@ int	handle_blind(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 
   if(!strcmp(tag, "show"))
     {
-      gtk_widget_show_all(g_blind_window);
+			if (screen != NULL || !g_blind_window_shown) 
+				{
+					gtk_widget_show_all(g_blind_window);
+					g_blind_window_shown = 1;
+				}
     }
   else if(!strcmp(tag, "hide"))
     {
-      gtk_widget_hide_all(g_blind_window); 
+			if (screen != NULL) 
+				gtk_widget_hide_all(g_blind_window); 
     }
   else if(!strcmp(tag, "blind message"))
     {

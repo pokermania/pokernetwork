@@ -33,6 +33,8 @@
 
 static GtkWidget*	g_yesno_window;
 static GtkWidget*	g_yesno_message;
+static gboolean	g_yesno_window_shown = 0;
+static GtkLayout*	g_screen = 0;
 
 void	on_yesno_no_button_clicked(GtkWidget *widget, gpointer user_data)
 {
@@ -43,7 +45,8 @@ void	on_yesno_no_button_clicked(GtkWidget *widget, gpointer user_data)
   set_string("yesno");
   set_string("no");
   flush_io_channel();
-  gtk_widget_hide_all(g_yesno_window);
+	if (g_screen)
+		gtk_widget_hide_all(g_yesno_window);
 }
 
 void	on_yesno_yes_button_clicked(GtkWidget *widget, gpointer user_data)
@@ -55,13 +58,15 @@ void	on_yesno_yes_button_clicked(GtkWidget *widget, gpointer user_data)
   set_string("yesno");
   set_string("yes");
   flush_io_channel();
-  gtk_widget_hide_all(g_yesno_window);
+	if (g_screen)
+		gtk_widget_hide_all(g_yesno_window);
 }
 
 int	handle_yesno(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 {
   if (init)
     {
+			g_screen = screen;
       g_yesno_window = glade_xml_get_widget(g_glade_xml,
 					    "yesno_window");
       g_assert(g_yesno_window);
@@ -78,6 +83,10 @@ int	handle_yesno(GladeXML* g_glade_xml, GtkLayout* screen, int init)
   gtk_label_set_text(GTK_LABEL(g_yesno_message), message);
   g_free(message);
 
-  gui_center(g_yesno_window, screen);
+	if (screen != NULL || !g_yesno_window_shown)
+		{
+			gui_center(g_yesno_window, screen);
+			g_yesno_window_shown = 1;
+		}
   return TRUE;
 }

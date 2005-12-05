@@ -1,4 +1,4 @@
-/* *
+/**
  * Copyright (C) 2005 Mekensleep
  *
  *	Mekensleep
@@ -53,6 +53,9 @@ static GtkWidget*	s_lobby_tabs_window = 0;
 static GtkWidget*	s_cashier_button_window = 0;
 static GtkButton*	s_cashier_button = 0;
 
+static int		s_tournaments_window_shown = 0;
+static GtkLayout* s_screen = 0;
+
 static int can_register = 0;
 
 #define PAGE_REGULAR 0
@@ -66,6 +69,9 @@ static void clear_stores(void) {
 
 static void	close_tournaments(void)
 {
+	if (s_screen == NULL)
+		return;
+
   gtk_widget_hide(s_tournaments_window);
   gtk_widget_hide(s_tournament_info_window);
   gtk_widget_hide(s_lobby_tabs_window);
@@ -227,6 +233,8 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
   static int s_selected_tournament = 0;
 
   if(init) {
+		s_screen = screen;
+
     s_tournaments_xml = g_tournaments_xml;
     s_tournaments_window = gui_get_widget(g_tournaments_xml, "tournaments_window");
     g_assert(s_tournaments_window);
@@ -350,6 +358,8 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     g_assert(s_lobby_tabs_window);
     if(screen) gtk_layout_put(screen, s_lobby_tabs_window, 0, 0);
     gtk_widget_set_size_request(s_lobby_tabs_window, gui_width(screen), -1);
+
+		//		gtk_window_set_title(s_lobby_tabs_window,"tournament_lobby_tabs_window");
     
     GUI_BRANCH(g_lobby_tabs_xml, on_table_toggled);
     GUI_BRANCH(g_lobby_tabs_xml, on_tourney_toggled);
@@ -375,37 +385,43 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     int	top_left_x = (screen_width - 900) / 2;
     int	top_left_y = (screen_height - 500) / 2;
 
-    {
-      static position_t position;
-      position.x = top_left_x + 350;
-      position.y = top_left_y;
-      gui_place(s_tournaments_window, &position, screen);
-    }
+    if (screen != NULL || s_tournaments_window_shown == 0)
+      {
 
-    {
-      static position_t position;
-      position.x = top_left_x;
-      position.y = top_left_y;
-      gui_place(s_tournament_info_window, &position, screen);
-    }
+				{
+					static position_t position;
+					position.x = top_left_x + 350;
+					position.y = top_left_y;
+					gui_place(s_tournaments_window, &position, screen);
+				}
 
-    {
-      static position_t position;
-      position.x = 0;
-      position.y = 33;
-      gui_place(s_lobby_tabs_window, &position, screen);
-    }
+				{
+					static position_t position;
+					position.x = top_left_x;
+					position.y = top_left_y;
+					gui_place(s_tournament_info_window, &position, screen);
+				}
 
+				{
+					static position_t position;
+					position.x = 0;
+					position.y = 33;
+					gui_place(s_lobby_tabs_window, &position, screen);
+				}
+
+				{
+					static position_t position;
+					position.x = top_left_x;
+					position.y = top_left_y + 400;
+					gui_place(s_cashier_button_window, &position, screen);
+				}
+				s_tournaments_window_shown = 1;
+		
+			}
     {
       char* label = get_string();
       gtk_button_set_label(s_cashier_button, label);
       g_free(label);
-    }
-    {
-      static position_t position;
-      position.x = top_left_x;
-      position.y = top_left_y + 400;
-      gui_place(s_cashier_button_window, &position, screen);
     }
 
     s_selected_tournament = 0;

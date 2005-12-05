@@ -3677,3 +3677,20 @@ class PacketPokerClientPlayerChips(Packet):
         return Packet.__str__(self) + " game_id = %d, serial = %d, bet = %s, money = %s" % ( self.game_id, self.serial, self.bet, self.money )
 
 PacketFactory[PACKET_POKER_CLIENT_PLAYER_CHIPS] = PacketPokerClientPlayerChips
+
+########################################
+
+PACKET_POKER_INTERFACE_COMMAND = 238
+PacketNames[PACKET_POKER_INTERFACE_COMMAND] = "PACKET_POKER_INTERFACE_COMMAND"
+
+class PacketPokerInterfaceCommand(Packet):
+    type = PACKET_POKER_INTERFACE_COMMAND
+
+    def __init__(self, *args, **kwargs):
+        self.window = kwargs.get("window", None)
+        self.command = kwargs.get("command", None)
+
+    def __str__(self):
+        return Packet.__str__(self) + " window = %s, command = %s" % ( self.window, self.command )
+
+PacketFactory[PACKET_POKER_INTERFACE_COMMAND] = PacketPokerInterfaceCommand

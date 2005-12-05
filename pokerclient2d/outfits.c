@@ -62,6 +62,7 @@ struct outfit_slider_slot {
 static struct outfit_slider_slot slider_slot_user_data;
 static struct outfit_params params_user_data[5];
 static gulong params_handlers[5];
+static int    g_outfit_shown = 0;
 
 static void on_ok_clicked(GtkButton *button, gpointer user_data)
 {
@@ -362,46 +363,53 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
       int	screen_height = gui_height(screen);
       int center_x = screen_width / 2;
       int center_y = screen_height / 2;
-
-      {
-        static position_t position;
-        gtk_widget_get_size_request(g_outfit_sex_window, &window_width, &window_height);
-        position.x = center_x - 5;
-        position.y = center_y - 336;
-        gui_place(g_outfit_sex_window, &position, screen);
-        gtk_widget_show_all(g_outfit_sex_window);
-      }
-      {
-        static position_t position;
-        gtk_widget_get_size_request(g_outfit_ok_window, &window_width, &window_height);
-        position.x = center_x + 414;
-        position.y = center_y + 310;
-        gui_place(g_outfit_ok_window, &position, screen);
-        gtk_widget_show_all(g_outfit_ok_window);
-      }
-      {
-        static position_t position;
-        gtk_widget_get_size_request(g_outfit_random_window, &window_width, &window_height);
-        position.x = center_x - 300;
-        position.y = center_y + 325;
-        gui_place(g_outfit_random_window, &position, screen);
-        gtk_widget_show_all(g_outfit_random_window);
-      }
-      {
-        static position_t position;
-        gtk_widget_get_size_request(g_outfit_params_window, &window_width, &window_height);
-        position.x = center_x + 50;
-        position.y = center_y + 25;
-        gui_place(g_outfit_params_window, &position, screen);
-        gtk_widget_show_all(g_outfit_params_window);
+      
+      if (screen != NULL || g_outfit_shown == 0) {
+	{
+	  static position_t position;
+	  gtk_widget_get_size_request(g_outfit_sex_window, &window_width, &window_height);
+	  position.x = center_x - 5;
+	  position.y = center_y - 336;
+	  gui_place(g_outfit_sex_window, &position, screen);
+	  gtk_widget_show_all(g_outfit_sex_window);
+	}
+	{
+	  static position_t position;
+	  gtk_widget_get_size_request(g_outfit_ok_window, &window_width, &window_height);
+	  position.x = center_x + 414;
+	  position.y = center_y + 310;
+	  gui_place(g_outfit_ok_window, &position, screen);
+	  gtk_widget_show_all(g_outfit_ok_window);
+	}
+	{
+	  static position_t position;
+	  gtk_widget_get_size_request(g_outfit_random_window, &window_width, &window_height);
+	  position.x = center_x - 300;
+	  position.y = center_y + 325;
+	  gui_place(g_outfit_random_window, &position, screen);
+	  gtk_widget_show_all(g_outfit_random_window);
+	}
+	{
+	  static position_t position;
+	  gtk_widget_get_size_request(g_outfit_params_window, &window_width, &window_height);
+	  position.x = center_x + 50;
+	  position.y = center_y + 25;
+	  gui_place(g_outfit_params_window, &position, screen);
+	  gtk_widget_show_all(g_outfit_params_window);
+	}
+	g_outfit_shown = 1;
       }
     } else if(!strcmp(tag, "hide")) {
-      gtk_widget_hide_all(g_outfit_sex_window);
-      gtk_widget_hide_all(g_outfit_ok_window);
-      gtk_widget_hide_all(g_outfit_random_window);
-      gtk_widget_hide_all(g_outfit_params_window);
-      gtk_widget_hide_all(g_outfit_slots_male_window);
-      gtk_widget_hide_all(g_outfit_slots_female_window);
+
+      if (screen != NULL) {
+	gtk_widget_hide_all(g_outfit_sex_window);
+	gtk_widget_hide_all(g_outfit_ok_window);
+	gtk_widget_hide_all(g_outfit_random_window);
+	gtk_widget_hide_all(g_outfit_params_window);
+	gtk_widget_hide_all(g_outfit_slots_male_window);
+	gtk_widget_hide_all(g_outfit_slots_female_window);
+      }
+
     } else if(!strcmp(tag, "set")) {
       char* sex;
       char widget_name[32];

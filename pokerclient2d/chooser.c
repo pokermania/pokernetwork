@@ -36,6 +36,8 @@ static GtkWidget*	g_chooser_window;
 static GtkWidget*	g_chooser_label;
 static GtkWidget*	g_chooser_vbox;
 static GtkWidget*	g_chooser_combobox = 0;
+static gboolean	g_chooser_window_shown = 0;
+static GtkLayout* g_screen = 0;
 
 void	on_chooser_button_clicked(GtkWidget* widget, gpointer user_data)
 {
@@ -53,7 +55,8 @@ void	on_chooser_button_clicked(GtkWidget* widget, gpointer user_data)
   set_string("chooser");
   set_string(str);
   flush_io_channel();
-  gtk_widget_hide_all(g_chooser_window);
+	if (g_screen)
+		gtk_widget_hide_all(g_chooser_window);
 }
 
 int	handle_chooser(GladeXML* g_glade_xml, GtkLayout* screen, int init)
@@ -105,7 +108,11 @@ int	handle_chooser(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     }
   gtk_combo_box_set_active(GTK_COMBO_BOX(g_chooser_combobox), 0);
 
-  gui_center(g_chooser_window, screen);
+	if (screen != NULL || !g_chooser_window_shown) 
+		{
+			gui_center(g_chooser_window, screen);
+			g_chooser_window_shown = 1;
+		}
 
   return TRUE;
 }
