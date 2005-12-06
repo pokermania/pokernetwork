@@ -1,6 +1,13 @@
 Tue Dec 06 2005  Johan Euphrosine  <johan@mekensleep.org>
 Tue Dec 06 2005  Cedric Pinson  <cpinson@freesheep.org>
 
+	* pokerclient2d/chat.c: added chat history handling
+	* pokerui/pokerrenderer.py: added chat history handling
+
+
+Tue Dec 06 2005  Johan Euphrosine  <johan@mekensleep.org>
+Tue Dec 06 2005  Cedric Pinson  <cpinson@freesheep.org>
+
 	* pokernetwork/pokerpackets.py: added PacketPokerInterfaceCommand for sending hide/show-window command to display3d
 
 	* pokerui/pokerrenderer.py: added render(PacketPokerInterfaceCommand) for forwarding hide/show-window command to display3d
