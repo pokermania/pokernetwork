@@ -1485,9 +1485,9 @@ class PokerRenderer:
             type = type or self.state_tournaments['type']
             interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['custom_money'])
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
-        self.render(PacketPokerInterfaceCommand(window = "tournaments_info_window", command = "show"))
-        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
-        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_lobby_tabs_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "show"))
         
         
     def hideTournaments(self):
@@ -1496,9 +1496,9 @@ class PokerRenderer:
             interface.hideTournaments()
         self.saveTournamentsState()
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "hide"))
-        self.render(PacketPokerInterfaceCommand(window = "tournaments_info_window", command = "hide"))
-        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
-        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_lobby_tabs_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "hide"))
         
     def handReplay(self, hand):
         self.protocol.sendPacket(PacketPokerHandReplay(serial = hand))

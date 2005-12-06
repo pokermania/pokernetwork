@@ -1,3 +1,12 @@
+Tue Dec 06 2005  Johan Euphrosine  <johan@mekensleep.org>
+Tue Dec 06 2005  Cedric Pinson  <cpinson@freesheep.org>
+
+	* pokernetwork/pokerpackets.py: added PacketPokerInterfaceCommand for sending hide/show-window command to display3d
+
+	* pokerui/pokerrenderer.py: added render(PacketPokerInterfaceCommand) for forwarding hide/show-window command to display3d
+
+	* pokerclient2d/: show and hide window only if (screen != NULL) (i.e in 2D)
+
 Wed Nov 23 2005  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.13
