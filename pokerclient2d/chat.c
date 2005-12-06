@@ -231,6 +231,7 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
 						g_message("chat: position x = %d, y = %d", position.x, position.y);
 						gui_place(g_entry_window, &position, screen);
 					}
+					if (0)
 					{
 						static position_t position;
 						gtk_widget_show_all(g_history_window);
@@ -259,7 +260,17 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       char *action = get_string();
       if(!strcmp(action, "show")) {
 				if ((screen != NULL) || (g_chat_history_shown == 0)) {
+					int	screen_width = gui_width(screen);
+					int	screen_height = gui_height(screen);
+					int	chat_entry_window_height;
+					static position_t position;
+					gtk_widget_get_size_request(g_entry_window, &position.x, &position.y);
+					chat_entry_window_height = position.y;
 					gtk_widget_show_all(g_history_window);
+					gtk_widget_get_size_request(g_history_window, &position.x, &position.y);
+					position.x = (screen_width - position.x) / 2;
+					position.y = (screen_height - (position.y + chat_entry_window_height));
+					gui_place(g_history_window,&position, screen);
 					g_chat_history_shown = 1;
 				}
       } else if(!strcmp(action, "hide")) {

@@ -554,9 +554,9 @@ class PokerRenderer:
         game = self.factory.getGame(game_id)        
         self.render(PacketPokerChatHistory(show = yesno))
         if yesno == "yes":
-            self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "show"))
+            self.chatHistoryShow()
         elif yesno == "no":
-            self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "hide"))
+            self.chatHistoryHide()
             
 
     def chatLine(self, line):
