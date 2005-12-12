@@ -535,9 +535,10 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             interface.chatShow()
-            self.render(PacketPokerChatHistory(show = "no"))
+            #self.render(PacketPokerChatHistory(show = "no"))
             # it does not hide chat history because the window is not created (not send yet by xwnc to c++)
             # so wa can't hide it. we need to fix that
+        self.render(PacketPokerInterfaceCommand(window = "chat_entry_window", command = "show"))
 
     def chatHistoryHide(self):
         print "CHAT HISTORY HIDE"
@@ -1377,7 +1378,7 @@ class PokerRenderer:
         self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "show"))
-        
+
     def hideLobby(self):
         interface = self.factory.interface
         if interface:
