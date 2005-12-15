@@ -607,6 +607,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             interface.showCashier(self.state_cashier['exit_label'])
+        self.showBackgroundLobbyCashier()
         self.render(PacketPokerInterfaceCommand(window = "personal_information_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "account_status_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "exit_cashier_window", command = "show"))
@@ -1373,6 +1374,7 @@ class PokerRenderer:
         if interface:
             type = type or self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['custom_money'])
+        self.showBackgroundLobbyCashier()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
@@ -1389,8 +1391,16 @@ class PokerRenderer:
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))        
         self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))                
 
+    def showBackgroundLobbyCashier(self):
+        self.render(PacketPokerInterfaceCommand(window = "background_lobby_cashier_window", command = "show"))
+
+    def hideBackgroundLobbyCashier(self):
+        self.render(PacketPokerInterfaceCommand(window = "background_lobby_cashier_window", command = "hide"))
+        
+
     def showOutfit(self):
         self.factory.getSkin().showOutfitEditor(self.selectOutfit)
+        self.hideBackgroundLobbyCashier()
         self.render(PacketPokerInterfaceCommand(window = "outfit_sex_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "outfit_ok_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "outfit_random_window", command = "show"))
@@ -1903,6 +1913,8 @@ class PokerRenderer:
             self.hideCashier()
             self.hideLobby()
             self.hideTournaments()
+            self.hideBackgroundLobbyCashier()
+
             if self.state == JOINING_MY:
                 self.state_joining_my -= 1
                 if self.state_joining_my <= 0:
