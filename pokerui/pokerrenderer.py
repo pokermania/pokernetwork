@@ -608,6 +608,7 @@ class PokerRenderer:
         if interface:
             interface.showCashier(self.state_cashier['exit_label'])
         self.showBackgroundLobbyCashier()
+        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "personal_information_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "account_status_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "exit_cashier_window", command = "show"))
@@ -1375,11 +1376,11 @@ class PokerRenderer:
             type = type or self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['custom_money'])
         self.showBackgroundLobbyCashier()
+        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
-        self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "show"))
 
     def hideLobby(self):
         interface = self.factory.interface
@@ -1389,7 +1390,14 @@ class PokerRenderer:
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))        
-        self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))                
+        #self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))                
+
+
+    def showClockWindow(self):
+        self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "show"))
+
+    def hideClockWindow(self):
+        self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))
 
     def showBackgroundLobbyCashier(self):
         self.render(PacketPokerInterfaceCommand(window = "background_lobby_cashier_window", command = "show"))
@@ -1401,6 +1409,7 @@ class PokerRenderer:
     def showOutfit(self):
         self.factory.getSkin().showOutfitEditor(self.selectOutfit)
         self.hideBackgroundLobbyCashier()
+        self.hideClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "outfit_sex_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "outfit_ok_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "outfit_random_window", command = "show"))
@@ -1914,6 +1923,7 @@ class PokerRenderer:
             self.hideLobby()
             self.hideTournaments()
             self.hideBackgroundLobbyCashier()
+            self.hideClockWindow()
 
             if self.state == JOINING_MY:
                 self.state_joining_my -= 1
