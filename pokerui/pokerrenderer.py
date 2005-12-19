@@ -1408,8 +1408,6 @@ class PokerRenderer:
 
     def showOutfit(self):
         self.factory.getSkin().showOutfitEditor(self.selectOutfit)
-        self.hideBackgroundLobbyCashier()
-        self.hideClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "outfit_sex_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "outfit_ok_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "outfit_random_window", command = "show"))
@@ -1696,7 +1694,7 @@ class PokerRenderer:
 
         if not self.stream_mode:
             return
-        
+
         if self.verbose > 2: print "changeState %s => %s (args = %s, kwargs = %s)" % ( self.state, state, str(args), str(kwargs) )
         current_state = self.state
         
@@ -1922,8 +1920,6 @@ class PokerRenderer:
             self.hideCashier()
             self.hideLobby()
             self.hideTournaments()
-            self.hideBackgroundLobbyCashier()
-            self.hideClockWindow()
 
             if self.state == JOINING_MY:
                 self.state_joining_my -= 1
@@ -2045,3 +2041,10 @@ class PokerRenderer:
             self.chatHide()
         if current_state != self.state:
             self.render(PacketPokerRendererState(state = self.state))
+
+        if ( (current_state == LOBBY and state != CASHIER and state != TOURNAMENTS and state != QUIT) or
+             (current_state == CASHIER and state != LOBBY and state != QUIT) or
+             (current_state == TOURNAMENTS and state != CASHIER and state != LOBBY and state != QUIT) ):
+            self.hideBackgroundLobbyCashier()
+            self.hideClockWindow()
+        
