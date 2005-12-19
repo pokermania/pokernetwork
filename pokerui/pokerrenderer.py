@@ -23,7 +23,6 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-
 from twisted.internet import reactor
 
 from string import join
@@ -80,6 +79,16 @@ CANCELED = "canceled"
 SIT_OUT = "sit_out"
 QUIT = "quit"
 
+import linecache
+import os
+import sys
+def global_trace(frame, event, arg):
+    return local_trace
+def local_trace(frame, event, arg):
+    if event == "line":
+        filename = frame.f_code.co_filename
+        lineno = frame.f_lineno
+        print "%s(%d): %s" % (filename, lineno, linecache.getline(filename, lineno))
 
 class PokerInteractors:
 
@@ -166,6 +175,22 @@ class PokerInteractors:
                                                                                       game_id,
                                                                                       self.factory.verbose,
                                                                                       str(game_id)),
+                                                               call = PokerInteractor("call",
+                                                                                      self.interactorAction,
+                                                                                      self.interactorDisplayNode,
+                                                                                      self.interactorSelectedCallback,
+                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/call/map")[0],
+                                                                                      game_id,
+                                                                                      self.factory.verbose,
+                                                                                      str(game_id)),                                                               
+                                                               raise_ = PokerInteractor("raise_",
+                                                                                      self.interactorAction,
+                                                                                      self.interactorDisplayNode,
+                                                                                      self.interactorSelectedCallback,
+                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/raise/map")[0],
+                                                                                      game_id,
+                                                                                      self.factory.verbose,
+                                                                                      str(game_id)),                                                               
                                                                shadowstacks = PokerInteractor("shadowstacks",
                                                                                               self.interactorAction,
                                                                                               self.interactorDisplayShadowStacks,
@@ -194,8 +219,10 @@ class PokerInteractors:
             isInPosition = game.getSerialInPosition() == serial
             player = game.getPlayer(serial)
             updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, [ game.id ])
-            updateInteractor(interactors["fold"], True, isInPosition, [ game.id ])
-            updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
+            updateInteractor(interactors["fold"], game.canFold(serial), isInPosition, [ game.id ])
+            updateInteractor(interactors["call"], game.canCall(serial), isInPosition, [ game.id ])
+            updateInteractor(interactors["raise_"], game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
+            #updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
         else:
             for (name, interactor) in interactors.iteritems():
                 interactor.disable()
@@ -247,8 +274,7 @@ class PokerInteractors:
         for (name, interactor) in interactors.iteritems():
             if self.factory.verbose > 2: print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
             self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
-            if interactor.name != "shadowstacks":
-                self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
+            self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
                 
     def interactorAction(self, interactor):
         self.cancelAllInteractorButThisOne(interactor)
@@ -261,14 +287,14 @@ class PokerInteractors:
 
     def interactorSelected(self, packet):
         if self.protocol.getCurrentGameId() == packet.game_id:
-            if packet.type == PACKET_POKER_CALL:
-                name = "shadowstacks"
-            elif packet.type == PACKET_POKER_RAISE:
-                name = "shadowstacks"
-            elif packet.type == PACKET_POKER_FOLD:
+            if packet.type == PACKET_POKER_FOLD:
                 name = "fold"
             elif packet.type == PACKET_POKER_CHECK:
                 name = "check"
+            elif packet.type == PACKET_POKER_CALL:
+                name = "call"
+            elif packet.type == PACKET_POKER_RAISE:
+                name = "raise_"
             else:
                 print "*CRITICAL* unexpected event %s " % event
                 return
@@ -284,7 +310,7 @@ class PokerInteractors:
 
     def render(self, packet):
         self.renderer.render(packet)
-        
+
 class PokerRenderer:
 
     def __init__(self, factory):
@@ -340,6 +366,8 @@ class PokerRenderer:
         
         self.chat_words = factory.config.headerGetProperties("/sequence/chatwords/word")
 
+    def linetrace(self):
+        sys.settrace(global_trace)
 
     def setProtocol(self, protocol):
         self.protocol = protocol
