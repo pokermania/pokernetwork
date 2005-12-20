@@ -1339,7 +1339,6 @@ class PokerRenderer:
             self.protocol.sendPacket(PacketPokerTableRequestPlayersList(game_id = game_id))
 
         elif action == "join":
-            self.protocol.publishDelay(1)
             self.connectTable(int(value))
 
         elif action == "refresh":
