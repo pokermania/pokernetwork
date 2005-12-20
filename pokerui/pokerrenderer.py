@@ -635,8 +635,8 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             interface.showCashier(self.state_cashier['exit_label'])
-        self.showBackgroundLobbyCashier()
-        self.showClockWindow()
+#        self.showBackgroundLobbyCashier()
+#        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "personal_information_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "account_status_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "exit_cashier_window", command = "show"))
@@ -1403,8 +1403,8 @@ class PokerRenderer:
         if interface:
             type = type or self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['custom_money'])
-        self.showBackgroundLobbyCashier()
-        self.showClockWindow()
+#        self.showBackgroundLobbyCashier()
+#        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
@@ -1715,6 +1715,21 @@ class PokerRenderer:
 
     def reload(self):
         self.factory.reload()
+
+    def enterStates(self, previous_state, next_state, states):
+        return previous_state not in states and next_state in states
+    
+    def exitStates(self, previous_state, next_state, states):
+        return previous_state in states and next_state not in states
+    
+    def updateDecorations(self, previous_state, next_state):
+        if self.exitStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
+            self.hideBackgroundLobbyCashier()
+            self.hideClockWindow()
+        elif self.enterStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
+            self.showBackgroundLobbyCashier()
+            self.showClockWindow()
+
 
     def changeState(self, state, *args, **kwargs):
         if self.state == state:
@@ -2070,9 +2085,5 @@ class PokerRenderer:
         if current_state != self.state:
             self.render(PacketPokerRendererState(state = self.state))
 
-        if ( (current_state == LOBBY and state != CASHIER and state != TOURNAMENTS and state != QUIT) or
-             (current_state == CASHIER and state != LOBBY and state != QUIT) or
-             (current_state == TOURNAMENTS and state != CASHIER and state != LOBBY and state != QUIT) ):
-            self.hideBackgroundLobbyCashier()
-            self.hideClockWindow()
-        
+            self.updateDecorations(current_state, self.state)
+            
