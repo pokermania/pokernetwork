@@ -544,6 +544,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if not self.no_display_packets:
                 forward_packets.extend(self.chipsPlayer2Bet(game, player, amount))
 
+        elif type == "bet2pot":
+            ( serial, amount ) = args
+            if not self.no_display_packets and game.isBlindAnteRound():
+                player = game.getPlayer(serial)
+                forward_packets.extend(self.chipsBet2Pot(game, player, amount, 0))
+
         elif type == "round_cap_decrease":
             if not self.no_display_packets:
                 forward_packets.extend(self.updateBetLimit(game))
@@ -854,11 +860,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_BLIND:
                 player = game.getPlayer(packet.serial)
                 game.blind(packet.serial, packet.amount, packet.dead)
-                if not self.no_display_packets:
-                    if packet.dead > 0:
-#                        forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.dead))
-                        forward_packets.extend(self.chipsBet2Pot(game, player, packet.dead, 0))
-#                    forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
 
             elif packet.type == PACKET_POKER_BLIND_REQUEST:
                 game.setPlayerBlind(packet.serial, packet.state)
@@ -866,9 +867,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_ANTE:
                 player = game.getPlayer(packet.serial)
                 game.ante(packet.serial, packet.amount)
-                if not self.no_display_packets:
-                    forward_packets.extend(self.chipsPlayer2Bet(game, player, packet.amount))
-                    forward_packets.extend(self.chipsBet2Pot(game, player, packet.amount, 0))
 
             elif packet.type == PACKET_POKER_STATE:
                 self.position_info[game.id][POSITION_OBSOLETE] = True
