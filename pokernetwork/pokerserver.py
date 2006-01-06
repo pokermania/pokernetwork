@@ -1888,7 +1888,8 @@ class PokerTable:
             timeout = self.playerTimeout / 2;
             self.broadcast(PacketPokerTimeoutWarning(game_id = game.id,
                                                      serial = serial,
-                                                     timeout = timeout))
+                                                     timeout = timeout,
+                                                     when = time.time()))
             info["playerTimeout"] = reactor.callLater(timeout, self.playerTimeoutTimer, serial)
         else:
             self.updateTimers()
@@ -2147,7 +2148,7 @@ class PokerService(service.Service):
             tourney_serial = cursor.insert_id()
         cursor.close()
         
-        tourney = PokerTournament(**schedule)
+        tourney = PokerTournament(dirs = self.dirs, **schedule)
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
         tourney.schedule_serial = schedule['serial']

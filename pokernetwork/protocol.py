@@ -58,6 +58,7 @@ class UGAMEProtocol(protocol.Protocol):
         self._prefix = ""
         self._blocked = False
         self.established = 0
+        self._protocol_ok = False
         self._poll = True
         self._ping_delay = 5
 
@@ -78,6 +79,8 @@ class UGAMEProtocol(protocol.Protocol):
 
     def connectionLost(self, reason):
         self.established = 0
+        if self._protocol_ok == False:
+            self.protocolInvalid("better", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
         
     def _sendVersion(self):
         self.transport.write('CGI %s.%s\n' % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ) )
@@ -98,6 +101,8 @@ class UGAMEProtocol(protocol.Protocol):
                     self.protocolInvalid(major + "." + minor, PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
                     self.transport.loseConnection()
                     return
+                else:
+                    self._protocol_ok = True
             buffer = buffer[12:]
             self.established = 1
             self._packet[:] = [buffer]

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
-<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.0.13">
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.0.14">
 
   <custom_money unit="C" cent="cts"/>
 
@@ -15,9 +15,12 @@
     <fold>
       <map enabled_default="Fold" enabled_clicked="Fold" enabled_clicked_in_position="Fold" scheduled_default="(Fold)" scheduled_clicked="(Fold)" activated_default="Fold" activated_clicked="Fold"/>
     </fold>
-    <shadowstacks>
-      <map enabled_default="enabled" enabled_clicked="enabled" enabled_clicked_in_position="enabled" scheduled_default="scheduled" scheduled_clicked="scheduled" activated_default="activated" activated_clicked="activated"/>
-    </shadowstacks>
+    <call>
+      <map enabled_default="Call" enabled_clicked="Call" enabled_clicked_in_position="Call" scheduled_default="(Call)" scheduled_clicked="(Call)" activated_default="Call" activated_clicked="Call"/>
+    </call>
+    <raise>
+      <map enabled_default="Raise" enabled_clicked="Raise" enabled_clicked_in_position="Raise" scheduled_default="(Raise)" scheduled_clicked="(Raise)" activated_default="Raise" activated_clicked="Raise"/>
+    </raise>
   </interactors2d>
 
 </sequence>

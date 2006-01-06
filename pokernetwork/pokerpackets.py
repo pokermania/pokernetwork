@@ -1305,28 +1305,27 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_TIMEOUT_WARNING
 
-    timeout = -1
-    format = "!I"
+    format = "!II"
     format_size = calcsize(format)
     
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("timeout"):
-            self.timeout = kwargs["timeout"]
+        self.timeout = kwargs.get("timeout", -1)
+        self.when = kwargs.get("when", -1)
         PacketPokerId.__init__(self, *args, **kwargs)
         
     def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerTimeoutWarning.format, self.timeout)
+        return PacketPokerId.pack(self) + pack(PacketPokerTimeoutWarning.format, self.timeout, self.when)
 
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
-        (self.timeout,) = unpack(PacketPokerTimeoutWarning.format, block[:PacketPokerTimeoutWarning.format_size])
+        (self.timeout, self.when) = unpack(PacketPokerTimeoutWarning.format, block[:PacketPokerTimeoutWarning.format_size])
         return block[PacketPokerTimeoutWarning.format_size:]
 
     def calcsize(self):
         return PacketPokerId.calcsize(self) + PacketPokerTimeoutWarning.format_size
 
     def __str__(self):
-        return PacketPokerId.__str__(self) + " timeout = %d" % self.timeout
+        return PacketPokerId.__str__(self) + " timeout = %d, when = %d" % ( self.timeout, self.when )
 
 PacketFactory[PACKET_POKER_TIMEOUT_WARNING] = PacketPokerTimeoutWarning
 

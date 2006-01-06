@@ -159,46 +159,39 @@ class PokerInteractors:
     def getOrCreateInteractorSet(self, game_id):
         if self.interactors_map.has_key(game_id) == False:
             display = self.factory.settings.headerGet("/settings/@display3d") == "yes" and "3d" or "2d"
-            self.interactors_map[game_id] = PokerInteractorSet(check = PokerInteractor("check",
-                                                                                       self.interactorAction,
-                                                                                       self.interactorDisplayNode,
-                                                                                       self.interactorSelectedCallback,
-                                                                                       self.factory.config.headerGetProperties("/sequence/interactors"+display+"/check/map")[0],
-                                                                                       game_id,
-                                                                                       self.factory.verbose,
-                                                                                       str(game_id)),
-                                                               fold = PokerInteractor("fold",
-                                                                                      self.interactorAction,
-                                                                                      self.interactorDisplayNode,
-                                                                                      self.interactorSelectedCallback,
-                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/fold/map")[0],
-                                                                                      game_id,
-                                                                                      self.factory.verbose,
-                                                                                      str(game_id)),
-                                                               call = PokerInteractor("call",
-                                                                                      self.interactorAction,
-                                                                                      self.interactorDisplayNode,
-                                                                                      self.interactorSelectedCallback,
-                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/call/map")[0],
-                                                                                      game_id,
-                                                                                      self.factory.verbose,
-                                                                                      str(game_id)),                                                               
-                                                               raise_ = PokerInteractor("raise_",
-                                                                                      self.interactorAction,
-                                                                                      self.interactorDisplayNode,
-                                                                                      self.interactorSelectedCallback,
-                                                                                      self.factory.config.headerGetProperties("/sequence/interactors"+display+"/raise/map")[0],
-                                                                                      game_id,
-                                                                                      self.factory.verbose,
-                                                                                      str(game_id)),                                                               
-                                                               shadowstacks = PokerInteractor("shadowstacks",
-                                                                                              self.interactorAction,
-                                                                                              self.interactorDisplayShadowStacks,
-                                                                                              self.interactorSelectedCallback,
-                                                                                              self.factory.config.headerGetProperties("/sequence/interactors"+display+"/shadowstacks/map")[0],
-                                                                                              game_id,
-                                                                                              self.factory.verbose,
-                                                                                              str(game_id)))
+            kwargs = { 'check': PokerInteractor("check",
+                                                self.interactorAction,
+                                                self.interactorDisplayNode,
+                                                self.interactorSelectedCallback,
+                                                self.factory.config.headerGetProperties("/sequence/interactors"+display+"/check/map")[0],
+                                                game_id,
+                                                self.factory.verbose,
+                                                str(game_id)),
+                       'fold': PokerInteractor("fold",
+                                               self.interactorAction,
+                                               self.interactorDisplayNode,
+                                               self.interactorSelectedCallback,
+                                               self.factory.config.headerGetProperties("/sequence/interactors"+display+"/fold/map")[0],
+                                               game_id,
+                                               self.factory.verbose,
+                                               str(game_id)),
+                       'call': PokerInteractor("call",
+                                               self.interactorAction,
+                                               self.interactorDisplayNode,
+                                               self.interactorSelectedCallback,
+                                               self.factory.config.headerGetProperties("/sequence/interactors"+display+"/call/map")[0],
+                                               game_id,
+                                               self.factory.verbose,
+                                               str(game_id)),                                                               
+                       'raise': PokerInteractor("raise",
+                                                self.interactorAction,
+                                                self.interactorDisplayNode,
+                                                self.interactorSelectedCallback,
+                                                self.factory.config.headerGetProperties("/sequence/interactors"+display+"/raise/map")[0],
+                                                game_id,
+                                                self.factory.verbose,
+                                                str(game_id)) }                                                               
+            self.interactors_map[game_id] = PokerInteractorSet(**kwargs)
         return self.interactors_map[game_id]        
 
     def handleInteractors(self, game):
@@ -221,8 +214,7 @@ class PokerInteractors:
             updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, [ game.id ])
             updateInteractor(interactors["fold"], game.canFold(serial), isInPosition, [ game.id ])
             updateInteractor(interactors["call"], game.canCall(serial), isInPosition, [ game.id ])
-            updateInteractor(interactors["raise_"], game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
-            #updateInteractor(interactors["shadowstacks"], game.canCall(serial) or game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
+            updateInteractor(interactors["raise"], game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
         else:
             for (name, interactor) in interactors.iteritems():
                 interactor.disable()
@@ -260,12 +252,6 @@ class PokerInteractors:
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
         
-    def interactorDisplayShadowStacks(self, interactor):
-        if interactor.game_id == self.protocol.getCurrentGameId():
-            game = self.factory.getGame(interactor.game_id)
-            if game and interactor.hasChanged():
-                self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
-
     def interactorsSyncDisplay(self, game_id):
         if self.factory.verbose > 2: print "interactorsSyncDisplay"
         game = self.factory.getGame(game_id)
@@ -294,14 +280,10 @@ class PokerInteractors:
             elif packet.type == PACKET_POKER_CALL:
                 name = "call"
             elif packet.type == PACKET_POKER_RAISE:
-                name = "raise_"
+                name = "raise"
             else:
                 print "*CRITICAL* unexpected event %s " % event
                 return
-
-#           interactor = self.interactors[name]
-#           interactor.select(packet)
-#           interactor.update()
 
             interactor = self.getOrCreateInteractorSet(packet.game_id).items[name]
             interactor.select(packet)

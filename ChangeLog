@@ -1,3 +1,24 @@
+Tue Jan 03 2006  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.14
+
+	* pokernetwork/pokerclient.py: store the timeout information
+	
+	* pokernetwork/pokerpackets.py(PACKET_POKER_TIMEOUT_WARNING): add the reference time
+	
+	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.updateAction): remove shadowstack handling
+	  since pokerrenderer now uses call/raise interactors
+
+Mon Jan 02 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerserver.py (PokerService.spawnTourney): provide search path
+	  to PokerTournament for it to find the payout structure.
+
+Wed Dec 28 2005  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/protocol.py (UGAMEProtocol._handleVersion): _protocol_ok flag to handle
+	  premature deconnexion while protocol is being negotiated
+
 Tue Dec 06 2005  Johan Euphrosine  <johan@mekensleep.org>
 Tue Dec 06 2005  Cedric Pinson  <cpinson@freesheep.org>
 

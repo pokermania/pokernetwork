@@ -63,6 +63,10 @@ class PokerServerProtocol(UGAMEProtocol):
         del self.avatar
         UGAMEProtocol.connectionLost(self, reason)
 
+    def protocolInvalid(self, client, server):
+        if self.factory.verbose:
+                print "client with protocol %s rejected (need %s)" % ( client, server )
+
     def ping(self):
         if not hasattr(self, "_ping_timer") or not self._ping_timer:
             return

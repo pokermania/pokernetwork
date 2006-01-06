@@ -396,34 +396,16 @@ class PokerDisplay2D(PokerDisplay):
         table = self.id2table[game_id]
 
         if not packet.style:
-            if packet.name == "shadowstacks":
-                self.actions["call"].hide()
-                self.actions["raise"].hide()
+            self.actions[packet.name].hide()
+            if packet.name == "raise":
                 self.actions["raise_range"].hide()
-            else:
-                self.actions[packet.name].hide()
             return
                 
-        if packet.name == "check" or packet.name == "fold":
+        if packet.name == "check" or packet.name == "fold" or packet.name == "call" or packet.name == "raise":
             action = self.actions[packet.name]
             action.show()
             action.set_label(packet.style)
-
-        elif packet.name == "shadowstacks":
-            action = self.actions["call"]
-            if game.canCall(serial):
-                action.show()
-                if packet.style == "enabled" or packet.style == "activated":
-                    action.set_label("Call")
-                elif packet.style == "scheduled" and packet.selection.type == PACKET_POKER_CALL:
-                    action.set_label("(Call)")
-                else:
-                    self.error("updateAction call: unexpected style " + packet.style)
-            else:
-                action.hide()
-
-            action = self.actions["raise"]
-            if game.canRaise(serial):
+            if packet.name == "raise":
                 range = self.actions['raise_range']
                 bet_limit = table.bet_limit
                 range.set_value(bet_limit.min / 100.0)
@@ -437,16 +419,8 @@ class PokerDisplay2D(PokerDisplay):
                     range.show()
                 else:
                     range.hide()
-                
-                if packet.style == "enabled" or packet.style == "activated":
-                    action.set_label("Raise")
-                elif packet.style == "scheduled" and packet.selection.type == PACKET_POKER_RAISE:
-                    action.set_label("(Raise)")
-                else:
-                    print "ERROR: updateAction raise: unexpected style " + packet.style
-                action.show()
-            else:
-                action.hide()
+        else:
+            self.error("updateAction %s: unexpected name " % packet.name)
             
     def render(self, packet):
         if self.verbose > 3: print "PokerDisplay2D::render: " + str(packet)

@@ -1,6 +1,14 @@
+Release 1.0.14
+
+New tournaments payout structures.
+
+Fix timeout handling bug and chat history. 
+
 Release 1.0.13
 
-Fix delays bugs.
+Fix delays and interface bugs.
+
+Improved interface for the poker client .
 
 Release 1.0.12
 
