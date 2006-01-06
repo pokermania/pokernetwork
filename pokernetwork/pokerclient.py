@@ -582,7 +582,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if player.user_data['timeout']:
                 now = time.time()
                 ( when, duration ) = player.user_data['timeout']
-                remaining = duration - ( now - when )
+                remaining = int(duration - ( now - when ))
                 if remaining > 0:
                     return ( PacketPokerTimeoutWarning(game_id = game.id, serial = player.serial, timeout = remaining), )
         return ()
