@@ -580,17 +580,20 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if game.isRunning() and game.getSerialInPosition() == self.getSerial():
             player = game.getPlayer(self.getSerial())
             if player.user_data['timeout']:
-                packet = player.user_data['timeout']
-                now = time.time()
-                if packet.when + packet.timeout < now:
-                    return ( packet, )
+                ( when, timeout ) = player.user_data['timeout']
+                timeout = timeout - ( now - when )
+                if timeout > 0:
+                    return ( PacketPokerTimeoutWarning(game_id = game.id,
+                                                       serial = self.getSerial(),
+                                                       timeout = int(timeout),
+                                                       when = now ), )
         return ()
         
     def setPlayerTimeout(self, game, packet):
         packet.timeout -= int(self.getLag())
         if packet.timeout > 0:
             player = game.getPlayer(serial)
-            player.getUserData()['timeout'] = packet
+            player.getUserData()['timeout'] = ( time.time(), timeout )
             return True
         else:
             return False
