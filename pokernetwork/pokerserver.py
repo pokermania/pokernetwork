@@ -1886,10 +1886,16 @@ class PokerTable:
         info = self.timer_info
         if game.isRunning() and serial == game.getSerialInPosition():
             timeout = self.playerTimeout / 2;
-            self.broadcast(PacketPokerTimeoutWarning(game_id = game.id,
-                                                     serial = serial,
-                                                     timeout = timeout,
-                                                     when = time.time()))
+            #
+            # Compensate the communication lag by always giving the client
+            # an extra 2 seconds to react. The warning says that there only is
+            # N seconds left but the server will actually timeout after N + 2
+            # seconds.
+            #
+            if timeout > 2:
+                self.broadcast(PacketPokerTimeoutWarning(game_id = game.id,
+                                                         serial = serial,
+                                                         timeout = timeout - 2))
             info["playerTimeout"] = reactor.callLater(timeout, self.playerTimeoutTimer, serial)
         else:
             self.updateTimers()
@@ -2000,7 +2006,6 @@ class PokerService(service.Service):
         self.dirs = split(settings.headerGet("/server/path"))
         self.serial2client = {}
         self.tables = []
-        self.groups = {}
         self.table_serial = 100
         self.shutting_down = False
         self.down = False
@@ -3125,9 +3130,6 @@ class PokerService(service.Service):
         if cursor.rowcount != 1:
             print " *ERROR* deleted %d rows (expected 1): %s " % ( cursor.rowcount, sql )
         cursor.close()
-        for groups in self.groups.itervalues():
-            if table in groups:
-                groups.remove(table)
 
 class PokerAuth:
 

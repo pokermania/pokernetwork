@@ -55,6 +55,7 @@ class UGAMEProtocol(protocol.Protocol):
         self._handler = self._handleConnection
         self._queues = {}
         self._lagmax = 0
+        self._lag = 0
         self._prefix = ""
         self._blocked = False
         self.established = 0
@@ -67,6 +68,9 @@ class UGAMEProtocol(protocol.Protocol):
 
     def getPingDelay(self):
         return self._ping_delay
+
+    def getLag(self):
+        return self._lag
     
     def getOrCreateQueue(self, id):
         if not self._queues.has_key(id):
@@ -169,6 +173,7 @@ class UGAMEProtocol(protocol.Protocol):
                 # If lagging behind too much, ignore the imposed delay
                 #
                 lag = now - queue.packets[0].time__
+                self._lag = lag
                 if queue.delay > now and lag > self._lagmax:
                     print " => queue %d delay canceled because lag too high" % id
                     queue.delay = 0
