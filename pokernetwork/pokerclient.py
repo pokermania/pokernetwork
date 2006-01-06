@@ -584,7 +584,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 ( when, duration ) = player.user_data['timeout']
                 remaining = duration - ( now - when )
                 if remaining > 0:
-                    packets.append(PacketPokerTimeoutWarning(game_id = game.id, serial = player.serial, timeout = remaining))
+                    return ( PacketPokerTimeoutWarning(game_id = game.id, serial = player.serial, timeout = remaining), )
+        return ()
         
     def setPlayerTimeout(self, game, serial, timeout):
         player = game.getPlayer(serial)
@@ -1231,7 +1232,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 packets.extend(self.packetsShowdown(game))
                 packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
         packets.append(PacketPokerStreamMode(game_id = game.id))
-        self.resendPlayerTimeoutWarning(game)
+        packets.extend(self.resendPlayerTimeoutWarning(game))
         
         for packet in packets:
             self.schedulePacket(packet)
