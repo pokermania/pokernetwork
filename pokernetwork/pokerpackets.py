@@ -1310,6 +1310,7 @@ game_id: integer uniquely identifying a game.
     
     def __init__(self, *args, **kwargs):
         self.timeout = kwargs.get("timeout", -1)
+        self.when = kwargs.get("when", -1)
         PacketPokerId.__init__(self, *args, **kwargs)
         
     def pack(self):
