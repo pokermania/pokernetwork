@@ -577,7 +577,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             return ( True, 0 )
 
     def resendPlayerTimeoutWarning(self, game):
-        if game.getSerialInPosition() == self.getSerial():
+        if game.isRunning() and game.getSerialInPosition() == self.getSerial():
             player = game.getPlayer(self.getSerial())
             if player.user_data['timeout']:
                 now = time.time()
