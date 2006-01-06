@@ -586,7 +586,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     return ( PacketPokerTimeoutWarning(game_id = game.id,
                                                        serial = self.getSerial(),
                                                        timeout = int(timeout),
-                                                       when = now ), )
+                                                       when = int(now) ), )
         return ()
         
     def setPlayerTimeout(self, game, packet):
