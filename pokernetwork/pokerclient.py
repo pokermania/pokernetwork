@@ -42,7 +42,7 @@ from pokernetwork.pokerchildren import PokerChildren, PokerChildBrowser
 from pokernetwork.pokerpackets import *
 from pokernetwork import upgrade
 
-DEFAULT_PLAYER_USER_DATA = { 'delay': 0 }
+DEFAULT_PLAYER_USER_DATA = { 'delay': 0, 'timeout': None }
 
 class PokerSkin:
     """Poker Skin"""
@@ -575,6 +575,24 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 return ( False, delay )
         else:
             return ( True, 0 )
+
+    def resendPlayerTimeoutWarning(self, game):
+        if game.getSerialInPosition() == self.getSerial():
+            player = game.getPlayer(self.getSerial())
+            if player.user_data['timeout']:
+                now = time.time()
+                ( when, duration ) = player.user_data['timeout']
+                remaining = duration - ( now - when )
+                if remaining > 0:
+                    packets.append(PacketPokerTimeoutWarning(game_id = game.id, serial = player.serial, timeout = remaining))
+        
+    def setPlayerTimeout(self, game, serial, timeout):
+        player = game.getPlayer(serial)
+        player.getUserData()['timeout'] = ( time.time(), timeout )
+        
+    def unsetPlayerTimeout(self, game, serial):
+        player = game.getPlayer(serial)
+        player.getUserData()['timeout'] = None
         
     def _handleConnection(self, packet):
         if self.factory.verbose > 3: self.message("PokerClientProtocol:handleConnection: %s" % packet )
@@ -745,6 +763,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
             elif packet.type == PACKET_POKER_SIT:
                 game.sit(packet.serial)
+
+            elif packet.type == PACKET_POKER_TIMEOUT_WARNING:
+                self.setPlayerTimeout(game, packet.serial, packet.timeout)
+            
+            elif packet.type == PACKET_POKER_TIMEOUT_NOTICE:
+                self.unsetPlayerTimeout(game, packet.serial)
 
             elif packet.type == PACKET_POKER_WAIT_FOR:
                 game.getPlayer(packet.serial).wait_for = packet.reason
@@ -929,12 +953,14 @@ class PokerClientProtocol(UGAMEClientProtocol):
                             forward_packets.append(PacketPokerPosition(game_id = game.id,
                                                                        serial = serial_in_position))
                         if ( self_was_in_position and not self_in_position ):
+                            self.unsetPlayerTimeout(game, self.getSerial())
                             forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
                                                                                serial = serial_in_position))
                         if ( ( not self_was_in_position or position_is_obsolete ) and self_in_position ):
                             forward_packets.append(PacketPokerSelfInPosition(game_id = game.id,
                                                                              serial = serial_in_position))
                     elif self_was_in_position:
+                        self.unsetPlayerTimeout(game, self.getSerial())
                         forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
                                                                            serial = self.getSerial()))
 
@@ -1205,7 +1231,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 packets.extend(self.packetsShowdown(game))
                 packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
         packets.append(PacketPokerStreamMode(game_id = game.id))
-
+        self.resendPlayerTimeoutWarning(game)
+        
         for packet in packets:
             self.schedulePacket(packet)
 
