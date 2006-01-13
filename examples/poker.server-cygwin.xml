@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" ping="20000" verbose="5" chat="yes" poker_network_version="1.0.14">
+
+  <delays autodeal="3" round="2" position="60" showdown="7" finish="3"/>
+  
+  <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <table name="Two" variant="holdem" betting_structure="10-20-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Deux" variant="holdem" betting_structure="10-20-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <table name="Three" variant="holdem" betting_structure="10-20-pot-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Trois" variant="holdem" betting_structure="10-20-pot-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <table name="Four" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Antigua" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Cairo" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Mont" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Nancy" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Corail" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Legend" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Chip" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Relax" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Speed" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Quatre" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <table name="Lyearnys" variant="holdem" betting_structure=".02-.04-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Ingwskel" variant="holdem" betting_structure=".05-.10-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Cerrt" variant="holdem" betting_structure=".10-.25-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Therrd" variant="holdem" betting_structure=".25-.50-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Issgar" variant="holdem" betting_structure=".50-1-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Torray" variant="holdem" betting_structure="1-2-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Uskeluina" variant="holdem" betting_structure="2-4-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Oilde" variant="holdem" betting_structure="3-6-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Cheper" variant="holdem" betting_structure="5-10-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Syfar" variant="holdem" betting_structure="10-20-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Rhoine" variant="holdem" betting_structure="30-60-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Mosolor" variant="holdem" betting_structure="50-100-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Cayrryns" variant="holdem" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <table name="Five" variant="omaha" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Six" variant="omaha" betting_structure="10-20-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Seven" variant="omaha" betting_structure="10-20-pot-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Eight" variant="omaha" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <table name="Nine" variant="omaha8" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Ten" variant="omaha8" betting_structure="10-20-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Eleven" variant="omaha8" betting_structure="10-20-pot-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Twelve" variant="omaha8" betting_structure="100-200-no-limit" seats="10" timeout="60" custom_money="0"/>
+
+  <listen tcp="19480" />
+
+  <database name="pokernetworktest" host="allinwifi.lan.free.tld" user="pokernetworktest" password="pokernetwork"/>
+  <path>/etc/poker-engine ../conf</path> 
+  <users temporary="BOT"/>
+</server>

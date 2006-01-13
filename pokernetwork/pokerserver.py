@@ -46,7 +46,12 @@ from traceback import print_exc, print_stack
 
 from MySQLdb.cursors import DictCursor
 
-from OpenSSL import SSL
+try:
+	from OpenSSL import SSL
+	HAS_OPENSSL=True
+except:
+	HAS_OPENSSL=False
+	
 
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
@@ -3186,20 +3191,21 @@ class PokerAuth:
         cursor.close()
         return int(serial)
 
-class SSLContextFactory:
-
-    def __init__(self, settings):
-        self.pem_file = None
-        for dir in split(settings.headerGet("/server/path")):
-            if exists(dir + "/poker.pem"):
-                self.pem_file = dir + "/poker.pem"
-        
-    def getContext(self):
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
-        ctx.use_certificate_file(self.pem_file)
-        ctx.use_privatekey_file(self.pem_file)
-        return ctx
-
+if HAS_OPENSSL:
+    class SSLContextFactory:
+    
+        def __init__(self, settings):
+            self.pem_file = None
+            for dir in split(settings.headerGet("/server/path")):
+                if exists(dir + "/poker.pem"):
+                    self.pem_file = dir + "/poker.pem"
+            
+        def getContext(self):
+            ctx = SSL.Context(SSL.SSLv23_METHOD)
+            ctx.use_certificate_file(self.pem_file)
+            ctx.use_privatekey_file(self.pem_file)
+            return ctx
+    
 from twisted.web import resource, server
 
 class PokerTree(resource.Resource):
@@ -3208,7 +3214,10 @@ class PokerTree(resource.Resource):
         resource.Resource.__init__(self)
         self.service = service
         self.putChild("RPC2", PokerXMLRPC(self.service))
-        self.putChild("SOAP", PokerSOAP(self.service))
+        try:
+            self.putChild("SOAP", PokerSOAP(self.service))
+        except:
+            print "SOAP service not available"
         self.putChild("", self)
 
     def render_GET(self, request):
@@ -3351,30 +3360,33 @@ class PokerXMLRPC(PokerXML):
     def maps2result(self, maps):
         return xmlrpclib.dumps((maps, ), methodresponse = 1)
 
-import SOAPpy
+try:
+    import SOAPpy
 
-class PokerSOAP(PokerXML):
-
-    def getArguments(self, request):
-        data = request.content.read()
-
-        p, header, body, attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
-
-        methodName, args, kwargs, ns = p._name, p._aslist, p._asdict, p._ns
-        
-        # deal with changes in SOAPpy 0.11
-        if callable(args):
-            args = args()
-        if callable(kwargs):
-            kwargs = kwargs()
-
-        return self.fromutf8(SOAPpy.simplify(args))
-
-    def maps2result(self, maps):
-        return SOAPpy.buildSOAP(kw = {'Result': self.toutf8(maps)},
-                                method = 'returnPacket',
-                                encoding = self.encoding)
-
+    class PokerSOAP(PokerXML):
+    
+        def getArguments(self, request):
+            data = request.content.read()
+    
+            p, header, body, attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
+    
+            methodName, args, kwargs, ns = p._name, p._aslist, p._asdict, p._ns
+            
+            # deal with changes in SOAPpy 0.11
+            if callable(args):
+                args = args()
+            if callable(kwargs):
+                kwargs = kwargs()
+    
+            return self.fromutf8(SOAPpy.simplify(args))
+    
+        def maps2result(self, maps):
+            return SOAPpy.buildSOAP(kw = {'Result': self.toutf8(maps)},
+                                    method = 'returnPacket',
+                                    encoding = self.encoding)
+except:
+    print "Python SOAP module not available"
+	    
 def makeApplication(argv):
     default_path = "/etc/poker-network" + sys.version[:3] + "/poker.server.xml"
     if not exists(default_path):
@@ -3401,8 +3413,9 @@ def makeApplication(argv):
                        ).setServiceParent(serviceCollection)    
 
     tcp_ssl_port = settings.headerGetInt("/server/listen/@tcp_ssl")
-    internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
-                       ).setServiceParent(serviceCollection)
+    if HAS_OPENSSL and tcp_ssl_port:
+	    internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
+    	                   ).setServiceParent(serviceCollection)
 
     site = server.Site(resource.IResource(poker_service))
 
@@ -3414,8 +3427,9 @@ def makeApplication(argv):
                        ).setServiceParent(serviceCollection)
 
     http_ssl_port = settings.headerGetInt("/server/listen/@http_ssl")
-    internet.SSLServer(http_ssl_port, site, SSLContextFactory(settings)
-                       ).setServiceParent(serviceCollection)
+    if HAS_OPENSSL and http_ssl_port:
+	    internet.SSLServer(http_ssl_port, site, SSLContextFactory(settings)
+	                       ).setServiceParent(serviceCollection)
     return application
         
 application = makeApplication(sys.argv)
