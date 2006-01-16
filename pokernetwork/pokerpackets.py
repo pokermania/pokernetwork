@@ -3693,3 +3693,32 @@ class PacketPokerInterfaceCommand(Packet):
         return Packet.__str__(self) + " window = %s, command = %s" % ( self.window, self.command )
 
 PacketFactory[PACKET_POKER_INTERFACE_COMMAND] = PacketPokerInterfaceCommand
+
+
+########################################
+PACKET_POKER_PLAYER_ME_LOOK_CARDS = 239
+PacketNames[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = "PACKET_POKER_PLAYER_ME_LOOK_CARDS"
+
+class PacketPokerPlayerMeLookCards(PacketPokerId):
+    """\
+Semantics: the player "serial" is looking at his cards
+in game "game_id".
+
+Direction: client <=> client
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+"""
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("state"):
+            self.state = kwargs["state"]
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    type = PACKET_POKER_PLAYER_ME_LOOK_CARDS
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
+
+PacketFactory[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = PacketPokerPlayerMeLookCards
+

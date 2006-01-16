@@ -1185,6 +1185,16 @@ class PokerRenderer:
         self.changeState(LEAVING_CONFIRM, game, serial)
         return True
 
+    def maybeStartLookCards(self):
+        current_gameid = self.protocol.getCurrentGameId()
+        packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start")
+        self.schedulePacket(packet)
+
+    def maybeStopLookCards(self):
+        current_gameid = self.protocol.getCurrentGameId()
+        packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "stop")
+        self.schedulePacket(packet)
+
     def clickSitOut(self):
         if self.factory.verbose: print "clickSitOut python"
         interface = self.factory.interface
