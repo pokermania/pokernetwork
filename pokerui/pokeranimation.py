@@ -221,7 +221,7 @@ class PokerAnimationPlayer:
     
     def fold(self, game_id):
         player = self.table.game.getPlayer(self.serial)
-        if self.myself and player.sit_out_next_turn:
+        if self.myself and player is not None and player.sit_out_next_turn:
             self.sitoutAction()
 
     def sitoutIfNotInGame(self):
