@@ -1146,12 +1146,14 @@ seats: maximum number of seats in this game.
 average_pot: the average amount put in the pot in the past few minutes.
 percent_flop: the average percentage of players after the flop in the past
               few minutes.
+players: the number of players who joined the table and are seated         
 observers: the number of players who joined (as in PACKET_POKER_TABLE_JOIN)
            the table but are not seated.
 waiting: the number of players in the waiting list.
 timeout: the number of seconds after which a player in position is forced to
          play (by folding).
 custom_money: 0 if play money table, 1 if custom money table
+skin: name of the level model to use
 """
     
     type = PACKET_POKER_TABLE
@@ -1172,6 +1174,7 @@ custom_money: 0 if play money table, 1 if custom money table
         self.waiting = kwargs.get("waiting", 0)
         self.timeout = kwargs.get("timeout", 0)
         self.custom_money = kwargs.get("custom_money", 0)
+        self.skin = kwargs.get("skin", "default")
 
     def pack(self):
         block = Packet.pack(self)
@@ -1179,6 +1182,7 @@ custom_money: 0 if play money table, 1 if custom money table
         block += self.packstring(self.name)
         block += self.packstring(self.variant)
         block += self.packstring(self.betting_structure)
+        block += self.packstring(self.skin)
         return block
 
     def unpack(self, block):
@@ -1188,13 +1192,14 @@ custom_money: 0 if play money table, 1 if custom money table
         (block, self.name) = self.unpackstring(block)
         (block, self.variant) = self.unpackstring(block)
         (block, self.betting_structure) = self.unpackstring(block)
+        (block, self.skin) = self.unpackstring(block)
         return block
 
     def calcsize(self):
-        return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure)
+        return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, timeout = %d, custom_money = %d " % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.timeout, self.custom_money )
+        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, timeout = %d, custom_money = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.timeout, self.custom_money, self.skin )
     
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 

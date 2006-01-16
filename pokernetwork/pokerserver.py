@@ -47,11 +47,11 @@ from traceback import print_exc, print_stack
 from MySQLdb.cursors import DictCursor
 
 try:
-	from OpenSSL import SSL
-	HAS_OPENSSL=True
+        from OpenSSL import SSL
+        HAS_OPENSSL=True
 except:
-	HAS_OPENSSL=False
-	
+        HAS_OPENSSL=False
+        
 
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
@@ -114,7 +114,7 @@ class PokerAvatar:
         self.protocol = protocol
 
 #    def __del__(self):
-#	print "PokerAvatar instance deleted"
+#       print "PokerAvatar instance deleted"
 
     def error(self, string):
         self.message("ERROR " + string)
@@ -142,12 +142,12 @@ class PokerAvatar:
             print "user %s/%d logged in" % ( self.user.name, self.user.serial )
         if self.protocol:
             self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
-	#
-	# Send player updates if it turns out that the player was already
-	# seated at a known table.
-	#
-	for table in self.tables.values():
-	    if table.possibleObserverLoggedIn(self, serial):
+        #
+        # Send player updates if it turns out that the player was already
+        # seated at a known table.
+        #
+        for table in self.tables.values():
+            if table.possibleObserverLoggedIn(self, serial):
                 game = table.game
                 self.sendPacketVerbose(PacketPokerPlayerCards(game_id = game.id,
                                                               serial = serial,
@@ -601,20 +601,7 @@ class PokerAvatar:
     def listTables(self, packet):
         packets = []
         for table in self.service.listTables(packet.string, self.getSerial()):
-            game = table.game
-            packet = PacketPokerTable(id = game.id,
-                                      name = game.name,
-                                      variant = game.variant,
-                                      betting_structure = game.betting_structure,
-                                      seats = game.max_players,
-                                      players = game.allCount(),
-                                      hands_per_hour = game.stats["hands_per_hour"],
-                                      average_pot = game.stats["average_pot"],
-                                      percent_flop = game.stats["percent_flop"],
-                                      timeout = table.playerTimeout,
-                                      observers = len(table.observers),
-                                      waiting = len(table.waiting))
-            packets.append(packet)
+            packets.append(table.toPacket())
         ( players, tables ) = self.service.statsTables()
         self.sendPacketVerbose(PacketPokerTableList(players = players,
                                                     tables = tables,
@@ -663,18 +650,7 @@ class PokerAvatar:
         
         self.tables[game.id] = table
 
-        self.sendPacketVerbose(PacketPokerTable(id = game.id,
-                                                name = game.name,
-                                                variant = game.variant,
-                                                seats = game.max_players,
-                                                betting_structure = game.betting_structure,
-                                                players = game.allCount(),
-                                                hands_per_hour = game.stats["hands_per_hour"],
-                                                average_pot = game.stats["average_pot"],
-                                                percent_flop = game.stats["percent_flop"],
-                                                timeout = table.playerTimeout,
-                                                observers = len(table.observers),
-                                                waiting = len(table.waiting)))
+        self.sendPacketVerbose(table.toPacket())
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
         nochips = 0
         for player in game.serial2player.values():
@@ -832,6 +808,7 @@ class PokerTable:
         game.setVariant(description["variant"])
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
+        self.skin = description.get("skin", "default")
         self.custom_money = int(description.get("custom_money", 0))
         self.playerTimeout = int(description["timeout"])
         self.transient = description.has_key("transient")
@@ -851,7 +828,7 @@ class PokerTable:
         self.game_delay = {
             "start": 0,
             "delay": 0
-            }
+            }            
 
     def isValid(self):
         return hasattr(self, "factory")
@@ -912,6 +889,22 @@ class PokerTable:
         self.history_index = 0
         self.cache = self.createCache()
 
+    def toPacket(self):
+        game = self.game
+        return PacketPokerTable(id = game.id,
+                                name = game.name,
+                                variant = game.variant,
+                                betting_structure = game.betting_structure,
+                                seats = game.max_players,
+                                players = game.allCount(),
+                                hands_per_hour = game.stats["hands_per_hour"],
+                                average_pot = game.stats["average_pot"],
+                                percent_flop = game.stats["percent_flop"],
+                                timeout = self.playerTimeout,
+                                observers = len(self.observers),
+                                waiting = len(self.waiting),
+                                skin = self.skin)
+                
     def cards2packets(self, game_id, board, pockets, cache):
         packets = []
         #
@@ -3386,7 +3379,7 @@ try:
                                     encoding = self.encoding)
 except:
     print "Python SOAP module not available"
-	    
+            
 def makeApplication(argv):
     default_path = "/etc/poker-network" + sys.version[:3] + "/poker.server.xml"
     if not exists(default_path):
@@ -3414,8 +3407,8 @@ def makeApplication(argv):
 
     tcp_ssl_port = settings.headerGetInt("/server/listen/@tcp_ssl")
     if HAS_OPENSSL and tcp_ssl_port:
-	    internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
-    	                   ).setServiceParent(serviceCollection)
+            internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
+                           ).setServiceParent(serviceCollection)
 
     site = server.Site(resource.IResource(poker_service))
 
@@ -3428,8 +3421,8 @@ def makeApplication(argv):
 
     http_ssl_port = settings.headerGetInt("/server/listen/@http_ssl")
     if HAS_OPENSSL and http_ssl_port:
-	    internet.SSLServer(http_ssl_port, site, SSLContextFactory(settings)
-	                       ).setServiceParent(serviceCollection)
+            internet.SSLServer(http_ssl_port, site, SSLContextFactory(settings)
+                               ).setServiceParent(serviceCollection)
     return application
         
 application = makeApplication(sys.argv)

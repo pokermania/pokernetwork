@@ -3,8 +3,8 @@
 
   <delays autodeal="3" round="2" position="60" showdown="7" finish="3"/>
   
-  <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0" skin="level01"/>
+  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0" skin="level00"/>
 
   <table name="Two" variant="holdem" betting_structure="10-20-limit" seats="10" timeout="60" custom_money="0"/>
   <table name="Deux" variant="holdem" betting_structure="10-20-limit" seats="10" timeout="60" custom_money="0"/>

@@ -1,3 +1,9 @@
+Tue Jan 03 2006  Benoit Treins
+
+	* pokernetwork/pokerserver.py: store the skin information in poker table
+	
+	* pokernetwork/pokerpackets.py(PACKET_POKER_TABLE): add the skin info
+
 Tue Jan 03 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.14
