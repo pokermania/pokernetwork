@@ -956,7 +956,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if game.isRunning():
                 position_changed = serial_in_position != game.getSerialInPosition()
                 if position_is_obsolete or position_changed:
-                    self_was_in_position = serial_in_position == self.getSerial()
+                    self_was_in_position = self.getSerial() != 0 and serial_in_position == self.getSerial()
                     serial_in_position = game.getSerialInPosition()
                     self_in_position = serial_in_position == self.getSerial()
                     if serial_in_position > 0:

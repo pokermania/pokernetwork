@@ -1497,6 +1497,11 @@ class PokerRenderer:
         interface = self.factory.interface
         if not interface:
             return
+
+        # discard the update if we are not the current tournament
+        if not self.state_tournaments["tournaments"].has_key(packet.serial):
+            return
+
         tournament = self.state_tournaments["tournaments"][packet.serial]
         can_register = None
         if tournament.state == "registering":
