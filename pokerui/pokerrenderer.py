@@ -288,7 +288,6 @@ class PokerInteractors:
             interactor = self.getOrCreateInteractorSet(packet.game_id).items[name]
             interactor.select(packet)
             interactor.update()
-            
 
     def render(self, packet):
         self.renderer.render(packet)
@@ -986,6 +985,9 @@ class PokerRenderer:
 
     def interactorSelected(self, packet):
         self.interactors.interactorSelected(packet)
+
+    def interactorPreRaise(self, packet):
+        self.interactors.cancelAllInteractors(packet.game_id)
 
     def sitActionsShow(self):
         interface = self.factory.interface

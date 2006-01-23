@@ -74,7 +74,7 @@ class enabled(state):
                 i.setState(activated())
             else:
                 i.setState(scheduled())
-        self.updateTags(i)
+        #self.updateTags(i)
 
 class scheduled(state):
     name = "scheduled"
