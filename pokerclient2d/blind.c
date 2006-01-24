@@ -32,11 +32,13 @@
 #include "interface_io.h"
 #include "dispatcher.h"
 
+static gboolean		g_sit_actions_disable = FALSE;
+
 static GtkWidget*	g_blind_window;
 static GtkWidget*	g_blind_message;
 static GtkWidget*	g_blind_window_shown;
 
-void	on_blind_no_clicked(GtkWidget *widget, gpointer user_data)
+static void	on_blind_no_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) widget;
   (void) user_data;
@@ -48,7 +50,7 @@ void	on_blind_no_clicked(GtkWidget *widget, gpointer user_data)
   flush_io_channel();
 }
 
-void	on_blind_yes_clicked(GtkWidget *widget, gpointer user_data)
+static void	on_blind_yes_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) widget;
   (void) user_data;
@@ -60,7 +62,7 @@ void	on_blind_yes_clicked(GtkWidget *widget, gpointer user_data)
   flush_io_channel();
 }
 
-void	on_wait_blind_clicked(GtkWidget *widget, gpointer user_data)
+static void	on_wait_blind_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) widget;
   (void) user_data;
@@ -71,6 +73,32 @@ void	on_wait_blind_clicked(GtkWidget *widget, gpointer user_data)
   set_string("wait");
   flush_io_channel();
 }
+
+static void	on_auto_post_toggled(GtkWidget *widget, gpointer user_data)
+{
+  (void) user_data;
+
+  if(g_sit_actions_disable) {
+    g_message("g_sit_actions_disable");
+    return;
+  }
+
+  set_string("sit_actions");
+  set_string("auto");
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
+    {
+      g_message("auto post blind");
+      set_string("yes");
+    }
+  else
+    {
+      g_message("no auto post blind");
+      set_string("no");
+    }
+  
+  flush_io_channel();
+}
+
 
 int	handle_blind(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 {
@@ -89,31 +117,27 @@ int	handle_blind(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GUI_BRANCH(g_glade_xml, on_blind_no_clicked);
       GUI_BRANCH(g_glade_xml, on_blind_yes_clicked);
       GUI_BRANCH(g_glade_xml, on_wait_blind_clicked);
+      GUI_BRANCH(g_glade_xml, on_auto_post_toggled);
 
-      {
-        static position_t position;
-        int	screen_width = gui_width(screen);
-        int	screen_height = gui_height(screen);
-        GtkRequisition requisition;
-        gtk_widget_size_request(g_blind_window, &requisition);
-        position.x = (screen_width - requisition.width) / 2;
-        position.y = (screen_height - requisition.height * 2);
-        gui_place(g_blind_window, &position, screen);
-      }
+      gui_center(g_blind_window, screen);
     }
 
   if(!strcmp(tag, "show"))
     {
-			if (screen != NULL || !g_blind_window_shown) 
-				{
-					gtk_widget_show_all(g_blind_window);
-					g_blind_window_shown = 1;
-				}
+      if (screen != NULL || !g_blind_window_shown) 
+        {
+          gtk_widget_show_all(g_blind_window);
+          g_blind_window_shown = 1;
+        }
     }
   else if(!strcmp(tag, "hide"))
     {
-			if (screen != NULL) 
-				gtk_widget_hide_all(g_blind_window); 
+      GtkWidget* auto_post = glade_xml_get_widget(g_glade_xml, "auto_post");
+      g_sit_actions_disable = TRUE;
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(auto_post), FALSE);
+
+      if (screen != NULL) 
+        gtk_widget_hide_all(g_blind_window); 
     }
   else if(!strcmp(tag, "blind message"))
     {

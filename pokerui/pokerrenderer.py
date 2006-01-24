@@ -808,6 +808,12 @@ class PokerRenderer:
                                                           serial = self.protocol.getSerial()))
             self.render(packet)
 
+        elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
+             self.sitActionsUpdate()
+
+        elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
+             self.sitActionsUpdate()
+
         elif packet.type == PACKET_POKER_CANCELED:
             self.changeState(CANCELED)
 
