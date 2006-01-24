@@ -1,3 +1,7 @@
+Tue Jan 24 2006  Johan Euphrosine <johan@mekensleep.org>
+
+	* pokerui/pokerrenderer.py: added wrap_text function instead of DummyWriter
+
 Tue Jan 03 2006  Benoit Treins
 
 	* pokernetwork/pokerserver.py: store the skin information in poker table
