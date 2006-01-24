@@ -100,8 +100,6 @@ on_radio_activate(resolution, 1400x1050)
 on_radio_activate(resolution, 1600x1200)
 on_radio_activate(resolution, 1680x1050)
 on_radio_activate(resolution, 1920x1200)
-on_radio_activate(display, 2d)
-on_radio_activate(display, 3d)
 
 int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 {
@@ -123,8 +121,6 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     branch(tables_list);
     branch(tournaments);
     branch(login);
-    branch(2d);
-    branch(3d);
     branch(graphics);
     branch(sound);
     branch(fullscreen);
@@ -180,9 +176,6 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       set_check(remember_me)
       set_check(muck)
     else if(!strcmp(what, "resolution")) {
-      GtkCheckMenuItem* widget = GTK_CHECK_MENU_ITEM(glade_xml_get_widget(g_glade_xml, value));
-      gtk_check_menu_item_set_active(widget, TRUE);
-    } else if(!strcmp(what, "display")) {
       GtkCheckMenuItem* widget = GTK_CHECK_MENU_ITEM(glade_xml_get_widget(g_glade_xml, value));
       gtk_check_menu_item_set_active(widget, TRUE);
     }

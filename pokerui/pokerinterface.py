@@ -511,12 +511,10 @@ class PokerInterface(dispatch.EventDispatcher):
         auto_post = settings.headerGet("/settings/auto_post")
         remember_me = settings.headerGet("/settings/remember")
         muck = settings.headerGet("/settings/muck")
-        display = settings.headerGet("/settings/@display3d") == "yes" and "3d" or "2d"
         packet = []
         packet.extend(("menu", "set", "resolution", screen["width"] + "x" + screen["height"]))
         packet.extend(("menu", "set", "graphics", graphics))
         packet.extend(("menu", "set", "sound", sound))
-        packet.extend(("menu", "set", "display", display))
         packet.extend(("menu", "set", "fullscreen", screen["fullscreen"]))
         packet.extend(("menu", "set", "auto_post", auto_post))
         packet.extend(("menu", "set", "remember_me", remember_me))
