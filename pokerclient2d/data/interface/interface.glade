@@ -1188,7 +1188,7 @@
 			  <property name="can_focus">True</property>
 			  <property name="editable">True</property>
 			  <property name="visibility">True</property>
-			  <property name="max_length">40</property>
+			  <property name="max_length">80</property>
 			  <property name="text" translatable="yes"></property>
 			  <property name="has_frame">False</property>
 			  <property name="invisible_char">*</property>
