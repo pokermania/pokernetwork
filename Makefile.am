@@ -133,6 +133,7 @@ EXTRA_DIST = \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \
+	examples/poker.server-cygwin.xml \
 	examples/interface_dummy_server.py \
 	examples/interface.py \
 	examples/xmlrpc-soap.py \

@@ -1648,7 +1648,8 @@ class PokerRenderer:
                 state["start"] -= state["count"]
                 self.queryHands()
         elif action == "quit":
-            self.changeState(LOBBY)
+            previous_state = self.state_hands.get("previous_state", LOBBY)
+            self.changeState(previous_state)
         else:
             print "*CRITICAL*: selectHands unexpected action " + action
     
@@ -2121,6 +2122,7 @@ class PokerRenderer:
                 self.changeState(LOBBY)
             
         elif state == HAND_LIST:
+            self.state_hands["previous_state"] = self.state
             if self.protocol.user.isLogged():
                 if self.state2hide():
                     self.state = state

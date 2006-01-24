@@ -2696,7 +2696,7 @@
 	      <property name="right_padding">1</property>
 
 	      <child>
-		<widget class="GtkEventBox" id="eventbox1">
+		<widget class="GtkEventBox" id="background">
 		  <property name="visible">True</property>
 		  <property name="visible_window">True</property>
 		  <property name="above_child">False</property>

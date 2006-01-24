@@ -195,15 +195,15 @@ int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       gui_center(hand_history_window, screen);
 
       if(start == 0) {
-	gtk_widget_hide_all(previous_widget);
+        gtk_widget_set_sensitive(previous_widget, FALSE);
       } else {
-	gtk_widget_show_all(previous_widget);
+        gtk_widget_set_sensitive(previous_widget, TRUE);
       }
 
       if(start + count >= total) {
-	gtk_widget_hide_all(next_widget);
+	gtk_widget_set_sensitive(next_widget, FALSE);
       } else {
-	gtk_widget_show_all(next_widget);
+	gtk_widget_set_sensitive(next_widget, TRUE);
       }
 
       gtk_text_buffer_set_text(s_hand_messages, "", -1);

@@ -135,6 +135,7 @@ int	handle_blind(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GtkWidget* auto_post = glade_xml_get_widget(g_glade_xml, "auto_post");
       g_sit_actions_disable = TRUE;
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(auto_post), FALSE);
+      g_sit_actions_disable = FALSE;
 
       if (screen != NULL) 
         gtk_widget_hide_all(g_blind_window); 
