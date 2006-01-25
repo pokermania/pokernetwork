@@ -31,6 +31,7 @@ if os.name != "posix" :
 import sys
 import socket
 from os.path import expanduser, exists, abspath
+from os import environ
 from string import split, join, replace
 from time import sleep
 from shutil import copy
@@ -241,6 +242,10 @@ class PokerRsync(PokerChild, ProcessProtocol):
         settings = self.settings
         source = settings.headerGet("/settings/rsync/@source")
         target = settings.headerGet("/settings/rsync/@target")
+        proxy = settings.headerGet("/settings/rsync/@proxy")
+
+        if proxy:
+            environ['RSYNC_PROXY'] = proxy
         
         self.rsync = [ settings.headerGet("/settings/rsync/@path") ] + map(lambda x:
                                                                            reduce(lambda a, b: replace(a, b[0], b[1]), [x,

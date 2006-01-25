@@ -26,6 +26,7 @@
 # 
 import sys
 from time import time
+from re import match
 
 from twisted.internet import reactor, protocol
 
@@ -59,6 +60,8 @@ class UGAMEProtocol(protocol.Protocol):
         self._prefix = ""
         self._blocked = False
         self.established = 0
+        self._proxy_request = None
+        self._proxy_ok = False
         self._protocol_ok = False
         self._poll = True
         self._ping_delay = 5
@@ -79,23 +82,55 @@ class UGAMEProtocol(protocol.Protocol):
             
     def connectionMade(self):
         "connectionMade"
-        self._sendVersion()
+        if self._proxy_request:
+            self._sendToProxy()
+        else:
+            self._sendVersion()
 
     def connectionLost(self, reason):
         self.established = 0
-        if self._protocol_ok == False:
+        if self._proxy_request and self._proxy_ok == False:
+            self.proxyFailure("Connection to the proxy failed " + ''.join(self._packet))
+        elif self._protocol_ok == False:
             self.protocolInvalid("better", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
+        self._proxy_ok == False
         
-    def _sendVersion(self):
-        self.transport.write('CGI %s.%s\n' % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ) )
-
     def _handleConnection(self):
         pass
 
     def ignoreIncomingData(self):
         if self._timer and self._timer.active():
             self._timer.cancel()
+
+    def setProxyRequest(self, host, port):
+        self._proxy_request = "%s:%d" % ( host, port )
         
+    def _sendToProxy(self):
+        self.transport.write('CONNECT %s HTTP/1.0\n\n' % self._proxy_request )
+
+    def _handleProxy(self):
+        buffer = ''.join(self._packet)
+        buffer = buffer.replace('\r','')
+        if '\n\n' in buffer:
+            ( headers, rest ) = buffer.split('\n\n', 1)
+            self._packet[:] = [rest]
+            self._packet_len = len(rest)
+            if match("^HTTP/\d\.\d\s+2\d\d", headers):
+                self._proxy_ok = True
+                if self.factory.verbose > 1:
+                    print "connected to " + self._proxy_request + " thru proxy"
+                self._sendVersion()
+            else:
+                self.proxyFailure(headers)
+            if self._packet_len > 0:
+                self.dataReceived("")
+        else:
+            self._packet[:] = [buffer]
+            self._packet_len = len(buffer)
+
+    def _sendVersion(self):
+        self.transport.write('CGI %s.%s\n' % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ) )
+
     def _handleVersion(self):
         buffer = ''.join(self._packet)
         if '\n' in buffer:
@@ -127,6 +162,9 @@ class UGAMEProtocol(protocol.Protocol):
 
     def protocolInvalid(self, server, client):
         pass
+    
+    def proxyFailure(self, headers):
+        print "UGAMEProtocol: proxy connection to " + self._proxy_request + " failed\n" + headers
     
     def hold(self, delay, id = None):
         if delay > 0:
@@ -255,5 +293,7 @@ class UGAMEProtocol(protocol.Protocol):
 
         if self.established:
             self.handleData()
+        elif self._proxy_request and not self._proxy_ok:
+            self._handleProxy()
         else:
             self._handleVersion()

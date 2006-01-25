@@ -190,6 +190,7 @@ class PokerClientFactory2D(PokerClientFactory):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
         self.skin = PokerSkin2D(settings = self.settings)
+        self.proxy = None
         self.renderer = PokerRenderer(self)
         self.initDisplay()
 
@@ -243,24 +244,37 @@ class PokerClientFactory2D(PokerClientFactory):
         else:
             want_ssl = None
         self.port = int(self.port)
+
         settings = self.settings
+        
+        self.proxy = settings.headerGet("/settings/servers/@proxy")
+        if self.proxy:
+            if self.verbose > 1:
+                print "connection thru proxy " + self.proxy
+            ( host, port ) = self.proxy.split(':')
+            port = int(port)
+        else:
+            ( host, port ) = ( self.host, self.port )
+
         timeout = settings.headerGetInt("/settings/@tcptimeout")
         if want_ssl:
             from twisted.internet import ssl
-            reactor.connectSSL(self.host,
-                               self.port,
+            reactor.connectSSL(host,
+                               port,
                                self,
                                ssl.ClientContextFactory(),
                                timeout)
         else:
-            reactor.connectTCP(self.host,
-                               self.port,
+            reactor.connectTCP(host,
+                               port,
                                self,
                                timeout)
         
 
     def buildProtocol(self, addr):
         protocol = PokerClientFactory.buildProtocol(self, addr)
+        if self.proxy:
+            protocol.setProxyRequest(self.host, self.port)
         self.renderer.setProtocol(protocol)
         self.display.setProtocol(protocol)
         return protocol
