@@ -74,6 +74,7 @@ pokernetworkdir = ${pyexecdir}/pokernetwork
 pokernetwork_PYTHON = \
 	pokernetwork/client.py \
 	pokernetwork/protocol.py \
+	pokernetwork/proxy.py \
 	pokernetwork/server.py \
 	pokernetwork/pokerdatabase.py \
 	pokernetwork/pokerserver.py \
