@@ -46,10 +46,12 @@ from shutil import copy
 from time import sleep
 from random import choice, uniform, randint
 
+from twisted.internet import ssl
 from twisted.python import log
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.version import version
+from pokernetwork.proxy import Connector
 
 from twisted.internet.gtk2reactor import Gtk2Reactor
 
@@ -190,7 +192,6 @@ class PokerClientFactory2D(PokerClientFactory):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
         self.skin = PokerSkin2D(settings = self.settings)
-        self.proxy = None
         self.renderer = PokerRenderer(self)
         self.initDisplay()
 
@@ -245,36 +246,27 @@ class PokerClientFactory2D(PokerClientFactory):
             want_ssl = None
         self.port = int(self.port)
 
-        settings = self.settings
+        ssl_context = want_ssl and ssl.ClientContextFactory()
         
-        self.proxy = settings.headerGet("/settings/servers/@proxy")
-        if self.proxy:
+        settings = self.settings
+        proxy = settings.headerGet("/settings/servers/@proxy")
+        if proxy:
             if self.verbose > 1:
-                print "connection thru proxy " + self.proxy
-            ( host, port ) = self.proxy.split(':')
+                print "connection thru proxy " + proxy
+            ( host, port ) = proxy.split(':')
             port = int(port)
         else:
             ( host, port ) = ( self.host, self.port )
 
         timeout = settings.headerGetInt("/settings/@tcptimeout")
-        if want_ssl:
-            from twisted.internet import ssl
-            reactor.connectSSL(host,
-                               port,
-                               self,
-                               ssl.ClientContextFactory(),
-                               timeout)
-        else:
-            reactor.connectTCP(host,
-                               port,
-                               self,
-                               timeout)
-        
+
+        c = Connector(host, port, self, ssl_context, timeout, None, reactor)
+        if proxy:
+            c.setProxyHost("%s:%d" % (self.host, self.port))
+        c.connect()
 
     def buildProtocol(self, addr):
         protocol = PokerClientFactory.buildProtocol(self, addr)
-        if self.proxy:
-            protocol.setProxyRequest(self.host, self.port)
         self.renderer.setProtocol(protocol)
         self.display.setProtocol(protocol)
         return protocol

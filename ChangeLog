@@ -1,3 +1,13 @@
+Fri Jan 27 2006  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.14
+
+	* pokernetwork/pokerchildren.py (PokerRsync.configure): support rsync proxy
+
+	* pokerclient2d/poker2d.py (PokerClientFactory2D.selectServer): use proxy aware connector
+
+	* pokernetwork/proxy.py: transparent proxy support draft-luotonen-web-proxy-tunneling-01.txt
+
 Tue Jan 24 2006  Loic Dachary  <loic@gnu.org>
 
 	* pokerui/pokerinterface.py (PokerInterface.updateMenu): 
@@ -14,8 +24,6 @@ Tue Jan 03 2006  Benoit Treins
 	* pokernetwork/pokerpackets.py(PACKET_POKER_TABLE): add the skin info
 
 Tue Jan 03 2006  Loic Dachary  <loic@gnu.org>
-
-	* Release 1.0.14
 
 	* pokernetwork/pokerclient.py: store the timeout information
 	
