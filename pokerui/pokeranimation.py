@@ -129,10 +129,10 @@ class PokerAnimationPlayer:
     
     def manageSitinSitout(self):
         
-        print "#####START#######"
-        for i in self.sitin_stack:
-            print "#### %s" % i
-        print "#####END#######"
+#        print "#####START#######"
+#        for i in self.sitin_stack:
+#            print "#### %s" % i
+#        print "#####END#######"
 
 #        print "manage Sitin"
 #        print "taille de sitin %d"%len(self.sitin_stack)
