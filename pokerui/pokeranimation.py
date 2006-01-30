@@ -108,7 +108,7 @@ class PokerAnimationPlayer:
         self.last_end_round=time()
 
     def playerArrive(self):
-        print "player arrive run stand animation"
+        #print "player arrive run stand animation"
         self.enable()
 
     def isInPosition(self):
