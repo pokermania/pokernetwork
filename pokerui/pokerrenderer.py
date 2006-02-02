@@ -1267,6 +1267,11 @@ class PokerRenderer:
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start")
         self.schedulePacket(packet)
 
+    def scheduleLookCardsAfterInteractionAnimation(self):
+        current_gameid = self.protocol.getCurrentGameId()
+        packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start", when = "scheduled" )
+        self.schedulePacket(packet)
+
     def maybeStopLookCards(self):
         current_gameid = self.protocol.getCurrentGameId()
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "stop")

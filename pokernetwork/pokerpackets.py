@@ -3718,6 +3718,7 @@ game_id: integer uniquely identifying a game.
     def __init__(self, *args, **kwargs):
         if kwargs.has_key("state"):
             self.state = kwargs["state"]
+        self.when = kwargs.get("when", "now")
         PacketPokerId.__init__(self, *args, **kwargs)
 
     type = PACKET_POKER_PLAYER_ME_LOOK_CARDS
