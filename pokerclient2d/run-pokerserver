@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# Copyright (C) 2005 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+DRY_RUN=/bin/false
+NOT_DRY_RUN=/bin/true
+declare -i VERBOSE
+VERBOSE=0
+LOCK=$0.lock
+LAUNCHING=$0.launching
+
+SERVER_CONFIG=${1:-poker.server.xml}
+SCHEMA=../database/schema.sql
+: ${PYTHON:=python}
+
+function run() {
+    . ../tests/createdatabase
+
+    ${PYTHON} -u ../pokernetwork/pokerserver.py ${SERVER_CONFIG} > pokerserver.log 2>&1 &
+    server_pid=$!
+    echo "Server now running as process $server_pid with logs in pokerserver.log"
+    sleep 3 # wait for server to bootstrap
+    while : 
+      do
+      ${PYTHON} -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
+      bot_pid=$!
+      trap "rm -f ${LOCK} ; kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
+      rm -f ${LAUNCHING}
+      echo "Bots now running as process $bot_pid with logs in pokerbot.log"
+      wait $bot_pid
+      exit 0
+      if wait $bot_pid
+          then
+          if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
+              then
+              exit -1
+          fi
+          sleep 1
+      else
+          break
+      fi
+    done
+}
+
+function usage() {
+    echo "$0: [-h] [-n] [-v verbose]"
+}
+
+while getopts 'hnv:' o ; do
+  case $o in
+      h) usage ;;
+      n) DRY_RUN=/bin/true ; DRY=echo ; NOT_DRY_RUN=/bin/false ;;
+      v) 
+          VERBOSE=$OPTARG
+          set -x
+          ;;
+  esac
+done
+
+#
+# lockfile is found in the procmail package
+#
+if lockfile -! -l$(((24 * 60 * 60))) -r1 -s8 ${LOCK} > /dev/null 2>&1
+then
+    (( VERBOSE > 0 )) && echo "${LOCK} present, abort" || /bin/true
+    exit 0
+else
+    trap "rm -f ${LOCK}" EXIT
+fi
+
+run
