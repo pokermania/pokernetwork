@@ -1,3 +1,13 @@
+Tue Jan 24 2006  Johan Euphrosine <johan@mekensleep.org>
+	
+	* pokerui/pokerrenderer.py (PokerRenderer.updateDecorations): 
+	added hide/show "lobby_tab_window" when leaving/entering lobby OR tournament
+
+	* pokerclient2d/tournaments.c: 
+	* pokerclient2d/lobby.c: 
+	added g_lobby_tab_state for keeping track of the state of tournament/lobby tab.	
+	merged tournament/lobby tab callbacks
+	
 Fri Jan 27 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.14

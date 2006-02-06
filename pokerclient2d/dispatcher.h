@@ -28,6 +28,14 @@
 #ifndef	_DISPATCHER_H_
 #define	_DISPATCHER_H_
 
+
+enum lobby_tab_state
+  {
+    none,
+    lobby,
+    tournament,
+  };
+
 int dispatcher(GtkLayout* screen);
 int	handle_lobby(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_xml, GladeXML* g_lobby_tabs_xml, GladeXML* g_cashier_button_xml, GladeXML* g_clock_xml, GtkLayout* screen, int init);
 int	handle_login(GladeXML* g_glade_xml, GtkLayout* screen, int init);

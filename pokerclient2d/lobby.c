@@ -39,6 +39,7 @@
 #define VARIANT_7STUD 3
 #define VARIANTS_COUNT 4
 
+enum lobby_tab_state g_lobby_tab_state = none;
 static GladeXML* s_lobby_xml = 0;
 static GtkWidget*	s_lobby_window = 0;
 static GtkLabel*	s_players_label = 0;
@@ -158,38 +159,62 @@ static void	on_lobby_list_treeview_selection_changed(GtkTreeSelection *treeselec
     g_warning("treeview_selection: unable to find active row");
 }
 
+void tournament_on_table_toggled(GtkWidget *widget, gpointer user_data);
 static void	on_table_toggled(GtkWidget *widget, gpointer user_data)
 {
-  (void) user_data;
-
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
-    const char* name = gtk_widget_get_name(widget);
-    if(!strcmp(name, "holdem")) {
-      gtk_notebook_set_current_page(s_notebook, VARIANT_HOLDEM);
-    } else if(!strcmp(name, "omaha")) {
-      gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA);
-    } else if(!strcmp(name, "omaha8")) {
-      gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA8);
-    } else if(!strcmp(name, "7stud")) {
-      gtk_notebook_set_current_page(s_notebook, VARIANT_7STUD);
+  if (g_lobby_tab_state == tournament)
+    {
+      tournament_on_table_toggled(widget, user_data);
     }
-    set_string("lobby");
-    set_string("refresh");
-    set_string(name);
-    flush_io_channel();
-  }
+  else if (g_lobby_tab_state == lobby)
+    {
+      (void) user_data;
+      
+      if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
+	const char* name = gtk_widget_get_name(widget);
+	if(!strcmp(name, "holdem")) {
+	  gtk_notebook_set_current_page(s_notebook, VARIANT_HOLDEM);
+	} else if(!strcmp(name, "omaha")) {
+	  gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA);
+	} else if(!strcmp(name, "omaha8")) {
+	  gtk_notebook_set_current_page(s_notebook, VARIANT_OMAHA8);
+	} else if(!strcmp(name, "7stud")) {
+	  gtk_notebook_set_current_page(s_notebook, VARIANT_7STUD);
+	}
+	set_string("lobby");
+	set_string("refresh");
+	set_string(name);
+	flush_io_channel();
+      }
+    }
+  else
+    {
+      g_critical("g_lobby_tab_state is %i\n", g_lobby_tab_state);
+    }
 }
 
+void tournament_on_tourney_toggled(GtkWidget *widget, gpointer user_data);
 static void	on_tourney_toggled(GtkWidget *widget, gpointer user_data)
 {
-  (void) user_data;
-
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
-    set_string("lobby");
-    set_string("quit");
-    set_string(gtk_widget_get_name(widget));
-    flush_io_channel();
-  }
+  if (g_lobby_tab_state == tournament)
+    {
+      tournament_on_tourney_toggled(widget, user_data);
+    }
+  else if (g_lobby_tab_state == lobby)
+    {
+      (void) user_data;
+      
+      if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
+	set_string("lobby");
+	set_string("quit");
+	set_string(gtk_widget_get_name(widget));
+	flush_io_channel();
+      }
+    }
+  else
+    {
+      g_critical("g_lobby_tab_state is %i\n", g_lobby_tab_state);
+    }
 }
 
 static void	on_all_radio_clicked(GtkWidget* widget, gpointer data)
@@ -395,7 +420,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 
   char* tag = get_string();
   if(!strcmp(tag, "show")) {
-
+    g_lobby_tab_state = lobby;
     {
       char* label = get_string();
       gtk_button_set_label(s_cashier_button, label);
@@ -487,7 +512,8 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       g_free(custom_money);
     }
   } else if(!strcmp(tag, "hide")) {
-		close_lobby();
+    g_lobby_tab_state = none;
+    close_lobby();
   } else if(!strcmp(tag, "info")) {
     char* players_count = get_string();
     char* tables_count = get_string();

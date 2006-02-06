@@ -33,6 +33,7 @@
 #include "interface_io.h"
 #include "dispatcher.h"
 
+extern enum lobby_tab_state g_lobby_tab_state;
 static GladeXML* s_tournaments_xml = 0;
 static GtkWidget*	s_tournaments_window = 0;
 static GtkLabel*	s_players_label = 0;
@@ -148,6 +149,7 @@ static void	on_tournament_list_treeview_selection_changed(GtkTreeSelection *tree
     g_warning("treeview_selection: unable to find active row");
 }
 
+
 static void	on_table_toggled(GtkWidget *widget, gpointer user_data)
 {
   (void) user_data;
@@ -159,6 +161,12 @@ static void	on_table_toggled(GtkWidget *widget, gpointer user_data)
     flush_io_channel();
   }
 }
+//bridge for lobby.c
+void tournament_on_table_toggled(GtkWidget *widget, gpointer user_data)
+{
+  on_table_toggled(widget, user_data);
+}
+
 
 static void	on_tourney_toggled(GtkWidget *widget, gpointer user_data)
 {
@@ -176,6 +184,11 @@ static void	on_tourney_toggled(GtkWidget *widget, gpointer user_data)
       gtk_notebook_set_current_page(s_notebook, PAGE_REGULAR);
     }
   }
+}
+//bridge for lobby.c
+void tournament_on_tourney_toggled(GtkWidget *widget, gpointer user_data)
+{
+  on_tourney_toggled(widget, user_data);
 }
 
 static void	on_all_radio_clicked(GtkWidget* widget, gpointer data)
@@ -378,6 +391,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
   char* tag = get_string();
   if(!strcmp(tag, "show")) {
+    g_lobby_tab_state = tournament;
     /*
      * calculate windows position
      */
@@ -462,6 +476,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       g_free(custom_money);
     }
   } else if(!strcmp(tag, "hide")) {
+    g_lobby_tab_state = none;
     close_tournaments();
 
   } else if(!strcmp(tag, "info")) {

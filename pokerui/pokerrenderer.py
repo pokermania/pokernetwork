@@ -1480,7 +1480,6 @@ class PokerRenderer:
 #        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
-        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
 
     def hideLobby(self):
@@ -1489,8 +1488,7 @@ class PokerRenderer:
             interface.hideLobby()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "hide"))
-        self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
-        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))        
+        self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))
         #self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))                
 
 
@@ -1610,9 +1608,7 @@ class PokerRenderer:
             interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['custom_money'])
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "show"))
-        self.render(PacketPokerInterfaceCommand(window = "tournaments_lobby_tabs_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "show"))
-        
         
     def hideTournaments(self):
         interface = self.factory.interface
@@ -1621,7 +1617,6 @@ class PokerRenderer:
         self.saveTournamentsState()
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "hide"))
-        self.render(PacketPokerInterfaceCommand(window = "tournaments_lobby_tabs_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "hide"))
         
     def handReplay(self, hand):
@@ -1808,7 +1803,10 @@ class PokerRenderer:
         elif self.enterStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
             self.showBackgroundLobbyCashier()
             self.showClockWindow()
-
+        if self.exitStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
+            self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
+        elif self.enterStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
+            self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
 
     def changeState(self, state, *args, **kwargs):
         if self.state == state:
