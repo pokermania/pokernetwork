@@ -23,6 +23,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
+import sys
 import os
 if os.name != "posix" :
     import win32api, win32pdhutil, win32con

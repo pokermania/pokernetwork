@@ -149,7 +149,7 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
 
   if(i > 0) {
 
-    g_message("%d", i);
+    g_message("cashier got %d entries", i);
     while (i-- > 0)
       {
         char*	str = get_string();

@@ -24,12 +24,12 @@ CC = gcc
 CFLAGS = $(DEBUG) $(shell pkg-config --cflags libglade-2.0)
 LDFLAGS = $(shell pkg-config --libs libglade-2.0)
 
-all:	poker3d-interface
+all:	poker3d-interface.exe
 
-poker3d-interface: ${OBJS}
+poker3d-interface.exe: ${OBJS}
 	${CC} -s ${OBJS} -o poker3d-interface ${LDFLAGS}
 
-install: poker3d-interface
+install: poker3d-interface.exe
 	cp poker3d-interface.exe /cygdrive/u/base/example/poker/
 
 clean:

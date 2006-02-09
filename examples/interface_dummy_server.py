@@ -72,7 +72,8 @@ class Echo(Protocol):
     def connectionMade(self):
         #self.blind()
         #self.buy_in()
-        #self.cashier()
+        self.menu()
+        self.cashier()
         #self.chat()
         #self.table_list()
         #self.login()
@@ -83,7 +84,7 @@ class Echo(Protocol):
         #self.menu()
         #self.outfits()
         #self.tournaments()
-        self.lobby()
+        #self.lobby()
 
     def interfaceSend(self, *args):
         self.transport.write("\000".join(args) + "\000")
@@ -148,7 +149,8 @@ class Echo(Protocol):
                   "15010$" )
         packet = [ "cashier", "show", "%d" % len(messages) ]
         packet.extend(messages)
-        reactor.callLater(0, lambda: self.interfaceSend(*packet))
+	packet.append("exit_label")
+        reactor.callLater(5, lambda: self.interfaceSend(*packet))
 
     def menu(self):
         delay = 0
