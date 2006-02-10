@@ -33,6 +33,6 @@ install: poker3d-interface.exe
 	cp poker3d-interface.exe /cygdrive/u/base/example/poker/
 
 clean:
-	rm *.o poker3d-interface.exe
+	rm -f *.o poker3d-interface.exe
 .c.o:
 	${CC} ${CFLAGS} -c $< -o $@
