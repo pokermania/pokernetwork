@@ -19,13 +19,13 @@
 			<Tool
 				Name="VCNMakeTool"
 				BuildCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d ; make -f Makefile.cygwin&quot;
+bash -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin&quot;
 "
 				ReBuildCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d ; make -f Makefile.cygwin clean all&quot;
+bash -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean all&quot;
 "
 				CleanCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d ; make -f Makefile.cygwin clean&quot;
+bash -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean&quot;
 "
 				Output="$(InputDir)\..\poker3d-interface.exe"/>
 		</Configuration>
@@ -37,13 +37,13 @@ bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d
 			<Tool
 				Name="VCNMakeTool"
 				BuildCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d ; make -f Makefile.cygwin&quot;
+bash -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin&quot;
 "
 				ReBuildCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d ; make -f Makefile.cygwin clean all&quot;
+bash -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean all&quot;
 "
 				CleanCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -c &quot;PATH=/bin ; cd %POK3DROOT%/pokersource/poker-network/pokerclient2d ; make -f Makefile.cygwin clean&quot;
+bash -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean&quot;
 "
 				Output="$(InputDir)\..\poker3d-interface.exe"/>
 		</Configuration>
