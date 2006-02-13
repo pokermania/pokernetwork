@@ -234,8 +234,8 @@ class PokerClientFactory(UGAMEClientFactory):
             remember = "yes"
         else:
             remember = "no"
-            name = "username"
-            password = "password"
+            name = ""
+            password = ""
         settings.headerSet("/settings/remember", remember)
         settings.headerSet("/settings/name", name)
         settings.headerSet("/settings/passwd", password)

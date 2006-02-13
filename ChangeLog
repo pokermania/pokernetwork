@@ -1,3 +1,10 @@
+Tue Feb 13 2006  Johan Euphrosine <johan@mekensleep.org>
+
+	* pokerui/pokerrenderer.py (PokerRenderer.bootstrap): 
+	based login show at startup upon first_time flag
+	* pokernetwork/pokerclient.py (PokerClientFactory.saveAuthToFile): 
+	save "" login instead of username to update first_time flag
+	
 Fri Feb 10 2006  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/poker2d.py (run): if settings file does not exist,

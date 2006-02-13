@@ -1787,7 +1787,7 @@ class PokerRenderer:
 
     def bootstrap(self):
         self.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
-        if self.factory.remember:
+        if not self.factory.first_time:
             if self.factory.interface:
                 if self.verbose: print "interface ready, ask for password"
                 self.changeState(LOGIN, lambda success: self.changeState(LOBBY))
