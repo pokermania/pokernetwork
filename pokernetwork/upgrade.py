@@ -52,7 +52,10 @@ UPGRADE_READY = "//event/pokernetwork/upgrade/upgrade_ready"
 class CheckClientVersion(PokerRsync):
 
     def __init__(self, config, settings, version, callback):
-        PokerRsync.__init__(self, config, settings, Constants.RSYNC + [ "@SOURCE@/*" ])
+        if match(".*:", '@SOURCE@'):
+            PokerRsync.__init__(self, config, settings, Constants.RSYNC + [ "@SOURCE@/" ])
+        else:
+            PokerRsync.__init__(self, config, settings, Constants.RSYNC + [ '--dry-run', '--list-only', "@SOURCE@/", "/most/unlikely/directory" ])
         self.version_compare = "%03d%03d%03d" % version
         self.version = version
         if self.verbose > 1:
@@ -63,7 +66,7 @@ class CheckClientVersion(PokerRsync):
 
     def line(self, line):
         if self.verbose > 2: print line
-        result = match(".* (\d+).(\d+).(\d+)$", line)
+        result = match(".*(\d+).(\d+).(\d+)$", line)
         if result:
             result = tuple(map(int, result.groups()))
             if self.verbose > 2:
@@ -81,7 +84,7 @@ DRY_RUN_DONE = "//event/pokernetwork/upgrade/dry_run_done"
 class DryrunUpgrade(PokerRsync):
 
     def __init__(self, config, settings, version):
-        PokerRsync.__init__(self, config, settings, Constants.RSYNC + Constants.EXCLUDES + [ "--dry-run", "-av", "--delete", "--progress", "--log-format=FILE:%f", "@SOURCE@/" + version + "/*", "@TARGET@/" ])
+        PokerRsync.__init__(self, config, settings, Constants.RSYNC + Constants.EXCLUDES + [ "--dry-run", "-av", "--delete", "--progress", "--log-format=FILE:%f", "@SOURCE@/" + version + "/", "@TARGET@" ])
         self.files_count = 0
         self.files_total = 0.0
 
@@ -109,7 +112,7 @@ GET_PATCH_DONE = "//event/pokernetwork/upgrade/get_patch_done"
 class GetPatch(PokerRsync):
 
     def __init__(self, config, settings, version, files_total):
-        PokerRsync.__init__(self, config, settings, Constants.RSYNC + Constants.EXCLUDES + Constants.BANDWIDTH + [ "--only-write-batch=%s/patch" % Constants.UPGRADES_DIR, "--delete", "-a", "--log-format=FILE:%f", "@SOURCE@/" + version + "/*", "@TARGET@/" ])
+        PokerRsync.__init__(self, config, settings, Constants.RSYNC + Constants.EXCLUDES + Constants.BANDWIDTH + [ "--only-write-batch=%s/patch" % Constants.UPGRADES_DIR, "--delete", "-a", "--log-format=FILE:%f", "@SOURCE@/" + version + "/", "@TARGET@" ])
         self.files_count = 0
         self.files_total = files_total
 
@@ -197,7 +200,7 @@ class Upgrader(dispatch.EventDispatcher):
 
     def upgradeStage2(self, version, files_count):
         self.publishEvent(TICK, 0.0, "Upgrading the upgrade system")
-        rsync = PokerRsync(self.config, self.settings, Constants.RSYNC + Constants.EXCLUDES + Constants.BANDWIDTH + [ "--delete", "-a", "@SOURCE@/" + "%s/%s/" % ( version, self.upgrades ), Constants.UPGRADES_DIR + "/" ])
+        rsync = PokerRsync(self.config, self.settings, Constants.RSYNC + Constants.EXCLUDES + Constants.BANDWIDTH + [ "--delete", "-a", "@SOURCE@/" + "%s/%s/" % ( version, self.upgrades ), Constants.UPGRADES_DIR ])
         rsync.registerHandler(RSYNC_DONE, lambda: self.upgradeStage3(version, files_count))
         rsync.registerHandler(RSYNC_FAILED, self.failed)
         rsync.spawn()

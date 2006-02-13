@@ -19,7 +19,7 @@
   <handlist start="0" count="100"/>
   <web browser="@WWWBROWSER@">http://@POKER_SERVER_HOST@/poker-web/</web>
   <user path="~/.poker2d"/>
-  <rsync path="@RSYNC@" dir="." source="@UPGRADES_SOURCE@/@target_os@" target="@prefix@" upgrades="share/poker-network/upgrades"/>
+  <rsync path="@RSYNC@" dir="." source="@UPGRADES_SOURCE@" target="@prefix@" upgrades="share/poker-network@MAYBE_PYTHON_VERSION@/upgrades"/>
   <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <data path="@POKER2D_PKGDATADIR@" sounds="@POKER2D_PKGDATADIR@/sounds"/>
 </settings>

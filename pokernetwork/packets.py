@@ -110,11 +110,9 @@ class PacketString(Packet):
     """
 
     type = PACKET_STRING
-    string = ""
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("string"):
-            self.string = kwargs["string"]
+        self.string = kwargs.get("string", "")
 
     def pack(self):
         return Packet.pack(self) + self.packstring(self.string)
@@ -231,6 +229,7 @@ class PacketPing(Packet):
     type = PACKET_PING
 
 PacketFactory[PACKET_PING] = PacketPing
+
 ########################################
 
 PACKET_SERIAL = 6
@@ -451,5 +450,3 @@ class PacketProtocolError(PacketError):
     type = PACKET_PROTOCOL_ERROR
 
 PacketFactory[PACKET_PROTOCOL_ERROR] = PacketProtocolError
-
-

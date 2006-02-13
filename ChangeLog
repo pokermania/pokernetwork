@@ -1,3 +1,8 @@
+Fri Feb 10 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/poker2d.py (run): if settings file does not exist,
+	  copy default one to it instead of copying it to ~/.poker2d/poker2d.xml
+
 Tue Jan 24 2006  Johan Euphrosine <johan@mekensleep.org>
 	
 	* pokerui/pokerrenderer.py (PokerRenderer.updateDecorations): 

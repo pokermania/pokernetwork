@@ -318,13 +318,14 @@ class PokerClientFactory(UGAMEClientFactory):
     def upgradeReady(self, target_dir, upgrades_dir):
         self.children.killall()
         reactor.disconnectAll()
-        self.display.underware.Uninit()
+        if hasattr(self.display, "underware"):
+            self.display.underware.Uninit()
         import sys
         import os
         if os.name != "posix" :
             os.execv(upgrades_dir + "/upgrade.exe", [ upgrades_dir + "/upgrade.exe", '"' + target_dir + '"', '"' + sys.executable + '"' ])
         else:
-            os.execv("/bin/sh", [ upgrades_dir + "/upgrade", upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)
+            os.execv("/bin/sh", [ upgrades_dir + "/upgrade", '-x', upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)
 
 SERIAL_IN_POSITION = 0
 POSITION_OBSOLETE = 1

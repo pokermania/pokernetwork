@@ -119,7 +119,7 @@ class Main:
             print """
 No <user path="user/settings/path" /> found in file %s.
 Using current directory instead.
-""" % settings.url
+""" % settings.path
             return
         
         rcdir = expanduser(settings.headerGet("/settings/user/@path"))
@@ -204,7 +204,10 @@ class PokerClientFactory2D(PokerClientFactory):
             self.clientVersionOk()
 
     def clientVersionOk(self):
-        self.showServers()
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            self.quit()
+        else:
+            self.showServers()
 
     def failedUpgrade(self, logs, reason):
         interface = self.interface
@@ -212,9 +215,13 @@ class PokerClientFactory2D(PokerClientFactory):
         interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
         
     def needUpgrade(self, version):
-        interface = self.interface
-        interface.yesnoBox("A new client version is available, do you want to upgrade now ?")
-        interface.registerHandler(pokerinterface.INTERFACE_YESNO, lambda result: self.upgradeConfirmed(result, version))
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            self.upgradeConfirmed(confirmed = True, version = version)
+            print "Upgrading to client version " + str(version)
+        else:
+            interface = self.interface
+            interface.yesnoBox("Client version " + str(version) + " is available, do you want to upgrade now ?")
+            interface.registerHandler(pokerinterface.INTERFACE_YESNO, lambda result: self.upgradeConfirmed(result, version))
 
     def upgradeConfirmed(self, confirmed, version):
         if confirmed:
@@ -300,12 +307,11 @@ def run(argv, datadir):
     Config.upgrades_repository = datadir + "/upgrades"
     
     if os.name == "posix":
-        conf_file = user_dir + "/poker2d.xml"
         default_settingsfile = datadir + "/poker2d.xml"
-        if not exists(conf_file) and exists(default_settingsfile):
+        if not exists(settingsfile) and exists(default_settingsfile):
             if not exists(user_dir):
                 makedirs(user_dir)
-            copy(default_settingsfile, user_dir)
+            copy(default_settingsfile, settingsfile)
 
 
     client = Main(configfile, settingsfile)
