@@ -1264,11 +1264,21 @@ class PokerRenderer:
 
     def maybeStartLookCards(self):
         current_gameid = self.protocol.getCurrentGameId()
+        game = self.factory.getGame(current_gameid)
+        if game.isRunning() is False:
+            if self.verbose:
+                print "ignoring look card the game is not running"
+            return
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start")
         self.schedulePacket(packet)
 
     def scheduleLookCardsAfterInteractionAnimation(self):
         current_gameid = self.protocol.getCurrentGameId()
+        game = self.factory.getGame(current_gameid)
+        if game.isRunning() is False:
+            if self.verbose:
+                print "ignoring look card the game is not running"
+            return
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start", when = "scheduled" )
         self.schedulePacket(packet)
 
