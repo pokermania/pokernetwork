@@ -630,6 +630,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.setMaxPlayers(packet.seats)
                 new_game.reset()
                 new_game.registerCallback(self.gameEvent)
+                new_game.level_skin = packet.skin
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
                 self.position_info[new_game.id] = [ 0, 0 ]
@@ -1186,7 +1187,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   players = game.allCount(),
                                   hands_per_hour = game.stats["hands_per_hour"],
                                   average_pot = game.stats["average_pot"],
-                                  percent_flop = game.stats["percent_flop"])
+                                  percent_flop = game.stats["percent_flop"],
+                                  skin = game.level_skin
+                                  )
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
         packets.append(packet)
