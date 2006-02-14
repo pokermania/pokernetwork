@@ -1,5 +1,7 @@
 Tue Feb 13 2006  Johan Euphrosine <johan@mekensleep.org>
 
+	* Release 1.0.14
+
 	* pokerui/pokerrenderer.py (PokerRenderer.bootstrap): 
 	based login show at startup upon first_time flag
 	* pokernetwork/pokerclient.py (PokerClientFactory.saveAuthToFile): 
@@ -21,8 +23,6 @@ Tue Jan 24 2006  Johan Euphrosine <johan@mekensleep.org>
 	merged tournament/lobby tab callbacks
 	
 Fri Jan 27 2006  Loic Dachary  <loic@gnu.org>
-
-	* Release 1.0.14
 
 	* pokernetwork/pokerchildren.py (PokerRsync.configure): support rsync proxy
 
