@@ -933,7 +933,10 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_CHAT:
             interface = self.factory.interface
             if interface:
-                interface.chatHistory(packet.message)
+                name = ""
+                if packet.serial != 0:
+                    name = game.serial2player[packet.serial].name + ": "
+                interface.chatHistory(name + packet.message)
             # duplicate PacketPokerChat
             # in order to preseve integrity of original packet
             message = self.chatFormatMessage(packet)
