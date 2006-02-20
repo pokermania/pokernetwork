@@ -35,6 +35,8 @@ from pokereval import PokerEval
 from pokerengine.pokergame import PokerGameClient, PokerPlayer, history2messages
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
+from pokerengine import pokergame
+
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclient import ABSOLUTE_LAGMAX
 from pokernetwork.user import checkNameAndPassword
@@ -56,6 +58,7 @@ BUY_IN = "buy_in"
 BUY_IN_DONE = "buy_in_done"
 REBUY = "rebuy"
 REBUY_DONE = "rebuy_done"
+MUCK = "muck"
 PAY_BLIND_ANTE = "pay_blind_ante"
 PAY_BLIND_ANTE_SEND = "pay_blind_ante_send"
 PAY_BLIND_ANTE_DONE = "pay_blind_ante_done"
@@ -330,6 +333,7 @@ class PokerRenderer:
         self.state_joining_my = 0
 
         self.state_cashier = { 'exit_label': factory.config.headerGet("/sequence/cashier/@exit") }
+        self.state_muck = None
 
         state_hands = factory.settings.headerGetProperties("/settings/handlist")
         if not state_hands:
@@ -368,6 +372,10 @@ class PokerRenderer:
 
     def hideYesNoBox(self):
         self.render(PacketPokerInterfaceCommand(window = "yesno_window", command = "hide"))
+        interface = self.factory.interface
+        if interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
+            del interface.callbacks[pokerinterface.INTERFACE_YESNO]
+        return True
 
     def quit(self, dummy = None):
         interface = self.factory.interface
@@ -715,6 +723,44 @@ class PokerRenderer:
                                     PokerChips.tostring(packet.custom_money + packet.custom_money_in_game) + unit,
                                     )
 
+    def showMuck(self, game):
+        interface = self.factory.interface
+        if interface:        
+            if interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
+                self.hideYesNoBox()                
+            self.state_muck = game
+            self.showYesNoBox("Do you want to muck your cards ?")
+            interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confimMuck)
+            return
+        self.postMuck(True)
+    
+    def confimMuck(self, want_to_muck):
+        self.hideYesNoBox() 
+        self.postMuck(want_to_muck)
+        self.changeState(IDLE)
+    
+    def hideMuck(self):
+        self.hideYesNoBox()        
+
+    def postMuck(self, want_to_muck):
+        game = self.state_muck
+        if game and self.protocol:            
+            self.protocol.postMuck(game, want_to_muck)
+            self.state_muck = None
+
+    def broadcastAutoMuckChange(self, auto_muck):
+        print "broadcastAutoMuckChange"
+        if self.protocol:
+            serial = self.protocol.user.serial
+            game_ids = self.factory.getGameIds()
+            for game_id in game_ids:
+                game = self.factory.getGame(game_id)
+                if game and game.serial2player.has_key(serial):
+                    print "broadcastAutoMuckChange: sending packet to game %d" % game_id
+                    self.protocol.sendPacket(PacketPokerAutoMuck(game_id = game_id,
+                                                                 serial = serial,
+                                                                 auto_muck = auto_muck))
+
     def handleSerial(self, packet):
         if self.verbose: print "handleSerial: we now have serial %d" % packet.serial
         self.protocol.user.serial = packet.serial
@@ -947,11 +993,16 @@ class PokerRenderer:
             if chatPacket.message.strip() != "":
                 self.render(chatPacket)
 
+        elif packet.type == PACKET_POKER_MUCK_REQUEST:
+            self.render(packet)
+            if self.protocol.getSerial() in packet.muckable_serials:
+                self.changeState(MUCK, game)                
+
         elif packet.type == PACKET_POKER_BLIND_REQUEST:
             if ( game.getSerialInPosition() == self.protocol.getSerial() ):
                 self.changeState(PAY_BLIND_ANTE, 'blind', game, packet.amount, packet.dead, packet.state)
                 self.sitActionsUpdate()
-                
+                           
         elif packet.type == PACKET_POKER_ANTE_REQUEST:
             if ( game.getSerialInPosition() == self.protocol.getSerial() ):
                 self.changeState(PAY_BLIND_ANTE, 'ante', game, packet.amount)
@@ -1054,7 +1105,8 @@ class PokerRenderer:
                 self.changeState(PAY_BLIND_ANTE_DONE)
 
         elif packet.type == PACKET_POKER_STATE:
-            pass
+            if self.state == MUCK and packet.string == "end":
+                self.changeState(IDLE)
 
     def readyToPlay(self, game_id):
         if self.factory.getGame(game_id):
@@ -1309,6 +1361,8 @@ class PokerRenderer:
             self.hideTournaments()
         elif self.state == CASHIER:
             self.hideCashier()
+        elif self.state == MUCK:                
+            self.hideMuck()
         elif self.state == IDLE:
             pass
         elif self.state == SEARCHING_MY:
@@ -1380,6 +1434,10 @@ class PokerRenderer:
         elif name == "muck":
             settings.headerSet("/settings/muck", value)
             settings.save()
+            auto_muck = pokergame.AUTO_MUCK_ALWAYS
+            if value == "no":
+                auto_muck = pokergame.AUTO_MUCK_NEVER
+            self.broadcastAutoMuckChange(auto_muck)
         else:
             print "*CRITICAL* handleMenu unknown name %s" % name
 
@@ -2020,6 +2078,11 @@ class PokerRenderer:
                     if self.factory.settings.headerGet("/settings/auto_post") == "yes":
                         self.protocol.sendPacket(PacketPokerAutoBlindAnte(game_id = packet.game_id,
                                                                           serial = packet.serial))
+                                                                          
+                    if self.factory.settings.headerGet("/settings/muck") == "no":
+                        self.protocol.sendPacket(PacketPokerAutoMuck(game_id = packet.game_id,
+                                                                     serial = packet.serial,
+                                                                     auto_muck = pokergame.AUTO_MUCK_NEVER))
                     self.state = state
                 else:
                     self.showMessage("You cannot do that now", None)
@@ -2169,6 +2232,14 @@ class PokerRenderer:
             self.state2hide()
             self.state = state
 
+        elif state == MUCK:
+            game = args[0]
+            if self.state == IDLE:
+                self.showMuck(game)
+                self.state = state
+            else:
+                self.postMuck(True)
+            
         if self.state == IDLE:
             self.chatShow()
         else:

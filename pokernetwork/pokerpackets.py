@@ -1150,14 +1150,15 @@ players: the number of players who joined the table and are seated
 observers: the number of players who joined (as in PACKET_POKER_TABLE_JOIN)
            the table but are not seated.
 waiting: the number of players in the waiting list.
-timeout: the number of seconds after which a player in position is forced to
+player_timeout: the number of seconds after which a player in position is forced to
          play (by folding).
+muck_timeout: the number of seconds after which a player is forced to muck.
 custom_money: 0 if play money table, 1 if custom money table
 skin: name of the level model to use
 """
     
     type = PACKET_POKER_TABLE
-    format = "!IBIHBBHBHB"
+    format = "!IBIHBBHBHHB"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
@@ -1172,13 +1173,14 @@ skin: name of the level model to use
         self.players = kwargs.get("players", 0)
         self.observers = kwargs.get("observers", 0)
         self.waiting = kwargs.get("waiting", 0)
-        self.timeout = kwargs.get("timeout", 0)
+        self.player_timeout = kwargs.get("player_timeout", 0)
+        self.muck_timeout = kwargs.get("muck_timeout", 0)
         self.custom_money = kwargs.get("custom_money", 0)
         self.skin = kwargs.get("skin", "default")
 
     def pack(self):
         block = Packet.pack(self)
-        block += pack(PacketPokerTable.format, self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.timeout, self.custom_money)
+        block += pack(PacketPokerTable.format, self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.custom_money)
         block += self.packstring(self.name)
         block += self.packstring(self.variant)
         block += self.packstring(self.betting_structure)
@@ -1187,7 +1189,7 @@ skin: name of the level model to use
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.timeout, self.custom_money) = unpack(PacketPokerTable.format, block[:PacketPokerTable.format_size])
+        (self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.custom_money) = unpack(PacketPokerTable.format, block[:PacketPokerTable.format_size])
         block = block[PacketPokerTable.format_size:]
         (block, self.name) = self.unpackstring(block)
         (block, self.variant) = self.unpackstring(block)
@@ -1199,7 +1201,7 @@ skin: name of the level model to use
         return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, timeout = %d, custom_money = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.timeout, self.custom_money, self.skin )
+        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, custom_money = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.custom_money, self.skin )
     
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 
@@ -3728,3 +3730,95 @@ game_id: integer uniquely identifying a game.
 
 PacketFactory[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = PacketPokerPlayerMeLookCards
 
+########################################
+
+PACKET_POKER_MUCK_REQUEST = 240
+PacketNames[PACKET_POKER_MUCK_REQUEST] = "POKER_MUCK_REQUEST"
+
+class PacketPokerMuckRequest(PacketPokerId):
+    """\
+Semantics: server is announcing a muck request to muckable players
+in game "game_id".
+
+Direction: server <=> client
+game_id: integer uniquely identifying a game.
+muckable_serials: list of muckable candidates
+    """
+    type = PACKET_POKER_MUCK_REQUEST
+
+    format_element = "!I"
+
+    def __init__(self, *args, **kwargs):
+        self.muckable_serials = kwargs.get("muckable_serials", [])
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        block = PacketPokerId.pack(self)
+        block += self.packlist(self.muckable_serials, PacketPokerMuckRequest.format_element)
+        return block
+    
+    def unpack(self, block):
+        block = PacketPokerId.unpack(self, block)
+        (block, self.muckable_serials) = self.unpacklist(block, PacketPokerMuckRequest.format_element)
+        return block
+
+    def calcsize(self):
+        return PacketPokerId.calcsize(self) + self.calcsizelist(self.muckable_serials, PacketPokerMuckRequest.format_element)
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " muckable_serials = %s" % self.muckable_serials
+
+PacketFactory[PACKET_POKER_MUCK_REQUEST] = PacketPokerMuckRequest
+
+########################################
+
+PACKET_POKER_AUTO_MUCK = 241
+PacketNames[PACKET_POKER_AUTO_MUCK] = "POKER_AUTO_MUCK"
+
+class PacketPokerAutoMuck(PacketPokerId):
+    type = PACKET_POKER_AUTO_MUCK
+
+    format = "!B"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.auto_muck = kwargs.get("auto_muck", 0xFF)
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketPokerId.pack(self) + pack(PacketPokerAutoMuck.format, self.auto_muck)
+        
+    def unpack(self, block):
+        block = PacketPokerId.unpack(self, block)
+        (self.auto_muck,) = unpack(PacketPokerAutoMuck.format, block[:PacketPokerAutoMuck.format_size])
+        return block[PacketPokerAutoMuck.format_size:]
+
+    def calcsize(self):
+        return PacketPokerId.calcsize(self) + PacketPokerAutoMuck.format_size
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " auto_muck = %x" % self.auto_muck
+
+PacketFactory[PACKET_POKER_AUTO_MUCK] = PacketPokerAutoMuck
+
+########################################
+
+PACKET_POKER_MUCK_ACCEPT = 242
+PacketNames[PACKET_POKER_MUCK_ACCEPT] = "POKER_MUCK_ACCEPT"
+
+class PacketPokerMuckAccept(PacketPokerId):
+    type = PACKET_POKER_MUCK_ACCEPT
+
+PacketFactory[PACKET_POKER_MUCK_ACCEPT] = PacketPokerMuckAccept
+
+########################################
+
+PACKET_POKER_MUCK_DENY = 243
+PacketNames[PACKET_POKER_MUCK_DENY] = "POKER_MUCK_DENY"
+
+class PacketPokerMuckDeny(PacketPokerId):
+    type = PACKET_POKER_MUCK_DENY
+
+PacketFactory[PACKET_POKER_MUCK_DENY] = PacketPokerMuckDeny
+
+########################################

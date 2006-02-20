@@ -604,7 +604,13 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def unsetPlayerTimeout(self, game, serial):
         player = game.getPlayer(serial)
         player.getUserData()['timeout'] = None
-        
+    
+    def postMuck(self, game, want_to_muck):
+        if game:            
+            packet_type = want_to_muck and PacketPokerMuckAccept or PacketPokerMuckDeny
+            self.sendPacket(packet_type(game_id = game.id, 
+                                        serial  = self.getSerial()) )
+    
     def _handleConnection(self, packet):
         if self.factory.verbose > 3: self.message("PokerClientProtocol:handleConnection: %s" % packet )
         
@@ -752,8 +758,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_PLAYER_CARDS:
                 player = game.getPlayer(packet.serial)
                 player.hand.set(packet.cards)
-                if not self.no_display_packets:
-                    forward_packets.remove(packet)
+                #if not self.no_display_packets:
+                #    forward_packets.remove(packet)
 
             elif packet.type == PACKET_POKER_BOARD_CARDS:
                 game.board.set(packet.cards)
@@ -773,6 +779,11 @@ class PokerClientProtocol(UGAMEClientProtocol):
             elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
                 game.noAutoBlindAnte(packet.serial)
 
+            elif packet.type == PACKET_POKER_MUCK_REQUEST:                
+                game.setMuckableSerials(packet.muckable_serials)
+                if packet.game_id != self.getCurrentGameId():
+                   self.postMuck(game, True)
+                
             elif packet.type == PACKET_POKER_SIT:
                 game.sit(packet.serial)
 
@@ -1146,6 +1157,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return packets
 
     def connectionLost(self, reason):
+        if self.factory.verbose:
+            print "connectionLost: noticed, aborting all tables."
         self.abortAllTables()
         UGAMEClientProtocol.connectionLost(self, reason)
         
@@ -1185,7 +1198,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   seats = game.max_players,
                                   betting_structure = game.betting_structure,
                                   players = game.allCount(),
-                                  hands_per_hour = game.stats["hands_per_hour"],
+                                  # observers ?
+                                  # waiting ?
+                                  # player_timeout ?
+                                  # muck_timeout ?
+                                  # custom_money ?
+                                  hands_per_hour = game.stats["hands_per_hour"],                                  
                                   average_pot = game.stats["average_pot"],
                                   percent_flop = game.stats["percent_flop"],
                                   skin = game.level_skin

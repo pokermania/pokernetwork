@@ -192,7 +192,7 @@ class PokerInterface(dispatch.EventDispatcher):
                      str(table.players),
                      str(table.observers),
                      str(table.waiting),
-                     str(table.timeout) )
+                     str(table.player_timeout) )
             variant2tables[table.variant].append(info)
 
         for (variant, tables) in variant2tables.iteritems():

@@ -46,10 +46,13 @@ from traceback import print_exc, print_stack
 
 from MySQLdb.cursors import DictCursor
 
+from OpenSSL import SSL
+
 try:
         from OpenSSL import SSL
         HAS_OPENSSL=True
 except:
+        print "openSSL not available."
         HAS_OPENSSL=False
         
 
@@ -466,24 +469,40 @@ class PokerAvatar:
                     table.autoBlindAnte(self, packet.serial, False)
                 else:
                     print "attempt to set auto blind/ante for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
+            
+            elif packet.type == PACKET_POKER_AUTO_MUCK:
+                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
+                    if table.game.getPlayer(packet.serial):
+                        table.game.autoMuck(packet.serial, packet.auto_muck)
+                else:
+                    print "attempt to set auto muck for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )             
+                
+            elif packet.type == PACKET_POKER_MUCK_ACCEPT:
+                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
+                    table.muckAccept(self, packet.serial)
+                else:
+                    print "attempt to accept muck for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
+                    
+            elif packet.type == PACKET_POKER_MUCK_DENY:
+                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
+                    table.muckDeny(self, packet.serial)
+                else:
+                    print "attempt to deny muck for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
                 
             elif packet.type == PACKET_POKER_BLIND:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.blind(packet.serial)
                 else:
                     print "attempt to pay the blind of player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
 
             elif packet.type == PACKET_POKER_WAIT_BIG_BLIND:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.waitBigBlind(packet.serial)
                 else:
                     print "attempt to wait for big blind of player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
 
             elif packet.type == PACKET_POKER_ANTE:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.ante(packet.serial)
                 else:
                     print "attempt to pay the ante of player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
@@ -763,7 +782,7 @@ class PokerAvatar:
         else:
             self.sendPacketVerbose(PacketPokerNoautoBlindAnte(game_id = game.id,
                                                               serial = serial))
-        
+                                                              
     def setMoney(self, table, amount):
         game = table.game
 
@@ -810,7 +829,8 @@ class PokerTable:
         game.setMaxPlayers(int(description["seats"]))
         self.skin = description.get("skin", "default")
         self.custom_money = int(description.get("custom_money", 0))
-        self.playerTimeout = int(description["timeout"])
+        self.playerTimeout = int(description["player_timeout"])        
+        self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = description.has_key("transient")
         self.tourney = description.get("tourney", None)
         self.delays = settings.headerGetProperties("/server/delays")[0]
@@ -821,13 +841,14 @@ class PokerTable:
         self.serial2client = {}
         self.timer_info = {
             "playerTimeout": None,
-            "playerTimeoutSerial": 0
+            "playerTimeoutSerial": 0,
+            "muckTimeout": None,
             }
         self.timeout_policy = "sitOut"
         self.previous_dealer = -1
         self.game_delay = {
             "start": 0,
-            "delay": 0
+            "delay": 0,
             }            
 
     def isValid(self):
@@ -900,7 +921,8 @@ class PokerTable:
                                 hands_per_hour = game.stats["hands_per_hour"],
                                 average_pot = game.stats["average_pot"],
                                 percent_flop = game.stats["percent_flop"],
-                                timeout = self.playerTimeout,
+                                player_timeout = self.playerTimeout,
+                                muck_timeout = self.muckTimeout,
                                 observers = len(self.observers),
                                 waiting = len(self.waiting),
                                 skin = self.skin)
@@ -1085,6 +1107,11 @@ class PokerTable:
                                                    serial = serial,
                                                    amount = amount))
                 
+            elif type == "muck":
+                (type, muckable_serials) = event
+                packets.append(PacketPokerMuckRequest(game_id = game_id,
+                                                      muckable_serials = muckable_serials))
+            
             elif type == "end":
                 (type, winners, showdown_stack) = event
                 packets.append(PacketPokerState(game_id = game_id,
@@ -1136,6 +1163,9 @@ class PokerTable:
                 pass
             
             elif type == "showdown":
+                pass
+                
+            elif type == "muck":
                 pass
                 
             elif type == "position":
@@ -1287,6 +1317,9 @@ class PokerTable:
 
             elif type == "sitOut":
                 new_history.append(event)
+            
+            elif type == "muck":
+                pass
                     
             elif type == "leave":
                 pass
@@ -1439,9 +1472,11 @@ class PokerTable:
         if not self.isValid():
             return
 
-        self.updateTimers()
         game = self.game
-        packets = self.history2packets(game.historyGet()[self.history_index:], game.id, self.cache);
+        history_tail = game.historyGet()[self.history_index:]
+        
+        self.updateTimers(history_tail)        
+        packets = self.history2packets(history_tail, game.id, self.cache);
         self.syncDatabase()
         self.syncChat()
         self.delayedActions()
@@ -1807,6 +1842,20 @@ class PokerTable:
             return False
         client.autoBlindAnte(self, serial, auto)
         
+    def muckAccept(self, client, serial):
+        game = self.game
+        if not self.isSeated(client):
+            client.error("player %d can't accept muck before getting a seat" % serial)
+            return False
+        game.muck(serial, want_to_muck = True)
+
+    def muckDeny(self, client, serial):
+        game = self.game
+        if not self.isSeated(client):
+            client.error("player %d can't deny muck before getting a seat" % serial)
+            return False
+        game.muck(serial, want_to_muck = False)
+    
     def sitPlayer(self, client, serial):
         game = self.game
         if not self.isSeated(client):
@@ -1896,7 +1945,7 @@ class PokerTable:
                                                          timeout = timeout - 2))
             info["playerTimeout"] = reactor.callLater(timeout, self.playerTimeoutTimer, serial)
         else:
-            self.updateTimers()
+            self.updatePlayerTimers()
 
     def playerTimeoutTimer(self, serial):
         if self.factory.verbose:
@@ -1916,9 +1965,26 @@ class PokerTable:
                                                     serial = serial))
             self.update()
         else:
-            self.updateTimers()
+            self.updatePlayerTimers()
         
-    def cancelTimers(self):
+    def muckTimeoutTimer(self):
+        if self.factory.verbose:
+            print "muck timed out"
+        # timer expires, force muck on muckables not responding
+        for serial in self.game.muckable_serials:
+            self.game.muck(serial, want_to_muck = True)
+        self.cancelMuckTimer()
+        self.update()
+        
+    def cancelMuckTimer(self):
+        info = self.timer_info
+        timer = info["muckTimeout"]
+        if timer != None:
+            if timer.active():
+                timer.cancel()
+            info["muckTimeout"] = None
+    
+    def cancelPlayerTimers(self):
         info = self.timer_info
 
         timer = info["playerTimeout"]
@@ -1928,7 +1994,18 @@ class PokerTable:
             info["playerTimeout"] = None
         info["playerTimeoutSerial"] = 0
         
-    def updateTimers(self):
+    def updateTimers(self, history = ()):
+        self.updateMuckTimer(history)
+        self.updatePlayerTimers()
+        
+    def updateMuckTimer(self, history):
+        for event in history:
+            type = event[0]            
+            if type == "muck":
+                self.cancelMuckTimer()
+                self.timer_info["muckTimeout"] = reactor.callLater(self.muckTimeout, self.muckTimeoutTimer)
+    
+    def updatePlayerTimers(self):
         game = self.game
         info = self.timer_info
 
@@ -1950,7 +2027,7 @@ class PokerTable:
             #
             # If the game is not running, cancel the previous timeout
             #
-            self.cancelTimers()
+            self.cancelPlayerTimers()
 
 class IPokerService(Interface):
 

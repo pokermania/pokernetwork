@@ -39,6 +39,17 @@ Tue Jan 24 2006  Johan Euphrosine <johan@mekensleep.org>
 
 	* pokerui/pokerrenderer.py: added wrap_text function instead of DummyWriter
 
+Mon Jan 23 2006  Benoit Treins
+
+        * pokernetwork/pokerserver.py: added 'muck_timeout' parameter in poker table and xml table def file
+
+	* pokernetwork/pokerserver.py: changed 'timeout' parameter to 'player_timeout' in poker table and xml table def file
+	
+        * pokernetwork/pokerpackets.py(PACKET_POKER_TABLE): added 'muck_timeout' parameter
+	
+	* pokernetwork/pokerpackets.py(PACKET_POKER_TABLE): changed 'timeout' parameter to 'player_timeout'	
+
+
 Tue Jan 03 2006  Benoit Treins
 
 	* pokernetwork/pokerserver.py: store the skin information in poker table

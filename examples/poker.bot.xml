@@ -9,9 +9,9 @@
   <path>/etc/poker-engine2.3 /etc/poker-engine</path> 
 
   <table name="One" count="4"/>
-  <table name="Two" count="4"/>
+  <table name="Two" count="4"/> 
   <table name="Three" count="4"/>
-  <table name="Four" count="4"/>
+  <table name="Four" count="4"/><!--  
   <table name="Antigua" count="4"/>
   <table name="Cairo" count="4"/>
   <table name="Mont" count="1"/>
@@ -47,5 +47,6 @@
   <tournament name="Ositngo8" count="7"/>
   <tournament name="Ositngo20" count="19"/>
   <tournament name="Ositngo50" count="49"/>
+-->
 
 </settings>
