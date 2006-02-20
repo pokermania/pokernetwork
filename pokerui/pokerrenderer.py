@@ -493,6 +493,9 @@ class PokerRenderer:
         else:
             name = ""
             password = ""
+        if name == "username":
+            name = ""
+            password = ""
         interface.requestLogin(name, password, remember)
         interface.registerHandler(pokerinterface.INTERFACE_LOGIN, self.interfaceCallbackLogin)
 
@@ -981,7 +984,9 @@ class PokerRenderer:
             if interface:
                 name = ""
                 if packet.serial != 0:
-                    name = game.serial2player[packet.serial].name + ": "
+                    if game != None:
+                        if game.serial2player.has_key(packet.serial):
+                            name = game.serial2player[packet.serial].name + ": "
                 interface.chatHistory(name + packet.message)
             # duplicate PacketPokerChat
             # in order to preseve integrity of original packet
