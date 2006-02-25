@@ -983,11 +983,18 @@ class PokerRenderer:
             interface = self.factory.interface
             if interface:
                 name = ""
+                indexColor = 0
                 if packet.serial != 0:
                     if game != None:
                         if game.serial2player.has_key(packet.serial):
+                            seats = game.seats()
+                            for i in range(len(seats)):
+                                if seats[i] == packet.serial:
+                                    indexColor = i+1
+                                    break
                             name = game.serial2player[packet.serial].name + ": "
-                interface.chatHistory(name + packet.message)
+                msg = str(indexColor) + ":" + name + packet.message
+                interface.chatHistory(msg)
             # duplicate PacketPokerChat
             # in order to preseve integrity of original packet
             message = self.chatFormatMessage(packet)

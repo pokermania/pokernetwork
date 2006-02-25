@@ -137,6 +137,29 @@ int find_smiley(const char *str)
   return -1;
 }
 
+char* read_seat(char *str, int* seat)
+{
+	int i=0;
+	*seat = -1;
+	for (; i < 3; i++)
+		if (':' == str[i]) {
+			*seat = i;
+			break;
+		}
+	if (*seat <0) {
+		*seat = 0;
+		return str;
+	}
+
+	{
+	char buf[3] = "\0\0\0";
+	strncpy(buf,str,i);
+	*seat = atoi(buf);
+	}
+	return &str[i+1];
+}
+
+
 void	on_history_clicked(GtkWidget *widget, gpointer user_data)
 {
   (void) user_data;
@@ -292,8 +315,23 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       GtkTextIter end_iter;
       gtk_text_buffer_get_end_iter(buffer, &end_iter);
 
+      GtkTextIter start = end_iter;
+
+			
+			static GtkTextTag* textTag[11] = {0,0,0,0,0,0,0,0,0,0,0};
+			static const char* colors[11] = { "#0a00a0", "#0000FF","#00FF00","#FF0000","#FFFF00","#00FFFF",
+																				"#FFFFFF", "#808080","#808F00","#FF0aa0","#0FF080"};
+			if (!textTag[0]) {
+				int i = 0;
+				for (;i<11;i++)
+					textTag[i] = gtk_text_buffer_create_tag (buffer, colors[i], "foreground", colors[i], NULL);
+			}
+
+			int colorChoice = 0;
+			char* newline = 0;
+			newline = read_seat(line,&colorChoice);
       {
-        char *str = line;
+        char *str = newline;
         while(*str)
           {
             int index = find_smiley(str);
@@ -309,7 +347,23 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
               }
             else
               {
-                gtk_text_buffer_insert(buffer, &end_iter, str, 1);
+								/*
+									void        gtk_text_buffer_insert_with_tags
+									(GtkTextBuffer *buffer,
+									GtkTextIter *iter,
+									const gchar *text,
+									gint len,
+									GtkTextTag *first_tag,
+									...);
+								*/
+								//GtkTextTag* textTag = gtk_text_buffer_create_tag (buffer, "blue_foreground",
+								//																		"foreground", "blue", NULL); 
+									/* Use a tag to change the color for just one part of the widget */
+								//									tag = gtk_text_buffer_create_tag (buffer, "blue_foreground",
+								//																	"foreground", "blue", NULL); 
+
+								//								gtk_text_buffer_insert(buffer, &end_iter, str, 1);
+								gtk_text_buffer_insert_with_tags(buffer, &end_iter, str, 1, textTag[colorChoice], NULL);
                 str++;
               }
           }
