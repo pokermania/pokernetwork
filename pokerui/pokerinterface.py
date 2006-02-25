@@ -450,7 +450,10 @@ class PokerInterface(dispatch.EventDispatcher):
 
     def chatHistory(self, message):
         self.command("chat", "line", message)
-        
+
+    def chatHistoryReset(self):
+        self.command("chat", "reset")
+
     def chatHistoryShow(self):
         self.command("chat", "history", "show")
         

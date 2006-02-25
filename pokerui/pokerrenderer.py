@@ -892,6 +892,7 @@ class PokerRenderer:
                     self.replayGameId = game.id
                 packet.seats_all = game.seats_all
                 self.render(packet)
+                self.factory.interface.chatHistoryReset()
             self.changeState(JOINING_DONE)
 
         elif packet.type == PACKET_POKER_CURRENT_GAMES:

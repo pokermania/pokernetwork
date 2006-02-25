@@ -304,7 +304,14 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       }
       g_free(action);
     }
-  else if(!strcmp(tag, "line"))
+	else if (!strcmp(tag, "reset")) 
+		{
+      GtkTextView* history = GTK_TEXT_VIEW(glade_xml_get_widget(g_history_xml,
+                                                                "history"));
+      GtkTextBuffer* buffer = gtk_text_view_get_buffer(history);
+			gtk_text_buffer_set_text(buffer, "", 0);
+		} 
+	else if(!strcmp(tag, "line"))
     {
       
       char*	line = get_string();
