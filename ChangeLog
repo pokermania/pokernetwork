@@ -1,3 +1,9 @@
+Tue Feb 27 2006  Johan Euphrosine <johan@mekensleep.org>
+
+	* pokernetwork/pokerclient.py (PokerNetworkGameClient): 
+	new class inherited from PokerGameClient
+	added skin_level member to keep track of level data per table
+
 Tue Feb 13 2006  Johan Euphrosine <johan@mekensleep.org>
 
 	* Release 1.0.14

@@ -44,6 +44,11 @@ from pokernetwork import upgrade
 
 DEFAULT_PLAYER_USER_DATA = { 'delay': 0, 'timeout': None }
 
+class PokerNetworkGameClient(PokerGameClient):
+    def __init__(self, url, dirs):
+        PokerGameClient.__init__(self, url, dirs) # is_directing == False
+        self.level_skin = ""        
+
 class PokerSkin:
     """Poker Skin"""
 
@@ -155,6 +160,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.games = {}
         self.file2name = {}
         self.first_time = self.settings.headerGet("/settings/name") == "username"
+        self.played_time = self.settings.headerGet("/settings/played_time")
 
         self.children = PokerChildren(self.config, self.settings)
         self.upgrader = upgrade.Upgrader(self.config, self.settings)
@@ -192,7 +198,7 @@ class PokerClientFactory(UGAMEClientFactory):
         # is not fatal and the data will be freed eventually. However,
         # debugging is made much harder because leak detection can't
         # check as much as it could.
-        #
+        #        
         self.skin.destroy()
         packet = PacketQuit()
         self.display.render(packet)
@@ -274,7 +280,7 @@ class PokerClientFactory(UGAMEClientFactory):
     
     def getOrCreateGame(self, game_id):
         if not self.games.has_key(game_id):
-            game = PokerGameClient("poker.%s.xml", self.dirs)
+            game = PokerNetworkGameClient("poker.%s.xml", self.dirs)
             game.verbose = self.verbose
             game.id = game_id
             self.games[game_id] = game
