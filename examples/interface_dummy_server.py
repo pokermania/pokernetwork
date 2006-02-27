@@ -72,8 +72,8 @@ class Echo(Protocol):
     def connectionMade(self):
         #self.blind()
         #self.buy_in()
-        self.menu()
-        self.cashier()
+        #self.menu()
+        #self.cashier()
         #self.chat()
         #self.table_list()
         #self.login()
@@ -85,6 +85,7 @@ class Echo(Protocol):
         #self.outfits()
         #self.tournaments()
         #self.lobby()
+        self.muck()
 
     def interfaceSend(self, *args):
         self.transport.write("\000".join(args) + "\000")
@@ -175,6 +176,10 @@ class Echo(Protocol):
     def yesno(self):
         delay = 0
         reactor.callLater(delay, lambda: self.interfaceSend("yesno", "Do you want or don't you want ?"))
+
+    def muck(self):
+        delay = 0
+        reactor.callLater(delay, lambda: self.interfaceSend("muck"))
 
     def login(self):
         delay = 0

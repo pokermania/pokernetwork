@@ -377,6 +377,17 @@ class PokerRenderer:
             del interface.callbacks[pokerinterface.INTERFACE_YESNO]
         return True
 
+    def showMuckBox(self):
+        self.factory.interface.muckBox()
+        self.render(PacketPokerInterfaceCommand(window = "muck_window", command = "show"))
+
+    def hideMuckBox(self):
+        self.render(PacketPokerInterfaceCommand(window = "muck_window", command = "hide"))
+        interface = self.factory.interface
+        if interface.callbacks.has_key(pokerinterface.INTERFACE_MUCK):
+            del interface.callbacks[pokerinterface.INTERFACE_MUCK]
+        return True
+
     def quit(self, dummy = None):
         interface = self.factory.interface
         if interface:
@@ -729,26 +740,36 @@ class PokerRenderer:
     def showMuck(self, game):
         interface = self.factory.interface
         if interface:        
-            if interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
-                self.hideYesNoBox()                
+            if interface.callbacks.has_key(pokerinterface.INTERFACE_MUCK):
+                self.hideMuckBox()
             self.state_muck = game
-            self.showYesNoBox("Do you want to muck your cards ?")
-            interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confimMuck)
+            self.showMuckBox()
+            interface.registerHandler(pokerinterface.INTERFACE_MUCK, self.confimMuck)
             return
         self.postMuck(True)
     
     def confimMuck(self, want_to_muck):
-        self.hideYesNoBox() 
+        self.hideMuckBox()        
         self.postMuck(want_to_muck)
         self.changeState(IDLE)
     
     def hideMuck(self):
-        self.hideYesNoBox()        
+        self.hideMuckBox()        
 
     def postMuck(self, want_to_muck):
         game = self.state_muck
-        if game and self.protocol:            
-            self.protocol.postMuck(game, want_to_muck)
+        if game and self.protocol:
+            if (want_to_muck == "show"):
+                self.protocol.postMuck(game, False)
+            elif (want_to_muck == "hide"):
+                self.protocol.postMuck(game, True)
+            elif (want_to_muck == "always"):
+                packet = []
+                packet.extend(("menu", "set", "muck", "yes"))
+                interface = self.factory.interface
+                if interface:        
+                    interface.command(*packet)
+                self.protocol.postMuck(game, True)
             self.state_muck = None
 
     def broadcastAutoMuckChange(self, auto_muck):

@@ -85,7 +85,9 @@ libinterface_la_SOURCES = \
 	chat.c \
 	buy_in.c \
 	lobby.c \
-	cashier.c
+	cashier.c \
+	muck.c
+
 libinterface_la_LDFLAGS = @GLADE_LIBS@
 libinterface_la_CPPFLAGS = @GLADE_CFLAGS@ 
 

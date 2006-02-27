@@ -83,6 +83,17 @@ int dispatcher(GtkLayout* screen) {
 
       handle_yesno(g_glade_xml, screen, init);
     }
+  else if (strcmp("muck", string) == 0)
+    {
+      static GladeXML*	g_glade_xml = 0;
+      int init = 0;
+      if(!g_glade_xml) {
+        g_glade_xml = gui_load_widget("muck_window");
+        init = 1;
+      }
+
+      handle_muck(g_glade_xml, screen, init);
+    }
   else if (strcmp("hand_history", string) == 0)
     {
       static GladeXML*	g_glade_xml = 0;
