@@ -43,7 +43,12 @@ EXTRA_DIST = \
 	upgrades/1.0.7-1.0.8.xsl.in \
 	poker2d.6.in \
 	poker2d.in \
-	poker2d.xml.in
+	poker2d.xml.in \
+	run-interface \
+	run-interface.bat \
+	run-pokerserver \
+	run-xwnc \
+	poker3d-interface/poker3d-interface.vcproj
 
 man_MANS = poker2d.6
 
