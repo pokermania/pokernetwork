@@ -17,7 +17,8 @@ OBJS =	\
 	hand_history.o \
 	cashier.o \
         network.o \
-        main.o
+        main.o \
+        muck.o
 
 DEBUG = -g
 CC = gcc
