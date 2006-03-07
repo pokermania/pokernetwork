@@ -2412,13 +2412,14 @@ class PacketPokerDisplayNode(Packet):
     type = PACKET_POKER_DISPLAY_NODE
 
     def __init__(self, *args, **kwargs):
+        self.game_id = kwargs.get("game_id", "")
         self.name = kwargs.get("name", "")
         self.state = kwargs.get("state", "")
         self.style = kwargs.get("style", "")
         self.selection = kwargs.get("selection", None)
 
     def __str__(self):
-        return Packet.__str__(self) + " name = %s, state = %s, style = %s, selection = %s " % ( self.name, self.state, self.style, self.selection )
+        return Packet.__str__(self) + "game_id = %s, name = %s, state = %s, style = %s, selection = %s " % ( str(self.game_id), self.name, self.state, self.style, self.selection )
 
 PacketFactory[PACKET_POKER_DISPLAY_NODE] = PacketPokerDisplayNode
 
