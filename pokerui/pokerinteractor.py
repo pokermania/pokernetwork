@@ -249,6 +249,10 @@ class PokerInteractor:
         if self.state.name == "disabled":
             self.setState(enabled())
 
+    def setEnableIfActivated(self):
+        if self.state.name == "activated":
+            self.setState(enabled())
+
     def isDisabled(self):
         return self.state.name == "disabled"
     

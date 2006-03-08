@@ -94,6 +94,17 @@ int dispatcher(GtkLayout* screen) {
 
       handle_muck(g_glade_xml, screen, init);
     }
+  else if (strcmp("check_warning", string) == 0)
+    {
+      static GladeXML*	g_glade_xml = 0;
+      int init = 0;
+      if(!g_glade_xml) {
+        g_glade_xml = gui_load_widget("check_warning_window");
+        init = 1;
+      }
+
+      handle_check_warning(g_glade_xml, screen, init);
+    }
   else if (strcmp("hand_history", string) == 0)
     {
       static GladeXML*	g_glade_xml = 0;

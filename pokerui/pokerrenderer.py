@@ -269,7 +269,34 @@ class PokerInteractors:
         self.cancelAllInteractorButThisOne(interactor)
         game = self.factory.getGame(interactor.game_id)
         packet = interactor.getSelectedValue()
+        if packet.type == PACKET_POKER_FOLD:
+            serial = self.protocol.getSerial()
+            if game.canCheck(serial):
+                interface = self.renderer.factory.interface
+                if interface:
+                    self.interactorSelectedData = interactor
+                    self.interactorSelectedDataPacket = packet
+                    self.renderer.showCheckWarningBox()
+                    interface.registerHandler(pokerinterface.INTERFACE_CHECK_WARNING, self.interactorCheckWarning)
+                    return
         self.protocol.sendPacket(packet)
+
+    def interactorCheckWarning(self, response):
+        self.renderer.hideCheckWarningBox()
+        interactor = self.interactorSelectedData
+        self.interactorSelectedData = None
+        packet = self.interactorSelectedDataPacket
+        self.interactorSelectedDataPacket = None
+        game = self.factory.getGame(interactor.game_id)
+        if response == "check":
+            packet = PacketPokerCheck(game_id = game.id,
+                                      serial = self.protocol.getSerial())
+            self.protocol.sendPacket(packet)
+        elif response == "fold":
+            self.protocol.sendPacket(packet)
+        elif response == "cancel":
+            interactor.setEnableIfActivated()
+            self.handleInteractors(game)
 
     def interactorSelectedCallback(self, interactor):
         self.cancelAllInteractorButThisOne(interactor)
@@ -386,6 +413,17 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface.callbacks.has_key(pokerinterface.INTERFACE_MUCK):
             del interface.callbacks[pokerinterface.INTERFACE_MUCK]
+        return True
+
+    def showCheckWarningBox(self):
+        self.factory.interface.checkWarningBox()
+        self.render(PacketPokerInterfaceCommand(window = "check_warning_window", command = "show"))
+        
+    def hideCheckWarningBox(self):
+        self.render(PacketPokerInterfaceCommand(window = "check_warning_window", command = "hide"))
+        interface = self.factory.interface
+        if interface.callbacks.has_key(pokerinterface.INTERFACE_CHECK_WARNING):
+            del interface.callbacks[pokerinterface.INTERFACE_CHECK_WARNING]
         return True
 
     def quit(self, dummy = None):

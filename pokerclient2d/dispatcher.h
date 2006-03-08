@@ -42,6 +42,7 @@ int	handle_login(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_message_box(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_yesno(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_muck(GladeXML* g_glade_xml, GtkLayout* screen, int init);
+int	handle_check_warning(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_chooser(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade_account_status_xml, GladeXML* s_glade_exit_cashier_xml, GtkLayout* screen, int init);

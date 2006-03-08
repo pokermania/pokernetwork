@@ -48,6 +48,7 @@ INTERFACE_OUTFITS_RANDOM = "//event/poker3d/pokerinterface/outfits_random"
 INTERFACE_OUTFITS = "//event/poker3d/pokerinterface/outfits"
 INTERFACE_YESNO = "//event/poker3d/pokerinterface/yesno"
 INTERFACE_MUCK = "//event/poker3d/pokerinterface/muck"
+INTERFACE_CHECK_WARNING = "//event/poker3d/pokerinterface/check_warning"
 INTERFACE_MESSAGE_BOX = "//event/poker3d/pokerinterface/message_box"
 INTERFACE_CHOOSER = "//event/poker3d/pokerinterface/chooser"
 INTERFACE_POST_BLIND = "//event/poker3d/pokerinterface/post_blind"
@@ -75,7 +76,9 @@ class PokerInterface(dispatch.EventDispatcher):
             elif type == "yesno":
                 data = self.handleYesNo(data[1:])
             elif type == "muck":
-                data = self.handleMuck(data[1:])                
+                data = self.handleMuck(data[1:])
+            elif type == "check_warning":
+                data = self.handleCheckWarning(data[1:])
             elif type == "hand_history":
                 data = self.handleHands(data[1:])
             elif type == "blind":
@@ -456,6 +459,19 @@ class PokerInterface(dispatch.EventDispatcher):
             raise Exception("bad packet recieved from lobby")
         self.publishEvent(INTERFACE_MUCK, response)
         self.clearCallbacks(INTERFACE_MUCK)
+        return data[1:]
+
+    def checkWarningBox(self):
+        if self.verbose > 1: print "PokerInterfaceProtocol:checkWarningBox"
+        self.clearCallbacks(INTERFACE_CHECK_WARNING)
+        self.command("check_warning")
+
+    def handleCheckWarning(self, data):
+        response = data[0]
+        if (response != "fold") and (response != "check") and (response != "cancel"):
+            raise Exception("bad packet recieved from lobby")
+        self.publishEvent(INTERFACE_CHECK_WARNING, response)
+        self.clearCallbacks(INTERFACE_CHECK_WARNING)
         return data[1:]
 
     def chatShow(self):

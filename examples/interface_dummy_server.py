@@ -78,7 +78,7 @@ class Echo(Protocol):
         #self.table_list()
         #self.login()
         #self.message_box()
-        #self.yesno()
+        self.yesno()
         #self.sit_actions()
         #self.chooser()
         #self.menu()
@@ -86,6 +86,7 @@ class Echo(Protocol):
         #self.tournaments()
         #self.lobby()
         self.muck()
+        self.check_warning()
 
     def interfaceSend(self, *args):
         self.transport.write("\000".join(args) + "\000")
@@ -180,6 +181,10 @@ class Echo(Protocol):
     def muck(self):
         delay = 0
         reactor.callLater(delay, lambda: self.interfaceSend("muck"))
+
+    def check_warning(self):
+        delay = 0
+        reactor.callLater(delay, lambda: self.interfaceSend("check_warning"))
 
     def login(self):
         delay = 0

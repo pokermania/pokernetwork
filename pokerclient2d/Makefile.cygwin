@@ -18,7 +18,8 @@ OBJS =	\
 	cashier.o \
         network.o \
         main.o \
-        muck.o
+        muck.o \
+	check_warning.o
 
 DEBUG = -g
 CC = gcc
