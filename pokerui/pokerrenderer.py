@@ -266,7 +266,7 @@ class PokerInteractors:
             self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
                 
     def interactorAction(self, interactor):
-        self.cancelAllInteractorButThisOne(interactor)
+        self.disableAllInteractorButThisOne(interactor)
         game = self.factory.getGame(interactor.game_id)
         packet = interactor.getSelectedValue()
         if packet.type == PACKET_POKER_FOLD:
@@ -274,8 +274,8 @@ class PokerInteractors:
             if game.canCheck(serial):
                 interface = self.renderer.factory.interface
                 if interface:
-                    self.interactorSelectedData = interactor
-                    self.interactorSelectedDataPacket = packet
+                    self.renderer.interactorSelectedData = interactor
+                    self.renderer.interactorSelectedDataPacket = packet
                     self.renderer.showCheckWarningBox()
                     interface.registerHandler(pokerinterface.INTERFACE_CHECK_WARNING, self.interactorCheckWarning)
                     return
@@ -283,10 +283,10 @@ class PokerInteractors:
 
     def interactorCheckWarning(self, response):
         self.renderer.hideCheckWarningBox()
-        interactor = self.interactorSelectedData
-        self.interactorSelectedData = None
-        packet = self.interactorSelectedDataPacket
-        self.interactorSelectedDataPacket = None
+        interactor = self.renderer.interactorSelectedData
+        self.renderer.interactorSelectedData = None
+        packet = self.renderer.interactorSelectedDataPacket
+        self.renderer.interactorSelectedDataPacket = None
         game = self.factory.getGame(interactor.game_id)
         if response == "check":
             packet = PacketPokerCheck(game_id = game.id,
@@ -377,6 +377,8 @@ class PokerRenderer:
         self.interactors = PokerInteractors(factory, self)
         
         self.chat_words = factory.config.headerGetProperties("/sequence/chatwords/word")
+        self.interactorSelectedData = None
+        self.interactorSelectedDataPacket = None
 
     def linetrace(self):
         sys.settrace(global_trace)
@@ -2232,6 +2234,13 @@ class PokerRenderer:
             if self.state == PAY_BLIND_ANTE:
                 self.hideBlind()
                 self.state = IDLE
+            print "#################################CANCEL<"
+            print self.interactorSelectedData
+            if self.interactorSelectedData != None:
+                print "#################################CANCEL>"
+                self.interactorSelectedData = None
+                self.interactorSelectedDataPacket = None
+                self.hideCheckWarningBox()                
 
         elif state == SIT_OUT:
             if self.state == PAY_BLIND_ANTE:
