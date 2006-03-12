@@ -18,7 +18,7 @@
   <vprogram>yes</vprogram>
   
   <user path="~/.poker2d"/>
-  <path>/etc/poker-engine2.3 /etc/poker-engine /etc/poker-network2.3 /etc/poker-network .</path> 
+  <path>/etc/poker-engine2.3 /etc/poker-engine2.4 /etc/poker-engine /etc/poker-network2.3 /etc/poker2-network2.4 /etc/poker-network .</path> 
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
