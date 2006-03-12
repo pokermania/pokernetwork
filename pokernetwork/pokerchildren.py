@@ -197,7 +197,7 @@ class PokerChildBrowser(PokerChild):
     def __init__(self, config, settings, path):
         PokerChild.__init__(self, config, settings)
         self.verbose = settings.headerGetInt("/settings/@verbose")
-        self.browser = settings.headerGet("/settings/web/@browser") or "firefox"
+        self.browser = settings.headerGet("/settings/web/@browser") or "/usr/bin/firefox"
         self.url = settings.headerGet("/settings/web")
         self.ready = self.configure(path)
         if self.ready:
