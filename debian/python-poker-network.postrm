@@ -7,6 +7,7 @@ if [ "${DH_VERBOSE:-0}" -gt 0 ] ; then set -x ; fi
 if [ "$1" = "purge" ]; then
     rm -f /etc/poker-network@PYTHON_VERSION@/poker.{bot,client,server}.xml
     rm -f /etc/poker-network@PYTHON_VERSION@/poker.pem
+    rm -f /etc/poker-network@PYTHON_VERSION@/lockfile
 fi
 
 # dh_installdeb will replace this with shell code automatically
