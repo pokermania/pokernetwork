@@ -2723,6 +2723,8 @@ class PokerService(service.Service):
             (play_money_in_game,) = cursor.fetchone()
             if not play_money_in_game:
                 play_money_in_game = 0
+            elif type(play_money_in_game) == StringType:
+                play_money_in_game = int(play_money_in_game)
 
         sql = ( "select sum(user2table.bet) + sum(user2table.money) from user2table,pokertables "
                 "  where user2table.user_serial = " + str(serial) + " and "
@@ -2736,6 +2738,8 @@ class PokerService(service.Service):
             (custom_money_in_game,) = cursor.fetchone()
             if not custom_money_in_game:
                 custom_money_in_game = 0
+            elif type(custom_money_in_game) == StringType:
+                custom_money_in_game = int(custom_money_in_game)
         
         cursor.close()
         
@@ -3064,7 +3068,7 @@ class PokerService(service.Service):
         cursor.execute(sql)
         status = cursor.fetchone()
         cursor.close()
-        return  status
+        return  map(int, status)
         
     def destroyTable(self, table_id):
 
