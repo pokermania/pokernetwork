@@ -5,6 +5,8 @@ poker-network (1.0.14-1) unstable; urgency=low
   * apply patch to po from Thomas Huriaux (closes: #338136)
 
   * french translation (closes: #340083)
+  
+  * rename soapclient to nusoapclient (closes: #355116)
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue,  3 Jan 2006 17:49:24 +0100
 

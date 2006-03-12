@@ -640,7 +640,6 @@ class PokerRenderer:
 	import string
         if self.factory.verbose: pprint(self.chat_words)
         for word in self.chat_words:
-            import string
             if string.find(message, word["in"]) != -1:
                 serial = packet.serial
                 game_id = packet.game_id
