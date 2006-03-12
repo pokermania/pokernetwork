@@ -637,6 +637,7 @@ class PokerRenderer:
     def chatFormatMessage(self, packet):
         message = packet.message        
         from pprint import pprint
+	import string
         if self.factory.verbose: pprint(self.chat_words)
         for word in self.chat_words:
             import string
