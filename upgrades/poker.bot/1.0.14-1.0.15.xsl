@@ -9,9 +9,8 @@
  />
 
  <!-- Send ping packet every 240 seconds by default -->
- <xsl:template match="/settings/@verbose">
+ <xsl:template match="/settings/@ping">
    <xsl:attribute name="ping">240</xsl:attribute>
-   <xsl:attribute name="verbose"><xsl:value-of select="." /></xsl:attribute>
  </xsl:template>
  
  <!-- copy the rest verbatim -->

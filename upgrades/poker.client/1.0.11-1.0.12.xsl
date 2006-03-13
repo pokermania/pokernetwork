@@ -8,9 +8,9 @@
 	     encoding="ISO-8859-1"
  />
 
- <!-- Send ping packet every 15 seconds by default -->
+ <!-- Send ping packet every 240 seconds by default -->
  <xsl:template match="/settings/@verbose">
-   <xsl:attribute name="ping">15</xsl:attribute>
+   <xsl:attribute name="ping">240</xsl:attribute>
    <xsl:attribute name="verbose"><xsl:value-of select="." /></xsl:attribute>
  </xsl:template>
  

@@ -8,12 +8,11 @@
 	     encoding="ISO-8859-1"
  />
 
- <!-- Send ping packet every 240 seconds by default -->
- <xsl:template match="/settings/@verbose">
-   <xsl:attribute name="ping">240</xsl:attribute>
-   <xsl:attribute name="verbose"><xsl:value-of select="." /></xsl:attribute>
+ <!-- Application keepalive parameter set to 300 by default -->
+ <xsl:template match="/server/@ping">
+   <xsl:attribute name="ping">300</xsl:attribute>
  </xsl:template>
- 
+
  <!-- copy the rest verbatim -->
  <xsl:template match="@*|node()">
   <xsl:copy>

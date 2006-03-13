@@ -1,6 +1,6 @@
 Source: poker-network
 Section: python
-Priority: optional
+Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
 Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf, po-debconf, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.12), libglade2-dev, libtool, perl
 Standards-Version: 3.6.2.1
