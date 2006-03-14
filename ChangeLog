@@ -1,5 +1,7 @@
 Tue Mar 14 2006  Loic Dachary  <loic@gnu.org>
 
+	* Release 1.0.16
+
 	* Release 1.0.15
 
 	* pokernetwork/dispatch.py: import from twisted because it is deprecated in
