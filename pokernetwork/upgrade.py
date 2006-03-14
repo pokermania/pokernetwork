@@ -32,7 +32,7 @@ if os.name != "posix":
 
 from re import match
 
-from twisted.python import dispatch
+from pokernetwork import dispatch
 
 from pokernetwork.pokerchildren import PokerRsync, RSYNC_DONE, RSYNC_FAILED
 

@@ -2,14 +2,14 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf, po-debconf, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.13), libglade2-dev, libtool, perl
+Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf, po-debconf, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.12), libglade2-dev, libtool, perl
 Standards-Version: 3.6.2.1
 
 Package: python2.3-poker-network
 Section: python
 Architecture: all
 Suggests: mysql-server
-Depends: python, python2.3, python2.3-poker-engine (>= 1.0.13), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Depends: python, python2.3, python2.3-poker-engine (>= 1.0.12), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants

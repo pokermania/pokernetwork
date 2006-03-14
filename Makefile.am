@@ -77,6 +77,7 @@ nobase_dist_pkgdata_DATA = \
 pokernetworkdir = ${pyexecdir}/pokernetwork
 pokernetwork_PYTHON = \
 	pokernetwork/client.py \
+	pokernetwork/dispatch.py \
 	pokernetwork/protocol.py \
 	pokernetwork/proxy.py \
 	pokernetwork/server.py \

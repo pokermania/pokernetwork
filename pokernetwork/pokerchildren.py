@@ -40,8 +40,9 @@ from shutil import copy
 import libxml2
 
 from twisted.python.failure import Failure
-from twisted.python import dispatch
 from twisted.internet import reactor
+
+from pokernetwork import dispatch
 
 def killProcName(procname_ori):
     print "killing " + procname_ori

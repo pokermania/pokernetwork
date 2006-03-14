@@ -28,10 +28,10 @@
 #
 from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
-from twisted.python import dispatch
 from string import split, join, rstrip
 from time import time, strftime, gmtime
 from pokerengine.pokerchips import PokerChips
+from pokernetwork import dispatch
 
 INTERFACE_READY = "//event/poker3d/pokerinterface/ready"
 INTERFACE_GONE = "//event/poker3d/pokerinterface/gone"

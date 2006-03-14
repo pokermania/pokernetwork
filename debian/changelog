@@ -2,6 +2,8 @@ poker-network (1.0.15-1) unstable; urgency=low
 
   * upstream version
 
+  * import bugous backward compatibility dispatch.py from twisted-2.2.0 (closes: #355049)
+  
   * control*: change priority to extra (twisted is extra)
   
  -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 13 Mar 2006 10:22:07 +0100
