@@ -1,6 +1,6 @@
 Template: python@PYTHON_VERSION@-poker-network/skip
 Type: boolean
-Default: true
+Default: false
 _Description: Do you want to configure and run the poker-network server ?
  If you want to configure and run a poker-network server, make sure you
  have administrative rights on a running MySQL server. If you do not want

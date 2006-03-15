@@ -2,6 +2,11 @@ poker-network (1.0.16-1) unstable; urgency=low
 
   * upstream version
 
+  * python-poker-network.templates: by default poker-network is not configured
+  
+  * python-poker-network.config: empty password for user was not properly tested
+    (missing quotes)
+  
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 14 Mar 2006 17:29:34 +0100
 
 poker-network (1.0.15-1) unstable; urgency=low
