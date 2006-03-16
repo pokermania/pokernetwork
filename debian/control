@@ -9,7 +9,7 @@ Package: python2.4-poker-network
 Section: python
 Architecture: all
 Suggests: mysql-server
-Depends: python, adduser, python2.4, python2.4-poker-engine (>= 1.0.12), python2.4-twisted, python2.4-mysqldb, python2.4-pyopenssl, python2.4-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Depends: adduser, python, python2.4, python2.4-poker-engine (>= 1.0.12), python2.4-twisted, python2.4-mysqldb, python2.4-pyopenssl, python2.4-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
@@ -38,7 +38,7 @@ Package: python2.3-poker-network
 Section: python
 Architecture: all
 Suggests: mysql-server
-Depends: python, adduser, python2.3, python2.3-poker-engine (>= 1.0.12), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python2.3-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Depends: adduser, python, python2.3, python2.3-poker-engine (>= 1.0.12), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python2.3-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
