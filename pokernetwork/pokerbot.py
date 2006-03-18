@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004, 2005 Mekensleep
+# Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -316,9 +316,10 @@ class PokerBot:
             protocol.sendPacket(PacketPokerCall(game_id = game.id,
                                                 serial = serial))
         elif desired_action == "raise":
+            (min_bet, max_bet, to_call) = game.betLimits(serial)
             protocol.sendPacket(PacketPokerRaise(game_id = game.id,
                                                  serial = serial,
-                                                 amount = 0))
+                                                 amount = min_bet * 2))
         else:
             print "=> unexpected actions = %s" % actions
         self.factory.can_disconnect = True

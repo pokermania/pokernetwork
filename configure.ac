@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004, 2005 Mekensleep
+# Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -60,10 +60,10 @@ AC_SUBST(pythonpath, [$pythonpath])
 
 AM_PYTHON_DEPENDS()
 
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine$PYTHON_VERSION >= 1.0.8, [
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine$PYTHON_VERSION >= 1.0.12, [
   MAYBE_PYTHON_VERSION=$PYTHON_VERSION
 ] , [
-  PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.8,, [
+  PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.12,, [
     if $python_depends ; then
       AC_MSG_ERROR([poker-engine is a mandatory library])
     else

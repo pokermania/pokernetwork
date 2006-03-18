@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004, 2005 Mekensleep
+# Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -681,12 +681,10 @@ class PokerRenderer:
         self.render(PacketPokerInterfaceCommand(window = "chat_entry_window", command = "show"))
 
     def chatHistoryHide(self):
-        print "CHAT HISTORY HIDE"
         self.factory.interface.chatHistoryHide()
         self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "hide"))
         
     def chatHistoryShow(self):
-        print "CHAT HISTORY SHOW"
         self.factory.interface.chatHistoryShow()
         self.render(PacketPokerInterfaceCommand(window = "chat_history_window", command = "show"))
         
@@ -813,14 +811,12 @@ class PokerRenderer:
             self.state_muck = None
 
     def broadcastAutoMuckChange(self, auto_muck):
-        print "broadcastAutoMuckChange"
         if self.protocol:
             serial = self.protocol.user.serial
             game_ids = self.factory.getGameIds()
             for game_id in game_ids:
                 game = self.factory.getGame(game_id)
                 if game and game.serial2player.has_key(serial):
-                    print "broadcastAutoMuckChange: sending packet to game %d" % game_id
                     self.protocol.sendPacket(PacketPokerAutoMuck(game_id = game_id,
                                                                  serial = serial,
                                                                  auto_muck = auto_muck))
@@ -1214,8 +1210,7 @@ class PokerRenderer:
             game = self.factory.getGame(self.protocol.getCurrentGameId())
             player = game.getPlayer(self.protocol.getSerial())
 
-            if self.verbose > 2:
-                print "sitActionsUpdate: " + str(player)
+            if self.verbose > 2: print "sitActionsUpdate: " + str(player)
                 
             if player.wait_for == "big":
                 interface.sitActionsSitOut("yes", "wait for big blind")
@@ -1395,8 +1390,7 @@ class PokerRenderer:
         current_gameid = self.protocol.getCurrentGameId()
         game = self.factory.getGame(current_gameid)
         if game.isRunning() is False:
-            if self.verbose:
-                print "ignoring look card the game is not running"
+            if self.verbose: print "ignoring look card the game is not running"
             return
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start")
         self.schedulePacket(packet)
@@ -1405,8 +1399,7 @@ class PokerRenderer:
         current_gameid = self.protocol.getCurrentGameId()
         game = self.factory.getGame(current_gameid)
         if game.isRunning() is False:
-            if self.verbose:
-                print "ignoring look card the game is not running"
+            if self.verbose: print "ignoring look card the game is not running"
             return
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "start", when = "scheduled" )
         self.schedulePacket(packet)
@@ -2234,10 +2227,7 @@ class PokerRenderer:
             if self.state == PAY_BLIND_ANTE:
                 self.hideBlind()
                 self.state = IDLE
-            print "#################################CANCEL<"
-            print self.interactorSelectedData
             if self.interactorSelectedData != None:
-                print "#################################CANCEL>"
                 self.interactorSelectedData = None
                 self.interactorSelectedDataPacket = None
                 self.hideCheckWarningBox()                

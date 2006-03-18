@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2005 Mekensleep
+# Copyright (C) 2005, 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -288,7 +288,7 @@ class PokerAnimationPlayer2D(PokerAnimationPlayer):
         return animation
 
     def showdownDelta(self, delta, is_delta_max, is_delta_min, chips):
-        self.message("delta %d, is_delta_max %s, is_delta_min %s" % (delta, is_delta_max, is_delta_min))
+        if self.verbose > 2: self.message("delta %d, is_delta_max %s, is_delta_min %s" % (delta, is_delta_max, is_delta_min))
         if is_delta_max:
             animation = AnimationBlinkWidget(widget = self.widget_name[0],
                                              verbose = self.table.verbose)

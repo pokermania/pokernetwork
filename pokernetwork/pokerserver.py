@@ -1,7 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
-# Copyright (C) 2004, 2005 Mekensleep
+# Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -657,7 +657,7 @@ class PokerAvatar:
             "name": packet.name,
             "variant": packet.variant,
             "betting_structure": packet.betting_structure,
-            "timeout": packet.timeout,
+            "player_timeout": packet.player_timeout,
             "custom_money": packet.custom_money,
             "transient": True })
         if not table:
@@ -2309,7 +2309,7 @@ class PokerService(service.Service):
                                       'betting_structure': tourney.betting_structure,
                                       'seats': tourney.seats_per_game,
                                       'custom_money': ( tourney_schedule['custom_money'] == 'y' and 1 or 0 ),
-                                      'timeout': 60,
+                                      'player_timeout': 60,
                                       'transient': True,
                                       'tourney': tourney,
                                       })

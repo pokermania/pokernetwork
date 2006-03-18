@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004, 2005 Mekensleep
+# Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -1148,7 +1148,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                         else:
                             hand = game.readableHandValueShort(side, bestcards[0], bestcards[1:])
                         cards = game.getPlayer(serial).hand.toRawList()
-                        print "Serial %d HAND %s" % (serial,hand)
                         best_hand = 0
                         if serial == serial_delta_max:
                             best_hand = 1
