@@ -26,8 +26,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 from os import environ
-if not environ.has_key('GTK2_RC_FILES'):
-    environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network@MAYBE_PYTHON_VERSION@/poker2d/Aero/gtkrc"
+environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network@MAYBE_PYTHON_VERSION@/poker2d/Aero/gtkrc"
 
 import sys
 sys.path = "@pythonpath@".split(":") + sys.path

@@ -123,28 +123,28 @@ if($poker_error) {
 				<td><b>Actual password:</b></td>
 				<td><input type="password" size="20" maxlength="32" name="password"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['password'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>New password:</b></td>
 				<td><input type="password" size="20" maxlength="32" name="password2"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password2'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['password2'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>New password confirmation:</b></td>
 				<td><input type="password" size="20" maxlength="32" name="password3"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password3'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['password3'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Email:</b></td>
 				<td><input type="text" size="32" maxlength="128" name="email" value="<?php
 	if (isset($account))
-		echo htmlspecialchars($account['email'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['email'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false) 
 		echo $PacketPokerPersonalInfo['email']; ?>" /></td>
 			</tr>
@@ -152,7 +152,7 @@ if($poker_error) {
 				<td><b>Phone:</b></td>
 				<td><input type="text" size="40" maxlength="64" name="phone" value="<?php
 	if (isset($account))
-		echo htmlspecialchars($account['phone'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['phone'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false) 
 		echo $PacketPokerPersonalInfo['phone']; ?>" /></td>
 			</tr>
@@ -160,7 +160,7 @@ if($poker_error) {
 				<td><b>Street:</b></td>
 				<td><textarea name="addr_street" cols="40" rows="4"><?php
 	if (isset($account))
-		echo htmlspecialchars($account['addr_street'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['addr_street'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false) 
 		echo $PacketPokerPersonalInfo['addr_street']; ?></textarea></td>
 			</tr>
@@ -168,7 +168,7 @@ if($poker_error) {
 				<td><b>Zip code:</b></td>
 				<td><input type="text" size="20" maxlength="64" name="addr_zip" value="<?php
 	if (isset($account))
-		echo htmlspecialchars($account['addr_zip'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['addr_zip'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false) 
 		echo $PacketPokerPersonalInfo['addr_zip']; ?>" /></td>
 			</tr>
@@ -176,7 +176,7 @@ if($poker_error) {
 				<td><b>Town:</b></td>
 				<td><input type="text" size="50" maxlength="64" name="addr_town" value="<?php
 	if (isset($account))
-		echo htmlspecialchars($account['addr_town'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['addr_town'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false) 
 		echo $PacketPokerPersonalInfo['addr_town']; ?>" /></td>
 			</tr>
@@ -184,7 +184,7 @@ if($poker_error) {
 				<td><b>State:</b></td>
 				<td><input type="text" size="50" maxlength="128" name="addr_state" value="<?php
 	if (isset($account))
-		echo htmlspecialchars($account['addr_state'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['addr_state'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false) 
 		echo $PacketPokerPersonalInfo['addr_state']; ?>" /></td>
 			</tr>
@@ -195,7 +195,7 @@ if($poker_error) {
 					<select name="addr_country">
 <?php
 	if (isset($account))
-		$addr_country = htmlspecialchars($account['addr_country'], ENT_QUOTES, _cst_encodage);
+		$addr_country = htmlspecialchars($account['addr_country'], ENT_QUOTES, _cst_encoding);
 	elseif ($PacketPokerPersonalInfo != false)
 		$addr_country = $PacketPokerPersonalInfo['addr_country'];
 

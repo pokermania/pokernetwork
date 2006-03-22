@@ -92,65 +92,65 @@ if($poker_error) {
 				<td><b>Login:</b></td>
 				<td><input type="texte" size="20" maxlength="32" name="login"<?php
 	if ($login != '')
-		echo ' value="'.htmlspecialchars($login, ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($login, ENT_QUOTES, _cst_encoding).'"';
 	elseif (isset($account))
-		echo ' value="'.htmlspecialchars($account['login'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['login'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Password:</b></td>
 				<td><input type="password" size="20" maxlength="32" name="password"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['password'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Password confirmation:</b></td>
 				<td><input type="password" size="20" maxlength="32" name="password2"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password2'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['password2'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Email:</b></td>
 				<td><input type="text" size="32" maxlength="128" name="email"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['email'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['email'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Phone:</b></td>
 				<td><input type="text" size="40" maxlength="64" name="phone"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['phone'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['phone'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Street:</b></td>
 				<td><textarea name="addr_street" cols="30" rows="3"><?php
 	if (isset($account))
-		echo htmlspecialchars($account['addr_street'], ENT_QUOTES, _cst_encodage);
+		echo htmlspecialchars($account['addr_street'], ENT_QUOTES, _cst_encoding);
 				?></textarea></td>
 			</tr>
 			<tr>
 				<td><b>Zip code:</b></td>
 				<td><input type="text" size="20" maxlength="64" name="addr_zip"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['addr_zip'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['addr_zip'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>Town:</b></td>
 				<td><input type="text" size="50" maxlength="64" name="addr_town"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['addr_town'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['addr_town'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>
 				<td><b>State:</b></td>
 				<td><input type="text" size="50" maxlength="128" name="addr_state"<?php
 	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['addr_state'], ENT_QUOTES, _cst_encodage).'"';
+		echo ' value="'.htmlspecialchars($account['addr_state'], ENT_QUOTES, _cst_encoding).'"';
 				?> /></td>
 			</tr>
 			<tr>

@@ -1,3 +1,26 @@
+Wed Mar 22 2006  Loic Dachary  <loic@gnu.org>
+
+	* Release 1.0.17
+
+	* pokerclient2d/pokerdisplay2d.py (PokerTable2D.render): handle
+	  PACKET_POKER_HIGHEST_BET_INCREASE to update the raise range
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.gameEvent): notify
+	  bet limit increase on call if pot limit
+
+	* database/{schema.sql,1.0.16-1.0.17.sql}: self-sufficient primary key for
+	  browsing session history
+
+	* {tests,examples}/poker.server*.xml: player_timeout
+
+Tue Mar 21 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokerweb: s/encodage/encoding/
+
+Sun Mar 19 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/poker2d.in: force theme
+
 Sat Mar 18 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.16

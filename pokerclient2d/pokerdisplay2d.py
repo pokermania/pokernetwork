@@ -242,6 +242,9 @@ class PokerTable2D:
         elif packet.type == PACKET_POKER_BET_LIMIT:
             self.bet_limit = packet
 
+        elif packet.type == PACKET_POKER_HIGHEST_BET_INCREASE:
+            self.display.updateRaiseRange(selected_amount = None)
+
         elif packet.type == PACKET_POKER_DEALER:
             self.dealer_buttons[packet.dealer].show()
             if packet.previous_dealer >= 0:
@@ -410,18 +413,30 @@ class PokerDisplay2D(PokerDisplay):
                 bet_limit = table.bet_limit
                 range.set_value(bet_limit.min / 100.0)
                 if bet_limit.min != bet_limit.max:
-                    range.set_range(bet_limit.min / 100.0, bet_limit.max / 100.0)
-                    range.set_increments(bet_limit.step / 100.0, bet_limit.step / 100.0)
-                    if packet.selection and packet.selection.type == PACKET_POKER_RAISE:
-                        range.set_value(packet.selection.amount / 100.0)
-                    else:
-                        range.set_value(bet_limit.min / 100.0)
                     range.show()
+                    if packet.selection and packet.selection.type == PACKET_POKER_RAISE:
+                        self.updateRaiseRange(packet.selection.amount / 100.0)
+                    else:
+                        self.updateRaiseRange(bet_limit.min / 100.0)
                 else:
                     range.hide()
         else:
             self.error("updateAction %s: unexpected name " % packet.name)
-            
+
+    def updateRaiseRange(self, selected_amount):
+        range = self.actions['raise_range']
+        if range.get_property('visible'):
+            game_id = self.protocol.getCurrentGameId()
+            game = self.factory.getGame(game_id)
+            serial = self.protocol.getSerial()
+            table = self.id2table[game_id]
+
+            bet_limit = table.bet_limit
+            range.set_range(bet_limit.min / 100.0, bet_limit.max / 100.0)
+            range.set_increments(bet_limit.step / 100.0, bet_limit.step / 100.0)
+            if selected_amount:
+                range.set_value(selected_amount / 100.0)
+
     def render(self, packet):
         if self.verbose > 3: print "PokerDisplay2D::render: " + str(packet)
 

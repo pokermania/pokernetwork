@@ -8,7 +8,7 @@
 
   <delays autodeal="3" round="2" position="1" showdown="7" finish="3" />
   
-  <table name="Fourty"	variant="7stud" betting_structure="ante-5-10-limit" seats="8" timeout="60" custom_money="0" />
+  <table name="Fourty"	variant="7stud" betting_structure="ante-5-10-limit" seats="8" player_timeout="60" custom_money="0" />
 
   <listen tcp="19480"
           tcp_ssl="19481" 
