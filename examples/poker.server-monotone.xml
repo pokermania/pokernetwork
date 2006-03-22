@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" ping="300" verbose="3" chat="yes" poker_network_version="1.0.16">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" autodeal="yes" simultaneous="4" ping="300" verbose="3" chat="yes" poker_network_version="1.0.17">
 
   <decks>
     <deck>8d 2h 2c 8c 4c Kc Ad 9d Ts Jd 5h Tc 4d 9h 8h 7h 9c 2s 3c Kd 5s Td 5d Th 3s Kh Js Qh 7d 2d 3d 9s Qd Ac Jh Jc Qc 6c 7s Ks 5c 4h 7c 4s Qs 6s 6h Ah 6d As 3h 8s</deck>
@@ -7,36 +7,36 @@
 
   <delays autodeal="0" round="0" position="0" showdown="0" finish="0"/>
   
-  <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Two" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Three" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Four" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Antigua" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Cairo" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Mont" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Nancy" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Corail" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Legend" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Chip" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Relax" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Speed" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Deux" variant="holdem" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Trois" variant="holdem" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Quatre" variant="holdem" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Two" variant="holdem" betting_structure="10-15-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Three" variant="holdem" betting_structure="10-15-pot-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Four" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Antigua" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Cairo" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Mont" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Nancy" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Corail" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Legend" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Chip" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Relax" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Speed" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Un" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Deux" variant="holdem" betting_structure="10-15-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Trois" variant="holdem" betting_structure="10-15-pot-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Quatre" variant="holdem" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
 
-  <table name="Five" variant="omaha" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Six" variant="omaha" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Seven" variant="omaha" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Eight" variant="omaha" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Five" variant="omaha" betting_structure="2-4-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Six" variant="omaha" betting_structure="10-15-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Seven" variant="omaha" betting_structure="10-15-pot-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Eight" variant="omaha" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
 
-  <table name="Nine" variant="omaha8" betting_structure="2-4-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Ten" variant="omaha8" betting_structure="10-15-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Eleven" variant="omaha8" betting_structure="10-15-pot-limit" seats="10" timeout="60" custom_money="0"/>
-  <table name="Twelve" variant="omaha8" betting_structure="15-30-no-limit" seats="10" timeout="60" custom_money="0"/>
+  <table name="Nine" variant="omaha8" betting_structure="2-4-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Ten" variant="omaha8" betting_structure="10-15-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Eleven" variant="omaha8" betting_structure="10-15-pot-limit" seats="10" player_timeout="60" custom_money="0"/>
+  <table name="Twelve" variant="omaha8" betting_structure="15-30-no-limit" seats="10" player_timeout="60" custom_money="0"/>
 
-  <table name="Thirty" variant="7stud" betting_structure="ante-10-15-pot-limit" seats="8" timeout="60" custom_money="0"/>
-  <table name="Fourty" variant="7stud" betting_structure="ante-5-10-limit" seats="8" timeout="60" custom_money="0"/>
+  <table name="Thirty" variant="7stud" betting_structure="ante-10-15-pot-limit" seats="8" player_timeout="60" custom_money="0"/>
+  <table name="Fourty" variant="7stud" betting_structure="ante-5-10-limit" seats="8" player_timeout="60" custom_money="0"/>
 
   <listen tcp="19480" tcp_ssl="19481" http="19482" http_ssl="19483"/>
 
