@@ -545,9 +545,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             ( serial, amount ) = args
             player = game.getPlayer(serial)
             last_action = game.historyGet()[-1][0]
-            pot_limit = game.betInfo()['max'] == "pot"
-            if ( last_action == "raise" or
-                 ( pot_limit and last_action == "call" ) ) :
+            if ( last_action == "raise" or last_action == "call" ) :
                 if not self.no_display_packets:
                     forward_packets.extend(self.updateBetLimit(game))
                 forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
