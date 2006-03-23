@@ -99,7 +99,7 @@ libinterface_la_CPPFLAGS = @GLADE_CFLAGS@
 
 pokerclient2ddir = ${pyexecdir}/pokerclient2d
 
-pokerclient2d_LTLIBRARIES      = \
+pokerclient2d_LTLIBRARIES = \
 	cpokerinterface.la
 cpokerinterface_la_SOURCES = \
 	python.c
@@ -137,7 +137,11 @@ nobase_poker2d_DATA = \
 # cope with a directory hierarchy including a .libs
 #
 all-local:
-	-rm -f *.so ; ln -s .libs/*.so .
+	if [ -f .libs/*.so ] ; then \
+		rm -f *.so ; ln -s .libs/*.so . ; \
+	else \
+		rm -f *.dll ; ln -s .libs/*.dll cpokerinterface.dll ; \
+	fi
 	export PYTHONPATH=${top_srcdir} ; \
 	${POKERCONFIGUPGRADE} --verbose=1  --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades ${srcdir}/poker2d.xml.in
 
@@ -147,9 +151,18 @@ install-data-hook:
 	fi
 	cp poker2d.xml $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
 
+install-exec-local:
+	mkdir -p ${DESTDIR}/${pyexecdir}
+	if [ -f cpokerinterface.dll ] ; then \
+		cp cpokerinterface.dll ${DESTDIR}/${pokerclient2ddir} ; \
+	fi
+	if [ -f cpokerinterface.so ] ; then \
+		cp cpokerinterface.so ${DESTDIR}/${pokerclient2ddir} ; \
+	fi
+
 uninstall-local:
 	rm -f $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
 	rm -f $(DESTDIR)$(gamesdir)/poker2d${PYTHON_VERSION}
 
 clean-local:
-	rm -f *.so *.pyc
+	rm -f *.so *.dll *.pyc
