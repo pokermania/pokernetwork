@@ -245,8 +245,7 @@ static void on_param_right_clicked(GtkToggleButton *button, gpointer user_data)
 
 static void on_slot_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 {
-  struct outfit_slider_slot* param = (struct outfit_slider_slot*)user_data;
-
+  (void)user_data;
   g_message("SLOT VALUE value changed\n");
 
   gdouble value = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment));

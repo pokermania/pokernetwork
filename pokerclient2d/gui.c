@@ -75,7 +75,7 @@ static void gui_get_screen_size(GtkLayout* screen, gint* width, gint* height) {
     *width = gdk_screen_width();
     *height = gdk_screen_height();
   } else {
-    gtk_layout_get_size(screen, width, height);
+    gtk_layout_get_size(screen, (guint*)width, (guint*)height);
   }
 }
 
@@ -205,7 +205,7 @@ static void nil_draw_focus(GtkStyle        *style,
                            gint            y,
                            gint            width,
                            gint            height)
-{}
+{ (void)style; (void)window; (void)state_type; (void)area; (void)widget; (void)detail; (void)x; (void)y; (void)width; (void)height; }
 
 void set_nil_draw_focus(GtkWidget* widget) {
   GtkStyle* style = gtk_widget_get_style(widget);
@@ -215,10 +215,10 @@ void set_nil_draw_focus(GtkWidget* widget) {
 
 int gui_width(GtkLayout* screen) {
   if(screen) {
-    gint width;
-    gint height;
+    guint width;
+    guint height;
     gtk_layout_get_size(screen, &width, &height);
-    return width;
+    return (int)width;
   } else {
     return gdk_screen_width();
   }
@@ -226,10 +226,10 @@ int gui_width(GtkLayout* screen) {
 
 int gui_height(GtkLayout* screen) {
   if(screen) {
-    gint width;
-    gint height;
+    guint width;
+    guint height;
     gtk_layout_get_size(screen, &width, &height);
-    return height;
+    return (int)height;
   } else {
     return gdk_screen_height();
   }

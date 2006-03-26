@@ -211,6 +211,7 @@ int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     } else if(!strcmp(tag, "messages")) {
       int hand_serial = get_int();
       char* messages = get_string();
+      (void)hand_serial;
       gtk_text_buffer_set_text(s_hand_messages, messages, -1);
       g_free(messages);
     }
