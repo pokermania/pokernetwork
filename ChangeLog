@@ -1,6 +1,11 @@
-Sun Mar 26 2006  Loic Dachary  <loic@gnu.org>
+Mon Mar 27 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.18
+
+	* pokerclient2d/Makefile.am (cpokerinterface_la_LDFLAGS): -no-undefined for
+	  cygwin compatibility (https://sourceforge.net/tracker/?func=detail&atid=213546&aid=1455067&group_id=13546)
+
+Sun Mar 26 2006  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/blind.c: don't store boolean in pointers
 

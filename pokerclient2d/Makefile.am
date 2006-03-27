@@ -106,7 +106,7 @@ cpokerinterface_la_SOURCES = \
 cpokerinterface_la_DEPENDENCIES = \
 	libinterface.la
 cpokerinterface_la_LDFLAGS = \
-	-module @GLIB_LIBS@ @PYTHON_LIBS@ @GLADE_LIBS@ \
+	-module -no-undefined @GLIB_LIBS@ @PYTHON_LIBS@ @GLADE_LIBS@ \
 	libinterface.la
 cpokerinterface_la_CPPFLAGS = \
 	@GLADE_CFLAGS@ @PYTHON_CFLAGS@ @GLIB_CFLAGS@
