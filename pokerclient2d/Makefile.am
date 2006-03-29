@@ -153,6 +153,7 @@ install-data-hook:
 
 install-exec-local:
 	mkdir -p ${DESTDIR}/${pyexecdir}
+	mkdir -p ${DESTDIR}/${pokerclient2ddir}
 	if [ -f cpokerinterface.dll ] ; then \
 		cp cpokerinterface.dll ${DESTDIR}/${pokerclient2ddir} ; \
 	fi
