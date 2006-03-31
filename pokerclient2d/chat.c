@@ -354,22 +354,6 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
               }
             else
               {
-								/*
-									void        gtk_text_buffer_insert_with_tags
-									(GtkTextBuffer *buffer,
-									GtkTextIter *iter,
-									const gchar *text,
-									gint len,
-									GtkTextTag *first_tag,
-									...);
-								*/
-								//GtkTextTag* textTag = gtk_text_buffer_create_tag (buffer, "blue_foreground",
-								//																		"foreground", "blue", NULL); 
-									/* Use a tag to change the color for just one part of the widget */
-								//									tag = gtk_text_buffer_create_tag (buffer, "blue_foreground",
-								//																	"foreground", "blue", NULL); 
-
-								//								gtk_text_buffer_insert(buffer, &end_iter, str, 1);
 								gtk_text_buffer_insert_with_tags(buffer, &end_iter, str, 1, textTag[colorChoice], NULL);
                 str++;
               }

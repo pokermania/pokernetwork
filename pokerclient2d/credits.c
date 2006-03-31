@@ -33,7 +33,7 @@
 #include "dispatcher.h"
 
 static GtkWidget*	g_message_window;
-static GtkWidget*	g_message_label;
+static GtkWidget*	g_credits_label;
 
 static void	on_okbutton1_clicked(GtkWidget *widget, gpointer user_data)
 {
@@ -41,28 +41,28 @@ static void	on_okbutton1_clicked(GtkWidget *widget, gpointer user_data)
   (void) user_data;
 
   gtk_widget_hide_all(g_message_window);
-  set_string("message_box");
+  set_string("credits");
   flush_io_channel();
 }
 
-int	handle_message_box(GladeXML* g_glade_xml, GtkLayout* screen, int init)
+int	handle_credits(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 {
   char*	message = get_string();
 
   if (init)
     {
       g_message_window = glade_xml_get_widget(g_glade_xml,
-					      "message_window");
+					      "credits_window");
       g_assert(g_message_window);
       set_nil_draw_focus(g_message_window);
       if(screen) gtk_layout_put(screen, g_message_window, 0, 0);
-      g_message_label = glade_xml_get_widget(g_glade_xml,
-					     "message_label");
-      g_assert(g_message_label);
+      g_credits_label = glade_xml_get_widget(g_glade_xml,
+					     "credits_label");
+      g_assert(g_credits_label);
       GUI_BRANCH(g_glade_xml, on_okbutton1_clicked);
     }
 
-  gtk_label_set_text(GTK_LABEL(g_message_label), message);
+  gtk_label_set_markup(GTK_LABEL(g_credits_label), message);
   g_free(message);
 
   gui_center(g_message_window, screen);

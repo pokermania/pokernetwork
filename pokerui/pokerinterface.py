@@ -365,6 +365,10 @@ class PokerInterface(dispatch.EventDispatcher):
             self.clearCallbacks(INTERFACE_CHOOSER)
         return data[1:]
         
+    def credits(self, message):
+        if self.verbose > 1: print "PokerInterfaceProtocol:credits %s" % message
+        self.command("credits", message)
+
     def messageBox(self, message):
         if self.verbose > 1: print "PokerInterfaceProtocol:messageBox %s" % message
         self.command("message_box", message)

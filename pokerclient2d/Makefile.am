@@ -84,6 +84,7 @@ libinterface_la_SOURCES = \
 	yesno_message.c \
 	tournaments.c \
 	message_box.c \
+	credits.c \
 	login.c \
 	blind.c \
 	hand_history.c \

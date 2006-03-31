@@ -35,6 +35,17 @@
 static GtkWidget*	g_menu_window;
 static int s_disable_callbacks = FALSE;
 
+void on_license_activate(GtkWidget* widget, gpointer data)
+{ 
+  (void) data;
+  (void) widget;
+  if(s_disable_callbacks) return;
+  set_string("menu");
+  set_string("license");
+  set_string(gtk_widget_get_name(widget));
+  flush_io_channel();
+}
+
 #define on_item_activate(WHAT) \
 void on_##WHAT##_activate(GtkWidget* widget, gpointer data) \
 { \
@@ -55,6 +66,8 @@ on_item_activate(quit)
 on_item_activate(tables_list)
 on_item_activate(tournaments)
 on_item_activate(login)
+on_item_activate(help)
+on_item_activate(credits)
 
 #define on_check_activate(WHAT) \
 void	on_##WHAT##_activate(GtkWidget *widget, gpointer user_data) \
@@ -121,6 +134,9 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     branch(tables_list);
     branch(tournaments);
     branch(login);
+    branch(help);
+    branch(credits);
+    branch(license);
     branch(graphics);
     branch(sound);
     branch(fullscreen);

@@ -3125,7 +3125,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> _Auto Select</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <signal name="activate" handler="on_auto_select_activate" last_modification_time="Wed, 16 Mar 2005 11:38:39 GMT"/>
 				</widget>
 			      </child>
@@ -3135,7 +3135,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1024x_768</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1024x768_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -3146,7 +3146,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1280x800</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x800_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3168,7 +3168,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1366x1024</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1336x1024_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3179,7 +3179,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_400x1050</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1400x1050_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -3190,7 +3190,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1600x1_200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1600x1200_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -3201,7 +3201,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1680x1050</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1680x1050_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3212,7 +3212,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_920x1200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1920x1200_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -3288,6 +3288,124 @@
 		  <property name="label" translatable="yes"> _About</property>
 		  <property name="use_underline">True</property>
 		  <signal name="activate" handler="on_about1_activate" last_modification_time="Tue, 15 Mar 2005 15:22:19 GMT"/>
+
+		  <child>
+		    <widget class="GtkMenu" id="about1_menu">
+
+		      <child>
+			<widget class="GtkImageMenuItem" id="item3">
+			  <property name="visible">True</property>
+			  <property name="tooltip" translatable="yes">Software released under the GNU GPL</property>
+			  <property name="label" translatable="yes">_Credits &amp; Licenses</property>
+			  <property name="use_underline">True</property>
+
+			  <child internal-child="image">
+			    <widget class="GtkImage" id="image1">
+			      <property name="visible">True</property>
+			      <property name="stock">gtk-media-record</property>
+			      <property name="icon_size">1</property>
+			      <property name="xalign">0.5</property>
+			      <property name="yalign">0.5</property>
+			      <property name="xpad">0</property>
+			      <property name="ypad">0</property>
+			    </widget>
+			  </child>
+
+			  <child>
+			    <widget class="GtkMenu" id="item3_menu">
+
+			      <child>
+				<widget class="GtkMenuItem" id="credits">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">Credits</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_credits_activate" last_modification_time="Thu, 30 Mar 2006 16:06:00 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkSeparatorMenuItem" id="separator2">
+				  <property name="visible">True</property>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="gnu_gpl_v2">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">GNU General  Public License v2 or later</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 12:19:34 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="gnu_lgpl_v21">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">GNU Lesser General Public License v2.1 or later</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 12:20:02 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="osg_00">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">OpenSceneGraph Public License, Version 0.0</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 12:21:06 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="x11">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">MIT or X11 License</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 13:47:47 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="python2_4_2">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">Python 2.4.2 License</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 13:53:56 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="zope_21">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">Zope Public License (ZPL) Version 2.1</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 14:12:37 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="jpeg">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">libJPEG License</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_licenses_activate" last_modification_time="Thu, 30 Mar 2006 15:12:58 GMT"/>
+				</widget>
+			      </child>
+
+			      <child>
+				<widget class="GtkMenuItem" id="openssl">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">OpenSSL License</property>
+				  <property name="use_underline">True</property>
+				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 15:34:53 GMT"/>
+				</widget>
+			      </child>
+			    </widget>
+			  </child>
+			</widget>
+		      </child>
+		    </widget>
+		  </child>
 		</widget>
 	      </child>
 	    </widget>
@@ -10033,11 +10151,11 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkLabel" id="message_label">
+			<widget class="GtkLabel" id="label61">
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">...</property>
 			  <property name="use_underline">False</property>
-			  <property name="use_markup">False</property>
+			  <property name="use_markup">True</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
 			  <property name="wrap">False</property>
 			  <property name="selectable">False</property>
@@ -10052,8 +10170,8 @@
 			</widget>
 			<packing>
 			  <property name="padding">0</property>
-			  <property name="expand">True</property>
-			  <property name="fill">True</property>
+			  <property name="expand">False</property>
+			  <property name="fill">False</property>
 			</packing>
 		      </child>
 		    </widget>
@@ -10506,6 +10624,220 @@
 			  <property name="padding">0</property>
 			  <property name="expand">False</property>
 			  <property name="fill">False</property>
+			</packing>
+		      </child>
+		    </widget>
+		  </child>
+		</widget>
+	      </child>
+	    </widget>
+	    <packing>
+	      <property name="padding">0</property>
+	      <property name="expand">True</property>
+	      <property name="fill">True</property>
+	    </packing>
+	  </child>
+	</widget>
+      </child>
+    </widget>
+  </child>
+</widget>
+
+<widget class="GtkWindow" id="credits_window">
+  <property name="visible">True</property>
+  <property name="title" translatable="yes">Credits</property>
+  <property name="type">GTK_WINDOW_TOPLEVEL</property>
+  <property name="window_position">GTK_WIN_POS_NONE</property>
+  <property name="modal">False</property>
+  <property name="resizable">True</property>
+  <property name="destroy_with_parent">False</property>
+  <property name="decorated">True</property>
+  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_pager_hint">False</property>
+  <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
+  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
+  <property name="focus_on_map">True</property>
+  <property name="urgency_hint">False</property>
+
+  <child>
+    <widget class="GtkAlignment" id="credits_container">
+      <property name="visible">True</property>
+      <property name="xalign">0.5</property>
+      <property name="yalign">0.5</property>
+      <property name="xscale">1</property>
+      <property name="yscale">1</property>
+      <property name="top_padding">0</property>
+      <property name="bottom_padding">0</property>
+      <property name="left_padding">0</property>
+      <property name="right_padding">0</property>
+
+      <child>
+	<widget class="GtkVBox" id="vbox41">
+	  <property name="visible">True</property>
+	  <property name="homogeneous">False</property>
+	  <property name="spacing">0</property>
+
+	  <child>
+	    <widget class="GtkHBox" id="hbox31">
+	      <property name="height_request">19</property>
+	      <property name="visible">True</property>
+	      <property name="sensitive">False</property>
+	      <property name="homogeneous">False</property>
+	      <property name="spacing">0</property>
+
+	      <child>
+		<widget class="GtkRadioButton" id="credits_msg_head_left">
+		  <property name="width_request">79</property>
+		  <property name="height_request">19</property>
+		  <property name="sensitive">False</property>
+		  <property name="label" translatable="yes"></property>
+		  <property name="use_underline">True</property>
+		  <property name="relief">GTK_RELIEF_NORMAL</property>
+		  <property name="focus_on_click">False</property>
+		  <property name="active">False</property>
+		  <property name="inconsistent">False</property>
+		  <property name="draw_indicator">False</property>
+		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">False</property>
+		  <property name="fill">False</property>
+		</packing>
+	      </child>
+
+	      <child>
+		<widget class="GtkRadioButton" id="credits_msg_head_middle">
+		  <property name="height_request">19</property>
+		  <property name="sensitive">False</property>
+		  <property name="label" translatable="yes"></property>
+		  <property name="use_underline">True</property>
+		  <property name="relief">GTK_RELIEF_NORMAL</property>
+		  <property name="focus_on_click">False</property>
+		  <property name="active">False</property>
+		  <property name="inconsistent">False</property>
+		  <property name="draw_indicator">False</property>
+		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">True</property>
+		  <property name="fill">True</property>
+		</packing>
+	      </child>
+
+	      <child>
+		<widget class="GtkRadioButton" id="credits_msg_head_right">
+		  <property name="width_request">2</property>
+		  <property name="height_request">19</property>
+		  <property name="sensitive">False</property>
+		  <property name="label" translatable="yes"></property>
+		  <property name="use_underline">True</property>
+		  <property name="relief">GTK_RELIEF_NORMAL</property>
+		  <property name="focus_on_click">False</property>
+		  <property name="active">False</property>
+		  <property name="inconsistent">False</property>
+		  <property name="draw_indicator">False</property>
+		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">False</property>
+		  <property name="fill">False</property>
+		</packing>
+	      </child>
+	    </widget>
+	    <packing>
+	      <property name="padding">0</property>
+	      <property name="expand">False</property>
+	      <property name="fill">True</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkFrame" id="frame27">
+	      <property name="visible">True</property>
+	      <property name="label_xalign">0</property>
+	      <property name="label_yalign">0.5</property>
+	      <property name="shadow_type">GTK_SHADOW_NONE</property>
+
+	      <child>
+		<widget class="GtkAlignment" id="alignment68">
+		  <property name="visible">True</property>
+		  <property name="xalign">0.5</property>
+		  <property name="yalign">0.5</property>
+		  <property name="xscale">1</property>
+		  <property name="yscale">1</property>
+		  <property name="top_padding">1</property>
+		  <property name="bottom_padding">1</property>
+		  <property name="left_padding">1</property>
+		  <property name="right_padding">1</property>
+
+		  <child>
+		    <widget class="GtkVBox" id="vbox42">
+		      <property name="visible">True</property>
+		      <property name="homogeneous">False</property>
+		      <property name="spacing">0</property>
+
+		      <child>
+			<widget class="GtkButton" id="button1">
+			  <property name="visible">True</property>
+			  <property name="can_default">True</property>
+			  <property name="can_focus">True</property>
+			  <property name="label">OK</property>
+			  <property name="use_underline">True</property>
+			  <property name="relief">GTK_RELIEF_NONE</property>
+			  <property name="focus_on_click">True</property>
+			  <signal name="clicked" handler="on_okbutton1_clicked" last_modification_time="Tue, 06 Jul 2004 12:56:47 GMT"/>
+			</widget>
+			<packing>
+			  <property name="padding">0</property>
+			  <property name="expand">False</property>
+			  <property name="fill">False</property>
+			  <property name="pack_type">GTK_PACK_END</property>
+			</packing>
+		      </child>
+
+		      <child>
+			<widget class="GtkScrolledWindow" id="scrolledwindow7">
+			  <property name="width_request">640</property>
+			  <property name="height_request">480</property>
+			  <property name="visible">True</property>
+			  <property name="can_focus">True</property>
+			  <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+			  <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+			  <property name="shadow_type">GTK_SHADOW_IN</property>
+			  <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
+
+			  <child>
+			    <widget class="GtkViewport" id="viewport8">
+			      <property name="visible">True</property>
+			      <property name="shadow_type">GTK_SHADOW_IN</property>
+
+			      <child>
+				<widget class="GtkLabel" id="credits_label">
+				  <property name="visible">True</property>
+				  <property name="can_focus">True</property>
+				  <property name="label" translatable="yes">Credits for poker-network</property>
+				  <property name="use_underline">False</property>
+				  <property name="use_markup">True</property>
+				  <property name="justify">GTK_JUSTIFY_LEFT</property>
+				  <property name="wrap">False</property>
+				  <property name="selectable">True</property>
+				  <property name="xalign">0.5</property>
+				  <property name="yalign">0.5</property>
+				  <property name="xpad">0</property>
+				  <property name="ypad">0</property>
+				  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+				  <property name="width_chars">-1</property>
+				  <property name="single_line_mode">False</property>
+				  <property name="angle">0</property>
+				</widget>
+			      </child>
+			    </widget>
+			  </child>
+			</widget>
+			<packing>
+			  <property name="padding">0</property>
+			  <property name="expand">True</property>
+			  <property name="fill">True</property>
 			</packing>
 		      </child>
 		    </widget>

@@ -1,6 +1,29 @@
-Mon Mar 27 2006  Loic Dachary  <loic@gnu.org>
+Fri Mar 31 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.18
+
+	* pokernetwork/pokerchildren.py (PokerChildBrowser.__init__): if absolute
+	  URL, dont prepend the poker web base url
+
+	* pokerui/pokerrenderer.py (PokerRenderer.handleMenu): on licenses, get 
+	  the matching license URL from /sequence/licences (or defaults to the	
+	  FSF license list)
+
+	* pokerclient2d/menu.c (on_license_activate): license display callback
+
+Thu Mar 30 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/data/interface/interface.glade: credit window
+
+	* pokerclient2d/client.xml (Authors): poker-network credits & copyright notice
+
+	* pokerui/pokerrenderer.py (PokerRenderer.displayCredits): display the <credits>
+	  element from the config file using the credit interface facility
+
+	* pokerclient2d/credits.c (handle_credits): pango markup enabled, scrollable credit
+	  window. 
+
+Mon Mar 27 2006  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/Makefile.am (cpokerinterface_la_LDFLAGS): -no-undefined for
 	  cygwin compatibility (https://sourceforge.net/tracker/?func=detail&atid=213546&aid=1455067&group_id=13546)

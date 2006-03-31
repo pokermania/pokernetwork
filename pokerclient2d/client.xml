@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
-<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.0.17">
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.0.18">
 
   <custom_money unit="C" cent="cts"/>
 
@@ -23,4 +23,24 @@
     </raise>
   </interactors2d>
 
+  <credits>
+&lt;tt&gt;
+* &lt;span weight="ultrabold" foreground="#bbffff"&gt; poker2d http://freshmeat.net/projects/poker-network/&lt;/span&gt;
+Copyright (C) 2004, 2005, 2006 Mekensleep
+24 rue vieille du temple
+75004 Paris
+licensing@mekensleep.com
+
+Authors:
+      Loic Dachary         loic@gnu.org
+      Cedric Pinson        cpinson@freesheep.org
+      Henry Precheur       henry@precheur.org
+      Johan Euphrosine     euphro_j@epitech.net
+
+GNU General Public License
+&lt;/tt&gt;
+  </credits>
+  <licenses list="http://www.gnu.org/licenses/license-list.html">
+   <gnu_gpl_v2>http://gnu.org/licenses/gpl.txt</gnu_gpl_v2>
+  </licenses>
 </sequence>

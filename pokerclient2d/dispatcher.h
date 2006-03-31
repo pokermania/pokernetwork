@@ -40,6 +40,7 @@ int dispatcher(GtkLayout* screen);
 int	handle_lobby(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_xml, GladeXML* g_lobby_tabs_xml, GladeXML* g_cashier_button_xml, GladeXML* g_clock_xml, GtkLayout* screen, int init);
 int	handle_login(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_message_box(GladeXML* g_glade_xml, GtkLayout* screen, int init);
+int	handle_credits(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_yesno(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_muck(GladeXML* g_glade_xml, GtkLayout* screen, int init);
 int	handle_check_warning(GladeXML* g_glade_xml, GtkLayout* screen, int init);

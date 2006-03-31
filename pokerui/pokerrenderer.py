@@ -39,6 +39,7 @@ from pokerengine import pokergame
 
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclient import ABSOLUTE_LAGMAX
+from pokernetwork.pokerchildren import PokerChildBrowser
 from pokernetwork.user import checkNameAndPassword
 from pokerui import pokerinterface
 from pokerui.pokerinteractor import PokerInteractor, PokerInteractorSet
@@ -1444,6 +1445,11 @@ class PokerRenderer:
                  self.state == TOURNAMENTS or
                  self.state == CASHIER or
                  self.state == IDLE )
+
+    def displayCredits(self):
+        interface = self.factory.interface
+        if interface:
+            interface.credits(self.factory.config.headerGet("/sequence/credits"))
         
     def handleMenu(self, name, value):
         settings = self.factory.settings
@@ -1451,6 +1457,14 @@ class PokerRenderer:
             if self.canHideInterface():
                 current_state = self.state
                 self.changeState(LOGIN, lambda success: self.changeState(current_state))
+        elif name == "help":
+            self.factory.browseWeb("")
+        elif name == "credits":
+            self.displayCredits()
+        elif name == "license":
+            config = self.factory.config
+            url = config.headerGet("/sequence/licenses/" + str(value)) or config.headerGet("/sequence/licenses/@list")
+            PokerChildBrowser(config, settings, url)
         elif name == "cashier":
             self.changeState(CASHIER)
         elif name == "outfits":

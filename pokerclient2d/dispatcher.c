@@ -72,6 +72,17 @@ int dispatcher(GtkLayout* screen) {
 
       handle_message_box(g_glade_xml, screen, init);
     }
+  else if (strcmp("credits", string) == 0)
+    {
+      static GladeXML*	g_glade_xml = 0;
+      int init = 0;
+      if(!g_glade_xml) {
+        g_glade_xml = gui_load_widget("credits_window");
+        init = 1;
+      }
+
+      handle_credits(g_glade_xml, screen, init);
+    }
   else if (strcmp("yesno", string) == 0)
     {
       static GladeXML*	g_glade_xml = 0;

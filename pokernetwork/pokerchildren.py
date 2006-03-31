@@ -199,7 +199,11 @@ class PokerChildBrowser(PokerChild):
         PokerChild.__init__(self, config, settings)
         self.verbose = settings.headerGetInt("/settings/@verbose")
         self.browser = settings.headerGet("/settings/web/@browser") or "/usr/bin/firefox"
-        self.url = settings.headerGet("/settings/web")
+        if "http://" in path:
+            self.url = path
+            path = ""
+        else:
+            self.url = settings.headerGet("/settings/web")
         self.ready = self.configure(path)
         if self.ready:
             self.spawn()
