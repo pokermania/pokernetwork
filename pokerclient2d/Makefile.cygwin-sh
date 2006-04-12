@@ -10,6 +10,7 @@ OBJS =	\
 	tournaments.o \
 	message_box.o \
 	login.o \
+	credits.o \
 	blind.o \
 	chat.o \
 	buy_in.o \

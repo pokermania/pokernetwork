@@ -11,6 +11,7 @@ OBJS =	\
 	message_box.o \
 	login.o \
 	blind.o \
+	credits.o \
 	chat.o \
 	buy_in.o \
 	lobby.o \
