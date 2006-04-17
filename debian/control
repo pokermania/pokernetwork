@@ -82,7 +82,7 @@ Description: multiplayer poker server and client library
 
 Package: poker2d
 Section: python
-Architecture: any
+Architecture: all
 Depends: python (>= 2.3), python (<< 2.4), python2.3-poker2d (= ${Source-Version})
 Description: GTK poker client to play on a poker-network server
  Play poker with other players connected on a poker-network server
