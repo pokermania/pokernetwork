@@ -48,6 +48,7 @@ EXTRA_DIST = \
 	run-interface.bat \
 	run-pokerserver \
 	run-xwnc \
+	$(wildcard *.png) \
 	poker3d-interface/poker3d-interface.vcproj
 
 man_MANS = poker2d.6
