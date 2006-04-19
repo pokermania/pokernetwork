@@ -119,7 +119,6 @@ pkgconfig_DATA = poker-network.pc
 EXTRA_DIST = \
 	HACKING \
 	NIHPHOBIA \
-	bootstrap \
 	config/python.m4 \
 	config/ccpython.m4 \
 	config/python-depends.m4 \
