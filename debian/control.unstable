@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf | debconf-2.0, po-debconf, python-dev, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python2.3-soappy, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.12), python2.4, python2.4-dev, python2.4-mysqldb, python2.4-pyopenssl, python2.4-soappy, python2.4-glade2, python2.4-twisted, python2.4-poker-engine (>= 1.0.12), libglade2-dev, libtool, perl
+Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf | debconf-2.0, po-debconf, python-dev, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python2.3-soappy, python2.3-glade2, python2.3-twisted, python2.3-pygame, python2.3-poker-engine (>= 1.0.12), python2.4, python2.4-dev, python2.4-mysqldb, python2.4-pyopenssl, python2.4-soappy, python2.4-glade2, python2.4-twisted, python2.4-pygame, python2.4-poker-engine (>= 1.0.12), libglade2-dev, libtool, perl
 Standards-Version: 3.6.2.1
 
 Package: python2.4-poker-network
@@ -26,7 +26,7 @@ Description: multiplayer poker server and client library
 Package: python2.4-poker2d
 Section: python
 Architecture: any
-Depends: python, python2.4, python2.4-poker-network, python2.4-glade2, rsync
+Depends: python, python2.4, python2.4-poker-network, python2.4-glade2, python2.4-pygame, rsync
 Description: GTK poker client to play on a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
@@ -55,7 +55,7 @@ Description: multiplayer poker server and client library
 Package: python2.3-poker2d
 Section: python
 Architecture: any
-Depends: python, python2.3, python2.3-poker-network, python2.3-glade2, rsync
+Depends: python, python2.3, python2.3-poker-network, python2.3-glade2, python2.3-pygame, rsync
 Description: GTK poker client to play on a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go

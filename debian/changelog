@@ -3,6 +3,8 @@ poker-network (1.0.18-1) unstable; urgency=low
   * upstream sync
   
   * use autoreconf instead of custom made script
+  
+  * depends on pygame
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 26 Mar 2006 13:02:26 +0200
 
