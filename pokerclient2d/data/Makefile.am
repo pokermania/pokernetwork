@@ -33,7 +33,9 @@ pkgdatadir=@pkgdatadir@
 
 poker2ddir = ${pkgdatadir}/poker2d
 nobase_dist_poker2d_DATA = \
-	$(wildcard sounds/*.wav) \
+	sounds/timeout_notice.wav \
+	sounds/self_in_position.wav \
+	sounds/timeout_warning.wav \
 	interface/pixmaps/cards/small-2c.jpg \
 	interface/pixmaps/cards/small-2d.jpg \
 	interface/pixmaps/cards/small-2h.jpg \
