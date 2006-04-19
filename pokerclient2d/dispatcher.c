@@ -25,10 +25,6 @@
  *  Loic Dachary <loic@gnu.org>
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif /* HAVE_CONFIG_H */
-
 #include <string.h>
 
 #include <gtk/gtk.h>

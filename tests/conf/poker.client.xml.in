@@ -1,15 +1,12 @@
-<?xml version='1.0'  encoding='iso-8859-1' ?>
-
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	  xsi:noNamespaceSchemaLocation="poker-client.xsd"
-	  verbose="0" delays="true" >
+<?xml version="1.0" encoding="iso-8859-1"?>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-client.xsd" verbose="0" delays="true" poker_network_version="1.0.18">
   <delays sit="1" blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="6" lag="15"/>
   <name>username</name>
   <passwd>password</passwd>
   <servers>@POKER_SERVER_HOST@:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <chat max_chars="40" line_length="20" />
+  <chat max_chars="40" line_length="20"/>
   <tournaments custom_money="n" type="sit_n_go" sort="name"/>
   <lobby custom_money="n" type="holdem" sort="name"/>
   <handlist start="0" count="100"/>

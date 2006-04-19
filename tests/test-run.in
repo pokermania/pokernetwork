@@ -1,5 +1,6 @@
+#!/bin/sh
 #
-# Copyright (C) 2005, 2006 Mekensleep
+# Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
 # 24 rue vieille du temple
@@ -23,26 +24,11 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-MAINTAINERCLEANFILES = Makefile.in
+set -e 
 
-EXTRA_DIST = \
-	createdatabase \
-	schema.sql \
-	poker.server.xml \
-	upgrade-rsync \
-	conf/poker.bot.xml.in \
-	conf/poker.client.xml.in \
-	conf/poker.server.xml.in \
-	conf/poker2d.xml.in \
-	conf/client.xml \
-	coverage.py
+: ${srcdir:=.}
 
-TESTS = coverage_reset \
-	upgrade \
-	test-run \
-	coverage_report
-
-export top_srcdir
-
-clean-local:
-	rm -fr .coverage
+for script in test-*.py
+do
+  @PYTHON@ ${srcdir}/coverage.py -x $script
+done

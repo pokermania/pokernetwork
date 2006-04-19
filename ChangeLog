@@ -1,6 +1,43 @@
-Fri Mar 31 2006  Loic Dachary  <loic@gnu.org>
+Wed Apr 19 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.18
+
+	* tests/test-pokernetworkconfig.py.in (PokerNetworkConfigTestCase.test_notify): 
+	  unit tests for pokernetworkconfig
+
+	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.settingsUpdated): update instance
+	  members each time the settings are updated
+
+	* pokerclient2d/{dispatcher,main}.c: no #if HAVE_CONFIG_H
+
+	* configure.ac: remove useless config.h
+
+Tue Apr 18 2006  Loic Dachary  <loic@gnu.org>
+
+	* Makefile.am (clean-local): all autotool files in config dir
+	  MAINTAINERCLEANFILES simpler because all in config dir
+
+	* tests/coverage_{reset,report}.in, tests/coverage.py: 
+	  code coverage report from http://nedbatchelder.com/code/modules/coverage.html
+
+	* pokernetwork/pokernetworkconfig.py (Config.headerSet): config modification notifications
+
+	* pokerui/pokerrenderer.py (PokerRenderer.handleMenu): sound effects menu change
+	  don't require restart for poker2d
+
+	* pokerclient2d/data/Makefile.am (nobase_dist_poker2d_DATA): sound/*.wav
+
+	* pokerclient2d/data/sounds: sounds for in_position + timeout
+
+	* pokerclient2d/client.xml: map events to sound files
+
+Thu Apr 06 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokernetwork/pokerserver.py (PokerService.{setAccount,userCreate}): set created field with current time
+
+	* database/{schema.sql.in,1.0.17-1.0.18.sql}: creation date for users
+
+Fri Mar 31 2006  Loic Dachary  <loic@gnu.org>
 
 	* pokernetwork/pokerchildren.py (PokerChildBrowser.__init__): if absolute
 	  URL, dont prepend the poker web base url

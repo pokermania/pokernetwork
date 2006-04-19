@@ -25,6 +25,8 @@
 #
 from os.path import exists
 
+import pygame
+
 from twisted.internet import reactor
 
 from pokernetwork.pokerpackets import *
@@ -209,6 +211,16 @@ class PokerTable2D:
         if packet.type == PACKET_POKER_TABLE_DESTROY:
             self.deleteTable()
 
+        elif packet.type == PACKET_POKER_SELF_IN_POSITION:
+            pass
+#            glade_file = display.datadir + "/interface/interface2d.glade"
+#            glade = gtk.glade.XML(fname = glade_file, root = "table_action_dialog")
+#            class dialog_actions:
+#                def on_button2_clicked(self, button):
+#                    glade.get_widget("table_action_dialog").hide()
+#
+#            glade.signal_autoconnect(dialog_actions())
+            
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             self.serial2player[packet.serial] = PokerPlayer2D(packet, self)
             if packet.serial == self.display.protocol.getSerial():
@@ -298,10 +310,32 @@ class PokerTable2D:
 class PokerDisplay2D(PokerDisplay):
     def __init__(self, *args, **kwargs):
         PokerDisplay.__init__(self, *args, **kwargs)
-        self.verbose = self.settings.headerGetInt("/settings/@verbose")
-        self.datadir = self.settings.headerGet("/settings/data/@path")
+        self.settings.notifyUpdates(self.settingsUpdated)
+        self.settingsUpdated(self.settings)
         self.id2table = {}
 
+    def settingsUpdated(self, settings):
+        self.verbose = settings.headerGetInt("/settings/@verbose")
+        self.datadir = settings.headerGet("/settings/data/@path")
+        self.event2sound = None
+        if ( settings.headerGet("/settings/sound") == "yes" or
+             settings.headerGet("/settings/sound") == "on" ):
+            sounddir = settings.headerGet("/settings/data/@sounds")
+            #
+            # Load event to sound map
+            #
+            pygame.mixer.init()
+            self.event2sound = {}
+            for (event, file) in self.config.headerGetProperties("/sequence/sounds")[0].iteritems():
+                soundfile = sounddir + "/" + file
+                if exists(soundfile):
+                    sound = pygame.mixer.Sound(sounddir + "/" + file)
+                    self.event2sound[event] = sound
+                else:
+                    self.error(soundfile + " file does not exist")
+
+            pygame.mixer.quit()
+        
     def message(self, string):
         print "[PokerDisplay2D] " + string
 
@@ -446,7 +480,14 @@ class PokerDisplay2D(PokerDisplay):
 
         if not self.protocol or not self.protocol.getCurrentGameId():
             return
-        
+
+        if self.event2sound:
+            soundfile = self.event2sound.get(PacketNames[packet.type], None)
+            if soundfile:
+                pygame.mixer.init()
+                soundfile.play()
+                reactor.callLater(4, pygame.mixer.quit)
+            
         game = self.factory.packet2game(packet)
         if game:
             self.id2table[game.id].render(packet)

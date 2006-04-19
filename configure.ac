@@ -27,9 +27,9 @@
 
 AC_PREREQ(2.54)
 AC_INIT(poker-network, [esyscmd(perl -n -e "print if(s/^version_number = \"(.*)\".*/\1/s)" pokernetwork/__init__.py)])
+AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE()
-AM_CONFIG_HEADER([config.h])
 AC_CONFIG_SRCDIR([pokernetwork/protocol.py])
 
 # Checks for programs.
@@ -205,7 +205,11 @@ then
         ])
 fi
 AC_CONFIG_FILES([
+        tests/coverage_reset
         tests/upgrade
+        tests/test-run
+        tests/test-pokernetworkconfig.py
+        tests/coverage_report
         database/pokerdatabaseupgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([

@@ -8,6 +8,10 @@
 
   <cashier enter="Cashier" exit="Exit Cashier"/>
 
+  <sounds POKER_SELF_IN_POSITION="self_in_position.wav"
+          POKER_TIMEOUT_WARNING="timeout_warning.wav"
+          POKER_TIMEOUT_NOTICE="timeout_notice.wav" />
+
   <interactors2d>
     <check>
       <map enabled_default="Check" enabled_clicked="Check" enabled_clicked_in_position="Check" scheduled_default="(Check)" scheduled_clicked="(Check)" activated_default="Check" activated_clicked="Check"/>

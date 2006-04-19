@@ -33,6 +33,7 @@ pkgdatadir=@pkgdatadir@
 
 poker2ddir = ${pkgdatadir}/poker2d
 nobase_dist_poker2d_DATA = \
+	$(wildcard sounds/*.wav) \
 	interface/pixmaps/cards/small-2c.jpg \
 	interface/pixmaps/cards/small-2d.jpg \
 	interface/pixmaps/cards/small-2h.jpg \

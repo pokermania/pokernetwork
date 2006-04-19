@@ -2837,7 +2837,7 @@ class PokerService(service.Service):
             #
             # User does not exists, create it
             #
-            sql = "insert into users (name, password, email) values ('%s', '%s', '%s')" % (packet.name, packet.password, packet.email)
+            sql = "insert into users (created, name, password, email) values (%d, '%s', '%s', '%s')" % (time.time(), packet.name, packet.password, packet.email)
             cursor.execute(sql)
             if cursor.rowcount != 1:
                 print " *ERROR* setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
@@ -3250,8 +3250,8 @@ class PokerAuth:
         if self.verbose:
             print "creating user %s" % name,
         cursor = self.db.cursor()
-        cursor.execute("insert into users (name, password) values ('%s', '%s')" %
-                       (name, password))
+        cursor.execute("insert into users (created, name, password) values (%d, '%s', '%s')" %
+                       (time.time(), name, password))
         #
         # Accomodate for MySQLdb versions < 1.1
         #

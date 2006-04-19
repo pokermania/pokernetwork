@@ -38,23 +38,8 @@ pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
 pkgsysconfdir=@pkgsysconfdir@
 
-MAINTAINERCLEANFILES = \
-	INSTALL \
-	ABOUT-NLS \
-	Makefile.in \
-	aclocal.m4 \
-	config.guess \
-	config.rpath \
-	config.h.in \
-	config.sub \
-	configure \
-	depcomp \
-	install-sh \
-	ltmain.sh \
-	missing \
-	mkinstalldirs \
-	compile \
-	py-compile
+MAINTAINERCLEANFILES = INSTALL Makefile.in aclocal.m4 configure \
+	$(filter-out %.m4,$(wildcard config/[a-z]*)) 
 
 nobase_dist_pkgdata_DATA = \
 	conf/poker.client.xml \
@@ -121,7 +106,8 @@ dist_pokerdb_DATA = \
 	database/1.0.6-1.0.7.sql \
 	database/1.0.7-1.0.8.sql \
 	database/1.0.11-1.0.12.sql \
-	database/1.0.16-1.0.17.sql
+	database/1.0.16-1.0.17.sql \
+	database/1.0.17-1.0.18.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \

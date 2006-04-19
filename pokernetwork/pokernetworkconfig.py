@@ -35,6 +35,7 @@ class Config(pokerengineconfig.Config):
     def __init__(self, *args, **kwargs):
         pokerengineconfig.Config.__init__(self, *args, **kwargs)
         self.version = version
+        self.notify_updates = []
 
     def loadFromString(self, string):
         self.path = "<string>"
@@ -50,3 +51,17 @@ class Config(pokerengineconfig.Config):
                 return False
         else:
             return status
+
+    def notifyUpdates(self, method):
+        if method not in self.notify_updates:
+            self.notify_updates.append(method)
+
+    def denotifyUpdates(self, method):
+        if method in self.notify_updates:
+            self.notify_updates.remove(method)
+        
+    def headerSet(self, name, value):
+        result = pokerengineconfig.Config.headerSet(self, name, value)
+        for method in self.notify_updates:
+            method(self)
+        return result
