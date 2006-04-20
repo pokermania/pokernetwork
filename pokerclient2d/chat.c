@@ -95,7 +95,7 @@ void create_smiley_array(const char *path, const char *filename)
         xmlChar* textAttributePtr = xmlTextReaderGetAttribute(reader, (const xmlChar*)"text");
         xmlChar* filenameAttributePtr = xmlTextReaderGetAttribute(reader, (const xmlChar*)"filename");	
         smiley_t smiley;
-        smiley.text = g_strdup((char)textAttributePtr);
+        smiley.text = g_strdup((char*)textAttributePtr);
         GString *filenameStr = g_string_new(path);
         g_string_append(filenameStr, "/");
         g_string_append(filenameStr, (char*)filenameAttributePtr);
