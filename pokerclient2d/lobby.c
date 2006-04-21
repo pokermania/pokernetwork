@@ -314,20 +314,22 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
         gchar* filename;
 
         filename = glade_xml_relative_file(g_lobby_xml, "table_bullet_my.png");
-        pixbuf_table_my = gdk_pixbuf_new_from_file(filename, &error);
-        if(pixbuf_table_my == NULL) {
-          GtkIconTheme* theme = gtk_icon_theme_get_default();
-          error = 0;
-          pixbuf_table_my = gtk_icon_theme_load_icon(theme, 
-                                               "stock_book_open",
-                                               16,
-                                               0,
-                                               &error);
-          if (!pixbuf_table_my) {
-            g_warning ("Couldn't load icon: %s", error->message);
+        if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
+          pixbuf_table_my = gdk_pixbuf_new_from_file(filename, &error);
+          if(pixbuf_table_my == NULL) {
+            GtkIconTheme* theme = gtk_icon_theme_get_default();
+            error = 0;
+            pixbuf_table_my = gtk_icon_theme_load_icon(theme, 
+                                                       "stock_book_open",
+                                                       16,
+                                                       0,
+                                                       &error);
+            if (!pixbuf_table_my) {
+              g_warning ("Couldn't load icon: %s", error->message);
+            }
           }
         }
-
+        g_free(filename);
       }
 #define SET_COLUMN(TITLE, INDEX) \
       { \

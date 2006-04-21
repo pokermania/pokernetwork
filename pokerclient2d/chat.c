@@ -120,7 +120,7 @@ void destroy_smiley_array(void)
       g_free(smiley->text);
       g_free(smiley->filename);
     }
-  g_array_free(g_smileys, TRUE);
+  if(g_smileys) g_array_free(g_smileys, TRUE);
 }
 
 int find_smiley(const char *str)
@@ -322,7 +322,7 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
       GtkTextIter end_iter;
       gtk_text_buffer_get_end_iter(buffer, &end_iter);
 
-      GtkTextIter start = end_iter;
+      //      GtkTextIter start = end_iter;
 
 			
 			static GtkTextTag* textTag[11] = {0,0,0,0,0,0,0,0,0,0,0};

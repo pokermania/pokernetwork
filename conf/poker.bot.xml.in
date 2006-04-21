@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" watch="no" level="1" ping="240" verbose="0" no_display_packets="yes" name_prefix="BOT" poker_network_version="1.0.18">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" watch="no" level="1" ping="240" verbose="0" no_display_packets="yes" name_prefix="BOT" poker_network_version="1.0.19">
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15"/>
   <name>test</name>
   <passwd>test</passwd>

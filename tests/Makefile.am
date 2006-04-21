@@ -35,12 +35,19 @@ EXTRA_DIST = \
 	conf/poker.server.xml.in \
 	conf/poker2d.xml.in \
 	conf/client.xml \
-	coverage.py
+	coverage.py \
+	test-poker-interface.py \
+	poker-interface-sid.supp \
+	vncpasswd
 
-TESTS = coverage_reset \
+TESTS_ENVIRONMENT = run
+TESTS = coverage-reset \
 	upgrade \
-	test-run \
-	coverage_report
+	test-pokernetworkconfig.py \
+	coverage-report \
+	poker-interface
+
+.PHONY: coverage-reset coverage-report poker-interface
 
 export top_srcdir
 

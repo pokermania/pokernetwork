@@ -188,7 +188,10 @@ int main(int   argc,
     create_smiley_array(".", "smileys.xml");
   gtk_main ();
   destroy_smiley_array();
-  if (g_smiley_path)
-    g_free(g_smiley_path);
-  return 0;
+  if (g_smiley_path) g_free(g_smiley_path);
+  if (g_data_dir) g_free(g_data_dir);
+  if (g_display) g_free(g_display);
+  gui_set_glade_file(NULL);
+
+  exit(0);
 }

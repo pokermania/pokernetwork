@@ -177,6 +177,10 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
         gtk_label_set_text(GTK_LABEL(s_labels[i]), str);
       }
 
+    for (i = 0; i < fields_cnt; i++) {
+      g_free(fields[i]);
+    }
+
   }
 
   if(!strcmp(showhide, "show")) {

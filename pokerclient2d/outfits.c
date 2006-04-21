@@ -130,7 +130,7 @@ static void param_update_preview(struct outfit_params* params, int value)
     rectangle.y += allocation.y;
     GdkRegion* region = gdk_region_rectangle(&rectangle);
     gdk_window_invalidate_region(window, region, FALSE);
-    g_free(region);
+    gdk_region_destroy(region);
   } else if(params->has_filename) {
     char image_name[1024];
     sprintf(image_name, params->filename, g_data_dir, value);

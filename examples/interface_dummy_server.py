@@ -28,90 +28,66 @@
 
 # tiny example to test poker3d-interface
 
+import getopt, sys
+
 from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
 from time import sleep
 
-def makeTables(tables):
-    packet = []
-    variants = {}
-    for table in tables:
-        if not variants.has_key(table['variant']):
-            variants[table['variant']] = []
-        variants[table['variant']].append(table)
-    packet.append("lobby")
-    packet.append("table_list")
-    packet.append("Tables: 3")
-    packet.append("Players: 10") 
-    packet.append("Choose a poker table to join")
-    packet.append("%d" % len(variants)) # number of tabs
-    variant_names = variants.keys()
-    variant_names.sort()
-    for variant in variant_names:
-        packet.append("%d" % 11) # number of fields
-        packet.extend(("0", "1", "1", "0", "0", "0", "0", "0", "0", "0", "0")) # field types
-        packet.extend(("id", "name", "structure", "seats", "avg. pot", "hands/h", "%flop", "playing", "observing", "waiting", "timeout")) # headers
-        packet.append("%d" % len(variants[variant]))
-        for table in variants[variant]:
-            packet.append("%d" % table['id'])
-            packet.append("%s" % table['name'])
-            packet.append("%s" % table['betting_structure'])
-            packet.append("%d" % table['seats'])
-            packet.append("%d" % table['average_pot'])
-            packet.append("%d" % table['hands_per_hour'])
-            packet.append("%d" % table['percent_flop'])
-            packet.append("%d" % table['players'])
-            packet.append("%d" % table['observers'])
-            packet.append("%d" % table['waiting'])
-            packet.append("%d" % table['timeout'])
-        packet.append("%s" % variant)
-    return packet
+verbose = 0
 
 step = 1
-class Echo(Protocol):
+class InterfaceProtocol(Protocol):
     def connectionMade(self):
-        #self.blind()
-        #self.buy_in()
-        #self.menu()
-        #self.cashier()
-        #self.chat()
-        #self.table_list()
-        #self.login()
-        #self.message_box()
-        self.yesno()
-        #self.sit_actions()
-        #self.chooser()
-        #self.menu()
-        #self.outfits()
-        #self.tournaments()
-        #self.lobby()
-        self.muck()
-        self.check_warning()
+        if self.factory.module:
+            eval('self.' + self.factory.module + '()')
+        else:
+            self.blind()
+            self.buy_in()
+            self.menu()
+            self.cashier()
+            self.chat()
+            self.login()
+            self.message_box()
+            self.yesno()
+            self.sit_actions()
+            self.chooser()
+            self.menu()
+            self.outfits()
+            self.tournaments()
+            #self.lobby()
+            self.muck()
+            self.check_warning()
+            reactor.callLater(60, lambda: self.command('quit'))
 
-    def interfaceSend(self, *args):
+    def command(self, *args):
+        global verbose
+        if verbose: print str(args)
         self.transport.write("\000".join(args) + "\000")
 
     def tournaments(self):
-        delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("tournaments", "show"))
+        delay = 5
+        reactor.callLater(delay, lambda: self.command("tournaments", "show", "cashier_label", "sit_n_go", "n"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("tournaments", "sitngo",
+        reactor.callLater(delay, lambda: self.command("tournaments", "sit_n_go",
+                                                            "1",
                                                             "2",
                                                             "1", "Sitngo 1", "registering", "5/10",
                                                             "2", "Sitngo 2", "registering", "7/10"))
+        return
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("tournaments", "sitngo",
+        reactor.callLater(delay, lambda: self.command("tournaments", "sit_n_go",
                                                             "2",
                                                             "1", "Sitngo 3", "registering", "5/10",
                                                             "2", "Sitngo 4", "registering", "7/10"))
         delay += 1 
-        reactor.callLater(delay, lambda: self.interfaceSend("tournaments", "regular",
+        reactor.callLater(delay, lambda: self.command("tournaments", "regular",
                                                             "2",
                                                             "10", "2004/05/07", "Regular 1", "registering", "250",
                                                             "20", "2003/04/06", "Regular 2", "registering", "312"))
         
         delay += 1 
-        reactor.callLater(delay, lambda: self.interfaceSend("tournaments", "players",
+        reactor.callLater(delay, lambda: self.command("tournaments", "players",
                                                             "20",
                                                             "player 1",
                                                             "player 2",
@@ -137,7 +113,7 @@ class Echo(Protocol):
         
     def chooser(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("chooser", "Chooser a server", "3", "server1", "server2", "server3"))
+        reactor.callLater(delay, lambda: self.command("chooser", "Chooser a server", "3", "server1", "server2", "server3"))
         
     def cashier(self):
         messages = ( "Foo Bar",
@@ -152,67 +128,67 @@ class Echo(Protocol):
         packet = [ "cashier", "show", "%d" % len(messages) ]
         packet.extend(messages)
 	packet.append("exit_label")
-        reactor.callLater(5, lambda: self.interfaceSend(*packet))
+        reactor.callLater(5, lambda: self.command(*packet))
 
     def menu(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("menu", "show"))
+        reactor.callLater(delay, lambda: self.command("menu", "show"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("menu", "set", "resolution", "800x600"))
+        reactor.callLater(delay, lambda: self.command("menu", "set", "resolution", "800x600"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("menu", "set", "shadow", "yes"))
+        reactor.callLater(delay, lambda: self.command("menu", "set", "shadow", "yes"))
         
     def message_box(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("message_box", "my message!"))
+        reactor.callLater(delay, lambda: self.command("message_box", "my message!"))
 
     def blind(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("blind", "show"))
+        reactor.callLater(delay, lambda: self.command("blind", "show"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("blind", "blind message", "Pay the blind ?", "yes"))
+        reactor.callLater(delay, lambda: self.command("blind", "blind message", "Pay the blind ?", "yes"))
         delay += 10
-        reactor.callLater(delay, lambda: self.interfaceSend("blind", "hide"))
+        reactor.callLater(delay, lambda: self.command("blind", "hide"))
 
     def yesno(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("yesno", "Do you want or don't you want ?"))
+        reactor.callLater(delay, lambda: self.command("yesno", "Do you want or don't you want ?"))
 
     def muck(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("muck"))
+        reactor.callLater(delay, lambda: self.command("muck"))
 
     def check_warning(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("check_warning"))
+        reactor.callLater(delay, lambda: self.command("check_warning"))
 
     def login(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("login", "henry", "blabla", "1"))
+        reactor.callLater(delay, lambda: self.command("login", "henry", "blabla", "1"))
 
     def chat(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "show"))
+        reactor.callLater(delay, lambda: self.command("chat", "show"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "line", "line 1\n"))
+        reactor.callLater(delay, lambda: self.command("chat", "line", "line 1\n"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "line", "line 2\n"))
+        reactor.callLater(delay, lambda: self.command("chat", "line", "line 2\n"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "line", "line 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\n"))
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "line", "line 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\n"))
+        reactor.callLater(delay, lambda: self.command("chat", "line", "line 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\n"))
+        reactor.callLater(delay, lambda: self.command("chat", "line", "line 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\n"))
         delay += 1
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "line", "line 3\n"))
+        reactor.callLater(delay, lambda: self.command("chat", "line", "line 3\n"))
         delay += 20
-        reactor.callLater(delay, lambda: self.interfaceSend("chat", "hide"))
+        reactor.callLater(delay, lambda: self.command("chat", "hide"))
         
     def buy_in(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("buy_in", "show"))
+        reactor.callLater(delay, lambda: self.command("buy_in", "show"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("buy_in", "params", "20", "300.0", "Which amount?", "All your bankroll"))
-        reactor.callLater(delay, lambda: self.interfaceSend("buy_in", "hide"))
+        reactor.callLater(delay, lambda: self.command("buy_in", "params", "20", "300.0", "Which amount?", "All your bankroll"))
+        reactor.callLater(delay, lambda: self.command("buy_in", "hide"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("buy_in", "show"))
+        reactor.callLater(delay, lambda: self.command("buy_in", "show"))
 
     def lobby(self):
         info = ( '1',	#str(table.id),
@@ -230,49 +206,18 @@ class Echo(Protocol):
         )
         packet = ['lobby', 'holdem', '0', '1']
         packet.extend(info)
-        self.interfaceSend(*packet)
-        self.interfaceSend('lobby', 'info', "Players: %d" % 10, "Tables: %d" % 11)
-        self.interfaceSend("lobby", "show", "Cashier", "holdem", "n")
-
-    def table_list(self):
-        packet = makeTables([
-            {'name': 'table 1',
-             'variant': 'holdem',
-             'betting_structure': 'limit 2/4',
-             'id': 1,
-             'seats': 5,
-             'average_pot': 150,
-             'hands_per_hour': 30,
-             'percent_flop': 60,
-             'players': 5,
-             'observers': 5,
-             'waiting': 5,
-             'timeout': 5,
-             },
-            {'name': 'table 2',
-             'variant': 'holdem',
-             'betting_structure': 'limit 2/4',
-             'id': 2,
-             'seats': 5,
-             'average_pot': 150,
-             'hands_per_hour': 30,
-             'percent_flop': 60,
-             'players': 5,
-             'observers': 5,
-             'waiting': 5,
-             'timeout': 5,
-             }])
-        print "packet %s" % packet
-        reactor.callLater(0, lambda: self.interfaceSend(*packet))
+        self.command(*packet)
+        self.command('lobby', 'info', "Players: %d" % 10, "Tables: %d" % 11)
+        self.command("lobby", "show", "Cashier", "holdem", "n")
 
     def outfits(self):
-        reactor.callLater(0, lambda: self.interfaceSend("outfit", "show"))
+        reactor.callLater(0, lambda: self.command("outfit", "show"))
         packet = ( "outfit", "set", "female", "2", 
                    "Slot", "1", "5", "2",
                    "1",
                    "Opacity", "opacity", "0", "5", "2",
                    "file", "1", "opacity_%d.png" )
-        reactor.callLater(1, lambda: self.interfaceSend(*packet))
+        reactor.callLater(1, lambda: self.command(*packet))
         packet = ( "outfit", "set", "male", "8", 
                    "Slot", "1", "5", "2",
                    "3",
@@ -282,34 +227,60 @@ class Echo(Protocol):
                    "detailcolor", "3", "#ff00ff", "#ff1111", "#11ff11", 
                    "Opacity", "opacity", "0", "2", "0",
                    "file", "1", "opacity_%d.png" )
-        reactor.callLater(2, lambda: self.interfaceSend(*packet))
+        reactor.callLater(2, lambda: self.command(*packet))
         
     def sit_actions(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "show"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "show"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "auto", "yes"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "auto", "yes"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "auto", "no"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "auto", "no"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "sit_out", "yes", "Sit back"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "sit_out", "yes", "Sit back"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "sit_out", "no", "Sitout"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "sit_out", "no", "Sitout"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "sit_out", "yes", "Come back"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "sit_out", "yes", "Come back"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "hide"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "hide"))
         delay += step
-        reactor.callLater(delay, lambda: self.interfaceSend("sit_actions", "show"))
+        reactor.callLater(delay, lambda: self.command("sit_actions", "show"))
     
     def dataReceived(self, data):
         print "%s" % data
 
+class InterfaceFactory(Factory):
+    def __init__(self, module):
+        self.module = module
+
 def main():
-    f = Factory()
-    f.protocol = Echo
-    reactor.listenTCP(19379, f)
-    print "started"
+    global verbose
+    
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hvmp", ["help", "verbose=", "module=", "port=" ])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+
+    module = None
+    port = 19379
+    dry_run = False
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit(0)
+        if o in ("-m", "--module"):
+            module = a
+        if o in ("-p", "--port"):
+            port = int(a)
+        if o in ("-v", "--verbose"):
+            verbose = int(a)
+
+    factory = InterfaceFactory(module)
+    factory.protocol = InterfaceProtocol
+    reactor.listenTCP(port, factory)
+    if verbose: print "started"
     reactor.run()
 
 if __name__ == '__main__':

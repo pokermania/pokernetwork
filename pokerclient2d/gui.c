@@ -145,11 +145,13 @@ static void	gui_##NAME##_size_callback(GtkWidget*	widget, \
 \
 void	gui_##NAME(GtkWidget* window, GtkLayout* screen) \
 { \
-  g_signal_connect(G_OBJECT(window), "show", \
-                   G_CALLBACK(gui_##NAME##_show_callback), screen); \
-  g_signal_connect(G_OBJECT(window), "size-allocate", \
-                   G_CALLBACK(gui_##NAME##_size_callback), \
-                   screen); \
+  if(screen != NULL) { \
+    g_signal_connect(G_OBJECT(window), "show", \
+                     G_CALLBACK(gui_##NAME##_show_callback), screen); \
+    g_signal_connect(G_OBJECT(window), "size-allocate", \
+                     G_CALLBACK(gui_##NAME##_size_callback), \
+                    screen); \
+  } \
   gtk_widget_show_all(window); \
   gui_##NAME##_move(window, screen, -1, -1); \
 }

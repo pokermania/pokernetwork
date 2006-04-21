@@ -42,6 +42,8 @@ AM_MAINTAINER_MODE
 
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(MYSQL, [mysql])
+AC_PATH_PROG(VALGRIND, [valgrind])
+AC_PATH_PROG(VNCSERVER, [vncserver])
 AC_PATH_PROG(PERL, [perl])
 AC_PATH_PROGS(WWWBROWSER, [x-www-browser firefox mozilla konqueror epiphany dillo links])
 
@@ -205,11 +207,9 @@ then
         ])
 fi
 AC_CONFIG_FILES([
-        tests/coverage_reset
         tests/upgrade
-        tests/test-run
+        tests/run
         tests/test-pokernetworkconfig.py
-        tests/coverage_report
         database/pokerdatabaseupgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([

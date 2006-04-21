@@ -22,102 +22,61 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Henry Precheur <henry@precheur.org>
 #
-import sys
-sys.path.insert(0, "../pokerclient2d")
+#
+
+# tiny example to test poker3d-interface
+
+import getopt, sys
+
 from twisted.internet.protocol import Protocol, Factory
-from twisted.internet import gtk2reactor
-gtk2reactor.install()
 from twisted.internet import reactor
 from time import sleep
-import cpokerinterface
-import gtk
 
-def makeTables(tables):
-    packet = []
-    variants = {}
-    for table in tables:
-        if not variants.has_key(table['variant']):
-            variants[table['variant']] = []
-        variants[table['variant']].append(table)
-    packet.append("lobby")
-    packet.append("table_list")
-    packet.append("Tables: 3")
-    packet.append("Players: 10") 
-    packet.append("Choose a poker table to join")
-    packet.append("%d" % len(variants)) # number of tabs
-    variant_names = variants.keys()
-    variant_names.sort()
-    for variant in variant_names:
-        packet.append("%d" % 11) # number of fields
-        packet.extend(("0", "1", "1", "0", "0", "0", "0", "0", "0", "0", "0")) # field types
-        packet.extend(("id", "name", "structure", "seats", "avg. pot", "hands/h", "%flop", "playing", "observing", "waiting", "timeout")) # headers
-        packet.append("%d" % len(variants[variant]))
-        for table in variants[variant]:
-            packet.append("%d" % table['id'])
-            packet.append("%s" % table['name'])
-            packet.append("%s" % table['betting_structure'])
-            packet.append("%d" % table['seats'])
-            packet.append("%d" % table['average_pot'])
-            packet.append("%d" % table['hands_per_hour'])
-            packet.append("%d" % table['percent_flop'])
-            packet.append("%d" % table['players'])
-            packet.append("%d" % table['observers'])
-            packet.append("%d" % table['waiting'])
-            packet.append("%d" % table['timeout'])
-        packet.append("%s" % variant)
-    return packet
+verbose = 0
 
 step = 1
-class InterfaceTest:
-    def __init__(self):
-        cpokerinterface.init(callback = self.event,
-                            glade = "../pokerclient2d/data/interface/interface2d.glade",
-#                            gtkrc = "../pokerclient2d/data/Aero/gtkrc",
-                            verbose = 3)
-        window = gtk.Window()
-        window.set_default_size(1024,768)
-        window.set_title("Poker Interface")
-        window.set_name("lobby_window_root")
-        self.screen = gtk.Layout()
-        self.screen.set_size(1024,768)
-        self.screen.set_name("screen")
-        window.add(self.screen)
-        window.show_all()
-
-    def event(self, *args):
-        print "event: " + str(args)
-    
-    def command(self, *args):
-        print args
-        cpokerinterface.command(self.screen, *args)
-
+class InterfaceProtocol(Protocol):
     def connectionMade(self):
-        #self.blind()
-        #self.buy_in()
-        #self.cashier()
-        #self.chat()
-        #self.table_list()
-        #self.login()
-        #self.message_box()
-        #self.yesno()
-        #self.sit_actions()
-        #self.chooser()
-        #self.menu()
-        #self.outfits()
-        #self.tournaments()
-        reactor.callLater(60, lambda: reactor.stop())
+        if self.factory.module:
+            eval('self.' + self.factory.module + '()')
+        else:
+            self.blind()
+            self.buy_in()
+            self.menu()
+            self.cashier()
+            self.chat()
+            self.login()
+            self.message_box()
+            self.yesno()
+            self.sit_actions()
+            self.chooser()
+            self.menu()
+            self.outfits()
+            self.tournaments()
+            #self.lobby()
+            self.muck()
+            self.check_warning()
+            reactor.callLater(60, lambda: self.command('quit'))
+
+    def command(self, *args):
+        global verbose
+        if verbose: print str(args)
+        self.transport.write("\000".join(args) + "\000")
 
     def tournaments(self):
-        delay = 0
-        reactor.callLater(delay, lambda: self.command("tournaments", "show"))
+        delay = 5
+        reactor.callLater(delay, lambda: self.command("tournaments", "show", "cashier_label", "sit_n_go", "n"))
         delay += 1
-        reactor.callLater(delay, lambda: self.command("tournaments", "sitngo",
+        reactor.callLater(delay, lambda: self.command("tournaments", "sit_n_go",
+                                                            "1",
                                                             "2",
                                                             "1", "Sitngo 1", "registering", "5/10",
                                                             "2", "Sitngo 2", "registering", "7/10"))
+        return
         delay += 1
-        reactor.callLater(delay, lambda: self.command("tournaments", "sitngo",
+        reactor.callLater(delay, lambda: self.command("tournaments", "sit_n_go",
                                                             "2",
                                                             "1", "Sitngo 3", "registering", "5/10",
                                                             "2", "Sitngo 4", "registering", "7/10"))
@@ -129,7 +88,6 @@ class InterfaceTest:
         
         delay += 1 
         reactor.callLater(delay, lambda: self.command("tournaments", "players",
-                                                            "1",
                                                             "20",
                                                             "player 1",
                                                             "player 2",
@@ -169,7 +127,8 @@ class InterfaceTest:
                   "15010$" )
         packet = [ "cashier", "show", "%d" % len(messages) ]
         packet.extend(messages)
-        reactor.callLater(0, lambda: self.command(*packet))
+	packet.append("exit_label")
+        reactor.callLater(5, lambda: self.command(*packet))
 
     def menu(self):
         delay = 0
@@ -181,7 +140,7 @@ class InterfaceTest:
         
     def message_box(self):
         delay = 0
-        reactor.callLater(delay, lambda: self.command("message_box", "my message! This is a long message\nto show how it wraps"))
+        reactor.callLater(delay, lambda: self.command("message_box", "my message!"))
 
     def blind(self):
         delay = 0
@@ -231,36 +190,25 @@ class InterfaceTest:
         delay += step
         reactor.callLater(delay, lambda: self.command("buy_in", "show"))
 
-    def table_list(self):
-        packet = makeTables([
-            {'name': 'table 1',
-             'variant': 'holdem',
-             'betting_structure': 'limit 2/4',
-             'id': 1,
-             'seats': 5,
-             'average_pot': 150,
-             'hands_per_hour': 30,
-             'percent_flop': 60,
-             'players': 5,
-             'observers': 5,
-             'waiting': 5,
-             'timeout': 5,
-             },
-            {'name': 'table 2',
-             'variant': 'holdem',
-             'betting_structure': 'limit 2/4',
-             'id': 2,
-             'seats': 5,
-             'average_pot': 150,
-             'hands_per_hour': 30,
-             'percent_flop': 60,
-             'players': 5,
-             'observers': 5,
-             'waiting': 5,
-             'timeout': 5,
-             }])
-        print "packet %s" % packet
-        reactor.callLater(0, lambda: self.command(*packet))
+    def lobby(self):
+        info = ( '1',	#str(table.id),
+        'yes',			#my,
+        'One',			#table.name,
+        'limit 2/4',	#file2name(table.betting_structure),
+        '2',			#str(table.seats),
+        '3',			#str(table.average_pot),
+        '4',			#str(table.hands_per_hour),
+        '5',			#str(table.percent_flop),
+        '6',			#str(table.players),
+        '7',			#str(table.observers),
+        '8',			#str(table.waiting),
+        '9',			#str(table.timeout)
+        )
+        packet = ['lobby', 'holdem', '0', '1']
+        packet.extend(info)
+        self.command(*packet)
+        self.command('lobby', 'info', "Players: %d" % 10, "Tables: %d" % 11)
+        self.command("lobby", "show", "Cashier", "holdem", "n")
 
     def outfits(self):
         reactor.callLater(0, lambda: self.command("outfit", "show"))
@@ -302,9 +250,41 @@ class InterfaceTest:
     def dataReceived(self, data):
         print "%s" % data
 
+class InterfaceFactory(Factory):
+    def __init__(self, module):
+        self.module = module
+
+def usage():
+    print """
+"""
+    
 def main():
-    i = InterfaceTest()
-    i.connectionMade()
+    global verbose
+    
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hvmp", ["help", "verbose=", "module=", "port=" ])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+
+    module = None
+    port = 19379
+    dry_run = False
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit(0)
+        if o in ("-m", "--module"):
+            module = a
+        if o in ("-p", "--port"):
+            port = int(a)
+        if o in ("-v", "--verbose"):
+            verbose = int(a)
+
+    factory = InterfaceFactory(module)
+    factory.protocol = InterfaceProtocol
+    reactor.listenTCP(port, factory)
+    if verbose: print "started"
     reactor.run()
 
 if __name__ == '__main__':

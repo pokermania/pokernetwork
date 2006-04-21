@@ -2,6 +2,20 @@ Fri Apr 21 2006  Loic Dachary  <loic@gnu.org>
 
 	* Release 1.0.19
 
+	* tests/test-poker-interface.py: test all functions of poker-interface
+
+	* pokerclient2d/outfits.c (param_update_preview): gdk_region_destroy leak fix
+
+	* pokerclient2d/cashier.c (handle_cashier): free fields[] (leak)
+
+	* pokerclient2d/lobby.c (handle_lobby): test that image exists
+
+	* pokerclient2d/chat.c (destroy_smiley_array): do not free NULL array
+
+	* configure.ac: search for valgrind & vncserver
+
+	* test/* : rearchitecture to centralize in run.in
+
 	* pokerclient2d/chat.c (create_smiley_array): (char*) instead of (char)
 
 Wed Apr 19 2006  Loic Dachary  <loic@gnu.org>

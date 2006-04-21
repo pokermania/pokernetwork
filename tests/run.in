@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+set -e
+
+: ${srcdir:=.}
+: ${top_srcdir:=..}
+
+#
+# As of Fri Apr 21 16:48:04 CEST 2006, valgrind only works on python2.4 on Debian/unstable
+# Don't "show-reachable" because poker-interface heavily relies on static variables
+#
+if [ "@VALGRIND@" -a "@PYTHON_VERSION@" = "2.4" ] ; then
+    VALGRIND="@VALGRIND@ --quiet --suppressions=/usr/lib/valgrind/debian.supp --suppressions=/usr/lib/valgrind/xfree-4.supp --suppressions=${srcdir}/poker-interface-sid.supp --num-callers=50 --leak-check=full"
+fi
+
+case "$1" in 
+
+*coverage-reset) @PYTHON@ ${srcdir}/coverage.py -e ;;
+
+*coverage-report) @PYTHON@ ${srcdir}/coverage.py -m -r ${top_srcdir}/poker{network,ui,client2d}/*.py ;;
+
+*upgrade) ./upgrade ;;
+
+*poker-interface) 
+        FONTPATH=/usr/share/fonts/X11/misc
+        INTERFACE_PORT=19579
+        if [ "@VNCSERVER@" -a -d "$FONTPATH" ] ; then
+            export DISPLAY=:20
+            @VNCSERVER@ -kill ${DISPLAY} || /bin/true
+            @VNCSERVER@ ${DISPLAY} -rfbauth ${srcdir}/vncpasswd -geometry 1024x768 -auth /unlikely -fp /usr/share/fonts/X11/misc
+            @PYTHON@ ${srcdir}/test-poker-interface.py --port ${INTERFACE_PORT} &
+            testpid=$!
+            killbackground="kill -9 $testpid; @VNCSERVER@ -kill ${DISPLAY}"
+            trap "$killbackground ; exit 1" INT QUIT
+            trap "$killbackground" EXIT
+            sleep 2
+            $VALGRIND ../pokerclient2d/poker-interface --port ${INTERFACE_PORT} --datadir=${top_srcdir}/pokerclient2d/data --gtkrc=${top_srcdir}/pokerclient2d/data/Aero/gtkrc --glade=${top_srcdir}/pokerclient2d/data/interface/interface.glade
+        fi
+        ;;
+
+*.py) @PYTHON@ ${srcdir}/coverage.py -x "$1" ;;
+
+*) 
+        echo unknown test $1
+        exit 1
+        ;;
+esac
