@@ -52,7 +52,7 @@ case "$1" in
             export DISPLAY=:20
             @VNCSERVER@ -kill ${DISPLAY} || /bin/true
             @VNCSERVER@ ${DISPLAY} -rfbauth ${srcdir}/vncpasswd -geometry 1024x768 -auth /unlikely -fp /usr/share/fonts/X11/misc
-            @PYTHON@ ${srcdir}/test-poker-interface.py --port ${INTERFACE_PORT} &
+            @PYTHON@ ${srcdir}/test-poker-interface.py --verbose 1 --port ${INTERFACE_PORT} &
             testpid=$!
             killbackground="kill -9 $testpid; @VNCSERVER@ -kill ${DISPLAY}"
             trap "$killbackground ; exit 1" INT QUIT
