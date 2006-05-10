@@ -1503,10 +1503,14 @@ class PokerRenderer:
             settings.save()
             self.queryRestart("Graphics quality changed")
         elif name == "sound":
+            display = self.factory.display
+            value = display.setSoundEnabled(value=="yes")
+            if value is not 0:
+                value = "yes"
+            else:
+                value = "no"
             settings.headerSet("/settings/sound", value)
             settings.save()
-            if self.factory.settings.headerGet("/settings/@display3d") == "yes":
-                self.queryRestart("Sound effects changed")
         elif name == "auto_post":
             settings.headerSet("/settings/auto_post", value)
             settings.save()

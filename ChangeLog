@@ -1,6 +1,11 @@
-Fri Apr 21 2006  Loic Dachary  <loic@gnu.org>
+Wed May 10 2006  Cedric Pinson  <cpinson@freesheep.org>
 
 	* Release 1.0.19
+
+	* pokerui/pokerrenderer.py:
+	it's not require to restart the game if we disable the sound
+
+Fri Apr 21 2006  Loic Dachary  <loic@gnu.org>
 
 	* tests/test-poker-interface.py: test all functions of poker-interface
 
