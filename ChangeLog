@@ -2,6 +2,9 @@ Sun May 21 2006  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.20
 
+	* configure.ac: eval three times to cope with various levels of
+	quoting by automake (2006.05 cvs is in unstable)
+
 	* pokerui/pokerdisplay.py (PokerDisplay.setSoundEnabled): the
 	  display may refuse to set the sound
 

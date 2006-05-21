@@ -136,7 +136,7 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, , [AC_MSG_ERROR(glib2 is a mandatory library)])
     PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, , [AC_MSG_ERROR(glade2 is a mandatory library)])
 
-    AC_SUBST(POKER2D_PKGDATADIR, [`eval echo $datadir/$VERSIONED_PACKAGE/poker2d`])
+    AC_SUBST(POKER2D_PKGDATADIR, [`eval eval eval echo $datadir/$VERSIONED_PACKAGE/poker2d`])
 
     PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk"
     PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk.glade"
@@ -148,10 +148,9 @@ AM_PYTHON_DEPENDS([$PYTHON_DEPENDENCIES])
 
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 
-AC_SUBST(POKER_PREFIX, [$prefix])
-AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval echo $pkgdatadir`])
-AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval echo $pkglibdir`])
-AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval echo $pkgsysconfdir`])
+AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval eval eval echo $pkgdatadir`])
+AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval eval eval echo $pkglibdir`])
+AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval eval eval echo $pkgsysconfdir`])
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION`])
 
 AC_ARG_WITH(poker-server-host,
