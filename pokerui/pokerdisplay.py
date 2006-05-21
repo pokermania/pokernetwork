@@ -65,3 +65,6 @@ class PokerDisplay:
     def tickProgressBar(self, ratio, message):
         if message: print "\n" + message + " "
         if ratio > 0: print str(int(ratio * 100)) + "% "
+
+    def setSoundEnabled(self, yesno):
+        return yesno and 1 or 0;

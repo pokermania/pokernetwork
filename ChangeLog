@@ -1,3 +1,17 @@
+Sun May 21 2006  Loic Dachary  <loic@dachary.org>
+
+	* Release 1.0.20
+
+	* pokerui/pokerdisplay.py (PokerDisplay.setSoundEnabled): the
+	  display may refuse to set the sound
+
+Sat Apr 22 2006  Loic Dachary  <loic@gnu.org>
+
+	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.render): play timeout
+	  sounds only for self, not for other players
+
+	* smoother swap self_in_position and timeout_notice
+
 Wed May 10 2006  Cedric Pinson  <cpinson@freesheep.org>
 
 	* Release 1.0.19
