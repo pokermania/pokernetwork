@@ -485,9 +485,9 @@ class PokerDisplay2D(PokerDisplay):
             soundfile = self.event2sound.get(PacketNames[packet.type], None)
             playsound = False
             if soundfile:
-                if ( packet.type == POKER_TIMEOUT_WARNING or
-                     packet.type == POKER_TIMEOUT_NOTICE ):
-                    if packet.serial == protocol.getSerial():
+                if ( packet.type == PACKET_POKER_TIMEOUT_WARNING or
+                     packet.type == PACKET_POKER_TIMEOUT_NOTICE ):
+                    if packet.serial == self.protocol.getSerial():
                         playsound = True
                 else:
                     playsound = True
