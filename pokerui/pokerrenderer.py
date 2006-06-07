@@ -1157,7 +1157,10 @@ class PokerRenderer:
                 self.sitActionsUpdate()
             
         elif packet.type == PACKET_POKER_CALL:
-            self.render(packet)
+	    packet_copy = PacketPokerCall(game_id = packet.game_id,
+					  serial = packet.serial)
+	    packet_copy.amount = game.last_bet
+            self.render(packet_copy)
 
         elif packet.type == PACKET_POKER_RAISE:
             self.render(packet)
