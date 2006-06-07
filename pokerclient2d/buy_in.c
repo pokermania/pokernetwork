@@ -118,14 +118,12 @@ int	handle_buy_in(GladeXML*	g_glade_xml, GtkLayout* screen, int init)
       GUI_BRANCH(g_glade_xml, on_ok_clicked);
       GUI_BRANCH(g_glade_xml, on_custom_amount_focus_out_event);
       GUI_BRANCH(g_glade_xml, on_custom_amount_insert_text);
-      gui_center(g_buy_in_window, screen);
-      gtk_widget_hide_all(g_buy_in_window);
     }
 
   if(!strcmp(tag, "show"))
     {
 			if (screen != NULL || !g_buy_in_window_shown) {
-				gtk_widget_show_all(g_buy_in_window);
+			        gui_center(g_buy_in_window, screen);
 				g_buy_in_window_shown = 1;
 			}
     }

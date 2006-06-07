@@ -1,3 +1,9 @@
+Wed Jun 07 2006  Johan Euphrosine  <johan@mekensleep.org>
+
+	* pokerui/pokerrenderer.py: added amount member to POKER_PACKET_CALL when rendered to game
+
+	* pokerclient2d/buy_in.c: moved gui_center from init to "show" command
+	
 Sun May 21 2006  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.20
