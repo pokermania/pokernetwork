@@ -3823,3 +3823,20 @@ class PacketPokerMuckDeny(PacketPokerId):
 PacketFactory[PACKET_POKER_MUCK_DENY] = PacketPokerMuckDeny
 
 ########################################
+
+PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON = 244
+PacketNames[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = "POKER_PLAYER_ME_IN_FIRST_PERSON"
+
+class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("state"):
+            self.state = kwargs["state"]
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    type = PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
+
+PacketFactory[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = PacketPokerPlayerMeInFirstPerson
+

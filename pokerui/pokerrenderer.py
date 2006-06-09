@@ -1413,6 +1413,16 @@ class PokerRenderer:
         packet = PacketPokerPlayerMeLookCards(game_id = current_gameid, state = "stop")
         self.schedulePacket(packet)
 
+    def setPlayerInFirstPerson(self):
+        current_gameid = self.protocol.getCurrentGameId()
+        packet = PacketPokerPlayerMeInFirstPerson(game_id = current_gameid, state = "true")
+        self.schedulePacket(packet)
+
+    def setPlayerNotInFirstPerson(self):
+        current_gameid = self.protocol.getCurrentGameId()
+        packet = PacketPokerPlayerMeInFirstPerson(game_id = current_gameid, state = "false")
+        self.schedulePacket(packet)
+
     def clickSitOut(self):
         if self.factory.verbose: print "clickSitOut python"
         interface = self.factory.interface
