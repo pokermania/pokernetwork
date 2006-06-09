@@ -45,7 +45,7 @@ static GtkWidget*	g_custom_radio;
 static GtkWidget*	g_legend;
 static GtkWidget*	g_custom_amount;
 
-static gboolean	g_buy_in_window_shown = 0;
+static gboolean	g_buy_in_window_shown = FALSE;
 
 gboolean
 on_custom_amount_focus_out_event       (GtkWidget       *widget,
@@ -122,15 +122,19 @@ int	handle_buy_in(GladeXML*	g_glade_xml, GtkLayout* screen, int init)
 
   if(!strcmp(tag, "show"))
     {
-			if (screen != NULL || !g_buy_in_window_shown) {
-			        gui_center(g_buy_in_window, screen);
-				g_buy_in_window_shown = 1;
-			}
+      if (!g_buy_in_window_shown)
+	{
+	  gui_center(g_buy_in_window, screen);
+	}
+      if (screen != NULL || !g_buy_in_window_shown) {
+	gtk_widget_show_all(g_buy_in_window);
+	g_buy_in_window_shown = TRUE;
+      }
     }
   else if(!strcmp(tag, "hide"))
     {
-			if (screen != NULL)
-				gtk_widget_hide_all(g_buy_in_window); 
+      if (screen != NULL)
+	gtk_widget_hide_all(g_buy_in_window); 
     }
   else if(!strcmp(tag, "params"))
     {

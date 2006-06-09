@@ -34,6 +34,7 @@
 
 static GtkWidget*	g_menu_window;
 static int s_disable_callbacks = FALSE;
+static gboolean g_menu_window_shown = FALSE;
 
 void on_license_activate(GtkWidget* widget, gpointer data)
 { 
@@ -152,13 +153,6 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     branch(1600x1200);
     branch(1680x1050);
     branch(1920x1200);
-
-    static position_t	menu_position;
-    menu_position.x = 0;
-    menu_position.y = 0;
-
-    gui_place(g_menu_window, &menu_position, screen);
-    gtk_widget_hide_all(g_menu_window);
   }
 
   if(!strcmp(tag, "show")) {
@@ -167,6 +161,14 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
      * calculate windows position
      */
     //    gtk_widget_set_size_request(g_menu_window, screen_width, -1 ); // -1 because we don't want to change height of menubar
+    if (!g_menu_window_shown)
+      {
+	static position_t	menu_position;
+	menu_position.x = 0;
+	menu_position.y = 0;
+	gui_place(g_menu_window, &menu_position, screen);
+	g_menu_window_shown = TRUE;
+      }
     gtk_widget_show_all(g_menu_window);
   } else if(!strcmp(tag, "hide")) {
     gtk_widget_hide_all(g_menu_window);
@@ -192,6 +194,7 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       set_check(muck)
     else if(!strcmp(what, "resolution")) {
       GtkCheckMenuItem* widget = GTK_CHECK_MENU_ITEM(glade_xml_get_widget(g_glade_xml, value));
+      g_assert(widget);
       gtk_check_menu_item_set_active(widget, TRUE);
     }
 
