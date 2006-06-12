@@ -2245,7 +2245,7 @@ class PokerRenderer:
                     self.state = IDLE
 
             interface = self.factory.interface
-            if game.getPlayer(serial):
+            if game and game.getPlayer(serial):
                 if game.isInGame(serial):
                     self.showYesNoBox("Do you really want to fold your hand\nand leave the table ?")
                     interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
