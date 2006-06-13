@@ -134,7 +134,7 @@ class InterfaceProtocol(Protocol):
         delay = 0
         reactor.callLater(delay, lambda: self.command("menu", "show"))
         delay += 1
-        reactor.callLater(delay, lambda: self.command("menu", "set", "resolution", "800x600"))
+        reactor.callLater(delay, lambda: self.command("menu", "set", "resolution", "1024x768"))
         delay += 1
         reactor.callLater(delay, lambda: self.command("menu", "set", "shadow", "yes"))
         
