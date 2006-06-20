@@ -26,7 +26,7 @@ Description: multiplayer poker server and client library
 Package: python2.4-poker2d
 Section: python
 Architecture: any
-Depends: python, python2.4, python2.4-poker-network, python2.4-glade2, python2.4-pygame, rsync
+Depends: python, python2.4, python2.4-poker-network, python2.4-glade2, python2.4-pygame, libsdl1.2debian-all, rsync
 Description: GTK poker client to play on a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
@@ -55,7 +55,7 @@ Description: multiplayer poker server and client library
 Package: python2.3-poker2d
 Section: python
 Architecture: any
-Depends: python, python2.3, python2.3-poker-network, python2.3-glade2, python2.3-pygame, rsync
+Depends: python, python2.3, python2.3-poker-network, python2.3-glade2, python2.3-pygame, libsdl1.2debian-all, rsync
 Description: GTK poker client to play on a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
