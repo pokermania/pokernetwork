@@ -993,6 +993,7 @@ class PokerRenderer:
 
         elif packet.type == PACKET_POKER_CANCELED:
             self.changeState(CANCELED)
+            self.readyToPlay(packet.game_id)
 
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             if packet.serial == self.protocol.getSerial():
