@@ -3066,9 +3066,13 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = ( "select sum(money), sum(bet) from user2table where table_serial = " + str(table_id) )
         cursor.execute(sql)
-        status = cursor.fetchone()
+        (money, bet) = cursor.fetchone()
         cursor.close()
-        return  map(int, status)
+        if not money: money = 0
+        elif type(money) == StringType: money = int(money)
+        if not bet: bet = 0
+        elif type(bet) == StringType: bet = int(bet)
+        return  (money, bet)
         
     def destroyTable(self, table_id):
 
