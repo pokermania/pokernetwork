@@ -45,7 +45,28 @@ AC_PATH_PROG(MYSQL, [mysql])
 AC_PATH_PROG(VALGRIND, [valgrind])
 AC_PATH_PROG(VNCSERVER, [vncserver])
 AC_PATH_PROG(PERL, [perl])
-AC_PATH_PROGS(WWWBROWSER, [x-www-browser firefox mozilla konqueror epiphany dillo links])
+AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox mozilla konqueror epiphany dillo links])
+
+AC_PATH_PROG(PHP, [php])
+AC_PATH_PROG(PHPUNIT, [phpunit])
+
+BANK=/bin/false
+if test x$PHP && $PHP --version | grep 'PHP 5' ; then
+   if $PHP --define extension=mysql.so --modules | grep mysql ; then
+      if test x$PHPUNIT ; then
+            BANK=/bin/true
+            echo "BANK enabled"
+      else
+            echo "BANK disabled: http://www.phpunit.de/ not found"
+      fi
+   else
+      echo "BANK disabled: mysql module not found"
+   fi
+else
+   echo "BANK disabled: PHP cli not found or $php --version != PHP 5"
+fi
+
+AM_CONDITIONAL([BANK], [$BANK])
 
 test x$prefix = xNONE && prefix="$ac_default_prefix"
 test x$exec_prefix = xNONE && exec_prefix="$prefix"
@@ -194,8 +215,7 @@ AC_ARG_WITH(poker-dbuser-password,
 AC_SUBST(POKER_DBUSER_PASSWORD)
 
 # Generate files
-if test x$poker2d = xtrue
-then
+if test x$poker2d = xtrue ; then
         AC_CONFIG_FILES([
         pokerclient2d/Makefile
         pokerclient2d/poker2d.6
@@ -205,6 +225,15 @@ then
         pokerclient2d/upgrades/1.0.7-1.0.8.xsl
         ])
 fi
+if $BANK ; then
+         AC_CONFIG_FILES([
+                 pokerweb/bank/run
+         ], [chmod +x $ac_file])
+         AC_CONFIG_FILES([
+                pokerweb/bank/Makefile
+         ])
+fi
+
 AC_CONFIG_FILES([
         tests/upgrade
         tests/run
@@ -218,6 +247,7 @@ AC_CONFIG_FILES([
         pokernetwork/pokerbot
         pokernetwork/pokerbot.8
         pokerweb/conf/constants.php
+        pokerweb/Makefile
         database/schema.sql
         database/pokerdatabaseupgrade.8
         conf/poker.bot.xml
