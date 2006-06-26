@@ -462,7 +462,7 @@ class PokerRenderer:
         serial = self.protocol.getSerial()
         game_id = self.protocol.getCurrentGameId()
         game = self.factory.getGame(game_id)
-        if not game.getPlayer(serial):
+        if not game or not game.getPlayer(serial):
             return
         if yesno:
             self.protocol.sendPacket(PacketPokerSitOut(game_id = game_id,
