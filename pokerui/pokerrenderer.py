@@ -702,9 +702,10 @@ class PokerRenderer:
     def chatLine(self, line):
         serial = self.protocol.getSerial()
         game_id = self.protocol.getCurrentGameId()
-        self.protocol.sendPacket(PacketPokerChat(game_id = game_id,
-                                                 serial = serial,
-                                                 message = line))
+        if game_id != None:
+            self.protocol.sendPacket(PacketPokerChat(game_id = game_id,
+                                                     serial = serial,
+                                                     message = line))
     
     def interfaceCallbackLogin(self, ok_or_cancel, name, password, remember):
         if ok_or_cancel == "create" :
