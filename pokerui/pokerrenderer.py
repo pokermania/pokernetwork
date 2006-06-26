@@ -937,6 +937,7 @@ class PokerRenderer:
                 display = self.factory.display
                 display.render(packet)
                 self.chatHide()
+                self.sitActionsHide()
             
         elif packet.type == PACKET_POKER_TABLE:
             game = self.factory.getGame(packet.id)
@@ -957,6 +958,8 @@ class PokerRenderer:
             self.render(packet)
 
         elif packet.type == PACKET_POKER_TABLE_QUIT:
+            self.state = LEAVING
+            self.changeState(LEAVING_DONE)
             self.deleteGame(game.id)
             self.protocol.setCurrentGameId(None)
             
