@@ -261,9 +261,9 @@ class PokerInteractor:
         
     def update(self):        
         if self.changed:
-            if self.verbose: print self.prefix + " PokerInteractor::update: before " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
+            if self.verbose > 3: print self.prefix + " PokerInteractor::update: before " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
             self.state.update(self)
-            if self.verbose: print self.prefix + "                         after  " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
+            if self.verbose > 3: print self.prefix + "                         after  " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
             self.displayCallback(self)
             self.changed = False
             self.state.changed = False
