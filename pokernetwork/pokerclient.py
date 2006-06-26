@@ -564,7 +564,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def setPlayerDelay(self, game, serial, value):
         player = game.getPlayer(serial)
-        player.getUserData()['delay'] = time.time() + value
+        if player: player.getUserData()['delay'] = time.time() + value
 
     def getPlayerDelay(self, game, serial):
         if not game: return 0
