@@ -257,12 +257,12 @@ class PokerInteractors:
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
         
     def interactorsSyncDisplay(self, game_id):
-        if self.factory.verbose > 2: print "interactorsSyncDisplay"
+        if self.factory.verbose > 3: print "interactorsSyncDisplay"
         game = self.factory.getGame(game_id)
         interactor_set = self.getOrCreateInteractorSet(game_id)
         interactors = interactor_set.items
         for (name, interactor) in interactors.iteritems():
-            if self.factory.verbose > 2: print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
+            if self.factory.verbose > 3: print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
             self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
             self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
                 
