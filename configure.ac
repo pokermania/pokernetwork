@@ -241,7 +241,6 @@ AC_CONFIG_FILES([
         pokernetwork/pokerbot
         pokernetwork/pokerbot.8
         pokerweb/conf/constants.php
-        pokerweb/Makefile
         database/schema.sql
         database/pokerdatabaseupgrade.8
         conf/poker.bot.xml
