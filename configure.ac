@@ -50,23 +50,23 @@ AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox mozilla konqueror epip
 AC_PATH_PROG(PHP, [php])
 AC_PATH_PROG(PHPUNIT, [phpunit])
 
-BANK=/bin/false
+PHP5_TESTS=/bin/false
 if test x$PHP && $PHP --version | grep 'PHP 5' ; then
    if $PHP --define extension=mysql.so --modules | grep mysql ; then
       if test x$PHPUNIT ; then
-            BANK=/bin/true
-            echo "BANK enabled"
+            PHP5_TESTS=/bin/true
+            echo "PHP5_TESTS enabled"
       else
-            echo "BANK disabled: http://www.phpunit.de/ not found"
+            echo "PHP5_TESTS disabled: http://www.phpunit.de/ not found"
       fi
    else
-      echo "BANK disabled: mysql module not found"
+      echo "PHP5_TESTS disabled: mysql module not found"
    fi
 else
-   echo "BANK disabled: PHP cli not found or $php --version != PHP 5"
+   echo "PHP5_TESTS disabled: PHP cli not found or $php --version != PHP 5"
 fi
 
-AM_CONDITIONAL([BANK], [$BANK])
+AM_CONDITIONAL([PHP5_TESTS], [$PHP5_TESTS])
 
 test x$prefix = xNONE && prefix="$ac_default_prefix"
 test x$exec_prefix = xNONE && exec_prefix="$prefix"
@@ -94,7 +94,7 @@ PKG_CHECK_MODULES(POKER_ENGINE, poker-engine$PYTHON_VERSION >= 1.0.12, [
     fi
   ])
 ])
-pythonpath=`pkg-config --variable=pythonpath pypoker-engine$MAYBE_PYTHON_VERSION`:$pythonpath
+pythonpath=`pkg-config --variable=pythonpath poker-engine$MAYBE_PYTHON_VERSION`:$pythonpath || AC_MSG_ERROR([pkg-config --variable=pythonpath poker-engine$MAYBE_PYTHON_VERSION fails])
 
 PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES twisted"
 PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES MySQLdb"
@@ -114,7 +114,8 @@ AC_SUBST(pkgdatadir, [$pkgdatadir])
 pkgsysconfdir=$sysconfdir/$VERSIONED_PACKAGE
 AC_SUBST(pkgsysconfdir, [$pkgsysconfdir])
 
-AC_SUBST(POKERCONFIGUPGRADE, [`pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION`])
+POKERCONFIGUPGRADE=`pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION` || AC_MSG_ERROR([pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION fails])
+AC_SUBST(POKERCONFIGUPGRADE, [$POKERCONFIGUPGRADE])
 
 #
 # G++ specific debug and optimization flags
@@ -172,7 +173,8 @@ AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval eval eval echo $pkgdatadir`])
 AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval eval eval echo $pkglibdir`])
 AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval eval eval echo $pkgsysconfdir`])
-AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [`pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION`])
+POKER_ENGINE_PKGSYSCONFDIR=`pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION` || AC_MSG_ERROR([pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION fails])
+AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [$POKER_ENGINE_PKGSYSCONFDIR])
 
 AC_ARG_WITH(poker-server-host,
 [  --with-poker-server-host=<hostname>
@@ -224,14 +226,6 @@ if test x$poker2d = xtrue ; then
         pokerclient2d/data/Makefile
         pokerclient2d/upgrades/1.0.7-1.0.8.xsl
         ])
-fi
-if $BANK ; then
-         AC_CONFIG_FILES([
-                 pokerweb/bank/run
-         ], [chmod +x $ac_file])
-         AC_CONFIG_FILES([
-                pokerweb/bank/Makefile
-         ])
 fi
 
 AC_CONFIG_FILES([
