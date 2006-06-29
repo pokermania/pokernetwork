@@ -548,7 +548,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if ( last_action == "raise" or last_action == "call" ) :
                 if not self.no_display_packets:
                     forward_packets.extend(self.updateBetLimit(game))
-                forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
+                if last_action == "raise":
+                    forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
             if not self.no_display_packets:
                 forward_packets.extend(self.chipsPlayer2Bet(game, player, amount))
 
