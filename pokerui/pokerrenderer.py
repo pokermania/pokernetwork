@@ -253,6 +253,7 @@ class PokerInteractors:
         if interactor.game_id == self.protocol.getCurrentGameId():
             game = self.factory.getGame(interactor.game_id)
             if game and interactor.stateHasChanged():
+                if self.factory.verbose > 3: print "interactor:" + interactor.name + " default=" + interactor.getDefault() + " clicked=" + interactor.getClicked()
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "default", style = interactor.getDefault(), selection = interactor.selected_value))
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
         
