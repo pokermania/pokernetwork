@@ -462,7 +462,11 @@ class PokerRenderer:
         serial = self.protocol.getSerial()
         game_id = self.protocol.getCurrentGameId()
         game = self.factory.getGame(game_id)
-        if not game or not game.getPlayer(serial):
+        if not game:
+            print "WARNING sitOut() when no current game active"
+            return
+        if not game.getPlayer(serial):
+            print "WARNING sitOut() for a non existing me-serial %d" % serial
             return
         if yesno:
             self.protocol.sendPacket(PacketPokerSitOut(game_id = game_id,
@@ -702,7 +706,9 @@ class PokerRenderer:
     def chatLine(self, line):
         serial = self.protocol.getSerial()
         game_id = self.protocol.getCurrentGameId()
-        if game_id != None:
+        if game_id == None:
+            print "WARNING chatLine() while no current game active"
+        else:
             self.protocol.sendPacket(PacketPokerChat(game_id = game_id,
                                                      serial = serial,
                                                      message = line))
