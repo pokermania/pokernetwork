@@ -101,6 +101,8 @@ class PokerInteractors:
         self.factory = factory
         self.protocol = None
         self.interactors_map = { }
+        # reentrant update call workaround
+        self.interactorActioned = None
         
     def setProtocol(self, protocol):
         self.protocol = protocol
@@ -215,10 +217,15 @@ class PokerInteractors:
 
             isInPosition = game.getSerialInPosition() == serial
             player = game.getPlayer(serial)
+            # reentrant update call workaround
+            self.interactorActioned = None
             updateInteractor(interactors["check"], game.canCheck(serial), isInPosition, [ game.id ])
             updateInteractor(interactors["fold"], game.canFold(serial), isInPosition, [ game.id ])
             updateInteractor(interactors["call"], game.canCall(serial), isInPosition, [ game.id ])
             updateInteractor(interactors["raise"], game.canRaise(serial), isInPosition, [ player.money, game.highestBetNotFold(), game.id ])
+            # reentrant update call workaround
+            if self.interactorActioned:
+                self.disableAllInteractorButThisOne(self.interactorActioned)
         else:
             for (name, interactor) in interactors.iteritems():
                 interactor.disable()
@@ -268,7 +275,8 @@ class PokerInteractors:
             self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
                 
     def interactorAction(self, interactor):
-        self.disableAllInteractorButThisOne(interactor)
+        # reentrant update call workaround
+        self.interactorActioned = interactor
         game = self.factory.getGame(interactor.game_id)
         packet = interactor.getSelectedValue()
         if packet.type == PACKET_POKER_FOLD:
