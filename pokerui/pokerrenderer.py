@@ -144,6 +144,9 @@ class PokerInteractors:
             self.cancelAllInteractors(game.id)
             self.handleInteractors(game)
 
+        elif packet.type == PACKET_POKER_BET_LIMIT:
+            self.handleInteractors(game)
+
     def destroy(self):
         protocol = self.protocol
         if protocol:
