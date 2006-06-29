@@ -564,7 +564,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def setPlayerDelay(self, game, serial, value):
         player = game.getPlayer(serial)
-        if player: player.getUserData()['delay'] = time.time() + value
+        if player == None:
+            print "WARNING setPlayerDelay for a non-existing player %d" % serial
+        else:
+            player.getUserData()['delay'] = time.time() + value
 
     def getPlayerDelay(self, game, serial):
         if not game: return 0
