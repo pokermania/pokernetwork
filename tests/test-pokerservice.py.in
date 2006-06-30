@@ -1,0 +1,94 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+import libxml2
+
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+
+settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="1" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18"/>
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" money="PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP"/>
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" money="RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"/>
+
+  <listen tcp="19480" />
+
+  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+            root_user="root" root_password="" schema="@top_srcdir@/database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <users temporary="BOT"/>
+</server>
+"""
+            
+class PokerAvatarTestCase(unittest.TestCase):
+    
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+        del self.service
+        os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'")
+        
+    # -----------------------------------------------------------------------------------------------------    
+    def test01_pass(self):
+        pass
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = runner.TestSuite(PokerAvatarTestCase)
+    suite.addTest(unittest.makeSuite(PokerServiceTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return pokerengineconfig
+  
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    suite = runner.TestLoader().loadAnything(PokerAvatarTestCase)
+    return runner.TrialRunner(reporter.TextReporter).run(suite)
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
