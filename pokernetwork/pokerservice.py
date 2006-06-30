@@ -1,0 +1,1507 @@
+#
+# -*- coding: iso-8859-1 -*-
+#
+# Copyright (C) 2004, 2005, 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#  Henry Precheur <henry@precheur.org> (2004)
+#
+
+from os.path import exists
+from types import *
+from string import split, join
+from pprint import pprint, pformat
+import time
+import os
+import operator
+import re
+from traceback import print_exc
+
+from MySQLdb.cursors import DictCursor
+
+from OpenSSL import SSL
+
+try:
+        from OpenSSL import SSL
+        HAS_OPENSSL=True
+except:
+        print "openSSL not available."
+        HAS_OPENSSL=False
+        
+
+from twisted.application import service
+from twisted.internet import protocol, reactor, defer
+try:
+    # twisted-2.0
+    from zope.interface import Interface, implements
+except ImportError:
+    # twisted-1.3 forwards compatibility
+    def implements(interface):
+        frame = sys._getframe(1)
+        locals = frame.f_locals
+
+        # Try to make sure we were called from a class def
+        if (locals is frame.f_globals) or ('__module__' not in locals):
+            raise TypeError(" can be used only from a class definition.")
+
+        if '__implements__' in locals:
+            raise TypeError(" can be used only once in a class definition.")
+
+        locals['__implements__'] = interface
+
+    from twisted.python.components import Interface
+
+from twisted.python import components
+
+from pokerengine.pokertournament import *
+
+from pokernetwork.server import PokerServerProtocol
+from pokernetwork.user import checkName, checkPassword
+from pokernetwork.pokerdatabase import PokerDatabase
+from pokernetwork.pokerpackets import *
+from pokernetwork.pokertable import PokerTable
+from pokernetwork.pokeravatar import PokerAvatar
+from pokernetwork.user import User
+
+class IPokerService(Interface):
+
+    def createAvatar(self):
+        """ """
+
+    def destroyAvatar(self, avatar):
+        """ """
+
+class IPokerFactory(Interface):
+
+    def createAvatar(self):
+        """ """
+
+    def destroyAvatar(self, avatar):
+        """ """
+
+    def buildProtocol(self, addr):
+        """ """
+
+class PokerFactoryFromPokerService(protocol.ServerFactory):
+
+    implements(IPokerFactory)
+
+    protocol = PokerServerProtocol
+
+    def __init__(self, service):
+        self.service = service
+        self.verbose = service.verbose
+
+    def createAvatar(self):
+        """ """
+        return self.service.createAvatar()
+
+    def destroyAvatar(self, avatar):
+        """ """
+        return self.service.destroyAvatar(avatar)
+
+components.registerAdapter(PokerFactoryFromPokerService,
+                           IPokerService,
+                           IPokerFactory)
+
+class PokerService(service.Service):
+
+    implements(IPokerService)
+
+    def __init__(self, settings):
+        self.db = PokerDatabase(settings)
+        self.poker_auth = PokerAuth(self.db, settings)
+        self.settings = settings
+        self.dirs = split(settings.headerGet("/server/path"))
+        self.serial2client = {}
+        self.tables = []
+        self.table_serial = 100
+        self.shutting_down = False
+        self.down = False
+        self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
+        self._ping_delay = self.settings.headerGetInt("/server/@ping")
+        self.verbose = self.settings.headerGetInt("/server/@verbose")
+        self.chat = self.settings.headerGet("/server/@chat") == "yes"
+        self.cleanupCrashedTables()
+        for description in self.settings.headerGetProperties("/server/table"):
+            self.createTable(0, description)
+        self.tourneys = {}
+        self.schedule2tourneys = {}
+        self.tourneys_schedule = {}
+        self.updateTourneysSchedule()
+        self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
+        self.poker_auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
+
+    def stopServiceFinish(self, x):
+        service.Service.stopService(self)
+
+    def stopService(self):
+        deferred = self.shutdown()
+        deferred.addCallback(self.stopServiceFinish)
+        return deferred
+    
+    def shutdown(self):
+        self.shutting_down = True
+        self.shutdown_deferred = defer.Deferred()
+        reactor.callLater(0, self.shutdownCheck)
+        return self.shutdown_deferred
+        
+    def shutdownCheck(self):
+        if self.down:
+            return
+        
+        playing = 0
+        for table in self.tables:
+            if table.game.isRunning():
+                playing += 1
+        if self.verbose and playing > 0:
+            print "Shutting down, waiting for %d games to finish" % playing
+        if playing <= 0:
+            if self.verbose:
+                print "Shutdown immediately"
+            self.down = True
+            self.shutdown_deferred.callback(True)
+        else:
+            reactor.callLater(10, self.shutdownCheck)
+        
+    def isShuttingDown(self):
+        return self.shutting_down
+    
+    def stopFactory(self):
+        pass
+
+    def createAvatar(self):
+        return PokerAvatar(self)
+
+    def destroyAvatar(self, avatar):
+        avatar.connectionLost("Disconnected")
+
+    def sessionStart(self, serial, ip):
+        if self.verbose > 2: print "PokerService::sessionStart(%d, %s): " % ( serial, ip )
+        cursor = self.db.cursor()
+        sql = "insert into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, time.time(), ip )
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
+        cursor.close()
+        
+    def sessionEnd(self, serial):
+        if self.verbose > 2: print "PokerService::sessionEnd(%d): " % ( serial )
+        cursor = self.db.cursor()
+        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session where user_serial = %d" % ( time.time(), serial )
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* a) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
+        sql = "delete from session where user_serial = %d" % serial
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* b) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
+        cursor.close()
+    
+    def auth(self, name, password, roles):
+        for (serial, client) in self.serial2client.iteritems():
+            if client.getName() == name and roles.intersection(client.roles):
+                if self.verbose: print "PokerService::auth: %s attempt to login more than once with similar roles %s" % ( name, roles.intersection(client.roles) )
+                return ( False, "Already logged in from somewhere else" ) 
+        return self.poker_auth.auth(name, password)
+            
+    def updateTourneysSchedule(self):
+        cursor = self.db.cursor(DictCursor)
+
+        sql = ( " select * from tourneys_schedule " )
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        self.tourneys_schedule = dict(zip(map(lambda schedule: schedule['serial'], result), result))
+        cursor.close()
+        self.checkTourneysSchedule()
+        reactor.callLater(10 * 60, self.updateTourneysSchedule)
+
+    def checkTourneysSchedule(self):
+        if self.verbose > 4: print "checkTourneysSchedule"
+        for schedule in filter(lambda schedule: schedule['respawn'] == 'y', self.tourneys_schedule.values()):
+            schedule_serial = schedule['serial']
+            if ( not self.schedule2tourneys.has_key(schedule_serial) or
+                 not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial]) ):
+                self.spawnTourney(schedule)
+        now = time.time()
+        for tourney in filter(lambda tourney: tourney.state == TOURNAMENT_STATE_COMPLETE, self.tourneys.values()):
+            if now - tourney.finish_time > 15 * 60:
+                self.deleteTourney(tourney)
+        reactor.callLater(60, self.checkTourneysSchedule)
+
+    def spawnTourney(self, schedule):
+        cursor = self.db.cursor()
+        cursor.execute("insert into tourneys "
+                       " (schedule_serial, name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, money, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay )"
+                       " values"
+                       " (%s,              %s,   %s,                %s,               %s,            %s,      %s,                %s,             %s,         %s,     %s,   %s,       %s,              %s,          %s,     %s )",
+                       ( schedule['serial'],
+                         schedule['name'],
+                         schedule['description_short'],
+                         schedule['description_long'],
+                         schedule['players_quota'],
+                         schedule['variant'],
+                         schedule['betting_structure'],
+                         schedule['seats_per_game'],
+                         schedule['money'],
+                         schedule['buy_in'],
+                         schedule['rake'],
+                         schedule['sit_n_go'],
+                         schedule['breaks_interval'],
+                         schedule['rebuy_delay'],
+                         schedule['add_on'],
+                         schedule['add_on_delay'] ) )
+        if self.verbose > 2: print "spawnTourney: " + str(schedule)
+        #
+        # Accomodate with MySQLdb versions < 1.1
+        #
+        if hasattr(cursor, "lastrowid"):
+            tourney_serial = cursor.lastrowid
+        else:
+            tourney_serial = cursor.insert_id()
+        cursor.close()
+        
+        tourney = PokerTournament(dirs = self.dirs, **schedule)
+        tourney.serial = tourney_serial
+        tourney.verbose = self.verbose
+        tourney.schedule_serial = schedule['serial']
+        tourney.money = schedule['money']
+        tourney.callback_new_state = self.tourneyNewState
+        tourney.callback_create_game = self.tourneyCreateTable
+        tourney.callback_game_filled = self.tourneyGameFilled
+        tourney.callback_destroy_game = self.tourneyDestroyGame
+        tourney.callback_move_player = self.tourneyMovePlayer
+        tourney.callback_remove_player = self.tourneyRemovePlayer
+        if not self.schedule2tourneys.has_key(schedule['serial']):
+            self.schedule2tourneys[schedule['serial']] = []
+        self.schedule2tourneys[schedule['serial']].append(tourney)
+        self.tourneys[tourney.serial] = tourney
+
+    def deleteTourney(self, tourney):
+        if self.verbose > 2: print "deleteTourney: %d" % tourney.serial
+        self.schedule2tourneys[tourney.schedule_serial].remove(tourney)
+        if len(self.schedule2tourneys[tourney.schedule_serial]) <= 0:
+            del self.schedule2tourneys[tourney.schedule_serial]
+        del self.tourneys[tourney.serial]
+
+    def tourneyNewState(self, tourney):
+        cursor = self.db.cursor()
+        updates = [ "state = '" + tourney.state + "'" ]
+        if tourney.state == TOURNAMENT_STATE_RUNNING:
+            updates.append("start_time = %d" % tourney.start_time)
+        sql = "update tourneys set " + ", ".join(updates) + " where serial = " + str(tourney.serial)
+        if self.verbose > 4: print "tourneyNewState: " + sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+        
+    def tourneyEndTurn(self, tourney, game_id):
+        if not tourney.endTurn(game_id):
+            self.tourneyFinished(tourney)
+        
+    def tourneyFinished(self, tourney):
+        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
+        prizes = tourney.prizes(tourney_schedule['buy_in'])
+        winners = tourney.winners[:len(prizes)]
+        cursor = self.db.cursor()
+        while prizes:
+            prize = prizes.pop(0)
+            serial = winners.pop(0)
+            sql = "update money_" + tourney.money + ".money set money = money + " + str(prize) + " where serial = " + str(serial)
+            if self.verbose > 4: print "tourneyFinished: " + sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+
+    def tourneyGameFilled(self, tourney, game):
+        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
+        table = self.getTable(game.id)
+        cursor = self.db.cursor()
+        for player in game.playersAll():
+            serial = player.serial
+            player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
+            client = self.serial2client.get(serial, None)
+            if client:
+                table.serial2client[serial] = client
+            self.seatPlayer(serial, game.id, game.buyIn())
+
+            if client:
+                client.join(table)
+            sql = "update user2tourney set table_serial = %d where user_serial = %d and tourney_serial = %d" % ( game.id, serial, tourney.serial ) 
+            if self.verbose > 4: print "tourneyGameFilled: " + sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+        table.update()
+
+    def tourneyCreateTable(self, tourney):
+        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
+        table = self.createTable(0, { 'name': tourney.name + str(self.table_serial),
+                                      'variant': tourney.variant,
+                                      'betting_structure': tourney.betting_structure,
+                                      'seats': tourney.seats_per_game,
+                                      'money': '',
+                                      'player_timeout': 60,
+                                      'transient': True,
+                                      'tourney': tourney,
+                                      })
+        table.timeout_policy = "fold"
+        self.table_serial += 1
+        return table.game
+
+    def tourneyDestroyGame(self, tourney, game):
+        table = self.getTable(game.id)
+        table.destroy()
+
+    def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
+        from_table = self.getTable(from_game_id)
+        from_table.movePlayer(from_table.serial2client.get(serial, None), serial, to_game_id)
+        cursor = self.db.cursor()
+        sql = "update user2tourney set table_serial = %d where user_serial = %d and tourney_serial = %d" % ( to_game_id, serial, tourney.serial ) 
+        if self.verbose > 4: print "tourneyMovePlayer: " + sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+
+    def tourneyRemovePlayer(self, tourney, game_id, serial):
+        table = self.getTable(game_id)
+        table.kickPlayer(serial)
+        cursor = self.db.cursor()
+        sql = "update user2tourney set rank = %d, table_serial = -1 where user_serial = %d and tourney_serial = %d" % ( tourney.getRank(serial), serial, tourney.serial ) 
+        if self.verbose > 4: print "tourneyRemovePlayer: " + sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+
+    def tourneyPlayersList(self, tourney_serial):
+        if not self.tourneys.has_key(tourney_serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                               code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
+                               message = "Tournament %d does not exist" % tourney_serial)
+        tourney = self.tourneys[tourney_serial]
+        players = map(lambda serial: ( self.getName(serial), -1, 0 ), tourney.players)
+        return PacketPokerTourneyPlayersList(serial = tourney_serial,
+                                             players = players)
+
+    def tourneyStats(self):
+        players = reduce(operator.add, map(lambda tourney: tourney.registered, self.tourneys.values()))
+        scheduled = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values())
+        return ( players, len(self.tourneys) + len(scheduled) )
+
+    def tourneySelect(self, string):
+        tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
+        criterion = split(string, "\t")
+        if string == '':
+            return tourneys
+        elif len(criterion) > 1:
+            ( money, type ) = criterion
+            sit_n_go = type == 'sit_n_go' and 'y' or 'n'
+            if money:
+                return filter(lambda tourney: tourney['money'] == money and tourney['sit_n_go'] == sit_n_go, tourneys)
+            else:
+                return filter(lambda tourney: tourney['sit_n_go'] == sit_n_go, tourneys)
+        else:
+            return filter(lambda tourney: tourney['name'] == string, tourneys)
+    
+    def tourneyRegister(self, packet):
+        serial = packet.serial
+        tourney_serial = packet.game_id
+        client = self.serial2client.get(serial, None)
+        
+        if not self.tourneys.has_key(tourney_serial):
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
+                                message = "Tournament %d does not exist" % tourney_serial)
+            print error
+            if client: client.sendPacketVerbose(error)
+            return False
+        tourney = self.tourneys[tourney_serial]
+
+        if tourney.isRegistered(serial):
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
+                                message = "Player %d already registered in tournament %d " % ( serial, tourney_serial ) )
+            print error
+            if client: client.sendPacketVerbose(error)
+            return False
+
+        if not tourney.canRegister(serial):
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
+                                message = "Registration refused in tournament %d " % tourney_serial)
+            print error
+            if client: client.sendPacketVerbose(error)
+            return False
+
+        cursor = self.db.cursor()
+        #
+        # Buy in
+        #
+        schedule = self.tourneys_schedule[tourney.schedule_serial]
+        money = schedule['money']
+        withdraw = schedule['buy_in'] + schedule['rake']
+        sql = ( "update money_" + money + " set "
+                " money = money - " + str(withdraw) + " "
+                " where user_serial = " + str(serial) + " and "
+                "       money >= " + str(withdraw) )
+        if self.verbose > 1:
+            print "tourneyRegister: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount == 0:
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
+                                message = "Not enough money to enter the tournament %d" % tourney_serial)
+            if client: client.sendPacketVerbose(error)
+            print error
+            return False
+        if cursor.rowcount != 1:
+            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            if client:
+                client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                                     code = PacketPokerTourneyRegister.SERVER_ERROR,
+                                                     message = "Server error"))
+            return False
+        #
+        # Register
+        #
+        sql = "insert into user2tourney (user_serial, tourney_serial) values (%d, %d)" % ( serial, tourney_serial )
+        if self.verbose > 4: print "tourneyRegister: " + sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            cursor.close()
+            if client:
+                client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                                     code = PacketPokerTourneyRegister.SERVER_ERROR,
+                                                     message = "Server error"))
+            return False
+        cursor.close()
+
+        # notify success
+        client.sendPacketVerbose(packet)
+        tourney.register(serial)
+        return True
+
+    def tourneyUnregister(self, packet):
+        serial = packet.serial
+        tourney_serial = packet.game_id
+        if not self.tourneys.has_key(tourney_serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.DOES_NOT_EXIST,
+                               message = "Tournament %d does not exist" % tourney_serial)
+        tourney = self.tourneys[tourney_serial]
+
+        if not tourney.isRegistered(serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.NOT_REGISTERED,
+                               message = "Player %d is not registered in tournament %d " % ( serial, tourney_serial ) )
+
+        if not tourney.canUnregister(serial):
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.TOO_LATE,
+                               message = "It is too late to unregister player %d from tournament %d " % ( serial, tourney_serial ) )
+
+        cursor = self.db.cursor()
+        #
+        # Refund buy in
+        #
+        schedule = self.tourneys_schedule[tourney.schedule_serial]
+        money = schedule['money']
+        withdraw = schedule['buy_in'] + schedule['rake']
+        sql = ( "update money_" + money + " set "
+                " money = money + " + str(withdraw) + " "
+                " where serial = " + str(serial) )
+        if self.verbose > 1:
+            print "tourneyUnregister: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.SERVER_ERROR,
+                               message = "Server error")
+        #
+        # Unregister
+        #
+        sql = "delete from user2tourney where user_serial = %d and tourney_serial = %d" % ( serial, tourney_serial )
+        if self.verbose > 4: print "tourneyUnregister: " + sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            cursor.close()
+            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                               code = PacketPokerTourneyUnregister.SERVER_ERROR,
+                               message = "Server error")
+        cursor.close()
+
+        tourney.unregister(serial)
+            
+        return packet
+
+    def getHandSerial(self):
+        cursor = self.db.cursor()
+        cursor.execute("insert into hands (description) values ('[]')")
+        #
+        # Accomodate with MySQLdb versions < 1.1
+        #
+        if hasattr(cursor, "lastrowid"):
+            serial = cursor.lastrowid
+        else:
+            serial = cursor.insert_id()
+        cursor.close()
+        return int(serial)
+
+    def getHandHistory(self, hand_serial, serial):
+        history = self.loadHand(hand_serial)
+
+        if not history:
+            return PacketPokerError(game_id = hand_serial,
+                                    serial = serial,
+                                    other_type = PACKET_POKER_HAND_HISTORY,
+                                    code = PacketPokerHandHistory.NOT_FOUND,
+                                    message = "Hand %d was not found in history of player %d" % ( hand_serial, serial ) )
+
+        (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = history[0]
+
+        if serial not in player_list:
+            return PacketPokerError(game_id = hand_serial,
+                                    serial = serial,
+                                    other_type = PACKET_POKER_HAND_HISTORY,
+                                    code = PacketPokerHandHistory.FORBIDDEN,
+                                    message = "Player %d did not participate in hand %d" % ( serial, hand_serial ) )
+            
+        serial2name = {}
+        for serial in player_list:
+            serial2name[serial] = self.getName(serial)
+        #
+        # Filter out the pocket cards that do not belong to player "serial"
+        #
+        for event in history:
+            if event[0] == "round":
+                (type, name, board, pockets) = event
+                if pockets:
+                    for (player_serial, pocket) in pockets.iteritems():
+                        if player_serial != serial:
+                            pocket.loseNotVisible()
+            elif event[0] == "showdown":
+                (type, board, pockets) = event
+                if pockets:
+                    for (player_serial, pocket) in pockets.iteritems():
+                        if player_serial != serial:
+                            pocket.loseNotVisible()
+
+        return PacketPokerHandHistory(game_id = hand_serial,
+                                      serial = serial,
+                                      history = str(history),
+                                      serial2name = str(serial2name))
+        
+    def loadHand(self, hand_serial):
+        cursor = self.db.cursor()
+        sql = ( "select description from hands where serial = " + str(hand_serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* loadHand(%d) expected one row got %d" % ( hand_serial, cursor.rowcount )
+            cursor.close()            
+            return None
+        (description,) = cursor.fetchone()
+        cursor.close()
+        try:
+            history = eval(description.replace("\r",""))
+            return history
+        except:
+            print " *ERROR* loadHand(%d) eval failed for %s" % ( hand_serial, description )
+            print_exc()
+            return None
+            
+    def saveHand(self, description, hand_serial):
+        (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0]
+        cursor = self.db.cursor()
+
+        sql = ( "update hands set " + 
+                " description = %s "
+                " where serial = " + str(hand_serial) )
+        if self.verbose > 1:
+            print "saveHand: %s" % sql
+        cursor.execute(sql, pformat(description))
+        if cursor.rowcount != 1 and cursor.rowcount != 0:
+            print " *ERROR* modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
+            cursor.close()
+            return
+
+        sql = "insert into user2hand values "
+        sql += ", ".join(map(lambda player_serial: "(%d, %d)" % ( player_serial, hand_serial ), player_list))
+        if self.verbose > 1:
+            print "saveHand: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != len(player_list):
+            print " *ERROR* inserted %d rows (expected exactly %d): %s " % ( cursor.rowcount, len(player_list), sql )
+
+       
+        cursor.close()
+        
+    def listHands(self, sql_list, sql_total):
+        cursor = self.db.cursor()
+        if self.verbose > 1:
+            print "listHands: " + sql_list + " " + sql_total
+        cursor.execute(sql_list)
+        hands = cursor.fetchall()
+        cursor.execute(sql_total)
+        total = cursor.fetchone()[0]
+        cursor.close()
+        return (total, map(lambda x: x[0], hands))
+
+    def statsTables(self):
+        players = reduce(operator.add, map(lambda table: table.game.allCount(), self.tables))
+        return ( players, len(self.tables) )
+                         
+    def listTables(self, string, serial):
+        criterion = split(string, "\t")
+        if string == '' or string == 'all':
+            return self.tables
+        elif string == 'my':
+            return filter(lambda table: serial in table.game.serialsAll(), self.tables)
+        elif len(string) == 40:
+            return filter(lambda table: table.money == string, self.tables)
+        elif len(criterion) > 1:
+            ( money, variant ) = criterion
+            if money:
+                return filter(lambda table: table.game.variant == variant and table.money == money, self.tables)
+            else:
+                return filter(lambda table: table.game.variant == variant, self.tables)
+        else:
+            return filter(lambda table: table.game.name == string, self.tables)
+
+    def cleanUp(self, temporary_users = ''):
+        cursor = self.db.cursor()
+        sql = "delete from user2table"
+        cursor.execute(sql)
+
+        if len(temporary_users) > 2:
+            sql = "delete session_history from session_history, users where session_history.user_serial = users.serial and users.name like '" + temporary_users + "%'"
+            cursor.execute(sql)
+            sql = "delete session from session, users where session.user_serial = users.serial and users.name like '" + temporary_users + "%'"
+            cursor.execute(sql)
+            sql = "delete from users where name like '" + temporary_users + "%'"
+            cursor.execute(sql)
+
+        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session" % time.time()
+        cursor.execute(sql)
+        sql = "delete from session"
+        cursor.execute(sql)
+
+        cursor.close()
+
+    def getMoney(self, serial, base):
+        cursor = self.db.cursor()
+        sql = ( "select " + base + "_money from users where serial = " + str(serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* getMoney(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            cursor.close()            
+            return 0
+        (money,) = cursor.fetchone()
+        cursor.close()
+        money = int(money)
+        if money < 0:
+            print " *ERROR* getMoney(%d) found %d" % ( serial, money)
+            money = 0
+        return money
+
+    def getPlayerInfo(self, serial):
+        placeholder = PacketPokerPlayerInfo(serial = serial,
+                                            name = "anonymous",
+                                            url= "random",
+                                            outfit = "random")
+        if serial == 0:
+            return placeholder
+        
+        cursor = self.db.cursor()
+        sql = ( "select name,skin_url,skin_outfit from users where serial = " + str(serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* getPlayerInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            return placeholder
+        (name,skin_url,skin_outfit) = cursor.fetchone()
+        if skin_outfit == None:
+            skin_outfit = "random"
+        cursor.close()
+        return PacketPokerPlayerInfo(serial = serial,
+                                     name = name,
+                                     url = skin_url,
+                                     outfit = skin_outfit)
+
+    def getUserInfo(self, serial):
+        cursor = self.db.cursor()
+        
+        sql = ( "select rating,email,name from users where serial = " + str(serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* getUserInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            return PacketPokerUserInfo(serial = serial)
+        (rating,email,name) = cursor.fetchone()
+        if email == None: email = ""
+
+        sql = ( "select sum(user2table.bet) + sum(user2table.money) from user2table,pokertables "
+                "  where user2table.user_serial = " + str(serial) + " and "
+                "        user2table.table_serial = pokertables.serial and "
+                "        pokertables.custom_money = \"n\" ")
+        cursor.execute(sql)
+        if cursor.rowcount < 1:
+            print " *ERROR* getUserInfo(%d) play money expected one row got %d" % ( serial, cursor.rowcount )
+            return PacketPokerUserInfo(serial = serial)
+        else:
+            (play_money_in_game,) = cursor.fetchone()
+            if not play_money_in_game:
+                play_money_in_game = 0
+            elif type(play_money_in_game) == StringType:
+                play_money_in_game = int(play_money_in_game)
+
+        sql = ( "select sum(user2table.bet) + sum(user2table.money) from user2table,pokertables "
+                "  where user2table.user_serial = " + str(serial) + " and "
+                "        user2table.table_serial = pokertables.serial and "
+                "        pokertables.custom_money = \"y\" ")
+        cursor.execute(sql)
+        if cursor.rowcount < 1:
+            print " *ERROR* getUserInfo(%d) custom money expected one row got %d" % ( serial, cursor.rowcount )
+            return PacketPokerUserInfo(serial = serial)
+        else:
+            (custom_money_in_game,) = cursor.fetchone()
+            if not custom_money_in_game:
+                custom_money_in_game = 0
+            elif type(custom_money_in_game) == StringType:
+                custom_money_in_game = int(custom_money_in_game)
+        
+        cursor.close()
+        
+        packet = PacketPokerUserInfo(serial = serial,
+                                     name = name,
+                                     email = email,
+                                     rating = rating)
+        return packet
+
+    def getPersonalInfo(self, serial):
+        user_info = self.getUserInfo(serial)
+        print "getPersonalInfo %s" % str(user_info)
+        packet = PacketPokerPersonalInfo(serial = user_info.serial,
+                                         name = user_info.name,
+                                         email = user_info.email,
+                                         rating = user_info.rating)
+        cursor = self.db.cursor()
+        sql = ( "select addr_street,addr_zip,addr_town,addr_state,addr_country,phone from users_private where serial = " + str(serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            return PacketPokerPersonalInfo(serial = serial)
+        (packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
+        cursor.close()
+        return packet
+
+    def setPersonalInfo(self, personal_info):
+        cursor = self.db.cursor()
+        sql = ( "update users_private set "
+                " addr_street = '" + personal_info.addr_street + "', "
+                " addr_zip = '" + personal_info.addr_zip + "', "
+                " addr_town = '" + personal_info.addr_town + "', "
+                " addr_state = '" + personal_info.addr_state + "', "
+                " addr_country = '" + personal_info.addr_country + "', "
+                " phone = '" + personal_info.phone + "' "
+                " where serial = " + str(personal_info.serial) )
+        if self.verbose > 1:
+            print "setPersonalInfo: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1 and cursor.rowcount != 0:
+            print " *ERROR* setPersonalInfo: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
+            return False
+        else:
+            return True
+
+    def setAccount(self, packet):
+        #
+        # name constraints check
+        #
+        status = checkName(packet.name)
+        if not status[0]:
+            return PacketError(code = status[1],
+                               message = status[2],
+                               other_type = packet.type)
+        #
+        # Look for user
+        #
+        cursor = self.db.cursor()
+        cursor.execute("select serial from users where name = '%s'" % packet.name)
+        numrows = int(cursor.rowcount)
+        #
+        # password constraints check
+        #
+        if ( numrows == 0 or ( numrows > 0 and packet.password != "" )):
+            status = checkPassword(packet.password)
+            if not status[0]:
+                return PacketError(code = status[1],
+                                   message = status[2],
+                                   other_type = packet.type)
+        #
+        # email constraints check
+        #
+        email_regexp = ".*.@.*\..*$"
+        if not re.match(email_regexp, packet.email):
+            return PacketError(code = PacketPokerSetAccount.INVALID_EMAIL,
+                               message = "email %s does not match %s " % ( packet.email, email_regexp ),
+                               other_type = packet.type)
+        if numrows == 0:
+            cursor.execute("select serial from users where email = '%s' " % packet.email)
+            numrows = int(cursor.rowcount)
+            if numrows > 0:
+                return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
+                                   message = "there already is another account with the email %s" % packet.email,
+                                   other_type = packet.type)
+            #
+            # User does not exists, create it
+            #
+            sql = "insert into users (created, name, password, email) values (%d, '%s', '%s', '%s')" % (time.time(), packet.name, packet.password, packet.email)
+            cursor.execute(sql)
+            if cursor.rowcount != 1:
+                print " *ERROR* setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "inserted %d rows (expected 1)" % cursor.rowcount,
+                                   other_type = packet.type)
+            #
+            # Accomodate for MySQLdb versions < 1.1
+            #
+            if hasattr(cursor, "lastrowid"):
+                packet.serial = cursor.lastrowid
+            else:
+                packet.serial = cursor.insert_id()
+            cursor.execute("insert into users_private (serial) values ('%d')" % packet.serial)
+            if int(cursor.rowcount) == 0:
+                print " *ERROR* setAccount: unable to create user_private entry for serial %d" % packet.serial
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "unable to create user_private entry for serial %d" % packet.serial,
+                                   other_type = packet.type)
+        else:
+            #
+            # User exists, update name, password and email
+            #
+            (serial,) = cursor.fetchone()
+            if serial != packet.serial:
+                return PacketError(code = PacketPokerSetAccount.NAME_ALREADY_EXISTS,
+                                   message = "user name %s already exists" % packet.name,
+                                   other_type = packet.type)
+            cursor.execute("select serial from users where email = '%s' and serial != %d" % ( packet.email, serial ))
+            numrows = int(cursor.rowcount)
+            if numrows > 0:
+                return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
+                                   message = "there already is another account with the email %s" % packet.email,
+                                   other_type = packet.type)
+            set_password = packet.password and ", password = '" + packet.password + "' " or ""
+            sql = ( "update users set "
+                    " name = '" + packet.name + "', "
+                    " email = '" + packet.email + "' " + 
+                    set_password +
+                    " where serial = " + str(packet.serial) )
+            if self.verbose > 1:
+                print "setAccount: %s" % sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1 and cursor.rowcount != 0:
+                print " *ERROR* setAccount: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "modified %d rows (expected 1 or 0)" % cursor.rowcount,
+                                   other_type = packet.type)
+        #
+        # Set personal information
+        #
+        if not self.setPersonalInfo(packet):
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "unable to set personal information",
+                                   other_type = packet.type)
+        return self.getPersonalInfo(packet.serial)
+
+    def setPlayerInfo(self, player_info):
+        cursor = self.db.cursor()
+        sql = ( "update users set "
+                " name = '" + player_info.name + "', "
+                " skin_url = '" + player_info.url + "', "
+                " skin_outfit = '" + player_info.outfit + "' "
+                " where serial = " + str(player_info.serial) )
+        if self.verbose > 1:
+            print "setPlayerInfo: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1 and cursor.rowcount != 0:
+            print " *ERROR* setPlayerInfo: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
+            return False
+        return True
+        
+        
+    def getName(self, serial):
+        if serial == 0:
+            return "anonymous"
+        
+        cursor = self.db.cursor()
+        sql = ( "select name from users where serial = " + str(serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* getName(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            return "UNKNOWN"
+        (name,) = cursor.fetchone()
+        cursor.close()
+        return name
+
+    def buyInPlayer(self, serial, table_id, money, amount):
+        # unaccounted money is delivered regardless and not accounted for
+        if money == '': return amount;
+        
+        withdraw = min(self.getMoney(serial, money), amount)
+        cursor = self.db.cursor()
+        sql = ( "update money_" + money + ",user2table set "
+                " user2table.money = user2table.money + " + str(withdraw) + ", "
+                " money_" + money + ".money = money_" + money + ".money - " + str(withdraw) + " "
+                " where money_" + money + ".user_serial = " + str(serial) + " and "
+                "       user2table.user_serial = " + str(serial) + " and "
+                "       user2table.table_serial = " + str(table_id) )
+        if self.verbose > 1:
+            print "buyInPlayer: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 0 and cursor.rowcount != 2:
+            print " *ERROR* modified %d rows (expected 0 or 2): %s " % ( cursor.rowcount, sql )
+        return withdraw
+
+    def seatPlayer(self, serial, table_id, amount):
+        status = True
+        cursor = self.db.cursor()
+        sql = ( "insert user2table ( user_serial, table_serial, money) values "
+                " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + " )" )
+        if self.verbose > 1:
+            print "seatPlayer: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            status = False
+        cursor.close()
+        return status
+
+    def movePlayer(self, serial, from_table_id, to_table_id):
+        money = -1
+        cursor = self.db.cursor()
+        sql = ( "select money from user2table "
+                "  where user_serial = " + str(serial) + " and"
+                "        table_serial = " + str(from_table_id) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* movePlayer(%d) expected one row got %d" % ( serial, cursor.rowcount )
+        (money,) = cursor.fetchone()
+        cursor.close()
+
+        if money > 0:
+            cursor = self.db.cursor()
+            sql = ( "update user2table "
+                    "  set table_serial = " + str(to_table_id) +
+                    "  where user_serial = " + str(serial) + " and"
+                    "        table_serial = " + str(from_table_id) )
+            if self.verbose > 1:
+                print "movePlayer: %s" % sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1:
+                print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+                money = -1
+            cursor.close()
+
+        # HACK CHECK
+#        cursor = self.db.cursor()
+#        sql = ( "select sum(money), sum(bet) from user2table" )
+#        cursor.execute(sql)
+#        (total_money,bet) = cursor.fetchone()
+#        if total_money + bet != 120000:
+#            print "BUG(6) %d" % (total_money + bet)
+#            os.abort()
+#        cursor.close()
+        # END HACK CHECK
+        
+        return money
+        
+    def leavePlayer(self, serial, table_id, money):
+        status = True
+        cursor = self.db.cursor()
+        if money != '':
+           sql = ( "update money_" + money + ",user2table set "
+                   " money_" + money + ".money = money_" + money + ".money + user2table.money "
+                   " where money_" + money + ".user_serial = " + str(serial) + " and "
+                   "       user2table.user_serial = " + str(serial) + " and "
+                   "       user2table.table_serial = " + str(table_id) )
+           if self.verbose > 1:
+               print "leavePlayer %s" % sql
+           cursor.execute(sql)
+           if cursor.rowcount > 1:
+                print " *ERROR* modified %d rows (expected 0 or 1): %s " % ( cursor.rowcount, sql )
+                status = False
+        sql = ( "delete from user2table "
+                " where user_serial = " + str(serial) + " and "
+                "       table_serial = " + str(table_id) )
+        if self.verbose > 1:
+            print "leavePlayer %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+        return status
+
+    def updatePlayerMoney(self, serial, table_id, amount):
+        if amount == 0:
+            return True
+        status = True
+        cursor = self.db.cursor()
+        sql = ( "update user2table set "
+                " money = money + " + str(amount) + ", "
+                " bet = bet - " + str(amount) +
+                " where user_serial = " + str(serial) + " and "
+                "       table_serial = " + str(table_id) )
+        if self.verbose > 1:
+            print "updatePlayerMoney: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            status = False
+        cursor.close()
+        
+#         # HACK CHECK
+#         cursor = self.db.cursor()
+#         sql = ( "select sum(money), sum(bet) from user2table" )
+#         cursor.execute(sql)
+#         (money,bet) = cursor.fetchone()
+#         if money + bet != 120000:
+#             print "BUG(4) %d" % (money + bet)
+#             os.abort()
+#         cursor.close()
+
+#         cursor = self.db.cursor()
+#         sql = ( "select user_serial,table_serial,money from user2table where money < 0" )
+#         cursor.execute(sql)
+#         if cursor.rowcount >= 1:
+#             (user_serial, table_serial, money) = cursor.fetchone()
+#             print "BUG(11) %d/%d/%d" % (user_serial, table_serial, money)
+#             os.abort()
+#         cursor.close()
+#         # END HACK CHECK
+        
+        return status
+
+    def tableMoneyAndBet(self, table_id):
+        cursor = self.db.cursor()
+        sql = ( "select sum(money), sum(bet) from user2table where table_serial = " + str(table_id) )
+        cursor.execute(sql)
+        (money, bet) = cursor.fetchone()
+        cursor.close()
+        if not money: money = 0
+        elif type(money) == StringType: money = int(money)
+        if not bet: bet = 0
+        elif type(bet) == StringType: bet = int(bet)
+        return  (money, bet)
+        
+    def destroyTable(self, table_id):
+
+#         # HACK CHECK
+#         cursor = self.db.cursor()
+#         sql = ( "select * from user2table where money != 0 and bet != 0 and table_serial = " + str(table_id) )
+#         cursor.execute(sql)
+#         if cursor.rowcount != 0:
+#             print "BUG(10)"
+#             os.abort()
+#         cursor.close()
+#         # END HACK CHECK
+        
+        cursor = self.db.cursor()
+        sql = ( "delete from user2table "
+                "  where table_serial = " + str(table_id) )
+        if self.verbose > 1:
+            print "destroy: %s" % sql
+        cursor.execute(sql)
+
+#     def setRating(self, winners, serials):
+#         url = self.settings.headerGet("/server/@rating")
+#         if url == "":
+#             return
+        
+#         params = []
+#         for first in range(0, len(serials) - 1):
+#             for second in range(first + 1, len(serials)):
+#                 first_wins = serials[first] in winners
+#                 second_wins = serials[second] in winners
+#                 if first_wins or second_wins:
+#                     param = "a=%d&b=%d&c=" % ( serials[first], serials[second] )
+#                     if first_wins and second_wins:
+#                         param += "2"
+#                     elif first_wins:
+#                         param += "0"
+#                     else:
+#                         param += "1"
+#                     params.append(param)
+
+#         params = join(params, '&')
+#         if self.verbose > 2:
+#             print "setRating: url = %s" % url + params
+#         content = loadURL(url + params)
+#         if self.verbose > 2:
+#             print "setRating: %s" % content
+        
+    def resetBet(self, table_id):
+        status = True
+        cursor = self.db.cursor()
+        sql = ( "update user2table set bet = 0 "
+                " where table_serial = " + str(table_id) )
+        if self.verbose > 1:
+            print "resetBet: %s" % sql
+        cursor.execute(sql)
+        cursor.close()
+
+#         # HACK CHECK
+#         cursor = self.db.cursor()
+#         sql = ( "select sum(money), sum(bet) from user2table" )
+#         cursor.execute(sql)
+#         (money,bet) = cursor.fetchone()
+#         if money + bet != 120000:
+#             print "BUG(2) %d" % (money + bet)
+#             os.abort()
+#         cursor.close()
+#         # END HACK CHECK
+        
+        return status
+        
+    def getTable(self, game_id):
+        for table in self.tables:
+            if game_id == table.game.id:
+                game = table.game
+                return table
+        return False
+
+    def createTable(self, owner, description):
+        #
+        # Do not create two tables by the same name
+        #
+        if filter(lambda table: table.game.name == description["name"], self.tables):
+            print "*ERROR* will not create two tables by the same name %s" % description["name"]
+            return False
+        
+        id = self.table_serial
+        table = PokerTable(self, id, description)
+        table.owner = owner
+
+        cursor = self.db.cursor()
+        sql = ( "insert pokertables ( serial, name, money ) values "
+                " ( " + str(id) + ", \"" + description["name"] + "\", \"" + description["money"] + "\" ) " )
+        if self.verbose > 1:
+            print "createTable: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+
+        self.tables.append(table)
+        self.table_serial += 1
+
+        if self.verbose:
+            print "table created : %s" % table.game.name
+
+        return table
+
+    def cleanupCrashedTables(self):
+        cursor = self.db.cursor()
+
+        sql = ( "select user_serial,table_serial from user2table " )
+        cursor.execute(sql)
+        for i in xrange(cursor.rowcount):
+            (user_serial, table_serial) = cursor.fetchone()
+            self.leavePlayer(user_serial, table_serial)
+
+        cursor.close()
+        self.shutdownTables()
+
+    def shutdownTables(self):
+        cursor = self.db.cursor()
+        sql = ( "delete from pokertables" )
+        cursor.execute(sql)
+        if self.verbose > 1:
+            print "shutdownTables: " + sql
+        cursor.close()
+        
+    def deleteTable(self, table):
+        if self.verbose:
+            print "table %s/%d removed from server" % ( table.game.name, table.game.id )
+        self.tables.remove(table)
+        cursor = self.db.cursor()
+        sql = ( "delete from  pokertables where serial = " + str(table.game.id) )
+        if self.verbose > 1:
+            print "deleteTable: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* deleted %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        cursor.close()
+
+class PokerAuth:
+
+    def __init__(self, db, settings):
+        self.db = db
+        self.type2auth = {}
+        self.verbose = settings.headerGetInt("/server/@verbose")
+
+    def SetLevel(self, type, level):
+        self.type2auth[type] = level
+
+    def GetLevel(self, type):
+        return self.type2auth.has_key(type) and self.type2auth[type]
+    
+    def auth(self, name, password):
+        cursor = self.db.cursor()
+        cursor.execute("select serial, password, privilege from users "
+                       "where name = '%s'" % name)
+        numrows = int(cursor.rowcount)
+        serial = 0
+        privilege = User.REGULAR
+        if numrows <= 0:
+            if self.verbose > 1:
+                print "user %s does not exist, create it" % name
+            serial = self.userCreate(name, password)
+        elif numrows > 1:
+            print "more than one row for %s" % name
+            return ( False, "Invalid login or password" )
+        else: 
+            (serial, password_sql, privilege) = cursor.fetchone()
+            cursor.close()
+            if password_sql != password:
+                print "password mismatch for %s" % name
+                return ( False, "Invalid login or password" )
+
+        return ( (serial, name, privilege), None )
+
+    def userCreate(self, name, password):
+        if self.verbose:
+            print "creating user %s" % name,
+        cursor = self.db.cursor()
+        cursor.execute("insert into users (created, name, password) values (%d, '%s', '%s')" %
+                       (time.time(), name, password))
+        #
+        # Accomodate for MySQLdb versions < 1.1
+        #
+        if hasattr(cursor, "lastrowid"):
+            serial = cursor.lastrowid
+        else:
+            serial = cursor.insert_id()
+        if self.verbose:
+            print "create user with serial %s" % serial
+        cursor.execute("insert into users_private (serial) values ('%d')" % serial)
+        cursor.close()
+        return int(serial)
+
+if HAS_OPENSSL:
+    class SSLContextFactory:
+    
+        def __init__(self, settings):
+            self.pem_file = None
+            for dir in split(settings.headerGet("/server/path")):
+                if exists(dir + "/poker.pem"):
+                    self.pem_file = dir + "/poker.pem"
+            
+        def getContext(self):
+            ctx = SSL.Context(SSL.SSLv23_METHOD)
+            ctx.use_certificate_file(self.pem_file)
+            ctx.use_privatekey_file(self.pem_file)
+            return ctx
+    
+from twisted.web import resource, server
+
+class PokerTree(resource.Resource):
+
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.putChild("RPC2", PokerXMLRPC(self.service))
+        try:
+            self.putChild("SOAP", PokerSOAP(self.service))
+        except:
+            print "SOAP service not available"
+        self.putChild("", self)
+
+    def render_GET(self, request):
+        return "Use /RPC2 or /SOAP"
+
+components.registerAdapter(PokerTree, IPokerService, resource.IResource)
+
+def _getRequestCookie(request):
+    if request.cookies:
+        return request.cookies[0]
+    else:
+        return request.getCookie(join(['TWISTED_SESSION'] + request.sitepath, '_'))
+
+class PokerXML(resource.Resource):
+
+    encoding = "ISO-8859-1"
+    
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.verbose = service.verbose
+
+    def sessionExpires(self, session):
+        self.service.destroyAvatar(session.avatar)
+        del session.avatar
+
+    def render(self, request):
+        if self.verbose > 2:
+            print "PokerXML::render " + request.content.read()
+        request.content.seek(0, 0)
+        if self.encoding is not None:
+            mimeType = 'text/xml; charset="%s"' % self.encoding
+        else:
+            mimeType = "text/xml"
+        request.setHeader("Content-type", mimeType)
+        args = self.getArguments(request)
+        if self.verbose > 2: print "PokerXML: " + str(args)
+        session = None
+        use_sessions = args[0]
+        args = args[1:]
+        if use_sessions == "use sessions":
+            if self.verbose > 2: print "PokerXML: Receive session cookie %s " % _getRequestCookie(request)
+            session = request.getSession()
+            if not hasattr(session, "avatar"):
+                session.avatar = self.service.createAvatar()
+                session.notifyOnExpire(lambda: self.sessionExpires(session))
+# For test : trigger session expiration in the next 4 seconds
+# see http://twistedmatrix.com/bugs/issue1090
+#                session.lastModified -= 900
+#                reactor.callLater(4, session.checkExpired)
+            avatar = session.avatar
+        else:
+            avatar = self.service.createAvatar()
+
+        logout = False
+        result_packets = []
+        for packet in self.args2packets(args):
+            if isinstance(packet, PacketError):
+                result_packets.append(packet)
+                break
+            else:
+                results = avatar.handlePacket(packet)
+                if use_sessions == "use sessions" and len(results) > 1:
+                    for result in results:
+                        if isinstance(result, PacketSerial):
+                            result.cookie = _getRequestCookie(request)
+                            if self.verbose > 2: print "PokerXML: Send session cookie " + result.cookie
+                            break
+                result_packets.extend(results)
+                if isinstance(packet, PacketLogout):
+                    logout = True
+        result_maps = self.packets2maps(result_packets)
+
+        if use_sessions != "use sessions":
+            self.service.destroyAvatar(avatar)
+        elif use_sessions == "use sessions" and logout:
+            session.expire()
+
+        result_string = self.maps2result(result_maps)
+        request.setHeader("Content-length", str(len(result_string)))
+        return result_string
+
+    def args2packets(self, args):
+        packets = []
+        for arg in args:
+            if re.match("^[a-zA-Z]+$", arg['type']):
+                try:
+                    fun_args = len(arg) > 1 and '(**arg)' or '()'
+                    packets.append(eval(arg['type'] + fun_args))
+                except:
+                    packets.append(PacketError(message = "Unable to instantiate %s(%s)" % ( arg['type'], arg )))
+            else:
+                packets.append(PacketError(message = "Invalid type name %s" % arg['type']))
+        return packets
+
+    def packets2maps(self, packets):
+        maps = []
+        for packet in packets:
+            attributes = packet.__dict__.copy()
+            attributes['type'] = packet.__class__.__name__
+            maps.append(attributes)
+        return maps
+
+    def getArguments(self, request):
+        pass
+    
+    def maps2result(self, maps):
+        pass
+
+    def fromutf8(self, tree):
+        return self.walk(tree, lambda x: x.encode(self.encoding))
+
+    def toutf8(self, tree):
+        return self.walk(tree, lambda x: unicode(x, self.encoding))
+
+    def walk(self, tree, convert):
+        if type(tree) is TupleType or type(tree) is ListType:
+            result = map(lambda x: self.walk(x, convert), tree)
+            if type(tree) is TupleType:
+                return tuple(result)
+            else:
+                return result
+        elif type(tree) is DictionaryType:
+            for (key, value) in tree.iteritems():
+                tree[key] = self.walk(value, convert)
+            return tree
+        elif ( type(tree) is UnicodeType or type(tree) is StringType ):
+            return convert(tree)
+        else:
+            return tree
+
+import xmlrpclib
+
+class PokerXMLRPC(PokerXML):
+
+    def getArguments(self, request):
+        ( args, functionPath ) = xmlrpclib.loads(request.content.read())
+        return self.fromutf8(args)
+    
+    def maps2result(self, maps):
+        return xmlrpclib.dumps((maps, ), methodresponse = 1)
+
+try:
+    import SOAPpy
+
+    class PokerSOAP(PokerXML):
+    
+        def getArguments(self, request):
+            data = request.content.read()
+    
+            p, header, body, attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
+    
+            methodName, args, kwargs, ns = p._name, p._aslist, p._asdict, p._ns
+            
+            # deal with changes in SOAPpy 0.11
+            if callable(args):
+                args = args()
+            if callable(kwargs):
+                kwargs = kwargs()
+    
+            return self.fromutf8(SOAPpy.simplify(args))
+    
+        def maps2result(self, maps):
+            return SOAPpy.buildSOAP(kw = {'Result': self.toutf8(maps)},
+                                    method = 'returnPacket',
+                                    encoding = self.encoding)
+except:
+    print "Python SOAP module not available"
+            
