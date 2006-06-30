@@ -1,0 +1,79 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+import unittest
+import libxml2
+
+from pokernetwork import pokerdatabase
+from pokernetwork import pokernetworkconfig
+from pokernetwork import version
+
+settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="1">
+  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+            root_user="root" root_password="" schema="@top_srcdir@/database/schema.sql" command="@MYSQL@" />
+</server>
+"""
+            
+class PokerDatabaseTestCase(unittest.TestCase):
+    
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.db = pokerdatabase.PokerDatabase(settings)
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+        del self.db
+        os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'")
+        
+    # -----------------------------------------------------------------------------------------------------    
+    def test_upgrade(self):
+        self.db.setVersionInDatabase("0.0.0")
+        self.db.version = version.Version("0.0.0")
+        self.db.upgrade('test-pokerdatabase', False)
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(PokerDatabaseTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+def Run(verbose = 2):
+    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    Run()
