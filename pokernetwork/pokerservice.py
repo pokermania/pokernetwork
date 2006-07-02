@@ -1,5 +1,5 @@
 #
-# -*- coding: iso-8859-1 -*-
+# -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
@@ -42,11 +42,11 @@ from MySQLdb.cursors import DictCursor
 from OpenSSL import SSL
 
 try:
-        from OpenSSL import SSL
-        HAS_OPENSSL=True
+    from OpenSSL import SSL
+    HAS_OPENSSL=True
 except:
-        print "openSSL not available."
-        HAS_OPENSSL=False
+    print "openSSL not available."
+    HAS_OPENSSL=False
         
 
 from twisted.application import service
@@ -130,6 +130,7 @@ class PokerService(service.Service):
 
     def __init__(self, settings):
         self.db = PokerDatabase(settings)
+        self.cashier = BankClient(settings.headerGetProperties("/server/cashier"))
         self.poker_auth = PokerAuth(self.db, settings)
         self.settings = settings
         self.dirs = split(settings.headerGet("/server/path"))
@@ -148,6 +149,7 @@ class PokerService(service.Service):
         self.tourneys = {}
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
+        self.timer = {}
         self.updateTourneysSchedule()
         self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
@@ -163,9 +165,19 @@ class PokerService(service.Service):
         deferred = self.shutdown()
         deferred.addCallback(self.stopServiceFinish)
         return deferred
-    
+
+    def cancelTimer(self, key):
+        if self.timer.has_key(key):
+           if self.verbose: print "cancelTimer " + key
+           timer = self.timer[key]
+           if timer.active():
+              timer.cancel()
+           del self.timer[key]
+            
     def shutdown(self):
         self.shutting_down = True
+        self.cancelTimer('checkTourney')
+        self.cancelTimer('updateTourney')
         self.shutdown_deferred = defer.Deferred()
         reactor.callLater(0, self.shutdownCheck)
         return self.shutdown_deferred
@@ -235,7 +247,8 @@ class PokerService(service.Service):
         self.tourneys_schedule = dict(zip(map(lambda schedule: schedule['serial'], result), result))
         cursor.close()
         self.checkTourneysSchedule()
-        reactor.callLater(10 * 60, self.updateTourneysSchedule)
+        self.cancelTimer('updateTourney')
+        self.timer['updateTourney'] = reactor.callLater(10 * 60, self.updateTourneysSchedule)
 
     def checkTourneysSchedule(self):
         if self.verbose > 4: print "checkTourneysSchedule"
@@ -248,7 +261,8 @@ class PokerService(service.Service):
         for tourney in filter(lambda tourney: tourney.state == TOURNAMENT_STATE_COMPLETE, self.tourneys.values()):
             if now - tourney.finish_time > 15 * 60:
                 self.deleteTourney(tourney)
-        reactor.callLater(60, self.checkTourneysSchedule)
+        self.cancelTimer('checkTourney')
+        self.timer['checkTourney'] = reactor.callLater(60, self.checkTourneysSchedule)
 
     def spawnTourney(self, schedule):
         cursor = self.db.cursor()
@@ -750,6 +764,115 @@ class PokerService(service.Service):
                                      url = skin_url,
                                      outfit = skin_outfit)
 
+    def cashIn(self, packet):
+        cursor = self.db.cursor()
+        #
+        # Figure out the bank_serial matching the URL
+        #
+        sql = "SELECT serial FROM banks WHERE url = %s"
+        cursor.execute(sql, pformat(packet.url))
+        if cursor.rowcount not in (1, 0):
+            message = sql % pformat(packet.url) + " found " + str(cursor.rowcount) + " records instead of 0 or 1"
+            print "*ERROR* " + message
+            cursor.close()
+            return PacketError(other_type = PACKET_POKER_CASH_IN,
+                               code = PacketPokerCashIn.DUPLICATE_BANK,
+                               message = message)
+        if cursor.rowcount == 0:
+            sql = "INSERT INTO banks (url) VALUES (%s)"
+            cursor.execute(sql, pformat(packet.url))
+            #
+            # Accomodate for MySQLdb versions < 1.1
+            #
+            if hasattr(cursor, "lastrowid"):
+                bank_serial = cursor.lastrowid
+            else:
+                bank_serial = cursor.insert_id()
+        else:
+            (bank_serial,) = cursor.fetchone()
+
+        #
+        # Validate the bank note and increase the user money 
+        #
+        self.db.db.autocommit(0)
+        cursor.execute("LOCK TABLE safe READ")
+        cursor.execute("START TRANSACTION")
+        try:
+            #
+            # Find the bank note in the safe
+            #
+            sql = "SELECT name, serial, value FROM safe WHERE bank_serial = " + str(bank_serial)
+            cursor.execute(sql)
+            if cursor.rowcount not in (0, 1):
+                message = sql + " found " + str(cursor.rowcount) + " records instead 1"
+                print "*ERROR* " + message
+                cursor.close()
+                return PacketError(other_type = PACKET_POKER_CASH_IN,
+                                   code = PacketPokerCashIn.SAFE,
+                                   message = message)
+            if cursor.rowcount == 1:
+                #
+                # A note already exists in the safe, merge it with the new note
+                #
+                (name, serial, value) = cursor.fetchone()
+                try:
+                    note_total = (packet.url, name, serial, value)
+                    note_new = (packet.url, packet.name, packet.bserial, packet.value)
+                    (url, merged_name, merged_serial, merged_value) = self.cashier.mergeNote(note_total, note_new)
+                except:
+                    return PacketError(other_type = PACKET_POKER_CASH_IN,
+                                       code = PacketPokerCashIn.REFUSED,
+                                       message = "The cashier refused your bank note")
+                #
+                # Update the dadabase accordingly
+                #
+                sql = ( "UPDATE safe SET " +
+                        " serial = " + str(merged_serial) +
+                        " value = " + str(merged_value) + 
+                        " name = " + merged_name + 
+                        " WHERE bank_serial = " + str(bank_serial) + " and "
+                        "       serial = " + str(serial) )
+                cursor.execute(sql)
+                if cursor.rowcount != 1:
+                    message = sql + " affected " + str(self.rowcount) + " records instead 1"
+                    print "*ERROR* " + message
+                    cursor.close()
+                    return PacketError(other_type = PACKET_POKER_CASH_IN,
+                                       code = PacketPokerCashIn.SAFE,
+                                       message = message)
+            else:
+                #
+                # This is the first deposit coming from this bank, change the note and store it
+                #
+                (url, name, serial, value) = self.cashier.changeNote(packet.url, packet.name, packet.serial, packet.value)
+                sql = ( " INSERT INTO SAFE (bank_serial, serial, value, name) VALUES ( " +
+                        str(bank_serial) + ", " +
+                        str(packet.name) + ", " + 
+                        str(packet.bserial) + ", " + 
+                        str(packet.value) + ") " )
+                if cursor.rowcount != 1:
+                    message = sql + " affected " + str(self.rowcount) + " records instead 1"
+                    print "*ERROR* " + message
+                    cursor.close()
+                    return PacketError(other_type = PACKET_POKER_CASH_IN,
+                                       code = PacketPokerCashIn.SAFE,
+                                       message = message)
+            #
+            # The bank note is secured, we can add to the user bank account
+            #
+            sql = ( "INSERT INTO user2money (user_serial, bank_serial, amount) VALUES (" +
+                    str(packet.serial) + ", " + str(bank_serial) + ", " + str(packet.value) + ") " + 
+                    " ON DUPLICATE KEY UPDATE amount = amount + " + str(packet.value) )
+            cursor.execute("COMMIT")
+            cursor.execute("UNLOCK TABLES")
+        except Exception e:
+            cursor.execute("ROLLBACK")
+            cursor.execute("UNLOCK TABLES")
+            raise e
+                
+    def cashOut(self, packet):
+        pass
+                
     def getUserInfo(self, serial):
         cursor = self.db.cursor()
         
@@ -967,7 +1090,7 @@ class PokerService(service.Service):
 
     def buyInPlayer(self, serial, table_id, money, amount):
         # unaccounted money is delivered regardless and not accounted for
-        if money == '': return amount;
+        if money == '': return amount
         
         withdraw = min(self.getMoney(serial, money), amount)
         cursor = self.db.cursor()
