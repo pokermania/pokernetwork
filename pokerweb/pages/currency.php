@@ -35,9 +35,9 @@ set_error_handler("myErrorHandler");
 
 */
 
-require_once 'bank_configuration.php';
+require_once 'currency_configuration.php';
 
-class bank {
+class currency {
 
   const E_UNKNOWN		=	0;
   const E_INVALID_NOTE		=	1;
@@ -56,13 +56,13 @@ class bank {
   var $fixedname = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
   function __construct($base = FALSE, $user = FALSE, $password = FALSE) {
-    $this->db_persist = $GLOBALS['bank_db_persist'];
+    $this->db_persist = $GLOBALS['currency_db_persist'];
     $this->db_host = "localhost";
     $this->db_port = 3306;
     $this->db_base = $base;
     $this->db_user = $user;
     $this->db_password = $password;
-    $this->db_prefix = "bank";
+    $this->db_prefix = "currency";
     $this->db_connection = FALSE;
     $this->db_selected = FALSE;
 
@@ -72,12 +72,12 @@ class bank {
 
     $this->trigger_error = FALSE;
 
-    $this->url = $GLOBALS['bank_url'];
+    $this->url = $GLOBALS['currency_url'];
 
-    $this->random_fd = fopen($GLOBALS['bank_random'], "r");
-    if(!$this->random_fd) throw new Exception("failed to open $bank_random");
+    $this->random_fd = fopen($GLOBALS['currency_random'], "r");
+    if(!$this->random_fd) throw new Exception("failed to open $currency_random");
 
-    $this->set_values($GLOBALS['bank_values']);
+    $this->set_values($GLOBALS['currency_values']);
   }
 
   function __destruct() {
@@ -88,7 +88,7 @@ class bank {
   function get_randname() {
     $number = fread($this->random_fd, self::key_size);
     if($number == FALSE)
-      throw new Exception("unable to read " . self::key_size . " from " . $GLOBALS['bank_random']);
+      throw new Exception("unable to read " . self::key_size . " from " . $GLOBALS['currency_random']);
     return bin2hex($number);
   }
 
@@ -245,7 +245,7 @@ class bank {
       }
     }
     if($retry >= 5)
-      throw new Exception("Unable to insert a note in the database (last name was $randname). This probably indicates a problem with the random feed " . $GLOBALS['bank_random'], self::E_RANDOM);
+      throw new Exception("Unable to insert a note in the database (last name was $randname). This probably indicates a problem with the random feed " . $GLOBALS['currency_random'], self::E_RANDOM);
     $insert_id = mysql_insert_id($this->connection);
     return array($this->url, $insert_id, $randname, $value);
   }
