@@ -68,7 +68,7 @@ class PokerTable:
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
         self.skin = description.get("skin", "default")
-        self.money = description.get("money", 0)
+        self.currency_serial = description.get("currency_serial", 0)
         self.playerTimeout = int(description["player_timeout"])        
         self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = description.has_key("transient")
@@ -803,7 +803,7 @@ class PokerTable:
             if self.isOpen():
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
-                    self.factory.leavePlayer(serial, game.id, self.money)
+                    self.factory.leavePlayer(serial, game.id, self.currency_serial)
                 else:
                     self.update()
             else:
@@ -828,7 +828,7 @@ class PokerTable:
             print " *ERROR* kickPlayer did not succeed in removing player %d from game %d" % ( serial, game.id )
             return
 
-        self.factory.leavePlayer(serial, game.id, self.money)
+        self.factory.leavePlayer(serial, game.id, self.currency_serial)
 
         if self.serial2client.has_key(serial):
             self.seated2observer(self.serial2client[serial])
@@ -848,7 +848,7 @@ class PokerTable:
                 #
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
-                    self.factory.leavePlayer(serial, game.id, self.money)
+                    self.factory.leavePlayer(serial, game.id, self.currency_serial)
                 else:
                     self.update()
             else:
@@ -881,7 +881,7 @@ class PokerTable:
             if self.isOpen():
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
-                    self.factory.leavePlayer(serial, game.id, self.money)
+                    self.factory.leavePlayer(serial, game.id, self.currency_serial)
                 else:
                     self.update()
             else:
@@ -1125,7 +1125,7 @@ class PokerTable:
             client.error("player %d can't bring money to a transient table" % client.getSerial())
             return False
 
-        amount = self.factory.buyInPlayer(client.getSerial(), game.id, self.money, max(amount, game.buyIn()))
+        amount = self.factory.buyInPlayer(client.getSerial(), game.id, self.currency_serial, max(amount, game.buyIn()))
         return client.setMoney(self, amount)
         
     def rebuyPlayerRequest(self, client, amount):
@@ -1152,7 +1152,7 @@ class PokerTable:
         if amount == 0:
             amount = game.buyIn()
             
-        amount = self.factory.buyInPlayer(serial, game.id, self.money, min(amount, maximum))
+        amount = self.factory.buyInPlayer(serial, game.id, self.currency_serial, min(amount, maximum))
 
         if amount == 0:
             client.error("player %d is broke and cannot rebuy" % serial)

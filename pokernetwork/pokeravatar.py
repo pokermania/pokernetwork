@@ -206,13 +206,6 @@ class PokerAvatar:
                 print "attempt to get user info for user %d by user %d" % ( packet.serial, self.getSerial() )
             return
 
-        if packet.type == PACKET_POKER_GET_USER_INFO:
-            if self.getSerial() == packet.serial:
-                self.getUserInfo(packet.serial)
-            else:
-                print "attempt to get user info for user %d by user %d" % ( packet.serial, self.getSerial() )
-            return
-
         elif packet.type == PACKET_POKER_GET_PERSONAL_INFO:
             if self.getSerial() == packet.serial:
                 self.getPersonalInfo(packet.serial)
@@ -238,6 +231,24 @@ class PokerAvatar:
                 self.setPersonalInfo(packet)
             else:
                 print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
+            return
+
+        elif packet.type == PACKET_POKER_CASH_IN:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.service.cashIn(serial))
+            else:
+                print "attempt to cash in for user %d by user %d" % ( packet.serial, self.getSerial() )
+                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
+                                                        other_type = PACKET_POKER_CASH_IN))
+            return
+
+        elif packet.type == PACKET_POKER_CASH_OUT:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.service.cashOut(serial))
+            else:
+                print "attempt to cash out for user %d by user %d" % ( packet.serial, self.getSerial() )
+                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
+                                                        other_type = PACKET_POKER_CASH_OUT))
             return
 
         elif packet.type == PACKET_POKER_SET_ROLE:
@@ -593,7 +604,7 @@ class PokerAvatar:
             "variant": packet.variant,
             "betting_structure": packet.betting_structure,
             "player_timeout": packet.player_timeout,
-            "money": packet.money,
+            "currency_serial": packet.currency_serial,
             "transient": True })
         if not table:
             self.sendPacket(PacketPokerTable())
