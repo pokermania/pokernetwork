@@ -30,7 +30,11 @@ import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
-import unittest
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor
+
+twisted.internet.base.DelayedCall.debug = True
 import libxml2
 
 from pokernetwork import pokerdatabase
@@ -40,14 +44,18 @@ from pokernetwork import version
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="1">
   <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
-            root_user="root" root_password="" schema="@top_srcdir@/database/schema.sql" command="@MYSQL@" />
+            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """
             
 class PokerDatabaseTestCase(unittest.TestCase):
-    
+
+    def destroyDb(self):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
+        self.destroyDb()
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
@@ -55,25 +63,66 @@ class PokerDatabaseTestCase(unittest.TestCase):
     
     # -----------------------------------------------------------------------------------------------------    
     def tearDown(self):
+        self.db.close()
         del self.db
-        os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'")
+        self.destroyDb()
         
     # -----------------------------------------------------------------------------------------------------    
-    def test_upgrade(self):
+    def test01_upgrade(self):
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
-        self.db.upgrade('test-pokerdatabase', False)
+        self.db.upgrade('../test-pokerdatabase', False)
+
+    # -----------------------------------------------------------------------------------------------------    
+    def test02_dbpool(self):
+        dbpool = self.db.dbpool
+        d = dbpool.runQuery("SELECT SLEEP(2)")
+        def dbpool_fails(reason):
+            raise reason
+        d.addErrback(dbpool_fails)
+        return d
+
+    # -----------------------------------------------------------------------------------------------------    
+    def test03_dbpool(self):
+        dbpool = self.db.dbpool
+        sql = "Yerk"
+        d = dbpool.runQuery(sql)
+        def dbpool_fails(reason):
+            pass
+        d.addErrback(dbpool_fails)
+        def dbpool_succeed(result):
+            self.fail("sql statement " + sql + " did not trigger an error")
+        d.addErrback(dbpool_fails)
+        return d
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
-    suite = unittest.TestSuite()
+    suite = runner.TestSuite(PokerDatabaseTestCase)
     suite.addTest(unittest.makeSuite(PokerDatabaseTestCase))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
-def Run(verbose = 2):
-    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+def GetTestedModule():
+    return pokerengineconfig
+  
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test03"
+    suite = loader.loadClass(PokerDatabaseTestCase)
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    Run()
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerdatabase.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerdatabase.py' TESTS='coverage-reset test-pokerdatabase.py coverage-report' check )"
+# End:
