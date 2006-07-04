@@ -32,16 +32,21 @@ require_once 'PHPUnit2/Framework/TestCase.php';
 
 require_once 'currency.php';
 
+$GLOBALS['currency_db_base'] = 'currencytest';
+
 class testcurrency extends PHPUnit2_Framework_TestCase
 {
     private $currency;
   
     protected function setUp()
     {
+      $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+      mysql_query("DROP DATABASE IF EXISTS " . $GLOBALS['currency_db_base'], $c);
+      mysql_close($c);
       $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
     }
     
-    public function testFake()
+    public function test_get_note()
     {
       $note = $this->currency->get_note(100);
     }

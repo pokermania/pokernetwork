@@ -32,6 +32,7 @@ sys.path.insert(0, "..")
 
 import libxml2
 from MySQLdb.cursors import DictCursor
+from pprint import pprint
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
@@ -41,6 +42,7 @@ twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokerservice, pokernetworkconfig, user
 from pokernetwork.currencyclient import FakeCurrencyClient
+from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="0" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -62,6 +64,7 @@ class PokerServiceTestCase(unittest.TestCase):
     
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
+        os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'")
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
@@ -72,7 +75,7 @@ class PokerServiceTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------    
     def tearDown(self):
         d = self.service.stopService()
-        d.addCallback(lambda x: os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'"))
+#        d.addCallback(lambda x: os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'"))
         return d
         
     # -----------------------------------------------------------------------------------------------------    
@@ -92,7 +95,6 @@ class PokerServiceTestCase(unittest.TestCase):
 
         user_serial = self.service.poker_auth.userCreate("user1", "password1")
 
-        from pokernetwork.pokerpackets import PacketPokerCashIn
         #
         # Cash in <value> more from the fake currency
         #
@@ -170,7 +172,6 @@ class PokerServiceTestCase(unittest.TestCase):
     def test03_getUserInfo(self):
         self.service.startService()
 
-        from pokernetwork.currencyclient import FakeCurrencyClient
         self.service.cashier = FakeCurrencyClient(self.service.cashier.parameters)
 
         user_serial = self.service.poker_auth.userCreate("user1", "password1")
@@ -180,17 +181,44 @@ class PokerServiceTestCase(unittest.TestCase):
         info = self.service.getUserInfo(user_serial)
         self.assertEqual(0, len(info.money))
         #
-        # Two currencies mean two rows
+        # Two currencies means two rows
         #
         packet = PacketPokerCashIn(serial = user_serial,
                                    url = "ONE",
+                                   name = "100",
                                    bserial = 1,
-                                   value = value)
-        self.service.cashIn(packet)
-        packet.url = "TWO"
-        packet.value = 200
-        self.service.cashIn(packet)
-        self.assertEqual(2, len(info.money))
+                                   value = 100)
+        packet2 = PacketPokerCashIn(serial = user_serial,
+                                    url = "TWO",
+                                    name = "200",
+                                    bserial = 1,
+                                    value = 200)
+        self.assertEquals(PacketAck(), self.service.cashIn(packet))
+        self.assertEquals(PacketAck(), self.service.cashIn(packet2))
+        info = self.service.getUserInfo(user_serial)
+        self.assertEquals({1: (100, 0), 2: (200, 0)}, info.money)
+        #
+        # Some money is on a table
+        #
+        table_serial = self.service.tables[0].game.id
+        buy_in = 50
+        currency_serial = 1
+        self.assertEquals(currency_serial, self.service.tables[0].currency_serial)
+        self.service.seatPlayer(user_serial, table_serial, 0)
+        self.service.buyInPlayer(user_serial, table_serial, currency_serial, buy_in)
+        info = self.service.getUserInfo(user_serial)
+        self.assertEquals({1: (50, 50), 2: (200, 0)}, info.money)
+        #
+        # 
+        #
+        user2_serial = self.service.poker_auth.userCreate("user2", "password1")
+        packet.serial = user2_serial
+        packet.name = "2.200"
+        self.assertEquals(PacketAck(), self.service.cashIn(packet))
+        self.service.seatPlayer(user2_serial, table_serial, 0)
+        self.service.buyInPlayer(user2_serial, table_serial, currency_serial, buy_in)
+        info = self.service.getUserInfo(user2_serial)
+        self.assertEquals({1: (50, 50)}, info.money)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
@@ -204,7 +232,9 @@ def GetTestedModule():
   
 # -----------------------------------------------------------------------------------------------------
 def Run():
-    suite = runner.TestLoader().loadAnything(PokerServiceTestCase)
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test03"
+    suite = loader.loadClass(PokerServiceTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
@@ -219,6 +249,6 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='test-pokerservice.py' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice.py coverage-report' check )"
 # End:
 
