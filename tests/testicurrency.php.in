@@ -1,0 +1,128 @@
+<?php
+//
+// Copyright (C) 2006 Mekensleep
+//
+// Mekensleep
+// 24 rue vieille du temple
+// 75004 Paris
+//       licensing@mekensleep.com
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+//
+// Authors:
+//  Loic Dachary <loic@gnu.org>
+//
+
+ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
+ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/conf");
+
+require_once 'PHPUnit2/Framework/TestCase.php';
+
+define('CURRENCY_INCLUDED', 'yes');
+
+require_once 'icurrency.php';
+
+$GLOBALS['currency_db_base'] = 'currencytest';
+
+class testicurrency extends PHPUnit2_Framework_TestCase
+{
+    protected function setUp()
+    {
+      $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+      mysql_query("DROP DATABASE IF EXISTS " . $GLOBALS['currency_db_base'], $c);
+      mysql_close($c);
+    }
+
+    public function test_get_note()
+    {
+      $_GET['command'] = 'get_note';
+      $_GET['value'] = 100;
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      $this->assertEquals(count(split("\n", $output)), 1);
+      $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	100$|', $output);
+    }
+
+    public function prepare_merge_notes()
+    {
+      $_GET['command'] = 'get_note';
+      $_GET['value'] = 100;
+      $serials = array();
+      $values = array();
+      $names = array();
+      for($i = 0; $i < 3; $i++) {
+        ob_start();
+        main();
+        $note = split("\t", ob_get_contents());
+        array_push($serials, $note[1]);
+        array_push($names, $note[2]);
+        array_push($values, $note[3]);
+        ob_end_clean();
+      }
+      $_GET['command'] = 'merge_notes';
+      $_GET['serial'] = $serials;
+      $_GET['name'] = $names;
+      $_GET['value'] = $values;
+    }
+
+    public function test_merge_notes_1()
+    {
+      $this->prepare_merge_notes();
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      $lines = split("\n", $output);
+      $this->assertEquals(count($lines), 2, $output);
+      $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
+      $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
+    }
+
+    public function test_merge_notes_2()
+    {
+      $this->prepare_merge_notes();
+      $_GET['values'] = '';
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      $lines = split("\n", $output);
+      $this->assertEquals(count($lines), 2, $output);
+      $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
+      $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
+    }
+
+    public function test_merge_notes_3()
+    {
+      $this->prepare_merge_notes();
+      $_GET['values'] = array(300);
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      $lines = split("\n", $output);
+      $this->assertEquals(count($lines), 1, $output);
+      $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	300$|', $lines[0]);
+    }
+}
+
+//
+// Interpreted by emacs
+// Local Variables:
+// compile-command: "( cd .. ; ./config.status tests/testicurrency.php ) ; ( cd ../tests ; make TESTS='testicurrency.php' check )"
+// End:
+?>
