@@ -1,0 +1,166 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+from twisted.python import failure
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor
+from twisted.internet import defer
+
+twisted.internet.base.DelayedCall.debug = True
+
+from urlparse import urlparse
+
+from pokernetwork import currencyclient
+
+class CurrencyClientTestCase(unittest.TestCase):
+
+    def destroyDb(self):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS currencytest'")
+    
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        self.destroyDb()
+        self.client = currencyclient.CurrencyClient({})
+        self.client.getPage = self.getPage
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+        del self.client
+        self.destroyDb()
+        
+    def getPage(self, url):
+        ( scheme, netloc, path, parameters, query, fragement ) = urlparse(url)
+        cmd = "LOCAL_PHP_PATH='@srcdir@/../../pokerweb/pages:@srcdir@/../../pokerweb/conf' QUERY_STRING='" + query + "' @PHP@ --define extension=mysql.so @srcdir@/../../pokerweb/pages/icurrency.php"
+        print cmd
+        fd = os.popen(cmd)
+        result = fd.read()
+        fd.close()
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(result))
+        return d
+
+    # -----------------------------------------------------------------------------------------------------    
+    def test_getNote(self):
+        d = self.client.getNote('http://localhost/currency/', 100)
+        def validate(result):
+            if isinstance(result, failure.Failure): raise result
+            self.assertEqual("http://localhost/currency/", result[0])
+            self.assertEqual(1, result[1])
+            self.assertEqual(40, len(result[2]))
+            self.assertEqual(100, result[3])
+            return result
+        d.addBoth(validate)
+        return d
+
+    # -----------------------------------------------------------------------------------------------------    
+    def test_changeNote(self):
+        d = self.test_getNote()
+
+        def changeNote(note):
+            d = self.client.changeNote(note)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual("http://localhost/currency/", result[0])
+                self.assertEqual(note[1], result[1])
+                self.assertEqual(40, len(result[2]))
+                self.assertNotEqual(note[2], result[2])
+                self.assertEqual(note[3], result[3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(changeNote)
+        return d
+
+    # -----------------------------------------------------------------------------------------------------    
+    def test_mergeNote(self):
+        notes = []
+        def addnote(result): 
+            notes.append(result)
+            return result
+
+        d1 = self.client.getNote('http://localhost/currency/', 100)
+        d1.addCallback(addnote)
+
+        d2 = self.client.getNote('http://localhost/currency/', 100)
+        d2.addCallback(addnote)
+
+        d = defer.DeferredList((d1, d2))
+
+        def mergeNote(note):
+            self.assertEquals(2, len(notes))
+            d = self.client.mergeNotes(notes[0], notes[1])
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual("http://localhost/currency/", result[0])
+                self.assertEqual(1, result[1])
+                self.assertEqual(40, len(result[2]))
+                self.assertEqual(200, result[3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(mergeNote)
+        return d
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = runner.TestSuite(CurrencyClientTestCase)
+    suite.addTest(unittest.makeSuite(CurrencyClientTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return currencyclient
+  
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test03"
+    suite = loader.loadClass(CurrencyClientTestCase)
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-currencyclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/currencyclient.py' TESTS='coverage-reset test-currencyclient.py coverage-report' check )"
+# End:
