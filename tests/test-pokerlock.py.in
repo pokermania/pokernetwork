@@ -1,0 +1,155 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+from twisted.python import failure
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor
+from twisted.internet import defer
+
+twisted.internet.base.DelayedCall.debug = True
+
+from urlparse import urlparse
+
+from pokernetwork import pokerlock
+
+class PokerLockTestCase(unittest.TestCase):
+
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        self.parameters = {'host': 'localhost', 'user': 'root', 'password': ''}
+        pokerlock.PokerLock.queue_timeout = 30
+        self.locker = pokerlock.PokerLock(self.parameters)
+        self.locker.start()
+        self.locker2 = pokerlock.PokerLock(self.parameters)
+        self.locker2.start()
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+        self.locker2.close()
+        self.locker.close()
+        
+    def test01_simple(self):
+        d = self.locker.acquire('lock01')
+        def validate(result):
+            if isinstance(result, failure.Failure): raise result
+            self.assertEqual("lock01", result)
+            self.locker.release('lock01')
+            return result
+        
+        d.addBoth(validate)
+        return d
+
+    def test02_wait(self):
+        def locker2_succeeded(result):
+            self.fail("locker2 succeeded with result = %s : should have failed with timeout")
+            self.locker2.close()
+
+        def locker2_failed(result):
+            self.assertTrue(isinstance(result, failure.Failure))
+            self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
+            
+        def locker2():
+            d = self.locker2.acquire('lock01', 5)
+            d.addCallback(locker2_succeeded)
+            d.addErrback(locker2_failed)
+            return d
+            
+        def validate(result):
+            if isinstance(result, failure.Failure): raise result
+            self.assertEqual("lock01", result)
+            return locker2()
+        
+        d = self.locker.acquire('lock01')
+        d.addBoth(validate)
+        return d
+
+    def test03_acquire_dead(self):
+        self.locker.close()
+        try:
+            self.locker.acquire('lock01')
+            problem = True
+        except Exception, e:
+            problem = False
+            self.assertEqual(e[0], pokerlock.PokerLocker.DEAD)
+        if problem:
+            self.fail("acquire on dead PokerLock did not raise exception")
+        
+    def test04_release_twice(self):
+        def validate(result):
+            if isinstance(result, failure.Failure): raise result
+            self.assertEqual("lock01", result)
+            self.locker.release("lock01")
+            try:
+                self.locker.release("lock01")
+                problem = True
+            except Exception, e:
+                problem = False
+                self.assertEqual(e[0], pokerlock.PokerLocker.RELEASE)
+            if problem:
+                self.fail("double release did not raise exception")
+        
+        d = self.locker.acquire('lock01')
+        d.addBoth(validate)
+        return d
+        
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = runner.TestSuite(PokerLockTestCase)
+    suite.addTest(unittest.makeSuite(PokerLockTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return currencyclient
+  
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test03"
+    suite = loader.loadClass(PokerLockTestCase)
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerlock.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerlock.py' TESTS='coverage-reset test-pokerlock.py coverage-report' check )"
+# End:
