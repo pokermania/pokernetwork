@@ -19,14 +19,14 @@
 			<Tool
 				Name="VCNMakeTool"
 				BuildCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -x -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin ; cp poker3d-interface.exe `cygpath &apos;%POK3DROOT%/underware/envwin32/bin-cygwin&apos;`&quot;"
+bash -x -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin&quot;"
 				ReBuildCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
-bash -x -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean all ; cp poker3d-interface.exe `cygpath &apos;%POK3DROOT%/underware/envwin32/bin-cygwin&apos;`&quot;
+bash -x -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean all&quot;
 "
 				CleanCommandLine="cd %POK3DROOT%/underware/envwin32/cygwin/bin
 bash -x -c &quot;PATH=/bin ; cd &apos;%POK3DROOT%/pokersource/poker-network/pokerclient2d&apos; ; make -f Makefile.cygwin clean&quot;
 "
-				Output="%POK3DROOT%/underware/envwin32/bin-cygwin/poker3d-interface.exe"/>
+				Output="$(InputDir)\..\poker3d-interface.exe"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
