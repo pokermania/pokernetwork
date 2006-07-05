@@ -1,0 +1,213 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@")
+sys.path.insert(0, "..")
+
+import libxml2
+from MySQLdb.cursors import DictCursor
+from pprint import pprint
+
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokercashier, pokernetworkconfig, user
+from pokernetwork.currencyclient import FakeCurrencyClient
+from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
+
+settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3">
+  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+</server>
+"""
+
+class PokerCashierTestCase(unittest.TestCase):
+
+    def destroyDb(self):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        self.destroyDb()
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.db = PokerDatabase(self.settings)
+        self.cashier = pokercashier.PokerCashier(settings)
+        self.cashier.setDb(self.db)
+        self.user_serial = 5050
+        self.user2_serial = 6060
+
+    # -----------------------------------------------------------------------------------------------------
+    def tearDown(self):
+        self.destroyDb()
+
+    # -----------------------------------------------------------------------------------------------------
+    def test02_cashIn(self):
+        self.cashier.currency_client = FakeCurrencyClient()
+
+        #
+        # Cash in <value> more from the fake currency
+        #
+        self.value = 100
+        self.url = 'http://fake'
+        packet = PacketPokerCashIn(serial = self.user_serial,
+                                   url = self.url,
+                                   bserial = 1,
+                                   value = self.value)
+        d = self.cashier.cashIn(packet)
+        #
+        # callLater(0) is useful to exit the defer callback chain *because*
+        # errors from cashIn_check aren't reported with the stack trace
+        # if it's just called from the defer callback chain.
+        #
+        d.addCallback(lambda result: reactor.callLater(0, self.check02_cashIn, packet))
+        return d
+
+    def check02_cashIn(self, packet):
+        cursor = self.db.cursor(DictCursor)
+
+        #
+        # A currency was created
+        #
+        cursor.execute("SELECT url, serial FROM currencies")
+        self.assertEquals(1, cursor.rowcount)
+        currency_row = cursor.fetchone()
+        self.assertEquals(self.url, currency_row['url'])
+        self.assertEquals(1, currency_row['serial'])
+        #
+        # With a single currency note
+        #
+        cursor.execute("SELECT currency_serial, serial, name, value FROM safe")
+        self.assertEquals(1, cursor.rowcount)
+        safe_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
+        self.assertEquals(1, safe_row['serial'])
+        self.assertEquals(self.value, safe_row['value'])
+        #
+        # Credited to the user
+        #
+        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money")
+        self.assertEquals(1, cursor.rowcount)
+        self.user2money_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], self.user2money_row['currency_serial'])
+        self.assertEquals(self.user_serial, self.user2money_row['user_serial'])
+        self.assertEquals(self.value, self.user2money_row['amount'])
+
+        cursor.close()
+
+    # -----------------------------------------------------------------------------------------------------
+    def test03_cashIn(self):
+        self.cashier.currency_client = FakeCurrencyClient()
+
+        self.value = 100
+        self.url = 'http://fake'
+
+        packet1 = PacketPokerCashIn(serial = self.user1_serial,
+                                    url = self.url,
+                                    bserial = 1,
+                                    value = self.value)
+        d1 = self.service.cashIn(packet1)
+
+        packet2 = PacketPokerCashIn(serial = self.user2_serial,
+                                    url = self.url,
+                                    bserial = 2,
+                                    value = self.value)
+        d2 = self.service.cashIn(packet2)
+
+        d = defer.DeferredList((d1, d2))
+        d.addCallback(lambda result: reactor.callLater(0, self.check03_cashIn))
+        return d
+
+    def check03_cashIn(self):
+        cursor = self.db.cursor(DictCursor)
+
+        #
+        # Only one currency for both buyIn
+        #
+        cursor.execute("SELECT url, serial FROM currencies")
+        self.assertEquals(1, cursor.rowcount)
+        currency_row = cursor.fetchone()
+        #
+        # With a single currency note but an amount == <value> * 2
+        #
+        cursor.execute("SELECT currency_serial, name, serial, value FROM safe")
+        self.assertEquals(1, cursor.rowcount)
+        safe_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
+        self.assertEquals(1, safe_row['serial'])
+        self.assertEquals(value * 2, safe_row['value'])
+        #
+        # Credited to the user2
+        #
+        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(user2_serial))
+        self.assertEquals(1, cursor.rowcount)
+        user2money_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
+        self.assertEquals(user2_serial, user2money_row['user_serial'])
+        self.assertEquals(value, user2money_row['amount'])
+
+        cursor.close()
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = runner.TestSuite(PokerCashierTestCase)
+    suite.addTest(unittest.makeSuite(PokerCashierTestCase))
+    return suite
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return pokerengineconfig
+
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+    loader.methodPrefix = "test03"
+    suite = loader.loadClass(PokerCashierTestCase)
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokercashier.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokercashier.py' TESTS='coverage-reset test-pokercashier.py coverage-report' check )"
+# End:
+
