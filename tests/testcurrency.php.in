@@ -49,6 +49,22 @@ class testcurrency extends PHPUnit2_Framework_TestCase
     public function test_get_note()
     {
       $note = $this->currency->get_note(100);
+      $this->assertEquals('http://localhost/currency/', $note[0]);
+      $this->assertEquals(1, $note[1]);
+      $this->assertEquals(40, strlen($note[2]));
+      $this->assertEquals(100, $note[3]);
+      $this->assertEquals($note, $this->currency->check_note($note[1], $note[2], $note[3]));
+      return $note;
+    }
+
+    public function test_change_note()
+    {
+      $note = $this->test_get_note();
+      $other_note = $this->currency->change_note($note[1], $note[2], $note[3]);
+      $this->assertEquals('http://localhost/currency/', $note[0]);
+      $this->assertEquals(1, $note[1]);
+      $this->assertEquals(40, strlen($note[2]));
+      $this->assertEquals(100, $note[3]);
     }
 }
 
