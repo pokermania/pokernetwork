@@ -135,13 +135,13 @@ class currency {
     if($this->db_selected == FALSE) {
       $this->db_check_connection();
       if(!mysql_query("CREATE DATABASE IF NOT EXISTS " . $this->db_base, $this->connection))
-        throw new Exception("db_check_selected(1):" . mysql_error());
+        throw new Exception("db_check_selected(1):" . mysql_error($this->connection));
       if(!mysql_select_db($this->db_base, $this->connection))
-        throw new Exception("db_check_selected(2):" . mysql_error());
+        throw new Exception("db_check_selected(2):" . mysql_error($this->connection));
 
       $sql = "SHOW TABLES LIKE '" . $this->db_prefix . "_%'";
       $result = mysql_query($sql);
-      if(!$result) throw new Exception("db_check_selected(3):" . $sql . mysql_error());
+      if(!$result) throw new Exception("db_check_selected(3):" . $sql . mysql_error($this->connection));
       $count = mysql_num_rows($result);
       $this->value2table = array();
       $prefix = $this->db_prefix . "_";
@@ -150,7 +150,7 @@ class currency {
         while ($row = mysql_fetch_row($result)) {
           $table = $row[0];
           if(strlen($table) <= $prefix_length) // impossible because of the LIKE clause above
-            throw Exception("mysql table $table is shorter or equal to the expected prefix $prefix",  self::E_DATABASE_CORRUPTED);
+            throw Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED);
           $value = intval(substr($table, $prefix_length));
           $this->value2table[$value] = $table;
         }
@@ -163,7 +163,7 @@ class currency {
 
       $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . " ( rowid INT NOT NULL AUTO_INCREMENT, value INT NOT NULL, randname CHAR(40) NOT NULL UNIQUE, PRIMARY KEY (rowid, value, randname) ) ENGINE=InnoDB CHARSET=ascii;";
       if(!mysql_query($sql))
-        throw new Exception("db_check_selected(4):" . mysql_error());
+        throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
 
       $this->db_selected = TRUE;
     }
@@ -190,7 +190,7 @@ class currency {
       $table = $this->value2table($value);
       $sql = "CREATE TABLE IF NOT EXISTS ${table} ( rowid INT NOT NULL AUTO_INCREMENT, randname CHAR(40) NOT NULL UNIQUE, PRIMARY KEY (rowid, randname)  ) ENGINE=InnoDB CHARSET=ascii;";
       if(!mysql_query($sql))
-        throw new Exception("db_check_or_create_table_value(1):" . mysql_error());
+        throw new Exception("db_check_or_create_table_value(1):" . mysql_error($this->connection));
       $this->value2table[$value] = TRUE;
     } elseif($value <= 0) {
       throw new Exception("value = $value must be a positive integer");
@@ -202,7 +202,7 @@ class currency {
     if(in_array($value, $this->values, TRUE)) {
       $table = $this->value2table($value);
       $result = mysql_query("SHOW TABLES LIKE '$table'");
-      if(!$result) throw new Exception("db_check_table_value: SHOW TABLES LIKE '$table' " . mysql_error());
+      if(!$result) throw new Exception("db_check_table_value: SHOW TABLES LIKE '$table' " . mysql_error($this->connection));
       $count = mysql_num_rows($result);
       if($count == FALSE || $count == 0) throw new Exception("$table does not exist ", self::E_INVALID_NOTE);
       if($count > 1) throw new Exception("table $table duplicate ?", self::E_INVALID_NOTE);
@@ -213,11 +213,12 @@ class currency {
   function db_query($query) {
     $this->db_check_selected();
     $result = mysql_query($query, $this->connection);
-    if(!$result) throw new Exception("db_query: " . $query . ": " . mysql_error());
+    if(!$result) throw new Exception("db_query: " . $query . ": " . mysql_error($this->connection));
     return $result;
   }
 
   function get_note($value) {
+    $value = intval($value);
     $done = FALSE;
     $this->db_check_or_create_table_value($value);
     $table = $this->value2table($value);
@@ -241,7 +242,7 @@ class currency {
         //
         $retry++;
       } else {
-        throw new Exception("get_note: " . $sql . " : " . mysql_error() . " : " . mysql_errno());
+        throw new Exception("get_note: " . $sql . " : " . mysql_error($this->connection) . " : " . mysql_errno());
       }
     }
     if($retry >= 5)
@@ -250,14 +251,32 @@ class currency {
     return array($this->url, $insert_id, $randname, $value);
   }
 
+  function check_note($serial, $name, $value) {
+    $serial = intval($serial);
+    $value = intval($value);
+    $randname = call_user_func($this->get_name, $this);
+    $this->db_check_table_value($value);
+    $table = $this->value2table($value);
+    $status = mysql_query("UPDATE ${table} SET valid = 'y' WHERE rowid = $serial AND randname = '$name'");
+    if($status) {
+      if(mysql_affected_rows($this->connection) == 0)
+        throw new Exception("note $serial $name is not found" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
+      return array($this->url, $serial, $randname, $value);
+    } else {
+      throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
+    }
+  }
+
   function change_note($serial, $name, $value) {
+    $serial = intval($serial);
+    $value = intval($value);
     $randname = call_user_func($this->get_name, $this);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
     $status = mysql_query("UPDATE ${table} SET randname = '$randname' WHERE rowid = $serial AND randname = '$name'");
     if($status) {
       if(mysql_affected_rows($this->connection) != 1)
-        throw new Exception("failed to change note $serial $name" . mysql_error(), self::E_CHANGE_NOTE_FAILED);
+        throw new Exception("failed to change note $serial $name" . mysql_error($this->connection), self::E_CHANGE_NOTE_FAILED);
       return array($this->url, $serial, $randname, $value);
     } elseif(mysql_errno($this->connection) == self::MYSQL_ER_DUP_KEY ||
              mysql_errno($this->connection) == self::MYSQL_ER_DUP_ENTRY) {
@@ -277,18 +296,23 @@ class currency {
         throw $error;
       }
     } else {
-      throw new Exception("failed to change note $serial $name" . mysql_error(), self::E_CHANGE_NOTE_FAILED);
+      throw new Exception("failed to change note $serial $name" . mysql_error($this->connection), self::E_CHANGE_NOTE_FAILED);
     }
   }
 
   function put_note($serial, $name, $value) {
+    $serial = intval($serial);
+    $value = intval($value);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
     $this->db_query("DELETE FROM ${table} WHERE rowid = $serial AND randname = '$name'");
-    if(mysql_affected_rows($this->connection) != 1) throw new Exception("failed to delete note $serial $name" . mysql_error(), self::E_PUT_NOTE_FAILED);
+    if(mysql_affected_rows($this->connection) != 1)
+      throw new Exception("failed to delete note $serial $name $value (affected " . mysql_affected_rows($this->connection) . " rows) " . mysql_error($this->connection), self::E_PUT_NOTE_FAILED);
   }
 
   function break_note($serial, $name, $value, $values = FALSE) {
+    $serial = intval($serial);
+    $value = intval($value);
     if($values == FALSE) 
       $values = $this->values;
     else
@@ -316,13 +340,13 @@ class currency {
     return $notes;
   }
 
-  function merge_notes_columns($serials, $names, $values) {
+  function merge_notes_columns($serials, $names, $values, $known_values = FALSE) {
     if(count($serials) != count($names) || count($names) != count($values))
-      throw new Exception("serials, names and values must have the same size count($serials) = " . count($serials) . " count($names) = " . count($names) . " count($values) = " . count($values));
+      throw new Exception("serials, names and values must have the same size count(serials) = " . count($serials) . " count(names) = " . count($names) . " count(values) = " . count($values));
     $notes = array();
     for($i = 0; $i < count($serials); $i++)
-      arrary_push($notes, array($this->url, $serials[$i], $names[$i], $values[$i]));
-    return merge_notes($notes);
+      array_push($notes, array($this->url, intval($serials[$i]), $names[$i], intval($values[$i])));
+    return $this->merge_notes($notes, $known_values);
   }
 
   function merge_notes($notes, $values = FALSE) {
