@@ -45,7 +45,18 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       mysql_close($c);
     }
 
-    public function test_get_note()
+    public function get_note()
+    {
+      $_GET['command'] = 'get_note';
+      $_GET['value'] = 100;
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      return split("\t", $output);
+    }
+
+    public function test01_get_note()
     {
       $_GET['command'] = 'get_note';
       $_GET['value'] = 100;
@@ -55,23 +66,36 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       ob_end_clean();
       $this->assertEquals(count(split("\n", $output)), 1);
       $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	100$|', $output);
+      return split("\t", $output);
+    }
+
+    public function test02_check_note()
+    {
+      $note = $this->get_note();
+      $_GET['command'] = 'check_note';
+      $_GET['serial'] = $note[1];
+      $_GET['name'] = $note[2];
+      $_GET['value'] = $note[3];
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      $this->assertEquals(count(split("\n", $output)), 1);
+      $checked_note = split("\t", $output);
+      $this->assertEquals($note, $checked_note);
+      return $checked_note;
     }
 
     public function prepare_merge_notes()
     {
-      $_GET['command'] = 'get_note';
-      $_GET['value'] = 100;
       $serials = array();
       $values = array();
       $names = array();
       for($i = 0; $i < 3; $i++) {
-        ob_start();
-        main();
-        $note = split("\t", ob_get_contents());
+        $note = $this->test02_check_note();
         array_push($serials, $note[1]);
         array_push($names, $note[2]);
         array_push($values, $note[3]);
-        ob_end_clean();
       }
       $_GET['command'] = 'merge_notes';
       $_GET['serial'] = $serials;
@@ -79,7 +103,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $_GET['value'] = $values;
     }
 
-    public function test_merge_notes_1()
+    public function test03_merge_notes_1()
     {
       $this->prepare_merge_notes();
       ob_start();
@@ -92,7 +116,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
     }
 
-    public function test_merge_notes_2()
+    public function test04_merge_notes_2()
     {
       $this->prepare_merge_notes();
       $_GET['values'] = '';
@@ -106,7 +130,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
     }
 
-    public function test_merge_notes_3()
+    public function test05_merge_notes_3()
     {
       $this->prepare_merge_notes();
       $_GET['values'] = array(300);
