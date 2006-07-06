@@ -25,29 +25,29 @@
 #
 from types import *
 from twisted.web import client
+from twisted.internet import defer, reactor
 
 class FakeCurrencyClient:
-
-    def __init__(self, parameters):
-        self.parameters = parameters
 
     def mergeNote(self, note_a, note_b):
         result = list(note_a)
         result[3] += note_b[3]
-        return result
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(result))
+        return d
 
     def changeNote(self, note):
-        return note
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(note))
+        return d
 
 class CurrencyClient:
 
-    def __init__(self, parameters):
-        self.parameters = parameters
+    def __init__(self):
         self.getPage = client.getPage
 
     def request(self, *args, **kwargs):
-        url = ( kwargs.get('url') + "?command=" + kwargs.get('command', 'get') )
-        args = ()
+        args = [ kwargs.get('url') + "?command=" + kwargs.get('command', 'get_note') ]
         for key in ('name', 'serial', 'value'):
             if kwargs.has_key(key): 
                 arg = kwargs[key]
@@ -55,32 +55,47 @@ class CurrencyClient:
 
         if kwargs.has_key('notes'):
             index = 0
-            for (name, serial, value) in kwargs['notes']:
+            for (url, serial, name, value) in kwargs['notes']:
                 args.append("name[%d]=%s" % ( index, name ) )
                 args.append("serial[%d]=%s" % ( index, serial ) )
                 args.append("value[%d]=%s" % ( index, value ) )
                 index += 1
                 
         if kwargs.has_key('note'):
-            (name, serial, value) = kwargs['note']
+            (url, serial, name, value) = kwargs['note']
             args.append("name=%s" % name )
             args.append("serial=%s" % serial )
             args.append("value=%s" % value )
                 
-        url += join("&", args)
-        return self.getPage(url)
+        return self.getPage("&".join(args))
 
-    def mergeNote(self, note_a, note_b):
+    def mergeNotes(self, note_a, note_b):
         deferred = self.request(url = note_a[0], command = 'merge_notes', notes = ( note_a, note_b ))
-        deferred.addCallback(self.mergeNoteResult)
+        deferred.addCallback(self.mergedNotesResult)
         return deferred
 
-    def mergedNoteResult(self, result):
-        return result.split("\t")
+    def mergedNotesResult(self, result):
+        print result
+        note = result.split("\t")
+        return ( note[0], int(note[1]), note[2], int(note[3]) )
 
     def changeNote(self, note):
         deferred = self.request(url = note[0], command = 'change_note', note = note)
         deferred.addCallback(self.changeNoteResult)
         return deferred
 
-    changeNoteResult = mergedNoteResult
+    changeNoteResult = mergedNotesResult
+
+    def getNote(self, url, value):
+        deferred = self.request(url = url, command = 'get_note', value = value)
+        deferred.addCallback(self.getNoteResult)
+        return deferred
+
+    getNoteResult = mergedNotesResult
+
+    def checkNote(self, note):
+        deferred = self.request(url = note[0], command = 'check_note', note = note)
+        deferred.addCallback(self.checkNoteResult)
+        return deferred
+
+    checkNoteResult = mergedNotesResult
