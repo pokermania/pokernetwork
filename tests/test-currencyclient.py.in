@@ -30,6 +30,8 @@ import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
+from types import *
+
 from twisted.python import failure
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
@@ -47,13 +49,13 @@ class CurrencyClientTestCase(unittest.TestCase):
     def destroyDb(self):
         os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS currencytest'")
     
-    # -----------------------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
-        self.client = currencyclient.CurrencyClient({})
+        self.client = currencyclient.CurrencyClient()
         self.client.getPage = self.getPage
     
-    # -----------------------------------------------------------------------------------------------------    
+    # -----------------------------------------------------------------------------    
     def tearDown(self):
         del self.client
         self.destroyDb()
@@ -69,29 +71,76 @@ class CurrencyClientTestCase(unittest.TestCase):
         reactor.callLater(0, lambda: d.callback(result))
         return d
 
-    # -----------------------------------------------------------------------------------------------------    
-    def test_getNote(self):
-        d = self.client.getNote('http://localhost/currency/', 100)
+    # -----------------------------------------------------------------------------    
+    def getNote(self, url, value):
+        d = self.client.getNote(url, value)
         def validate(result):
             if isinstance(result, failure.Failure): raise result
-            self.assertEqual("http://localhost/currency/", result[0])
-            self.assertEqual(1, result[1])
+            self.assertEqual(url, result[0])
             self.assertEqual(40, len(result[2]))
-            self.assertEqual(100, result[3])
+            self.assertEqual(value, result[3])
             return result
         d.addBoth(validate)
         return d
 
-    # -----------------------------------------------------------------------------------------------------    
-    def test_changeNote(self):
-        d = self.test_getNote()
+    # -----------------------------------------------------------------------------    
+    def getCommitedNote(self, url, value):
+        return self.commit(self.getNote(url, value))
+
+    # -----------------------------------------------------------------------------    
+    def commit(self, d):
+        def commit(result):
+            if isinstance(result, failure.Failure): raise result
+            notes = result
+            if type(notes[0]) is ListType:
+                first_note = notes[0]
+            else:
+                first_note = notes
+            d = self.client.commit(first_note[0], first_note[2])
+            d.addCallback(lambda result: notes)
+            return d
+        d.addBoth(commit)
+        return d
+
+    # -----------------------------------------------------------------------------    
+    def test01_getNote(self):
+        d = self.getNote('http://localhost/currency/', 100)
+        def validate(result):
+            self.assertEqual(1, result[1])
+            return result
+        d.addCallback(validate)
+        return d
+
+    # -----------------------------------------------------------------------------    
+    def test02_commit(self):
+        return self.getCommitedNote('http://localhost/currency/', 100)
+
+    # -----------------------------------------------------------------------------    
+    def test03_checkNote(self):
+        d = self.getCommitedNote('http://localhost/currency/', 100)
+
+        def checkNote(note):
+            d = self.client.checkNote(note)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual(note, result)
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(checkNote)
+        return d
+
+    # -----------------------------------------------------------------------------    
+    def test04_changeNote(self):
+        d = self.getCommitedNote('http://localhost/currency/', 100)
 
         def changeNote(note):
             d = self.client.changeNote(note)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 self.assertEqual("http://localhost/currency/", result[0])
-                self.assertEqual(note[1], result[1])
+                self.assertEqual(note[1] + 1, result[1])
                 self.assertEqual(40, len(result[2]))
                 self.assertNotEqual(note[2], result[2])
                 self.assertEqual(note[3], result[3])
@@ -102,17 +151,17 @@ class CurrencyClientTestCase(unittest.TestCase):
         d.addCallback(changeNote)
         return d
 
-    # -----------------------------------------------------------------------------------------------------    
-    def test_mergeNote(self):
+    # -----------------------------------------------------------------------------    
+    def test05_mergeNote(self):
         notes = []
         def addnote(result): 
             notes.append(result)
             return result
 
-        d1 = self.client.getNote('http://localhost/currency/', 100)
+        d1 = self.getCommitedNote('http://localhost/currency/', 100)
         d1.addCallback(addnote)
 
-        d2 = self.client.getNote('http://localhost/currency/', 100)
+        d2 = self.getCommitedNote('http://localhost/currency/', 100)
         d2.addCallback(addnote)
 
         d = defer.DeferredList((d1, d2))
@@ -131,19 +180,19 @@ class CurrencyClientTestCase(unittest.TestCase):
             return d
 
         d.addCallback(mergeNote)
-        return d
+        return self.commit(d)
 
-# -----------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(CurrencyClientTestCase)
     suite.addTest(unittest.makeSuite(CurrencyClientTestCase))
     return suite
     
-# -----------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def GetTestedModule():
     return currencyclient
   
-# -----------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"
@@ -153,7 +202,7 @@ def Run():
                               tracebackFormat='default',
                               ).run(suite)
     
-# -----------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)

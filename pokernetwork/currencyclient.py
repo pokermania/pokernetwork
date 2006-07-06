@@ -48,7 +48,7 @@ class CurrencyClient:
 
     def request(self, *args, **kwargs):
         args = [ kwargs.get('url') + "?command=" + kwargs.get('command', 'get_note') ]
-        for key in ('name', 'serial', 'value'):
+        for key in ('name', 'serial', 'value', 'transaction_id'):
             if kwargs.has_key(key): 
                 arg = kwargs[key]
                 args.append("%s=%s" % ( key, arg ))
@@ -99,3 +99,7 @@ class CurrencyClient:
         return deferred
 
     checkNoteResult = mergedNotesResult
+
+    def commit(self, url, transaction_id):
+        return self.request(url = url, command = 'commit', transaction_id = transaction_id)
+        
