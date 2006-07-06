@@ -64,6 +64,11 @@ function main() {
     } elseif($_GET['command'] == 'change_note') {
       $note = $currency->change_note($_GET['serial'], $_GET['name'], $_GET['value']);
       array_push($page, join("\t", $note));
+    } elseif($_GET['command'] == 'check_note') {
+      $note = $currency->check_note($_GET['serial'], $_GET['name'], $_GET['value']);
+      array_push($page, join("\t", $note));
+    } elseif($_GET['command'] == 'commit') {
+      $currency->commit($_GET['transaction_id']);
     } else {
       throw new Exception("unknow command " . $_GET['command']);
     }

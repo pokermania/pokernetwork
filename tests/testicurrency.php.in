@@ -53,7 +53,20 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       main();
       $output = ob_get_contents();
       ob_end_clean();
-      return split("\t", $output);
+      $note = split("\t", $output);
+      $this->commit($note[2]);
+      return $note;
+    }
+
+    public function commit($transaction_id)
+    {
+      $_GET['command'] = 'commit';
+      $_GET['transaction_id'] = $transaction_id;
+      ob_start();
+      main();
+      $output = ob_get_contents();
+      ob_end_clean();
+      $this->assertEquals($output, '');
     }
 
     public function test01_get_note()
@@ -92,7 +105,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $values = array();
       $names = array();
       for($i = 0; $i < 3; $i++) {
-        $note = $this->test02_check_note();
+        $note = $this->get_note();
         array_push($serials, $note[1]);
         array_push($names, $note[2]);
         array_push($values, $note[3]);
@@ -147,6 +160,6 @@ class testicurrency extends PHPUnit2_Framework_TestCase
 //
 // Interpreted by emacs
 // Local Variables:
-// compile-command: "( cd .. ; ./config.status tests/testicurrency.php ) ; ( cd ../tests ; make TESTS='testicurrency.php' check )"
+// compile-command: "( cd .. ; ./config.status tests/testicurrency.php ) ; ( cd ../tests || cd ../../tests ; make TESTS='testicurrency.php' check )"
 // End:
 ?>
