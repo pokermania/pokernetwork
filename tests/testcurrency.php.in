@@ -53,7 +53,8 @@ class testcurrency extends PHPUnit2_Framework_TestCase
       $this->assertEquals(1, $note[1]);
       $this->assertEquals(40, strlen($note[2]));
       $this->assertEquals(100, $note[3]);
-      $this->assertEquals($note, $this->currency->check_note($note[1], $note[2], $note[3]));
+      $this->assertEquals(TRUE, $this->currency->commit($note[2]));
+      $this->assertEquals(TRUE, $this->currency->_check_note($note));
       return $note;
     }
 
@@ -62,15 +63,18 @@ class testcurrency extends PHPUnit2_Framework_TestCase
       $note = $this->test_get_note();
       $other_note = $this->currency->change_note($note[1], $note[2], $note[3]);
       $this->assertEquals('http://localhost/currency/', $note[0]);
-      $this->assertEquals(1, $note[1]);
-      $this->assertEquals(40, strlen($note[2]));
-      $this->assertEquals(100, $note[3]);
+      $this->assertEquals(2, $other_note[1]);
+      $this->assertEquals(40, strlen($other_note[2]));
+      $this->assertNotEquals($note[2], $other_note[2]);
+      $this->assertEquals(100, $other_note[3]);
+      $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
+      $this->assertEquals(TRUE, $this->currency->_check_note($other_note));
     }
 }
 
 //
 // Interpreted by emacs
 // Local Variables:
-// compile-command: "( cd .. ; ./config.status tests/testcurrency.php ) ; ( cd ../tests ; make TESTS='testcurrency.php' check )"
+// compile-command: "( cd .. ; ./config.status tests/testcurrency.php ) ; ( cd ../tests || cd ../../tests ; make TESTS='testcurrency.php' check )"
 // End:
 ?>

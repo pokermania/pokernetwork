@@ -46,6 +46,8 @@ class currency {
   const E_VALUES_UNIT_MISSING	=	5;
   const E_DATABASE_CORRUPTED	=	6;
   const E_RANDOM		=	7;
+  const E_COMMIT		=	8;
+  const E_TRANSACTION		=	9;
 
   const MYSQL_ER_DUP_KEY	=	1022;
   const MYSQL_ER_DUP_ENTRY	=	1062;
@@ -83,6 +85,20 @@ class currency {
   function __destruct() {
     if($this->db_connection != FALSE) mysql_close($this->connection);
     fclose($this->random_fd);
+  }
+
+  function transaction_wrap() {
+    try {
+      $this->db_query("START TRANSACTION");
+      $args = func_get_args();
+      $func = array_shift($args); 
+      $result = call_user_func_array(array($this, $func), $args);
+      $this->db_query("COMMIT");
+      return $result;
+    } catch(Exception $error) {
+      $this->db_query("ROLLBACK");
+      throw $error;
+    }
   }
 
   function get_randname() {
@@ -161,7 +177,26 @@ class currency {
       if($unexpected_tables) 
         throw new Exception("mysql tables found for the values " . join(",", $unexpected_tables) . " because the only valid values are " . join(",", $this->values), self::E_DATABASE_CORRUPTED);
 
-      $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . " ( rowid INT NOT NULL AUTO_INCREMENT, value INT NOT NULL, randname CHAR(40) NOT NULL UNIQUE, PRIMARY KEY (rowid, value, randname) ) ENGINE=InnoDB CHARSET=ascii;";
+      $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . " ( " .
+        "   rowid INT NOT NULL AUTO_INCREMENT, " .
+        "   updated TIMESTAMP, " . 
+        "   value INT NOT NULL, " . 
+        "   randname CHAR(40) NOT NULL UNIQUE, " .
+        "   valid CHAR DEFAULT 'n' NOT NULL, " .
+        "   PRIMARY KEY (rowid, value, randname) " .
+        " ) ENGINE=InnoDB CHARSET=ascii;";
+      if(!mysql_query($sql))
+        throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
+
+      $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . "_transactions ( " .
+        "   transaction_id CHAR(40) NOT NULL, " .
+        "   updated TIMESTAMP, " . 
+        "   table_name VARCHAR(255) NOT NULL, " . 
+        "   rowid INT NOT NULL, " .
+        "   randname CHAR(40) NOT NULL UNIQUE, " .
+        "   valid CHAR NOT NULL, " .
+        "   INDEX ( transaction_id ) " .
+        " ) ENGINE=InnoDB CHARSET=ascii;";
       if(!mysql_query($sql))
         throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
 
@@ -188,7 +223,13 @@ class currency {
       return;
     } elseif(in_array($value, $this->values, TRUE)) { 
       $table = $this->value2table($value);
-      $sql = "CREATE TABLE IF NOT EXISTS ${table} ( rowid INT NOT NULL AUTO_INCREMENT, randname CHAR(40) NOT NULL UNIQUE, PRIMARY KEY (rowid, randname)  ) ENGINE=InnoDB CHARSET=ascii;";
+      $sql = "CREATE TABLE IF NOT EXISTS ${table} ( " .
+        "   rowid INT NOT NULL AUTO_INCREMENT, " .
+        "   updated TIMESTAMP, " . 
+        "   randname CHAR(40) NOT NULL UNIQUE, " .
+        "   valid CHAR DEFAULT 'n' NOT NULL, " .
+        "   PRIMARY KEY (rowid, randname)  " . 
+        " ) ENGINE=InnoDB CHARSET=ascii;";
       if(!mysql_query($sql))
         throw new Exception("db_check_or_create_table_value(1):" . mysql_error($this->connection));
       $this->value2table[$value] = TRUE;
@@ -218,6 +259,16 @@ class currency {
   }
 
   function get_note($value) {
+    return $this->transaction_wrap('_get_note_transaction', $value);
+  }
+
+  function _get_note_transaction($value) {
+    $note = $this->_get_note($value);
+    $this->_transaction_add($note[2], 'n', $note);
+    return $note;
+  }
+
+  function _get_note($value) {
     $value = intval($value);
     $done = FALSE;
     $this->db_check_or_create_table_value($value);
@@ -251,53 +302,97 @@ class currency {
     return array($this->url, $insert_id, $randname, $value);
   }
 
-  function check_note($serial, $name, $value) {
-    $serial = intval($serial);
-    $value = intval($value);
-    $randname = call_user_func($this->get_name, $this);
-    $this->db_check_table_value($value);
-    $table = $this->value2table($value);
-    $status = mysql_query("UPDATE ${table} SET valid = 'y' WHERE rowid = $serial AND randname = '$name'");
+  function commit($transaction_id) {
+    if(strlen($transaction_id) != self::key_size_ascii || preg_match ("|^\w{40}$|", $transaction_id) == 0)
+      throw new Exception("$transaction_id is not a valid transaction name");
+    $sql = "SELECT table_name, rowid, randname, valid FROM " . $this->db_prefix . "_transactions " .
+      "            WHERE transaction_id = '" . $transaction_id . "'";
+    $status = mysql_query($sql);
     if($status) {
-      if(mysql_affected_rows($this->connection) == 0)
-        throw new Exception("note $serial $name is not found" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
-      return array($this->url, $serial, $randname, $value);
+      $transactions_count = mysql_affected_rows($this->connection);
+      if($transactions_count == 0)
+        throw new Exception("no rows for transaction $transaction_id", self::E_COMMIT);
+      //
+      // Prepare all the SQL statements to commit the transaction
+      // (i.e. change the toggle 'y' and 'n' value of each valid
+      // field.
+      //
+      $sqls = array();
+      while(list($table_name, $rowid, $randname, $valid) = mysql_fetch_array($status, MYSQL_NUM)) {
+        $key = "${table_name}-${valid}";
+        if(!array_key_exists($key, $sqls)) {
+          $future_valid = $valid == 'y' ? 'n' : 'y';
+          $sqls[$key] = array("UPDATE $table_name SET valid = '$future_valid' WHERE valid = '$valid' AND rowid in ( ");
+        }
+        array_push($sqls[$key], strval($rowid));
+      }
+      return $this->transaction_wrap('_commit', $transaction_id, $sqls, $transactions_count);
     } else {
-      throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
+      throw new Exception("failed to commit transaction $transaction_id" . mysql_error($this->connection), self::E_COMMIT);
     }
   }
 
-  function change_note($serial, $name, $value) {
+  function _commit($transaction_id, $sqls, $transactions_count) {
+    //
+    // Run the SQL statements, verifying that each of them affect
+    // the expected number of rows.
+    //
+    foreach ( $sqls as $sql ) {
+      $expected_affected_rows = count($sql) - 1;
+      $sql_string = array_shift($sql);
+      $sql_string .= join(", ", $sql);
+      $sql_string .= " ) ";
+      $status = mysql_query($sql_string);
+      if(mysql_affected_rows($this->connection) != $expected_affected_rows) 
+        throw new Exception("$sql_string affected " . mysql_affected_rows($this->connection) . " instead of the expected $expected_affected_rows", self::E_COMMIT);
+    }
+    //
+    // Remove the transaction records
+    //
+    $sql = "DELETE FROM " . $this->db_prefix . "_transactions WHERE transaction_id = '$transaction_id'";
+    mysql_query($sql);
+    if(mysql_affected_rows($this->connection) != $transactions_count) 
+      throw new Exception("$sql  affected " . mysql_affected_rows($this->connection) . " instead of the expected $transactions_count", self::E_COMMIT);
+    return TRUE;
+  }
+
+  function _transaction_add($transaction_id, $valid, $note) {
+    $table = $this->value2table($note[3]);
+    list( $url, $serial, $name, $value ) = $note;
+    $sql = "INSERT INTO " . $this->db_prefix . "_transactions " . 
+      " ( transaction_id,    table_name,    rowid,   randname, valid ) VALUES " .
+      " ( '$transaction_id', '$table',      $serial, '$name',  '$valid' ) ";
+    $status = mysql_query($sql);
+    if(mysql_affected_rows($this->connection) != 1)
+      throw new Exception("failed to $sql " . mysql_error($this->connection), self::E_TRANSACTION);
+  }
+
+  function check_note($serial, $name, $value) {
+    return $this->_check_note(array($this->url, $serial, $name, $value));
+  }
+
+  function _check_note($note) {
+    list( $url, $serial, $name, $value ) = $note;
+
     $serial = intval($serial);
     $value = intval($value);
-    $randname = call_user_func($this->get_name, $this);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
-    $status = mysql_query("UPDATE ${table} SET randname = '$randname' WHERE rowid = $serial AND randname = '$name'");
+    $status = mysql_query("SELECT COUNT(*) FROM ${table} WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
     if($status) {
       if(mysql_affected_rows($this->connection) != 1)
-        throw new Exception("failed to change note $serial $name" . mysql_error($this->connection), self::E_CHANGE_NOTE_FAILED);
-      return array($this->url, $serial, $randname, $value);
-    } elseif(mysql_errno($this->connection) == self::MYSQL_ER_DUP_KEY ||
-             mysql_errno($this->connection) == self::MYSQL_ER_DUP_ENTRY) {
-      //
-      // If there is a name clash unlikely but not impossible
-      // Dont try to be smart and just use the regular put / get
-      // with their strategy to cope with name clashes.
-      //
-      try {
-        $this->db_query("BEGIN");
-        $this->put_note($serial, $name, $value);
-        $note = $this->get_note($value);
-        $this->db_query("COMMIT");
-        return $note;
-      } catch(Exception $error) {
-        $this->db_query("ROLLBACK");
-        throw $error;
-      }
+        throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
     } else {
-      throw new Exception("failed to change note $serial $name" . mysql_error($this->connection), self::E_CHANGE_NOTE_FAILED);
+      throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
     }
+    return TRUE;
+  }
+
+  function change_note($serial, $name, $value) {
+    $this->check_note($serial, $name, $value);
+    $note = $this->_get_note_transaction($value);
+    $this->_transaction_add($note[2], 'y', array($this->url, $serial, $name, $value));
+    return $note;
   }
 
   function put_note($serial, $name, $value) {
@@ -305,38 +400,43 @@ class currency {
     $value = intval($value);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
-    $this->db_query("DELETE FROM ${table} WHERE rowid = $serial AND randname = '$name'");
+    $this->db_query("UPDATE ${table} SET valid = 'n' WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
     if(mysql_affected_rows($this->connection) != 1)
       throw new Exception("failed to delete note $serial $name $value (affected " . mysql_affected_rows($this->connection) . " rows) " . mysql_error($this->connection), self::E_PUT_NOTE_FAILED);
   }
 
   function break_note($serial, $name, $value, $values = FALSE) {
+    return $this->_transaction_wrap('_break_note', $serial, $name, $value, $values);
+  }
+
+  function _break_note($serial, $name, $value, $values) {
     $serial = intval($serial);
     $value = intval($value);
     if($values == FALSE) 
       $values = $this->values;
     else
       $values = $this->sort_values($values);
-    $this->db_query("BEGIN");
-    try {
-      $this->put_note($serial, $name, $value);
-      $notes = array();
-      foreach ( $values as $note_value ) {
-        if($value < $note_value) continue;
-        $count = intval($value / $note_value); 
-        $value %= $note_value;
-        for($i = 0; $i < $count; $i++)
-          array_push($notes, $this->get_note($note_value));
-        if($value <= 0) break;
-      }
-      if($value > 0)
-        array_push($notes, $this->get_note($value));
-      if($this->trigger_error) throw new Exception("unit test exception");
-      $this->db_query("COMMIT");
-    } catch(Exception $error) {
-      $this->db_query("ROLLBACK");
-      throw $error;
+    $to_delete = array($this->url, $serial, $name, $value);
+    $notes = array();
+    foreach ( $values as $note_value ) {
+      if($value < $note_value) continue;
+      $count = intval($value / $note_value); 
+      $value %= $note_value;
+      for($i = 0; $i < $count; $i++)
+        array_push($notes, $this->_get_note($note_value));
+      if($value <= 0) break;
     }
+
+    if($value > 0)
+      array_push($notes, $this->get_note($value));
+
+    $transaction_id = $notes[0][2];
+    $this->_check_note($to_delete);
+    $this->_transaction_add($transaction_id, 'y', $to_delete);
+    foreach ( $notes as $note )
+      $this->_transaction_add($transaction_id, 'n', $note);
+
+    if($this->trigger_error) throw new Exception("unit test exception");
     return $notes;
   }
 
@@ -368,40 +468,47 @@ class currency {
 
     // don't merge if this results in a larger number of notes
     if(count($value2count) >= count($notes))
-      return $notes;
+      throw new Exception("merge notes would not merge anything");
 
+    return $this->transaction_wrap('_merge_notes', $value2count, $notes, $values);
+  }
+
+  function _merge_notes($value2count, $notes, $value) {
     $new_notes = array();
-    $this->db_query("BEGIN");
-    try {
-      if($values) {
-        //
-        // Delete the notes provided in argument or re-use them when possible
-        //
-        foreach ( $notes as $note ) {
-          $value = $note[3];
-          if(array_key_exists($value, $value2count)) {
-            $value2count[$value]--;
-            array_push($new_notes, $note);
-            if($value2count[$value] <= 0) 
-              unset($value2count[$value]);
-          } else {
-            $this->put_note($note[1], $note[2], $note[3]);
-          }
+    $to_delete = array();
+    if($values) {
+      //
+      // Delete the notes provided in argument or re-use them when possible
+      //
+      foreach ( $notes as $note ) {
+        $value = $note[3];
+        if(array_key_exists($value, $value2count)) {
+          $value2count[$value]--;
+          array_push($new_notes, $note);
+          if($value2count[$value] <= 0) 
+            unset($value2count[$value]);
+        } else {
+          $this->_check_note($note);
+          array_push($to_delete, $note);
         }
       }
-      //
-      // Create new notes
-      //
-      foreach ( $value2count as $value => $count ) {
-        for($i = 0; $i < $count; $i++)
-          array_push($new_notes, $this->get_note($value));
-      }
-      if($this->trigger_error) throw new Exception("unit test exception");
-      $this->db_query("COMMIT");
-    } catch(Exception $error) {
-      $this->db_query("ROLLBACK");
-      throw $error;
     }
+
+    //
+    // Create new notes
+    //
+    foreach ( $value2count as $value => $count ) {
+      for($i = 0; $i < $count; $i++)
+        array_push($new_notes, $this->_get_note($value));
+    }
+
+    $transaction_id = $new_notes[0][2];
+    foreach ( $to_delete as $note )
+      $this->_transaction_add($transaction_id, 'y', $note);
+    foreach ( $new_note as $note )
+      $this->_transaction_add($transaction_id, 'n', $note);
+
+    if($this->trigger_error) throw new Exception("unit test exception");
     return $new_notes;
   }
 }
