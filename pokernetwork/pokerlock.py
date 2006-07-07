@@ -27,8 +27,10 @@
 from twisted.internet import reactor, defer
 from twisted.python import failure
 import threading
+import thread
 import MySQLdb
 import Queue
+import time
 
 class PokerLock(threading.Thread):
 
@@ -42,6 +44,7 @@ class PokerLock(threading.Thread):
     def __init__(self, parameters):
         self.verbose = 0
         self.q = Queue.Queue()
+        self.lock = threading.Lock()
         self.db = None
         self.connect(parameters)
         threading.Thread.__init__(self, target = self.main)
@@ -57,14 +60,27 @@ class PokerLock(threading.Thread):
         
     def main(self):
         while 1:
-            if self.verbose: print "loop"
-            ( name, function, timeout, deferred ) = self.q.get(timeout = PokerLock.queue_timeout)
-            if not name:
+            if self.verbose > 2: print "PokerLock::loop"
+            try:
+                ( name, function, timeout, deferred ) = self.q.get(timeout = PokerLock.queue_timeout)
+            except Queue.Empty:
+                #
+                # When timeout, silently terminate the thread
+                #
+                print "PokerLock:: thread " + str(thread.get_ident()) + " timeout"
                 break
+
+            if not name:
+                #
+                # Stop the thread
+                #
+                break
+
             try:
                 function(name, timeout)
                 reactor.callFromThread(deferred.callback, name)
             except:
+                self.lock.release()
                 reactor.callFromThread(deferred.errback, failure.Failure())
         self.db.close()
         self.db = None
@@ -75,6 +91,7 @@ class PokerLock(threading.Thread):
                                   passwd = parameters["password"])
 
     def acquire(self, name, timeout = acquire_timeout):
+        if self.verbose > 2: print "PokerLock::acquire"
         if not self.isAlive():
             raise Exception(PokerLock.DEAD, "this PokerLock instance is dead, create a new one")
         d = defer.Deferred()
@@ -82,13 +99,26 @@ class PokerLock(threading.Thread):
         return d
         
     def __acquire(self, name, timeout):
+        if self.verbose > 2: print "PokerLock::__acquire %s %d" % ( name, timeout )
+        tick = timeout
+        while 1:
+            if self.lock.acquire(0):
+                break
+            tick -= 1
+            if tick <= 0:
+                raise Exception(PokerLock.TIMED_OUT, name)
+            if self.verbose > 2: print "PokerLock::sleep 1"
+            time.sleep(1)
         self.db.query("SELECT GET_LOCK('%s', %d)" % ( name, timeout))
         result = self.db.store_result()
-        if result.fetch_row()[0][0] == 0:
+        if result.fetch_row()[0][0] != 1:
             raise Exception(PokerLock.TIMED_OUT, name)
+        if self.verbose > 2: print "PokerLock::__acquire got MySQL lock"
 
     def release(self, name):
+        if self.verbose > 2: print "PokerLock::release"
         self.db.query("SELECT RELEASE_LOCK('%s')" % name)
         result = self.db.store_result()
-        if result.fetch_row()[0][0] == 0:
+        if result.fetch_row()[0][0] != 1:
             raise Exception(PokerLock.RELEASE, name)
+        self.lock.release()

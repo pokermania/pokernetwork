@@ -36,49 +36,54 @@ from pprint import pprint
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokerservice, pokernetworkconfig, user
-from pokernetwork.currencyclient import FakeCurrencyClient
+from pokernetwork import currencyclient
+currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="0" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="18" round="12" position="60" showdown="30" finish="18"/>
+<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
 
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
   <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
 
 class PokerServiceTestCase(unittest.TestCase):
-    
+
+    def destroyDb(self):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-        os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'")
+        self.destroyDb()
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.service = pokerservice.PokerService(settings)
 #        self.service.verbose = 0
         self.service.verbose = 3
-    
-    # -----------------------------------------------------------------------------------------------------    
+
+    # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
         d = self.service.stopService()
-#        d.addCallback(lambda x: os.system("@MYSQL@ -u root -e 'drop database pokernetworktest'"))
+        d.addCallback(lambda x: self.destroyDb())
         return d
-        
-    # -----------------------------------------------------------------------------------------------------    
+
+    # -----------------------------------------------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
         ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
@@ -86,160 +91,102 @@ class PokerServiceTestCase(unittest.TestCase):
         self.assertEquals(4, serial)
         self.assertEquals("user1", name)
         self.assertEquals(user.User.REGULAR, privilege)
-        
-    # -----------------------------------------------------------------------------------------------------    
-    def test02_cashIn(self):
+
+    # -----------------------------------------------------------------------------------------------------
+    def createUsers(self):
+        ( (self.user1_serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
+        ( (self.user2_serial, name, privilege), message ) = self.service.auth("user2", "password1", "role1")
+
+    # -----------------------------------------------------------------------------------------------------
+    def cashIn(self):
+
+        note1 = self.service.cashier.currency_client._buildNote("ONE", 100)
+        packet1 = PacketPokerCashIn(serial = self.user1_serial,
+                                    url = note1[0],
+                                    bserial = note1[1],
+                                    name = note1[2],
+                                    value = note1[3])
+        d1 = self.service.cashIn(packet1)
+
+        note2 = self.service.cashier.currency_client._buildNote("ONE", 100)
+        packet2 = PacketPokerCashIn(serial = self.user2_serial,
+                                    url = note2[0],
+                                    bserial = note2[1],
+                                    name = note2[2],
+                                    value = note2[3])
+        d2 = self.service.cashIn(packet2)
+
+        note3 = self.service.cashier.currency_client._buildNote("TWO", 200)
+        packet3 = PacketPokerCashIn(serial = self.user2_serial,
+                                    url = note3[0],
+                                    bserial = note3[1],
+                                    name = note3[2],
+                                    value = note3[3])
+        d3 = self.service.cashIn(packet3)
+
+        return defer.DeferredList((d1, d2, d3), fireOnOneErrback = True)
+
+    # -----------------------------------------------------------------------------------------------------
+    def test04_getUserInfo(self):
         self.service.startService()
 
-        self.service.cashier = FakeCurrencyClient(self.service.cashier.parameters)
-
-        user_serial = self.service.poker_auth.userCreate("user1", "password1")
-
-        #
-        # Cash in <value> more from the fake currency
-        #
-        value = 100
-        url = 'http://fake'
-        packet = PacketPokerCashIn(serial = user_serial,
-                                   url = url,
-                                   bserial = 1,
-                                   value = value)
-        self.service.cashIn(packet)
-        cursor = self.service.db.cursor(DictCursor)
-        #
-        # A currency was created
-        #
-        cursor.execute("SELECT url, serial FROM currencies")
-        self.assertEquals(1, cursor.rowcount)
-        currency_row = cursor.fetchone()
-        self.assertEquals(url, currency_row['url'])
-        self.assertEquals(1, currency_row['serial'])
-        return
-        #
-        # With a single currency note
-        #
-        cursor.execute("SELECT currency_serial, name, serial, value FROM safe")
-        self.assertEquals(1, cursor.rowcount)
-        safe_row = cursor.fetchone()
-        self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
-        self.assertEquals(1, safe_row['serial'])
-        self.assertEquals(value, safe_row['value'])
-        #
-        # Credited to the user
-        #
-        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money")
-        self.assertEquals(1, cursor.rowcount)
-        user2money_row = cursor.fetchone()
-        self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
-        self.assertEquals(user_serial, user2money_row['user_serial'])
-        self.assertEquals(value, user2money_row['amount'])
-        #
-        # Another user is created
-        #
-        user2_serial = self.service.poker_auth.userCreate("user2", "password1")
-        #
-        # Cash in <value> more from the same currency
-        #
-        packet.serial = user2_serial
-        self.service.cashIn(packet)
-        #
-        # No other currency was created
-        #
-        cursor.execute("SELECT url, serial FROM currencies")
-        self.assertEquals(1, cursor.rowcount)
-        #
-        # With a single currency note but an amount == <value> * 2
-        #
-        cursor.execute("SELECT currency_serial, name, serial, value FROM safe")
-        self.assertEquals(1, cursor.rowcount)
-        safe_row = cursor.fetchone()
-        self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
-        self.assertEquals(1, safe_row['serial'])
-        self.assertEquals(value * 2, safe_row['value'])
-        #
-        # Credited to the user2
-        #
-        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(user2_serial))
-        self.assertEquals(1, cursor.rowcount)
-        user2money_row = cursor.fetchone()
-        self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
-        self.assertEquals(user2_serial, user2money_row['user_serial'])
-        self.assertEquals(value, user2money_row['amount'])
-        
-        cursor.close()
-
-    # -----------------------------------------------------------------------------------------------------    
-    def test03_getUserInfo(self):
-        self.service.startService()
-
-        self.service.cashier = FakeCurrencyClient(self.service.cashier.parameters)
-
-        user_serial = self.service.poker_auth.userCreate("user1", "password1")
+        self.createUsers()
         #
         # No cash in means no money
         #
-        info = self.service.getUserInfo(user_serial)
+        info = self.service.getUserInfo(self.user1_serial)
         self.assertEqual(0, len(info.money))
-        #
-        # Two currencies means two rows
-        #
-        packet = PacketPokerCashIn(serial = user_serial,
-                                   url = "ONE",
-                                   name = "100",
-                                   bserial = 1,
-                                   value = 100)
-        packet2 = PacketPokerCashIn(serial = user_serial,
-                                    url = "TWO",
-                                    name = "200",
-                                    bserial = 1,
-                                    value = 200)
-        self.assertEquals(PacketAck(), self.service.cashIn(packet))
-        self.assertEquals(PacketAck(), self.service.cashIn(packet2))
-        info = self.service.getUserInfo(user_serial)
-        self.assertEquals({1: (100, 0), 2: (200, 0)}, info.money)
-        #
-        # Some money is on a table
-        #
-        table_serial = self.service.tables[0].game.id
-        buy_in = 50
-        currency_serial = 1
-        self.assertEquals(currency_serial, self.service.tables[0].currency_serial)
-        self.service.seatPlayer(user_serial, table_serial, 0)
-        self.service.buyInPlayer(user_serial, table_serial, currency_serial, buy_in)
-        info = self.service.getUserInfo(user_serial)
-        self.assertEquals({1: (50, 50), 2: (200, 0)}, info.money)
-        #
-        # 
-        #
-        user2_serial = self.service.poker_auth.userCreate("user2", "password1")
-        packet.serial = user2_serial
-        packet.name = "2.200"
-        self.assertEquals(PacketAck(), self.service.cashIn(packet))
-        self.service.seatPlayer(user2_serial, table_serial, 0)
-        self.service.buyInPlayer(user2_serial, table_serial, currency_serial, buy_in)
-        info = self.service.getUserInfo(user2_serial)
-        self.assertEquals({1: (50, 50)}, info.money)
+
+        def step2(result):
+            self.assertEquals([ (True, PacketAck()), (True, PacketAck()), (True, PacketAck()) ], result)
+            info = self.service.getUserInfo(self.user2_serial)
+            self.assertEquals({1: (100, 0), 2: (200, 0)}, info.money)
+
+            #
+            # Some money is on a table
+            #
+            table_serial = self.service.tables[0].game.id
+            buy_in = 50
+            currency_serial = 1
+            self.assertEquals(currency_serial, self.service.tables[0].currency_serial)
+            self.service.seatPlayer(self.user2_serial, table_serial, 0)
+            self.service.buyInPlayer(self.user2_serial, table_serial, currency_serial, buy_in)
+            info = self.service.getUserInfo(self.user2_serial)
+            self.assertEquals({1: (50, 50), 2: (200, 0)}, info.money)
+            #
+            # The other player only has one currency
+            #
+            self.service.seatPlayer(self.user1_serial, table_serial, 0)
+            self.service.buyInPlayer(self.user1_serial, table_serial, currency_serial, buy_in)
+            info = self.service.getUserInfo(self.user1_serial)
+            self.assertEquals({1: (50, 50)}, info.money)
+
+            return result
+            
+        d = self.cashIn()
+        d.addCallback(step2)
+        return d
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerServiceTestCase)
     suite.addTest(unittest.makeSuite(PokerServiceTestCase))
     return suite
-    
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
-  
+
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+    loader.methodPrefix = "test04"
     suite = loader.loadClass(PokerServiceTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
-    
+
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():

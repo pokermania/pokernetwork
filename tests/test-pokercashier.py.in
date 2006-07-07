@@ -42,6 +42,7 @@ twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokercashier, pokernetworkconfig, user
 from pokernetwork import currencyclient
+currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
 from pokernetwork.pokerdatabase import PokerDatabase
 
@@ -65,7 +66,6 @@ class PokerCashierTestCase(unittest.TestCase):
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         self.settings.header = self.settings.doc.xpathNewContext()
         self.db = PokerDatabase(self.settings)
-        currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
         self.user_serial = 5050
