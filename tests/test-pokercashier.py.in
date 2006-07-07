@@ -41,13 +41,15 @@ from twisted.internet import reactor, defer
 twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokercashier, pokernetworkconfig, user
-from pokernetwork.currencyclient import FakeCurrencyClient
+from pokernetwork import currencyclient
 from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
+from pokernetwork.pokerdatabase import PokerDatabase
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3">
   <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
 </server>
 """
 
@@ -59,23 +61,24 @@ class PokerCashierTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
-        settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-        settings.header = settings.doc.xpathNewContext()
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
         self.db = PokerDatabase(self.settings)
-        self.cashier = pokercashier.PokerCashier(settings)
+        currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+        self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
         self.user_serial = 5050
-        self.user2_serial = 6060
+        self.user1_serial = 6060
+        self.user2_serial = 7070
 
     # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
+        self.cashier.close()
         self.destroyDb()
 
     # -----------------------------------------------------------------------------------------------------
-    def test02_cashIn(self):
-        self.cashier.currency_client = FakeCurrencyClient()
-
+    def test01_cashIn(self):
         #
         # Cash in <value> more from the fake currency
         #
@@ -84,17 +87,13 @@ class PokerCashierTestCase(unittest.TestCase):
         packet = PacketPokerCashIn(serial = self.user_serial,
                                    url = self.url,
                                    bserial = 1,
+                                   name = "%040d" % 1,
                                    value = self.value)
         d = self.cashier.cashIn(packet)
-        #
-        # callLater(0) is useful to exit the defer callback chain *because*
-        # errors from cashIn_check aren't reported with the stack trace
-        # if it's just called from the defer callback chain.
-        #
-        d.addCallback(lambda result: reactor.callLater(0, self.check02_cashIn, packet))
+        d.addCallback(lambda result: self.check01_cashIn(packet))
         return d
 
-    def check02_cashIn(self, packet):
+    def check01_cashIn(self, packet):
         cursor = self.db.cursor(DictCursor)
 
         #
@@ -112,7 +111,7 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEquals(1, cursor.rowcount)
         safe_row = cursor.fetchone()
         self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
-        self.assertEquals(1, safe_row['serial'])
+        self.assertEquals(2, safe_row['serial'])
         self.assertEquals(self.value, safe_row['value'])
         #
         # Credited to the user
@@ -127,29 +126,31 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor.close()
 
     # -----------------------------------------------------------------------------------------------------
-    def test03_cashIn(self):
-        self.cashier.currency_client = FakeCurrencyClient()
-
+    def test02_cashIn(self):
         self.value = 100
         self.url = 'http://fake'
 
+        note1 = self.cashier.currency_client._buildNote(self.url, self.value)
         packet1 = PacketPokerCashIn(serial = self.user1_serial,
-                                    url = self.url,
-                                    bserial = 1,
-                                    value = self.value)
-        d1 = self.service.cashIn(packet1)
+                                    url = note1[0],
+                                    bserial = note1[1],
+                                    name = note1[2],
+                                    value = note1[3])
+        d1 = self.cashier.cashIn(packet1)
 
+        note2 = self.cashier.currency_client._buildNote(self.url, self.value)
         packet2 = PacketPokerCashIn(serial = self.user2_serial,
-                                    url = self.url,
-                                    bserial = 2,
-                                    value = self.value)
-        d2 = self.service.cashIn(packet2)
+                                    url = note2[0],
+                                    bserial = note2[1],
+                                    name = note2[2],
+                                    value = note2[3])
+        d2 = self.cashier.cashIn(packet2)
 
-        d = defer.DeferredList((d1, d2))
-        d.addCallback(lambda result: reactor.callLater(0, self.check03_cashIn))
+        d = defer.DeferredList((d1, d2), fireOnOneErrback = True)
+        d.addCallback(lambda result: self.check02_cashIn())
         return d
 
-    def check03_cashIn(self):
+    def check02_cashIn(self):
         cursor = self.db.cursor(DictCursor)
 
         #
@@ -159,23 +160,32 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEquals(1, cursor.rowcount)
         currency_row = cursor.fetchone()
         #
-        # With a single currency note but an amount == <value> * 2
+        # With a single currency note with an amount == <value> * 2
         #
         cursor.execute("SELECT currency_serial, name, serial, value FROM safe")
         self.assertEquals(1, cursor.rowcount)
         safe_row = cursor.fetchone()
         self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
-        self.assertEquals(1, safe_row['serial'])
-        self.assertEquals(value * 2, safe_row['value'])
+        self.assertEquals(5, safe_row['serial'])
+        self.assertEquals(self.value * 2, safe_row['value'])
         #
-        # Credited to the user2
+        # Credited to the user1
         #
-        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(user2_serial))
+        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(self.user1_serial))
         self.assertEquals(1, cursor.rowcount)
         user2money_row = cursor.fetchone()
         self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
-        self.assertEquals(user2_serial, user2money_row['user_serial'])
-        self.assertEquals(value, user2money_row['amount'])
+        self.assertEquals(self.user1_serial, user2money_row['user_serial'])
+        self.assertEquals(self.value, user2money_row['amount'])
+        #
+        # Credited to the user2
+        #
+        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(self.user2_serial))
+        self.assertEquals(1, cursor.rowcount)
+        user2money_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
+        self.assertEquals(self.user2_serial, user2money_row['user_serial'])
+        self.assertEquals(self.value, user2money_row['amount'])
 
         cursor.close()
 
@@ -192,7 +202,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test02"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',

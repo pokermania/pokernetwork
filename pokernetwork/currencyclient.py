@@ -27,21 +27,7 @@ from types import *
 from twisted.web import client
 from twisted.internet import defer, reactor
 
-class FakeCurrencyClient:
-
-    def mergeNote(self, note_a, note_b):
-        result = list(note_a)
-        result[3] += note_b[3]
-        d = defer.Deferred()
-        reactor.callLater(0, lambda: d.callback(result))
-        return d
-
-    def changeNote(self, note):
-        d = defer.Deferred()
-        reactor.callLater(0, lambda: d.callback(note))
-        return d
-
-class CurrencyClient:
+class RealCurrencyClient:
 
     def __init__(self):
         self.getPage = client.getPage
@@ -69,37 +55,90 @@ class CurrencyClient:
                 
         return self.getPage("&".join(args))
 
-    def mergeNotes(self, note_a, note_b):
-        deferred = self.request(url = note_a[0], command = 'merge_notes', notes = ( note_a, note_b ))
-        deferred.addCallback(self.mergedNotesResult)
-        return deferred
+    def parseResult(self, result):
+        notes = []
+        for line in result.split("\n"):
+            note = line.split("\t")
+            notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
+        return notes
 
-    def mergedNotesResult(self, result):
-        print result
-        note = result.split("\t")
-        return ( note[0], int(note[1]), note[2], int(note[3]) )
+    def mergeNotes(self, *args):
+        deferred = self.request(url = args[0][0], command = 'merge_notes', notes = args)
+        deferred.addCallback(self.parseResult)
+        return deferred
 
     def changeNote(self, note):
         deferred = self.request(url = note[0], command = 'change_note', note = note)
-        deferred.addCallback(self.changeNoteResult)
+        deferred.addCallback(self.parseResult)
         return deferred
-
-    changeNoteResult = mergedNotesResult
 
     def getNote(self, url, value):
         deferred = self.request(url = url, command = 'get_note', value = value)
-        deferred.addCallback(self.getNoteResult)
+        deferred.addCallback(self.parseResult)
         return deferred
-
-    getNoteResult = mergedNotesResult
 
     def checkNote(self, note):
         deferred = self.request(url = note[0], command = 'check_note', note = note)
-        deferred.addCallback(self.checkNoteResult)
+        deferred.addCallback(self.parseResult)
         return deferred
-
-    checkNoteResult = mergedNotesResult
 
     def commit(self, url, transaction_id):
         return self.request(url = url, command = 'commit', transaction_id = transaction_id)
         
+CurrencyClient = RealCurrencyClient
+
+class FakeCurrencyClient:
+
+    def __init__(self):
+        self.serial = 1
+        self.check_note_result = True
+        self.commit_result = True
+        
+    def mergeNotes(self, *notes):
+        self.serial += 1
+        result = list(notes[0])
+        result[1] = self.serial
+        result[2] = "%040d" % self.serial
+        result[3] = sum(map(lambda x: x[3], notes))
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback([result]))
+        return d
+
+    def changeNote(self, note):
+        self.serial += 1
+        result = note.copy()
+        result[1] = self.serial
+        result[2] = "%040d" % self.serial
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(result))
+        return d
+
+    def _buildNote(self, url, value):
+        self.serial += 1
+        name = "%040d" % self.serial
+        return ( url, self.serial, name, value )
+
+    def getNote(self, url, value):
+        note = self._buildNote(url, value)
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(note))
+        return d
+
+    def checkNote(self, note):
+        if self.check_note_result:
+            result = note
+        else:
+            result = failure.Failure()
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(result))
+        return d
+
+    def commit(self, url, transaction_id):
+        if self.commit_result:
+            result = "OK"
+        else:
+            result = failure.Failure()
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(result))
+        return d
+
