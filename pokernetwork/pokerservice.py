@@ -1429,16 +1429,36 @@ class PokerXML(resource.Resource):
                 result_packets.extend(results)
                 if isinstance(packet, PacketLogout):
                     logout = True
-        result_maps = self.packets2maps(result_packets)
 
-        if use_sessions != "use sessions":
-            self.service.destroyAvatar(avatar)
-        elif use_sessions == "use sessions" and logout:
-            session.expire()
+        #
+        # If the result is a single packet, it means the requested
+        # action is using sessions (non session packet streams all
+        # start with an auth packet). It may be deferred but may never
+        # be a logout (because logout is not supposed to return a deferred).
+        #
+        if len(result_packets) == 1 and isinstance(result_packets[0], defer.Deferred):
+            def renderLater(packet):
+                result_maps = self.packets2maps([packet])
 
-        result_string = self.maps2result(result_maps)
-        request.setHeader("Content-length", str(len(result_string)))
-        return result_string
+                result_string = self.maps2result(result_maps)
+                request.setHeader("Content-length", str(len(result_string)))
+                request.write(result_string)
+                request.finish()
+                return
+            d = result_packets[0]
+            d.addCallback(renderLater)
+            return server.NO_DONE_YET
+        else:
+            if use_sessions != "use sessions":
+                self.service.destroyAvatar(avatar)
+            elif use_sessions == "use sessions" and logout:
+                session.expire()
+
+            result_maps = self.packets2maps(result_packets)
+
+            result_string = self.maps2result(result_maps)
+            request.setHeader("Content-length", str(len(result_string)))
+            return result_string
 
     def args2packets(self, args):
         packets = []
