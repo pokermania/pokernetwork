@@ -34,7 +34,6 @@ import time
 import os
 import operator
 import re
-from decimal import Decimal
 from traceback import print_exc
 
 from MySQLdb.cursors import DictCursor
@@ -235,6 +234,7 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
         cursor.close()
+        return True
 
     def sessionEnd(self, serial):
         if self.verbose > 2: print "PokerService::sessionEnd(%d): " % ( serial )
@@ -246,6 +246,7 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 1: print " *ERROR* b) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
         cursor.close()
+        return True
 
     def auth(self, name, password, roles):
         for (serial, client) in self.serial2client.iteritems():

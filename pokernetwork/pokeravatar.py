@@ -36,7 +36,6 @@ from pokernetwork.pokerpackets import *
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
 class PokerAvatar:
-    """Poker server"""
 
     def __init__(self, service):
         self.protocol = None
@@ -45,6 +44,7 @@ class PokerAvatar:
         self.tables = {}
         self.user = User()
         self._packets_queue = []
+        self.has_session = False
         self.bugous_processing_hand = False
         self.noqueuePackets()
 
@@ -79,7 +79,7 @@ class PokerAvatar:
         if self.service.verbose:
             print "user %s/%d logged in" % ( self.user.name, self.user.serial )
         if self.protocol:
-            self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
+            self.has_session = self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
         #
         # Send player updates if it turns out that the player was already
         # seated at a known table.
@@ -111,7 +111,8 @@ class PokerAvatar:
         if self.user.serial:
             if PacketPokerRoles.PLAY in self.roles:
                 del self.service.serial2client[self.user.serial]
-            self.service.sessionEnd(self.getSerial())
+            if self.has_session:
+                self.service.sessionEnd(self.getSerial())
             self.user.logout()
         
     def auth(self, packet):
@@ -164,6 +165,8 @@ class PokerAvatar:
         else:
             self.protocol.sendPacket(packet)
 
+    queueDeferred = sendPacket
+    
     def sendPacketVerbose(self, packet):
         if self.service.verbose > 1 and packet.type != PACKET_PING or self.service.verbose > 5:
             print "sendPacket: %s" % str(packet)
@@ -235,7 +238,7 @@ class PokerAvatar:
 
         elif packet.type == PACKET_POKER_CASH_IN:
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.service.cashIn(serial))
+                self.queueDeferred(self.service.cashIn(packet))
             else:
                 print "attempt to cash in for user %d by user %d" % ( packet.serial, self.getSerial() )
                 self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),

@@ -43,7 +43,7 @@ twisted.internet.base.DelayedCall.debug = True
 from pokernetwork import pokerservice, pokernetworkconfig, user
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
+from pokernetwork.pokerpackets import *
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -167,11 +167,147 @@ class PokerServiceTestCase(unittest.TestCase):
         d.addCallback(step2)
         return d
 
-# -----------------------------------------------------------------------------------------------------
-def GetTestSuite():
-    suite = runner.TestSuite(PokerServiceTestCase)
-    suite.addTest(unittest.makeSuite(PokerServiceTestCase))
-    return suite
+from twisted.web import xmlrpc, server, http, resource
+
+#
+# Override QueryProtocol from xmlrpc because it lacks
+# the Cookie header.
+#
+class QueryProtocol(http.HTTPClient):
+
+    def connectionMade(self):
+        self.sendCommand('POST', self.factory.path)
+        self.sendHeader('User-Agent', 'Twisted/XMLRPClib')
+        self.sendHeader('Host', self.factory.host)
+        if self.factory.cookie:
+            self.sendHeader('Cookie', self.factory.cookie)
+        self.sendHeader('Content-type', 'text/xml')
+        self.sendHeader('Content-length', str(len(self.factory.payload)))
+        if self.factory.user:
+            auth = '%s:%s' % (self.factory.user, self.factory.password)
+            auth = auth.encode('base64').strip()
+            self.sendHeader('Authorization', 'Basic %s' % (auth,))
+        self.endHeaders()
+        self.transport.write(self.factory.payload)
+
+    def handleStatus(self, version, status, message):
+        if status != '200':
+            self.factory.badStatus(status, message)
+
+    def handleResponse(self, contents):
+        self.factory.parseResponse(contents)
+
+
+payloadTemplate = """<?xml version="1.0"?>
+<methodCall>
+<methodName>%s</methodName>
+%s
+</methodCall>
+"""
+
+class XMLRPCPokerServiceTestCase(unittest.TestCase):
+
+    def destroyDb(self, arg = None):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+         
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        self.destroyDb()
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
+        self.service.verbose = 3
+        site = server.Site(resource.IResource(self.service))
+        self.p = reactor.listenTCP(0, site,
+                                   interface="127.0.0.1")
+        self.port = self.p.getHost().port
+        self.cookie = None
+
+    def cleanSessions(self, arg):
+        pending = reactor.getDelayedCalls()
+        if pending:
+            for p in pending:
+                if p.active():
+#                    print "still pending:" + str(p)
+                    p.cancel()
+        return arg
+        
+    def tearDown(self):
+        self.cookie = None
+        d = self.service.stopService()
+        d.addCallback(self.destroyDb)
+        d.addCallback(lambda x: self.p.stopListening())
+        d.addCallback(self.cleanSessions)
+        return d
+
+    def query(self, *args):
+        factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', None, None, *args)
+        factory.protocol = QueryProtocol
+        factory.cookie = self.cookie
+        reactor.connectTCP('127.0.0.1', self.port, factory)
+        return factory.deferred
+
+    def login(self):
+        def validate(result):
+            self.assertEquals(2, len(result))
+            self.assertEquals({'type': 'PacketAuthOk'}, result[0])
+            serial_packet = result[1]
+            print "serial_packet " + str(serial_packet)
+            self.assertEquals(serial_packet['type'], 'PacketSerial')
+            self.failUnless(serial_packet.has_key('cookie'))
+            self.cookie = serial_packet['cookie']
+            self.failUnless(serial_packet.has_key('serial'))
+            self.user_serial = serial_packet['serial']
+            return serial_packet['cookie']
+            
+        d = self.query('use sessions', { 'type': 'PacketLogin',
+                                         'name': 'user1',
+                                         'password': 'password' })
+        d.addCallback(validate)
+        return d
+
+    def logout(self, *args):
+        def validate(result):
+            self.assertEquals([], result)
+            return result
+            
+        d = self.query('use sessions', { 'type': 'PacketLogout' })
+        d.addCallback(validate)
+        return d
+
+    def test01_ping(self):
+        self.service.startService()
+        d = self.query('no session', { 'type': 'PacketPing' })
+        d.addCallback(self.assertEquals, [])
+        return d
+
+    def test02_login(self):
+        self.service.startService()
+        d = self.login()
+        d.addCallback(self.logout)
+        return d
+
+    def cashIn(self, arg):
+        def validate(result):
+            print "cashIn: result " + str(arg)
+            return
+        
+        d = self.query('use sessions', { 'type': 'PacketPokerCashIn',
+                                         'serial': self.user_serial,
+                                         'url': 'ONE',
+                                         'name': "%040d" % 1,
+                                         'bserial': 1,
+                                         'value': 100 })
+        d.addCallback(validate)
+        return d
+    
+    def test03_cashIn(self):
+        self.service.startService()
+        d = self.login()
+        d.addCallback(self.cashIn)
+        d.addCallback(self.logout)
+        return d
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
@@ -180,8 +316,10 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test04"
-    suite = loader.loadClass(PokerServiceTestCase)
+    loader.methodPrefix = "test03"
+    suite = loader.suiteFactory()
+#    suite.addTest(loader.loadClass(PokerServiceTestCase))
+    suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
