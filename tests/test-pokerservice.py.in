@@ -224,6 +224,10 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         self.cookie = None
 
     def cleanSessions(self, arg):
+        #
+        # twisted Session code has leftovers : disable the hanging delayed call warnings
+        # of trial by nuking all what's left.
+        #
         pending = reactor.getDelayedCalls()
         if pending:
             for p in pending:
@@ -235,8 +239,8 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
     def tearDown(self):
         self.cookie = None
         d = self.service.stopService()
-        d.addCallback(self.destroyDb)
         d.addCallback(lambda x: self.p.stopListening())
+        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
         return d
 
@@ -311,9 +315,9 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
-#    suite.addTest(loader.loadClass(PokerServiceTestCase))
+    suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
