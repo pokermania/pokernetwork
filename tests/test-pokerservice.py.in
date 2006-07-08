@@ -62,6 +62,12 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
+def fun_name():
+    try:
+        raise ZeroDivisionError
+    except ZeroDivisionError:
+        return sys.exc_info()[2].tb_frame.f_back.f_code.co_name
+        
 class PokerServiceTestCase(unittest.TestCase):
 
     def destroyDb(self):
@@ -198,13 +204,6 @@ class QueryProtocol(http.HTTPClient):
         self.factory.parseResponse(contents)
 
 
-payloadTemplate = """<?xml version="1.0"?>
-<methodCall>
-<methodName>%s</methodName>
-%s
-</methodCall>
-"""
-
 class XMLRPCPokerServiceTestCase(unittest.TestCase):
 
     def destroyDb(self, arg = None):
@@ -289,17 +288,13 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         return d
 
     def cashIn(self, arg):
-        def validate(result):
-            print "cashIn: result " + str(arg)
-            return
-        
         d = self.query('use sessions', { 'type': 'PacketPokerCashIn',
                                          'serial': self.user_serial,
                                          'url': 'ONE',
                                          'name': "%040d" % 1,
                                          'bserial': 1,
                                          'value': 100 })
-        d.addCallback(validate)
+        d.addCallback(self.assertEquals, [{'type': 'PacketAck'}])
         return d
     
     def test03_cashIn(self):
