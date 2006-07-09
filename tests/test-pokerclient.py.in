@@ -1,0 +1,185 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@")
+sys.path.insert(0, "..")
+
+import libxml2
+
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+from pokernetwork import pokerclient
+from pokernetwork import currencyclient
+currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+from pokernetwork.pokerpackets import *
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
+  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings display2d="yes" display3d="no" ping="15" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
+   <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="1" lag="60"/> 
+  <screen fullscreen="no" width="1024" height="768"/>
+  <name>user1</name>
+  <passwd>password1</passwd>
+  <remember>yes</remember>
+  <muck>yes</muck>
+  <auto_post>no</auto_post>
+  <chat max_chars="40" line_length="20"/>
+  <servers>localhost:19480 localhost:19481;ssl localhost:19480;ssl localhost:19380 test.mekensleep.org:19380 poker.pok3d.com:80</servers>
+  <web browser="/usr/bin/firefox">http://localhost/poker-web/</web>
+  <sound>yes</sound>
+  <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
+  <lobby currency_serial="1" type="holdem" sort="name"/>
+  <shadow>yes</shadow>
+  <vprogram>yes</vprogram>
+  
+  <user path="~/.poker2d"/>
+  <path>/etc/poker-engine2.3 /etc/poker-engine2.4 /etc/poker-engine /etc/poker-network2.3 /etc/poker2-network2.4 /etc/poker-network .</path> 
+  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
+  <data path="data" sounds="data/sounds"/>
+  <handlist start="0" count="10"/>
+</settings>
+"""
+
+class PokerClientTestCase(unittest.TestCase):
+
+    def destroyDb(self, arg = None):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUpServer(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        #
+        # Setup server
+        #
+        self.service = pokerservice.PokerService(settings)
+        self.service.verbose = 3
+        self.service.startService()
+        factory = pokerservice.IPokerFactory(self.service)
+        self.p = reactor.listenTCP(0, factory,
+                                   interface="127.0.0.1")
+        self.port = self.p.getHost().port
+
+    def setUpClient(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
+        settings.header = settings.doc.xpathNewContext()
+        d = defer.Deferred()
+        self.client_factory = pokerclient.PokerClientFactory(settings = settings,
+                                                             established_deferred = d)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory)
+
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        self.destroyDb()
+        self.setUpServer()
+        return self.setUpClient()
+
+    def cleanSessions(self, arg):
+        #
+        # twisted Session code has leftovers : disable the hanging delayed call warnings
+        # of trial by nuking all what's left.
+        #
+        pending = reactor.getDelayedCalls()
+        if pending:
+            for p in pending:
+                if p.active():
+#                    print "still pending:" + str(p)
+                    p.cancel()
+        return arg
+        
+    def tearDown(self):
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.p.stopListening())
+        d.addCallback(self.destroyDb)
+        d.addCallback(self.cleanSessions)
+        return d
+
+    def ping(self, client):
+        client.sendPacket(PacketPing())
+        return client
+        
+    def quit(self, client):
+        client.sendPacket(PacketQuit())
+        return client
+        
+    def test01_ping(self):
+        d = self.client_factory.established_deferred
+        d.addCallback(self.ping)
+        d.addCallback(self.quit)
+        return d
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return pokerengineconfig
+
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test04"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerClientTestCase))
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerclient.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
+# End:
