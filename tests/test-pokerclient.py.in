@@ -113,15 +113,12 @@ class PokerClientTestCase(unittest.TestCase):
         settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
         settings.header = settings.doc.xpathNewContext()
         self.client_factory = pokerclient.PokerClientFactory(settings = settings)
-        reactor.connectTCP('127.0.0.1', self.port, self.client_factory)
-
-    def setUpProtocol(self):
         def setUpProtocol(client):
             client._poll_frequency = 1
             return client
         d = self.client_factory.established_deferred
         d.addCallback(setUpProtocol)
-        return d
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory)
                       
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
@@ -166,7 +163,7 @@ class PokerClientTestCase(unittest.TestCase):
         return (client,)
 
     def test01_ping(self):
-        d = self.setUpProtocol()
+        d = self.client_factory.established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
         return d
@@ -176,7 +173,7 @@ class PokerClientTestCase(unittest.TestCase):
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
 
     def test02_login(self):
-        d = self.setUpProtocol()
+        d = self.client_factory.established_deferred
         d.addCallback(self.login)
         d.addCallback(self.quit)
         return d
