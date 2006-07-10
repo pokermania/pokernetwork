@@ -1,5 +1,5 @@
 #!@PYTHON@
-# -*- mode: python -*-
+# -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
 # Copyright (C) 2006 Mekensleep
 #
@@ -35,6 +35,7 @@ import libxml2
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer, error
+from twisted.python import failure
 
 twisted.internet.base.DelayedCall.debug = True
 
@@ -63,7 +64,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 """
 
 settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings display2d="yes" display3d="no" ping="15" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
+<settings display2d="yes" display3d="no" ping="15000" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
    <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="1" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
   <name>user1</name>
@@ -72,7 +73,6 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <muck>yes</muck>
   <auto_post>no</auto_post>
   <chat max_chars="40" line_length="20"/>
-  <servers>localhost:19480 localhost:19481;ssl localhost:19480;ssl localhost:19380 test.mekensleep.org:19380 poker.pok3d.com:80</servers>
   <web browser="/usr/bin/firefox">http://localhost/poker-web/</web>
   <sound>yes</sound>
   <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
@@ -143,17 +143,49 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.cleanSessions)
         return d
 
+    def watch_client(self):
+        def install_protocol_callback(client):
+            print "install_protocol_callback"
+            def handler(packet):
+                print "sniffing packet " + str(packet)
+                client._handleConnection(packet)
+                if client.d:
+                    print "invoke deferred"
+                    d = client.d
+                    client.d = None
+                    d.callback((client, packet))
+#            client._handler = handler
+#            print "client test handler installed"
+            client._poll_frequency = 1
+            client.d = None
+            return client
+        d = self.client_factory.established_deferred
+        d.addCallback(install_protocol_callback)
+        return d
+                      
     def ping(self, client):
         client.sendPacket(PacketPing())
         return client
         
-    def quit(self, client):
+    def quit(self, args):
+        client = args[0]
         client.sendPacket(PacketQuit())
         return client
         
     def test01_ping(self):
-        d = self.client_factory.established_deferred
+        d = self.watch_client()
         d.addCallback(self.ping)
+        d.addCallback(self.quit)
+        return d
+
+    def login(self, client):
+        client.sendPacket(PacketLogin(name = 'user1', password = 'password1'))
+        d = defer.Deferred()
+        return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
+
+    def test02_login(self):
+        d = self.watch_client()
+        d.addCallback(self.login)
         d.addCallback(self.quit)
         return d
 
@@ -164,7 +196,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
