@@ -115,6 +115,14 @@ class PokerClientTestCase(unittest.TestCase):
         self.client_factory = pokerclient.PokerClientFactory(settings = settings)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory)
 
+    def setUpProtocol(self):
+        def setUpProtocol(client):
+            client._poll_frequency = 1
+            return client
+        d = self.client_factory.established_deferred
+        d.addCallback(setUpProtocol)
+        return d
+                      
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
@@ -147,39 +155,24 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.cleanSessions)
         return d
 
-    def setUpProtocol(self):
-        def setUpProtocol(client):
-            client._poll_frequency = 1
-            return client
-        d = self.client_factory.established_deferred
-        d.addCallback(setUpProtocol)
-        return d
-                      
-    def ping(self, client):
-        client.sendPacket(PacketPing())
-        return client
-
-    def connectionLost(self, arg):
-        print "connectionLost arg " + str(arg)
-        return arg
-    
     def quit(self, args):
         client = args[0]
         client.sendPacket(PacketQuit())
         client.transport.loseConnection()
-        d = client.connection_lost_deferred
-        d.addCallback(self.connectionLost)
-        return d
+        return client.connection_lost_deferred
         
+    def ping(self, client):
+        client.sendPacket(PacketPing())
+        return (client,)
+
     def test01_ping(self):
-        d = self.watch_client()
+        d = self.setUpProtocol()
         d.addCallback(self.ping)
         d.addCallback(self.quit)
         return d
 
     def login(self, client):
         client.sendPacket(PacketLogin(name = 'user1', password = 'password1'))
-        d = defer.Deferred()
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
 
     def test02_login(self):
@@ -195,7 +188,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test02"
+#    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
