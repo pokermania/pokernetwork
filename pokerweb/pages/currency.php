@@ -60,7 +60,7 @@ if(!isset($GLOBALS['currency_url'])) {
       $GLOBALS['currency_url'] .= ":" . $_SERVER['SERVER_PORT'];
     }
 
-    $GLOBALS['currency_url'] .= $_SERVER["SCRIPT_FILENAME"];
+    $GLOBALS['currency_url'] .= $_SERVER["SCRIPT_NAME"];
   } else {
     $GLOBALS['currency_url'] = "http://fake/";
   }
@@ -439,6 +439,8 @@ class currency {
   }
 
   function change_note($serial, $name, $value) {
+    $serial = intval($serial);
+    $value = intval($value);
     $this->check_note($serial, $name, $value);
     $note = $this->_get_note_transaction($value);
     $this->_transaction_add($note[2], 'y', array($this->url, $serial, $name, $value));
@@ -498,7 +500,7 @@ class currency {
     // is equivalent to changing the note.
     //
     if(count($serials) == 1)
-      return $this->change_note($serials[0], $names[0], $values[0]);
+      return array($this->change_note($serials[0], $names[0], $values[0]));
     $notes = array();
     for($i = 0; $i < count($serials); $i++)
       array_push($notes, array($this->url, intval($serials[$i]), $names[$i], intval($values[$i])));

@@ -62,8 +62,18 @@ class CurrencyClientTestCase(unittest.TestCase):
         
     def getPage(self, url):
         ( scheme, netloc, path, parameters, query, fragement ) = urlparse(url)
-        cmd = "LOCAL_PHP_PATH='@srcdir@/../../pokerweb/pages:@srcdir@/../../pokerweb/conf' QUERY_STRING='" + query + "' @PHP@ --define extension=mysql.so @srcdir@/../../pokerweb/pages/icurrency.php"
-        print cmd
+        cmd = """
+cat <<'EOF' | QUERY_STRING='""" + query + """' @PHP@ --define extension=mysql.so
+<?
+  ini_set('include_path', '@srcdir@/../../pokerweb/pages:' . ini_get('include_path'));
+  $GLOBALS['currency_db_base'] = 'currencytest';
+  require 'currency.php';
+  parse_str(getenv('QUERY_STRING'), $_GET);
+  currency_main(False);
+?>
+EOF
+"""
+        #print cmd
         fd = os.popen(cmd)
         result = fd.read()
         fd.close()
@@ -76,9 +86,10 @@ class CurrencyClientTestCase(unittest.TestCase):
         d = self.client.getNote(url, value)
         def validate(result):
             if isinstance(result, failure.Failure): raise result
-            self.assertEqual(url, result[0])
-            self.assertEqual(40, len(result[2]))
-            self.assertEqual(value, result[3])
+            note = result[0]
+            self.assertEqual(url, note[0])
+            self.assertEqual(40, len(note[2]))
+            self.assertEqual(value, note[3])
             return result
         d.addBoth(validate)
         return d
@@ -91,39 +102,39 @@ class CurrencyClientTestCase(unittest.TestCase):
     def commit(self, d):
         def commit(result):
             if isinstance(result, failure.Failure): raise result
-            notes = result
-            if type(notes[0]) is ListType:
-                first_note = notes[0]
-            else:
-                first_note = notes
+            first_note = result[0]
             d = self.client.commit(first_note[0], first_note[2])
-            d.addCallback(lambda result: notes)
+            d.addCallback(lambda ignore: result)
             return d
         d.addBoth(commit)
         return d
 
     # -----------------------------------------------------------------------------    
     def test01_getNote(self):
-        d = self.getNote('http://localhost/currency/', 100)
+        d = self.getNote('http://fake/', 100)
         def validate(result):
-            self.assertEqual(1, result[1])
+            note = result[0]
+            self.assertEqual(1, note[1])
             return result
         d.addCallback(validate)
         return d
 
     # -----------------------------------------------------------------------------    
     def test02_commit(self):
-        return self.getCommitedNote('http://localhost/currency/', 100)
+        return self.getCommitedNote('http://fake/', 100)
 
     # -----------------------------------------------------------------------------    
     def test03_checkNote(self):
-        d = self.getCommitedNote('http://localhost/currency/', 100)
+        d = self.getCommitedNote('http://fake/', 100)
 
-        def checkNote(note):
-            d = self.client.checkNote(note)
+        def checkNote(result):
+            #print "checkNote " + str(result)
+            note_to_check = result[0]
+            d = self.client.checkNote(note_to_check)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
-                self.assertEqual(note, result)
+                checked_note = result[0]
+                self.assertEqual(note_to_check, checked_note)
                 return result
             d.addBoth(validate)
             return d
@@ -133,17 +144,19 @@ class CurrencyClientTestCase(unittest.TestCase):
 
     # -----------------------------------------------------------------------------    
     def test04_changeNote(self):
-        d = self.getCommitedNote('http://localhost/currency/', 100)
+        d = self.getCommitedNote('http://fake/', 100)
 
-        def changeNote(note):
-            d = self.client.changeNote(note)
+        def changeNote(result):
+            note_to_change = result[0]
+            d = self.client.changeNote(note_to_change)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
-                self.assertEqual("http://localhost/currency/", result[0])
-                self.assertEqual(note[1] + 1, result[1])
-                self.assertEqual(40, len(result[2]))
-                self.assertNotEqual(note[2], result[2])
-                self.assertEqual(note[3], result[3])
+                changed_note = result[0]
+                self.assertEqual("http://fake/", changed_note[0])
+                self.assertEqual(note_to_change[1] + 1, changed_note[1])
+                self.assertEqual(40, len(changed_note[2]))
+                self.assertNotEqual(note_to_change[2], changed_note[2])
+                self.assertEqual(note_to_change[3], changed_note[3])
                 return result
             d.addBoth(validate)
             return d
@@ -152,46 +165,71 @@ class CurrencyClientTestCase(unittest.TestCase):
         return d
 
     # -----------------------------------------------------------------------------    
-    def test05_mergeNote(self):
+    def test05_mergeNotes(self):
         notes = []
         def addnote(result): 
-            notes.append(result)
+            notes.append(result[0])
             return result
 
-        d1 = self.getCommitedNote('http://localhost/currency/', 100)
+        d1 = self.getCommitedNote('http://fake/', 100)
         d1.addCallback(addnote)
 
-        d2 = self.getCommitedNote('http://localhost/currency/', 100)
+        d2 = self.getCommitedNote('http://fake/', 100)
         d2.addCallback(addnote)
 
         d = defer.DeferredList((d1, d2))
 
-        def mergeNote(note):
+        def mergeNotes(note):
             self.assertEquals(2, len(notes))
-            d = self.client.mergeNotes(notes[0], notes[1])
+            d = self.client.mergeNotes(*notes)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
-                self.assertEqual("http://localhost/currency/", result[0])
-                self.assertEqual(1, result[1])
-                self.assertEqual(40, len(result[2]))
-                self.assertEqual(200, result[3])
+                self.assertEqual(1, len(result))
+                note = result[0]
+                self.assertEqual("http://fake/", note[0])
+                self.assertEqual(1, note[1])
+                self.assertEqual(40, len(note[2]))
+                self.assertEqual(200, note[3])
                 return result
             d.addBoth(validate)
             return d
 
-        d.addCallback(mergeNote)
+        d.addCallback(mergeNotes)
         return self.commit(d)
 
-# -----------------------------------------------------------------------------
-def GetTestSuite():
-    suite = runner.TestSuite(CurrencyClientTestCase)
-    suite.addTest(unittest.makeSuite(CurrencyClientTestCase))
-    return suite
-    
-# -----------------------------------------------------------------------------
-def GetTestedModule():
-    return currencyclient
-  
+    # -----------------------------------------------------------------------------    
+    def test06_meltNotes(self):
+        notes = []
+        def addnote(result): 
+            notes.append(result[0])
+            return result
+
+        d1 = self.getCommitedNote('http://fake/', 100)
+        d1.addCallback(addnote)
+
+        d2 = self.getCommitedNote('http://fake/', 500)
+        d2.addCallback(addnote)
+
+        d = defer.DeferredList((d1, d2))
+
+        def meltNotes(note):
+            self.assertEquals(2, len(notes))
+            d = self.client.meltNotes(*notes)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual(1, len(result))
+                note = result[0]
+                self.assertEqual("http://fake/", note[0])
+                self.assertEqual(1, note[1])
+                self.assertEqual(40, len(note[2]))
+                self.assertEqual(600, note[3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(meltNotes)
+        return self.commit(d)
+
 # -----------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()

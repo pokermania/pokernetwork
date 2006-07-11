@@ -108,7 +108,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $this->prepare_merge_notes();
       $output = currency_main(False, True);
       $lines = split("\n", $output);
-      $this->assertEquals(count($lines), 2, $output);
+      $this->assertEquals(count($lines), 2);
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
     }
@@ -119,7 +119,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $_GET['values'] = '';
       $output = currency_main(False, True);
       $lines = split("\n", $output);
-      $this->assertEquals(count($lines), 2, $output);
+      $this->assertEquals(count($lines), 2);
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
     }
@@ -130,9 +130,44 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $_GET['values'] = array(300);
       $output = currency_main(False, True);
       $lines = split("\n", $output);
-      $this->assertEquals(count($lines), 1, $output);
+      $this->assertEquals(count($lines), 1);
       $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	300$|', $lines[0]);
     }
+
+    public function test05_merge_notes_4()
+    {
+      $note = $this->get_note();
+      $_GET['command'] = 'merge_notes';
+      $_GET['serial'] = array($note[1]);
+      $this->assertEquals(array(1), $_GET['serial']);
+      $_GET['name'] = array($note[2]);
+      $_GET['value'] = array($note[3]);
+      $this->assertEquals(array(100), $_GET['value']);
+      $output = currency_main(False, True);
+      $lines = split("\n", $output);
+      $this->assertEquals(1, count($lines));
+      $merged_note = split("\t", $lines[0]);
+      $this->assertNotEquals($note[2], $merged_note[2], $output);
+      $this->assertRegExp('|^http://localhost/currency/	2	\w{40}	100$|', $lines[0]);
+      //      $this->commit($merged_note[2]);
+      return $merged_note;
+    }
+
+    public function test06_change_note()
+    {
+      $note = $this->get_note();
+      $_GET['command'] = 'change_note';
+      $_GET['serial'] = $note[1];
+      $_GET['name'] = $note[2];
+      $_GET['value'] = $note[3];
+      $output = currency_main(False, True);
+      $this->assertEquals(count(split("\n", $output)), 1);
+      $this->assertRegExp('|^http://localhost/currency/	2	\w{40}	100$|', $output);
+      $changed_note = split("\t", $output);
+      $this->commit($changed_note[2]);
+      return $changed_note;
+    }
+
 }
 
 //

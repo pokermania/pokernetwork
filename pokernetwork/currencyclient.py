@@ -53,17 +53,33 @@ class RealCurrencyClient:
             args.append("serial=%s" % serial )
             args.append("value=%s" % value )
                 
-        return self.getPage("&".join(args))
+        if kwargs.has_key('values'):
+            index = 0
+            for value in kwargs['values']:
+                args.append("values[%d]=%d" % ( index, value ))
+                index += 1
+        url = "&".join(args)
+        #print "RealCurrencyClient: " + url
+        return self.getPage(url)
 
     def parseResult(self, result):
         notes = []
         for line in result.split("\n"):
             note = line.split("\t")
-            notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
+            if len(note) == 4:
+                notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
+            else:
+                print "RealCurrencyClient::parseResult ignore line: " + line
         return notes
 
     def mergeNotes(self, *args):
         deferred = self.request(url = args[0][0], command = 'merge_notes', notes = args)
+        deferred.addCallback(self.parseResult)
+        return deferred
+
+    def meltNotes(self, *notes):
+        values = sum(map(lambda note: note[3], notes))
+        deferred = self.request(url = notes[0][0], command = 'merge_notes', notes = notes, values = [ values ])
         deferred.addCallback(self.parseResult)
         return deferred
 

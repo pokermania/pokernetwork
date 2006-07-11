@@ -215,7 +215,7 @@ class PokerCashier:
                     #
                     (name, serial, value) = cursor.fetchone()
                     notes.append((packet.url, serial, name, value))
-                deferred = self.currency_client.mergeNotes(*notes)
+                deferred = self.currency_client.meltNotes(*notes)
                 deferred.addCallback(self.cashInUpdateCounter, packet, notes)
         finally:
             cursor.close()

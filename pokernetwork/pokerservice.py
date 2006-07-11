@@ -141,6 +141,7 @@ class PokerService(service.Service):
 
     def startService(self):
         self.db = PokerDatabase(self.settings)
+        self.cleanUp(temporary_users = self.settings.headerGet("/server/users/@temporary"))
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
         self.poker_auth = PokerAuth(self.db, self.settings)
@@ -826,7 +827,7 @@ class PokerService(service.Service):
                                          email = user_info.email,
                                          rating = user_info.rating)
         cursor = self.db.cursor()
-        sql = ( "select addr_street,addr_zip,addr_town,addr_state,addr_country,phone from users_private where serial = " + str(serial) )
+        sql = ( "SELECT addr_street,addr_zip,addr_town,addr_state,addr_country,phone FROM users_private WHERE serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
@@ -1434,7 +1435,7 @@ class PokerXML(resource.Resource):
         #
         # If the result is a single packet, it means the requested
         # action is using sessions (non session packet streams all
-        # start with an auth packet). It may be deferred but may never
+        # start with an auth packet). It may be a Deferred but may never
         # be a logout (because logout is not supposed to return a deferred).
         #
         if len(result_packets) == 1 and isinstance(result_packets[0], defer.Deferred):
@@ -1448,7 +1449,7 @@ class PokerXML(resource.Resource):
                 return
             d = result_packets[0]
             d.addCallback(renderLater)
-            return server.NO_DONE_YET
+            return server.NOT_DONE_YET
         else:
             if use_sessions != "use sessions":
                 self.service.destroyAvatar(avatar)
