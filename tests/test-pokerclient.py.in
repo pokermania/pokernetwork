@@ -178,6 +178,34 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def cashIn(self, client, url, value):
+        note = self.service.cashier.currency_client._buildNote(url, value)
+        client.sendPacket(PacketPokerCashIn(serial = client.getSerial(), note = note))
+        return client.packetDeferred(True, PACKET_ACK)
+
+    def check_cashIn(self, (client, packet)):
+        client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
+        d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
+        def validate((client, packet),):
+            print "check_cashIn " + str(packet)
+            self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
+            self.assertEquals(2, len(packet.money))
+            self.assertEquals([1, 2], packet.money.keys())
+            self.assertEquals(100, packet.money[1][0])
+            self.assertEquals(200, packet.money[2][0])
+            return (client, packet)
+        d.addCallback(validate)
+        return d
+                                   
+    def test03_cashIn(self):
+        d = self.client_factory.established_deferred
+        d.addCallback(self.login)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
+        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
+        d.addCallback(self.check_cashIn)
+        d.addCallback(self.quit)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -185,7 +213,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
+    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
