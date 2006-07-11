@@ -30,11 +30,10 @@ ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/c
 
 require_once 'PHPUnit2/Framework/TestCase.php';
 
-define('CURRENCY_INCLUDED', 'yes');
-
-require_once 'icurrency.php';
-
+$GLOBALS['currency_url'] = 'http://localhost/currency/';
 $GLOBALS['currency_db_base'] = 'currencytest';
+
+require_once 'currency.php';
 
 class testicurrency extends PHPUnit2_Framework_TestCase
 {
@@ -49,10 +48,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     {
       $_GET['command'] = 'get_note';
       $_GET['value'] = 100;
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
+      $output = currency_main(False, True);
       $note = split("\t", $output);
       $this->commit($note[2]);
       return $note;
@@ -62,21 +58,15 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     {
       $_GET['command'] = 'commit';
       $_GET['transaction_id'] = $transaction_id;
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
-      $this->assertEquals($output, '');
+      $output = currency_main(False, True);
+      $this->assertEquals($output, 'DONE');
     }
 
     public function test01_get_note()
     {
       $_GET['command'] = 'get_note';
       $_GET['value'] = 100;
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
+      $output = currency_main(False, True);
       $this->assertEquals(count(split("\n", $output)), 1);
       $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	100$|', $output);
       return split("\t", $output);
@@ -89,10 +79,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $_GET['serial'] = $note[1];
       $_GET['name'] = $note[2];
       $_GET['value'] = $note[3];
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
+      $output = currency_main(False, True);
       $this->assertEquals(count(split("\n", $output)), 1);
       $checked_note = split("\t", $output);
       $this->assertEquals($note, $checked_note);
@@ -119,10 +106,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     public function test03_merge_notes_1()
     {
       $this->prepare_merge_notes();
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
+      $output = currency_main(False, True);
       $lines = split("\n", $output);
       $this->assertEquals(count($lines), 2, $output);
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
@@ -133,10 +117,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     {
       $this->prepare_merge_notes();
       $_GET['values'] = '';
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
+      $output = currency_main(False, True);
       $lines = split("\n", $output);
       $this->assertEquals(count($lines), 2, $output);
       $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
@@ -147,10 +128,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     {
       $this->prepare_merge_notes();
       $_GET['values'] = array(300);
-      ob_start();
-      main();
-      $output = ob_get_contents();
-      ob_end_clean();
+      $output = currency_main(False, True);
       $lines = split("\n", $output);
       $this->assertEquals(count($lines), 1, $output);
       $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	300$|', $lines[0]);
