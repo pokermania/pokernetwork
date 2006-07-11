@@ -25,19 +25,56 @@
 //  Loic Dachary <loic@gnu.org>
 //
 
-/*
- 
-function myErrorHandler($errno, $errstr, $errfile, $errline) {
-  fwrite(STDERR, "ERROR: $errstr [$errno] at $errfile:$errline\n");
-  exit(1);
+//
+// Look for configuration file based on the invoked script name
+//
+if(isset($_SERVER["SCRIPT_FILENAME"]) && $_SERVER["SCRIPT_FILENAME"] != '') {
+  @include(basename($_SERVER["SCRIPT_FILENAME"], '.php') . '_configuration.php');
 }
-set_error_handler("myErrorHandler");
 
-*/
+//
+// Provide configuration defaults that may be useful for testing
+// or suitable for packaging.
+//
+if(!isset($GLOBALS['currency_db_persist'])) $GLOBALS['currency_db_persist'] = TRUE;
+if(!isset($GLOBALS['currency_db_host'])) $GLOBALS['currency_db_host'] = "localhost";
+if(!isset($GLOBALS['currency_db_port'])) $GLOBALS['currency_db_port'] = 3306;
+if(!isset($GLOBALS['currency_db_base'])) $GLOBALS['currency_db_base'] = "currency";
+if(!isset($GLOBALS['currency_db_user'])) $GLOBALS['currency_db_user'] = "currency";
+if(!isset($GLOBALS['currency_db_password'])) $GLOBALS['currency_db_password'] = "currency";
 
-ini_set('include_path', "../conf:" . ini_get('include_path'));
+if(!isset($GLOBALS['currency_random'])) $GLOBALS['currency_random'] = "/dev/urandom";
 
-require_once 'currency_configuration.php';
+if(!isset($GLOBALS['currency_url'])) {
+  if(isset($_SERVER['SERVER_NAME'])) {
+    if(isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '443') {
+      $GLOBALS['currency_url'] = "https://";
+    } else {
+      $GLOBALS['currency_url'] = "http://";
+    }
+
+    $GLOBALS['currency_url'] .= $_SERVER['SERVER_NAME'];
+
+    if(!(isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '443') &&
+       !(!isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '80')) {
+      $GLOBALS['currency_url'] .= ":" . $_SERVER['SERVER_PORT'];
+    }
+
+    $GLOBALS['currency_url'] .= $_SERVER["SCRIPT_FILENAME"];
+  } else {
+    $GLOBALS['currency_url'] = "http://fake/";
+  }
+}
+
+if(!isset($GLOBALS['currency_values'])) $GLOBALS['currency_values'] = array(1, 2, 5,
+                                                                            10, 20, 50,
+                                                                            100, 200, 500,
+                                                                            1000, 2000, 5000,
+                                                                            10000, 20000, 50000,
+                                                                            100000, 200000, 500000,
+                                                                            1000000, 2000000, 5000000,
+                                                                            10000000, 20000000, 50000000,
+                                                                            100000000, 200000000, 500000000);
 
 class currency {
 
@@ -532,20 +569,28 @@ class currency {
   }
 }
 
+//
+// Implement currency interaction if called from a standalone php script.
+//
 function currency_main($use_headers = True, $return_output = False) {
   ob_start();
   try {
     $page = array();
     $currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
 
-    if($_GET['command'] == 'get_note') {
+    if(!isset($_GET['command']))
+      $command = 'get_note';
+    else
+      $command = $_GET['command'];
+
+    if($command == 'get_note') {
       if(isset($_GET['count'])) $count = $_GET['count'];
       else $count = 1;
       for($i = 0; $i < $count; $i++) {
         $note = $currency->get_note($_GET['value']);
         array_push($page, join("\t", $note));
       }
-    } elseif($_GET['command'] == 'merge_notes') {
+    } elseif($command == 'merge_notes') {
       if(isset($_GET['values'])) {
         if($_GET['values'] == '') $_GET['values'] = array();
       } else {
@@ -554,16 +599,16 @@ function currency_main($use_headers = True, $return_output = False) {
       $notes = $currency->merge_notes_columns($_GET['serial'], $_GET['name'], $_GET['value'], $_GET['values']);
       foreach ($notes as $note)
         array_push($page, join("\t", $note));
-    } elseif($_GET['command'] == 'change_note') {
+    } elseif($command == 'change_note') {
       $note = $currency->change_note($_GET['serial'], $_GET['name'], $_GET['value']);
       array_push($page, join("\t", $note));
-    } elseif($_GET['command'] == 'check_note') {
+    } elseif($command == 'check_note') {
       $note = $currency->check_note($_GET['serial'], $_GET['name'], $_GET['value']);
       array_push($page, join("\t", $note));
-    } elseif($_GET['command'] == 'commit') {
+    } elseif($command == 'commit') {
       array_push($page, $currency->commit($_GET['transaction_id']));
     } else {
-      throw new Exception("unknow command " . $_GET['command']);
+      throw new Exception("unknow command " . $command);
     }
 
     print join("\n", $page);
