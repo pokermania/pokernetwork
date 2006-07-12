@@ -6,39 +6,39 @@ import re
 
 def check_digits_only(map, name):
     if map.has_key(name) and not re.match('^[0-9]+$', map[name]):
-        raise UserWarning, name + " is not made of digits only: " + str(map)
+        raise UserWarning, name + " is not made of digits only" 
 
 def check_alnum_only(map, name):
     if map.has_key(name) and not re.match('^\w+$', map[name]):
-        raise UserWarning, name + " is not made of alphanumerical characters only: " + str(map)
+        raise UserWarning, name + " is not made of alphanumerical characters only" 
 
 def check_amount(map, name):
     if map.has_key(name) and not re.match('^[0-9]*(?:\.[0-9]{1,2})?$', map[name]):
-        raise UserWarning, name + " is not made of digits and two digit decimal only: " + str(map)
+        raise UserWarning, name + " is not made of digits and two digit decimal only" 
 
 def check_words_and_space_only(map, name):
     if map.has_key(name) and not re.match('^[\w\s]*$', map[name]):
-        raise UserWarning, name + " must be all alphanumeric and space: " + str(parameters)
+        raise UserWarning, name + " must be all alphanumeric and space"
     
 def check_length(map, name, min, max):
     if map.has_key(name) and len(map[name]) not in range(min,max+1):
-        raise UserWarning, name + " length must be between " + str(min) + " and " + str(max) + " characters long: " + str(map)
+        raise UserWarning, name + " length must be between " + str(min) + " and " + str(max) + " characters long" 
 
 def check_min_length(map, name, min):
     if map.has_key(name) and len(map[name]) < min:
-        raise UserWarning, name + " length must be at least " + str(min) + " characters long: " + str(map)
+        raise UserWarning, name + " length must be at least " + str(min) + " characters long" 
 
 def check_max_length(map, name, max):
     if map.has_key(name) and len(map[name]) > max:
-        raise UserWarning, name + " length must be at most " + str(max) + " characters long: " + str(map)
+        raise UserWarning, name + " length must be at most " + str(max) + " characters long" 
 
 def check_exact_length(map, name, length):
     if map.has_key(name) and len(map[name]) != length:
-        raise UserWarning, name + " length must be exactly " + str(length) + " characters long: " + str(map)
+        raise UserWarning, name + " length must be exactly " + str(length) + " characters long" 
 
 def check_is_in(map, name, values):
     if map.has_key(name) and map[name] not in values:
-        raise UserWarning, name + " is not among the supported values (" + str(values) + ": " + str(map)
+        raise UserWarning, name + " is not among the supported values (" + str(values) + ")" 
         
 def check_mandatory_fields(parameters, fields):
     missing_fields = []
@@ -74,6 +74,9 @@ class Neteller:
 
         check_digits_only(parameters, 'net_account')
         check_exact_length(parameters, 'net_account', 12)
+
+        check_digits_only(parameters, 'secure_id')
+        check_exact_length(parameters, 'secure_id', 6)
 
         check_max_length(parameters, 'merch_account', 50)
         check_words_and_space_only(parameters, 'merch_account')
@@ -309,9 +312,38 @@ neteller.py [--config=<path>] (in|out|check)
 """
         sys.exit(1)
 
+    def dry_run_patch(kwargs, command, verbose):
+        kwargs['Test'] = '1'
+        if command == "in":
+            #    AccountID       SecureId    Currency
+            cashin = (
+                ('458415554241', '896365', 'USD'),
+                ('451015522412', '568492', 'GBP'),
+                ('456115522530', '362626', 'EUR'),
+                ('455715767192', '283419', 'CAD'),
+                )
+            input = ( kwargs['net_account'], kwargs['secure_id'], kwargs['currency'] )
+            if input not in cashin:
+                if verbose:
+                    print "Invalid test input for command '" + command + "' : " + str(input) + " changed with " + str(cashin[0])
+                ( kwargs['net_account'], kwargs['secure_id'], kwargs['currency'] ) = cashin[0]
+        
+        elif command == "out":
+            cashout = (
+                ('458415554241', 'USD'),
+                ('451015522412', 'GBP'),
+                ('456115522530', 'EUR'),
+                )
+            input = ( kwargs['net_account'], kwargs['currency'] )
+            if input not in cashout:
+                if verbose:
+                    print "Invalid test input for command '" + command + "' : " + str(input) + " changed with " + str(cashout[0])
+                ( kwargs['net_account'], kwargs['currency'] ) = cashout[0]
+
+        
     def main():
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hcvdop", ["help", "config=", "verbose", "dry_run", "option=", "php" ])
+            opts, args = getopt.getopt(sys.argv[1:], "hcvdop", ["help", "config=", "verbose", "dry-run", "option=", "php" ])
         except getopt.GetoptError:
             usage()
             sys.exit(2)
@@ -326,7 +358,7 @@ neteller.py [--config=<path>] (in|out|check)
                 sys.exit(0)
             if o in ("-c", "--config"):
                 config_path = a
-            if o in ("-d", "--dry_run"):
+            if o in ("-d", "--dry-run"):
                 dry_run = True
             if o in ("-p", "--php"):
                 php = True
@@ -340,9 +372,11 @@ neteller.py [--config=<path>] (in|out|check)
         config = ConfigParser.SafeConfigParser()
         config.read(config_path)
 
+        if len(args) < 1: usage("no argument provided")
+        command = args.pop(0)
+
         kwargs['verbose'] = verbose
-        if dry_run:
-            kwargs['Test'] = '1'
+        if dry_run: dry_run_patch(kwargs, command, verbose)
 
         if verbose: print "kwargs " + str(kwargs)
         
@@ -350,9 +384,6 @@ neteller.py [--config=<path>] (in|out|check)
         kwargs['merch_pass'] = config.get('merchant', 'merch_pass')
         kwargs['merch_key'] = config.get('merchant', 'merch_key')
 
-        if len(args) < 1: usage("no argument provided")
-        
-        command = args.pop(0)
         result = {}
         if command == "in":
             o = NetellerCashIn(**kwargs)
@@ -363,7 +394,14 @@ neteller.py [--config=<path>] (in|out|check)
         else:
             usage("unknown command " + command)
 
-        result = o.request()
+        try:
+            result = o.request()
+        except UserWarning, error:
+            if php:
+                string = str(error)
+                print "array('error', '" + string.replace("'", "\\'") + "');";
+                sys.exit(0)
+            raise
         
         if php:
             buffer = "array("
@@ -378,7 +416,7 @@ neteller.py [--config=<path>] (in|out|check)
                 else:
                     buffer += "'%s'" % value
                 buffer += ", "
-            buffer += ")"
+            buffer += ");"
             print buffer
         else:
             print result
