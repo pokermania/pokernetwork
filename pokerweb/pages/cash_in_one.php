@@ -52,14 +52,12 @@ function action() {
     $handle = fopen(dirname(_me()) . "/currency_one.php?command=get_note&value=" . $amount, "r");
     $line = fgets($handle);
     $note = split("\t", $line);
-    pclose($handle);
+    fclose($handle);
 
     $handle = fopen(dirname(_me()) . "/currency_one.php?command=commit&transaction_id=" . $note[2], "r");
     $line = fgets($handle);
-    pclose($handle);
+    fclose($handle);
 
-    $note[1] = intval($note[1]);
-    $note[3] = intval($note[3]);
     $poker->cashIn($note);
 
     return true;
