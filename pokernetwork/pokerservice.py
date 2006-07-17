@@ -671,11 +671,11 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
 
         sql = ( "update hands set " +
-                " description = '%s' "
+                " description = %s "
                 " where serial = " + str(hand_serial) )
         if self.verbose > 1:
-            print "saveHand: %s" % sql
-        cursor.execute(sql, description)
+            print "saveHand: %s" % ( sql % description )
+        cursor.execute(sql, str(description))
         if cursor.rowcount != 1 and cursor.rowcount != 0:
             print " *ERROR* modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
             cursor.close()
@@ -1062,10 +1062,11 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         if money != '':
-           sql = ( "UPDATE user2money,user2table SET " +
+           sql = ( "UPDATE user2money,user2table,pokertables SET " +
                    " user2money.amount = user2money.amount + user2table.money " +
                    " WHERE user2money.user_serial = user2table.user_serial AND " +
-                   "       user2money.currency_serial = user2table.currency_serial AND " +
+                   "       user2money.currency_serial = pokertables.currency_serial AND " +
+                   "       pokertables.serial = " + str(table_id) + " AND " +
                    "       user2table.table_serial = " + str(table_id) + " AND " +
                    "       user2table.user_serial = " + str(serial) )
            if self.verbose > 1:
@@ -1082,8 +1083,26 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            status = False
         cursor.close()
         return status
+
+    def updatePlayerRake(self, currency_serial, serial, amount):
+        if amount == 0:
+            return True
+        status = True
+        cursor = self.db.cursor()
+        sql = ( "UPDATE user2money SET "
+                " rake = rake + " + str(amount) + " "
+                " WHERE user_serial = " + str(serial) + " AND "
+                "       currency_serial = " + str(currency_serial) )
+        if self.verbose > 1:
+            print "updatePlayerRake: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            status = False
+        cursor.close()
 
     def updatePlayerMoney(self, serial, table_id, amount):
         if amount == 0:

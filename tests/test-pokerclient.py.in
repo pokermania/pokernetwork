@@ -108,23 +108,25 @@ class PokerClientTestCase(unittest.TestCase):
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
 
-    def setUpClient(self):
+    def setUpClient(self, index):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
         settings.header = settings.doc.xpathNewContext()
-        self.client_factory = pokerclient.PokerClientFactory(settings = settings)
+        self.client_factory[index] = pokerclient.PokerClientFactory(settings = settings)
         def setUpProtocol(client):
             client._poll_frequency = 1
             return client
-        d = self.client_factory.established_deferred
+        d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
-        reactor.connectTCP('127.0.0.1', self.port, self.client_factory)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[index])
                       
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
         self.setUpServer()
-        return self.setUpClient()
+        self.client_factory = [None, None]
+        self.setUpClient(1)
+        return self.setUpClient(0)
 
     def cleanSessions(self, arg):
         #
@@ -148,7 +150,7 @@ class PokerClientTestCase(unittest.TestCase):
         reactor.iterate(0)
         d = self.service.stopService()
         d.addCallback(lambda x: self.p.stopListening())
-        d.addCallback(self.destroyDb)
+#        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
         return d
 
@@ -163,18 +165,18 @@ class PokerClientTestCase(unittest.TestCase):
         return (client,)
 
     def test01_ping(self):
-        d = self.client_factory.established_deferred
+        d = self.client_factory[0].established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
         return d
 
-    def login(self, client):
-        client.sendPacket(PacketLogin(name = 'user1', password = 'password1'))
+    def login(self, client, index):
+        client.sendPacket(PacketLogin(name = 'user%d' % index, password = 'password1'))
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
 
     def test02_login(self):
-        d = self.client_factory.established_deferred
-        d.addCallback(self.login)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
         d.addCallback(self.quit)
         return d
 
@@ -198,13 +200,61 @@ class PokerClientTestCase(unittest.TestCase):
         return d
                                    
     def test03_cashIn(self):
-        d = self.client_factory.established_deferred
-        d.addCallback(self.login)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
         d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
         d.addCallback(self.check_cashIn)
         d.addCallback(self.quit)
         return d
+
+    def sit(self, (client, packet)):
+        client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
+                                               game_id = 100))
+        client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
+                                          game_id = 100))
+        client.sendPacket(PacketPokerAutoBlindAnte(serial = client.getSerial(),
+                                                   game_id = 100))
+        client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
+                                           game_id = 100,
+                                           amount = 200000))
+        client.sendPacket(PacketPokerSit(serial = client.getSerial(),
+                                         game_id = 100))
+        return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+        
+    def allIn(self, (client, packet)):
+        print "allIn"
+        self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+        self.assertEqual(client.getSerial(), packet.serial)
+        client.sendPacket(PacketPokerSitOut(serial = packet.serial,
+                                            game_id = packet.game_id))
+        game = client.getGame(packet.game_id)
+        player = game.getPlayer(packet.serial)
+        if game.canRaise(player.serial):
+            client.sendPacket(PacketPokerRaise(serial = packet.serial,
+                                               game_id = packet.game_id,
+                                               amount = player.money))
+        else:
+            client.sendPacket(PacketPokerCall(serial = packet.serial,
+                                              game_id = packet.game_id))
+            
+        return client.packetDeferred(True, PACKET_POKER_WIN)
+        
+    def win(self, (client, packet)):
+        print "win " + str(packet)
+        return (client, packet)
+        
+    def test04_playHand(self):
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            d[index].addCallback(self.login, index)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
+            d[index].addCallback(self.sit)
+            d[index].addCallback(self.allIn)
+            d[index].addCallback(self.win)
+            d[index].addCallback(self.quit)
+        return defer.DeferredList(d)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
@@ -213,7 +263,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test03"
+    loader.methodPrefix = "test04"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,

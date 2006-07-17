@@ -27,6 +27,8 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 
+from twisted.internet import reactor
+
 from re import match
 from types import *
 from string import split, join
@@ -36,6 +38,7 @@ from pokerengine.pokergame import PokerGameServer, history2messages
 from pokerengine.pokercards import PokerCards
 
 from pokernetwork.pokerpackets import *
+from pokernetwork import pokeravatar
 
 class PokerPredefinedDecks:
     def __init__(self, decks):
@@ -68,7 +71,7 @@ class PokerTable:
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
         self.skin = description.get("skin", "default")
-        self.currency_serial = description.get("currency_serial", 0)
+        self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description["player_timeout"])        
         self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = description.has_key("transient")
@@ -352,6 +355,11 @@ class PokerTable:
                 packets.append(PacketPokerMuckRequest(game_id = game_id,
                                                       muckable_serials = muckable_serials))
             
+            elif type == "rake":
+                (type, amount, serial2rake) = event
+                packets.append(PacketPokerRake(game_id = game_id,
+                                               value = amount))
+                
             elif type == "end":
                 (type, winners, showdown_stack) = event
                 packets.append(PacketPokerState(game_id = game_id,
@@ -381,12 +389,13 @@ class PokerTable:
                 pass
             
             else:
-                print "*ERROR* unknown history type %s " % type
+                print "history2packets: *ERROR* unknown history type %s " % type
         return packets
 
     def syncDatabase(self):
         game = self.game
         updates = {}
+        serial2rake = {}
         reset_bet = False
         for event in game.historyGet()[self.history_index:]:
             type = event[0]
@@ -404,6 +413,9 @@ class PokerTable:
             
             elif type == "showdown":
                 pass
+                
+            elif type == "rake":
+                (type, amount, serial2rake) = event
                 
             elif type == "muck":
                 pass
@@ -480,10 +492,13 @@ class PokerTable:
                 self.factory.saveHand(self.compressedHistory(game.historyGet()), hand_serial)
             
             else:
-                print "*ERROR* unknown history type %s " % type
+                print "syncDatabase: *ERROR* unknown history type %s " % type
 
         for (serial, amount) in updates.iteritems():
             self.factory.updatePlayerMoney(serial, game.id, amount)
+
+        for (serial, rake) in serial2rake.iteritems():
+            self.factory.updatePlayerRake(self.currency_serial, serial, rake)
 
         if reset_bet:
             self.factory.resetBet(game.id)
@@ -551,6 +566,9 @@ class PokerTable:
                    type == "player_list" ):
                 new_history.append(event)
 
+            elif type == "rake":
+                new_history.append(event)
+                
             elif type == "end":
                 (type, winners, showdown_stack) = event
                 new_history.append(event)
@@ -568,7 +586,7 @@ class PokerTable:
                 pass
             
             else:
-                print "*ERROR* unknown history type %s " % type
+                print "compressedHistory: *ERROR* unknown history type %s " % type
 
         return new_history
 
@@ -961,7 +979,7 @@ class PokerTable:
         game.open()
         game.addPlayer(serial)
         player = game.getPlayer(serial)
-        player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
+        player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
         player.money = money
         player.buy_in_payed = True
         game.sit(serial)
@@ -1079,21 +1097,21 @@ class PokerTable:
         if not self.isSeated(client):
             client.error("player %d can't set auto blind/ante before getting a seat" % serial)
             return False
-        client.autoBlindAnte(self, serial, auto)
+        return client.autoBlindAnte(self, serial, auto)
         
     def muckAccept(self, client, serial):
         game = self.game
         if not self.isSeated(client):
             client.error("player %d can't accept muck before getting a seat" % serial)
             return False
-        game.muck(serial, want_to_muck = True)
+        return game.muck(serial, want_to_muck = True)
 
     def muckDeny(self, client, serial):
         game = self.game
         if not self.isSeated(client):
             client.error("player %d can't deny muck before getting a seat" % serial)
             return False
-        game.muck(serial, want_to_muck = False)
+        return game.muck(serial, want_to_muck = False)
     
     def sitPlayer(self, client, serial):
         game = self.game
@@ -1101,8 +1119,7 @@ class PokerTable:
             client.error("player %d can't sit before getting a seat" % serial)
             return False
 
-        client.sitPlayer(self, serial)
-        return True
+        return client.sitPlayer(self, serial)
         
     def destroyPlayer(self, client, serial):
         if client in self.observers:

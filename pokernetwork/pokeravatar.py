@@ -169,7 +169,7 @@ class PokerAvatar:
     
     def sendPacketVerbose(self, packet):
         if self.service.verbose > 1 and packet.type != PACKET_PING or self.service.verbose > 5:
-            print "sendPacket: %s" % str(packet)
+            print "PokerAvatar::sendPacket: %s" % str(packet)
         self.sendPacket(packet)
         
     def packet2table(self, packet):
@@ -185,7 +185,7 @@ class PokerAvatar:
         return self.resetPacketsQueue()
         
     def handlePacketLogic(self, packet):
-        if self.service.verbose > 2 and packet.type != PACKET_PING: print "handleConnection: " + str(packet)
+        if self.service.verbose > 2 and packet.type != PACKET_PING: print "PokerAvatar::handleConnection: " + str(packet)
         
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
@@ -318,6 +318,7 @@ class PokerAvatar:
         table = self.packet2table(packet)
             
         if table:
+            if self.service.verbose > 2: print "packet for table " + str(table.game.id)
             game = table.game
 
             if packet.type == PACKET_POKER_READY_TO_PLAY:

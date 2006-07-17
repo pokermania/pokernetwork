@@ -120,6 +120,8 @@ class FakeCurrencyClient:
         reactor.callLater(0, lambda: d.callback([result]))
         return d
 
+    meltNotes = mergeNotes
+
     def changeNote(self, note):
         self.serial += 1
         result = note.copy()
