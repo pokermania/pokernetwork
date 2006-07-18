@@ -98,6 +98,11 @@ class RealCurrencyClient:
         deferred.addCallback(self.parseResult)
         return deferred
 
+    def breakNote(self, note, *values):
+        deferred = self.request(url = note[0], command = 'break_note', note = note, values = values)
+        deferred.addCallback(self.parseResult)
+        return deferred
+
     def commit(self, url, transaction_id):
         return self.request(url = url, command = 'commit', transaction_id = transaction_id)
         
@@ -110,6 +115,23 @@ class FakeCurrencyClient:
         self.check_note_result = True
         self.commit_result = True
         
+    def breakNote(self, (url, serial, name, value), *values):
+        notes = []
+        for note_value in values:
+            if value < note_value: continue
+            count = value / note_value
+            value %= note_value
+            for i in xrange(count):
+                notes.append((url, self.serial, "%040d" % self.serial, note_value))
+                self.serial += 1
+            if value <= 0: break
+        if value > 0:
+            notes.append((url, self.serial, "%040d" % self.serial, note_value))
+            self.serial += 1
+        d = defer.Deferred()
+        reactor.callLater(0, lambda: d.callback(notes))
+        return d
+
     def mergeNotes(self, *notes):
         self.serial += 1
         result = list(notes[0])

@@ -1093,7 +1093,8 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         sql = ( "UPDATE user2money SET "
-                " rake = rake + " + str(amount) + " "
+                " rake = rake + " + str(amount) + ", "
+                " points = points + " + str(amount) + " "
                 " WHERE user_serial = " + str(serial) + " AND "
                 "       currency_serial = " + str(currency_serial) )
         if self.verbose > 1:
