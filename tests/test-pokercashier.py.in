@@ -43,7 +43,7 @@ twisted.internet.base.DelayedCall.debug = True
 from pokernetwork import pokercashier, pokernetworkconfig, user
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import PacketPokerCashIn, PacketAck
+from pokernetwork.pokerpackets import PacketPokerCashIn, PacketPokerCashOut, PacketPokerCashOutCommit, PacketAck
 from pokernetwork.pokerdatabase import PokerDatabase
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
@@ -75,7 +75,7 @@ class PokerCashierTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
         self.cashier.close()
-        self.destroyDb()
+#        self.destroyDb()
 
     # -----------------------------------------------------------------------------------------------------
     def test01_cashIn(self):
@@ -124,6 +124,8 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEquals(self.value, self.user2money_row['amount'])
 
         cursor.close()
+
+        return packet
 
     # -----------------------------------------------------------------------------------------------------
     def test02_cashIn(self):
@@ -189,6 +191,54 @@ class PokerCashierTestCase(unittest.TestCase):
 
         cursor.close()
 
+    def cashOut(self, packet):
+        cashOut_packet = PacketPokerCashOut(serial = packet.serial,
+                                            url = packet.url,
+                                            value = 15)
+        return self.cashier.cashOut(cashOut_packet)
+        
+    def check03_cashOut(self, packet):
+        #print "check03_cashOut " + str(note)
+        cursor = self.db.cursor(DictCursor)
+
+        #
+        # With two currency notes on the counter
+        #
+        cursor.execute("SELECT transaction_id, user_serial, currency_serial, name, serial, value, status FROM counter WHERE status = 'c'")
+        self.assertEquals(1, cursor.rowcount)
+        safe_row = cursor.fetchone()
+        print "safe_row " + str(safe_row)
+        self.assertEquals(15, safe_row['value'])
+        self.assertEquals(packet.name, safe_row['name'])
+
+        cursor.close()
+
+        return packet
+
+    def cashOutCommit(self, packet):
+        return self.cashier.cashOutCommit(PacketPokerCashOutCommit(transaction_id = packet.name))
+        
+    def check03_cashOutCommit(self, count):
+        print "check03_cashOutCommit " + str(count)
+        cursor = self.db.cursor(DictCursor)
+
+        cursor.execute("SELECT * FROM counter ORDER BY value")
+        self.assertEquals(0, cursor.rowcount)
+
+        cursor.close()
+
+        return count
+
+    # -----------------------------------------------------------------------------------------------------
+    def test03_cashOut(self):
+        d = self.test01_cashIn()
+
+        d.addCallback(self.cashOut)
+        d.addCallback(self.check03_cashOut)
+        d.addCallback(self.cashOutCommit)
+        d.addCallback(self.check03_cashOutCommit)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
@@ -202,7 +252,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
+#    loader.methodPrefix = "test03"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
@@ -220,4 +270,3 @@ if __name__ == '__main__':
 # Local Variables:
 # compile-command: "( cd .. ; ./config.status tests/test-pokercashier.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokercashier.py' TESTS='coverage-reset test-pokercashier.py coverage-report' check )"
 # End:
-
