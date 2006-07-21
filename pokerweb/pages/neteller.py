@@ -3,6 +3,7 @@ import urllib
 import pycurl
 import libxml2
 import re
+import os
 
 def check_digits_only(map, name):
     if map.has_key(name) and not re.match('^[0-9]+$', map[name]):
