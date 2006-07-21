@@ -1,4 +1,29 @@
 <?php
+//
+// Copyright (C) 2006 Mekensleep
+//
+// Mekensleep
+// 24 rue vieille du temple
+// 75004 Paris
+//       licensing@mekensleep.com
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+//
+// Authors:
+//  Loic Dachary <loic@gnu.org>
+//
 
 require_once 'lib_filters.php';
 require_once 'nusoap.php';
@@ -78,6 +103,38 @@ class poker {
         return $packets[0];
       } else {
         return $this->error(1000, 1, 'Expected PacketPokerPersonalInfo but got ' . $packets[0]['type']);
+      }
+    } else {
+      return $packets;
+    }
+  }
+
+  function cashIn($note) {
+    $packets = $this->send(array('type' => 'PacketPokerCashIn',
+                                 'url' => $note[0],
+                                 'bserial' => intval($note[1]),
+                                 'name' => $note[2],
+                                 'value' => intval($note[3])));
+    if($packets) {
+      if($packets[0]['type'] == 'PacketAck') {
+        return $packets[0];
+      } else {
+        return $this->error(1000, 1, 'Expected PacketAck but got ' . $packets[0]['type']);
+      }
+    } else {
+      return $packets;
+    }
+  }
+
+  function cashOut($url, $value) {
+    $packets = $this->send(array('type' => 'PacketPokerCashOut',
+                                 'url' => $url,
+                                 'value' => $value));
+    if($packets) {
+      if($packets[0]['type'] == 'PacketAck') {
+        return $packets[0];
+      } else {
+        return $this->error(1000, 1, 'Expected PacketAck but got ' . $packets[0]['type']);
       }
     } else {
       return $packets;
