@@ -131,6 +131,20 @@ class poker {
                                  'url' => $url,
                                  'value' => $value));
     if($packets) {
+      if($packets[0]['type'] == 'PacketPokerCashOut') {
+        return $packets[0];
+      } else {
+        return $this->error(1000, 1, 'Expected PacketPokerCashOut but got ' . $packets[0]['type']);
+      }
+    } else {
+      return $packets;
+    }
+  }
+
+  function cashOutCommit($transaction_id) {
+    $packets = $this->send(array('type' => 'PacketPokerCashOutCommit',
+                                 'transaction_id' => $transaction_id));
+    if($packets) {
       if($packets[0]['type'] == 'PacketAck') {
         return $packets[0];
       } else {
