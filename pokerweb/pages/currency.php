@@ -458,7 +458,7 @@ class currency {
   }
 
   function break_note($serial, $name, $value, $values = FALSE) {
-    return $this->_transaction_wrap('_break_note', $serial, $name, $value, $values);
+    return $this->transaction_wrap('_break_note', $serial, $name, $value, $values);
   }
 
   function _break_note($serial, $name, $value, $values) {
@@ -601,6 +601,15 @@ function currency_main($use_headers = True, $return_output = False) {
       $notes = $currency->merge_notes_columns($_GET['serial'], $_GET['name'], $_GET['value'], $_GET['values']);
       foreach ($notes as $note)
         array_push($page, join("\t", $note));
+    } elseif($command == 'break_note') {
+      if(isset($_GET['values'])) {
+        if($_GET['values'] == '') $_GET['values'] = array();
+      } else {
+        $_GET['values'] = FALSE;
+      }
+      $notes = $currency->break_note($_GET['serial'], $_GET['name'], $_GET['value'], $_GET['values']);
+      foreach ($notes as $note)
+        array_push($page, join("\t", $note));
     } elseif($command == 'change_note') {
       $note = $currency->change_note($_GET['serial'], $_GET['name'], $_GET['value']);
       array_push($page, join("\t", $note));
@@ -610,7 +619,7 @@ function currency_main($use_headers = True, $return_output = False) {
     } elseif($command == 'commit') {
       array_push($page, $currency->commit($_GET['transaction_id']));
     } else {
-      throw new Exception("unknow command " . $command);
+      throw new Exception("unknown command " . $command);
     }
 
     print join("\n", $page);
