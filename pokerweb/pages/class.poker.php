@@ -71,7 +71,7 @@ class poker {
     if($packets) {
       switch ($packets[0]['type']) {
       case 'PacketAuthRefused':
-        return $this->error(6, 0, 'Authentication failed, ' . $packets[0]['string']);
+        return $this->error(6, 0, 'Authentication failed, ' . $packets[0]['message']);
         break;
       case 'PacketAuthOk':
         if($packets[1]['type'] == 'PacketSerial') {
