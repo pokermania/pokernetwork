@@ -26,6 +26,8 @@
 //  Loic Dachary <loic@gnu.org>
 //
 
+ini_set('include_path', "../conf:" . ini_get('include_path'));
+
 require_once 'constants.php';
 require_once 'lib_filters.php';
 require_once 'class.poker.php';
