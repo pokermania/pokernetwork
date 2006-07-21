@@ -124,4 +124,23 @@
 		return $array;
 	}
 
+function _me() {
+  if(isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '443') {
+    $url = "https://";
+  } else {
+    $url = "http://";
+  }
+
+  $url .= $_SERVER['SERVER_NAME'];
+
+  if(!(isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '443') &&
+     !(!isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '80')) {
+    $url .= ":" . $_SERVER['SERVER_PORT'];
+  }
+
+  $url .= $_SERVER["SCRIPT_NAME"];
+
+  return $url;
+}
+
 ?>
