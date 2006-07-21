@@ -49,7 +49,7 @@ function action() {
   global $note;
 
   try {
-    $packet = $poker->cashIn($note);
+    $packet = $poker->cashOut($note);
     $poker->cashOutCommmit($packet['name'])
 
     $handle = fopen(dirname(_me()) . "/currency_one.php?command=put_note&serial=" . $packet['serial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
@@ -65,7 +65,7 @@ function action() {
 }
 
 if(_post_string('submit') && validate() && action()) {
-  header('Location: index.php?comment=Cash%20in%20was%20successful');
+  header('Location: index.php?comment=Cash%20out%20was%20successful');
   die();
 }
 
@@ -81,7 +81,7 @@ if($poker_error) {
 		<table>
 			<tr>
 				<td></td>
-				<td>Cash-In</td>
+				<td>Cash-Out</td>
 			</tr>
 			<tr>
 				<td><b>Amount:</b></td>
