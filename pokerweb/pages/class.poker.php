@@ -119,7 +119,7 @@ class poker {
       if($packets[0]['type'] == 'PacketAck') {
         return $packets[0];
       } else {
-        return $this->error(1000, 1, 'Expected PacketAck but got ' . $packets[0]['type']);
+        return $this->error(1000, 5, 'Expected PacketAck but got ' . $packets[0]['type']);
       }
     } else {
       return $packets;
@@ -134,7 +134,7 @@ class poker {
       if($packets[0]['type'] == 'PacketPokerCashOut') {
         return $packets[0];
       } else {
-        return $this->error(1000, 1, 'Expected PacketPokerCashOut but got ' . $packets[0]['type']);
+        return $this->error(1000, 6, 'Expected PacketPokerCashOut but got ' . $packets[0]['type']);
       }
     } else {
       return $packets;
@@ -148,7 +148,7 @@ class poker {
       if($packets[0]['type'] == 'PacketAck') {
         return $packets[0];
       } else {
-        return $this->error(1000, 1, 'Expected PacketAck but got ' . $packets[0]['type']);
+        return $this->error(1000, 7, 'Expected PacketAck but got ' . $packets[0]['type']);
       }
     } else {
       return $packets;
