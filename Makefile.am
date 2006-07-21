@@ -68,6 +68,9 @@ pokernetwork_PYTHON = \
 	pokernetwork/server.py \
 	pokernetwork/pokerdatabase.py \
 	pokernetwork/pokerserver.py \
+	pokernetwork/pokeravatar.py \
+	pokernetwork/pokertable.py \
+	pokernetwork/pokerservice.py \
 	pokernetwork/pokerclient.py \
 	pokernetwork/pokerchildren.py \
 	pokernetwork/pokernetworkconfig.py \
@@ -107,7 +110,8 @@ dist_pokerdb_DATA = \
 	database/1.0.7-1.0.8.sql \
 	database/1.0.11-1.0.12.sql \
 	database/1.0.16-1.0.17.sql \
-	database/1.0.17-1.0.18.sql
+	database/1.0.17-1.0.18.sql \
+	database/1.0.20-1.0.21.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \
