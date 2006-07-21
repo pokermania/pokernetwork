@@ -116,7 +116,6 @@ class currency {
     $this->url = $GLOBALS['currency_url'];
 
     $this->random_fd = fopen($GLOBALS['currency_random'], "r");
-    if(!$this->random_fd) throw new Exception("failed to open $currency_random");
 
     $this->set_values($GLOBALS['currency_values']);
   }
@@ -141,10 +140,14 @@ class currency {
   }
 
   function get_randname() {
-    $number = fread($this->random_fd, self::key_size);
-    if($number == FALSE)
-      throw new Exception("unable to read " . self::key_size . " from " . $GLOBALS['currency_random']);
-    return bin2hex($number);
+    if($this->random_fd) {
+      $number = fread($this->random_fd, self::key_size);
+      if($number == FALSE)
+        throw new Exception("unable to read " . self::key_size . " from " . $GLOBALS['currency_random']);
+      return bin2hex($number);
+    } else {
+      return sha1(uniqid(rand(), true));
+    }
   }
 
   function get_fixedname() {
