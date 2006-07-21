@@ -39,6 +39,8 @@ if($is_logged_in) {
   echo '<!-- HOME IS LOGGED IN -->';
   echo '<a href="logout.php">logout</a><br>';
   echo '<a href="edit_account.php">Edit Account</a><br>';
+  echo '<a href="cash_in.php">Cash-In</a><br>';
+  echo '<a href="cash_out.php">Cash-Out</a><br>';
 } else {
   echo '<!-- HOME NOT LOGGED IN -->';
   echo '<a href="login.php">login</a><br>';
