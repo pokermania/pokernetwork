@@ -104,6 +104,8 @@ class Neteller:
         collect = Collect()
         url = self.URL + self.FORM
         curl = pycurl.Curl()
+        if os.name != "posix":
+            curl.setopt(curl.SSL_VERIFYPEER, False)
         curl.setopt(curl.URL, self.URL + self.FORM)
         curl.setopt(curl.WRITEFUNCTION, collect.body_callback)
         curl.setopt(curl.POSTFIELDS, urllib.urlencode(parameters))
