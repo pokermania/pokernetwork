@@ -31,7 +31,6 @@ import re
 from traceback import print_exc, print_stack
 import MySQLdb
 from MySQLdb.cursors import DictCursor
-from twisted.enterprise import adbapi
 
 class ExceptionDatabaseTooOld(Exception): pass
 class ExceptionSoftwareTooOld(Exception): pass
