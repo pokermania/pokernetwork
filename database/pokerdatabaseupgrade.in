@@ -1,5 +1,5 @@
 #!@PYTHON@ 
-# -*- coding: iso-8859-1, mode: python -*-
+# -*- coding: iso-8859-1; mode: python -*-
 #
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
@@ -26,7 +26,6 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import getopt, sys
-sys.path = "@pythonpath@".split(":") + sys.path
 sys.path.insert(0, "@top_srcdir@")
 
 from pokernetwork.pokernetworkconfig import Config
