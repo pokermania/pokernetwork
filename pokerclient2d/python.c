@@ -222,9 +222,9 @@ static PyMethodDef base_methods[] = {
 extern "C" {
 #endif
 DL_EXPORT(void)
-initcpokerinterface(void)
+VERSION_NAME(init_pokerinterface)(void)
 {
-  Py_InitModule("cpokerinterface", base_methods);
+  Py_InitModule("_pokerinterface" PYTHON_VERSION, base_methods);
 }
 #ifdef __cplusplus
 }
