@@ -27,7 +27,9 @@
 set -e
 
 : ${srcdir:=.}
+export srcdir
 : ${top_srcdir:=..}
+export top_srcdir
 
 #
 # As of Fri Apr 21 16:48:04 CEST 2006, valgrind only works on python2.4 on Debian/unstable
@@ -37,24 +39,42 @@ if [ "@VALGRIND@" -a "@PYTHON_VERSION@" = "2.4" ] ; then
     VALGRIND="@VALGRIND@ --quiet --suppressions=/usr/lib/valgrind/debian.supp --suppressions=/usr/lib/valgrind/xfree-4.supp --suppressions=${srcdir}/poker-interface-sid.supp --num-callers=50 --leak-check=full"
 fi
 
+#
+# For some reason php5 is unhappy if TZ is not set.
+#
+export TZ=Europe/Paris
+
+DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/poker{network,ui,client2d}/*.py) 
+: ${COVERAGE_FILES:=$DEFAULT_COVERAGE_FILES}
+
 case "$1" in 
 
 *coverage-reset) @PYTHON@ ${srcdir}/coverage.py -e ;;
 
-*coverage-report) @PYTHON@ ${srcdir}/coverage.py -m -r ${top_srcdir}/poker{network,ui,client2d}/*.py ;;
+*coverage-report) 
+        @PYTHON@ ${srcdir}/coverage.py -m -r ${COVERAGE_FILES}
+        rm -fr annotated ; mkdir annotated
+        @PYTHON@ ${srcdir}/coverage.py -a -d annotated ${COVERAGE_FILES}
+        ;;
 
 *upgrade) ./upgrade ;;
 
 *poker-interface) 
         FONTPATH=/usr/share/fonts/X11/misc
         INTERFACE_PORT=19579
-        if [ "@VNCSERVER@" -a -d "$FONTPATH" ] ; then
+        if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
             export DISPLAY=:20
-            @VNCSERVER@ -kill ${DISPLAY} || /bin/true
-            @VNCSERVER@ ${DISPLAY} -rfbauth ${srcdir}/vncpasswd -geometry 1024x768 -auth /unlikely -fp /usr/share/fonts/X11/misc
+            killall -9 @XVFB@ 2> /dev/null || /bin/true
+            sleep 1
+	    # -fbdir framebuffer
+            @XVFB@ ${DISPLAY} -ac -nolisten TCP -screen 0 1024x768x24 &
+            xvfb_pid=$!
+            if [ -z "$xvfb_pid" ] ; then
+                echo "there is a problem to start Xvfb (ignored)"
+            fi
             @PYTHON@ ${srcdir}/test-poker-interface.py --verbose 1 --port ${INTERFACE_PORT} &
             testpid=$!
-            killbackground="kill -9 $testpid; @VNCSERVER@ -kill ${DISPLAY}"
+            killbackground="kill -9 $testpid; killall -9 @XVFB@"
             trap "$killbackground ; exit 1" INT QUIT
             trap "$killbackground" EXIT
             sleep 2
@@ -62,10 +82,17 @@ case "$1" in
         fi
         ;;
 
-*.py) @PYTHON@ ${srcdir}/coverage.py -x "$1" ;;
+*.php) 
+        file=$(basename $1)
+        mkdir -p phpunit/$file
+        @PHP@ --define extension=mysql.so @PHPUNIT@ --report phpunit/$file $(basename $file .php)
+        ;;
+
+*.py)   @PYTHON@ -u ${srcdir}/coverage.py -x "$1" ;;
 
 *) 
         echo unknown test $1
         exit 1
         ;;
 esac
+
