@@ -25,7 +25,7 @@
 #  Henry Precheur <henry@precheur.org>
 #
 # 
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, defer
 
 from pokernetwork.protocol import UGAMEProtocol
 
@@ -41,8 +41,27 @@ class PokerServerProtocol(UGAMEProtocol):
 
     def _handleConnection(self, packet):
         self.ping()
-        for packet in self.avatar.handlePacket(packet):
-            self.sendPacket(packet)
+        self.sendPackets(self.avatar.handlePacket(packet))
+
+    def sendPackets(self, packets):
+        if not hasattr(self, 'transport') or not self.transport:
+            #
+            # Just trash packets sent when the connection is down
+            #
+            if self.factory.verbose:
+                print "server: packets " + str(packets) + " thrown away because the protocol has no usuable transport"
+            return
+        while len(packets) > 0:
+            packet = packets.pop(0)
+            if isinstance(packet, defer.Deferred):
+                packet.addCallback(self.unshiftPacket, packets)
+                break
+            else:
+                self.sendPacket(packet)
+
+    def unshiftPacket(self, packet, packets):
+        packets.insert(0, packet)
+        self.sendPackets(packets)
 
     def sendPacket(self, packet):
         self.transport.write(packet.pack())
