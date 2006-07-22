@@ -22,8 +22,8 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Precheur <henry@precheur.org>
 #  Cedric Pinson <cpinson@freesheep.org>
+#  Henry Precheur <henry@precheur.org> (2004)
 #
 
 from time import strftime, gmtime
@@ -1109,10 +1109,8 @@ The answer is a possibly empty PACKET_POKER_TABLE_LIST packet.
 
 Direction: server <=  client
 
-string: (y/n)<tabulation>variant
-        Examples: y holdem selects all holdem tables using custom money
-                  n holdem selects all holdem tables using play money
-                  n omaha selects all omaha tables using play money
+string: currency<tabulation>variant
+        Examples: 1 holdem selects all holdem tables using this currency
         The specials value "my" restricts the search to the tables
         in which the player id attached to the connection is playing.
 """
@@ -1153,12 +1151,12 @@ waiting: the number of players in the waiting list.
 player_timeout: the number of seconds after which a player in position is forced to
          play (by folding).
 muck_timeout: the number of seconds after which a player is forced to muck.
-custom_money: 0 if play money table, 1 if custom money table
+currency: int currency id
 skin: name of the level model to use
 """
     
     type = PACKET_POKER_TABLE
-    format = "!IBIHBBHBHHB"
+    format = "!IBIHBBHBHHI"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
@@ -1175,12 +1173,12 @@ skin: name of the level model to use
         self.waiting = kwargs.get("waiting", 0)
         self.player_timeout = kwargs.get("player_timeout", 0)
         self.muck_timeout = kwargs.get("muck_timeout", 0)
-        self.custom_money = kwargs.get("custom_money", 0)
         self.skin = kwargs.get("skin", "default")
+        self.currency_serial = kwargs.get("currency_serial", 0)
 
     def pack(self):
         block = Packet.pack(self)
-        block += pack(PacketPokerTable.format, self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.custom_money)
+        block += pack(PacketPokerTable.format, self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial)
         block += self.packstring(self.name)
         block += self.packstring(self.variant)
         block += self.packstring(self.betting_structure)
@@ -1189,7 +1187,7 @@ skin: name of the level model to use
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.custom_money) = unpack(PacketPokerTable.format, block[:PacketPokerTable.format_size])
+        (self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial) = unpack(PacketPokerTable.format, block[:PacketPokerTable.format_size])
         block = block[PacketPokerTable.format_size:]
         (block, self.name) = self.unpackstring(block)
         (block, self.variant) = self.unpackstring(block)
@@ -1201,7 +1199,7 @@ skin: name of the level model to use
         return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, custom_money = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.custom_money, self.skin )
+        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin )
     
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 
@@ -1749,7 +1747,10 @@ game_id: integer uniquely identifying a game.
         auto_blind_ante = self.auto_blind_ante and 1 or 0
         wait_for = self.wait_for and 1 or 0
         buy_in_payed = self.buy_in_payed and 1 or 0
-        seat = self.seat == None and 255 or self.seat
+        if self.seat == None:
+            seat = 255
+        else:
+            seat = self.seat
         return PacketPokerPlayerInfo.pack(self) + self.packstring(blind) + pack(PacketPokerPlayerArrive.format, remove_next_turn, sit_out, sit_out_next_turn, auto, auto_blind_ante, wait_for, buy_in_payed, seat)
         
     def unpack(self, block):
@@ -2083,7 +2084,7 @@ PACKET_POKER_HAND_REPLAY = 173
 PacketNames[PACKET_POKER_HAND_REPLAY] = "POKER_HAND_REPLAY"
 
 class PacketPokerHandReplay(PacketPokerId):
-    """"""
+    """ """
 
     type = PACKET_POKER_HAND_REPLAY
 
@@ -2143,55 +2144,62 @@ Direction: server  => client
 
 Context: answer to the PACKET_POKER_GET_USER_INFO packet.
 
-play_money: total amount of play money.
-custom_money: total amount of custom money.
-point_money: total amount of point money.
 rating: server wide ELO rating.
 serial: integer uniquely identifying a player.
 """
 
     NOT_LOGGED = 1
-    
+
     type = PACKET_POKER_USER_INFO
-    play_money = -1
-    play_money_in_game = -1
-    custom_money = -1
-    custom_money_in_game = -1
-    point_money = -1
     rating = 1500
     
-    format = "!IIIIII"
+    format = "!IH"
     format_size = calcsize(format)
+    format_item = "!III"
+    format_item_size = calcsize(format_item)
 
     def __init__(self, *args, **kwargs):
         self.name = kwargs.get("name", "unknown")
         self.password = kwargs.get("password", "")
         self.email = kwargs.get("email", "")
-        self.play_money = kwargs.get("play_money", -1)
-        self.play_money_in_game = kwargs.get("play_money_in_game", -1)
-        self.custom_money = kwargs.get("custom_money", -1)
-        self.custom_money_in_game = kwargs.get("custom_money_in_game", -1)
-        self.point_money = kwargs.get("point_money", -1)
         self.rating = kwargs.get("rating", 1500)
+        #
+        # currency 5, bankroll 200, in_game 3
+        # {5: (200, 3), ...} 
+        #
+        self.money = kwargs.get("money", {})
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
-        return PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.play_money, self.play_money_in_game, self.custom_money, self.custom_money_in_game, self.point_money, self.rating) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
+        block = PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.rating, len(self.money)) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
+        for (currency, (bankroll, in_game)) in self.money.iteritems():
+            block += pack(PacketPokerUserInfo.format_item, currency, bankroll, in_game)
+        return block
         
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
-        (self.play_money, self.play_money_in_game, self.custom_money, self.custom_money_in_game, self.point_money, self.rating) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
+        (self.rating, length) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
         block = block[PacketPokerUserInfo.format_size:]
         (block, self.name) = self.unpackstring(block)
         (block, self.password) = self.unpackstring(block)
         (block, self.email) = self.unpackstring(block)
+        self.money = {}
+        for i in xrange(length):
+            (currency, bankroll, in_game) = unpack(PacketPokerUserInfo.format_item, block[:PacketPokerUserInfo.format_item_size])
+            block = block[PacketPokerUserInfo.format_item_size:]
+            self.money[currency] = (bankroll, in_game)
         return block
 
     def calcsize(self):
-        return PacketSerial.calcsize(self) + PacketPokerUserInfo.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.password) + self.calcsizestring(self.email)
-
+        size = PacketSerial.calcsize(self) + PacketPokerUserInfo.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.password) + self.calcsizestring(self.email)
+        size += len(self.money) * PacketPokerUserInfo.format_item_size
+        return size
+    
     def __str__(self):
-        return PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, play_money = %d, play_money_in_game = %d, custom_money = %d, custom_money_in_game = %d, point_money = %d, rating = %d" % ( self.name, self.password, self.email, self.play_money, self.play_money_in_game, self.custom_money,  self.custom_money_in_game, self.point_money, self.rating )
+        string = PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, rating = %d, " % ( self.name, self.password, self.email, self.rating )
+        for (currency, (bankroll, in_game)) in self.money.iteritems():
+            string += str(currency) + "=" + str(bankroll) + "/" + str(in_game) + " "
+        return string
 
 PacketFactory[PACKET_POKER_USER_INFO] = PacketPokerUserInfo
 
@@ -2926,10 +2934,10 @@ class PacketPokerPlayersList(PacketPokerId):
 
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
-        (len,) = unpack(PacketPokerPlayersList.format, block[:PacketPokerPlayersList.format_size])
+        (length,) = unpack(PacketPokerPlayersList.format, block[:PacketPokerPlayersList.format_size])
         block = block[PacketPokerPlayersList.format_size:]
         self.players = []
-        for i in xrange(len):
+        for i in xrange(length):
             (block, name) = self.unpackstring(block)
             (chips, flag) = unpack(PacketPokerPlayersList.format_item, block[:PacketPokerPlayersList.format_item_size])
             block = block[PacketPokerPlayersList.format_item_size:]
@@ -3102,7 +3110,7 @@ PacketNames[PACKET_POKER_TOURNEY] = "POKER_TOURNEY"
 class PacketPokerTourney(Packet):
     
     type = PACKET_POKER_TOURNEY
-    format = "!IHIBHHB"
+    format = "!IHIBHHI"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
@@ -3116,13 +3124,11 @@ class PacketPokerTourney(Packet):
         self.sit_n_go = kwargs.get("sit_n_go", 'y')
         self.players_quota = kwargs.get("players_quota", 0)
         self.registered = kwargs.get("registered", 0)
-        self.custom_money = kwargs.get("custom_money", 'n')
-        if self.custom_money == 1: self.custom_money = 'y'
-        if self.custom_money == 0: self.custom_money = 'n'
+        self.currency_serial = kwargs.get("currency_serial", 0)
 
     def pack(self):
         block = Packet.pack(self)
-        block += pack(PacketPokerTourney.format, self.serial, self.buy_in, self.start_time, (self.sit_n_go == 'y' and 1 or 0), self.players_quota, self.registered, (self.custom_money == 'y' and 1 or 0))
+        block += pack(PacketPokerTourney.format, self.serial, self.buy_in, self.start_time, (self.sit_n_go == 'y' and 1 or 0), self.players_quota, self.registered, self.currency_serial)
         block += self.packstring(self.description_short)
         block += self.packstring(self.variant)
         block += self.packstring(self.state)
@@ -3131,9 +3137,8 @@ class PacketPokerTourney(Packet):
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (self.serial, self.buy_in, self.start_time, self.sit_n_go, self.players_quota, self.registered, self.custom_money) = unpack(PacketPokerTourney.format, block[:PacketPokerTourney.format_size])
+        (self.serial, self.buy_in, self.start_time, self.sit_n_go, self.players_quota, self.registered, self.currency_serial) = unpack(PacketPokerTourney.format, block[:PacketPokerTourney.format_size])
         self.sit_n_go = self.sit_n_go and 'y' or 'n'
-        self.custom_money = self.custom_money and 'y' or 'n'
         block = block[PacketPokerTourney.format_size:]
         (block, self.description_short) = self.unpackstring(block)
         (block, self.variant) = self.unpackstring(block)
@@ -3145,7 +3150,7 @@ class PacketPokerTourney(Packet):
         return Packet.calcsize(self) + PacketPokerTourney.format_size + self.calcsizestring(self.description_short) + self.calcsizestring(self.variant) + self.calcsizestring(self.state) + self.calcsizestring(self.name)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tserial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, custom_money = %s " % ( self.serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.custom_money )
+        return Packet.__str__(self) + "\n\tserial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d " % ( self.serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial )
     
 PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
 
@@ -3840,3 +3845,132 @@ class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
 
 PacketFactory[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = PacketPokerPlayerMeInFirstPerson
 
+########################################
+
+class PacketPokerMoneyTransfert(PacketSerial):
+
+    format = "!II"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.url = kwargs.get("url", "UNKNOWN")
+        self.name = kwargs.get("name", "UNKNOWN")
+        self.bserial = kwargs.get("bserial", 0)
+        self.value = kwargs.get("value", 0)
+        if kwargs.has_key('note'):
+            note = kwargs['note']
+            self.url = note[0]
+            self.serial = note[1]
+            self.name = note[2]
+            self.value = note[3]
+        PacketSerial.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketSerial.pack(self) + self.packstring(self.url) + self.packstring(self.name) + pack(PacketPokerMoneyTransfert.format, self.bserial, self.value)
+
+    def unpack(self, block):
+        block = PacketSerial.unpack(self, block)
+        (block, self.url) = self.unpackstring(block)
+        (block, self.name) = self.unpackstring(block)
+        (self.bserial, self.value) = unpack(PacketPokerMoneyTransfert.format, block[:PacketPokerMoneyTransfert.format_size])
+        return block[PacketPokerMoneyTransfert.format_size:]
+
+    def calcsize(self):
+        return PacketSerial.calcsize(self) + self.calcsizestring(self.url) + self.calcsizestring(self.name) + PacketPokerMoneyTransfert.format_size
+
+    def __str__(self):
+        return PacketSerial.__str__(self) + ", url = %s, name = %s, bserial = %d, value = %d" % (self.url, self.name, self.bserial, self.value )
+
+
+########################################
+
+PACKET_POKER_CASH_IN = 245
+PacketNames[PACKET_POKER_CASH_IN] = "POKER_CASH_IN"
+
+class PacketPokerCashIn(PacketPokerMoneyTransfert):
+    type = PACKET_POKER_CASH_IN
+
+    DUPLICATE_CURRENCIES	= 1
+    REFUSED			= 2
+    SAFE			= 3
+    UNKNOWN			= 4
+    RETRY			= 5
+    
+PacketFactory[PACKET_POKER_CASH_IN] = PacketPokerCashIn
+
+########################################
+
+PACKET_POKER_CASH_OUT = 246
+PacketNames[PACKET_POKER_CASH_OUT] = "POKER_CASH_OUT"
+
+class PacketPokerCashOut(PacketPokerMoneyTransfert):
+    type = PACKET_POKER_CASH_OUT
+
+    SAFE			= 1
+    BREAK_NOTE			= 2
+    EMPTY			= 3
+
+PacketFactory[PACKET_POKER_CASH_OUT] = PacketPokerCashOut
+
+########################################
+
+PACKET_POKER_CASH_OUT_COMMIT = 247
+PacketNames[PACKET_POKER_CASH_OUT_COMMIT] = "POKER_CASH_OUT_COMMIT"
+
+class PacketPokerCashOutCommit(Packet):
+
+    type = PACKET_POKER_CASH_OUT_COMMIT
+
+    INVALID_TRANSACTION = 1
+
+    def __init__(self, *args, **kwargs):
+        self.transaction_id = kwargs.get("transaction_id", "")
+
+    def pack(self):
+        return Packet.pack(self) + self.packstring(self.transaction_id)
+
+    def unpack(self, block):
+        block = Packet.unpack(self, block)
+        (block, self.transaction_id) = self.unpackstring(block)
+        return block
+
+    def calcsize(self):
+        return Packet.calcsize(self) + self.calcsizestring(self.transaction_id)
+
+    def __str__(self):
+        return Packet.__str__(self) + " transaction_id = %s" % self.transaction_id
+
+PacketFactory[PACKET_POKER_CASH_OUT_COMMIT] = PacketPokerCashOutCommit
+
+########################################
+
+PACKET_POKER_RAKE = 248
+PacketNames[PACKET_POKER_RAKE] = "POKER_RAKE"
+
+class PacketPokerRake(PacketInt):
+
+    type = PACKET_POKER_RAKE
+    game_id = 0
+
+    format = "!I"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.game_id = kwargs.get("game_id", 0)
+        PacketInt.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketInt.pack(self) + pack(PacketPokerRake.format, self.game_id)
+        
+    def unpack(self, block):
+        block = PacketInt.unpack(self, block)
+        (self.game_id,) = unpack(PacketPokerRake.format, block[:PacketPokerRake.format_size])
+        return block[PacketPokerRake.format_size:]
+
+    def calcsize(self):
+        return PacketInt.calcsize(self) + PacketPokerRake.format_size
+
+    def __str__(self):
+        return PacketInt.__str__(self) + " game_id = %d" % self.game_id
+
+PacketFactory[PACKET_POKER_RAKE] = PacketPokerRake
