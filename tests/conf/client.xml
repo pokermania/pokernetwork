@@ -3,7 +3,8 @@
 <sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="poker.sequence.xsd">
 
-  <custom_money unit="C" cent="cts" />
+  <money_one unit="" cent="" serial="1" />
+  <money_two unit="C" cent="cts" serial="2" />
 
   <cashier enter="Cashier" exit="Exit Cashier" />
 
