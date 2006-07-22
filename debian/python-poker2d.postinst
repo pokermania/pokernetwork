@@ -22,9 +22,9 @@ db_version 2.0
 
 case "$1" in
     configure)
-        db_get "python@PYTHON_VERSION@-poker-network/host"
+        db_get "python-poker-network/host"
         poker_network_host="$RET"
-        sed -e "s/\%HOST\%/$poker_network_host/" < /usr/share/poker-network@PYTHON_VERSION@/poker2d/poker2d.xml.ref > /usr/share/poker-network@PYTHON_VERSION@/poker2d/poker2d.xml
+        sed -e "s/\%HOST\%/$poker_network_host/" < /usr/share/poker-network/poker2d/poker2d.xml.ref > /usr/share/poker-network/poker2d/poker2d.xml
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

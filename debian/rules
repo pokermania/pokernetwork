@@ -1,14 +1,18 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-DEB_AUTO_PACKAGES = $(filter python2.%, $(DEB_ALL_PACKAGES))
+#export DH_VERBOSE=1 
 
-include debian/rules.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
 
-DEB_BUILDDIR_python2.3-poker2d := python2.3-build
-DEB_BUILDDIR_python2.3-poker-network := python2.3-build
-DEB_BUILDDIR_python2.4-poker2d := python2.4-build
-DEB_BUILDDIR_python2.4-poker-network := python2.4-build
+clean:: $(DEB_BUILDDIR)/config.status
+	rm -f $(DEB_SRCDIR)/*cdbs-*
+
+include /usr/share/cdbs/1/class/autotools.mk
+
+DEB_MAKE_CLEAN_TARGET = maintainer-clean
+
+DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode
 
 DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-server-host=%HOST% \
@@ -17,17 +21,26 @@ DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-dbuser=%USER% \
 		--with-poker-dbuser-password=%PASS%
 
-install/python2.3-poker-network install/python2.4-poker-network :: 
-	for man in pokerdatabaseupgrade pokerbot pokerserver ; do \
-		cp -a $(DEB_DESTDIR)/usr/share/man/man8/$$man.8 $(DEB_DESTDIR)/usr/share/man/man8/$$man$(python_version).8 ; \
-	done
+#DEB_MAKE_CHECK_TARGET = check
 
-install/python2.3-poker2d install/python2.4-poker2d ::
-	for man in poker2d ; do \
-		cp -a $(DEB_DESTDIR)/usr/share/man/man6/$$man.6 $(DEB_DESTDIR)/usr/share/man/man6/$$man$(python_version).6 ; \
-	done
+is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
-common-configure-arch common-configure-indep:: $(DEB_SRCDIR)/config.status
+$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
+	autoreconf --install
+	chmod a+x $@
+
+# override in order to add dependency to configure (should be a :: rule instead of a : rule)
+$(DEB_BUILDDIR)/config.status: $(DEB_SRCDIR)/configure
+	chmod a+x $(DEB_CONFIGURE_SCRIPT)
+	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
+
+binary-install/python-poker-network::
+	-dh_pycentral -ppython-poker-network
+	dh_python -ppython-poker-network
+
+binary-install/python-poker2d::
+	-dh_pycentral -ppython-poker2d
+	dh_python -ppython-poker2d
 
 install/poker-web ::
 	ln -fs /etc/poker-web/htaccess pokerweb/pages/.htaccess
@@ -35,3 +48,4 @@ install/poker-web ::
 	cp pokerweb/conf/constants.php pokerweb/pages/constants.php.ref
 	mkdir -p debian/poker-web/var/www
 	ln -fs /usr/share/poker-web debian/poker-web/var/www/poker-web
+

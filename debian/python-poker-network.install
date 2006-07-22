@@ -1,9 +1,8 @@
-debian/tmp/usr/lib/python@PYTHON_VERSION@/site-packages/pokernetwork
-debian/tmp/usr/lib/python@PYTHON_VERSION@/site-packages/pokerui
-debian/tmp/usr/share/poker-network@PYTHON_VERSION@/*.sql
-debian/tmp/usr/sbin/*@PYTHON_VERSION@
-debian/tmp/usr/share/poker-network@PYTHON_VERSION@/conf
-debian/tmp/usr/share/poker-network@PYTHON_VERSION@/upgrades
-debian/tmp/usr/share/man/man8/*@PYTHON_VERSION@*
-debian/tmp/usr/lib/pkgconfig/*@PYTHON_VERSION@*
-
+debian/tmp/usr/lib/python???/site-packages/pokernetwork
+debian/tmp/usr/lib/python???/site-packages/pokerui
+debian/tmp/usr/share/poker-network/*.sql
+debian/tmp/usr/sbin
+debian/tmp/usr/share/poker-network/conf
+debian/tmp/usr/share/poker-network/upgrades
+debian/tmp/usr/share/man/man8
+debian/tmp/usr/lib/pkgconfig

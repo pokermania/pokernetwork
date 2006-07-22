@@ -1,23 +1,23 @@
 #! /bin/sh
 
-twistd=/usr/bin/twistd@PYTHON_VERSION@
+twistd=/usr/bin/twistd
 reactor=poll
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-name=poker-network@PYTHON_VERSION@
-desc='poker server @PYTHON_VERSION@'
+name=poker-network
+desc='poker server '
 
-python=/usr/bin/python@PYTHON_VERSION@
+python=/usr/bin/python
 
-lockfile=/etc/poker-network@PYTHON_VERSION@/lockfile
+lockfile=/etc/poker-network/lockfile
 
-serverpidfile=/var/run/poker-network-server@PYTHON_VERSION@.pid
-serverlogfile=/var/log/poker-network-server@PYTHON_VERSION@.log
-serverscript=/usr/lib/python@PYTHON_VERSION@/site-packages/pokernetwork/pokerserver.py
+serverpidfile=/var/run/poker-network-server.pid
+serverlogfile=/var/log/poker-network-server.log
+serverscript=/usr/lib/python/site-packages/pokernetwork/pokerserver.py
 
-botpidfile=/var/run/poker-network-bot@PYTHON_VERSION@.pid
-botlogfile=/var/log/poker-network-bot@PYTHON_VERSION@.log
-botscript=/usr/lib/python@PYTHON_VERSION@/site-packages/pokernetwork/pokerbot.py
+botpidfile=/var/run/poker-network-bot.pid
+botlogfile=/var/log/poker-network-bot.log
+botscript=/usr/lib/python/site-packages/pokernetwork/pokerbot.py
 
 more_args=--no_save
 
