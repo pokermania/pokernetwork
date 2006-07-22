@@ -341,12 +341,17 @@ class PokerRenderer:
         self.verbose = factory.verbose
         self.replayStepping = True
         self.replayGameId = None
-        self.custom_money = factory.config.headerGetProperties("/sequence/custom_money")        
-        if not self.custom_money:
-            self.custom_money = { 'unit': 'C',
-                                  'cent': 'cts' }
-        else:
-            self.custom_money = self.custom_money[0]
+        self.money = { 'default': { 'unit': 'C', 'cent': 'cts' } }
+        money_serial = 1
+        for key in ( 'money_one', 'money_two' ):
+            self.money[key] = factory.config.headerGetProperties("/sequence/" + key)
+            if not self.money[key]:
+                self.money[key] = self.money['default'].copy()
+                self.money[key]['serial'] = money_serial
+                money_serial += 1
+            else:
+                self.money[key] = self.money[key][0]
+                self.money[key]['serial'] = int(self.money[key]['serial'])
         self.state = IDLE
 
         self.state_buy_in = ()
@@ -399,7 +404,7 @@ class PokerRenderer:
     def setProtocol(self, protocol):
         self.protocol = protocol
         if protocol:
-            self.protocol.play_money = -1
+            self.protocol.user_info = None
             protocol.registerHandler("current", None, self._handleConnection)
             protocol.registerHandler("outbound", None, self._handleConnection)
             protocol.registerLagmax(self.updateLagmax)
@@ -783,16 +788,19 @@ class PokerRenderer:
         if self.verbose > 1: print "updateCashier"
         interface = self.factory.interface
         if interface:
-            unit = self.custom_money['unit']
+            money_one = packet.money.get(self.money['money_one']['serial'], (0, 0))
+            money_two = packet.money.get(self.money['money_two']['serial'], (0, 0))
+            cashier = PacketPokerUserInfo.cashier
+            in_game = PacketPokerUserInfo.in_game
             interface.updateCashier(self.protocol.getName(),
                                     packet.email,
                                     "%s\n%s %s %s\n%s" % ( packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country ),
-                                    PokerChips.tostring(packet.play_money),
-                                    PokerChips.tostring(packet.play_money_in_game),
-                                    PokerChips.tostring(packet.play_money + packet.play_money_in_game),
-                                    PokerChips.tostring(packet.custom_money) + unit,
-                                    PokerChips.tostring(packet.custom_money_in_game) + unit,
-                                    PokerChips.tostring(packet.custom_money + packet.custom_money_in_game) + unit,
+                                    PokerChips.tostring(money_one[cashier]) + self.money['money_one']['unit'],
+                                    PokerChips.tostring(money_one[in_game]) + self.money['money_one']['unit'],
+                                    PokerChips.tostring(money_one[cashier] + money_one[in_game]) + self.money['money_one']['unit'],
+                                    PokerChips.tostring(money_two[cashier]) + self.money['money_two']['unit'],
+                                    PokerChips.tostring(money_two[in_game]) + self.money['money_two']['unit'],
+                                    PokerChips.tostring(money_two[cashier] + money_two[in_game]) + self.money['money_two']['unit'],
                                     )
 
     def showMuck(self, game):
@@ -1277,15 +1285,16 @@ class PokerRenderer:
             self.showMessage("You can't bring more money\nto the table", None)
             return False
 
+        money_cashier = self.protocol.user_info.money[game.currency_serial][0]
         if player.isBuyInPayed():
-            if self.protocol.play_money <= 0:
+            if money_cashier <= 0:
                 self.showMessage("You have no money left", None)
                 self.sitActionsUpdate()
                 return False
 
             legend = "How much do you want to rebuy ?"
         else:
-            if min_amount > self.protocol.play_money:
+            if min_amount > money_cashier:
                 self.showMessage("You don't have enough money to\nparticipate in the game", None)
                 return False
 
@@ -1293,11 +1302,11 @@ class PokerRenderer:
         
         interface = self.factory.interface
 
-        if max_amount >= self.protocol.play_money:
+        if max_amount >= money_cashier:
             label = "All your bankroll"
         else:
             label = "Maximum buy in"
-        max_amount = min(max_amount, self.protocol.play_money)
+        max_amount = min(max_amount, money_cashier)
         interface.buyInParams(min_amount, max_amount, legend, label)
         self.showBuyIn()
         if player.isBuyInPayed():
@@ -1503,6 +1512,8 @@ class PokerRenderer:
             PokerChildBrowser(config, settings, url)
         elif name == "cashier":
             self.changeState(CASHIER)
+        elif name == "cash_in" or name == "cash_out":
+            self.factory.browseWeb(name + ".php?serial=%d&name=%s" % ( self.protocol.getSerial(), self.protocol.getName() ))
         elif name == "outfits":
             self.changeState(OUTFIT)
         elif name == "edit_account":
@@ -1609,12 +1620,10 @@ class PokerRenderer:
             self.connectTable(int(value))
 
         elif action == "refresh":
-            if value == "play":
-                self.state_lobby['custom_money'] = 'n'
-            elif value == "custom":
-                self.state_lobby['custom_money'] = 'y'
+            if value == "money_one" or value == "money_two":
+                self.state_tournaments['currency_serial'] = value
             elif value == "all":
-                self.state_lobby['custom_money'] = ''
+                self.state_lobby['currency_serial'] = ''
             else:
                 self.state_lobby['type'] = value
             self.queryLobby()
@@ -1629,7 +1638,8 @@ class PokerRenderer:
 
     def queryLobby(self):
         if self.state == LOBBY and self.protocol:
-            criterion = self.state_lobby['custom_money'] + "\t" + self.state_lobby['type']
+            currency_serial = self.money.get(self.state_lobby['currency_serial'], '')
+            criterion = str(currency_serial) + "\t" + self.state_lobby['type']
             self.protocol.sendPacket(PacketPokerTableSelect(string = criterion))
             timer = self.state_lobby.get('timer', None)
             if not timer or not timer.active():
@@ -1638,7 +1648,7 @@ class PokerRenderer:
     def saveLobbyState(self):
         settings = self.factory.settings
         state = self.state_lobby
-        settings.headerSet("/settings/lobby/@custom_money", state['custom_money'])
+        settings.headerSet("/settings/lobby/@currency_serial", state['currency_serial'])
         settings.headerSet("/settings/lobby/@type", state['type'])
         settings.headerSet("/settings/lobby/@sort", state['sort'])
         settings.save()
@@ -1668,7 +1678,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             type = type or self.state_lobby['type']
-            interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['custom_money'])
+            interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['currency_serial'])
 #        self.showBackgroundLobbyCashier()
 #        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
@@ -1731,12 +1741,10 @@ class PokerRenderer:
             self.changeState(TOURNAMENTS_UNREGISTER, int(value))
 
         elif action == "refresh":
-            if value == "play":
-                self.state_tournaments['custom_money'] = 'n'
-            elif value == "custom":
-                self.state_tournaments['custom_money'] = 'y'
+            if value == "money_one" or value == "money_two":
+                self.state_tournaments['currency_serial'] = value
             elif value == "all":
-                self.state_tournaments['custom_money'] = ''
+                self.state_tournaments['currency_serial'] = ''
             else:
                 self.state_tournaments['type'] = value
             self.queryTournaments()
@@ -1750,7 +1758,8 @@ class PokerRenderer:
 
     def queryTournaments(self):
         if self.state == TOURNAMENTS:
-            criterion = self.state_tournaments['custom_money'] + "\t" + self.state_tournaments['type']
+            currency_serial = self.money.get(self.state_lobby['currency_serial'], '')
+            criterion = str(currency_serial) + "\t" + self.state_tournaments['type']
             self.protocol.sendPacket(PacketPokerTourneySelect(string = criterion))
             timer = self.state_tournaments.get('timer', None)
             if not timer or not timer.active():
@@ -1759,7 +1768,7 @@ class PokerRenderer:
     def saveTournamentsState(self):
         settings = self.factory.settings
         state = self.state_tournaments
-        settings.headerSet("/settings/tournaments/@custom_money", state['custom_money'])
+        settings.headerSet("/settings/tournaments/@currency_serial", state['currency_serial'])
         settings.headerSet("/settings/tournaments/@type", state['type'])
         settings.headerSet("/settings/tournaments/@sort", state['sort'])
         settings.save()
@@ -1798,7 +1807,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             type = type or self.state_tournaments['type']
-            interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['custom_money'])
+            interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['currency_serial'])
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "show"))
