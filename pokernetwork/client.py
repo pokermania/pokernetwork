@@ -24,7 +24,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 # 
-from twisted.internet import reactor, protocol, error
+from twisted.internet import reactor, protocol, error, defer
 from struct import pack, unpack
 
 from pokernetwork.packets import *
@@ -39,6 +39,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self.bufferized_packets = []
         UGAMEProtocol.__init__(self)
         self._ping_delay = 5
+        self.connection_lost_deferred = defer.Deferred()
 
     def getSerial(self):
         return self.user.serial
@@ -81,6 +82,13 @@ class UGAMEClientProtocol(UGAMEProtocol):
         for packet in self.bufferized_packets:
             self.sendPacket(packet)
         self.bufferized_packets = []
+        d = self.factory.established_deferred
+        self.factory.established_deferred = None
+        d.callback(self)
+        self.factory.established_deferred = defer.Deferred()
+
+    def protocolInvalid(self, server, client):
+        self.factory.established_deferred.errback((self, server, client),)
             
     def connectionLost(self, reason):
         if hasattr(self, "_ping_timer") and self._ping_timer and self._ping_timer.active():
@@ -90,6 +98,10 @@ class UGAMEClientProtocol(UGAMEProtocol):
         UGAMEProtocol.connectionLost(self, reason)
         if not reason.check(error.ConnectionDone) and self.factory.verbose > 3:
             print "UGAMEClient.connectionLost %s" % reason
+        d = self.connection_lost_deferred
+        self.connection_lost_deferred = None
+        d.callback(self)
+        self.connection_lost_deferred = defer.Deferred()
 
 class UGAMEClientFactory(protocol.ClientFactory):
 
@@ -97,6 +109,7 @@ class UGAMEClientFactory(protocol.ClientFactory):
         self.protocol = UGAMEClientProtocol
         self.protocol_instance = None
         self.verbose = 0
+        self.established_deferred = defer.Deferred()
 
     def buildProtocol(self, addr):
         instance = self.protocol()
