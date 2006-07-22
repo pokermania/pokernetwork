@@ -71,29 +71,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
     def test01_upgrade(self):
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
-        self.db.upgrade('../test-pokerdatabase', False)
-
-    # -----------------------------------------------------------------------------------------------------    
-    def test02_dbpool(self):
-        dbpool = self.db.dbpool
-        d = dbpool.runQuery("SELECT SLEEP(2)")
-        def dbpool_fails(reason):
-            raise reason
-        d.addErrback(dbpool_fails)
-        return d
-
-    # -----------------------------------------------------------------------------------------------------    
-    def test03_dbpool(self):
-        dbpool = self.db.dbpool
-        sql = "Yerk"
-        d = dbpool.runQuery(sql)
-        def dbpool_fails(reason):
-            pass
-        d.addErrback(dbpool_fails)
-        def dbpool_succeed(result):
-            self.fail("sql statement " + sql + " did not trigger an error")
-        d.addErrback(dbpool_fails)
-        return d
+        self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase', False)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
@@ -103,7 +81,7 @@ def GetTestSuite():
     
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
-    return pokerengineconfig
+    return pokerdatabase
   
 # -----------------------------------------------------------------------------------------------------
 def Run():
