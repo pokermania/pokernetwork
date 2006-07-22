@@ -7,6 +7,18 @@ if [ "${DH_VERBOSE:-0}" -gt 0 ] ; then set -x ; fi
 . /usr/share/debconf/confmodule
 db_version 2.0 || [ $? -lt 30 ]
 
+if pear install --alldeps phpunit2-alpha > /dev/null 2>&1 ; then
+    if pecl install xdebug-beta  > /dev/null 2>&1 ; then
+        if ! php --modules | grep xdebug ; then
+            ext_dir=$(pecl config-get ext_dir)
+            echo "zend_extension=${ext_dir}/xdebug.so" >> /etc/php5/cli/php.ini
+            echo "xdebug installed in /etc/php5/cli/php.ini"
+        fi
+    fi
+    echo "http://www.phpunit.de/ installed"
+    /etc/init.d/apache2 reload || /bin/true
+fi
+
 if [ -f /etc/poker-web/apache.conf ]; then
     md5sum /etc/poker-web/apache.conf 2>/dev/null >/etc/poker-web/apache.conf.dpkg-md5sum || true
 fi
