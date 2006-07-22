@@ -1,4 +1,378 @@
-Thu Jun 29 2006  Johan Euphrosine  <johan@mekensleep.com>
+2006-07-22  Loic Dachary  <loic@dachary.org>
+
+	* Release 1.0.21
+
+	* Makefile.am: Remove python_version file.
+
+	* tests/test-pokerdatabase/0.0.0-0.0.1.sql: *** empty log message ***
+
+	* tests/conf/poker.client.xml.in: version
+
+	* tests/conf/client.xml: money_*
+
+	* tests/test-xmlrpc.py.in: xmlrpc server access
+
+	* tests/test-pokerservice.py.in: Split pokerservice tests and fix path.
+
+	* tests/test-pokernetworkconfig.py.in: *** empty log message ***
+
+	* tests/test-pokerlock.py.in: increase locker verbosity for diag
+
+	* pokernetwork/pokerdatabase.py:
+	dbapi is no longer used, home made asynchronous queries
+
+	* tests/test-pokerdatabase.py.in: dbpool no longer in use
+
+	* tests/test-pokerclient.py.in: run all tests
+
+	* tests/test-currencyclient.py.in: Break notes.
+
+	* tests/run.in: Replace vnc with xvfb.
+	Add phpunit tests handling.
+
+	* tests/poker.server.xml: mysql command
+
+	* tests/Makefile.am: More tests.
+
+	* pokernetwork/pokerpackets.py:     # self.money index constants
+
+	* pokerui/pokerrenderer.py:
+	PokerRenderer custom_money attribute is replaced by money_one & money_two information read from the configuration file.
+	The pokerclient play_money field is replaced by the user_info field that holds all informations about the currencies available to the user.
+	The requestBuyIn method is rewritten to use the money fields in accordance with the currency required by the table.
+	The handleMeny method redirects the cash_in / cash_out menus to the web.
+	The queryLobby and queryTournaments methods use money_one / two instead of custom money.
+	The saveLobbyState (&tournament) method saves currency_serial instead of custom_money.
+
+	* pokerui/pokerinterface.py: custom_money replaced with currency_serial
+
+	* pokernetwork/server.py:
+	sendPacket method that handles either packets (sent right away) or deferred that will be triggered at a later time.
+
+	* pokernetwork/protocol.py:
+	poll_frequency can be set instead of being hard coded to 0.01 sec.
+	factory field always set even if to None.
+	connectionLost prints if verbosity set.
+	portocol invalid parameters better was bugous and is now replaced with different (may be worse ;-).
+	fix _handleConnection prototype because it's used in tests.
+	_handleVersion special case when newline in the first three chars
+
+	* pokernetwork/pokerservice.py:
+	cashOutCommit to validate a cashout request
+
+	* pokernetwork/pokerserver.py:
+	Split into files : pokeravatar.py, pokercashier.py, pokerdatabase.py, pokerlock.py, pokerservice.py, pokertable.py
+
+	* pokernetwork/pokerserver.in: Remove useless pythonpath.
+
+	* pokernetwork/pokerpackets.py: Update copyrights.
+	TABLE_SELECT : query string hold the currency serial instead of the custom_money y/n flag.
+	PLAYER_ARRIVE : bugous ternary replaced with a regular if on seat number.
+	USER_INFO : remove the *_money fields and replace with the money list
+	TOURNEY : replace custom_money with currency_serial
+	PacketPokerMoneyTransfert, CASH_IN, CASH_OUT, CASH_OUT_COMMIT, RAKE packets
+
+	* pokernetwork/pokerdatabase.py:
+	Allow for asynchronous db requests thru adbapi.
+	Create database, tables and user when the database root password is valid so that setup is made easier.
+	Stricter upgrade file searching (.sql in the last 4 letters) to avoid confusion.
+	MySQL command is not hard wired but read from the configuration file.
+
+	* pokernetwork/pokerclient.py:
+	Avoid strange emacs indent problem by adding leading py-indent-offset.
+	Update copyright.
+	PLAYER_INFO AND USER_INFO are outbound packets.
+	packetDeferred method : allow for a callback to be fired once when a packet of a given type and for a given table is received. Allow for implementation of fibers / continuations in packet handling.
+	New field : user_info very redundant with player_info.
+	Update the pokergame instance when POKER_RAKE is received.
+	Do not generate SELF_IN_POSITION packets when autopaying the blinds.
+	protocolInvalid calls parent method.
+	Replace False boolean expressions with not.
+
+	* pokernetwork/pokerbot.py: Update copyright.
+
+	* pokernetwork/pokerbot.in: Remove useless pythonpath.
+
+	* pokernetwork/pokeravatar.py: Extracted from pokerserver.
+
+	* pokernetwork/packets.py: Avoid harmless python name clashes.
+	Handle gracefully __eq__ with heterogeneous types.
+
+	* pokernetwork/client.py:
+	Trigger deferred when the connection is established and when it is lost.
+
+	* pokernetwork/__init__.py: protocol version changed
+
+	* pokerclient2d/lobby.c, pokerclient2d/tournaments.c:
+	play_money -> money_one, custom_money -> money_two
+
+	* pokerclient2d/python.c:
+	build interface function name based on python version and compile time macros
+
+	* pokerclient2d/pokerinterface2d.py:
+	Load the C module with python version prefix if appropriate, with fallback to unversioned.
+
+	* pokerclient2d/poker2d.xml.in: currency_serial instead of custom_money
+
+	* pokerclient2d/poker2d.in: no version
+
+	* configure.ac: poker2d not versioned
+
+	* pokerclient2d/poker2d-test.xml: default web for tests moved
+
+	* pokerclient2d/poker2D.ico: poker2d icons for menus
+
+	* pokerclient2d/menu.c: branch the cash-in / cash-out menu entries
+
+	* pokerclient2d/client.xml:
+	money* elements to describe the supported currencies
+
+	* pokerclient2d/cashier.c:
+	play_money -> money_one, custom_money -> money_two
+
+	* pokerclient2d/data/interface/interface.glade:
+	Add cash-in & cash-out menu entries.
+
+	* pokerclient2d/Makefile.am: Update copyrights.
+	Per python version interface module.
+
+	* examples/poker.bot.xml, examples/poker.server-cygwin.xml, examples/poker.server-monotone.xml, examples/poker.server.xml:
+	new database element parameters
+
+	* debian/python-poker-network.config, debian/python-poker-network.dirs, debian/python-poker-network.init, debian/python-poker-network.install, debian/python-poker-network.postinst, debian/python-poker-network.postrm, debian/python-poker-network.preinst, debian/python-poker-network.templates, debian/python-poker2d.install, debian/python-poker2d.postinst, debian/rules, debian/rules.mk:
+	remove python versions and invoque pycentral first in postinst
+
+	* debian/poker-web.preinst:
+	Attempt to install phpunit & xdebug using pear and pecl.
+
+	* debian/control: python new policy, package are not versionned
+
+	* debian/changelog: new python policy
+
+	* debian/changelog, debian/pycompat: pycentral
+
+	* database/schema.sql.in: switch all tables to InnoDB for transactions.
+	table server : no money generator paradigm.
+	table users : money amounts are stored in other tables.
+	table user2money : per currency amounts for each player.
+	table currencies : one entry per cash generator (pokerweb/pages/currency.php)
+	table safe : notes from various currencies owned by the server.
+	table counter : notes being cashed in or out but not yet commited
+	table user2table : kill the custom_money switch
+	table pokertables : the currency serial is added
+	table tourneys,tourneys_schedule : currency_serial replaces custom_money flag
+	table users_transaction : user chips exchanges.
+
+	* database/pokerdatabaseupgrade.in: Fix coding typo + trash pythonpath
+
+	* database/1.0.20-1.0.21.sql: *** empty log message ***
+
+	* config/python.m4, config/ccpython.m4:
+	copy from pypoker-eval for multiple python interpreter support
+
+	* conf/poker.server.xml.in: s/custom_money/currency_serial/
+	root_user & root_password & command added to the database element
+
+	* conf/poker.client.xml.in: s/custom_money/currency_serial/
+
+	* conf/poker.bot.xml.in: 1.0.21
+
+	* poker-network.pc.in: Remove obsolete pythonpath and version suffix.
+
+	* configure.ac: Replace vnc with Xvfb.
+	pokerconfigupgrade does not have a versionned name.
+	Remove python version tweaks. Keep pkg* variables substitutions.
+	--with-poker-dbroot & --with-poker-dbroot-password flags added.
+	Shorter mysql related message at the end of the script (because pokerdatabase does more automagic).
+
+2006-07-21  Loic Dachary  <loic@dachary.org>
+
+	* Makefile.am: SQL schema migration + pokerserver splitted files
+
+	* pokerweb/pages/currency.php:
+	fallback if no device based random source is found
+
+	* pokerweb/pages/neteller.py: *** empty log message ***
+
+	* pokerweb/pages/neteller.py:
+	Don't verify CA peer on windows : the curl lib is not provided with the proper CA list.
+
+	* debian/control.unstable: sync
+
+	* pokerweb/pages/class.poker.php, pokerweb/pages/cash_out_two.php, pokerweb/pages/cash_out_one.php:
+	*** empty log message ***
+
+	* pokerweb/pages/cash_out.php: cash out switch
+
+	* pokerweb/pages/cash_out_one.php: cash out example
+
+	* pokerweb/pages/class.poker.php: errors
+
+	* pokerweb/pages/class.poker.php: cashOut
+
+	* pokerweb/pages/prototype.js: ajax
+
+	* pokerweb/pages/index.php: cashIn / cashOut options
+
+	* pokerweb/pages/currency.php: *** empty log message ***
+
+	* pokerweb/pages/common.php: setup include path
+
+	* pokerweb/pages/class.poker.php: cashIn / cashOut
+
+	* pokerweb/pages/lib_filters.php: _me
+
+2006-07-18  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/currencyclient.py, pokernetwork/pokerservice.py, pokernetwork/pokercashier.py, tests/test-pokercashier.py.in:
+	*** empty log message ***
+
+2006-07-17  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokertable.py, pokernetwork/pokerservice.py, pokernetwork/pokeravatar.py, pokernetwork/currencyclient.py, tests/test-pokerclient.py.in:
+	*** empty log message ***
+
+2006-07-12  Loic Dachary  <loic@dachary.org>
+
+	* pokerweb/pages/cash_in_one.php, pokerweb/pages/cash_in.php, pokerweb/pages/cash_in_two.php, pokerweb/pages/neteller.py, pokerweb/pages/neteller.cfg:
+	*** empty log message ***
+
+2006-07-11  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-currencyclient.py.in, pokernetwork/pokercashier.py, pokernetwork/pokerservice.py, tests/testicurrency.php.in, tests/testcurrency.php.in, pokerweb/pages/currency.php, pokernetwork/currencyclient.py:
+	*** empty log message ***
+
+	* pokerweb/pages/currency_two.php, pokerweb/pages/currency_one.php:
+	two currencies
+
+	* pokerweb/pages/currency.php: standalone
+
+	* pokerweb/pages/currency.php, tests/testicurrency.php.in, tests/test-pokerclient.py.in:
+	*** empty log message ***
+
+2006-07-10  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-pokerclient.py.in: *** empty log message ***
+
+2006-07-09  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-pokerclient.py.in, pokerclient2d/poker2d-test.xml:
+	*** empty log message ***
+
+2006-07-08  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-pokerservice.py.in, pokernetwork/pokerservice.py, pokernetwork/pokercashier.py, pokernetwork/pokeravatar.py:
+	*** empty log message ***
+
+2006-07-07  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokerservice.py, tests/test-pokercashier.py.in, pokernetwork/pokerlock.py, tests/test-pokerservice.py.in, pokernetwork/currencyclient.py:
+	*** empty log message ***
+
+2006-07-06  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/currencyclient.py, tests/test-currencyclient.py.in, tests/testicurrency.php.in, pokerweb/pages/icurrency.php, pokerweb/pages/currency.php, tests/testcurrency.php.in:
+	*** empty log message ***
+
+	* tests/testicurrency.php.in: confirmation
+
+	* pokerweb/pages/icurrency.php, tests/testcurrency.php.in, pokerweb/pages/currency.php:
+	*** empty log message ***
+
+2006-07-05  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-pokercashier.py.in, pokernetwork/pokerlock.py, tests/test-pokerlock.py.in:
+	*** empty log message ***
+
+2006-07-05  proppy  <proppy@allin>
+
+	* pokerclient2d/poker3d-interface/poker3d-interface.vcproj: remove copy
+
+2006-07-04  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-currencyclient.py.in: *** empty log message ***
+
+	* tests/test-pokerdatabase.py.in: asynchronous pool
+
+	* pokernetwork/currencyclient.py, tests/test-pokerservice.py.in:
+	*** empty log message ***
+
+	* tests/testicurrency.php.in: icurrency
+
+	* tests/testcurrency.php.in: *** empty log message ***
+
+	* tests/testcurrency.php.in: currency
+
+2006-07-02  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokertable.py, pokernetwork/pokeravatar.py, pokernetwork/pokerservice.py:
+	*** empty log message ***
+
+	* tests/test-pokerservice.py.in: more tests
+
+	* pokerweb/conf/currency_configuration.php: rename
+
+	* pokerweb/pages/bank.php, pokerweb/pages/currency.php: rename bank.php
+
+	* pokernetwork/pokerservice.py: cashin
+
+2006-07-01  Loic Dachary  <loic@dachary.org>
+
+	* pokerweb/conf/bank_configuration.php, pokerweb/pages/bank.php:
+	bank note server
+
+2006-06-30  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokertable.py, pokernetwork/pokerservice.py, pokernetwork/pokeravatar.py:
+	split pokerserver
+
+	* tests/test-pokerservice.py.in: pokerservice tests
+
+	* tests/test-pokerdatabase.py.in: pokerdatabase tests
+
+2006-06-29  proppy  <proppy@allin>
+
+	* ChangeLog: update ChangeLog
+
+	* pokernetwork/pokerclient.py:
+	PacketPokerHighestBetIncrease only when raised
+
+	* pokerui/pokerrenderer.py:
+	bind handleInteractor on PACKET_POKER_BET_LIMIT
+
+	* pokerui/pokerrenderer.py: fixed bug interactor
+
+	* pokerui/pokerrenderer.py: added log
+
+	* pokernetwork/pokerclient.py: added warning
+
+	* pokerui/pokerrenderer.py: added warning message
+
+2006-06-28  Loic Dachary  <loic@dachary.org>
+
+	* configure.ac: no makefile
+
+	* configure.ac: no bank specifics
+
+2006-06-26  proppy  <proppy@allin>
+
+	* pokerui/pokerrenderer.py: fix bug 788
+
+	* pokernetwork/pokerclient.py: fixed bug #803
+
+	* pokerui/pokerrenderer.py: fixed bug #830
+
+2006-06-26  Cedric Pinson  <cpinson@allin>
+
+	* pokerui/pokerrenderer.py: Fix the bug at the end of tournament
+
+2006-06-26  proppy  <proppy@allin>
+
+	* pokerui/pokerinteractor.py: verbose 3
+
+	* pokerui/pokerrenderer.py: verbose 2 -> 3
+
+2006-06-26  Johan Euphrosine  <johan@mekensleep.com>
 
 	* pokernetwork/pokerclient.py: PacketPokerHighestBetIncrease is now only sent when raised
 	fix bug #803, remove setPlayerDelay() call when the corresponding player doesn't exist
@@ -17,7 +391,14 @@ Thu Jun 29 2006  Johan Euphrosine  <johan@mekensleep.com>
 
 Thu Jun 22 2006  Loic Dachary  <loic@dachary.org>
 
-	* Release 1.0.21
+	* pokernetwork/protocol.py (UGAMEProtocol._handleVersion): if bootstrap string
+	  < 4 char & contains newline, bomb instead of going thru
+
+Fri Jun 23 2006  Loic Dachary  <loic@dachary.org>
+
+	* configure.ac (POKER_NETWORK_PKGSYSCONFDIR): test pkg-config result
+
+Thu Jun 22 2006  Loic Dachary  <loic@dachary.org>
 
 	* configure.ac: htmlview for fedora
 
