@@ -160,8 +160,8 @@ class PokerInterface(dispatch.EventDispatcher):
                     packet[selected_index] = str(current_tournament)
             self.command(*packet)
             
-    def showTournaments(self, cashier_label, page, custom_money):
-        self.command("tournaments", "show", cashier_label, page, custom_money)
+    def showTournaments(self, cashier_label, page, currency_serial):
+        self.command("tournaments", "show", cashier_label, page, currency_serial)
                 
     def hideTournaments(self):
         self.command("tournaments", "hide")
@@ -210,8 +210,8 @@ class PokerInterface(dispatch.EventDispatcher):
 
         self.command('lobby', 'info', "Players: %d" % players_count, "Tables: %d" % tables_count)
             
-    def showLobby(self, cashier_label, page, custom_money):
-        self.command("lobby", "show", cashier_label, page, custom_money)
+    def showLobby(self, cashier_label, page, currency_serial):
+        self.command("lobby", "show", cashier_label, page, currency_serial)
                 
     def hideLobby(self):
         self.command("lobby", "hide")
