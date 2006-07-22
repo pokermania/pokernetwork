@@ -1,6 +1,8 @@
 poker-network (1.0.21-1) unstable; urgency=low
 
   * upstream sync
+
+  * use pycentral
   
   * libsdl1.2debian-all : give alsa a chance to be chosen instead of dsp / oss
 
