@@ -230,10 +230,34 @@ EOF
         d.addCallback(meltNotes)
         return self.commit(d)
 
+    # -----------------------------------------------------------------------------    
+    def test07_breakNote(self):
+        d = self.getCommitedNote('http://fake/', 100)
+
+        def breakNote(result):
+            #print "breakNote " + str(result)
+            note_to_break = result[0]
+            d = self.client.breakNote(note_to_break, 30, 10, 5)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                #print "broken notes " + str(result)
+                notes = result
+                self.assertEqual(4, len(notes))
+                self.assertEqual(30, notes[0][3])
+                self.assertEqual(30, notes[1][3])
+                self.assertEqual(30, notes[2][3])
+                self.assertEqual(10, notes[3][3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(breakNote)
+        return d
+
 # -----------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test07"
     suite = loader.loadClass(CurrencyClientTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
