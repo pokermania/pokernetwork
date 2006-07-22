@@ -2,7 +2,7 @@
 ## Python file handling
 ## From Andrew Dalke
 ## Updated by James Henstridge
-## Updated by Ludovic Heyberger, Loic Dachary (2005)
+## Updated by Ludovic Heyberger (2005), Loic Dachary (2006)
 ## ------------------------
 # Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
 # Free Software Foundation, Inc.
@@ -71,16 +71,17 @@ python2.1 python2.0 python1.6 python1.5])
     else
       # Otherwise, try each interpreter until we find one that satisfies
       # VERSION.
-      AC_CACHE_CHECK([for a Python interpreter with version $required_version],
-	[am_cv_pathless_PYTHON],[
-	for am_cv_pathless_PYTHON in _AM_PYTHON_INTERPRETER_LIST none; do
+      AC_MSG_CHECKING([for a Python interpreter with version $required_version])
+      for am_cv_pathless_PYTHON in _AM_PYTHON_INTERPRETER_LIST none; do
 	  test "$am_cv_pathless_PYTHON" = none && break
 	  AM_PYTHON_CHECK_VERSION([$am_cv_pathless_PYTHON], [$required_version], [break])
-	done])
+      done
+      AC_MSG_RESULT([done])
       # Set $PYTHON to the absolute path of $am_cv_pathless_PYTHON.
       if test "$am_cv_pathless_PYTHON" = none; then
 	PYTHON=:
       else
+        unset ac_cv_path_PYTHON
         AC_PATH_PROG([PYTHON], [$am_cv_pathless_PYTHON])
       fi
       am_display_PYTHON=$am_cv_pathless_PYTHON
@@ -89,15 +90,16 @@ python2.1 python2.0 python1.6 python1.5])
 
   if test "$PYTHON" = :; then
   dnl Run any user-specified action, or abort.
-    m4_default([$3], [AC_MSG_ERROR([no suitable Python interpreter found])])
+    m4_default([$3], [AC_MSG_ERROR([no suitable Python interpreter found for $1])])
   else
 
   dnl Query Python for its version number.  Getting [:3] seems to be
   dnl the best way to do this; it's what "site.py" does in the standard
   dnl library.
 
-  AC_CACHE_CHECK([for $am_display_PYTHON version], [am_cv_python_version],
-    [am_cv_python_version=`$PYTHON -c "import sys; print sys.version[[:3]]"`])
+  AC_MSG_CHECKING([for $am_display_PYTHON version])
+  am_cv_python_version=`$PYTHON -c "import sys; print sys.version[[:3]]"`
+  AC_MSG_RESULT([done])
   AC_SUBST([PYTHON_VERSION], [$am_cv_python_version])
 
   dnl Use the values of $prefix and $exec_prefix for the corresponding
@@ -111,8 +113,9 @@ python2.1 python2.0 python1.6 python1.5])
   dnl At times (like when building shared libraries) you may want
   dnl to know which OS platform Python thinks this is.
 
-  AC_CACHE_CHECK([for $am_display_PYTHON platform], [am_cv_python_platform],
-    [am_cv_python_platform=`$PYTHON -c "import sys; print sys.platform"`])
+  AC_MSG_CHECKING([for $am_display_PYTHON platform])
+  am_cv_python_platform=`$PYTHON -c "import sys; print sys.platform"`
+  AC_MSG_RESULT([done])
   AC_SUBST([PYTHON_PLATFORM], [$am_cv_python_platform])
 
 
@@ -125,10 +128,10 @@ python2.1 python2.0 python1.6 python1.5])
   dnl Query distutils for this directory.  distutils does not exist in
   dnl Python 1.5, so we fall back to the hardcoded directory if it
   dnl doesn't work.
-  AC_CACHE_CHECK([for $am_display_PYTHON script directory],
-    [am_cv_python_pythondir],
-    [am_cv_python_pythondir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib(0,0,prefix='$PYTHON_PREFIX')" 2>/dev/null ||
-     echo "$PYTHON_PREFIX/lib/python$PYTHON_VERSION/site-packages"`])
+  AC_MSG_CHECKING([for $am_display_PYTHON script directory])
+  am_cv_python_pythondir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib(0,0,prefix='$PYTHON_PREFIX')" 2>/dev/null ||
+     echo "$PYTHON_PREFIX/lib/python$PYTHON_VERSION/site-packages"`
+  AC_MSG_RESULT([done])
   AC_SUBST([pythondir], [$am_cv_python_pythondir])
 
   dnl pkgpythondir -- $PACKAGE directory under pythondir.  Was
@@ -142,10 +145,10 @@ python2.1 python2.0 python1.6 python1.5])
   dnl Query distutils for this directory.  distutils does not exist in
   dnl Python 1.5, so we fall back to the hardcoded directory if it
   dnl doesn't work.
-  AC_CACHE_CHECK([for $am_display_PYTHON extension module directory],
-    [am_cv_python_pyexecdir],
-    [am_cv_python_pyexecdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib(1,0,prefix='$PYTHON_EXEC_PREFIX')" 2>/dev/null ||
-     echo "${PYTHON_EXEC_PREFIX}/lib/python${PYTHON_VERSION}/site-packages"`])
+  AC_MSG_CHECKING([for $am_display_PYTHON extension module directory])
+  am_cv_python_pyexecdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib(1,0,prefix='$PYTHON_EXEC_PREFIX')" 2>/dev/null ||
+     echo "${PYTHON_EXEC_PREFIX}/lib/python${PYTHON_VERSION}/site-packages"`
+  AC_MSG_RESULT([done])
   AC_SUBST([pyexecdir], [$am_cv_python_pyexecdir])
 
   dnl pkgpyexecdir -- $(pyexecdir)/$(PACKAGE)
@@ -155,7 +158,11 @@ python2.1 python2.0 python1.6 python1.5])
   dnl Run any user-specified action.
   $2
   fi
-
+unset am_cv_pathless_PYTHON
+unset am_cv_python_version
+unset am_cv_python_platform
+unset am_cv_python_pythondir
+unset am_cv_python_pyexecdir
 ])
 
 
