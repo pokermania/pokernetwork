@@ -790,6 +790,15 @@ class PokerService(service.Service):
     def cashOut(self, packet):
         return self.cashier.cashOut(packet)
 
+    def cashOutCommit(self, packet):
+        count = self.cashier.cashOutCommit(packet)
+        if count == 0:
+            return PacketAck()
+        else:
+            return PacketError(code = PacketPokerCashOutCommit.INVALID_TRANSACTION,
+                               message = "transaction " + packet.transaction_id + " affected " + str(count) + " rows instead of just one",
+                               other_type = PACKET_POKER_CASH_OUT_COMMIT)
+
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)
 
