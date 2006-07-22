@@ -26,10 +26,9 @@
 #  Loic Dachary <loic@gnu.org>
 #
 from os import environ
-environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network@MAYBE_PYTHON_VERSION@/poker2d/Aero/gtkrc"
+environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network/poker2d/Aero/gtkrc"
 
 import sys
-sys.path = "@pythonpath@".split(":") + sys.path
 sys.path.insert(0, "@top_srcdir@")
 
 from pokerclient2d.poker2d import run
