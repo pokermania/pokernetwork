@@ -38,18 +38,27 @@ EXTRA_DIST = \
 	coverage.py \
 	test-poker-interface.py \
 	poker-interface-sid.supp \
+	test-pokerdatabase \
 	vncpasswd
 
-TESTS_ENVIRONMENT = run
+TESTS_ENVIRONMENT = ./run
 TESTS = coverage-reset \
 	upgrade \
 	test-pokernetworkconfig.py \
+	test-pokerdatabase.py \
+	test-pokerservice.py \
+	test-currencyclient.py \
+	test-pokerclient.py \
+	test-pokerlock.py \
+	test-pokercashier.py \
+	test-xmlrpc.py \
+	testcurrency.php \
 	coverage-report \
 	poker-interface
 
-.PHONY: coverage-reset coverage-report poker-interface
+.PHONY: coverage-reset coverage-report poker-interface testicurrency
 
 export top_srcdir
 
 clean-local:
-	rm -fr .coverage
+	rm -fr .coverage annotated _trial_temp
