@@ -22,7 +22,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Precheur <henry@precheur.org>
+#  Henry Precheur <henry@precheur.org> (2004)
 #
 import sys
 sys.path.insert(0, "..")
