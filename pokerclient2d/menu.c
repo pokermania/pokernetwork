@@ -60,6 +60,8 @@ void on_##WHAT##_activate(GtkWidget* widget, gpointer data) \
 }
 
 on_item_activate(cashier)
+on_item_activate(cash_in)
+on_item_activate(cash_out)
 on_item_activate(outfits)
 on_item_activate(hand_history)
 on_item_activate(edit_account)
@@ -128,6 +130,8 @@ int	handle_menu(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 
 #define branch(WHAT) GUI_BRANCH(g_glade_xml, on_##WHAT##_activate)
     branch(cashier);
+    branch(cash_in);
+    branch(cash_out);
     branch(outfits);
     branch(hand_history);
     branch(edit_account);
