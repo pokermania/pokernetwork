@@ -26,7 +26,6 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import sys
-sys.path = "@pythonpath@".split(":") + sys.path
 sys.path.insert(0, "@top_srcdir@")
 
 if(sys.argv[-1][-4:] != ".xml"):
