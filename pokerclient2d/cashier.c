@@ -21,8 +21,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Authors:
- *  Henry Prêcheur <henry at precheur dot org>
  *  Loic Dachary <loic@gnu.org>
+ *  Henry Prêcheur <henry at precheur dot org> (2004)
  *
  */
 
@@ -119,12 +119,12 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
       {
         static const char*	labels[LABELS_CNT] =
           {
-            "play_money_available",
-            "play_money_in_game",
-            "play_money_total",
-            "custom_money_available",
-            "custom_money_in_game",
-            "custom_money_total"
+            "money_one_available",
+            "money_one_in_game",
+            "money_one_total",
+            "money_two_available",
+            "money_two_in_game",
+            "money_two_total"
           };
         int	i;
 
