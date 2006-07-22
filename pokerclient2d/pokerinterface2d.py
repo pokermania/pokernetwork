@@ -26,8 +26,12 @@
 import sys
 sys.path.insert(0, "..")
 
-import gtk
-from pokerclient2d import cpokerinterface
+try:
+    _pokerinterface = __import__('_pokerinterface' + sys.version[0] + '_' + sys.version[2])
+except:
+    sys.path.insert(0, ".libs")    
+    _pokerinterface = __import__('_pokerinterface')
+
 from pokerui.pokerinterface import PokerInterface
 
 class PokerInterface2D(PokerInterface):
@@ -36,7 +40,7 @@ class PokerInterface2D(PokerInterface):
         PokerInterface.__init__(self)
         self.verbose = settings.headerGetInt("/settings/@verbose")
         datadir = settings.headerGet("/settings/data/@path")
-        cpokerinterface.init(callback = self.event,
+        _pokerinterface.init(callback = self.event,
                             datadir = datadir,
                             gtkrc = datadir + "/interface/gtkrc",
                             glade = datadir + "/interface/interface2d.glade",
@@ -55,8 +59,8 @@ class PokerInterface2D(PokerInterface):
         window.show_all()
         
     def __del__(self):
-        cpokerinterface.uninit()
+        _pokerinterface.uninit()
 
     def command(self, *args):
         if self.verbose > 2: print "PokerInterface2D.command: " + str(args)
-        cpokerinterface.command(self.screen, *args)
+        _pokerinterface.command(self.screen, *args)
