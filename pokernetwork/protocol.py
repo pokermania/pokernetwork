@@ -24,7 +24,6 @@
 #  Loic Dachary <loic@gnu.org>
 #
 # 
-import sys
 from time import time
 
 from twisted.internet import reactor, protocol
@@ -61,7 +60,9 @@ class UGAMEProtocol(protocol.Protocol):
         self.established = 0
         self._protocol_ok = False
         self._poll = True
+        self._poll_frequency = 0.01
         self._ping_delay = 5
+        if not hasattr(self, 'factory'): self.factory = None
 
     def setPingDelay(self, ping_delay):
         self._ping_delay = ping_delay
@@ -83,13 +84,15 @@ class UGAMEProtocol(protocol.Protocol):
 
     def connectionLost(self, reason):
         self.established = 0
-        if self._protocol_ok == False:
-            self.protocolInvalid("better", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
+        if not self._protocol_ok:
+            if self.factory and self.factory.verbose > 1:
+                print "connectionLost: reason = " + str(reason)
+            self.protocolInvalid("different", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
         
     def _sendVersion(self):
         self.transport.write('CGI %s.%s\n' % ( PROTOCOL_MAJOR, PROTOCOL_MINOR ) )
 
-    def _handleConnection(self):
+    def _handleConnection(self, packet):
         pass
 
     def ignoreIncomingData(self):
@@ -97,20 +100,24 @@ class UGAMEProtocol(protocol.Protocol):
             self._timer.cancel()
 
     def _handleVersion(self):
-        buffer = ''.join(self._packet)
-        if '\n' in buffer:
-            if buffer[:3] == 'CGI':
-                major, minor = buffer[4:11].split('.')
+        buf = ''.join(self._packet)
+        if '\n' in buf:
+            if buf[:3] == 'CGI':
+                major, minor = buf[4:11].split('.')
                 if (major, minor) != ( PROTOCOL_MAJOR, PROTOCOL_MINOR ):
                     self.protocolInvalid(major + "." + minor, PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
                     self.transport.loseConnection()
                     return
                 else:
                     self._protocol_ok = True
-            buffer = buffer[12:]
+            else:
+                self.protocolInvalid("UNKNOWN", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
+                self.transport.loseConnection()
+                return
+            buf = buf[12:]
             self.established = 1
-            self._packet[:] = [buffer]
-            self._packet_len = len(buffer)
+            self._packet[:] = [buf]
+            self._packet_len = len(buf)
             self._expected_len = Packet.format_size
             if self.factory.verbose > 1:
                 print "protocol established"
@@ -119,8 +126,8 @@ class UGAMEProtocol(protocol.Protocol):
                 self.dataReceived("")
             self._processQueues()
         else:
-            self._packet[:] = [buffer]
-            self._packet_len = len(buffer)
+            self._packet[:] = [buf]
+            self._packet_len = len(buf)
 
     def protocolEstablished(self):
         pass
@@ -158,7 +165,7 @@ class UGAMEProtocol(protocol.Protocol):
             #
             # Shallow copy the queues list so that 
             # self.discardPacket can remove an entry
-            # without conpromizing the for loop on queues
+            # without compromising the for loop on queues
             #
             queues = self._queues.copy()
             #
@@ -207,7 +214,7 @@ class UGAMEProtocol(protocol.Protocol):
         #
         if not self._timer or not self._timer.active():
             if self._poll or len(self._queues) > 0:
-                self._timer = reactor.callLater(0.01, self._processQueues)            
+                self._timer = reactor.callLater(self._poll_frequency, self._processQueues)            
 
     def pushPacket(self, packet):
         id = self._packet2id(packet)
@@ -224,14 +231,14 @@ class UGAMEProtocol(protocol.Protocol):
     def handleData(self):
         if self._packet_len >= self._expected_len:
             type = Packet()
-            buffer = ''.join(self._packet)
-            while len(buffer) >= self._expected_len:
-                type.unpack(buffer)
-                if type.length <= len(buffer):
+            buf = ''.join(self._packet)
+            while len(buf) >= self._expected_len:
+                type.unpack(buf)
+                if type.length <= len(buf):
 
                     if PacketFactory.has_key(type.type):
                         packet = PacketFactory[type.type]()
-                        buffer = packet.unpack(buffer)
+                        buf = packet.unpack(buf)
                         if self.factory.verbose > 4:
                             print "%s(%d bytes) => %s" % ( self._prefix, type.length, packet )
                         if self._poll:
@@ -242,12 +249,12 @@ class UGAMEProtocol(protocol.Protocol):
                         print "%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length )
                         if self.factory.verbose > 4:
                             print "known types are %s " % PacketNames
-                        buffer = buffer[type.length:]
+                        buf = buf[type.length:]
                     self._expected_len = Packet.format_size
                 else:
                     self._expected_len = type.length
-            self._packet[:] = [buffer]
-            self._packet_len = len(buffer)
+            self._packet[:] = [buf]
+            self._packet_len = len(buf)
         
     def dataReceived(self, data):
         self._packet.append(data)
