@@ -2150,6 +2150,10 @@ serial: integer uniquely identifying a player.
 
     NOT_LOGGED = 1
 
+    # self.money index constants
+    cashier = 0
+    in_game = 1
+    
     type = PACKET_POKER_USER_INFO
     rating = 1500
     
