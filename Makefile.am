@@ -178,17 +178,5 @@ install-data-local:
 	chmod 600 "${DESTDIR}${pkgsysconfdir}/poker.server.xml"
 	chmod u+w "${DESTDIR}${pkgsysconfdir}"
 
-install-data-hook:
-	if [ "${MAYBE_PYTHON_VERSION}" ] ; then \
-		cp ${DESTDIR}${pkgconfigdir}/poker-network.pc ${DESTDIR}${pkgconfigdir}/poker-network${PYTHON_VERSION}.pc ; \
-		for file in pokerserver pokerbot pokerdatabaseupgrade ; do \
-			cp -a ${DESTDIR}${sbindir}/$$file ${DESTDIR}${sbindir}/$${file}${PYTHON_VERSION} ; \
-		done ; \
-	fi
-
 uninstall-local:
 	rm -fr "${DESTDIR}${pkgsysconfdir}"
-	rm -f ${DESTDIR}${pkgconfigdir}/poker-network${MAYBE_PYTHON_VERSION}.pc
-	for file in pokerserver pokerbot pokerdatabaseupgrade ; do \
-		rm -f ${DESTDIR}${sbindir}/$${file}${MAYBE_PYTHON_VERSION} ; \
-	done
