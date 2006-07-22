@@ -43,12 +43,13 @@ AM_MAINTAINER_MODE
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(MYSQL, [mysql])
 AC_PATH_PROG(VALGRIND, [valgrind])
-AC_PATH_PROG(VNCSERVER, [vncserver])
+AC_PATH_PROG(XVFB, [Xvfb], ,[$PATH:/usr/bin/X11:/usr/X11R6/bin])
 AC_PATH_PROG(PERL, [perl])
 AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox mozilla konqueror epiphany dillo links])
 
 AC_PATH_PROG(PHP, [php])
 AC_PATH_PROG(PHPUNIT, [phpunit])
+AC_PATH_PROG(POKERCONFIGUPGRADE, [pokerconfigupgrade])
 
 PHP5_TESTS=/bin/false
 if test x$PHP && $PHP --version | grep 'PHP 5' ; then
@@ -68,71 +69,17 @@ fi
 
 AM_CONDITIONAL([PHP5_TESTS], [$PHP5_TESTS])
 
-test x$prefix = xNONE && prefix="$ac_default_prefix"
-test x$exec_prefix = xNONE && exec_prefix="$prefix"
-
-if test -z "$PYTHON_VERSION_CONSTRAINT" ; then PYTHON_VERSION_CONSTRAINT='>=2.3' ; fi
-
-m4_define([_AM_PYTHON_INTERPRETER_LIST], [python2.4 python2.3 python])
-AM_PATH_PYTHON([$PYTHON_VERSION_CONSTRAINT])
-eval pythonpath=$pythondir
-if eval test "$pythondir" != "$pyexecdir" ; then
-   eval pythonpath=$pythonpath:$pyexecdir
-fi
-AC_SUBST(pythonpath, [$pythonpath])
-
-AM_PYTHON_DEPENDS()
-
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine$PYTHON_VERSION >= 1.0.12, [
-  MAYBE_PYTHON_VERSION=$PYTHON_VERSION
-] , [
-  PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.12,, [
-    if $python_depends ; then
-      AC_MSG_ERROR([poker-engine is a mandatory library])
-    else
-      AC_MSG_RESULT([not found, ignored])
-    fi
-  ])
-])
-pythonpath=`pkg-config --variable=pythonpath poker-engine$MAYBE_PYTHON_VERSION`:$pythonpath || AC_MSG_ERROR([pkg-config --variable=pythonpath poker-engine$MAYBE_PYTHON_VERSION fails])
-
-PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES twisted"
-PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES MySQLdb"
-AC_ARG_ENABLE(openssl, [  --disable-openssl do not use openssl], [], [
-		       PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES OpenSSL"
-])
-AC_ARG_ENABLE(soap, [  --disable-soap do not use soap], [], [
-		       PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES SOAPpy"
-])
-
-AC_SUBST(MAYBE_PYTHON_VERSION, [$MAYBE_PYTHON_VERSION])
-VERSIONED_PACKAGE=$PACKAGE$MAYBE_PYTHON_VERSION
-pkglibdir=$libdir/$VERSIONED_PACKAGE
-AC_SUBST(pkglibdir, [$pkglibdir])
-pkgdatadir=$datadir/$VERSIONED_PACKAGE
-AC_SUBST(pkgdatadir, [$pkgdatadir])
-pkgsysconfdir=$sysconfdir/$VERSIONED_PACKAGE
+pkgsysconfdir=$sysconfdir/$PACKAGE
 AC_SUBST(pkgsysconfdir, [$pkgsysconfdir])
-
-POKERCONFIGUPGRADE=`pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION` || AC_MSG_ERROR([pkg-config --variable=pokerconfigupgrade poker-engine$MAYBE_PYTHON_VERSION fails])
-AC_SUBST(POKERCONFIGUPGRADE, [$POKERCONFIGUPGRADE])
-
-#
-# G++ specific debug and optimization flags
-#
-AC_ARG_ENABLE(debug,
-    [  --enable-debug          build in debug mode (the default is to build in optimized mode)],
-    [enable_debug=yes])
-    
-AC_ARG_ENABLE(upgrades,
-    [  --enable-upgrades       upgrades are automatically installed from the specified server (default off)],
-    [enable_upgrades=yes],
-    [enable_upgrades=no])
-AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
-AC_SUBST(UPGRADES_SOURCE, $enableval)
+pkglibdir=$libdir/$PACKAGE
+AC_SUBST(pkglibdir, [$pkglibdir])
+pkgdatadir=$datadir/$PACKAGE
+AC_SUBST(pkgdatadir, [$pkgdatadir])
 
 AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION
+
+    AM_PATH_PYTHON([2.3])
 
 ], [
     if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then
@@ -153,7 +100,10 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     
     AC_LANG(C)
     
-    AM_CC_PYTHON([$PYTHON_VERSION_CONSTRAINT])
+    test x$prefix = xNONE && prefix="$ac_default_prefix"
+    test x$exec_prefix = xNONE && exec_prefix="$prefix"
+
+    ALL_CC_PYTHON
     
     PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, , [AC_MSG_ERROR(glib2 is a mandatory library)])
     PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, , [AC_MSG_ERROR(glade2 is a mandatory library)])
@@ -166,14 +116,57 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=true			# for AM_CONDITION
 ])
 
-AM_PYTHON_DEPENDS([$PYTHON_DEPENDENCIES])
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.16,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
+
+python_script="
+import imp
+import sys
+
+path = list()
+modules = sys.argv.pop(1)
+for module in modules.split('.'):
+        (file,  pathname, info) = imp.find_module(module, sys.path + path)
+        sys.stdout.write(pathname + ' ')
+        path = list(( pathname, ))
+"
+
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES twisted"
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES MySQLdb"
+AC_ARG_ENABLE(openssl, [  --disable-openssl do not use openssl], [], [
+		       PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES OpenSSL"
+])
+AC_ARG_ENABLE(soap, [  --disable-soap do not use soap], [], [
+		       PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES SOAPpy"
+])
+
+AC_SUBST(POKERCONFIGUPGRADE, [$POKERCONFIGUPGRADE])
+
+AC_ARG_ENABLE(debug,
+    [  --enable-debug          build in debug mode (the default is to build in optimized mode)],
+    [enable_debug=yes])
+    
+AC_ARG_ENABLE(upgrades,
+    [  --enable-upgrades       upgrades are automatically installed from the specified server (default off)],
+    [enable_upgrades=yes],
+    [enable_upgrades=no])
+AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
+AC_SUBST(UPGRADES_SOURCE, $enableval)
+
+for module in ${PYTHON_DEPENDENCIES} ; do
+    AC_MSG_CHECKING([wether python module $module is available])
+    if $PYTHON -c "$python_script" $module ; then
+       AC_MSG_RESULT([... yes])
+    else
+       AC_MSG_ERROR([failed])
+    fi
+done
 
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 
 AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval eval eval echo $pkgdatadir`])
 AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval eval eval echo $pkglibdir`])
 AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval eval eval echo $pkgsysconfdir`])
-POKER_ENGINE_PKGSYSCONFDIR=`pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION` || AC_MSG_ERROR([pkg-config --variable=pkgsysconfdir poker-engine$MAYBE_PYTHON_VERSION fails])
+POKER_ENGINE_PKGSYSCONFDIR=`pkg-config --variable=pkgsysconfdir poker-engine` || AC_MSG_ERROR([pkg-config --variable=pkgsysconfdir poker-engine fails])
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [$POKER_ENGINE_PKGSYSCONFDIR])
 
 AC_ARG_WITH(poker-server-host,
@@ -216,6 +209,20 @@ AC_ARG_WITH(poker-dbuser-password,
     [ POKER_DBUSER_PASSWORD=pokernetwork ] )
 AC_SUBST(POKER_DBUSER_PASSWORD)
 
+AC_ARG_WITH(poker-dbroot,
+[  --with-poker-dbroot=<user>
+                          root user name to creat database (default root). ],
+    [ POKER_DBROOT=$with_poker_dbroot ],
+    [ POKER_DBROOT=root ] )
+AC_SUBST(POKER_DBROOT)
+
+AC_ARG_WITH(poker-dbroot-password,
+[  --with-poker-dbroot-password=<password>
+                          password for the mysql root user (default none). ],
+    [ POKER_DBROOT_PASSWORD=$with_poker_dbroot_password ],
+    [ POKER_DBROOT_PASSWORD= ] )
+AC_SUBST(POKER_DBROOT_PASSWORD)
+
 # Generate files
 if test x$poker2d = xtrue ; then
         AC_CONFIG_FILES([
@@ -232,6 +239,15 @@ AC_CONFIG_FILES([
         tests/upgrade
         tests/run
         tests/test-pokernetworkconfig.py
+        tests/test-pokerdatabase.py
+        tests/test-pokerservice.py
+        tests/test-xmlrpc.py
+        tests/test-pokerclient.py
+        tests/test-pokerlock.py
+        tests/test-pokercashier.py
+        tests/test-currencyclient.py
+        tests/testcurrency.php
+        tests/testicurrency.php
         database/pokerdatabaseupgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
@@ -253,15 +269,11 @@ AC_OUTPUT
 
 cat <<!
 
-If this is your first installation, you will have to manually create
-the MySQL database $POKER_DATABASE, create the MySQL user
-$POKER_DBUSER with password $POKER_DBUSER_PASSWORD, give it permissions
-on the $POKER_DATABASE database and populate the $POKER_DATABASE database.
+If this is your first installation, you need to fill the
+MySQL root user name and password in ${pkgsysconfdir}/poker.server.xml.
+It will be used to create the poker database as follows: 
 
-        mysqladmin -h $POKER_DBHOST -u root -p create $POKER_DATABASE
-        mysql -h $POKER_DBHOST -u root -p $POKER_DATABASE < database/schema.sql 
-        mysql -h $POKER_DBHOST -u root -p -e "insert into user (Host, User, Password, Select_priv, Insert_priv, Update_priv, Delete_priv) values ('YOUR_HOSTNAME', '$POKER_DBUSER', password('$POKER_DBUSER_PASSWORD'), 'Y', 'Y', 'Y', 'Y')" mysql
-        mysqladmin -h $POKER_DBHOST -u root -p reload
+        mysqladmin -h $POKER_DBHOST -u $POKER_DBROOT create $POKER_DATABASE
 
 If you already have a previous version installed, you must upgrade
 your database using:
