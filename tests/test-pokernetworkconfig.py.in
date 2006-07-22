@@ -1,6 +1,12 @@
 #!@PYTHON@
 # -*- mode: python -*-
-# Copyright (C) 2006 Pierre-Andre
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +23,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # Authors:
-#  Pierre-Andre Vieillard-Baron
 #  Loic Dachary <loic@gnu.org>
 #
 
