@@ -204,7 +204,7 @@ static void	on_all_radio_clicked(GtkWidget* widget, gpointer data)
   }
 }
 
-static void	on_play_money_radio_clicked(GtkWidget* widget, gpointer data)
+static void	on_money_one_radio_clicked(GtkWidget* widget, gpointer data)
 {
   (void) data;
 
@@ -212,12 +212,12 @@ static void	on_play_money_radio_clicked(GtkWidget* widget, gpointer data)
     clear_stores();
     set_string("tournaments");
     set_string("refresh");
-    set_string("play");
+    set_string("money_one");
     flush_io_channel();
   }
 }
 
-static void	on_custom_money_radio_clicked(GtkWidget* widget, gpointer data)
+static void	on_money_two_radio_clicked(GtkWidget* widget, gpointer data)
 {
   (void) data;
 
@@ -225,7 +225,7 @@ static void	on_custom_money_radio_clicked(GtkWidget* widget, gpointer data)
     clear_stores();
     set_string("tournaments");
     set_string("refresh");
-    set_string("custom");
+    set_string("money_two");
     flush_io_channel();
   }
 }
@@ -341,8 +341,8 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     s_players_label = GTK_LABEL(gui_get_widget(g_tournaments_xml, "players_label"));
     s_tournaments_label = GTK_LABEL(gui_get_widget(g_tournaments_xml, "tournaments_label"));
     GUI_BRANCH(g_tournaments_xml, on_all_radio_clicked);
-    GUI_BRANCH(g_tournaments_xml, on_play_money_radio_clicked);
-    GUI_BRANCH(g_tournaments_xml, on_custom_money_radio_clicked);
+    GUI_BRANCH(g_tournaments_xml, on_money_one_radio_clicked);
+    GUI_BRANCH(g_tournaments_xml, on_money_two_radio_clicked);
 
     s_tournament_info_window = gui_get_widget(g_tournament_info_xml, "tournament_info_window");
     g_assert(s_tournament_info_window);
@@ -455,13 +455,13 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     }
 
     {
-      char* custom_money = get_string();
+      char* currency_serial = get_string();
       char* button;
       GtkWidget* radio;
-      if(!strcmp(custom_money, "y")) {
-        button = "custom_money_radio";
-      } else if(!strcmp(custom_money, "y")) {
-        button = "play_money_radio";
+      if(!strcmp(currency_serial, "money_two")) {
+        button = "money_two_radio";
+      } else if(!strcmp(currency_serial, "money_one")) {
+        button = "money_one_radio";
       } else {
         button = "all_radio";
       }
@@ -472,7 +472,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(radio), TRUE);
       s_disable_buttons = 0;
 
-      g_free(custom_money);
+      g_free(currency_serial);
     }
   } else if(!strcmp(tag, "hide")) {
     g_lobby_tab_state = none;
