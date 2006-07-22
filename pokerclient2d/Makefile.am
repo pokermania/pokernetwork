@@ -22,7 +22,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Prêcheur <henry@precheur.org>
+#  Henry Prêcheur <henry@precheur.org> (2004)
 #
 INCLUDES = -Wstrict-prototypes
 
@@ -49,6 +49,7 @@ EXTRA_DIST = \
 	run-pokerserver \
 	run-xwnc \
 	$(wildcard *.png) \
+	poker2D.ico \
 	poker3d-interface/poker3d-interface.vcproj
 
 man_MANS = poker2d.6
@@ -99,20 +100,37 @@ libinterface_la_SOURCES = \
 libinterface_la_LDFLAGS = @GLADE_LIBS@
 libinterface_la_CPPFLAGS = @GLADE_CFLAGS@ 
 
+pyexec_LTLIBRARIES = _pokerinterface.la
+_pokerinterface_la_SOURCES = python.c
+_pokerinterface_la_DEPENDENCIES = libinterface.la
+_pokerinterface_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"\" -D'VERSION_NAME(w)=w'
+
+if PYTHON_2_5
+py2_5exec_LTLIBRARIES = _pokerinterface2_5.la
+_pokerinterface2_5_la_SOURCES = python.c
+_pokerinterface2_5_la_DEPENDENCIES = libinterface.la
+_pokerinterface2_5_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_5_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_5_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_5_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_5\" -D'VERSION_NAME(w)=w\#\#2_5'
+endif
+
+if PYTHON_2_4
+py2_4exec_LTLIBRARIES = _pokerinterface2_4.la
+_pokerinterface2_4_la_SOURCES = python.c
+_pokerinterface2_4_la_DEPENDENCIES = libinterface.la
+_pokerinterface2_4_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_4_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_4_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_4_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_4\" -D'VERSION_NAME(w)=w\#\#2_4'
+endif
+
+if PYTHON_2_3
+py2_3exec_LTLIBRARIES = _pokerinterface2_3.la
+_pokerinterface2_3_la_SOURCES = python.c
+_pokerinterface2_3_la_DEPENDENCIES = libinterface.la
+_pokerinterface2_3_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_3_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_3_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_3_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_3\" -D'VERSION_NAME(w)=w\#\#2_3'
+endif
+
 pokerclient2ddir = ${pyexecdir}/pokerclient2d
-
-pokerclient2d_LTLIBRARIES = \
-	cpokerinterface.la
-cpokerinterface_la_SOURCES = \
-	python.c
-cpokerinterface_la_DEPENDENCIES = \
-	libinterface.la
-cpokerinterface_la_LDFLAGS = \
-	-module -no-undefined @GLIB_LIBS@ @PYTHON_LIBS@ @GLADE_LIBS@ \
-	libinterface.la
-cpokerinterface_la_CPPFLAGS = \
-	@GLADE_CFLAGS@ @PYTHON_CFLAGS@ @GLIB_CFLAGS@
-
 pokerclient2d_PYTHON = \
 	__init__.py \
 	poker2d.py \
@@ -139,33 +157,14 @@ nobase_poker2d_DATA = \
 # cope with a directory hierarchy including a .libs
 #
 all-local:
-	if [ -f .libs/*.so ] ; then \
-		rm -f *.so ; ln -s .libs/*.so . ; \
-	else \
-		rm -f *.dll ; ln -s .libs/*.dll cpokerinterface.dll ; \
-	fi
 	export PYTHONPATH=${top_srcdir} ; \
 	${POKERCONFIGUPGRADE} --verbose=1  --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades ${srcdir}/poker2d.xml.in
 
 install-data-hook:
-	if [ "${MAYBE_PYTHON_VERSION}" ] ; then \
-		cp -a $(DESTDIR)$(gamesdir)/poker2d $(DESTDIR)$(gamesdir)/poker2d${PYTHON_VERSION} ; \
-	fi
 	cp poker2d.xml $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
-
-install-exec-local:
-	mkdir -p ${DESTDIR}/${pyexecdir}
-	mkdir -p ${DESTDIR}/${pokerclient2ddir}
-	if [ -f cpokerinterface.dll ] ; then \
-		cp cpokerinterface.dll ${DESTDIR}/${pokerclient2ddir} ; \
-	fi
-	if [ -f cpokerinterface.so ] ; then \
-		cp cpokerinterface.so ${DESTDIR}/${pokerclient2ddir} ; \
-	fi
 
 uninstall-local:
 	rm -f $(DESTDIR)$(poker2ddir)/poker2d.xml.ref
-	rm -f $(DESTDIR)$(gamesdir)/poker2d${PYTHON_VERSION}
 
 clean-local:
-	rm -f *.so *.dll *.pyc
+	rm -f *.pyc
