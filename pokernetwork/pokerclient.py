@@ -1,3 +1,4 @@
+# -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
@@ -22,14 +23,14 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Precheur <henry@precheur.org>
+#  Henry Precheur <henry@precheur.org> (2004)
 #
 
 import time
-from string import split
+from string import split, lower
 from re import match
 
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 
 from pokereval import PokerEval
 from pokerengine.pokergame import PokerGameClient, PokerPlayer
@@ -252,6 +253,8 @@ class PokerClientFactory(UGAMEClientFactory):
     def isOutbound(self, packet):
         return ( packet.type == PACKET_ERROR or
                  packet.type == PACKET_POKER_HAND_LIST or
+                 packet.type == PACKET_POKER_PLAYER_INFO or
+                 packet.type == PACKET_POKER_USER_INFO or
                  packet.type == PACKET_POKER_HAND_HISTORY or
                  packet.type == PACKET_POKER_PLAYERS_LIST or
                  packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST or
@@ -367,7 +370,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         print self._prefix + string
         
     def setCurrentGameId(self, game_id):
-        if hasattr(self, 'factory') and self.factory.verbose > 2: self.message("setCurrentGameId(%s)" % game_id)
+        if hasattr(self.factory, 'verbose') and self.factory.verbose > 2: self.message("setCurrentGameId(%s)" % game_id)
         self.hold(0)
         self.currentGameId = game_id
 
@@ -382,6 +385,17 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.no_display_packets = self.factory.no_display_packets
         UGAMEClientProtocol.connectionMade(self)
 
+    def packetDeferred(self, what, name):
+        d = defer.Deferred()
+        def fire(client, packet):
+            d.callback((client, packet))
+        self.registerHandler(what, name, fire)
+        def unregister(arg):
+            self.unregisterHandler(what, name, fire)
+            return  arg
+        d.addCallback(unregister)
+        return d
+        
     def registerHandler(self, what, name, meth):
         if name:
             names = [ name ]
@@ -480,7 +494,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return packet
         
     def handleUserInfo(self, packet):
-        self.play_money = packet.play_money
+        print "handleUserInfo: " + str(packet)
+        self.user_info = packet
 
     def handlePersonalInfo(self, packet):
         self.handleUserInfo(packet)
@@ -840,6 +855,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
                             forward_packets.append(PacketPokerSitOut(game_id = game.id,
                                                                      serial = serial))
 
+            elif packet.type == PACKET_POKER_RAKE:
+                game.setRakedAmount(packet.value)
+                
             elif packet.type == PACKET_POKER_WIN:
                 if not self.no_display_packets:
                     for serial in packet.serials:
@@ -989,20 +1007,24 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                                        serial = serial_in_position))
                         if ( self_was_in_position and not self_in_position ):
                             self.unsetPlayerTimeout(game, self.getSerial())
-                            forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
-                                                                               serial = serial_in_position))
+                            if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
+                                forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
+                                                                                   serial = serial_in_position))
                         if ( ( not self_was_in_position or position_is_obsolete ) and self_in_position ):
-                            forward_packets.append(PacketPokerSelfInPosition(game_id = game.id,
-                                                                             serial = serial_in_position))
+                            if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
+                                forward_packets.append(PacketPokerSelfInPosition(game_id = game.id,
+                                                                                 serial = serial_in_position))
                     elif self_was_in_position:
                         self.unsetPlayerTimeout(game, self.getSerial())
-                        forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
-                                                                           serial = self.getSerial()))
+                        if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
+                            forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
+                                                                               serial = self.getSerial()))
 
             else:
                 if serial_in_position > 0:
-                    forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
-                                                                       serial = self.getSerial()))
+                    if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
+                        forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
+                                                                           serial = self.getSerial()))
                     serial_in_position = 0
             position_is_obsolete = False
             self.position_info[game.id] = [ serial_in_position, position_is_obsolete ]
@@ -1212,7 +1234,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                   # waiting ?
                                   # player_timeout ?
                                   # muck_timeout ?
-                                  # custom_money ?
                                   hands_per_hour = game.stats["hands_per_hour"],                                  
                                   average_pot = game.stats["average_pot"],
                                   percent_flop = game.stats["percent_flop"],
@@ -1364,6 +1385,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def protocolInvalid(self, server, client):
         self.schedulePacket(PacketProtocolError(message = "Upgrade the client from\nhttp://mekensleep.org/\nServer version is %s\nClient version is %s" % ( server, client ) ))
         self.publishAllPackets()
+        UGAMEClientProtocol.protocolInvalid(self)
 
     def publishDelay(self, delay):
         if self.factory.verbose > 2: self.message("publishDelay: %f delay" % delay)
@@ -1375,14 +1397,14 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if not self.factory.isOutbound(packet) and hasattr(packet, "game_id") and not self.factory.gameExists(packet.game_id):
             return
         self.publish_packets.append(packet)
-        if self._poll == False:
+        if not self._poll:
             self.publishPacket()
             
     def unschedulePackets(self, predicate):
         self.publish_packets = filter(lambda packet: not predicate(packet), self.publish_packets)
         
     def publishPackets(self):
-        if self._poll == False:
+        if not self._poll:
             return
         
         delay = 0.01
