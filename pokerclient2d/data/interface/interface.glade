@@ -1823,7 +1823,7 @@
 						      </child>
 
 						      <child>
-							<widget class="GtkLabel" id="play_money_available">
+							<widget class="GtkLabel" id="money_one_available">
 							  <property name="visible">True</property>
 							  <property name="label" translatable="yes">0</property>
 							  <property name="use_underline">False</property>
@@ -1918,7 +1918,7 @@
 						      </child>
 
 						      <child>
-							<widget class="GtkLabel" id="play_money_in_game">
+							<widget class="GtkLabel" id="money_one_in_game">
 							  <property name="visible">True</property>
 							  <property name="label" translatable="yes">0</property>
 							  <property name="use_underline">False</property>
@@ -2007,7 +2007,7 @@
 						  </child>
 
 						  <child>
-						    <widget class="GtkLabel" id="play_money_total">
+						    <widget class="GtkLabel" id="money_one_total">
 						      <property name="visible">True</property>
 						      <property name="label" translatable="yes">0</property>
 						      <property name="use_underline">False</property>
@@ -2191,7 +2191,7 @@
 						      </child>
 
 						      <child>
-							<widget class="GtkLabel" id="custom_money_available">
+							<widget class="GtkLabel" id="money_two_available">
 							  <property name="visible">True</property>
 							  <property name="label" translatable="yes">0$</property>
 							  <property name="use_underline">False</property>
@@ -2286,7 +2286,7 @@
 						      </child>
 
 						      <child>
-							<widget class="GtkLabel" id="custom_money_in_game">
+							<widget class="GtkLabel" id="money_two_in_game">
 							  <property name="visible">True</property>
 							  <property name="label" translatable="yes">0$</property>
 							  <property name="use_underline">False</property>
@@ -2375,7 +2375,7 @@
 						  </child>
 
 						  <child>
-						    <widget class="GtkLabel" id="custom_money_total">
+						    <widget class="GtkLabel" id="money_two_total">
 						      <property name="visible">True</property>
 						      <property name="label" translatable="yes">0$</property>
 						      <property name="use_underline">False</property>
@@ -3006,7 +3006,7 @@
 		      <child>
 			<widget class="GtkMenuItem" id="tables_list">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes"> _Tables List</property>
+			  <property name="label" translatable="yes"> T_ables List</property>
 			  <property name="use_underline">True</property>
 			  <signal name="activate" handler="on_tables_list_activate" last_modification_time="Tue, 15 Mar 2005 15:48:07 GMT"/>
 			</widget>
@@ -3036,6 +3036,24 @@
 			  <property name="label" translatable="yes"> _Cashier</property>
 			  <property name="use_underline">True</property>
 			  <signal name="activate" handler="on_cashier_activate" last_modification_time="Tue, 15 Mar 2005 15:47:14 GMT"/>
+			</widget>
+		      </child>
+
+		      <child>
+			<widget class="GtkMenuItem" id="cash_in">
+			  <property name="visible">True</property>
+			  <property name="label" translatable="yes"> Cash I_n</property>
+			  <property name="use_underline">True</property>
+			  <signal name="activate" handler="on_cash_in_activate" last_modification_time="Tue, 11 Jul 2006 09:36:06 GMT"/>
+			</widget>
+		      </child>
+
+		      <child>
+			<widget class="GtkMenuItem" id="cash_out">
+			  <property name="visible">True</property>
+			  <property name="label" translatable="yes"> Cash _Out</property>
+			  <property name="use_underline">True</property>
+			  <signal name="activate" handler="on_cash_out_activate" last_modification_time="Tue, 11 Jul 2006 09:36:06 GMT"/>
 			</widget>
 		      </child>
 
@@ -3146,7 +3164,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1280x800</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x800_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3157,7 +3175,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 12_80x1024</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">True</property>
+				  <property name="active">False</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x1024_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -5292,7 +5310,7 @@
 			  </child>
 
 			  <child>
-			    <widget class="GtkRadioButton" id="play_money_radio">
+			    <widget class="GtkRadioButton" id="money_one_radio">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
 			      <property name="label" translatable="yes">play money</property>
@@ -5303,7 +5321,7 @@
 			      <property name="inconsistent">False</property>
 			      <property name="draw_indicator">True</property>
 			      <property name="group">all_radio</property>
-			      <signal name="clicked" handler="on_play_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:32 GMT"/>
+			      <signal name="clicked" handler="on_money_one_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:32 GMT"/>
 			    </widget>
 			    <packing>
 			      <property name="padding">0</property>
@@ -5313,7 +5331,7 @@
 			  </child>
 
 			  <child>
-			    <widget class="GtkRadioButton" id="custom_money_radio">
+			    <widget class="GtkRadioButton" id="money_two_radio">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
 			      <property name="label" translatable="yes">custom money</property>
@@ -5324,7 +5342,7 @@
 			      <property name="inconsistent">False</property>
 			      <property name="draw_indicator">True</property>
 			      <property name="group">all_radio</property>
-			      <signal name="clicked" handler="on_custom_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
+			      <signal name="clicked" handler="on_money_two_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
 			    </widget>
 			    <packing>
 			      <property name="padding">0</property>
@@ -5979,7 +5997,7 @@
 			  </child>
 
 			  <child>
-			    <widget class="GtkRadioButton" id="play_money_radio">
+			    <widget class="GtkRadioButton" id="money_one_radio">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
 			      <property name="label" translatable="yes">play money</property>
@@ -5990,7 +6008,7 @@
 			      <property name="inconsistent">False</property>
 			      <property name="draw_indicator">True</property>
 			      <property name="group">all_radio</property>
-			      <signal name="clicked" handler="on_play_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:32 GMT"/>
+			      <signal name="clicked" handler="on_money_one_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:32 GMT"/>
 			    </widget>
 			    <packing>
 			      <property name="padding">0</property>
@@ -6000,7 +6018,7 @@
 			  </child>
 
 			  <child>
-			    <widget class="GtkRadioButton" id="custom_money_radio">
+			    <widget class="GtkRadioButton" id="money_two_radio">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
 			      <property name="label" translatable="yes">custom money</property>
@@ -6011,7 +6029,7 @@
 			      <property name="inconsistent">False</property>
 			      <property name="draw_indicator">True</property>
 			      <property name="group">all_radio</property>
-			      <signal name="clicked" handler="on_custom_money_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
+			      <signal name="clicked" handler="on_money_two_radio_clicked" last_modification_time="Wed, 12 Jan 2005 15:44:41 GMT"/>
 			    </widget>
 			    <packing>
 			      <property name="padding">0</property>
