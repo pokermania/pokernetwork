@@ -26,9 +26,12 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import os
+from os.path import exists
 import re
+from traceback import print_exc, print_stack
 import MySQLdb
 from MySQLdb.cursors import DictCursor
+from twisted.enterprise import adbapi
 
 class ExceptionDatabaseTooOld(Exception): pass
 class ExceptionSoftwareTooOld(Exception): pass
@@ -40,21 +43,74 @@ from pokernetwork.version import Version, version
 class PokerDatabase:
 
     def __init__(self, settings):
-        parameters = settings.headerGetProperties("/server/database")[0]
-        self.db = MySQLdb.connect(host = parameters["host"],
-                                  user = parameters["user"],
-                                  passwd = parameters["password"],
-                                  db = parameters["name"])
-        self.parameters = parameters
-        print "Database connection to %s/%s open" % ( parameters["host"], parameters["name"] )        
         self.verbose = settings.headerGetInt("/server/@verbose")
+        self.parameters = settings.headerGetProperties("/server/database")[0]
+        self.mysql_command = settings.headerGet("/server/database/@command")
+        try:
+            self.db = MySQLdb.connect(host = self.parameters["host"],
+                                      user = self.parameters["user"],
+                                      passwd = self.parameters["password"],
+                                      db = self.parameters["name"])
+        except:
+            if self.parameters.has_key('root_user'):
+                if self.verbose: print "connecting as root user '" + self.parameters["root_user"] + "'"
+                db = MySQLdb.connect(host = self.parameters["host"],
+                                     user = self.parameters["root_user"],
+                                     passwd = self.parameters["root_password"])
+                db.query("SHOW DATABASES LIKE '" + self.parameters["name"] + "'")
+                result = db.store_result()
+                #
+                # It may be because the database does not exist
+                #
+                if result.num_rows() <= 0:
+                    if self.verbose: print "creating database " + self.parameters["name"]
+                    if not exists(self.parameters["schema"]):
+                        db.close()
+                        raise UserWarning, "PokerDatabase: schema " + self.parameters["schema"] + " file not found"
+                    del result
+                    db.query("CREATE DATABASE " + self.parameters["name"])
+                    if self.verbose: print "populating database from " + self.parameters["schema"]
+                    cmd = self.mysql_command + " --host='" + self.parameters["host"] + "' --user='" + self.parameters["root_user"] + "' --password='" + self.parameters["root_password"] + "' '" + self.parameters["name"] + "' < " + self.parameters["schema"]
+                    if self.verbose: print cmd
+                    os.system(cmd)
+                db.select_db("mysql")
+                #
+                # Or because the user does not exist
+                #
+                try:
+                    db.query("CREATE USER '" + self.parameters['user'] + "'@'%' IDENTIFIED BY '" + self.parameters['password'] + "'")
+                    db.query("FLUSH PRIVILEGES")
+                    if self.verbose: print "created database user " + self.parameters["user"]
+                except:
+                    if self.verbose > 3: print_exc()
+                    if self.verbose: print "poker user '" + self.parameters["user"] + "' already exists"
+                #
+                # Or because the user does not have permission
+                #
+                db.query("GRANT SELECT, INSERT, UPDATE, DELETE, LOCK TABLES ON `" + self.parameters['name'] + "`.* TO '" + self.parameters['user'] + "'@'%'")
+                db.query("FLUSH PRIVILEGES")
+                db.close()
+                if self.verbose: print "granted privilege to " + self.parameters["user"] + "' for database '" + self.parameters['name'] + "'"
+            else:
+                if self.verbose: print "root_user is not defined in the self.parameters, cannot create schema database"
+            self.db = MySQLdb.connect(host = self.parameters["host"],
+                                      user = self.parameters["user"],
+                                      passwd = self.parameters["password"],
+                                      db = self.parameters["name"])
+
+        if self.verbose: print "PokerDatabase: Database connection to %s/%s open" % ( self.parameters["host"], self.parameters["name"] )
+        self.db.query("SET AUTOCOMMIT = 1")
         self.version = Version(self.getVersionFromDatabase())
         if self.verbose: print "PokerDatabase: database version %s" % self.version
+
+    def close(self):
+        if hasattr(self, 'db'):
+            self.db.close()
 
     def getVersionFromDatabase(self):
         try:
             cursor = self.cursor(DictCursor)
-            cursor.execute("select * from server")
+            cursor.execute("SELECT * FROM server")
             row = cursor.fetchone()
             version = row['version']
             cursor.close()
@@ -85,10 +141,10 @@ class PokerDatabase:
         try:
             self.checkVersion()
         except ExceptionDatabaseTooOld:
-            files = filter(lambda file: ".sql" in file, os.listdir(directory))
+            files = filter(lambda file: ".sql" == file[-4:], os.listdir(directory))
             files = map(lambda file: directory + "/" + file, files)
             parameters = self.parameters
-            mysql = "mysql -h '" + parameters['host'] + "' -u '" + parameters['user'] + "' --password='" + parameters['password'] + "' '" + parameters['name'] + "'"
+            mysql = self.mysql_command + " -h '" + parameters['host'] + "' -u '" + parameters['user'] + "' --password='" + parameters['password'] + "' '" + parameters['name'] + "'"
             for file in self.version.upgradeChain(version, files):
                 print "PokerDatabase: apply " + file
                 if not dry_run:
