@@ -5,10 +5,9 @@ exec_prefix=@exec_prefix@
 pkgsysconfdir=@POKER_NETWORK_PKGSYSCONFDIR@
 pkgdatadir=@POKER_NETWORK_PKGDATADIR@
 pkglibdir=@POKER_NETWORK_PKGLIBDIR@
-pythonpath=@pythonpath@
 
 Name: poker-network
 Description: python poker server and client library
 Version: @PACKAGE_VERSION@
-Requires: poker-engine@MAYBE_PYTHON_VERSION@
+Requires: poker-engine
 Conflicts:
