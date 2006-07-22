@@ -49,8 +49,10 @@ class PokerLockTestCase(unittest.TestCase):
         self.parameters = {'host': 'localhost', 'user': 'root', 'password': ''}
         pokerlock.PokerLock.queue_timeout = 30
         self.locker = pokerlock.PokerLock(self.parameters)
+        self.locker.verbose = 3
         self.locker.start()
         self.locker2 = pokerlock.PokerLock(self.parameters)
+        self.locker2.verbose = 3
         self.locker2.start()
     
     # -----------------------------------------------------------------------------------------------------    
@@ -71,10 +73,12 @@ class PokerLockTestCase(unittest.TestCase):
 
     def test02_wait(self):
         def locker2_succeeded(result):
+            self.locker.release('lock01')
             self.fail("locker2 succeeded with result = %s : should have failed with timeout")
             self.locker2.close()
 
         def locker2_failed(result):
+            self.locker.release('lock01')
             self.assertTrue(isinstance(result, failure.Failure))
             self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
             
@@ -100,7 +104,7 @@ class PokerLockTestCase(unittest.TestCase):
             problem = True
         except Exception, e:
             problem = False
-            self.assertEqual(e[0], pokerlock.PokerLocker.DEAD)
+            self.assertEqual(e[0], pokerlock.PokerLock.DEAD)
         if problem:
             self.fail("acquire on dead PokerLock did not raise exception")
         
@@ -114,7 +118,7 @@ class PokerLockTestCase(unittest.TestCase):
                 problem = True
             except Exception, e:
                 problem = False
-                self.assertEqual(e[0], pokerlock.PokerLocker.RELEASE)
+                self.assertEqual(e[0], pokerlock.PokerLock.RELEASE)
             if problem:
                 self.fail("double release did not raise exception")
         
