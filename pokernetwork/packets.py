@@ -22,7 +22,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Precheur <henry@precheur.org>
+#  Henry Precheur <henry@precheur.org> (2004)
 #
 from struct import pack, unpack, calcsize
 
@@ -58,9 +58,9 @@ class Packet:
     def calcsize(self):
         return Packet.format_size
 
-    def packlist(self, list, format):
-        block = pack(Packet.format_list_length, len(list))
-        for value in list:
+    def packlist(self, l, format):
+        block = pack(Packet.format_list_length, len(l))
+        for value in l:
             block += pack(format, value)
         return block
 
@@ -68,14 +68,14 @@ class Packet:
         (length,) = unpack(Packet.format_list_length, block[:calcsize(Packet.format_list_length)])
         format_size = calcsize(format)
         block = block[calcsize(Packet.format_list_length):]
-        list = []
+        l = []
         for i in xrange(length):
-            list.append(unpack(format, block[:format_size])[0])
+            l.append(unpack(format, block[:format_size])[0])
             block = block[format_size:]
-        return (block, list)
+        return (block, l)
 
-    def calcsizelist(self, list, format):
-        return calcsize(Packet.format_list_length) + len(list) * calcsize(format)
+    def calcsizelist(self, l, format):
+        return calcsize(Packet.format_list_length) + len(l) * calcsize(format)
 
     def packstring(self, string):
         return pack("!H", len(string)) + string
@@ -94,6 +94,9 @@ class Packet:
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        return isinstance(other, Packet) and self.type == other.type
 
 PacketFactory[PACKET_NONE] = Packet
 
@@ -172,7 +175,7 @@ PacketFactory[PACKET_INT] = PacketInt
 PACKET_ERROR = 3
 PacketNames[PACKET_ERROR] = "ERROR"
 
-class PacketError(Packet):
+class PacketError(Packet, Exception):
     """
 
     Packet describing an error
@@ -385,15 +388,15 @@ class PacketList(Packet):
         block = Packet.unpack(self, block)
         (length,) = unpack(PacketList.format, block[:PacketList.format_size])
         block = block[PacketList.format_size:]
-        type = Packet()
+        t = Packet()
         count = 0
         self.packets = []
         while len(block) > 0 and count < length:
-            type.unpack(block)
-            if not PacketFactory.has_key(type.type):
-                print " *ERROR* unknown packet type %d (known types are %s)" % ( type.type, PacketNames)
+            t.unpack(block)
+            if not PacketFactory.has_key(t.type):
+                print " *ERROR* unknown packet type %d (known types are %s)" % ( t.type, PacketNames)
                 return
-            packet = PacketFactory[type.type]()
+            packet = PacketFactory[t.type]()
             block = packet.unpack(block)
             count += 1
             self.packets.append(packet)
