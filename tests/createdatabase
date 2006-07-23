@@ -26,24 +26,12 @@
 
 : ${MYSQL_HOST:=localhost}
 : ${LOCALHOST:=localhost}
-if [ -z "${MYSQL_ROOT_PASSWORD}" ] ; then
-    echo "Preparing the pokernetworktest database, enter the root user password."
-    MYSQL_ROOT_PASSWORD=-p
-fi
 
 ( 
 
 cat <<EOF
 
 USE mysql;
-
-DELETE FROM user WHERE User = 'pokernetworktest' AND Host = '${LOCALHOST}';
-
-DELETE FROM db WHERE User = 'pokernetworktest' AND Host = '${LOCALHOST}';
-
-DELETE FROM tables_priv WHERE User = 'pokernetworktest' AND Host = '${LOCALHOST}';
-
-DELETE FROM columns_priv WHERE User = 'pokernetworktest' AND Host = '${LOCALHOST}';
 
 GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , FILE , INDEX , ALTER , CREATE TEMPORARY TABLES ON * . * TO 'pokernetworktest'@'${LOCALHOST}'
 IDENTIFIED BY 'pokernetwork'
@@ -58,4 +46,4 @@ cat $SCHEMA
 
 echo "$INIT_SQL"
 
-) | mysql -h ${MYSQL_HOST} -u root ${MYSQL_ROOT_PASSWORD}
+) | mysql -h ${MYSQL_HOST} -u root 
