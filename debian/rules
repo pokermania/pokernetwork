@@ -19,9 +19,11 @@ DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-database=%DATABASE% \
 		--with-poker-dbhost=%DBHOST% \
 		--with-poker-dbuser=%USER% \
-		--with-poker-dbuser-password=%PASS%
+		--with-poker-dbuser-password=%PASS% \
+		--with-poker-dbroot=%ROOT_USER% \
+		--with-poker-dbroot-password=%ROOT_PASS%
 
-#DEB_MAKE_CHECK_TARGET = check
+DEB_MAKE_CHECK_TARGET = check
 
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
