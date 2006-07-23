@@ -87,7 +87,7 @@ case "$1" in
 	    . /usr/share/wwwconfig-common/mysql-createuser.sh
 	    . /usr/share/wwwconfig-common/mysql.get
 
-	    sed -e "s/\%PASS\%/$dbpass/" -e "s/\%DBHOST\%/$dbserver/" -e "s/\%USER\%/$dbuser/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
+	    sed  -e "s/\%DBHOST\%/$dbserver/" -e "s/\%PASS\%/$dbpass/" -e "s/\%USER\%/$dbuser/" -e "s/\%ROOT_PASS\%/$dbadmpass/" -e "s/\%ROOT_USER\%/$dbadmin/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
             if diff $tmpfile /etc/poker-network/poker.server.xml > /dev/null
             then
                 rm $tmpfile
