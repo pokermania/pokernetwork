@@ -16,7 +16,6 @@ if pear install --alldeps phpunit2-alpha > /dev/null 2>&1 ; then
         fi
     fi
     echo "http://www.phpunit.de/ installed"
-    /etc/init.d/apache2 reload || /bin/true
 fi
 
 if [ -f /etc/poker-web/apache.conf ]; then
