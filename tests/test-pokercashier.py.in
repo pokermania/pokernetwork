@@ -27,7 +27,7 @@
 #
 
 import sys, os
-sys.path.insert(0, "@srcdir@")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 import libxml2
@@ -48,7 +48,7 @@ from pokernetwork.pokerdatabase import PokerDatabase
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3">
-  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
 </server>

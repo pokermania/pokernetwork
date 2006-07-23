@@ -43,7 +43,7 @@ from pokernetwork import version
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="1">
-  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """

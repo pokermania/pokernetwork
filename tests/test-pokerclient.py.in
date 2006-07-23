@@ -27,7 +27,7 @@
 #
 
 import sys, os
-sys.path.insert(0, "@srcdir@")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 import libxml2
@@ -56,7 +56,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
-  <database name="pokernetworktest" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
@@ -114,7 +114,7 @@ class PokerClientTestCase(unittest.TestCase):
         settings.header = settings.doc.xpathNewContext()
         self.client_factory[index] = pokerclient.PokerClientFactory(settings = settings)
         def setUpProtocol(client):
-            client._poll_frequency = 1
+            client._poll_frequency = 0.1
             return client
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
