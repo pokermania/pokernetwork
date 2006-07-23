@@ -61,4 +61,4 @@ TESTS = coverage-reset \
 export top_srcdir
 
 clean-local:
-	rm -fr .coverage annotated _trial_temp
+	rm -fr .coverage annotated _trial_temp phpunit
