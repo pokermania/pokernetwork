@@ -79,6 +79,7 @@
   <table name="Twelve" variant="omaha8" betting_structure="100-200-no-limit" seats="10" player_timeout="60"
     muck_timeout="5" currency_serial="2" />
   <listen tcp="19480" tcp_ssl="19481" />
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
   <database name="pokernetwork" host="127.0.0.1" user="pokernetwork" password="pokernetwork" 
             root_user="root" root_password="" schema="../database/schema.sql"
             command="mysql"  />
