@@ -30,7 +30,7 @@ COOKIES=$0.cookies
 rm -f ${COOKIES}
 #DUMP_HEADERS='--dump-header /dev/tty'
 touch run-pokerserver.launching
-MYSQL_ROOT_PASSWORD=--password='' sh run-pokerserver &
+sh run-pokerserver &
 pokerserver_pid=$!
 trap "kill $pokerserver_pid ; rm -f $0.{cookies,out}" EXIT INT QUIT
 lockfile run-pokerserver.launching
