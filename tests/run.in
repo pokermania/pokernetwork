@@ -26,6 +26,11 @@
 #
 set -e
 
+if ! mysql -u "root" -h "localhost" -e "show databases" >/dev/null 2>&1 ; then
+    echo 'skipped because mysql -u "root" -e -h "localhost" "show databases" fails"'
+    exit 0
+fi
+
 : ${srcdir:=.}
 export srcdir
 : ${top_srcdir:=..}
