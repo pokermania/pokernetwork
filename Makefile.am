@@ -61,23 +61,26 @@ nobase_dist_pkgdata_DATA = \
 
 pokernetworkdir = ${pyexecdir}/pokernetwork
 pokernetwork_PYTHON = \
+	pokernetwork/__init__.py \
 	pokernetwork/client.py \
+	pokernetwork/currencyclient.py \
 	pokernetwork/dispatch.py \
+	pokernetwork/packets.py \
+	pokernetwork/pokeravatar.py \
+	pokernetwork/pokerbot.py \
+	pokernetwork/pokercashier.py \
+	pokernetwork/pokerchildren.py \
+	pokernetwork/pokerclient.py \
+	pokernetwork/pokerdatabase.py \
+	pokernetwork/pokerlock.py \
+	pokernetwork/pokernetworkconfig.py \
+	pokernetwork/pokerpackets.py \
+	pokernetwork/pokerserver.py \
+	pokernetwork/pokerservice.py \
+	pokernetwork/pokertable.py \
 	pokernetwork/protocol.py \
 	pokernetwork/proxy.py \
 	pokernetwork/server.py \
-	pokernetwork/pokerdatabase.py \
-	pokernetwork/pokerserver.py \
-	pokernetwork/pokeravatar.py \
-	pokernetwork/pokertable.py \
-	pokernetwork/pokerservice.py \
-	pokernetwork/pokerclient.py \
-	pokernetwork/pokerchildren.py \
-	pokernetwork/pokernetworkconfig.py \
-	pokernetwork/__init__.py \
-	pokernetwork/packets.py \
-	pokernetwork/pokerpackets.py \
-	pokernetwork/pokerbot.py \
 	pokernetwork/upgrade.py \
 	pokernetwork/user.py \
 	pokernetwork/version.py
