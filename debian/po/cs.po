@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker-network\n"
 "Report-Msgid-Bugs-To: loic@debian.org\n"
-"POT-Creation-Date: 2005-11-21 15:58+0100\n"
+"POT-Creation-Date: 2006-07-23 16:46+0200\n"
 "PO-Revision-Date: 2005-07-18 18:48+0200\n"
 "Last-Translator: Miroslav Kure <kurem@debian.cz>\n"
 "Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
@@ -25,13 +25,13 @@ msgstr ""
 
 #. Type: multiselect
 #. Description
-#: ../poker-web.templates:5
+#: ../poker-web.templates:1001
 msgid "Which web server would you like to reconfigure automatically?"
 msgstr ""
 
 #. Type: multiselect
 #. Description
-#: ../poker-web.templates:5
+#: ../poker-web.templates:1001
 msgid ""
 "poker-web supports any web server that PHP does, but this automatic "
 "configuration process only supports Apache."
@@ -39,13 +39,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../poker-web.templates:12
+#: ../poker-web.templates:2001
 msgid "Do you want me to restart ${webserver} now?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../poker-web.templates:12
+#: ../poker-web.templates:2001
 msgid ""
 "Remember that in order to activate the new configuration ${webserver} has to "
 "be restarted. You can also restart ${webserver} manually executing /etc/init."
@@ -54,14 +54,14 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../poker-web.templates:20
+#: ../poker-web.templates:3001
 #, fuzzy
 msgid "Hostname or IP address of the poker-network server:"
 msgstr "Zadejte jméno počítače nebo IP adresu výchozího serveru poker-network."
 
 #. Type: string
 #. Description
-#: ../poker-web.templates:20
+#: ../poker-web.templates:3001
 msgid ""
 "The poker-network server for which poker-web provides a web based interface. "
 "It will be queried via its SOAP interface."
@@ -69,13 +69,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../python-poker-network.templates:4
+#: ../python-poker-network.templates:1001
 msgid "Do you want to configure and run the poker-network server ?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../python-poker-network.templates:4
+#: ../python-poker-network.templates:1001
 #, fuzzy
 msgid ""
 "If you want to configure and run a poker-network server, make sure you have "
@@ -90,33 +90,32 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../python-poker-network.templates:12
+#: ../python-poker-network.templates:2001
 #, fuzzy
 msgid "Skipping poker-network server installation"
 msgstr "Přeskakuji serverovou instalaci poker-network."
 
 #. Type: note
 #. Description
-#: ../python-poker-network.templates:12
+#: ../python-poker-network.templates:2001
 #, fuzzy
 msgid ""
 "If you want to run poker-network at a later time, you will need to configure "
-"it by hand or by running dpkg-reconfigure python@PYTHON_VERSION@-poker-"
-"network."
+"it by hand or by running dpkg-reconfigure python-poker-network."
 msgstr ""
 "Budete-li chtít poker-network spustit později, můžete to provést ručně, nebo "
 "příkazem dpkg-reconfigure python2.3-poker-network."
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:20
+#: ../python-poker-network.templates:3001
 #, fuzzy
 msgid "Hostname or IP address of the default poker-network server:"
 msgstr "Zadejte jméno počítače nebo IP adresu výchozího serveru poker-network."
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:20
+#: ../python-poker-network.templates:3001
 msgid ""
 "The clients based on poker-network installed on the same machine will be "
 "able to use this poker-network server host as a default, if needed."
@@ -126,14 +125,14 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:27
+#: ../python-poker-network.templates:4001
 #, fuzzy
 msgid "MySQL server host name:"
 msgstr "Zadejte jméno počítače s MySQL serverem:"
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:27
+#: ../python-poker-network.templates:4001
 #, fuzzy
 msgid ""
 "Please enter the the hostname or the IP address of the machine where the "
@@ -144,14 +143,14 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:34
+#: ../python-poker-network.templates:5001
 #, fuzzy
 msgid "poker-network database name:"
 msgstr "Zadejte jméno databáze pro poker-network:"
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:34
+#: ../python-poker-network.templates:5001
 msgid ""
 "This is the name of the database that poker-network will use. A new database "
 "of that name will be created on the MySQL server."
@@ -161,14 +160,14 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:41
+#: ../python-poker-network.templates:6001
 #, fuzzy
 msgid "MySQL user name dedicated to poker-network:"
 msgstr "Zadejte uživatelské jméno MySQL určené pro poker-network:"
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:41
+#: ../python-poker-network.templates:6001
 msgid ""
 "This is the user name that poker-network will use to access the database. A "
 "MySQL user of that name will be created on the MySQL server, with "
@@ -180,21 +179,17 @@ msgstr ""
 
 #. Type: password
 #. Description
-#: ../python-poker-network.templates:48
+#: ../python-poker-network.templates:7001
 #, fuzzy
 msgid "Password for the poker-network MySQL user:"
 msgstr "Zadejte heslo pro MySQL uživatele poker-network:"
 
 #. Type: password
 #. Description
-#: ../python-poker-network.templates:54
-#, fuzzy
-msgid "Retype the password of the poker-network MySQL user:"
-msgstr "Zopakujte prosím heslo pro MySQL uživatele poker-network:"
-
 #. Type: password
 #. Description
-#: ../python-poker-network.templates:54
+#: ../python-poker-network.templates:7001
+#: ../python-poker-network.templates:8001
 msgid ""
 "This is the password that poker-network will use, along with the MySQL user "
 "name you chose, to access the poker-network database."
@@ -202,16 +197,23 @@ msgstr ""
 "Toto je heslo, které poker-network použije společně se jménem MySQL "
 "uživatele (již jste jej zadali) pro přístup k databázi."
 
+#. Type: password
+#. Description
+#: ../python-poker-network.templates:8001
+#, fuzzy
+msgid "Retype the password of the poker-network MySQL user:"
+msgstr "Zopakujte prosím heslo pro MySQL uživatele poker-network:"
+
 #. Type: text
 #. Description
-#: ../python-poker-network.templates:60
+#: ../python-poker-network.templates:9001
 #, fuzzy
 msgid "Passwords mismatch"
 msgstr "Hesla nesouhlasí."
 
 #. Type: text
 #. Description
-#: ../python-poker-network.templates:60
+#: ../python-poker-network.templates:9001
 msgid ""
 "The poker-network MySQL user passwords you entered do not match. Please try "
 "again."
@@ -221,14 +223,14 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:67
+#: ../python-poker-network.templates:10001
 #, fuzzy
 msgid "MySQL server administrator user name:"
 msgstr "Zadejte uživatelské jméno administrátora MySQL serveru:"
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:67
+#: ../python-poker-network.templates:10001
 msgid ""
 "The MySQL server administrator user will be used only during the "
 "installation process to do the following:"
@@ -237,7 +239,7 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:67
+#: ../python-poker-network.templates:10001
 msgid ""
 " (1) The poker-network database\n"
 " (2) The MySQL user that poker-network will use to access the\n"
@@ -249,20 +251,20 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../python-poker-network.templates:67
+#: ../python-poker-network.templates:10001
 msgid "The 'root' user usually have permission to create databases and users."
 msgstr "Práva pro vytváření databází a uživatelů má obvykle uživatel 'root'."
 
 #. Type: password
 #. Description
-#: ../python-poker-network.templates:79
+#: ../python-poker-network.templates:11001
 #, fuzzy
 msgid "MySQL server administrator password (if any):"
 msgstr "Zadejte heslo administrátora MySQL serveru (pokud používáte):"
 
 #. Type: password
 #. Description
-#: ../python-poker-network.templates:79
+#: ../python-poker-network.templates:11001
 msgid ""
 "This is the password that will be used along with the MySQL server "
 "administrator name."
@@ -272,7 +274,7 @@ msgstr ""
 
 #. Type: password
 #. Description
-#: ../python-poker-network.templates:79
+#: ../python-poker-network.templates:11001
 msgid ""
 "NOTE: This password will not be asked twice, since it's not a new password."
 msgstr ""
