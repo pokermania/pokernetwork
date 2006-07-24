@@ -69,14 +69,17 @@ from twisted.web import xmlrpc, server, http, resource
 class QueryProtocol(http.HTTPClient):
 
     def connectionMade(self):
-        self.sendCommand('POST', self.factory.path)
+	if hasattr(self.factory.path):
+            self.sendCommand('POST', self.factory.path)
+	else if hasattr(self.factory.url):
+            self.sendCommand('POST', self.factory.url)
         self.sendHeader('User-Agent', 'Twisted/XMLRPClib')
         self.sendHeader('Host', self.factory.host)
         if self.factory.cookie:
             self.sendHeader('Cookie', self.factory.cookie)
         self.sendHeader('Content-type', 'text/xml')
         self.sendHeader('Content-length', str(len(self.factory.payload)))
-        if self.factory.user:
+	if hasattr(self.factory.user) and self.factory.user:
             auth = '%s:%s' % (self.factory.user, self.factory.password)
             auth = auth.encode('base64').strip()
             self.sendHeader('Authorization', 'Basic %s' % (auth,))
@@ -132,7 +135,7 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         return d
 
     def query(self, *args):
-        factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', None, None, *args)
+        factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', *args)
         factory.protocol = QueryProtocol
         factory.cookie = self.cookie
         reactor.connectTCP('127.0.0.1', self.port, factory)
