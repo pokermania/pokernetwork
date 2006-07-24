@@ -663,6 +663,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.reset()
                 new_game.registerCallback(self.gameEvent)
                 new_game.level_skin = packet.skin
+                new_game.currency_serial = packet.currency_serial
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
                 self.position_info[new_game.id] = [ 0, 0 ]

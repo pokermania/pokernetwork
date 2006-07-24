@@ -168,7 +168,8 @@ class PokerTable:
                                 muck_timeout = self.muckTimeout,
                                 observers = len(self.observers),
                                 waiting = len(self.waiting),
-                                skin = self.skin)
+                                skin = self.skin,
+                                currency_serial = self.currency_serial)
                 
     def cards2packets(self, game_id, board, pockets, cache):
         packets = []

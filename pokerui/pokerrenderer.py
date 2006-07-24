@@ -1285,7 +1285,9 @@ class PokerRenderer:
             self.showMessage("You can't bring more money\nto the table", None)
             return False
 
-        money_cashier = self.protocol.user_info.money[game.currency_serial][0]
+        money_cashier = 0
+        if self.protocol.user_info.money.has_key(game.currency_serial):
+            money_cashier = self.protocol.user_info.money[game.currency_serial]
         if player.isBuyInPayed():
             if money_cashier <= 0:
                 self.showMessage("You have no money left", None)
