@@ -69,9 +69,9 @@ from twisted.web import xmlrpc, server, http, resource
 class QueryProtocol(http.HTTPClient):
 
     def connectionMade(self):
-	if hasattr(self.factory.path):
+	if hasattr(self.factory, "path"):
             self.sendCommand('POST', self.factory.path)
-	elif hasattr(self.factory.url):
+	elif hasattr(self.factory, "url"):
             self.sendCommand('POST', self.factory.url)
         self.sendHeader('User-Agent', 'Twisted/XMLRPClib')
         self.sendHeader('Host', self.factory.host)
@@ -79,7 +79,7 @@ class QueryProtocol(http.HTTPClient):
             self.sendHeader('Cookie', self.factory.cookie)
         self.sendHeader('Content-type', 'text/xml')
         self.sendHeader('Content-length', str(len(self.factory.payload)))
-	if hasattr(self.factory.user) and self.factory.user:
+	if hasattr(self.factory, "user") and self.factory.user:
             auth = '%s:%s' % (self.factory.user, self.factory.password)
             auth = auth.encode('base64').strip()
             self.sendHeader('Authorization', 'Basic %s' % (auth,))
