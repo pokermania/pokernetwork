@@ -34,8 +34,8 @@ fi
 #
 # User for currency test
 #
-echo "CREATE USER 'currency'@ '%' IDENTIFIED BY '********';" | mysql -u root -h localhost > /dev/null 2>&1
-echo "GRANT ALL PRIVILEGES ON * . * TO 'currency'@ '%' IDENTIFIED BY '********'" | mysql -u root -h localhost > /dev/null 2>&1
+echo "CREATE USER 'currency'@ '%' IDENTIFIED BY '********';" | mysql -u root -h localhost > /dev/null 2>&1 || true
+echo "GRANT ALL PRIVILEGES ON * . * TO 'currency'@ '%' IDENTIFIED BY '********'" | mysql -u root -h localhost > /dev/null 2>&1 || true
 
 : ${srcdir:=.}
 export srcdir
