@@ -69,9 +69,9 @@ from twisted.web import xmlrpc, server, http, resource
 class QueryProtocol(http.HTTPClient):
 
     def connectionMade(self):
-	if hasattr(self.factory, "path"):
+	if hasattr(self.factory, "path"): # twisted-2.4
             self.sendCommand('POST', self.factory.path)
-	elif hasattr(self.factory, "url"):
+	elif hasattr(self.factory, "url"): # twisted-2.2
             self.sendCommand('POST', self.factory.url)
         self.sendHeader('User-Agent', 'Twisted/XMLRPClib')
         self.sendHeader('Host', self.factory.host)
@@ -136,6 +136,8 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
 
     def query(self, *args):
         factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', *args)
+	if hasattr(factory, "path"): # twisted-2.4
+            factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', None, None, *args)
         factory.protocol = QueryProtocol
         factory.cookie = self.cookie
         reactor.connectTCP('127.0.0.1', self.port, factory)
