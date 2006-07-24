@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="300" autodeal="yes" simultaneous="4" verbose="0" chat="yes" poker_network_version="1.0.21">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="300" autodeal="yes" simultaneous="4" verbose="0" chat="yes" poker_network_version="1.0.22">
 
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18"/>
   
@@ -50,10 +50,8 @@
 
   <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383"/>
 
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
-  <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@"
-            root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" schema="@POKER_NETWORK_PKGDATADIR@/schema.sql"
-            command="@MYSQL@" />
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30"/>
+  <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@" root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" schema="@POKER_NETWORK_PKGDATADIR@/schema.sql" command="@MYSQL@"/>
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <users temporary="BOT"/>
 </server>

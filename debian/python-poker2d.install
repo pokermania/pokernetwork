@@ -1,4 +1,5 @@
 debian/tmp/usr/lib/python???/site-packages/pokerclient2d
+debian/tmp/usr/lib/python???/site-packages/_pokerinterface*
 debian/tmp/usr/lib/poker-network
 debian/tmp/usr/share/poker-network/poker2d
 debian/tmp/usr/games/poker2d

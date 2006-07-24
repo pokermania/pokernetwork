@@ -1,6 +1,6 @@
 2006-07-22  Loic Dachary  <loic@dachary.org>
 
-	* Release 1.0.21
+	* Release 1.0.22
 
 	* Makefile.am: Remove python_version file.
 

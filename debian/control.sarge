@@ -12,7 +12,7 @@ Architecture: all
 Suggests: mysql-server
 Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, adduser, python-poker-engine (>= 1.0.16), python2.3-twisted, python2.3-mysqldb, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Depends: ${python:Depends}, adduser, python-poker-engine (>= 1.0.16), python2.3-twisted, python2.3-mysqldb, python-soappy, python2.3-pyopenssl, debconf, wwwconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
