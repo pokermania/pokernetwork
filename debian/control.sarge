@@ -2,14 +2,17 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), automake1.7 | automake1.9, cdbs, pkg-config, debconf, po-debconf, python2.3, python2.3-dev, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, python2.3-pygame, python2.3-glade2, python2.3-twisted, python2.3-poker-engine (>= 1.0.12), libglade2-dev, libtool, perl
-Standards-Version: 3.6.2.1
+Build-Depends: debhelper (>= 4.0.0), python-dev, automake1.9, cdbs, pkg-config, debconf, po-debconf, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, python2.3-glade2, python2.3-twisted, python2.3-pygame, python-poker-engine (>= 1.0.16), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php4-pear, php4-cgi
+XS-Python-Version: >=2.3
+Standards-Version: 3.6.1.1
 
-Package: python2.3-poker-network
+Package: python-poker-network
 Section: python
 Architecture: all
 Suggests: mysql-server
-Depends: adduser, python, python2.3, python2.3-poker-engine (>= 1.0.12), python2.3-twisted, python2.3-mysqldb, python2.3-pyopenssl, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
+Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, adduser, python-poker-engine (>= 1.0.16), python2.3-twisted, python2.3-mysqldb, python-soappy, debconf, wwwconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
@@ -23,38 +26,13 @@ Description: multiplayer poker server and client library
  library decodes the protocol. An abstract user interface library
  provides a framework to implement graphical clients.
 
-Package: python2.3-poker2d
+Package: python-poker2d
 Section: python
 Architecture: any
-Depends: python, python2.3, python2.3-poker-network, python2.3-glade2, python2.3-pygame, , rsync
-Description: GTK poker client to play on a poker-network server
- Play poker with other players connected on a poker-network server
- (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
- or multitables tournaments. poker2d will automaticaly reconnect to
- the table if the connection is lost and allows playing on multiple
- tables simultaneously.
-
-Package: poker-network
-Section: python
-Architecture: all
-Depends: python (>= 2.3), python (<< 2.4), python2.3-poker-network (= ${Source-Version})
-Description: multiplayer poker server and client library
- The server deals the cards and checks the user actions using a poker
- game engine (poker-engine). It can handle all the poker variants
- implemented by the poker game engine (holdem, omaha, omaha high/low,
- stud 7 ...) in ring games, sit and go or multitables tournaments.
- The client library can be used to implement simple clients such as
- robots (<1000 LOC example robot provided) or a graphical user
- interface.
- .
- The poker server has its own TCP/IP based protocol. The client
- library decodes the protocol. An abstract user interface library
- provides a framework to implement graphical clients.
-
-Package: poker2d
-Section: python
-Architecture: all
-Depends: python (>= 2.3), python (<< 2.4), python2.3-poker2d (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), python2.3-glade2, python2.3-pygame, libsdl1.2debian-all, rsync
+XB-Python-Version: ${python:Versions}
+Provides: ${python:Provides}
+Conflicts: python2.3-python-poker2d (<< 1.0.21), python2.4-python-poker2d (<< 1.0.21)
 Description: GTK poker client to play on a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
@@ -65,7 +43,7 @@ Description: GTK poker client to play on a poker-network server
 Package: poker-web
 Section: web
 Architecture: all
-Depends: debconf (>= 0.2.26), php4 | php4-cgi | php5 | php5-cgi, apache2 | httpd
+Depends: debconf (>= 0.2.26), php4 | php4-cgi, apache, php4-pear
 Description: Web interface to a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go

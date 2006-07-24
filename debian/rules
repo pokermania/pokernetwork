@@ -3,6 +3,14 @@
 
 #export DH_VERBOSE=1 
 
+#
+# Help backward compatibility for those distributions that do
+# not distinguish /usr/lib and /usr/share for pkgconfig (i.e.
+# /usr/share/pkgconfig is not part of the path in the standard
+# pkg-config command.
+#
+export PKG_CONFIG_PATH=/usr/share/pkgconfig
+
 include /usr/share/cdbs/1/rules/debhelper.mk
 
 clean:: $(DEB_BUILDDIR)/config.status
