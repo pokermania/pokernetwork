@@ -29,7 +29,7 @@ sys.path.insert(0, "..")
 
 from os import popen
 from os.path import exists
-from string import split
+from string import split, rstrip
 from random import randint
 from traceback import print_exc
 
@@ -84,6 +84,21 @@ class StringGenerator:
             input.close()
         return self.pool.pop()
 
+class NoteGenerator:
+
+    def __init__(self, command):
+        self.command = command
+        print "NoteGenerator " + self.command
+        self.pool = []
+
+    def getNote(self):
+        while len(self.pool) == 0:
+            input = popen(self.command)
+            self.pool = map(lambda string: rstrip(string).split('\t'), input.readlines())
+            input.close()
+            print "NoteGenerator " + str(self.pool)
+        return self.pool.pop()
+
 class PokerBot:
 
     def __init__(self, factory):
@@ -96,7 +111,7 @@ class PokerBot:
             if join_info['tournament']:
                 protocol.sendPacket(PacketPokerTourneySelect(string = join_info["name"]))
             else:
-                protocol.sendPacket(PacketPokerTableSelect(string = "play"))
+                protocol.sendPacket(PacketPokerTableSelect(string = "1"))
             self.state = STATE_SEARCHING
             self.factory.can_disconnect = True
             
@@ -112,6 +127,10 @@ class PokerBot:
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
             self.state = STATE_BATCH
+            
+        elif packet.type == PACKET_SERIAL:
+            protocol.sendPacket(PacketPokerCashIn(serial = packet.serial,
+                                                  note = PokerBotFactory.note_generator.getNote()))
             
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.state = STATE_RUNNING
@@ -348,6 +367,7 @@ class PokerBotProtocol(PokerClientProtocol):
 class PokerBotFactory(PokerClientFactory):
 
     string_generator = None
+    note_generator = None
 
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
@@ -364,6 +384,7 @@ class PokerBotFactory(PokerClientFactory):
         self.reconnect_delay = settings.headerGet("/settings/@reconnect_delay")
         if self.reconnect_delay:
             self.reconnect_delay = tuple(map(lambda x: int(x), split(self.reconnect_delay, ",")))
+        self.currency = settings.headerGetInt("/settings/currency")
         self.verbose = settings.headerGetInt("/settings/@verbose")
         self.bot = None
         self.went_broke = False
@@ -378,6 +399,7 @@ class PokerBotFactory(PokerClientFactory):
         protocol._poll = False
         protocol.registerHandler(True, PACKET_BOOTSTRAP, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_ERROR, pokerbot._handleConnection)
+        protocol.registerHandler('outbound', PACKET_SERIAL, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_BATCH_MODE, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_STREAM_MODE, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_ERROR, pokerbot._handleConnection)
@@ -480,6 +502,7 @@ def makeApplication(argv):
     settings.load(configuration)
 
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
+    PokerBotFactory.note_generator = NoteGenerator(settings.headerGet("/settings/currency"))
 
     ( host, port ) = split(settings.headerGet("/settings/servers"), ":")
     port = int(port)
@@ -488,7 +511,7 @@ def makeApplication(argv):
     bots.verbose = settings.headerGetInt("/settings/@verbose")
     services = service.IServiceCollection(bots)
     services.setSettings(settings)
-    
+
     for table in settings.headerGetProperties("/settings/table"):
         for i in range(0, int(table["count"])):
             table['tournament'] = False
