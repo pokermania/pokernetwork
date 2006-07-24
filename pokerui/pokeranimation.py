@@ -129,16 +129,6 @@ class PokerAnimationPlayer:
     
     def manageSitinSitout(self):
         
-#        print "#####START#######"
-#        for i in self.sitin_stack:
-#            print "#### %s" % i
-#        print "#####END#######"
-
-#        print "manage Sitin"
-#        print "taille de sitin %d"%len(self.sitin_stack)
-#        for i in self.sitin_stack:
-#            print "%s"%i
-#        print "----------------------------------------"
         self.sitin_stack.pop(0) # remove the first element
         if len(self.sitin_stack) > 0:
             if self.sitin_stack[0] == "sitout":
@@ -153,18 +143,8 @@ class PokerAnimationPlayer:
                     self.setAnimationCallback(anim, self.manageSitinSitout)
                 else:
                     self.sitin_stack.pop()
-#        print "taille de sitin %d"%len(self.sitin_stack)
-#        for i in self.sitin_stack:
-#           print "%s"%i
-#        print "########################################"
-        
 
     def sitoutAction(self):
-#        print "########################################"
-#        print "taille de sitin %d"%len(self.sitin_stack)
-#        for i in self.sitin_stack:
-#            print "%s"%i
-#        print "----------------------------------------"
         if len(self.sitin_stack) > 0:
             if self.sitin_stack[-1]!="sitout":
                 if len(self.sitin_stack) > 1:
@@ -176,12 +156,6 @@ class PokerAnimationPlayer:
             self.sitin_stack.append("sitout")
             self.manageSitinSitout()
 
-#        print "taille de sitin %d"%len(self.sitin_stack)
-#        for i in self.sitin_stack:
-#           print "%s"%i
-#        print "########################################"
-
-            
     def lookCards(self, packet):
         pass
     
@@ -529,9 +503,6 @@ class PokerAnimationScheduler:
         tmp = protocol.callbacks['current'][PACKET_POKER_PLAYER_LEAVE]
         tmp.remove(self.playerLeave)
         tmp.insert(0, self.playerLeave)
-#        tmp = protocol.callbacks['current'][PACKET_POKER_TABLE]
-#        tmp.remove(self.table)
-#        tmp.insert(0, self.table)
         tmp = protocol.callbacks['current'][PACKET_POKER_TABLE_DESTROY]
         tmp.remove(self.tableQuit)
         tmp.insert(0, self.tableQuit)
