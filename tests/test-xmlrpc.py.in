@@ -241,5 +241,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-xmlrpc.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/xmlrpc.py' TESTS='coverage-reset test-xmlrpc.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-xmlrpc.py ) ; ( cd ../tests ; make TESTS='test-xmlrpc.py' check )"
 # End:
