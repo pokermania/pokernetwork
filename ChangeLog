@@ -11,6 +11,7 @@
 	* tests/conf/client.xml: money_*
 
 	* tests/test-xmlrpc.py.in: xmlrpc server access
+	fixed twisted 2.2 compat issue
 
 	* tests/test-pokerservice.py.in: Split pokerservice tests and fix path.
 
@@ -29,6 +30,7 @@
 
 	* tests/run.in: Replace vnc with xvfb.
 	Add phpunit tests handling.
+	Add mysql currency test account creation
 
 	* tests/poker.server.xml: mysql command
 
