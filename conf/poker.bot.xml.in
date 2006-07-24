@@ -6,6 +6,7 @@
   <servers>@POKER_SERVER_HOST@:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
+  <currency>@WGET@ wget --quiet -O - 'http://@POKER_SERVER_HOST@/poker-web-test/pages/currency_one.php?command=get_note&amp;value=500000000&amp;count=100'</currency>
   <path>@POKER_ENGINE_PKGSYSCONFDIR@</path> 
 
   <table name="One" count="4"/>
