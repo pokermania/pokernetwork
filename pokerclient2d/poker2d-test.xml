@@ -10,7 +10,7 @@
   <auto_post>no</auto_post>
   <chat max_chars="40" line_length="20"/>
   <servers>localhost:19480 localhost:19481;ssl localhost:19480;ssl localhost:19380 poker:19380 test.mekensleep.org:19380 poker.pok3d.com:80</servers>
-  <web browser="/usr/bin/firefox">http://poker/poker-web/</web>
+  <web browser="/usr/bin/firefox">http://localhost/poker-web-test/pages/</web>
   <sound>yes</sound>
   <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
   <lobby currency_serial="1" type="holdem" sort="name"/>
