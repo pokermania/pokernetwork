@@ -31,6 +31,12 @@ if ! mysql -u "root" -h "localhost" -e "show databases" >/dev/null 2>&1 ; then
     exit 0
 fi
 
+#
+# User for currency test
+#
+echo "CREATE USER 'currency'@ '%' IDENTIFIED BY '********';" | mysql -u root -h localhost > /dev/null 2>&1
+echo "GRANT ALL PRIVILEGES ON * . * TO 'currency'@ '%' IDENTIFIED BY '********'" | mysql -u root -h localhost > /dev/null 2>&1
+
 : ${srcdir:=.}
 export srcdir
 : ${top_srcdir:=..}
