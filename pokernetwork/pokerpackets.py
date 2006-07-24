@@ -2159,7 +2159,7 @@ serial: integer uniquely identifying a player.
     
     format = "!IH"
     format_size = calcsize(format)
-    format_item = "!III"
+    format_item = "!IIII"
     format_item_size = calcsize(format_item)
 
     def __init__(self, *args, **kwargs):
@@ -2168,16 +2168,16 @@ serial: integer uniquely identifying a player.
         self.email = kwargs.get("email", "")
         self.rating = kwargs.get("rating", 1500)
         #
-        # currency 5, bankroll 200, in_game 3
-        # {5: (200, 3), ...} 
+        # currency 5, bankroll 200, in_game 3, points 20
+        # {5: (200, 3, 20), ...} 
         #
         self.money = kwargs.get("money", {})
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
         block = PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.rating, len(self.money)) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
-        for (currency, (bankroll, in_game)) in self.money.iteritems():
-            block += pack(PacketPokerUserInfo.format_item, currency, bankroll, in_game)
+        for (currency, (bankroll, in_game, points)) in self.money.iteritems():
+            block += pack(PacketPokerUserInfo.format_item, currency, bankroll, in_game, points)
         return block
         
     def unpack(self, block):
@@ -2189,9 +2189,9 @@ serial: integer uniquely identifying a player.
         (block, self.email) = self.unpackstring(block)
         self.money = {}
         for i in xrange(length):
-            (currency, bankroll, in_game) = unpack(PacketPokerUserInfo.format_item, block[:PacketPokerUserInfo.format_item_size])
+            (currency, bankroll, in_game, points) = unpack(PacketPokerUserInfo.format_item, block[:PacketPokerUserInfo.format_item_size])
             block = block[PacketPokerUserInfo.format_item_size:]
-            self.money[currency] = (bankroll, in_game)
+            self.money[currency] = (bankroll, in_game, points)
         return block
 
     def calcsize(self):
@@ -2201,8 +2201,8 @@ serial: integer uniquely identifying a player.
     
     def __str__(self):
         string = PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, rating = %d, " % ( self.name, self.password, self.email, self.rating )
-        for (currency, (bankroll, in_game)) in self.money.iteritems():
-            string += str(currency) + "=" + str(bankroll) + "/" + str(in_game) + " "
+        for (currency, (bankroll, in_game, points)) in self.money.iteritems():
+            string += str(currency) + "=" + str(bankroll) + "/" + str(in_game) + "/" + str(points) + " "
         return string
 
 PacketFactory[PACKET_POKER_USER_INFO] = PacketPokerUserInfo
@@ -3864,9 +3864,9 @@ class PacketPokerMoneyTransfert(PacketSerial):
         if kwargs.has_key('note'):
             note = kwargs['note']
             self.url = note[0]
-            self.serial = note[1]
+            self.bserial = int(note[1])
             self.name = note[2]
-            self.value = note[3]
+            self.value = int(note[3])
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
