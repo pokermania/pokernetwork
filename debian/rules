@@ -36,7 +36,7 @@ DEB_MAKE_CHECK_TARGET = check
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
 $(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
-	autoreconf --install
+	AUTOMAKE=automake-1.9 ACLOCAL=aclocal-1.9 autoreconf --install
 	chmod a+x $@
 
 # override in order to add dependency to configure (should be a :: rule instead of a : rule)
