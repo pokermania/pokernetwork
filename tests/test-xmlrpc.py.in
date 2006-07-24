@@ -71,7 +71,7 @@ class QueryProtocol(http.HTTPClient):
     def connectionMade(self):
 	if hasattr(self.factory.path):
             self.sendCommand('POST', self.factory.path)
-	else if hasattr(self.factory.url):
+	elif hasattr(self.factory.url):
             self.sendCommand('POST', self.factory.url)
         self.sendHeader('User-Agent', 'Twisted/XMLRPClib')
         self.sendHeader('Host', self.factory.host)
