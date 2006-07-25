@@ -1536,7 +1536,8 @@ class PokerXML(resource.Resource):
                 return result
         elif type(tree) is DictionaryType:
             for (key, value) in tree.iteritems():
-                tree[key] = self.walk(value, convert)
+                converted_key = convert(str(key))
+                tree[converted_key] = self.walk(value, convert)
             return tree
         elif ( type(tree) is UnicodeType or type(tree) is StringType ):
             return convert(tree)
