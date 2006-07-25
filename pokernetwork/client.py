@@ -79,12 +79,12 @@ class UGAMEClientProtocol(UGAMEProtocol):
         
     def protocolEstablished(self):
         self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
-        for packet in self.bufferized_packets:
-            self.sendPacket(packet)
-        self.bufferized_packets = []
         d = self.factory.established_deferred
         self.factory.established_deferred = None
         d.callback(self)
+        for packet in self.bufferized_packets:
+            self.sendPacket(packet)
+        self.bufferized_packets = []
         self.factory.established_deferred = defer.Deferred()
 
     def protocolInvalid(self, server, client):
