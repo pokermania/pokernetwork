@@ -148,7 +148,7 @@ class PokerServiceTestCase(unittest.TestCase):
         def step2(result):
             self.assertEquals([ (True, PacketAck()), (True, PacketAck()), (True, PacketAck()) ], result)
             info = self.service.getUserInfo(self.user2_serial)
-            self.assertEquals({1: (100, 0), 2: (200, 0)}, info.money)
+            self.assertEquals({1: (100, 0, 0), 2: (200, 0, 0)}, info.money)
 
             #
             # Some money is on a table
@@ -160,14 +160,14 @@ class PokerServiceTestCase(unittest.TestCase):
             self.service.seatPlayer(self.user2_serial, table_serial, 0)
             self.service.buyInPlayer(self.user2_serial, table_serial, currency_serial, buy_in)
             info = self.service.getUserInfo(self.user2_serial)
-            self.assertEquals({1: (50, 50), 2: (200, 0)}, info.money)
+            self.assertEquals({1: (50, 50, 0), 2: (200, 0, 0)}, info.money)
             #
             # The other player only has one currency
             #
             self.service.seatPlayer(self.user1_serial, table_serial, 0)
             self.service.buyInPlayer(self.user1_serial, table_serial, currency_serial, buy_in)
             info = self.service.getUserInfo(self.user1_serial)
-            self.assertEquals({1: (50, 50)}, info.money)
+            self.assertEquals({1: (50, 50, 0)}, info.money)
 
             return result
             
