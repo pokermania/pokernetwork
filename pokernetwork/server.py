@@ -34,13 +34,14 @@ class PokerServerProtocol(UGAMEProtocol):
 
     def __init__(self):
         UGAMEProtocol.__init__(self)
-        self._poll = False
         self.avatar = None
         self._ping_delay = 10
+        self._poll_frequency = 0.01
         self._ping_timer = None
 
     def _handleConnection(self, packet):
         self.ping()
+        self.block()
         self.sendPackets(self.avatar.handlePacket(packet))
 
     def sendPackets(self, packets):
