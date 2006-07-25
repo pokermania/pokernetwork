@@ -590,13 +590,14 @@ function currency_main($use_headers = True, $return_output = False) {
 
     if($command == 'get_note') {
       if(isset($_GET['count'])) $count = $_GET['count'];
+      $autocommit = FALSE;
       if(isset($_GET['autocommit'])) $autocommit = $_GET['autocommit'];
       else $count = 1;
       for($i = 0; $i < $count; $i++) {
         if($autocommit) 
-          $note = $currency->get_note($_GET['value']);
-        else
           $note = $currency->_get_note($_GET['value']);
+        else
+          $note = $currency->get_note($_GET['value']);
         array_push($page, join("\t", $note));
       }
     } elseif($command == 'merge_notes') {
