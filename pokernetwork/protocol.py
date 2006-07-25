@@ -156,7 +156,7 @@ class UGAMEProtocol(protocol.Protocol):
             del self._queues[id]
 
     def canHandlePacket(self, packet):
-        return True
+        return (True, 0)
     
     def _processQueues(self):
         if not self._blocked:
@@ -209,6 +209,9 @@ class UGAMEProtocol(protocol.Protocol):
             for id in to_delete:
                 del self._queues[id]
 
+        self.triggerTimer()
+
+    def triggerTimer(self):
         #
         # Reconsider the situation every 1/100 seconds
         #
@@ -227,6 +230,7 @@ class UGAMEProtocol(protocol.Protocol):
             else:
                 packet.nodelay__ = False
                 self.getOrCreateQueue(id).packets.append(packet)
+            self.triggerTimer()
         
     def handleData(self):
         if self._packet_len >= self._expected_len:
