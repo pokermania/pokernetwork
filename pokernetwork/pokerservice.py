@@ -1491,6 +1491,7 @@ class PokerXML(resource.Resource):
             result_maps = self.packets2maps(result_packets)
 
             result_string = self.maps2result(result_maps)
+            if self.verbose > 2: print "result_string xmlrpc / soap " + str(result_string)
             request.setHeader("Content-length", str(len(result_string)))
             return result_string
 
@@ -1511,6 +1512,20 @@ class PokerXML(resource.Resource):
         maps = []
         for packet in packets:
             attributes = packet.__dict__.copy()
+            #
+            # It is forbiden to set a map key to a numeric (native
+            # numeric or string made of digits). Taint the map entries
+            # that are numeric and hope the client will figure it out.
+            #
+	    for (key, value) in packet.__dict__.iteritems():
+		if type(value) == DictType:
+			for ( subkey, subvalue ) in value.items():
+				del value[subkey]
+				new_subkey = str(subkey)
+				if new_subkey.isdigit():
+					new_subkey = "X" + new_subkey
+				print "replace key " + new_subkey
+				value[new_subkey] = subvalue
             attributes['type'] = packet.__class__.__name__
             maps.append(attributes)
         return maps
