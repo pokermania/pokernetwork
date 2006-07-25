@@ -48,7 +48,7 @@ class PokerServerProtocol(UGAMEProtocol):
         self.unblock()
         if not hasattr(self, 'transport') or not self.transport:
             if self.factory.verbose:
-                print "server: packets " + str(packets) + " thrown away because the protocol has no usuable transport"
+                print "server: packets " + str(packets) + " bufferized because the protocol has no usuable transport"
             self.bufferized_packets.extend(packets)
             return
         while len(packets) > 0:
@@ -86,6 +86,8 @@ class PokerServerProtocol(UGAMEProtocol):
             self._ping_timer.cancel()
         self._ping_timer = None
         if self.avatar:
+            while len(self._queues) > 0:
+                self._processQueues()
             self.factory.destroyAvatar(self.avatar)
         del self.avatar
         UGAMEProtocol.connectionLost(self, reason)
