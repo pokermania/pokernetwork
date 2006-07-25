@@ -44,6 +44,7 @@ class PokerServerProtocol(UGAMEProtocol):
         self.sendPackets(self.avatar.handlePacket(packet))
 
     def sendPackets(self, packets):
+        self.unblock()
         if not hasattr(self, 'transport') or not self.transport:
             #
             # Just trash packets sent when the connection is down
@@ -55,6 +56,11 @@ class PokerServerProtocol(UGAMEProtocol):
             packet = packets.pop(0)
             if isinstance(packet, defer.Deferred):
                 packet.addCallback(self.unshiftPacket, packets)
+                #
+                # No packet may be received while sending the answer to
+                # a previous packet.
+                #
+                self.block()
                 break
             else:
                 self.sendPacket(packet)
