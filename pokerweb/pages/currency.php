@@ -305,12 +305,12 @@ class currency {
   }
 
   function _get_note_transaction($value) {
-    $note = $this->_get_note($value);
+    $note = $this->_get_note($value, 'n');
     $this->_transaction_add($note[2], 'n', $note);
     return $note;
   }
 
-  function _get_note($value) {
+  function _get_note($value, $valid) {
     $value = intval($value);
     $done = FALSE;
     $this->db_check_or_create_table_value($value);
@@ -321,9 +321,9 @@ class currency {
     while(!$done && $retry < 5) {
       $randname = call_user_func($this->get_name, $this);
       if($is_private_table)
-        $sql = "INSERT INTO ${table} (randname) VALUES ('$randname')";
+        $sql = "INSERT INTO ${table} (randname, valid) VALUES ('$randname', '$valid')";
       else
-        $sql = "INSERT INTO ${table} (value, randname) VALUES ($value, '$randname')";
+        $sql = "INSERT INTO ${table} (value, randname, valid) VALUES ($value, '$randname', '$valid')";
       $status = $this->db_query($sql);
       if($status) {
         $done = TRUE;
@@ -478,7 +478,7 @@ class currency {
       $count = intval($value / $note_value); 
       $value %= $note_value;
       for($i = 0; $i < $count; $i++)
-        array_push($notes, $this->_get_note($note_value));
+        array_push($notes, $this->_get_note($note_value, 'n'));
       if($value <= 0) break;
     }
 
@@ -560,7 +560,7 @@ class currency {
     //
     foreach ( $value2count as $value => $count ) {
       for($i = 0; $i < $count; $i++)
-        array_push($new_notes, $this->_get_note($value));
+        array_push($new_notes, $this->_get_note($value, 'n'));
     }
 
     $transaction_id = $new_notes[0][2];
@@ -594,8 +594,8 @@ function currency_main($use_headers = True, $return_output = False) {
       if(isset($_GET['autocommit'])) $autocommit = $_GET['autocommit'];
       else $count = 1;
       for($i = 0; $i < $count; $i++) {
-        if($autocommit) 
-          $note = $currency->_get_note($_GET['value']);
+        if($autocommit == 'yes') 
+          $note = $currency->_get_note($_GET['value'], 'y');
         else
           $note = $currency->get_note($_GET['value']);
         array_push($page, join("\t", $note));
