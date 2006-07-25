@@ -78,6 +78,9 @@ class PokerServerProtocol(UGAMEProtocol):
         self.avatar = self.factory.createAvatar()
         self.avatar.setProtocol(self)
         self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
+        for packet in self.bufferized_packets:
+            self.sendPacket(packet)
+        self.bufferized_packets = []
 
     def connectionLost(self, reason):
         if hasattr(self, "_ping_timer") and self._ping_timer and self._ping_timer.active():
