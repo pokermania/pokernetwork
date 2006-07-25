@@ -36,7 +36,6 @@ class PokerServerProtocol(UGAMEProtocol):
         UGAMEProtocol.__init__(self)
         self.avatar = None
         self._ping_delay = 10
-        self._poll_frequency = 0.01
         self._ping_timer = None
 
     def _handleConnection(self, packet):
