@@ -24,6 +24,9 @@
 // Authors:
 //  Loic Dachary <loic@gnu.org>
 //
+// To get a full nusoap debug trace :    
+//    print "<pre>" . htmlspecialchars($this->client->getDebug()) . "</pre>";
+//
 
 require_once 'lib_filters.php';
 require_once 'nusoap.php';
