@@ -50,12 +50,16 @@ class PokerDatabase:
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
                                       db = self.parameters["name"])
+            if self.verbose > 2: print "MySQL server version is " + self.db.get_server_info()
         except:
             if self.parameters.has_key('root_user'):
                 if self.verbose: print "connecting as root user '" + self.parameters["root_user"] + "'"
                 db = MySQLdb.connect(host = self.parameters["host"],
                                      user = self.parameters["root_user"],
                                      passwd = self.parameters["root_password"])
+                if self.verbose: print "MySQL server version is " + db.get_server_info()
+                if int(db.get_server_info().split('.')[0]) < 5:
+                    raise UserWarning, "PokerDatabase: MySQL server version is " + db.get_server_info() + " but version >= 5.0 is required"
                 db.query("SHOW DATABASES LIKE '" + self.parameters["name"] + "'")
                 result = db.store_result()
                 #
