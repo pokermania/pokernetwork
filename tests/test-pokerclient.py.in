@@ -263,7 +263,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
