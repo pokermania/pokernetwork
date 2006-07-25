@@ -33,10 +33,11 @@ class PokerServerProtocol(UGAMEProtocol):
     """UGAMEServerProtocol"""
 
     def __init__(self):
-        UGAMEProtocol.__init__(self)
-        self.avatar = None
-        self._ping_delay = 10
         self._ping_timer = None
+        self.bufferized_packets = []
+        self.avatar = None
+        UGAMEProtocol.__init__(self)
+        self._ping_delay = 10
 
     def _handleConnection(self, packet):
         self.ping()
@@ -46,11 +47,9 @@ class PokerServerProtocol(UGAMEProtocol):
     def sendPackets(self, packets):
         self.unblock()
         if not hasattr(self, 'transport') or not self.transport:
-            #
-            # Just trash packets sent when the connection is down
-            #
             if self.factory.verbose:
                 print "server: packets " + str(packets) + " thrown away because the protocol has no usuable transport"
+            self.bufferized_packets.extend(packets)
             return
         while len(packets) > 0:
             packet = packets.pop(0)
