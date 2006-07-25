@@ -30,6 +30,7 @@ from twisted.internet import defer, reactor
 class RealCurrencyClient:
 
     def __init__(self):
+        self.verbose = 0
         self.getPage = client.getPage
 
     def request(self, *args, **kwargs):
@@ -62,49 +63,60 @@ class RealCurrencyClient:
         #print "RealCurrencyClient: " + url
         return self.getPage(url)
 
-    def parseResult(self, result):
+    def parseResultNote(self, result):
+	has_error = False
         notes = []
         for line in result.split("\n"):
             note = line.split("\t")
             if len(note) == 4:
                 notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
             else:
-                print "RealCurrencyClient::parseResult ignore line: " + line
+                print "RealCurrencyClient::parseResultNote ignore line: " + line
+		has_error = True
+	if has_error:
+		raise Exception("expected notes got something else")
         return notes
 
     def mergeNotes(self, *args):
         deferred = self.request(url = args[0][0], command = 'merge_notes', notes = args)
-        deferred.addCallback(self.parseResult)
+        deferred.addCallback(self.parseResultNote)
         return deferred
 
     def meltNotes(self, *notes):
         values = sum(map(lambda note: note[3], notes))
         deferred = self.request(url = notes[0][0], command = 'merge_notes', notes = notes, values = [ values ])
-        deferred.addCallback(self.parseResult)
+        deferred.addCallback(self.parseResultNote)
         return deferred
 
     def changeNote(self, note):
         deferred = self.request(url = note[0], command = 'change_note', note = note)
-        deferred.addCallback(self.parseResult)
+        deferred.addCallback(self.parseResultNote)
         return deferred
 
     def getNote(self, url, value):
         deferred = self.request(url = url, command = 'get_note', value = value)
-        deferred.addCallback(self.parseResult)
+        deferred.addCallback(self.parseResultNote)
         return deferred
 
     def checkNote(self, note):
         deferred = self.request(url = note[0], command = 'check_note', note = note)
-        deferred.addCallback(self.parseResult)
+        deferred.addCallback(self.parseResultNote)
         return deferred
 
     def breakNote(self, note, *values):
         deferred = self.request(url = note[0], command = 'break_note', note = note, values = values)
-        deferred.addCallback(self.parseResult)
+        deferred.addCallback(self.parseResultNote)
         return deferred
 
     def commit(self, url, transaction_id):
-        return self.request(url = url, command = 'commit', transaction_id = transaction_id)
+	def validate(result):
+            if self.verbose > 2: print "CurrencyClient::commit " + str(result)
+            if len(result.split("\n")) > 1:
+                raise Exception("expected a single line got " + str(result) + " instead")
+            return result
+        deferred = self.request(url = url, command = 'commit', transaction_id = transaction_id)
+	deferred.addCallback(validate)
+	return deferred
         
 CurrencyClient = RealCurrencyClient
 
