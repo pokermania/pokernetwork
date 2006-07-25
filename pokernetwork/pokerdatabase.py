@@ -87,7 +87,7 @@ class PokerDatabase:
                     db.query("FLUSH PRIVILEGES")
                     if self.verbose: print "created database user " + self.parameters["user"]
                 except:
-                    if self.verbose > 2: print_exc()
+                    if self.verbose > 3: print_exc()
                     if self.verbose: print "poker user '" + self.parameters["user"] + "' already exists"
                 #
                 # Or because the user does not have permission
