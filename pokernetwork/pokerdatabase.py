@@ -77,7 +77,7 @@ class PokerDatabase:
                 # Or because the user does not exist
                 #
                 try:
-                    db.query("CREATE USER '" + self.parameters['user'] + "'@'%' IDENTIFIED BY PASSWORD('" + self.parameters['password'] + "')")
+                    db.query("CREATE USER '" + self.parameters['user'] + "'@'%' IDENTIFIED BY '" + self.parameters['password'] + "'")
                     db.query("FLUSH PRIVILEGES")
                     if self.verbose: print "created database user " + self.parameters["user"]
                 except:
