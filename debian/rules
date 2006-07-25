@@ -20,7 +20,7 @@ include /usr/share/cdbs/1/class/autotools.mk
 
 DEB_MAKE_CLEAN_TARGET = maintainer-clean
 
-DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode
+DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode --disable-static
 
 DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-server-host=%HOST% \
