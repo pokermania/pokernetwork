@@ -272,9 +272,7 @@ cat <<!
 
 If this is your first installation, you need to fill the
 MySQL root user name and password in ${pkgsysconfdir}/poker.server.xml.
-It will be used to create the poker database as follows: 
-
-        mysqladmin -h $POKER_DBHOST -u $POKER_DBROOT create $POKER_DATABASE
+It will be used to create the poker database and user.
 
 If you already have a previous version installed, you must upgrade
 your database using:
