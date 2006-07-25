@@ -29,12 +29,15 @@ require_once 'common.php';
 
 $is_logged_in = $poker->isLoggedin();
 
+if($poker_error) print "<h3>" . $poker_error . "</h3>";
+
 hci_header();
 
 print "<h3>" . _get_string('comment') . "</h3>";
 
 if($is_logged_in) {
   $info = $poker->getPersonalInfo();
+  if($poker_error) print "<h3>" . $poker_error . "</h3>";
   echo '<h2>'.$infos['name'].'</h2>';
   echo '<!-- HOME IS LOGGED IN -->';
   echo '<a href="logout.php">logout</a><br>';
