@@ -749,6 +749,7 @@ class PokerService(service.Service):
         sql = ( "SELECT amount FROM user2money " +
                 "       WHERE user_serial = " + str(serial) + " AND " +
                 "             currency_serial = "  + str(currency_serial) )
+        if self.verbose: print sql
         cursor.execute(sql)
         if cursor.rowcount > 1:
             print " *ERROR* getMoney(%d) expected one row got %d" % ( serial, cursor.rowcount )
@@ -814,7 +815,7 @@ class PokerService(service.Service):
                                      name = row['name'],
                                      email = row['email'],
                                      rating = row['rating'])
-        sql = ( " SELECT user2money.currency_serial,user2money.amount,CAST(SUM(user2table.bet) + SUM(user2table.money) AS UNSIGNED) AS in_game "
+        sql = ( " SELECT user2money.currency_serial,user2money.amount,user2money.points,CAST(SUM(user2table.bet) + SUM(user2table.money) AS UNSIGNED) AS in_game "
                 "        FROM user2money LEFT JOIN (pokertables,user2table) "
                 "        ON (user2table.user_serial = user2money.user_serial  AND "
                 "            user2table.table_serial = pokertables.serial AND  "
@@ -824,7 +825,8 @@ class PokerService(service.Service):
         cursor.execute(sql)
         for row in cursor:
             if not row['in_game']: row['in_game'] = 0
-            packet.money[row['currency_serial']] = ( row['amount'], row['in_game'] )
+            if not row['points']: row['points'] = 0
+            packet.money[row['currency_serial']] = ( row['amount'], row['in_game'], row['points'] )
         if self.verbose > 2: print "getUserInfo: " + str(packet)
         return packet
 
@@ -834,7 +836,8 @@ class PokerService(service.Service):
         packet = PacketPokerPersonalInfo(serial = user_info.serial,
                                          name = user_info.name,
                                          email = user_info.email,
-                                         rating = user_info.rating)
+                                         rating = user_info.rating,
+                                         money = user_info.money)
         cursor = self.db.cursor()
         sql = ( "SELECT addr_street,addr_zip,addr_town,addr_state,addr_country,phone FROM users_private WHERE serial = " + str(serial) )
         cursor.execute(sql)
