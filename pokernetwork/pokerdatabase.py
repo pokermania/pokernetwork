@@ -86,7 +86,7 @@ class PokerDatabase:
                 #
                 # Or because the user does not have permission
                 #
-                db.query("GRANT SELECT, INSERT, UPDATE, DELETE, LOCK TABLES ON `" + self.parameters['name'] + "`.* TO '" + self.parameters['user'] + "'@'%'")
+                db.query("GRANT ALL ON `" + self.parameters['name'] + "`.* TO '" + self.parameters['user'] + "'@'%'")
                 db.query("FLUSH PRIVILEGES")
                 db.close()
                 if self.verbose: print "granted privilege to " + self.parameters["user"] + "' for database '" + self.parameters['name'] + "'"
