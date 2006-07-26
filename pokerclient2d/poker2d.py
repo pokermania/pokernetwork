@@ -35,6 +35,7 @@ sys.path.insert(0, "..")
 #    del gobject.threads_init
 
 import os
+
 from string import split, lower
 from os import makedirs
 from os.path import expanduser, exists
@@ -198,6 +199,7 @@ class PokerClientFactory2D(PokerClientFactory):
         self.interface = PokerInterface2D(self.settings)
         self.skin.interfaceReady(self.interface, self.display)
         self.renderer.interfaceReady(self.interface)
+ 
         if self.settings.headerGet("/settings/@upgrades") == "yes":
             self.checkClientVersion((version.major(), version.medium(), version.minor()))
         else:

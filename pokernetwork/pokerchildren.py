@@ -28,6 +28,7 @@ import os
 if os.name != "posix" :
     import win32api, win32pdhutil, win32con
     from underware import python_mywin32
+    from win32com.shell import shell, shellcon
 
 import sys
 import socket
@@ -89,10 +90,15 @@ class PokerChild(dispatch.EventDispatcher):
         self.spawnInDir = None
         self.ready = False
 
-        if settings.headerGet("/settings/user/@path"):
-            self.poker3drc = expanduser(settings.headerGet("/settings/user/@path"))
+        if os.name != "posix":
+            IDLList = shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA)
+            localData = shell.SHGetPathFromIDList(IDLList) + "\Pok3d"
+            self.poker3drc = localData
         else:
-            self.poker3drc = '.'
+            if settings.headerGet("/settings/user/@path"):
+                self.poker3drc = expanduser(settings.headerGet("/settings/user/@path"))
+            else:
+                self.poker3drc = '.'
 
     def kill(self):
         if not self.ready:
@@ -247,8 +253,16 @@ class PokerRsync(PokerChild, ProcessProtocol):
     def configure(self, rsync):
         settings = self.settings
         source = settings.headerGet("/settings/rsync/@source")
-        target = settings.headerGet("/settings/rsync/@target")
         proxy = settings.headerGet("/settings/rsync/@proxy")
+
+        #target = settings.headerGet("/settings/rsync/@target")
+        try:
+            reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
+        except:
+            reg_key = win32api.RegOpenKey(win32con.HKEY_LOCAL_MACHINE, "Software\Mekensleep\Pok3d")
+
+        target = win32api.RegQueryValue(reg_key, "")
+        win32api.RegCloseKey(reg_key)
 
         if proxy:
             environ['RSYNC_PROXY'] = proxy
