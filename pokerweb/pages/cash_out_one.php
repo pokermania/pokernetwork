@@ -54,7 +54,7 @@ function action() {
     $packet = $poker->cashOut($currency_url, $amount);
     $poker->cashOutCommit($packet['name']);
 
-    $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['serial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
+    $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
     $line = fgets($handle);
     print "$line";
     fclose($handle);

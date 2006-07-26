@@ -50,9 +50,11 @@ function action() {
   global $amount, $net_account, $secure_id;
   global $note;
 
+  $currency_url = dirname(_me()) . "/currency_two.php";
+
   try {
-    $packet = $poker->cashOut($note);
-    $poker->cashOutCommmit($packet['name'])
+    $packet = $poker->cashOut($currency_url, $amount);
+    $poker->cashOutCommit($packet['name']);
 
     $cmd = "/usr/bin/python neteller.py --dry-run --php --option 'currency=USD&net_account=" . $net_account . "&secure_id=" . $secure_id . "&amount=" . $amount . "&merch_transid=1234' out";
     #print "neteller command " . $cmd;
@@ -73,7 +75,7 @@ function action() {
     if(isset($in['error']))
       throw new Exception($in['error']);
 
-    $handle = fopen(dirname(_me()) . "/currency_one.php?command=put_note&serial=" . $packet['serial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
+    $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
     $line = fgets($handle);
     print "$line";
     fclose($handle);
