@@ -1623,7 +1623,7 @@ class PokerRenderer:
 
         elif action == "refresh":
             if value == "money_one" or value == "money_two":
-                self.state_tournaments['currency_serial'] = value
+                self.state_lobby['currency_serial'] = value
             elif value == "all":
                 self.state_lobby['currency_serial'] = ''
             else:
@@ -1640,7 +1640,7 @@ class PokerRenderer:
 
     def queryLobby(self):
         if self.state == LOBBY and self.protocol:
-            currency_serial = self.money.get(self.state_lobby['currency_serial'], '')
+            currency_serial = self.state_lobby['currency_serial']
             criterion = str(currency_serial) + "\t" + self.state_lobby['type']
             self.protocol.sendPacket(PacketPokerTableSelect(string = criterion))
             timer = self.state_lobby.get('timer', None)
@@ -1668,7 +1668,7 @@ class PokerRenderer:
             return
         interface = self.factory.interface
         tables = packet.packets
-        tables_map = dict(zip(map(lambda tournament: tournament.id, tables), tables))
+        tables_map = dict(zip(map(lambda table: table.id, tables), tables))
         self.state_lobby["tables"] = tables_map
         game_id = self.state_lobby["current"]
         if not tables_map.has_key(game_id):
@@ -1679,7 +1679,10 @@ class PokerRenderer:
     def showLobby(self, type = None):
         interface = self.factory.interface
         if interface:
-            type = type or self.state_lobby['type']
+            if type:
+                self.state_lobby['type'] = type
+            else:
+                type = self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['currency_serial'])
 #        self.showBackgroundLobbyCashier()
 #        self.showClockWindow()
@@ -1760,7 +1763,7 @@ class PokerRenderer:
 
     def queryTournaments(self):
         if self.state == TOURNAMENTS:
-            currency_serial = self.money.get(self.state_lobby['currency_serial'], '')
+            currency_serial = self.state_tournaments['currency_serial']
             criterion = str(currency_serial) + "\t" + self.state_tournaments['type']
             self.protocol.sendPacket(PacketPokerTourneySelect(string = criterion))
             timer = self.state_tournaments.get('timer', None)
@@ -1808,7 +1811,10 @@ class PokerRenderer:
     def showTournaments(self, type = None):
         interface = self.factory.interface
         if interface:
-            type = type or self.state_tournaments['type']
+            if type:
+                self.state_tournaments['type'] = type
+            else:
+                type = self.state_tournaments['type']
             interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['currency_serial'])
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "show"))
