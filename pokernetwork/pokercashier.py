@@ -239,11 +239,13 @@ class PokerCashier:
             return None
         ( serial, url, bserial, name, value ) = cursor.fetchone()
         cursor.close()
-        return PacketPokerCashOut(serial = serial,
-                                  url = url,
-                                  bserial = bserial,
-                                  name = name,
-                                  value = value)
+        packet = PacketPokerCashOut(serial = serial,
+                                    url = url,
+                                    bserial = bserial,
+                                    name = name,
+                                    value = value)
+        if self.verbose > 2: print "cashOutCollect " + str(packet)
+        return packet
         
     def cashOutUpdateSafe(self, result, currency_serial, transaction_id):
         if self.verbose > 2: print "cashOutUpdateSafe: " + str(currency_serial) + " " + str(transaction_id)
