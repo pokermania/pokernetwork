@@ -3859,8 +3859,8 @@ class PacketPokerMoneyTransfert(PacketSerial):
     def __init__(self, *args, **kwargs):
         self.url = kwargs.get("url", "UNKNOWN")
         self.name = kwargs.get("name", "UNKNOWN")
-        self.bserial = kwargs.get("bserial", 0)
-        self.value = kwargs.get("value", 0)
+        self.bserial = int(kwargs.get("bserial", 0))
+        self.value = int(kwargs.get("value", 0))
         if kwargs.has_key('note'):
             note = kwargs['note']
             self.url = note[0]
