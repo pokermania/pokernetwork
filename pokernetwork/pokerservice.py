@@ -450,6 +450,7 @@ class PokerService(service.Service):
             ( currency_serial, type ) = criterion
             sit_n_go = type == 'sit_n_go' and 'y' or 'n'
             if currency_serial:
+                currency_serial = int(currency_serial)
                 return filter(lambda tourney: tourney['currency_serial'] == currency_serial and tourney['sit_n_go'] == sit_n_go, tourneys)
             else:
                 return filter(lambda tourney: tourney['sit_n_go'] == sit_n_go, tourneys)
@@ -718,6 +719,7 @@ class PokerService(service.Service):
         elif len(criterion) > 1:
             ( currency_serial, variant ) = criterion
             if currency_serial:
+                currency_serial = int(currency_serial)
                 return filter(lambda table: table.game.variant == variant and table.currency_serial == currency_serial, self.tables)
             else:
                 return filter(lambda table: table.game.variant == variant, self.tables)
