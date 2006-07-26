@@ -255,12 +255,7 @@ class PokerAvatar:
             return
 
         elif packet.type == PACKET_POKER_CASH_OUT_COMMIT:
-            if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.service.cashOutCommit(serial))
-            else:
-                print "attempt to cash out for user %d by user %d" % ( packet.serial, self.getSerial() )
-                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
-                                                        other_type = PACKET_POKER_CASH_OUT_COMMIT))
+            self.sendPacketVerbose(self.service.cashOutCommit(packet))
             return
 
         elif packet.type == PACKET_POKER_SET_ROLE:
