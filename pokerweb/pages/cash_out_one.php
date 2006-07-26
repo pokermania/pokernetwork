@@ -48,11 +48,13 @@ function action() {
   global $amount;
   global $note;
 
-  try {
-    $packet = $poker->cashOut($note);
-    $poker->cashOutCommmit($packet['name'])
+  $currency_url = dirname(_me()) . "/currency_one.php";
 
-    $handle = fopen(dirname(_me()) . "/currency_one.php?command=put_note&serial=" . $packet['serial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
+  try {
+    $packet = $poker->cashOut($currency_url, $amount);
+    $poker->cashOutCommit($packet['name']);
+
+    $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['serial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
     $line = fgets($handle);
     print "$line";
     fclose($handle);
