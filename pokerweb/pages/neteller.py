@@ -403,7 +403,7 @@ neteller.py [--config=<path>] (in|out|check)
         except UserWarning, error:
             if php:
                 string = str(error)
-                print "array('error', '" + string.replace("'", "\\'") + "');";
+                print "array('error' => '" + string.replace("'", "\\'") + "');";
                 sys.exit(0)
             raise
         
