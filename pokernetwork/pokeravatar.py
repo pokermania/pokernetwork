@@ -168,7 +168,7 @@ class PokerAvatar:
     queueDeferred = sendPacket
     
     def sendPacketVerbose(self, packet):
-        if self.service.verbose > 1 and packet.type != PACKET_PING or self.service.verbose > 5:
+        if self.service.verbose > 1 and hasattr(packet, 'type') and packet.type != PACKET_PING or self.service.verbose > 5:
             print "PokerAvatar::sendPacket: %s" % str(packet)
         self.sendPacket(packet)
         
