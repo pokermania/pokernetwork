@@ -209,6 +209,7 @@ class NetellerCashIn(Neteller):
         '1018': 'Merchant account error.',                                                               
         '1019': 'Currency and transaction request not currently supported.',                             
         '1020': 'Supplied net_account invalid while submitting a test transaction.',
+        '1023': 'Transaction not completed. You must sign in to your NETELLER account and accept the Terms and Conditions.',
         }
 
     REQUEST_FIELDS_MANDATORY = (
