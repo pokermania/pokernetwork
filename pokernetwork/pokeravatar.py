@@ -247,7 +247,7 @@ class PokerAvatar:
 
         elif packet.type == PACKET_POKER_CASH_OUT:
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.service.cashOut(serial))
+                self.sendPacketVerbose(self.service.cashOut(packet))
             else:
                 print "attempt to cash out for user %d by user %d" % ( packet.serial, self.getSerial() )
                 self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
