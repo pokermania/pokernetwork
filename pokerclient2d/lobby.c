@@ -22,6 +22,7 @@
  *
  * Authors:
  *  Loic Dachary <loic@gnu.org>
+ *  Cedric Pinson <cpinson@freesheep.org>
  */
 
 #include <time.h>
@@ -497,9 +498,9 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       char* currency_serial = get_string();
       char* button;
       GtkWidget* radio;
-      if(!strcmp(currency_serial, "money_two")) {
+      if(!strcmp(currency_serial, "2")) {
         button = "money_two_radio";
-      } else if(!strcmp(currency_serial, "money_one")) {
+      } else if(!strcmp(currency_serial, "1")) {
         button = "money_one_radio";
       } else {
         button = "all_radio";
