@@ -219,6 +219,35 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         d.addCallback(self.logout)
         return d
 
+    def cashOut(self, arg):
+        d = self.query('use sessions', { 'type': 'PacketPokerCashOut',
+                                         'serial': self.user_serial,
+                                         'url': 'ONE',
+                                         'value': 10 })
+        def validate(packet):
+            self.assertEquals('PacketPokerCashOut', packet[0]['type'])
+            self.assertEquals(3, packet[0]['bserial'])
+            return packet
+        
+        d.addCallback(validate)
+        return d
+    
+    def cashOutCommit(self, arg):
+        d = self.query('use sessions', { 'type': 'PacketPokerCashOutCommit',
+                                         'transaction_id': "%040d" % 1,
+                                         'value': 10 })
+        d.addCallback(self.assertEquals, [{'type': 'PacketAck'}])
+        return d
+    
+    def test05_cashOut(self):
+        self.service.startService()
+        d = self.login()
+        d.addCallback(self.cashIn)
+        d.addCallback(self.cashOut)
+        d.addCallback(self.cashOutCommit)
+        d.addCallback(self.logout)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -226,7 +255,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
