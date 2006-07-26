@@ -135,17 +135,6 @@ class PokerCashier:
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
-
-            packet = self.cashOutCollect(currency_serial, transaction_id)
-            sql = ( "UPDATE user2money SET amount = amount - " + str(packet.value) +
-                    "       WHERE user_serial = " + str(packet.serial) + " AND " +
-                    "             currency_serial = " + str(currency_serial) )
-            if cursor.execute(sql) != 1:
-                message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
-                print "*ERROR* " + message
-                raise PacketError(other_type = PACKET_POKER_CASH_OUT,
-                                  code = PacketPokerCashOut.SAFE,
-                                  message = message)
             cursor.execute("COMMIT")
             cursor.close()
         except:
@@ -284,6 +273,17 @@ class PokerCashier:
                                           code = PacketPokerCashOut.SAFE,
                                           message = message)
 
+
+                packet = self.cashOutCollect(currency_serial, transaction_id)
+                sql = ( "UPDATE user2money SET amount = amount - " + str(packet.value) +
+                        "       WHERE user_serial = " + str(packet.serial) + " AND " +
+                        "             currency_serial = " + str(currency_serial) )
+                if cursor.execute(sql) != 1:
+                    message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
+                    print "*ERROR* " + message
+                    raise PacketError(other_type = PACKET_POKER_CASH_OUT,
+                                      code = PacketPokerCashOut.SAFE,
+                                      message = message)
                 cursor.execute("COMMIT")
                 cursor.close()
             except:
