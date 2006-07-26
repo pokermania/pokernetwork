@@ -196,7 +196,36 @@ class PokerServiceTestCase(unittest.TestCase):
         d = self.cashIn()
         d.addCallback(updatePlayerRake)
         return d
+
+    def cashOutCommit(self, packet):
+        packet = PacketPokerCashOutCommit(transaction_id = packet.name)
+        self.assertEquals(PacketAck(), self.service.cashOutCommit(packet))
+        return 1
+    
+    def cashOut(self, result):
+        self.assertEquals([ (True, PacketAck()), (True, PacketAck()), (True, PacketAck()) ], result)
+        packet = PacketPokerCashOut(serial = self.user1_serial,
+                                    url = "ONE",
+                                    value = 30)
+        def validate(packet):
+            self.assertEquals("ONE", packet.url)
+            self.assertEquals(30, packet.value)
+            return packet
         
+        d = self.service.cashOut(packet)
+        d.addCallback(validate)
+        d.addCallback(self.cashOutCommit)
+        return d
+                
+    # -----------------------------------------------------------------------------------------------------
+    def test07_cashOut(self):
+        self.service.startService()
+
+        self.createUsers()
+        d = self.cashIn()
+        d.addCallback(self.cashOut)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -204,7 +233,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
