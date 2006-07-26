@@ -626,6 +626,9 @@ function currency_main($use_headers = True, $return_output = False) {
       array_push($page, join("\t", $note));
     } elseif($command == 'commit') {
       array_push($page, $currency->commit($_GET['transaction_id']));
+    } elseif($command == 'put_note') {
+      $currency->put_note($_GET['serial'], $_GET['name'], $_GET['value']);
+      array_push($page, "OK");
     } else {
       throw new Exception("unknown command " . $command);
     }
