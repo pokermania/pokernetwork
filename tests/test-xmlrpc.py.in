@@ -255,7 +255,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
