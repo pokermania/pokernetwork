@@ -1623,7 +1623,7 @@ class PokerRenderer:
 
         elif action == "refresh":
             if value == "money_one" or value == "money_two":
-                self.state_lobby['currency_serial'] = self.money['value']['serial']
+                self.state_lobby['currency_serial'] = self.money[value]['serial']
             elif value == "all":
                 self.state_lobby['currency_serial'] = ''
             else:
