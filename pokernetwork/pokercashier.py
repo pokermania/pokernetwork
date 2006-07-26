@@ -136,6 +136,16 @@ class PokerCashier:
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
 
+            packet = self.cashOutCollect(currency_serial, transaction_id)
+            sql = ( "UPDATE user2money SET amount = amount - " + str(packet.value) +
+                    "       WHERE user_serial = " + str(packet.serial) + " AND " +
+                    "             currency_serial = " + str(currency_serial) )
+            if cursor.execute(sql) != 1:
+                message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
+                print "*ERROR* " + message
+                raise PacketError(other_type = PACKET_POKER_CASH_OUT,
+                                  code = PacketPokerCashOut.SAFE,
+                                  message = message)
             cursor.execute("COMMIT")
             cursor.close()
         except:
@@ -261,6 +271,10 @@ class PokerCashier:
                               "             status = 'r' ", 1))
                 sqls.append(( "DELETE FROM counter WHERE currency_serial = %s and status = 'r'" % currency_serial, 1))
                 sqls.append(( "UPDATE counter SET status = 'c' WHERE currency_serial = %s " % currency_serial , 1))
+                packet = self.cashOutCollect(currency_serial, transaction_id)
+                sqls.append(( "UPDATE user2money SET amount = amount - " + str(packet.value) +
+                              "       WHERE user_serial = " + str(packet.serial) + " AND " +
+                              "             currency_serial = " + str(currency_serial), 1))
                 for ( sql, rowcount ) in sqls:
                     if self.verbose > 2: print sql
                     if cursor.execute(sql) < rowcount:
@@ -276,7 +290,6 @@ class PokerCashier:
                 cursor.execute("ROLLBACK")
                 cursor.close()
                 raise
-            packet = self.cashOutCollect(currency_serial, transaction_id)
             if not packet:
                 packet = PacketError(other_type = PACKET_POKER_CASH_OUT,
                                      code = PacketPokerCashOut.EMPTY,
