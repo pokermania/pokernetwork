@@ -30,10 +30,9 @@ require_once 'common.php';
 function validate() {
   global $poker_error;
   global $poker;
-  global $amount, $net_account, $secure_id;
+  global $amount, $net_account;
 
   $amount = _post_string('amount');
-  $secure_id = _post_string('secure_id');
   $net_account = _post_string('net_account');
 
   if($amount == '' or $amount < 0) {
@@ -47,7 +46,7 @@ function validate() {
 function action() {
   global $poker;
   global $poker_error;
-  global $amount, $net_account, $secure_id;
+  global $amount, $net_account;
   global $note;
 
   $currency_url = dirname(_me()) . "/currency_two.php";
@@ -58,7 +57,7 @@ function action() {
 
     $poker_error .= "Pass cashOutCommit ";
 
-    $cmd = "/usr/bin/python neteller.py --dry-run --php --option 'currency=USD&net_account=" . $net_account . "&secure_id=" . $secure_id . "&amount=" . $amount . "&merch_transid=1234' out";
+    $cmd = "/usr/bin/python neteller.py --dry-run --php --option 'currency=USD&net_account=" . $net_account . "&amount=" . $amount . "&merch_transid=1234' out";
     $poker_error .= "neteller command " . $cmd;
     $handle = popen($cmd, "r");
     $buffer = '';
@@ -123,12 +122,6 @@ if($poker_error) {
 				<td><b>Neteller Account:</b></td>
 				<td>
                                      <input type="text" name="net_account" value="<?php echo $net_account; ?>" />
-                               </td>
-			</tr>
-			<tr>
-				<td><b>Secure Id:</b></td>
-				<td>
-                                     <input type="text" name="secure_id" value="<?php echo $secure_id; ?>" />
                                </td>
 			</tr>
 			<tr>
