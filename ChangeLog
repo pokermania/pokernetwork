@@ -1,6 +1,141 @@
-2006-07-25  Loic Dachary  <loic@dachary.org>
+2006-07-27  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.22
+
+2006-07-27  Loic Dachary  <loic@dachary.org>
+
+	* pokerweb/pages/cash_out_one.php: verbose high
+
+	* pokerui/pokerrenderer.py: Import all types.
+	Map money serial to name.
+	Currency serial always stored as an int.
+	currencySerial2Name function to map currency serial to symbolic names with 0 mapped to empty string.
+
+	* pokerclient2d/tournaments.c, pokerclient2d/lobby.c:
+	Use symbolic names.
+
+	* pokerui/pokerrenderer.py:
+	currency_serial converted to string for interface
+
+2006-07-26  Cedric Pinson  <cpinson@allin>
+
+	* pokerclient2d/lobby.c, pokerclient2d/tournaments.c:
+	fix the string to update the toogle button all/money_one/money_two
+
+2006-07-26  Loic Dachary  <loic@dachary.org>
+
+	* pokerui/pokerrenderer.py:
+	currency_serial converted from money_one / money_two
+
+	* pokernetwork/pokercashier.py:
+	subtrac the amount from the player money
+
+	* tests/test-xmlrpc.py.in: cashOut tests
+
+	* pokerweb/pages/cash_out_two.php, pokerweb/pages/cash_out_one.php:
+	bserial is the serial for notes
+
+	* pokernetwork/pokercashier.py: cashOutCollect verbosity improved.
+
+	* pokerclient2d/poker2d-test.xml: alternate web configuration
+
+	* pokernetwork/pokeravatar.py:
+	cash_out_commit may be invoked by anyone.
+
+	* pokernetwork/pokeravatar.py: has attr
+
+	* pokerweb/pages/cash_out_one.php: *** empty log message ***
+
+	* pokerweb/pages/currency.php: put_note command
+
+	* pokernetwork/protocol.py: kill comment
+
+	* pokernetwork/pokerservice.py:
+	It's ok for cashout commit to alter zero rows or exactly one.
+
+	* pokernetwork/pokeravatar.py: packet for cashout instead of serial
+
+	* tests/test-pokerservice.py.in: cashOut tests
+
+	* pokerweb/pages/neteller.py: error formating
+
+2006-07-26  Cedric Pinson  <cpinson@allin>
+
+	* pokerweb/pages/neteller.py: add error message
+
+2006-07-26  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: cast pokermoney fields to proper type
+
+	* pokerui/pokerrenderer.py:
+	handleLobby : used state_tournaments instead of state_lobby
+	queryLobby and queryTouranments : get currency_serial from state
+	showLobby & showTournaments : self.state_{lobby,tournaments} is updated with type
+
+	* pokernetwork/pokerservice.py: cast currency_serial to int
+
+2006-07-25  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/server.py:
+	connectionLost : process all pending packets before destroying the avatar. This is specially important when a client sends PACKET_QUIT because it is handle differently from a lost connection.
+
+	* pokernetwork/pokerdatabase.py: don't traceback user creation <= 3
+
+	* tests/test-pokerclient.py.in: *** empty log message ***
+
+	* pokernetwork/server.py:
+	Initial packets may be bufferized (as in client since it became an async service).
+
+	* pokernetwork/protocol.py: canHandlePacket returns pair.
+	triggerTimer function schedule the unqueuing of the packets.
+	pushPacket invokes triggerTimer for bootstraping purposes
+
+	* pokernetwork/server.py:
+	Handle bufferized_packets when the protocol is established.
+
+	* pokernetwork/client.py:
+	Call the established deferrred before any bufferized packet is invoked.
+
+	* pokerweb/pages/class.poker.php: Debuging tip.
+
+	* pokerweb/pages/index.php: Show errors occuring at login time.
+
+	* pokerweb/pages/currency.php:
+	Autocommit must set valid to 'y' right away.
+
+	* pokernetwork/pokerservice.py: Report XMLRPC result if verbose.
+	Fix numeric map key entries into strings.
+
+	* pokernetwork/currencyclient.py: Differentiate error handling.
+
+	* pokernetwork/server.py:
+	The server polls so that it can handle async packets.
+
+	* pokernetwork/pokerservice.py:
+	convert the key into string : SOAPpy expects array indices to be strings
+
+	* ChangeLog: *** empty log message ***
+
+	* debian/rules: no need to compile static extensions
+
+	* pokernetwork/server.py:
+	Block while handling a packets (incoming packets are batched).
+
+	* pokerweb/pages/currency.php: currency
+
+	* configure.ac: subst mysql
+
+	* debian/python-poker-network.postinst: pycentral doubled call
+
+	* configure.ac: remove confusing SQL order
+
+	* pokernetwork/pokerdatabase.py: check that server version is >= 5
+
+	* pokernetwork/pokerdatabase.py: *** empty log message ***
+
+	* pokernetwork/pokerdatabase.py: verbose
+
+	* pokernetwork/pokerdatabase.py: no password function
 
 	* pokernetwork/pokerdatabase.py:
 	Grand all privileges on a given database so that upgrades are possible.
@@ -37,6 +172,57 @@
 	* tests/test-xmlrpc.py.in: xmlrpc
 
 	* tests/run.in: true
+
+2006-07-24  proppy  <proppy@allin>
+
+	* ChangeLog: updated changelog
+
+	* tests/run.in: fixed mysql
+
+	* tests/test-xmlrpc.py.in: fixed test
+
+	* tests/test-xmlrpc.py.in: fixed hasattr
+
+	* tests/test-xmlrpc.py.in: fixed else if
+
+	* tests/test-xmlrpc.py.in: fixed twisted 2.2 compat issue
+
+2006-07-24  Loic Dachary  <loic@dachary.org>
+
+	* debian/rules: call autotools with proper version
+
+2006-07-24  proppy  <proppy@allin>
+
+	* database/1.0.20-1.0.21.sql: remove old scrip
+
+	* database/1.0.21-1.0.22.sql, Makefile.am: added migration sql
+
+	* Makefile.am: added config
+
+2006-07-24  Loic Dachary  <loic@dachary.org>
+
+	* debian/control.breezy, debian/control.dapper, debian/control.hoary, debian/control.sarge:
+	gtk python dependency
+
+	* debian/control.unstable: gtk
+
+	* debian/changelog, debian/control, debian/control.breezy, debian/control.dapper, debian/control.hoary, debian/control.sarge, debian/control.unstable, debian/python-poker-network.init, debian/python-poker2d.install, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml, pokerclient2d/client.xml, pokerclient2d/poker2d-test.xml, pokerclient2d/poker2d.xml.in, pokerclient2d/pokerinterface2d.py, pokernetwork/__init__.py, tests/conf/poker.client.xml.in, ChangeLog, NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in, conf/poker.server.xml.in:
+	fix packaging bugs
+
+2006-07-24  Cedric Pinson  <cpinson@allin>
+
+	* pokerui/pokeranimation.py: remove old comment
+
+2006-07-24  proppy  <proppy@allin>
+
+	* upgrades/poker.client/1.0.21-1.0.22.xsl: added xsl
+
+2006-07-24  Loic Dachary  <loic@dachary.org>
+
+	* Makefile.am: missing neteller
+
+	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.hoary, debian/control.sarge, debian/control.unstable, debian/rules:
+	fix control files for all distributions
 
 2006-07-24  proppy  <proppy@allin>
 
