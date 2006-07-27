@@ -56,8 +56,10 @@ function action() {
     $packet = $poker->cashOut($currency_url, $amount);
     $poker->cashOutCommit($packet['name']);
 
+    $poker_error .= "Pass cashOutCommit ";
+
     $cmd = "/usr/bin/python neteller.py --dry-run --php --option 'currency=USD&net_account=" . $net_account . "&secure_id=" . $secure_id . "&amount=" . $amount . "&merch_transid=1234' out";
-    #print "neteller command " . $cmd;
+    $poker_error .= "neteller command " . $cmd;
     $handle = popen($cmd, "r");
     $buffer = '';
     if ($handle) {
@@ -66,18 +68,23 @@ function action() {
       }
       pclose($handle);
     }
+    $poker_error .= "buffer " . $buffer;
 
     eval('$in=' . $buffer);
 
-    if(!isset($in) or $in == '')
-      throw new Exception($buffer);
+    if(!isset($in) or $in == '') {
+      $poker_error .= "eval failed";
+      return false;
+    }
 
-    if(isset($in['error']))
-      throw new Exception($in['error']);
+    if(isset($in['error'])) {
+      $poker_error .= "ERROR " . $in['error'] . "\n";
+      return false;
+    }
 
     $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
     $line = fgets($handle);
-    print "$line";
+    $poker_error .= "put_note $line";
     fclose($handle);
 
     return true;
