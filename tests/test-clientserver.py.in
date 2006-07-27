@@ -53,15 +53,15 @@ class FakeAvatar:
         self.protocol = protocol
 
     def handlePacket(self, packet):
+        if packet.type == PACKET_ERROR:
+            raise Exception, "EXCEPTION TEST"
         return []
 
 class FakeFactory(protocol.ServerFactory):
 
-    protocol = pokernetwork.server.PokerServerProtocol
-
     def __init__(self):
         self.service = FakeService()
-        self.verbose = 3
+        self.verbose = 6
 
     def createAvatar(self):
         return FakeAvatar()
@@ -69,10 +69,17 @@ class FakeFactory(protocol.ServerFactory):
     def destroyAvatar(self, avatar):
         pass
     
+    def buildProtocol(self, addr):
+        self.instance = pokernetwork.server.PokerServerProtocol()
+        self.instance.exception = None
+        self.instance.factory = self
+        return self.instance
+
 class ClientServer(unittest.TestCase):
 
     def setUpServer(self):
-        self.p = reactor.listenTCP(0, FakeFactory(),
+        self.server_factory = FakeFactory()
+        self.p = reactor.listenTCP(0, self.server_factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
 
@@ -104,6 +111,8 @@ class ClientServer(unittest.TestCase):
         return arg
         
     def tearDown(self):
+        reactor.iterate()
+        reactor.iterate()
         self.p.stopListening()
         return self.cleanSessions(None)
 
@@ -121,6 +130,21 @@ class ClientServer(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
+        return d
+
+    def exception(self, client):
+        client.sendPacket(PacketError())
+        d = client.connection_lost_deferred
+        def validate(result):
+            server_protocol = self.server_factory.instance
+            self.assertEquals("EXCEPTION TEST", str(server_protocol.exception[1]))
+
+        d.addCallback(validate)
+        return d
+        
+    def test02_exception(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.exception)
         return d
 
 # -----------------------------------------------------------------------------------------------------
