@@ -260,10 +260,6 @@ class PokerCashier:
                               "             status = 'r' ", 1))
                 sqls.append(( "DELETE FROM counter WHERE currency_serial = %s and status = 'r'" % currency_serial, 1))
                 sqls.append(( "UPDATE counter SET status = 'c' WHERE currency_serial = %s " % currency_serial , 1))
-                packet = self.cashOutCollect(currency_serial, transaction_id)
-                sqls.append(( "UPDATE user2money SET amount = amount - " + str(packet.value) +
-                              "       WHERE user_serial = " + str(packet.serial) + " AND " +
-                              "             currency_serial = " + str(currency_serial), 1))
                 for ( sql, rowcount ) in sqls:
                     if self.verbose > 2: print sql
                     if cursor.execute(sql) < rowcount:
