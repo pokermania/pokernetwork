@@ -498,9 +498,9 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       char* currency_serial = get_string();
       char* button;
       GtkWidget* radio;
-      if(!strcmp(currency_serial, "2")) {
+      if(!strcmp(currency_serial, "money_two")) {
         button = "money_two_radio";
-      } else if(!strcmp(currency_serial, "1")) {
+      } else if(!strcmp(currency_serial, "money_one")) {
         button = "money_one_radio";
       } else {
         button = "all_radio";
