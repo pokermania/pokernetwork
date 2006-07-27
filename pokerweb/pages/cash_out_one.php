@@ -56,7 +56,7 @@ function action() {
 
     $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
     $line = fgets($handle);
-    print "$line";
+    $poker_error = "CashOut result : $line";
     fclose($handle);
 
     return true;
