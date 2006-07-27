@@ -42,12 +42,16 @@ EXTRA_DIST = \
 	vncpasswd
 
 TESTS_ENVIRONMENT = ./run
+#
+# Do NOT sort entries because the order matters 
+#
 TESTS = coverage-reset \
 	upgrade \
+	test-clientserver.py \
+	test-currencyclient.py \
 	test-pokernetworkconfig.py \
 	test-pokerdatabase.py \
 	test-pokerservice.py \
-	test-currencyclient.py \
 	test-pokerclient.py \
 	test-pokerlock.py \
 	test-pokercashier.py \

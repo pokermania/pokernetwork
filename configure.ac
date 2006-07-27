@@ -238,19 +238,20 @@ if test x$poker2d = xtrue ; then
 fi
 
 AC_CONFIG_FILES([
-        tests/upgrade
+        database/pokerdatabaseupgrade
         tests/run
-        tests/test-pokernetworkconfig.py
+        tests/test-clientserver.py
+        tests/test-currencyclient.py
+        tests/test-pokercashier.py
+        tests/test-pokerclient.py
         tests/test-pokerdatabase.py
+        tests/test-pokerlock.py
+        tests/test-pokernetworkconfig.py
         tests/test-pokerservice.py
         tests/test-xmlrpc.py
-        tests/test-pokerclient.py
-        tests/test-pokerlock.py
-        tests/test-pokercashier.py
-        tests/test-currencyclient.py
         tests/testcurrency.php
         tests/testicurrency.php
-        database/pokerdatabaseupgrade
+        tests/upgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
         poker-network.pc
