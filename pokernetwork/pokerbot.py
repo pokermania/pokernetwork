@@ -457,7 +457,7 @@ class Bots(service.MultiService):
     def check(self):
         if self.verbose > 1:
             print "%d bots currently active" % len(self.services)
-        if len(self.services) <= 0:
+        if len(self.services) <= 0 and reactor.running:
             reactor.callLater(0, reactor.stop)
 
 def Application(name, uid=None, gid=None):
