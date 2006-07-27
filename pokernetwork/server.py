@@ -22,9 +22,10 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Precheur <henry@precheur.org>
+#  Henry Precheur <henry@precheur.org> (2003)
 #
-# 
+#
+import sys
 from twisted.internet import reactor, protocol, defer
 
 from pokernetwork.protocol import UGAMEProtocol
@@ -40,9 +41,23 @@ class PokerServerProtocol(UGAMEProtocol):
         self._ping_delay = 10
 
     def _handleConnection(self, packet):
-        self.ping()
-        self.block()
-        self.sendPackets(self.avatar.handlePacket(packet))
+        try:
+            self.ping()
+            self.block()
+            self.sendPackets(self.avatar.handlePacket(packet))
+        except:
+            self.unblock()
+            if hasattr(self, 'exception'):
+                #
+                # For test purposes : if the instance has an exception member
+                # store the exception instead of raising it and lose the connection.
+                # It's not trivial to catch / control the twisted behavior when
+                # a protocol exits because of a stack trace. 
+                #
+                self.exception = sys.exc_info()
+                self.transport.loseConnection()
+            else:
+                raise
 
     def sendPackets(self, packets):
         self.unblock()
@@ -90,6 +105,7 @@ class PokerServerProtocol(UGAMEProtocol):
                 self._processQueues()
             self.factory.destroyAvatar(self.avatar)
         del self.avatar
+        self.ignoreIncomingData()
         UGAMEProtocol.connectionLost(self, reason)
 
     def protocolInvalid(self, client, server):
