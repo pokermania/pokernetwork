@@ -29,6 +29,7 @@ from string import join
 from time import sleep
 from formatter import DumbWriter
 from StringIO import StringIO
+from types import *
 from random import choice
 
 from pokereval import PokerEval
@@ -343,6 +344,7 @@ class PokerRenderer:
         self.replayGameId = None
         self.money = { 'default': { 'unit': 'C', 'cent': 'cts' } }
         money_serial = 1
+        self.money_serial2name = {}
         for key in ( 'money_one', 'money_two' ):
             self.money[key] = factory.config.headerGetProperties("/sequence/" + key)
             if not self.money[key]:
@@ -352,6 +354,7 @@ class PokerRenderer:
             else:
                 self.money[key] = self.money[key][0]
                 self.money[key]['serial'] = int(self.money[key]['serial'])
+            self.money_serial2name[self.money[key]['serial']] = key
         self.state = IDLE
 
         self.state_buy_in = ()
@@ -366,6 +369,7 @@ class PokerRenderer:
             self.state_tournaments = self.state_tournaments[0]
         self.state_tournaments['cashier_label'] = factory.config.headerGet("/sequence/cashier/@enter")
         self.state_tournaments["current"] = 0
+        self.state_tournaments['currency_serial'] = int(self.state_tournaments['currency_serial'])
 
         self.state_lobby = factory.settings.headerGetProperties("/settings/lobby")
         if not self.state_lobby:
@@ -374,6 +378,7 @@ class PokerRenderer:
             self.state_lobby = self.state_lobby[0]
         self.state_lobby['cashier_label'] = factory.config.headerGet("/sequence/cashier/@enter")
         self.state_lobby["current"] = 0
+        self.state_lobby['currency_serial'] = int(self.state_lobby['currency_serial'])
 
         self.state_joining_my = 0
 
@@ -1625,7 +1630,7 @@ class PokerRenderer:
             if value == "money_one" or value == "money_two":
                 self.state_lobby['currency_serial'] = self.money[value]['serial']
             elif value == "all":
-                self.state_lobby['currency_serial'] = ''
+                self.state_lobby['currency_serial'] = 0
             else:
                 self.state_lobby['type'] = value
             self.queryLobby()
@@ -1640,7 +1645,7 @@ class PokerRenderer:
 
     def queryLobby(self):
         if self.state == LOBBY and self.protocol:
-            currency_serial = self.state_lobby['currency_serial']
+            currency_serial = self.state_lobby['currency_serial'] or ''
             criterion = str(currency_serial) + "\t" + self.state_lobby['type']
             self.protocol.sendPacket(PacketPokerTableSelect(string = criterion))
             timer = self.state_lobby.get('timer', None)
@@ -1650,7 +1655,7 @@ class PokerRenderer:
     def saveLobbyState(self):
         settings = self.factory.settings
         state = self.state_lobby
-        settings.headerSet("/settings/lobby/@currency_serial", state['currency_serial'])
+        settings.headerSet("/settings/lobby/@currency_serial", str(state['currency_serial']))
         settings.headerSet("/settings/lobby/@type", state['type'])
         settings.headerSet("/settings/lobby/@sort", state['sort'])
         settings.save()
@@ -1676,6 +1681,18 @@ class PokerRenderer:
         if interface:
             interface.updateLobby(packet.players, packet.tables, game_id, self.factory.translateFile2Name, self.factory.getGameIds(), packet.packets)
 
+    def currencySerial2Name(self, currency_serial):
+        if self.verbose > 2:
+            print "currencySerial2Name " + str(currency_serial)
+        if type(currency_serial) is StringType:
+            raise UserWarning
+        if currency_serial == 0:
+            return ''
+        elif self.money_serial2name.has_key(currency_serial):
+            return self.money_serial2name[currency_serial]
+        else:
+            raise UserWarning, "currencySerial2Name unknown serial " + str(currency_serial)
+        
     def showLobby(self, type = None):
         interface = self.factory.interface
         if interface:
@@ -1683,7 +1700,7 @@ class PokerRenderer:
                 self.state_lobby['type'] = type
             else:
                 type = self.state_lobby['type']
-            interface.showLobby(self.state_lobby['cashier_label'], type, str(self.state_lobby['currency_serial']))
+            interface.showLobby(self.state_lobby['cashier_label'], type, self.currencySerial2Name(self.state_lobby['currency_serial']))
 #        self.showBackgroundLobbyCashier()
 #        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
@@ -1749,7 +1766,7 @@ class PokerRenderer:
             if value == "money_one" or value == "money_two":
                 self.state_tournaments['currency_serial'] = self.money[value]['serial']
             elif value == "all":
-                self.state_tournaments['currency_serial'] = ''
+                self.state_tournaments['currency_serial'] = 0
             else:
                 self.state_tournaments['type'] = value
             self.queryTournaments()
@@ -1763,7 +1780,7 @@ class PokerRenderer:
 
     def queryTournaments(self):
         if self.state == TOURNAMENTS:
-            currency_serial = self.state_tournaments['currency_serial']
+            currency_serial = self.state_tournaments['currency_serial'] or ''
             criterion = str(currency_serial) + "\t" + self.state_tournaments['type']
             self.protocol.sendPacket(PacketPokerTourneySelect(string = criterion))
             timer = self.state_tournaments.get('timer', None)
@@ -1773,7 +1790,7 @@ class PokerRenderer:
     def saveTournamentsState(self):
         settings = self.factory.settings
         state = self.state_tournaments
-        settings.headerSet("/settings/tournaments/@currency_serial", state['currency_serial'])
+        settings.headerSet("/settings/tournaments/@currency_serial", str(state['currency_serial']))
         settings.headerSet("/settings/tournaments/@type", state['type'])
         settings.headerSet("/settings/tournaments/@sort", state['sort'])
         settings.save()
@@ -1815,7 +1832,7 @@ class PokerRenderer:
                 self.state_tournaments['type'] = type
             else:
                 type = self.state_tournaments['type']
-            interface.showTournaments(self.state_tournaments['cashier_label'], type, str(self.state_tournaments['currency_serial']))
+            interface.showTournaments(self.state_tournaments['cashier_label'], type, self.currencySerial2Name(self.state_tournaments['currency_serial']))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "show"))
