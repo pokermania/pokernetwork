@@ -1,0 +1,147 @@
+#!@PYTHON@
+# -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+import sys, os
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+from twisted.internet import protocol, reactor
+from twisted.application import service
+
+import twisted.internet.base
+twisted.internet.base.DelayedCall.debug = True
+
+import pokernetwork.server
+import pokernetwork.client
+import pokernetwork.protocol
+from pokernetwork.packets import *
+
+class FakeService(service.Service):
+    def __init__(self):
+        self._ping_delay = 0.1
+
+class FakeAvatar:
+    def __init__(self):
+        pass
+
+    def setProtocol(self, protocol):
+        self.protocol = protocol
+
+    def handlePacket(self, packet):
+        return []
+
+class FakeFactory(protocol.ServerFactory):
+
+    protocol = pokernetwork.server.PokerServerProtocol
+
+    def __init__(self):
+        self.service = FakeService()
+        self.verbose = 3
+
+    def createAvatar(self):
+        return FakeAvatar()
+
+    def destroyAvatar(self, avatar):
+        pass
+    
+class ClientServer(unittest.TestCase):
+
+    def setUpServer(self):
+        self.p = reactor.listenTCP(0, FakeFactory(),
+                                   interface="127.0.0.1")
+        self.port = self.p.getHost().port
+
+    def setUpClient(self, index):
+        self.client_factory[index] = pokernetwork.client.UGAMEClientFactory()
+        def setUpProtocol(client):
+            client._poll_frequency = 0.1
+            return client
+        d = self.client_factory[index].established_deferred
+        d.addCallback(setUpProtocol)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[index])
+
+    def setUp(self):
+        self.setUpServer()
+        self.client_factory = [None, None]
+        return self.setUpClient(0)
+
+    def cleanSessions(self, arg):
+        #
+        # twisted Session code has leftovers : disable the hanging delayed call warnings
+        # of trial by nuking all what's left.
+        #
+        pending = reactor.getDelayedCalls()
+        if pending:
+            for p in pending:
+                if p.active():
+#                    print "still pending:" + str(p)
+                    p.cancel()
+        return arg
+        
+    def tearDown(self):
+        self.p.stopListening()
+        return self.cleanSessions(None)
+
+    def quit(self, args):
+        client = args[0]
+        client.sendPacket(PacketQuit())
+        client.transport.loseConnection()
+        return client.connection_lost_deferred
+        
+    def ping(self, client):
+        client.sendPacket(PacketPing())
+        return (client,)
+
+    def test01_ping(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.ping)
+        d.addCallback(self.quit)
+        return d
+
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test02"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(ClientServer))
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-clientserver.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/server.py ../pokernetwork/client.py ../pokernetwork/protocol.py' TESTS='coverage-reset test-clientserver.py coverage-report' check )"
+# End:
