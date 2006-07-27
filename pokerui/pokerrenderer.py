@@ -1683,7 +1683,7 @@ class PokerRenderer:
                 self.state_lobby['type'] = type
             else:
                 type = self.state_lobby['type']
-            interface.showLobby(self.state_lobby['cashier_label'], type, self.state_lobby['currency_serial'])
+            interface.showLobby(self.state_lobby['cashier_label'], type, str(self.state_lobby['currency_serial']))
 #        self.showBackgroundLobbyCashier()
 #        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
@@ -1815,7 +1815,7 @@ class PokerRenderer:
                 self.state_tournaments['type'] = type
             else:
                 type = self.state_tournaments['type']
-            interface.showTournaments(self.state_tournaments['cashier_label'], type, self.state_tournaments['currency_serial'])
+            interface.showTournaments(self.state_tournaments['cashier_label'], type, str(self.state_tournaments['currency_serial']))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournament_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "tournaments_cashier_button_window", command = "show"))
