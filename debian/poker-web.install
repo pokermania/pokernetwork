@@ -1,2 +1,3 @@
 pokerweb/pages/*.php pokerweb/pages/*.ref pokerweb/pages/*.txt pokerweb/pages/.htaccess usr/share/poker-web
 pokerweb/conf/apache.conf pokerweb/conf/htaccess pokerweb/conf/constants.php etc/poker-web
+pokerweb/pages/neteller.py pokerweb/pages/neteller.cfg usr/share/poker-web
