@@ -4,6 +4,35 @@
 
 2006-07-27  Loic Dachary  <loic@dachary.org>
 
+	* pokerweb/pages/cash_out_two.php: Don't use secure id.
+
+	* debian/poker-web.install: neteller scripts example
+
+	* debian/control.dapper, debian/control.hoary, debian/control.sarge, debian/control.unstable, debian/control.breezy, debian/control:
+	add php-mysql depend on poker-web
+
+	* conf/poker.bot.xml.in, examples/poker.bot.xml: bot need autocommit
+
+	* pokerweb/pages/cash_out_two.php: Cashout error report fixes.
+
+	* pokernetwork/server.py:
+	Wrap packet handling in try / except. unblock() if exception to avoid infinite loop. Facility to avoid exception in test conditions.
+
+	* pokernetwork/protocol.py:
+	Connection lost message only displayed in very high verbosity mode.
+
+	* pokernetwork/pokercashier.py:
+	Remove extra cashout that breaks it all.
+
+	* configure.ac, tests/Makefile.am: test-clientserver.py
+
+	* tests/test-clientserver.py.in:
+	Test script dedicated to client / server and protocol.
+
+	* tests/test-clientserver.py.in, ChangeLog: *** empty log message ***
+
+2006-07-27  Loic Dachary  <loic@dachary.org>
+
 	* pokerweb/pages/cash_out_one.php: verbose high
 
 	* pokerui/pokerrenderer.py: Import all types.
