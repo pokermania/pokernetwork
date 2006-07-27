@@ -84,6 +84,8 @@ class UGAMEProtocol(protocol.Protocol):
 
     def connectionLost(self, reason):
         self.established = 0
+        if self.factory and self.factory.verbose > 5:
+            print "connectionLost: reason = " + str(reason)
         if not self._protocol_ok:
             if self.factory and self.factory.verbose > 1:
                 print "connectionLost: reason = " + str(reason)
