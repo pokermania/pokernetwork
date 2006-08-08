@@ -26,7 +26,7 @@
 import sys
 import os
 if os.name != "posix" :
-    import win32api, win32pdhutil, win32con
+    import win32api, win32pdhutil, win32con, win32process
     from underware import python_mywin32
     from win32com.shell import shell, shellcon
 
@@ -282,7 +282,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
             print "PokerRsync::spawn: " + join(self.rsync)
         dir = self.settings.headerGet("/settings/rsync/@dir")
         if os.name != "posix":
-            self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir)
+            self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir, win32flags = win32process.DETACHED_PROCESS)
         else:
             childFDs = { 1: 'r', 2: 'r' }
             self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir,
