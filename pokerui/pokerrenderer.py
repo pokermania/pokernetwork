@@ -1279,7 +1279,7 @@ class PokerRenderer:
                 interface.sitActionsAuto("yes")
             else:
                 interface.sitActionsAuto("no")
-                
+
     def requestBuyIn(self, game):
         player = game.getPlayer(self.protocol.getSerial())
 
@@ -1292,20 +1292,22 @@ class PokerRenderer:
 
         money_cashier = 0
         if self.protocol.user_info.money.has_key(game.currency_serial):
-            money_cashier = self.protocol.user_info.money[game.currency_serial]
+            money_cashier = self.protocol.user_info.money[game.currency_serial][0]
+
         if player.isBuyInPayed():
             if money_cashier <= 0:
                 self.showMessage("You have no money left", None)
                 self.sitActionsUpdate()
                 return False
 
-            legend = "How much do you want to rebuy ?"
+            legend = "How much do you want to rebuy?"
         else:
+
             if min_amount > money_cashier:
                 self.showMessage("You don't have enough money to\nparticipate in the game", None)
                 return False
 
-            legend = "Which amount do you want to bring at the table ?"
+            legend = "Which amount do you want to bring at the table?"
         
         interface = self.factory.interface
 
