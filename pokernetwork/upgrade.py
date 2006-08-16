@@ -73,6 +73,7 @@ class CheckClientVersion(PokerRsync):
                 print "compare %s against %s" % ( str(result), str(self.version))
             version = "%03d%03d%03d" % result
             if version > self.version_compare:
+		self.version_compare = version
                 self.version = result
                 self.need_upgrade = True
 
