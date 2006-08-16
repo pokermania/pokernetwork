@@ -255,14 +255,15 @@ class PokerRsync(PokerChild, ProcessProtocol):
         source = settings.headerGet("/settings/rsync/@source")
         proxy = settings.headerGet("/settings/rsync/@proxy")
 
-        #target = settings.headerGet("/settings/rsync/@target")
-        try:
-            reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
-        except:
-            reg_key = win32api.RegOpenKey(win32con.HKEY_LOCAL_MACHINE, "Software\Mekensleep\Pok3d")
+        if os.name != "posix" :
+            #target = settings.headerGet("/settings/rsync/@target")
+            try:
+                reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
+            except:
+                reg_key = win32api.RegOpenKey(win32con.HKEY_LOCAL_MACHINE, "Software\Mekensleep\Pok3d")
 
-        target = win32api.RegQueryValue(reg_key, "")
-        win32api.RegCloseKey(reg_key)
+            target = win32api.RegQueryValue(reg_key, "")
+            win32api.RegCloseKey(reg_key)
 
         if proxy:
             environ['RSYNC_PROXY'] = proxy

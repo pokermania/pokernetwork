@@ -2,6 +2,18 @@
 
 	* Release 1.0.22
 
+	* pokerweb/pages/currency.php: all if with {} to cope with xdebug bug
+
+	* pokerweb/pages/currency.php:_check_note: use rowid instead of count(*) otherwise mysql_affected_rows always returns true.
+
+	* examples/poker.bot.xml: More bots.
+
+	* pokerweb/pages/cash_in_two.php: Fix error handling.
+
+	* pokernetwork/pokerbot.py: dont stop reactor if it's not running.
+
+	* pokerweb/pages/currency.php: count=1 by default
+
 2006-07-27  Johan Euphrosine  <johan@mekensleep.com>
 
 	* pokernetwork/upgrade.py (CheckClientVersion.line): 

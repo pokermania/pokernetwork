@@ -55,8 +55,7 @@ if(!isset($GLOBALS['currency_url'])) {
 
     $GLOBALS['currency_url'] .= $_SERVER['SERVER_NAME'];
 
-    if(!(isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '443') &&
-       !(!isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '80')) {
+    if(!(isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '443') && !(!isset($_SERVER["HTTPS"]) && $_SERVER['SERVER_PORT'] == '80')) {
       $GLOBALS['currency_url'] .= ":" . $_SERVER['SERVER_PORT'];
     }
 
@@ -87,6 +86,8 @@ class currency {
   const E_RANDOM		=	7;
   const E_COMMIT		=	8;
   const E_TRANSACTION		=	9;
+  const E_CHECK_NOTE_FAILED	=      10;
+  const E_MYSQL			=      11;
 
   const MYSQL_ER_DUP_KEY	=	1022;
   const MYSQL_ER_DUP_ENTRY	=	1062;
@@ -142,8 +143,9 @@ class currency {
   function get_randname() {
     if($this->random_fd) {
       $number = fread($this->random_fd, self::key_size);
-      if($number == FALSE)
+      if($number == FALSE) {
         throw new Exception("unable to read " . self::key_size . " from " . $GLOBALS['currency_random']);
+      }
       return bin2hex($number);
     } else {
       return sha1(uniqid(rand(), true));
@@ -192,10 +194,12 @@ class currency {
   function db_check_selected() {
     if($this->db_selected == FALSE) {
       $this->db_check_connection();
-      if(!mysql_query("CREATE DATABASE IF NOT EXISTS " . $this->db_base, $this->connection))
+      if(!mysql_query("CREATE DATABASE IF NOT EXISTS " . $this->db_base, $this->connection)) {
         throw new Exception("db_check_selected(1):" . mysql_error($this->connection));
-      if(!mysql_select_db($this->db_base, $this->connection))
+      }
+      if(!mysql_select_db($this->db_base, $this->connection)) {
         throw new Exception("db_check_selected(2):" . mysql_error($this->connection));
+      }
 
       $sql = "SHOW TABLES LIKE '" . $this->db_prefix . "_[0-9]%'";
       $result = mysql_query($sql);
@@ -207,8 +211,9 @@ class currency {
       if($count != FALSE && $count > 0) {
         while ($row = mysql_fetch_row($result)) {
           $table = $row[0];
-          if(strlen($table) <= $prefix_length) // impossible because of the LIKE clause above
-            throw Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED);
+          if(strlen($table) <= $prefix_length) { // impossible because of the LIKE clause above 
+            throw new Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED);
+          }
           $value = intval(substr($table, $prefix_length));
           $this->value2table[$value] = $table;
         }
@@ -216,8 +221,9 @@ class currency {
       mysql_free_result($result);
 
       $unexpected_tables = array_diff(array_keys($this->value2table), $this->values);
-      if($unexpected_tables) 
+      if($unexpected_tables) {
         throw new Exception("mysql tables were found for the following values : " . join(",", $unexpected_tables) . ". However, the only valid values are " . join(",", $this->values), self::E_DATABASE_CORRUPTED);
+      }
 
       $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . " ( " .
         "   rowid INT NOT NULL AUTO_INCREMENT, " .
@@ -227,8 +233,9 @@ class currency {
         "   valid CHAR DEFAULT 'n' NOT NULL, " .
         "   PRIMARY KEY (rowid, value, randname) " .
         " ) ENGINE=InnoDB CHARSET=ascii;";
-      if(!mysql_query($sql))
+      if(!mysql_query($sql)) {
         throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
+      }
 
       $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . "_transactions ( " .
         "   transaction_id CHAR(40) NOT NULL, " .
@@ -239,8 +246,9 @@ class currency {
         "   valid CHAR NOT NULL, " .
         "   INDEX ( transaction_id ) " .
         " ) ENGINE=InnoDB CHARSET=ascii;";
-      if(!mysql_query($sql))
+      if(!mysql_query($sql)) {
         throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
+      }
 
       $this->db_selected = TRUE;
     }
@@ -272,8 +280,9 @@ class currency {
         "   valid CHAR DEFAULT 'n' NOT NULL, " .
         "   PRIMARY KEY (rowid, randname)  " . 
         " ) ENGINE=InnoDB CHARSET=ascii;";
-      if(!mysql_query($sql))
+      if(!mysql_query($sql)) {
         throw new Exception("db_check_or_create_table_value(1):" . mysql_error($this->connection));
+      }
       $this->value2table[$value] = TRUE;
     } elseif($value <= 0) {
       throw new Exception("value = $value must be a positive integer");
@@ -285,18 +294,24 @@ class currency {
     if(in_array($value, $this->values, TRUE)) {
       $table = $this->value2table($value);
       $result = mysql_query("SHOW TABLES LIKE '$table'");
-      if(!$result) throw new Exception("db_check_table_value: SHOW TABLES LIKE '$table' " . mysql_error($this->connection));
+      if(!$result) {
+        throw new Exception("db_check_table_value: SHOW TABLES LIKE '$table' " . mysql_error($this->connection));
+      }
       $count = mysql_num_rows($result);
       if($count == FALSE || $count == 0) throw new Exception("$table does not exist ", self::E_INVALID_NOTE);
-      if($count > 1) throw new Exception("table $table duplicate ?", self::E_INVALID_NOTE);
+      if($count > 1) {
+        throw new Exception("table $table duplicate ?", self::E_INVALID_NOTE);
+      }
       mysql_free_result($result);
     }
   }
 
   function db_query($query) {
     $this->db_check_selected();
-    $result = mysql_query($query, $this->connection);
-    if(!$result) throw new Exception("db_query: " . $query . ": " . mysql_error($this->connection));
+    $result = @mysql_query($query, $this->connection);
+    if(!$result) {
+      throw new Exception("db_query: " . $query . ": " . mysql_error($this->connection), self::E_MYSQL);
+    }
     return $result;
   }
 
@@ -320,10 +335,11 @@ class currency {
     $randname = FALSE;
     while(!$done && $retry < 5) {
       $randname = call_user_func($this->get_name, $this);
-      if($is_private_table)
+      if($is_private_table) {
         $sql = "INSERT INTO ${table} (randname, valid) VALUES ('$randname', '$valid')";
-      else
+      } else {
         $sql = "INSERT INTO ${table} (value, randname, valid) VALUES ($value, '$randname', '$valid')";
+      }
       $status = $this->db_query($sql);
       if($status) {
         $done = TRUE;
@@ -338,15 +354,17 @@ class currency {
         throw new Exception("get_note: " . $sql . " : " . mysql_error($this->connection) . " : " . mysql_errno());
       }
     }
-    if($retry >= 5)
+    if($retry >= 5) {
       throw new Exception("Unable to insert a note in the database (last name was $randname). This probably indicates a problem with the random feed " . $GLOBALS['currency_random'], self::E_RANDOM);
+    }
     $insert_id = mysql_insert_id($this->connection);
     return array($this->url, $insert_id, $randname, $value);
   }
 
   function commit($transaction_id) {
-    if(strlen($transaction_id) != self::key_size_ascii || preg_match ("|^\w{40}$|", $transaction_id) == 0)
+    if(strlen($transaction_id) != self::key_size_ascii || preg_match ("|^\w{40}$|", $transaction_id) == 0) {
       throw new Exception("$transaction_id is not a valid transaction name");
+    }
     $sql = "SELECT table_name, rowid, randname, valid FROM " . $this->db_prefix . "_transactions " .
       "            WHERE transaction_id = '" . $transaction_id . "'";
     $status = $this->db_query($sql);
@@ -363,8 +381,9 @@ class currency {
       // previous commit message that was sent or because of the current
       // commit. 
       //
-      if($transactions_count == 0)
+      if($transactions_count == 0) {
         return "NO SUCH TRANSACTION";
+      }
       //
       // Prepare all the SQL statements to commit the transaction
       // (i.e. change the toggle 'y' and 'n' value of each valid
@@ -396,16 +415,18 @@ class currency {
       $sql_string .= join(", ", $sql);
       $sql_string .= " ) ";
       $status = $this->db_query($sql_string);
-      if(mysql_affected_rows($this->connection) != $expected_affected_rows) 
+      if(mysql_affected_rows($this->connection) != $expected_affected_rows) {
         throw new Exception("$sql_string affected " . mysql_affected_rows($this->connection) . " instead of the expected $expected_affected_rows", self::E_COMMIT);
+      }
     }
     //
     // Remove the transaction records
     //
     $sql = "DELETE FROM " . $this->db_prefix . "_transactions WHERE transaction_id = '$transaction_id'";
     $this->db_query($sql);
-    if(mysql_affected_rows($this->connection) != $transactions_count) 
+    if(mysql_affected_rows($this->connection) != $transactions_count) {
       throw new Exception("$sql  affected " . mysql_affected_rows($this->connection) . " instead of the expected $transactions_count", self::E_COMMIT);
+    }
     return "DONE";
   }
 
@@ -415,9 +436,19 @@ class currency {
     $sql = "INSERT INTO " . $this->db_prefix . "_transactions " . 
       " ( transaction_id,    table_name,    rowid,   randname, valid ) VALUES " .
       " ( '$transaction_id', '$table',      $serial, '$name',  '$valid' ) ";
-    $status = $this->db_query($sql);
-    if(mysql_affected_rows($this->connection) != 1)
+    try {
+      $this->db_query($sql);
+    } catch(Exception $error) {
+      if($error->getCode() == self::E_MYSQL && mysql_errno($this->connection) == self::MYSQL_ER_DUP_ENTRY) {
+        mysql_query("DELETE FROM " . $this->db_prefix . "_transactions WHERE randname = '$name'");
+        $this->db_query($sql);
+      } else {
+        throw $error;
+      }
+    }
+    if(mysql_affected_rows($this->connection) != 1) {
       throw new Exception("failed to $sql " . mysql_error($this->connection), self::E_TRANSACTION);
+    }
   }
 
   function check_note($serial, $name, $value) {
@@ -431,11 +462,8 @@ class currency {
     $value = intval($value);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
-    $status = $this->db_query("SELECT COUNT(*) FROM ${table} WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
-    if($status) {
-      if(mysql_affected_rows($this->connection) != 1)
-        throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
-    } else {
+    $result = $this->db_query("SELECT rowid FROM ${table} WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
+    if(mysql_affected_rows($this->connection) != 1) {
       throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
     }
     return $note;
@@ -456,8 +484,9 @@ class currency {
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
     $this->db_query("UPDATE ${table} SET valid = 'n' WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
-    if(mysql_affected_rows($this->connection) != 1)
+    if(mysql_affected_rows($this->connection) != 1) {
       throw new Exception("failed to delete note $serial $name $value (affected " . mysql_affected_rows($this->connection) . " rows) " . mysql_error($this->connection), self::E_PUT_NOTE_FAILED);
+    }
   }
 
   function break_note($serial, $name, $value, $values = FALSE) {
@@ -467,10 +496,11 @@ class currency {
   function _break_note($serial, $name, $value, $values) {
     $serial = intval($serial);
     $value = intval($value);
-    if($values == FALSE) 
+    if($values == FALSE) {
       $values = $this->values;
-    else
+    } else {
       $values = $this->sort_values($values);
+    }
     $to_delete = array($this->url, $serial, $name, $value);
     $notes = array();
     foreach ( $values as $note_value ) {
@@ -482,8 +512,9 @@ class currency {
       if($value <= 0) break;
     }
 
-    if($value > 0)
+    if($value > 0) {
       array_push($notes, $this->get_note($value));
+    }
 
     $transaction_id = $notes[0][2];
     $this->_check_note($to_delete);
@@ -491,19 +522,23 @@ class currency {
     foreach ( $notes as $note )
       $this->_transaction_add($transaction_id, 'n', $note);
 
-    if($this->trigger_error) throw new Exception("unit test exception");
+    if($this->trigger_error) {
+      throw new Exception("unit test exception");
+    }
     return $notes;
   }
 
   function merge_notes_columns($serials, $names, $values, $known_values = FALSE) {
-    if(count($serials) != count($names) || count($names) != count($values))
+    if(count($serials) != count($names) || count($names) != count($values)) {
       throw new Exception("serials, names and values must have the same size count(serials) = " . count($serials) . " count(names) = " . count($names) . " count(values) = " . count($values));
+    }
     //
     // For the sake of genericity, merging a single note 
     // is equivalent to changing the note.
     //
-    if(count($serials) == 1)
+    if(count($serials) == 1) {
       return array($this->change_note($serials[0], $names[0], $values[0]));
+    }
     $notes = array();
     for($i = 0; $i < count($serials); $i++)
       array_push($notes, array($this->url, intval($serials[$i]), $names[$i], intval($values[$i])));
@@ -511,10 +546,11 @@ class currency {
   }
 
   function merge_notes($notes, $values = FALSE) {
-    if($values == FALSE) 
+    if($values == FALSE) {
       $values = $this->values;
-    else
+    } else {
       $values = $this->sort_values($values);
+    }
     $total = array_reduce($notes, create_function('$a,$b', 'return $a + $b[3];'), 0);
     $value2count = array();
     foreach ( $values as $note_value ) {
@@ -524,12 +560,14 @@ class currency {
       $value2count[$note_value] = $count;
       if($total <= 0) break;
     }
-    if($total > 0)
+    if($total > 0) {
       $value2count[$total] = 1;
+    }
 
     // don't merge if this results in a larger number of notes
-    if(count($value2count) >= count($notes))
+    if(count($value2count) >= count($notes)) {
       throw new Exception("merge notes would not merge anything");
+    }
 
     return $this->transaction_wrap('_merge_notes', $value2count, $notes, $values);
   }
@@ -546,8 +584,9 @@ class currency {
         if(array_key_exists($value, $value2count)) {
           $value2count[$value]--;
           array_push($new_notes, $note);
-          if($value2count[$value] <= 0) 
+          if($value2count[$value] <= 0) {
             unset($value2count[$value]);
+          }
         } else {
           $this->_check_note($note);
           array_push($to_delete, $note);
@@ -569,7 +608,9 @@ class currency {
     foreach ( $new_notes as $note )
       $this->_transaction_add($transaction_id, 'n', $note);
 
-    if($this->trigger_error) throw new Exception("unit test exception");
+    if($this->trigger_error) {
+      throw new Exception("unit test exception");
+    }
     return $new_notes;
   }
 }
@@ -583,10 +624,11 @@ function currency_main($use_headers = True, $return_output = False) {
     $page = array();
     $currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
 
-    if(!isset($_GET['command']))
+    if(!isset($_GET['command'])) {
       $command = 'get_note';
-    else
+    } else {
       $command = $_GET['command'];
+    }
 
     if($command == 'get_note') {
       if(isset($_GET['count'])) $count = $_GET['count'];
@@ -594,10 +636,11 @@ function currency_main($use_headers = True, $return_output = False) {
       $autocommit = FALSE;
       if(isset($_GET['autocommit'])) $autocommit = $_GET['autocommit'];
       for($i = 0; $i < $count; $i++) {
-        if($autocommit == 'yes')
+        if($autocommit == 'yes') {
           $note = $currency->_get_note($_GET['value'], 'y');
-        else
+        } else {
           $note = $currency->get_note($_GET['value']);
+        }
         array_push($page, join("\t", $note));
       }
     } elseif($command == 'merge_notes') {
