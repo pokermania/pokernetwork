@@ -1,11 +1,11 @@
-2006-08-16  Johan Euphrosine  <johan@mekensleep.com>
-
-	* pokernetwork/upgrade.py (CheckClientVersion.line): 
-	update self.version_compare, to always compare against greater version, instead of assuming that we receive versions in an increasing order.
-
 2006-07-27  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.22
+
+2006-07-27  Johan Euphrosine  <johan@mekensleep.com>
+
+	* pokernetwork/upgrade.py (CheckClientVersion.line): 
+	update self.version_compare, to always compare against greater version, instead of assuming that we receive versions in an increasing order.
 
 2006-07-27  Loic Dachary  <loic@dachary.org>
 
