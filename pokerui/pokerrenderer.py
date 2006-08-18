@@ -799,7 +799,7 @@ class PokerRenderer:
             in_game = PacketPokerUserInfo.in_game
             interface.updateCashier(self.protocol.getName(),
                                     packet.email,
-                                    "%s\n%s %s %s\n%s" % ( packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country ),
+                                    "%s %s\n%s\n%s\n%s %s %s\n%s" % ( packet.firstname, packet.lastname, packet.addr_street, packet.addr_street2, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country ),
                                     PokerChips.tostring(money_one[cashier]) + self.money['money_one']['unit'],
                                     PokerChips.tostring(money_one[in_game]) + self.money['money_one']['unit'],
                                     PokerChips.tostring(money_one[cashier] + money_one[in_game]) + self.money['money_one']['unit'],
