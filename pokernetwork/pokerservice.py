@@ -841,19 +841,22 @@ class PokerService(service.Service):
                                          rating = user_info.rating,
                                          money = user_info.money)
         cursor = self.db.cursor()
-        sql = ( "SELECT addr_street,addr_zip,addr_town,addr_state,addr_country,phone FROM users_private WHERE serial = " + str(serial) )
+        sql = ( "SELECT firstname,lastname,addr_street,addr_street2,addr_zip,addr_town,addr_state,addr_country,phone FROM users_private WHERE serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerPersonalInfo(serial = serial)
-        (packet.addr_street, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
+        (packet.fisrtname, packet.lastname, packet.addr_street, packet.addr_street2, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
         cursor.close()
         return packet
 
     def setPersonalInfo(self, personal_info):
         cursor = self.db.cursor()
         sql = ( "update users_private set "
+                " firstname = '" + personal_info.firstname + "', "
+                " lastname = '" + personal_info.lastname + "', "
                 " addr_street = '" + personal_info.addr_street + "', "
+                " addr_street2 = '" + personal_info.addr_street2 + "', "
                 " addr_zip = '" + personal_info.addr_zip + "', "
                 " addr_town = '" + personal_info.addr_town + "', "
                 " addr_state = '" + personal_info.addr_state + "', "
