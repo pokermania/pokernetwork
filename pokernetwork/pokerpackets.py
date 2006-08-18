@@ -3788,7 +3788,7 @@ muckable_serials: list of muckable candidates
         return PacketPokerId.calcsize(self) + self.calcsizelist(self.muckable_serials, PacketPokerMuckRequest.format_element)
 
     def __str__(self):
-        return PacketPokerId.__str__(self) + " muckable_serials = %s" % self.muckable_serials
+        return PacketPokerId.__str__(self) + " muckable_serials = " + str(self.muckable_serials)
 
 PacketFactory[PACKET_POKER_MUCK_REQUEST] = PacketPokerMuckRequest
 
