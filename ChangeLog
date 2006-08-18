@@ -1,6 +1,59 @@
-2006-07-27  Loic Dachary  <loic@dachary.org>
+2006-08-18  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.22
+
+	* pokernetwork/pokerservice.py:
+	    def leavePlayer(self, serial, table_id, currency_serial):
+	more appropriate than
+	    def leavePlayer(self, serial, table_id, money):
+
+	* pokerclient2d/data/interface/interface.glade:
+	show two digits in raise sliders
+
+	* pokernetwork/pokerpackets.py:
+	use str instead of % in PacketPokerMuckRequest to avoid break if more than one element and tuple
+
+	* pokernetwork/pokertable.py:
+	delayedActions -> call leavePlayer with currency_serial instead of money
+
+	* pokernetwork/pokerservice.py: s/fisr/firs/
+
+	* pokernetwork/pokerpackets.py: PacketPokerPersonalInfo s/sef/self/
+
+	* database/1.0.21-1.0.22.sql: add trailing ;
+
+	* pokerui/pokerrenderer.py:
+	updateCashier add firstname, lastname and addr_street2
+
+	* pokerweb/pages/edit_account.php, pokerweb/pages/create_account.php:
+	add firstname, lastname and addr_street2
+
+	* pokernetwork/pokerservice.py: set/get personal info
+	add firstname, lastname and addr_street2
+
+	* pokernetwork/pokerpackets.py:
+	PacketPokerPersonalInfo add firstname, lastname and addr_street2
+
+	* database/1.0.21-1.0.22.sql, database/schema.sql.in:
+	in users_private, add firstname, lastname and addr_street2
+
+2006-08-16  Loic Dachary  <loic@dachary.org>
+
+	* ChangeLog, pokerclient2d/poker2d-test.xml, pokernetwork/pokerchildren.py, pokerweb/pages/currency.php, tests/testcurrency.php.in:
+	check note bug
+
+2006-08-16  proppy  <proppy@allin>
+
+	* ChangeLog: updated Changelog
+
+	* ChangeLog, pokernetwork/upgrade.py:
+	update self.version_compare, to always compare against greater version, instead of assuming that we receive versions in an increasing order.
+
+2006-08-14  izidor79  <izidor79@allin>
+
+	* pokerui/pokerrenderer.py: requestBuyIn(), money_cashier[0]
+
+2006-07-27  Loic Dachary  <loic@dachary.org>
 
 	* pokerweb/pages/currency.php: all if with {} to cope with xdebug bug
 
