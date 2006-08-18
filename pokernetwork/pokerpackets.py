@@ -2976,8 +2976,8 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
     type = PACKET_POKER_PERSONAL_INFO
 
     def __init__(self, *args, **kwargs):
-        self.addr_street = kwargs.get("firstname", "")
-        self.addr_street = kwargs.get("lastname", "")
+        self.firstname = kwargs.get("firstname", "")
+        self.lastname = kwargs.get("lastname", "")
         self.addr_street = kwargs.get("addr_street", "")
         self.addr_street2 = kwargs.get("addr_street2", "")
         self.addr_zip = kwargs.get("addr_zip", "")
@@ -3026,7 +3026,7 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
                  self.calcsizestring(self.phone) )
 
     def __str__(self):
-        return PacketPokerUserInfo.__str__(self) + " firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s" % ( self.firstname, sef.lastname, self.addr_street, self.addr_street2, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone )
+        return PacketPokerUserInfo.__str__(self) + " firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s" % ( self.firstname, self.lastname, self.addr_street, self.addr_street2, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone )
 
 PacketFactory[PACKET_POKER_PERSONAL_INFO] = PacketPokerPersonalInfo
 
