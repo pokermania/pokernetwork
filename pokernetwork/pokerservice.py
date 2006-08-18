@@ -846,7 +846,7 @@ class PokerService(service.Service):
         if cursor.rowcount != 1:
             print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerPersonalInfo(serial = serial)
-        (packet.fisrtname, packet.lastname, packet.addr_street, packet.addr_street2, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
+        (packet.firstname, packet.lastname, packet.addr_street, packet.addr_street2, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
         cursor.close()
         return packet
 
