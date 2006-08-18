@@ -1075,10 +1075,10 @@ class PokerService(service.Service):
 
         return money
 
-    def leavePlayer(self, serial, table_id, money):
+    def leavePlayer(self, serial, table_id, currency_serial):
         status = True
         cursor = self.db.cursor()
-        if money != '':
+        if currency_serial != '':
            sql = ( "UPDATE user2money,user2table,pokertables SET " +
                    " user2money.amount = user2money.amount + user2table.money " +
                    " WHERE user2money.user_serial = user2table.user_serial AND " +
