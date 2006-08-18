@@ -23,6 +23,9 @@ ALTER TABLE `users` DROP COLUMN `play_money_rebuy`; # was int(11) default '0'
 ALTER TABLE `users` DROP COLUMN `play_money`; # was int(11) default '100000000'
 ALTER TABLE `users` ENGINE=InnoDB DEFAULT CHARSET=utf8; # was ENGINE=MyISAM DEFAULT CHARSET=latin1
 ALTER TABLE `users_private` ENGINE=InnoDB DEFAULT CHARSET=utf8; # was ENGINE=MyISAM DEFAULT CHARSET=latin1
+ALTER TABLE `users_private` ADD COLUMN `firstname` varchar(255) default ""
+ALTER TABLE `users_private` ADD COLUMN `lastname` varchar(255) default ""
+ALTER TABLE `users_private` ADD COLUMN `addr_street2` varchar(255) default ""
 ALTER TABLE `users_transactions` DROP COLUMN `status_time`; # was int(11) default '0'
 ALTER TABLE `users_transactions` DROP COLUMN `custom_money`; # was char(1) default 'n'
 ALTER TABLE `users_transactions` DROP COLUMN `created`; # was int(11) default '0'

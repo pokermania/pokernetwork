@@ -59,7 +59,10 @@ drop table if exists users_private;
 
 create table users_private (
   serial int unsigned not null,
+  firstname varchar(255) default "",
+  lastname varchar(255) default "",
   addr_street varchar(255) default "",
+  addr_street2 varchar(255) default "",
   addr_zip varchar(64) default "",
   addr_town varchar(64) default "",
   addr_state varchar(128) default "",
