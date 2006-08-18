@@ -35,7 +35,10 @@ function validate() {
   $password = _post_string('password');
   $password2 = _post_string('password2');
   $email = _post_string('email');
+  $firstname = _post_string('firstname');
+  $lastname = _post_string('lastname');
   $addr_street = _post_string('addr_street');
+  $addr_street2 = _post_string('addr_street2');
   $addr_zip = _post_string('addr_zip');
   $addr_town = _post_string('addr_town');
   $addr_state = _post_string('addr_state');
@@ -50,7 +53,10 @@ function validate() {
                                 'name' => $login, 
                                 'password' => $password,
                                 'email' => $email,
+                                'firstname' => $firstname,
+                                'lastname' => $lastname,
                                 'addr_street' => $addr_street,
+                                'addr_street2' => $addr_street2,
                                 'addr_zip' => $addr_zip,
                                 'addr_town' => $addr_town,
                                 'addr_state' => $addr_state,
@@ -126,10 +132,31 @@ if($poker_error) {
 				?> /></td>
 			</tr>
 			<tr>
+				<td><b>First Name:</b></td>
+				<td><textarea name="firstname" cols="30" rows="3"><?php
+	if (isset($account))
+		echo htmlspecialchars($account['firstname'], ENT_QUOTES, _cst_encoding);
+				?></textarea></td>
+			</tr>
+			<tr>
+				<td><b>Last Name:</b></td>
+				<td><textarea name="lastname" cols="30" rows="3"><?php
+	if (isset($account))
+		echo htmlspecialchars($account['firstname'], ENT_QUOTES, _cst_encoding);
+				?></textarea></td>
+			</tr>
+			<tr>
 				<td><b>Street:</b></td>
 				<td><textarea name="addr_street" cols="30" rows="3"><?php
 	if (isset($account))
 		echo htmlspecialchars($account['addr_street'], ENT_QUOTES, _cst_encoding);
+				?></textarea></td>
+			</tr>
+			<tr>
+				<td><b>Street 2:</b></td>
+				<td><textarea name="addr_street2" cols="30" rows="3"><?php
+	if (isset($account))
+		echo htmlspecialchars($account['addr_street2'], ENT_QUOTES, _cst_encoding);
 				?></textarea></td>
 			</tr>
 			<tr>
