@@ -621,7 +621,7 @@ class PokerTable:
             elif type == "leave":
                 (type, quitters) = event
                 for (serial, seat) in quitters:
-                    self.factory.leavePlayer(serial, game.id, self.money)
+                    self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     if self.serial2client.has_key(serial):
                         self.seated2observer(self.serial2client[serial])
 
