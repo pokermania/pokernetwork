@@ -1,6 +1,38 @@
 2006-08-21  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.23
+
+	* tests/conf/poker.client.xml.in, pokerclient2d/poker2d.xml.in: 1.0.23
+
+	* database/schema.sql.in:
+	In counter add  application_data VARCHAR(255) DEFAULT '' NOT NULL,
+
+	* pokernetwork/pokercashier.py: Add missing application_data fields
+
+	* tests/test-pokercashier.py.in: Add cashQuery tests
+
+	* pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py:
+	cashQuery forward to pokercashier equivalent method
+
+	* pokernetwork/pokerpackets.py:
+	application_data added to money transfert packets + cash_query packet to query the status of transactions
+
+	* pokernetwork/pokeravatar.py: handle CASH_QUERY packet
+
+2006-08-21  proppy  <proppy@allin>
+
+	* Makefile.am: 1.0.21-1.1.23.sql -> 1.0.22-1.1.23.sql
+
+2006-08-21  Loic Dachary  <loic@dachary.org>
+
+	* database/1.0.22-1.0.23.sql: ;
+
+	* Makefile.am: 1.0.23 sql upgrades
+
+2006-08-21  Loic Dachary  <loic@dachary.org>
+
+	* database/1.0.22-1.0.23.sql:
+	Avoid stupid errors by making currencies serial unique
 	
 	* configure.ac:
 	Bark if pokerconfigupgrade is not found because the consequences are hard
