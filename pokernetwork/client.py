@@ -63,6 +63,8 @@ class UGAMEClientProtocol(UGAMEProtocol):
                 print "%ssendPacket %s " % ( self._prefix, packet )
             self.transport.write(packet.pack())
         else:
+            if self.factory.verbose > 2:
+                print "%ssendPacket bufferized %s " % ( self._prefix, packet )
             self.bufferized_packets.append(packet)
 
     def ping(self):
