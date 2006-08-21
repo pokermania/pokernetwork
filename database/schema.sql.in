@@ -89,7 +89,7 @@ create table user2money (
 drop table if exists currencies;
 
 create table currencies (
-  serial INT NOT NULL AUTO_INCREMENT,
+  serial INT NOT NULL AUTO_INCREMENT UNIQUE,
   url CHAR(255) NOT NULL UNIQUE,
   symbol CHAR(8),
   name CHAR(32),
@@ -117,6 +117,7 @@ create table counter (
   name CHAR(40) NOT NULL,
   value INT NOT NULL,
   status CHAR DEFAULT 'y' NOT NULL,
+  application_data VARCHAR(255) DEFAULT '' NOT NULL,
 
   primary key (currency_serial, name, serial)
 )  ENGINE=InnoDB CHARSET=utf8;
