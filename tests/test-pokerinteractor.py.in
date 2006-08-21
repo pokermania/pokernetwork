@@ -33,13 +33,21 @@ sys.path.insert(0, "..")
 import unittest
 
 from pokerui.pokerrenderer import PokerInteractors
-from pokernetwork.pokerpackets import PACKET_POKER_HIGHEST_BET_INCREASE
+from pokernetwork.pokerpackets import PACKET_POKER_HIGHEST_BET_INCREASE, PACKET_POKER_FOLD, PACKET_POKER_CHECK, PACKET_POKER_CALL, PACKET_POKER_RAISE
+
+class PokerInterfaceMockup:
+    def __init__(self):
+	return
+
+    def registerHandler(self, dummy, dummy2):
+	return
 
 class PokerFactoryMockup:
     def __init__(self):
 	self.verbose = 3
 	self.settings = PokerSettingsMockup()
 	self.config = PokerSettingsMockup()
+	self.interface = PokerInterfaceMockup()
 
     def packet2game(self, packet):
 	return PokerGameMockup()
@@ -65,9 +73,12 @@ class PokerSettingsMockup:
 
 class PokerRendererMockup:
     def __init__(self):
-	return
+	self.factory = PokerFactoryMockup()
 
     def render(self, packet):
+	return
+    
+    def showCheckWarningBox(self):
 	return
 
 class PokerProtocolMockup:
@@ -83,9 +94,12 @@ class PokerProtocolMockup:
     def getSerial(self):
 	return 0
 
-class PokerPacketHighestBetIncreaseMockup:
-    def __init__(self):
-	self.type = PACKET_POKER_HIGHEST_BET_INCREASE
+    def sendPacket(self, packet):
+	return
+
+class PokerPacketMockup:
+    def __init__(self, type):
+	self.type = type
 
 class PokerGameMockup:
     def __init__(self):
@@ -95,7 +109,7 @@ class PokerGameMockup:
 	return True
 
     def getSerialInPosition(self):
-	return 0
+	return 1
 
     def getPlayer(self, serial):
 	return PokerProtocolMockup()
@@ -134,37 +148,46 @@ class PokerInteractorTestCase(unittest.TestCase):
     def test_highestBetIncreaseCancelCall(self):	
 	interactor_set = self.interactors.getOrCreateInteractorSet(0)
 	interactors = interactor_set.items
-	interactors['call'].select(None)
-	self.assertEquals(True, interactors['call'].selected)
-	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
-	self.assertEquals(False, interactors['call'].selected)
+	interactors['call'].setEnableIfDisabled()
+	interactors['call'].setUserData([0,])
+	interactors['call'].select(PokerPacketMockup(PACKET_POKER_CALL))
+	interactors['call'].update()
+	self.assertEquals('scheduled', interactors['call'].state.name)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketMockup(PACKET_POKER_HIGHEST_BET_INCREASE))
+	self.assertEquals('enabled', interactors['call'].state.name)
 
     def test_highestBetIncreaseCancelRaise(self):	
-	self.interactors.setProtocol(PokerProtocolMockup())
 	interactor_set = self.interactors.getOrCreateInteractorSet(0)
 	interactors = interactor_set.items
-	interactors['raise'].select(None)
-	self.assertEquals(True, interactors['raise'].selected)
-	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
-	self.assertEquals(False, interactors['raise'].selected)
+	interactors['raise'].setEnableIfDisabled()
+	interactors['raise'].setUserData([0,])
+	interactors['raise'].select(PokerPacketMockup(PACKET_POKER_RAISE))
+	interactors['raise'].update()
+	self.assertEquals('scheduled', interactors['raise'].state.name)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketMockup(PACKET_POKER_HIGHEST_BET_INCREASE))
+	self.assertEquals('enabled', interactors['raise'].state.name)
 
     def test_highestBetIncreaseCancelCheck(self):	
-	self.interactors.setProtocol(PokerProtocolMockup())
 	interactor_set = self.interactors.getOrCreateInteractorSet(0)
 	interactors = interactor_set.items
-	interactors['check'].select(None)
-	self.assertEquals(True, interactors['check'].selected)
-	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
-	self.assertEquals(False, interactors['check'].selected)
+	interactors['check'].setEnableIfDisabled()
+	interactors['check'].setUserData([0,])
+	interactors['check'].select(PokerPacketMockup(PACKET_POKER_CHECK))
+	interactors['check'].update()
+	self.assertEquals('scheduled', interactors['check'].state.name)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketMockup(PACKET_POKER_HIGHEST_BET_INCREASE))
+	self.assertEquals('enabled', interactors['check'].state.name)
 
     def test_highestBetIncreaseNotCancelFold(self):	
-	self.interactors.setProtocol(PokerProtocolMockup())
 	interactor_set = self.interactors.getOrCreateInteractorSet(0)
 	interactors = interactor_set.items
-	interactors['fold'].select(None)
-	self.assertEquals(True, interactors['fold'].selected)
-	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
-	self.assertEquals(True, interactors['fold'].selected)
+	interactors['fold'].setEnableIfDisabled()
+	interactors['fold'].setUserData([0,])
+	interactors['fold'].select(PokerPacketMockup(PACKET_POKER_FOLD))
+	interactors['fold'].update()
+	self.assertEquals('scheduled', interactors['fold'].state.name)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketMockup(PACKET_POKER_HIGHEST_BET_INCREASE))
+	self.assertEquals('scheduled', interactors['fold'].state.name)
         
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
