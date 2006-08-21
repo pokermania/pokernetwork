@@ -3972,7 +3972,7 @@ class PacketPokerCashQuery(Packet):
     DOES_NOT_EXIST = 1
 
     def __init__(self, *args, **kwargs):
-        self.transaction_id = kwargs.get("application_data", "")
+        self.application_data = kwargs.get("application_data", "")
 
     def pack(self):
         return Packet.pack(self) + self.packstring(self.application_data)
