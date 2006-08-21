@@ -3871,6 +3871,7 @@ class PacketPokerMoneyTransfert(PacketSerial):
     def __init__(self, *args, **kwargs):
         self.url = kwargs.get("url", "UNKNOWN")
         self.name = kwargs.get("name", "UNKNOWN")
+        self.application_data = kwargs.get("application_data", '')
         self.bserial = int(kwargs.get("bserial", 0))
         self.value = int(kwargs.get("value", 0))
         if kwargs.has_key('note'):
@@ -3882,20 +3883,21 @@ class PacketPokerMoneyTransfert(PacketSerial):
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
-        return PacketSerial.pack(self) + self.packstring(self.url) + self.packstring(self.name) + pack(PacketPokerMoneyTransfert.format, self.bserial, self.value)
+        return PacketSerial.pack(self) + self.packstring(self.url) + self.packstring(self.name) + self.packstring(self.application_data) + pack(PacketPokerMoneyTransfert.format, self.bserial, self.value)
 
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
         (block, self.url) = self.unpackstring(block)
         (block, self.name) = self.unpackstring(block)
+        (block, self.application_data) = self.unpackstring(block)
         (self.bserial, self.value) = unpack(PacketPokerMoneyTransfert.format, block[:PacketPokerMoneyTransfert.format_size])
         return block[PacketPokerMoneyTransfert.format_size:]
 
     def calcsize(self):
-        return PacketSerial.calcsize(self) + self.calcsizestring(self.url) + self.calcsizestring(self.name) + PacketPokerMoneyTransfert.format_size
+        return PacketSerial.calcsize(self) + self.calcsizestring(self.url) + self.calcsizestring(self.name) + self.calcsizestring(self.application_data) + PacketPokerMoneyTransfert.format_size
 
     def __str__(self):
-        return PacketSerial.__str__(self) + ", url = %s, name = %s, bserial = %d, value = %d" % (self.url, self.name, self.bserial, self.value )
+        return PacketSerial.__str__(self) + ", url = %s, name = %s, bserial = %d, value = %d, application_data = %s" % (self.url, self.name, self.bserial, self.value, self.application_data )
 
 
 ########################################
@@ -3960,7 +3962,37 @@ PacketFactory[PACKET_POKER_CASH_OUT_COMMIT] = PacketPokerCashOutCommit
 
 ########################################
 
-PACKET_POKER_RAKE = 248
+PACKET_POKER_CASH_QUERY = 248
+PacketNames[PACKET_POKER_CASH_QUERY] = "POKER_CASH_QUERY"
+
+class PacketPokerCashQuery(Packet):
+
+    type = PACKET_POKER_CASH_QUERY
+
+    DOES_NOT_EXIST = 1
+
+    def __init__(self, *args, **kwargs):
+        self.transaction_id = kwargs.get("application_data", "")
+
+    def pack(self):
+        return Packet.pack(self) + self.packstring(self.application_data)
+
+    def unpack(self, block):
+        block = Packet.unpack(self, block)
+        (block, self.application_data) = self.unpackstring(block)
+        return block
+
+    def calcsize(self):
+        return Packet.calcsize(self) + self.calcsizestring(self.application_data)
+
+    def __str__(self):
+        return Packet.__str__(self) + " application_data = %s" % self.application_data
+
+PacketFactory[PACKET_POKER_CASH_QUERY] = PacketPokerCashQuery
+
+########################################
+
+PACKET_POKER_RAKE = 249
 PacketNames[PACKET_POKER_RAKE] = "POKER_RAKE"
 
 class PacketPokerRake(PacketInt):
