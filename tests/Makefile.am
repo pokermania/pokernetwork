@@ -56,7 +56,7 @@ TESTS = coverage-reset \
 	test-pokerlock.py \
 	test-pokercashier.py \
 	test-xmlrpc.py \
-	test-pokerinterfactor.py \
+	test-pokerinteractor.py \
 	testcurrency.php \
 	coverage-report \
 	poker-interface
