@@ -793,6 +793,9 @@ class PokerService(service.Service):
     def cashOut(self, packet):
         return self.cashier.cashOut(packet)
 
+    def cashQuery(self, packet):
+        return self.cashier.cashQuery(packet)
+
     def cashOutCommit(self, packet):
         count = self.cashier.cashOutCommit(packet)
         if count in (0, 1):
