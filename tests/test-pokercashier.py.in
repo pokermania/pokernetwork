@@ -43,7 +43,7 @@ twisted.internet.base.DelayedCall.debug = True
 from pokernetwork import pokercashier, pokernetworkconfig, user
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import PacketPokerCashIn, PacketPokerCashOut, PacketPokerCashOutCommit, PacketAck
+from pokernetwork.pokerpackets import *
 from pokernetwork.pokerdatabase import PokerDatabase
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
@@ -194,7 +194,8 @@ class PokerCashierTestCase(unittest.TestCase):
     def cashOut(self, packet):
         cashOut_packet = PacketPokerCashOut(serial = packet.serial,
                                             url = packet.url,
-                                            value = 15)
+                                            value = 15,
+                                            application_data = 'appdata')
         return self.cashier.cashOut(cashOut_packet)
         
     def check03_cashOut(self, packet):
@@ -204,12 +205,13 @@ class PokerCashierTestCase(unittest.TestCase):
         #
         # With two currency notes on the counter
         #
-        cursor.execute("SELECT transaction_id, user_serial, currency_serial, name, serial, value, status FROM counter WHERE status = 'c'")
+        cursor.execute("SELECT transaction_id, user_serial, currency_serial, name, serial, value, status, application_data FROM counter WHERE status = 'c'")
         self.assertEquals(1, cursor.rowcount)
-        safe_row = cursor.fetchone()
-        print "safe_row " + str(safe_row)
-        self.assertEquals(15, safe_row['value'])
-        self.assertEquals(packet.name, safe_row['name'])
+        counter_row = cursor.fetchone()
+        print "counter_row " + str(counter_row)
+        self.assertEquals(15, counter_row['value'])
+        self.assertEquals(packet.name, counter_row['name'])
+        self.assertEquals(packet.application_data, counter_row['application_data'])
 
         cursor.close()
 
@@ -237,6 +239,22 @@ class PokerCashierTestCase(unittest.TestCase):
         d.addCallback(self.check03_cashOut)
         d.addCallback(self.cashOutCommit)
         d.addCallback(self.check03_cashOutCommit)
+        return d
+
+    def cashQuery(self, packet):
+        result = self.cashier.cashQuery(PacketPokerCashQuery(application_data = 'appdata'))
+        self.assertEqual(PacketAck(), result)
+        result = self.cashier.cashQuery(PacketPokerCashQuery(application_data = 'fakeinvalid'))
+        self.assertEqual(PACKET_ERROR, result.type)
+        self.assertEqual(PacketPokerCashQuery.DOES_NOT_EXIST, result.code)
+        return packet
+        
+    # -----------------------------------------------------------------------------------------------------
+    def test04_cashQuery(self):
+        d = self.test01_cashIn()
+
+        d.addCallback(self.cashOut)
+        d.addCallback(self.cashQuery)
         return d
 
 # -----------------------------------------------------------------------------------------------------
