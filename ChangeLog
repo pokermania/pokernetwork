@@ -30,6 +30,8 @@
 	* tests/Makefile.am (TESTS): 
 	* tests/test-pokerinteractor.py.in (PokerInteractorTestCase.test_highestBetIncrease):
 	added testCase to reproduce this bug : highestBetIncrease should cancel all interactor but fold
+	* pokerui/pokerrenderer.py (PokerInteractors._handleConnection): 
+	fixed scheduled fold bug
 
 2006-08-21  Loic Dachary  <loic@dachary.org>
 
