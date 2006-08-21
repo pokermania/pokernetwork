@@ -1,0 +1,181 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+import unittest
+
+from pokerui.pokerrenderer import PokerInteractors
+from pokernetwork.pokerpackets import PACKET_POKER_HIGHEST_BET_INCREASE
+
+class PokerFactoryMockup:
+    def __init__(self):
+	self.verbose = 3
+	self.settings = PokerSettingsMockup()
+	self.config = PokerSettingsMockup()
+
+    def packet2game(self, packet):
+	return PokerGameMockup()
+
+    def getGame(self, id):
+	return PokerGameMockup()
+
+class PokerSettingsMockup:
+    def __init__(self):
+	return
+
+    def headerGet(self, path):
+	return "yes"
+
+    def headerGetProperties(self, path):
+	return [{'enabled_default': "Fold",
+		 'enabled_clicked': "Fold",
+		 'enabled_clicked_in_position': "Fold",
+		 'scheduled_default': "(Fold)",
+		 'scheduled_clicked': "(Fold)",
+		 'activated_default': "Fold",
+		 'activated_clicked': "Fold"},]
+
+class PokerRendererMockup:
+    def __init__(self):
+	return
+
+    def render(self, packet):
+	return
+
+class PokerProtocolMockup:
+    def __init__(self):
+	self.money = 0
+
+    def registerHandler(self, dummy, dummy2, dummy3):
+	return
+
+    def getCurrentGameId(self):
+	return 0
+
+    def getSerial(self):
+	return 0
+
+class PokerPacketHighestBetIncreaseMockup:
+    def __init__(self):
+	self.type = PACKET_POKER_HIGHEST_BET_INCREASE
+
+class PokerGameMockup:
+    def __init__(self):
+	self.id = 0
+
+    def willAct(self, serial):
+	return True
+
+    def getSerialInPosition(self):
+	return 0
+
+    def getPlayer(self, serial):
+	return PokerProtocolMockup()
+
+    def canCheck(self, serial):
+	return True
+
+    def canFold(self, serial):
+	return True
+
+    def canCall(self, serial):
+	return True
+
+    def canRaise(self, serial):
+	return True
+
+    def highestBetNotFold(self):
+	return 0
+
+class PokerPlayerMockup:
+    def __init__(self):
+	return
+
+class PokerInteractorTestCase(unittest.TestCase):
+    
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+	self.interactors = PokerInteractors(PokerFactoryMockup(), PokerRendererMockup())
+	self.interactors.setProtocol(PokerProtocolMockup())
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+	self.interactors = None
+        
+    # -----------------------------------------------------------------------------------------------------    
+    def test_highestBetIncreaseCancelCall(self):	
+	interactor_set = self.interactors.getOrCreateInteractorSet(0)
+	interactors = interactor_set.items
+	interactors['call'].select(None)
+	self.assertEquals(True, interactors['call'].selected)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
+	self.assertEquals(False, interactors['call'].selected)
+
+    def test_highestBetIncreaseCancelRaise(self):	
+	self.interactors.setProtocol(PokerProtocolMockup())
+	interactor_set = self.interactors.getOrCreateInteractorSet(0)
+	interactors = interactor_set.items
+	interactors['raise'].select(None)
+	self.assertEquals(True, interactors['raise'].selected)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
+	self.assertEquals(False, interactors['raise'].selected)
+
+    def test_highestBetIncreaseCancelCheck(self):	
+	self.interactors.setProtocol(PokerProtocolMockup())
+	interactor_set = self.interactors.getOrCreateInteractorSet(0)
+	interactors = interactor_set.items
+	interactors['check'].select(None)
+	self.assertEquals(True, interactors['check'].selected)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
+	self.assertEquals(False, interactors['check'].selected)
+        
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(PokerInteractorTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return pokerinteractor
+  
+# -----------------------------------------------------------------------------------------------------
+def Run(verbose = 2):
+    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    Run()
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerinteractor.py ) ; ( cd ../tests ; make TESTS='test-pokerinteractor.py' check )"
+# End:
