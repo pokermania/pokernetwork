@@ -50,9 +50,11 @@ class FakeAvatar:
         pass
 
     def setProtocol(self, protocol):
+        print "SetProtocol"
         self.protocol = protocol
 
     def handlePacket(self, packet):
+        print "FakeAvatar: handlePacket " + str(packet)
         if packet.type == PACKET_ERROR:
             raise Exception, "EXCEPTION TEST"
         return []
@@ -71,6 +73,7 @@ class FakeFactory(protocol.ServerFactory):
     
     def buildProtocol(self, addr):
         self.instance = pokernetwork.server.PokerServerProtocol()
+        self.instance.verbose = 6
         self.instance.exception = None
         self.instance.factory = self
         return self.instance
@@ -82,15 +85,18 @@ class ClientServer(unittest.TestCase):
         self.p = reactor.listenTCP(0, self.server_factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
+        print "Listening on 127.0.0.1:" + str(self.port)
 
     def setUpClient(self, index):
         self.client_factory[index] = pokernetwork.client.UGAMEClientFactory()
+        self.client_factory[index].verbose = 6
         def setUpProtocol(client):
             client._poll_frequency = 0.1
             return client
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory[index])
+        print "Connecting on 127.0.0.1:" + str(self.port)
 
     def setUp(self):
         self.setUpServer()
@@ -135,12 +141,19 @@ class ClientServer(unittest.TestCase):
     def exception(self, client):
         client.sendPacket(PacketError())
         d = client.connection_lost_deferred
-        def validate(result):
+        def validate(result, count):
             server_protocol = self.server_factory.instance
-            print "EXCEPTION OBJECT " + str(server_protocol.exception)
-            self.assertEquals("EXCEPTION TEST", str(server_protocol.exception[1]))
+            if server_protocol.exception:
+                self.assertEquals("EXCEPTION TEST", str(server_protocol.exception[1]))
+            else:
+                if count >= 5: print "Waiting for exception to be raised ",
+                if count > 0: print ".",
+                if count == 0:
+                    self.fail("exception was not received")
+                else:
+                    reactor.callLater(1, lambda: validate(result, count -1))
 
-        d.addCallback(validate)
+        d.addCallback(lambda result: validate(result, 5))
         return d
         
     def test02_exception(self):
