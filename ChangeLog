@@ -2,6 +2,9 @@
 
 	* Release 1.0.23
 
+	* database/1.0.22-1.0.23.sql:
+	Counter can hold application_data (may be the application transaction id)
+
 	* tests/conf/poker.client.xml.in, pokerclient2d/poker2d.xml.in: 1.0.23
 
 	* database/schema.sql.in:
