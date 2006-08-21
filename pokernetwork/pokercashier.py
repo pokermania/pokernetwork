@@ -48,6 +48,12 @@ class PokerCashier:
         self.locks = {}
         reactor.callLater(0, self.resumeCommits)
 
+    def message(self, string):
+        print "PokerCashier: " + string
+
+    def error(self, string):
+        self.message("*ERROR* " + string)
+        
     def close(self):
         for lock in self.locks.values():
             lock.close()
@@ -55,9 +61,6 @@ class PokerCashier:
         
     def setDb(self, db):
         self.db = db
-
-    def getDb(self):
-        return self.db
 
     def resumeCommits(self):
         pass
@@ -68,24 +71,15 @@ class PokerCashier:
         # Figure out the currency_serial matching the URL
         #
         sql = "SELECT serial FROM currencies WHERE url = %s"
-        if self.verbose > 2: print sql % self.db.db.literal(url)
+        if self.verbose > 2: self.message(sql % self.db.db.literal(url))
         cursor.execute(sql, url)
-        if cursor.rowcount not in (1, 0):
-            message = sql % url + " found " + str(cursor.rowcount) + " records instead of 0 or 1"
-            print "*ERROR* " + message
         if cursor.rowcount == 0:
             sql = "INSERT INTO currencies (url) VALUES (%s)"
-            if self.verbose > 2: print sql % self.db.db.literal(url)
+            if self.verbose > 2: self.message(sql % self.db.db.literal(url))
             try:
                 cursor.execute(sql, url)
                 if cursor.rowcount == 1:
-                    #
-                    # Accomodate for MySQLdb versions < 1.1
-                    #
-                    if hasattr(cursor, "lastrowid"):
-                        currency_serial = cursor.lastrowid
-                    else:
-                        currency_serial = cursor.insert_id()
+                    currency_serial = cursor.lastrowid
             except Exception, e:
                 cursor.close()
                 if e[0] == ER.DUP_ENTRY and reentrant:
@@ -103,14 +97,14 @@ class PokerCashier:
         return currency_serial
 
     def cashGeneralFailure(self, reason, packet):
-        if self.verbose > 2: print "cashGeneralFailure: " + str(reason) + " packet = " + str(packet)
+        if self.verbose > 2: self.message("cashGeneralFailure: " + str(reason) + " packet = " + str(packet))
         if hasattr(packet, "currency_serial"):
             self.unlock(packet.currency_serial)
             del packet.currency_serial
         return reason
 
     def cashInUpdateSafe(self, result, transaction_id, packet):
-        if self.verbose > 2: print "cashInUpdateSafe: " + str(packet)
+        if self.verbose > 2: self.message("cashInUpdateSafe: " + str(packet))
         cursor = self.db.cursor()
         cursor.execute("START TRANSACTION")
         try:
@@ -130,8 +124,7 @@ class PokerCashier:
 
             for ( sql, rowcount ) in sqls:
                 if cursor.execute(sql) < rowcount:
-                    message = sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount)
-                    print "*ERROR* " + message
+                    self.error(sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount))
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
@@ -146,7 +139,7 @@ class PokerCashier:
         return PacketAck()
 
     def cashInUpdateCounter(self, new_notes, packet, old_notes):
-        if self.verbose > 2: print "cashInUpdateCounter: new_notes = " + str(new_notes) + " old_notes = " + str(old_notes)
+        if self.verbose > 2: self.message("cashInUpdateCounter: new_notes = " + str(new_notes) + " old_notes = " + str(old_notes))
         #
         # The currency server gives us new notes to replace the
         # old ones. These new notes are not valid yet, the
@@ -159,9 +152,9 @@ class PokerCashier:
         try:
             def notes_on_counter(notes, transaction_id, status):
                 for ( url, serial, name, value ) in notes:
-                    sql = ( "INSERT INTO counter ( transaction_id, user_serial, currency_serial, serial, name, value, status) VALUES " +
-                            "                    ( %s,           %s,          %s,              %s,     %s,   %s,    %s )" )
-                    cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, serial, name, value, status ));
+                    sql = ( "INSERT INTO counter ( transaction_id, user_serial, currency_serial, serial, name, value, status, application_data) VALUES " +
+                            "                    ( %s,             %s,          %s,              %s,     %s,   %s,    %s,     %s )" )
+                    cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, serial, name, value, status, packet.application_data ));
             notes_on_counter(new_notes, transaction_id, 'n')
             notes_on_counter(old_notes, transaction_id, 'y')
             cursor.execute("COMMIT")
@@ -174,7 +167,7 @@ class PokerCashier:
         return self.cashInCurrencyCommit(transaction_id, packet)
 
     def cashInCurrencyCommit(self, transaction_id, packet):
-        if self.verbose > 2: print "cashInCurrencyCommit"
+        if self.verbose > 2: self.message("cashInCurrencyCommit")
         deferred = self.currency_client.commit(packet.url, transaction_id)
         deferred.addCallback(self.cashInUpdateSafe, transaction_id, packet)
         return deferred
@@ -188,7 +181,7 @@ class PokerCashier:
             sql = ( "SELECT transaction_id FROM counter WHERE " +
                     " currency_serial = " + str(packet.currency_serial) + " AND " +
                     " serial = " + str(packet.bserial) )
-            if self.verbose > 2: print sql
+            if self.verbose > 2: self.message(sql)
             cursor.execute(sql)
             if cursor.rowcount > 0:
                 (transaction_id, ) = cursor.fetchone()
@@ -198,11 +191,10 @@ class PokerCashier:
                 # Get the currency note from the safe
                 #
                 sql = "SELECT name, serial, value FROM safe WHERE currency_serial = " + str(packet.currency_serial)
-                if self.verbose > 2: print sql
+                if self.verbose > 2: self.message(sql)
                 cursor.execute(sql)
                 if cursor.rowcount not in (0, 1):
-                    message = sql + " found " + str(cursor.rowcount) + " records instead of 0 or 1"
-                    print "*ERROR* " + message
+                    self.error(sql + " found " + str(cursor.rowcount) + " records instead of 0 or 1")
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
@@ -227,27 +219,28 @@ class PokerCashier:
         else:
             transaction = ""
 
-        sql = ( "SELECT counter.user_serial, currencies.url, counter.serial, counter.name, counter.value FROM counter,currencies " +
+        sql = ( "SELECT counter.user_serial, currencies.url, counter.serial, counter.name, counter.value, counter.application_data FROM counter,currencies " +
                 "       WHERE currencies.serial = " + str(currency_serial) + " AND " +
                 "             counter.currency_serial = " + str(currency_serial) + " AND " +
                 transaction +
                 "             counter.status = 'c' " )
-        if self.verbose > 2: print sql
+        if self.verbose > 2: self.message(sql)
         cursor.execute(sql)
         if cursor.rowcount == 0:
             return None
-        ( serial, url, bserial, name, value ) = cursor.fetchone()
+        ( serial, url, bserial, name, value, application_data ) = cursor.fetchone()
         cursor.close()
         packet = PacketPokerCashOut(serial = serial,
                                     url = url,
                                     bserial = bserial,
                                     name = name,
-                                    value = value)
-        if self.verbose > 2: print "cashOutCollect " + str(packet)
+                                    value = value,
+                                    application_data = application_data)
+        if self.verbose > 2: self.message("cashOutCollect " + str(packet))
         return packet
         
     def cashOutUpdateSafe(self, result, currency_serial, transaction_id):
-        if self.verbose > 2: print "cashOutUpdateSafe: " + str(currency_serial) + " " + str(transaction_id)
+        if self.verbose > 2: self.message("cashOutUpdateSafe: " + str(currency_serial) + " " + str(transaction_id))
         packet = self.cashOutCollect(currency_serial, transaction_id)
         if not packet:
             cursor = self.db.cursor()
@@ -261,10 +254,9 @@ class PokerCashier:
                 sqls.append(( "DELETE FROM counter WHERE currency_serial = %s and status = 'r'" % currency_serial, 1))
                 sqls.append(( "UPDATE counter SET status = 'c' WHERE currency_serial = %s " % currency_serial , 1))
                 for ( sql, rowcount ) in sqls:
-                    if self.verbose > 2: print sql
+                    if self.verbose > 2: self.message(sql)
                     if cursor.execute(sql) < rowcount:
-                        message = sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount)
-                        print "*ERROR* " + message
+                        self.error(sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount))
                         raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                           code = PacketPokerCashOut.SAFE,
                                           message = message)
@@ -275,8 +267,7 @@ class PokerCashier:
                         "       WHERE user_serial = " + str(packet.serial) + " AND " +
                         "             currency_serial = " + str(currency_serial) )
                 if cursor.execute(sql) != 1:
-                    message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
-                    print "*ERROR* " + message
+                    self.error(sql + " affected " + str(cursor.rowcount) + " records instead of 1 ")
                     raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                       code = PacketPokerCashOut.SAFE,
                                       message = message)
@@ -294,14 +285,14 @@ class PokerCashier:
         return packet
 
     def cashOutCurrencyCommit(self, transaction_id, url):
-        if self.verbose > 2: print "cashOutCurrencyCommit"
+        if self.verbose > 2: self.message("cashOutCurrencyCommit")
         currency_serial = self.getCurrencySerial(url)
         deferred = self.currency_client.commit(url, transaction_id)
         deferred.addCallback(self.cashOutUpdateSafe, currency_serial, transaction_id)
         return deferred
         
     def cashOutUpdateCounter(self, new_notes, packet):
-        if self.verbose > 2: print "cashOuUpdateCounter: new_notes = " + str(new_notes) + " packet = " + str(packet)
+        if self.verbose > 2: self.message("cashOuUpdateCounter: new_notes = " + str(new_notes) + " packet = " + str(packet))
         cursor = self.db.cursor()
         if len(new_notes) != 2:
             raise PacketError(other_type = PACKET_POKER_CASH_OUT,
@@ -321,10 +312,10 @@ class PokerCashier:
         url = new_notes[0][0]
         cursor.execute("START TRANSACTION")
         try:
-            sql = ( "INSERT INTO counter ( transaction_id, user_serial, currency_serial, serial, name, value, status ) VALUES " +
-                    "                    ( %s,             %s,          %s,              %s,     %s,   %s,    %s )" )
-            cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, server_note[1], server_note[2], server_note[3], 'r' ))
-            cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, user_note[1], user_note[2], user_note[3], 'u' ))
+            sql = ( "INSERT INTO counter ( transaction_id, user_serial, currency_serial, serial, name, value, status, application_data ) VALUES " +
+                    "                    ( %s,             %s,          %s,              %s,     %s,   %s,    %s,     %s )" )
+            cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, server_note[1], server_note[2], server_note[3], 'r', packet.application_data ))
+            cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, user_note[1], user_note[2], user_note[3], 'u', packet.application_data ))
             cursor.execute("COMMIT")
             cursor.close()
         except:
@@ -342,7 +333,7 @@ class PokerCashier:
         try:
             sql = ( "SELECT transaction_id FROM counter WHERE " +
                     " currency_serial = " + str(packet.currency_serial) )
-            if self.verbose > 2: print sql
+            if self.verbose > 2: self.message(sql)
             cursor.execute(sql)
             if cursor.rowcount > 0:
                 (transaction_id, ) = cursor.fetchone()
@@ -352,11 +343,10 @@ class PokerCashier:
                 # Get the currency note from the safe
                 #
                 sql = "SELECT name, serial, value FROM safe WHERE currency_serial = " + str(packet.currency_serial)
-                if self.verbose > 2: print sql
+                if self.verbose > 2: self.message(sql)
                 cursor.execute(sql)
                 if cursor.rowcount != 1:
-                    message = sql + " found " + str(cursor.rowcount) + " records instead of exactly 1"
-                    print "*ERROR* " + message
+                    self.error(sql + " found " + str(cursor.rowcount) + " records instead of exactly 1")
                     raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                       code = PacketPokerCashOut.SAFE,
                                       message = message)
@@ -379,17 +369,17 @@ class PokerCashier:
     def unlock(self, currency_serial):
         name = self.getLockName(currency_serial)
         if not self.locks.has_key(name):
-            if self.verbose: print "*ERROR* cashInUnlock: unpexected missing " + name + " in locks (ignored)"
+            if self.verbose: self.error("cashInUnlock: unpexected missing " + name + " in locks (ignored)")
             return
         if not self.locks[name].isAlive():
-            if self.verbose: print "*ERROR* cashInUnlock: unpexected dead " + name + " pokerlock (ignored)"
+            if self.verbose: self.error("cashInUnlock: unpexected dead " + name + " pokerlock (ignored)")
             return
         self.locks[name].release(name)
 
     def lock(self, currency_serial):
         name = self.getLockName(currency_serial)
 
-        if self.verbose > 2: print "get lock " + name
+        if self.verbose > 2: self.message("get lock " + name)
         if self.locks.has_key(name):
             lock = self.locks[name]
             if lock.isAlive():
@@ -407,7 +397,7 @@ class PokerCashier:
         return self.locks[name].acquire(name, int(self.parameters.get('acquire_timeout', 60)))
         
     def cashIn(self, packet):
-        if self.verbose > 2: print "cashIn: " + str(packet)
+        if self.verbose > 2: self.message("cashIn: " + str(packet))
         currency_serial = self.getCurrencySerial(packet.url)
         packet.currency_serial = currency_serial
         d = self.lock(currency_serial)
@@ -416,7 +406,7 @@ class PokerCashier:
         return d
     
     def cashOut(self, packet):
-        if self.verbose > 2: print "cashOut: " + str(packet)
+        if self.verbose > 2: self.message("cashOut: " + str(packet))
         currency_serial = self.getCurrencySerial(packet.url)
         packet.currency_serial = currency_serial
         d = self.lock(currency_serial)
@@ -425,8 +415,25 @@ class PokerCashier:
         return d
 
     def cashOutCommit(self, packet):
-        if self.verbose > 2: print "cashOutCommit: " + str(packet)
+        if self.verbose > 2: self.message("cashOutCommit: " + str(packet))
         cursor = self.db.cursor()
         cursor.execute("DELETE FROM counter WHERE name = %s AND status = 'c'", packet.transaction_id)
         cursor.close()
         return cursor.rowcount
+
+    def cashQuery(self, packet):
+        if self.verbose > 2: self.message("cashQuery: " + str(packet))
+        cursor = self.db.cursor()
+        sql = ( "SELECT COUNT(*) FROM counter WHERE " +
+                " application_data = '" + str(packet.application_data) + "'" )
+        if self.verbose > 2: self.message(sql)
+        cursor.execute(sql)
+        (count,) = cursor.fetchone()
+        cursor.close()
+        if count > 0:
+            return PacketAck()
+        else:
+            return PacketError(other_type = PACKET_POKER_CASH_QUERY,
+                               code = PacketPokerCashQuery.DOES_NOT_EXIST,
+                               message = "No record with application_data = '%s'" % packet.application_data)
+    
