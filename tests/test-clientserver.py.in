@@ -137,6 +137,7 @@ class ClientServer(unittest.TestCase):
         d = client.connection_lost_deferred
         def validate(result):
             server_protocol = self.server_factory.instance
+            print "EXCEPTION OBJECT " + str(server_protocol.exception)
             self.assertEquals("EXCEPTION TEST", str(server_protocol.exception[1]))
 
         d.addCallback(validate)
