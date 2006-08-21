@@ -1,3 +1,12 @@
+2006-08-21  Loic Dachary  <loic@dachary.org>
+
+	* Release 1.0.23
+	
+	* configure.ac:
+	Bark if pokerconfigupgrade is not found because the consequences are hard
+	to decipher later on.
+	https://gna.org/support/index.php?func=detailitem&item_id=1182
+
 2006-08-18  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.22
