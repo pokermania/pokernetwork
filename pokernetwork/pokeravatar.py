@@ -254,6 +254,10 @@ class PokerAvatar:
                                                         other_type = PACKET_POKER_CASH_OUT))
             return
 
+        elif packet.type == PACKET_POKER_CASH_QUERY:
+            self.sendPacketVerbose(self.service.cashQuery(packet))
+            return
+
         elif packet.type == PACKET_POKER_CASH_OUT_COMMIT:
             self.sendPacketVerbose(self.service.cashOutCommit(packet))
             return
