@@ -24,7 +24,8 @@
 
 2006-08-21  Johan Euphrosine  <johan@mekensleep.com>
 
-	* Makefile.am: fixed typo 1.0.21-1.1.23.sql to 1.0.22-1.1.23.sql
+	* Makefile.am:
+	fixed typo 1.0.21-1.1.23.sql to 1.0.22-1.1.23.sql
 	* configure.ac: 
 	* tests/Makefile.am (TESTS): 
 	* tests/test-pokerinteractor.py.in (PokerInteractorTestCase.test_highestBetIncrease):
