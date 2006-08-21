@@ -156,6 +156,15 @@ class PokerInteractorTestCase(unittest.TestCase):
 	self.assertEquals(True, interactors['check'].selected)
 	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
 	self.assertEquals(False, interactors['check'].selected)
+
+    def test_highestBetIncreaseNotCancelFold(self):	
+	self.interactors.setProtocol(PokerProtocolMockup())
+	interactor_set = self.interactors.getOrCreateInteractorSet(0)
+	interactors = interactor_set.items
+	interactors['fold'].select(None)
+	self.assertEquals(True, interactors['fold'].selected)
+	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketHighestBetIncreaseMockup())
+	self.assertEquals(True, interactors['fold'].selected)
         
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
