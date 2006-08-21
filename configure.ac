@@ -53,6 +53,8 @@ AC_PATH_PROG(PHP, [php])
 AC_PATH_PROG(PHPUNIT, [phpunit])
 AC_PATH_PROG(POKERCONFIGUPGRADE, [pokerconfigupgrade])
 
+if test -z "$POKERCONFIGUPGRADE" ; then AC_MSG_ERROR([pokerconfigupgrade is a mandatory program provided by poker-engine]) ; fi
+
 PHP5_TESTS=/bin/false
 if test x$PHP && $PHP --version | grep 'PHP 5' ; then
    if $PHP --define extension=mysql.so --modules | grep mysql ; then
