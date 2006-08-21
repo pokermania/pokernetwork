@@ -142,7 +142,10 @@ class PokerInteractors:
             self.handleInteractors(game)
 
         elif packet.type == PACKET_POKER_HIGHEST_BET_INCREASE:
-            self.cancelAllInteractors(game.id)
+            interactor_set = self.getOrCreateInteractorSet(game.id)
+            interactors = interactor_set.items
+            fold_interactor = interactors['fold']
+            self.cancelAllInteractorButThisOne(fold_interactor)
             self.handleInteractors(game)
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
