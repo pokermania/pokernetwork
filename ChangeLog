@@ -22,9 +22,13 @@
 
 	* pokernetwork/pokeravatar.py: handle CASH_QUERY packet
 
-2006-08-21  proppy  <proppy@allin>
+2006-08-21  Johan Euphrosine  <johan@mekensleep.com>
 
-	* Makefile.am: 1.0.21-1.1.23.sql -> 1.0.22-1.1.23.sql
+	* Makefile.am: fixed typo 1.0.21-1.1.23.sql to 1.0.22-1.1.23.sql
+	* configure.ac: 
+	* tests/Makefile.am (TESTS): 
+	* tests/test-pokerinteractor.py.in (PokerInteractorTestCase.test_highestBetIncrease):
+	added testCase to reproduce this bug : highestBetIncrease should cancel all interactor but fold
 
 2006-08-21  Loic Dachary  <loic@dachary.org>
 
