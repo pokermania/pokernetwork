@@ -46,7 +46,6 @@ class PokerServerProtocol(UGAMEProtocol):
             self.block()
             self.sendPackets(self.avatar.handlePacket(packet))
         except:
-            self.unblock()
             if hasattr(self, 'exception'):
                 #
                 # For test purposes : if the instance has an exception member
@@ -55,8 +54,10 @@ class PokerServerProtocol(UGAMEProtocol):
                 # a protocol exits because of a stack trace. 
                 #
                 self.exception = sys.exc_info()
+                self.unblock()
                 self.transport.loseConnection()
             else:
+                self.unblock()
                 raise
 
     def sendPackets(self, packets):
