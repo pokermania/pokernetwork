@@ -205,7 +205,10 @@ def Run(verbose = 2):
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    Run()
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 # Interpreted by emacs
 # Local Variables:
