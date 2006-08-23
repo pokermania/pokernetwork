@@ -1,6 +1,26 @@
-2006-08-23  Cedric Pinson  <cpinson@freesheep.org>
+2006-08-23  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.23
+
+	* pokerui/pokerrenderer.py: use muck show / hide functions
+
+2006-08-23  Loic Dachary  <loic@dachary.org>
+
+	* pokerui/pokerinterface.py: muck show / hide functions
+
+	* pokerclient2d/muck.c: show / hide functions
+
+2006-08-23  proppy  <proppy@call>
+
+	* configure.ac, tests/Makefile.am, tests/test-pokerrenderer.py.in:
+	test for chatFormatMessage bug
+
+2006-08-23  Loic Dachary  <loic@dachary.org>
+
+	* pokerclient2d/client.xml, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml, conf/poker.bot.xml.in, conf/poker.client.xml.in, conf/poker.server.xml.in:
+	version bump
+
+2006-08-23  Cedric Pinson  <cpinson@freesheep.org>
 
 	* cashier.c, client.xml, data/interface/interface.glade:
 	Now we can change the name of money in cashier
