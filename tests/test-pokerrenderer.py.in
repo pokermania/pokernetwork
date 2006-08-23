@@ -44,9 +44,9 @@ class PokerRendererMockup(PokerRenderer):
 
 class PokerProtocolMockup:
     def __init__(self):
-	pass
+	self.packets = []
     def schedulePacket(self, packet):
-	pass
+	self.packets.append(packet)
 
 class PokerFactoryMockup:
     def __init__(self):
@@ -74,6 +74,15 @@ class PokerRendererTestCase(unittest.TestCase):
     def test_chatFormatMessage(self):
 	message = self.renderer.chatFormatMessage(PokerPacketChatMockup("inhaler"))
 	self.assertEquals("inhaler", message)
+	self.assertEquals(0, len(self.renderer.protocol.packets))
+	message = self.renderer.chatFormatMessage(PokerPacketChatMockup("nh"))
+	self.assertEquals("nice hand", message)
+	self.assertEquals("emThumbUp", self.renderer.protocol.packets[0].word)
+	message = self.renderer.chatFormatMessage(PokerPacketChatMockup("nh nh nh"))
+	self.assertEquals("nice hand nice hand nice hand", message)
+	self.assertEquals("emThumbUp", self.renderer.protocol.packets[1].word)
+	self.assertEquals("emThumbUp", self.renderer.protocol.packets[2].word)
+	self.assertEquals("emThumbUp", self.renderer.protocol.packets[3].word)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
