@@ -1,5 +1,13 @@
 2006-08-23  Cedric Pinson  <cpinson@freesheep.org>
 
+	* cashier.c, client.xml, data/interface/interface.glade:
+	Now we can change the name of money in cashier
+
+	* chat.c, data/interface/interface.glade:
+	Fix chat color and change message muck loosing hand to always muck
+
+2006-08-23  Cedric Pinson  <cpinson@freesheep.org>
+
 	* pokerclient2d/chat.c, pokerclient2d/data/interface/interface.glade:
 	Fix chat color and change message muck loosing hand to always muck
 
