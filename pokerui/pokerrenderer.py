@@ -670,15 +670,21 @@ class PokerRenderer:
         from pprint import pprint
 	import string
         if self.factory.verbose: pprint(self.chat_words)
+	
         for word in self.chat_words:
-            if string.find(message, word["in"]) != -1:
-                serial = packet.serial
-                game_id = packet.game_id
-                if self.factory.verbose: print "chat word (%s) found => sending (%s) event" % (word["in"], word["event"])
-                self.schedulePacket(PacketPokerChatWord(word = word["event"], game_id = game_id, serial = serial))
-                message = string.replace(message, word["in"], word["out"])
-            else:
-                if self.factory.verbose: print "chat word (%s) not found" % word["in"]
+	    words = message.split()
+	    def matchChatWord(current):
+		if current == word["in"]:
+		    serial = packet.serial
+		    game_id = packet.game_id
+		    if self.factory.verbose: print "chat word (%s) found => sending (%s) event" % (word["in"], word["event"])
+		    self.schedulePacket(PacketPokerChatWord(word = word["event"], game_id = game_id, serial = serial))
+		    return word["out"]
+		else:
+		    if self.factory.verbose == 3: print "chat word (%s) not found" % word["in"]
+		    return current
+	    words = map(matchChatWord, words)
+	    message = string.join(words)
 
         #
         # This is crude but is only meant to cope with a server that
