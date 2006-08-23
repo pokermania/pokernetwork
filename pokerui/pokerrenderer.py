@@ -433,11 +433,12 @@ class PokerRenderer:
         return True
 
     def showMuckBox(self):
-        self.factory.interface.muckBox()
+        self.factory.interface.muckShow()
         self.render(PacketPokerInterfaceCommand(window = "muck_window", command = "show"))
 
     def hideMuckBox(self):
         self.render(PacketPokerInterfaceCommand(window = "muck_window", command = "hide"))
+        self.factory.interface.muckHide()
         interface = self.factory.interface
         if interface.callbacks.has_key(pokerinterface.INTERFACE_MUCK):
             del interface.callbacks[pokerinterface.INTERFACE_MUCK]
