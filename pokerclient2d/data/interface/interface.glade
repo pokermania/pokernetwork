@@ -3289,7 +3289,7 @@
 		      <child>
 			<widget class="GtkCheckMenuItem" id="muck">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes"> _Muck Loosing Hand</property>
+			  <property name="label" translatable="yes"> _Always Muck</property>
 			  <property name="use_underline">True</property>
 			  <property name="active">False</property>
 			  <signal name="activate" handler="on_muck_activate" last_modification_time="Wed, 16 Mar 2005 15:21:06 GMT"/>

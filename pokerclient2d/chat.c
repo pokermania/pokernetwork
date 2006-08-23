@@ -326,8 +326,19 @@ int	handle_chat(GladeXML* g_history_xml, GladeXML* 	g_entry_xml, GtkLayout* scre
 
 			
 			static GtkTextTag* textTag[11] = {0,0,0,0,0,0,0,0,0,0,0};
-			static const char* colors[11] = { "#0a00a0", "#0000FF","#00FF00","#FF0000","#FFFF00","#00FFFF",
-																				"#FFFFFF", "#808080","#808F00","#FF0aa0","#0FF080"};
+			static const char* colors[11] = { "#ffffff",
+                                        "#ff8787",
+                                        "#cb83ec",
+                                        "#6fceff",
+                                        "#1bf778",
+                                        "#e5f900",
+                                        "#ffb11a",
+                                        "#00ffd2",
+                                        "#fff2ca",
+                                        "#f52f2f",
+                                        "#f716ff"
+      };
+
 			if (!textTag[0]) {
 				int i = 0;
 				for (;i<11;i++)
