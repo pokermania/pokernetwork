@@ -1,5 +1,7 @@
 2006-08-23  Cedric Pinson  <cpinson@freesheep.org>
 
+	* Release 1.0.23
+
 	* cashier.c, client.xml, data/interface/interface.glade:
 	Now we can change the name of money in cashier
 
@@ -11,93 +13,7 @@
 	* pokerclient2d/chat.c, pokerclient2d/data/interface/interface.glade:
 	Fix chat color and change message muck loosing hand to always muck
 
-2006-08-21  Johan Euphrosine  <proppy@aminche.com>
-
-	* ChangeLog: updated changelog
-
-	* pokerui/pokerrenderer.py: fixed scheduled fold bug
-
-	* tests/test-pokerinteractor.py.in: fixed bug scheduled fold
-
-	* tests/test-pokerinteractor.py.in: added test for fold
-
-2006-08-21  Loic Dachary  <loic@gnu.org>
-
-	* tests/Makefile.am: pokerinteractor
-
-	* tests/test-clientserver.py.in: more verbosity + retry if delay needed
-
-	* pokernetwork/client.py: verbose if bufferizing packets
-
-2006-08-21  Johan Euphrosine  <proppy@aminche.com>
-
-	* ChangeLog: updated changelog
-
-	* configure.ac, tests/Makefile.am, tests/test-pokerinteractor.py.in:
-	added test for pokerinteractor
-
-2006-08-21  Loic Dachary  <loic@gnu.org>
-
-	* pokernetwork/server.py:
-	unblock only after querying the exception otherwise tests may fail with race condition
-
-2006-08-21  Johan Euphrosine  <proppy@aminche.com>
-
-	* tests/test-pokernetworkconfig.py.in:
-	fixed typo pokerengineconfig -> pokernetworkconfig
-
-2006-08-21  Loic Dachary  <loic@gnu.org>
-
-	* ChangeLog: *** empty log message ***
-
-	* database/1.0.22-1.0.23.sql:
-	Counter can hold application_data (may be the application transaction id)
-
-	* tests/test-clientserver.py.in: more verbose
-
-	* ChangeLog: *** empty log message ***
-
-	* tests/conf/poker.client.xml.in, pokerclient2d/poker2d.xml.in: 1.0.23
-
-	* database/schema.sql.in:
-	In counter add  application_data VARCHAR(255) DEFAULT '' NOT NULL,
-
-	* pokernetwork/pokercashier.py: Add missing application_data fields
-
-	* tests/test-pokercashier.py.in: Add cashQuery tests
-
-	* pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py:
-	cashQuery forward to pokercashier equivalent method
-
-	* pokernetwork/pokerpackets.py:
-	application_data added to money transfert packets + cash_query packet to query the status of transactions
-
-	* pokernetwork/pokeravatar.py: handle CASH_QUERY packet
-
-2006-08-21  Johan Euphrosine  <proppy@aminche.com>
-
-	* Makefile.am: 1.0.21-1.1.23.sql -> 1.0.22-1.1.23.sql
-
-2006-08-21  Loic Dachary  <loic@gnu.org>
-
-	* database/1.0.22-1.0.23.sql: ;
-
-	* Makefile.am: 1.0.23 sql upgrades
-
-	* database/1.0.22-1.0.23.sql:
-	Avoid stupid errors by making currencies serial unique
-
-	* ChangeLog, NEWS, debian/changelog, pokerclient2d/poker2d-test.xml, pokernetwork/__init__.py:
-	1.23 bump
-
-	* configure.ac:
-	Bark if pokerconfigupgrade is not found because the consequences are hard
-	to decipher later on.
-	https://gna.org/support/index.php?func=detailitem&item_id=1182
-
 2006-08-21  Loic Dachary  <loic@dachary.org>
-
-	* Release 1.0.23
 
 	* database/1.0.22-1.0.23.sql:
 	Counter can hold application_data (may be the application transaction id)
@@ -190,7 +106,7 @@
 	* ChangeLog, pokerclient2d/poker2d-test.xml, pokernetwork/pokerchildren.py, pokerweb/pages/currency.php, tests/testcurrency.php.in:
 	check note bug
 
-2006-08-16  Johan Euphrosine  <proppy@allin>
+2006-08-16  proppy  <proppy@allin>
 
 	* ChangeLog: updated Changelog
 
@@ -420,7 +336,7 @@
 
 	* tests/run.in: true
 
-2006-07-24  Johan Euphrosine  <proppy@allin>
+2006-07-24  proppy  <proppy@allin>
 
 	* ChangeLog: updated changelog
 
@@ -438,7 +354,7 @@
 
 	* debian/rules: call autotools with proper version
 
-2006-07-24  Johan Euphrosine  <proppy@allin>
+2006-07-24  proppy  <proppy@allin>
 
 	* database/1.0.20-1.0.21.sql: remove old scrip
 
@@ -460,7 +376,7 @@
 
 	* pokerui/pokeranimation.py: remove old comment
 
-2006-07-24  Johan Euphrosine  <proppy@allin>
+2006-07-24  proppy  <proppy@allin>
 
 	* upgrades/poker.client/1.0.21-1.0.22.xsl: added xsl
 
@@ -471,7 +387,7 @@
 	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.hoary, debian/control.sarge, debian/control.unstable, debian/rules:
 	fix control files for all distributions
 
-2006-07-24  Johan Euphrosine  <proppy@allin>
+2006-07-24  proppy  <proppy@allin>
 
 	* ChangeLog: updated changelog
 
@@ -489,7 +405,7 @@
 
 	* debian/rules: call autotools with proper version
 
-2006-07-24  Johan Euphrosine  <proppy@allin>
+2006-07-24  proppy  <proppy@allin>
 
 	* database/1.0.20-1.0.21.sql: remove old scrip
 
@@ -511,7 +427,7 @@
 
 	* pokerui/pokeranimation.py: remove old comment
 
-2006-07-24  Johan Euphrosine  <proppy@allin>
+2006-07-24  proppy  <proppy@allin>
 
 	* upgrades/poker.client/1.0.21-1.0.22.xsl: added xsl
 
@@ -1036,7 +952,7 @@
 	* tests/test-pokercashier.py.in, pokernetwork/pokerlock.py, tests/test-pokerlock.py.in:
 	*** empty log message ***
 
-2006-07-05  Johan Euphrosine  <proppy@allin>
+2006-07-05  proppy  <proppy@allin>
 
 	* pokerclient2d/poker3d-interface/poker3d-interface.vcproj: remove copy
 
@@ -1082,7 +998,7 @@
 
 	* tests/test-pokerdatabase.py.in: pokerdatabase tests
 
-2006-06-29  Johan Euphrosine  <proppy@allin>
+2006-06-29  proppy  <proppy@allin>
 
 	* ChangeLog: update ChangeLog
 
@@ -1106,7 +1022,7 @@
 
 	* configure.ac: no bank specifics
 
-2006-06-26  Johan Euphrosine  <proppy@allin>
+2006-06-26  proppy  <proppy@allin>
 
 	* pokerui/pokerrenderer.py: fix bug 788
 
@@ -1118,7 +1034,7 @@
 
 	* pokerui/pokerrenderer.py: Fix the bug at the end of tournament
 
-2006-06-26  Johan Euphrosine  <proppy@allin>
+2006-06-26  proppy  <proppy@allin>
 
 	* pokerui/pokerinteractor.py: verbose 3
 
@@ -2146,7 +2062,7 @@ Mon Jul 04 2005  Loic Dachary  <loic@gnu.org>
 	* README (Client): fix install paths as pointed out by
 	  Jeff Schoby <ssrjazz@gmail.com>
 
-Tue Jun 28 2005  Johan Euphrosine  <euphro_j@epitech.net>
+Tue Jun 28 2005  proppy  <euphro_j@epitech.net>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.clickSitOut): 
 	called when click occured on the sitout interactor
@@ -2171,7 +2087,7 @@ Tue Jun 28 2005  Loic Dachary  <loic@gnu.org>
 
 	* pokerclient2d/outfits.c (on_arrow_clicked): outfit arrow wrap around
 
-Tue Jun 28 2005  Johan Euphrosine  <euphro_j@epitech.net>
+Tue Jun 28 2005  proppy  <euphro_j@epitech.net>
 
 	* pokerui/pokerrenderer.py (PokerRenderer.chatFormatMessage): 
 	chat words (defined in /sequence/chatwords) are filtered from POKER_CHAT message
