@@ -452,10 +452,15 @@ class PokerInterface(dispatch.EventDispatcher):
         self.clearCallbacks(INTERFACE_YESNO)
         return data[1:]
 
-    def muckBox(self):
-        if self.verbose > 1: print "PokerInterfaceProtocol:muckBox"
+    def muckShow(self):
+        if self.verbose > 1: print "PokerInterfaceProtocol:muckShow"
         self.clearCallbacks(INTERFACE_MUCK)
-        self.command("muck")
+        self.command("muck", "show")
+        
+    def muckHide(self):
+        if self.verbose > 1: print "PokerInterfaceProtocol:muckHide"
+        self.clearCallbacks(INTERFACE_MUCK)
+        self.command("muck", "hide")
         
     def handleMuck(self, data):
         response = data[0]
