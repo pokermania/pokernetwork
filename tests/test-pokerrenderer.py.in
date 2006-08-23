@@ -96,7 +96,7 @@ def GetTestedModule():
   
 # -----------------------------------------------------------------------------------------------------
 def Run(verbose = 2):
-    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
