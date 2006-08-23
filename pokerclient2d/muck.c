@@ -21,12 +21,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Authors:
- *  Henry Prêcheur <henry@precheur.org>
+ *  Loic Dachary <loic@dachary.org>
  *
  */
 
 #include <gtk/gtk.h>
 #include <glade/glade.h>
+#include <string.h>
 #include "gui.h"
 #include "interface_io.h"
 #include "dispatcher.h"
@@ -76,6 +77,8 @@ void	on_muck_always_button_clicked(GtkWidget *widget, gpointer user_data)
 
 int	handle_muck(GladeXML* g_glade_xml, GtkLayout* screen, int init)
 {
+  char*	tag = get_string();
+
   if (init)
     {
       g_screen = screen;
@@ -90,10 +93,18 @@ int	handle_muck(GladeXML* g_glade_xml, GtkLayout* screen, int init)
     }
 
   
-  if (screen != NULL || !g_muck_window_shown)
+  if(!strcmp(tag, "show"))
     {
-      gui_center(g_muck_window, screen);
-      g_muck_window_shown = 1;
+      if (screen != NULL || !g_muck_window_shown)
+        {
+          gui_center(g_muck_window, screen);
+          g_muck_window_shown = 1;
+        }
+    }
+  else if(!strcmp(tag, "hide"))
+    {
+      if (screen != NULL) 
+        gtk_widget_hide_all(g_muck_window); 
     }
 
   return TRUE;
