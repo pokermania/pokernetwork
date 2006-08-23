@@ -345,7 +345,7 @@ class PokerRenderer:
         self.verbose = factory.verbose
         self.replayStepping = True
         self.replayGameId = None
-        self.money = { 'default': { 'unit': 'C', 'cent': 'cts' } }
+        self.money = { 'default': { 'name': 'Custom', 'unit': 'C', 'cent': 'cts' } }
         money_serial = 1
         self.money_serial2name = {}
         for key in ( 'money_one', 'money_two' ):
@@ -777,7 +777,7 @@ class PokerRenderer:
     def showCashier(self):
         interface = self.factory.interface
         if interface:
-            interface.showCashier(self.state_cashier['exit_label'])
+            interface.showCashier(self.state_cashier['exit_label'],self.money['money_one']['name'], self.money['money_two']['name'])
 #        self.showBackgroundLobbyCashier()
 #        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "personal_information_window", command = "show"))

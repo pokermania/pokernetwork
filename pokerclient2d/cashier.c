@@ -211,7 +211,22 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
       gtk_button_set_label(s_exit_button, label);
       g_free(label);
     }
-    
+
+    {
+      //moneyone
+      GtkWidget* sl = gui_get_widget(s_glade_account_status_xml, "money_one_name");
+      char* label = get_string();
+      gtk_label_set_text(GTK_LABEL(sl), label);
+      g_free(label);
+    }
+    {
+      //moneytwo
+      GtkWidget* sl = gui_get_widget(s_glade_account_status_xml, "money_two_name");
+      char* label = get_string();
+      gtk_label_set_text(GTK_LABEL(sl), label);
+      g_free(label);
+    }
+
     if ((screen != NULL) || (s_cashier_shown == 0))
     {
       gui_place(s_personal_information_window, &s_personal_information_position, screen);
@@ -222,7 +237,7 @@ int	handle_cashier(GladeXML* s_glade_personal_information_xml, GladeXML* s_glade
   } else {
     if (screen != NULL)
       {
-	hide_cashier();
+        hide_cashier();
       }
   }
 

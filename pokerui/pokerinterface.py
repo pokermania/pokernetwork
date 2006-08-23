@@ -532,8 +532,8 @@ class PokerInterface(dispatch.EventDispatcher):
         self.publishEvent(INTERFACE_CASHIER, data[0])
         return data[1:]
 
-    def showCashier(self, exit_label):
-        self.command("cashier", "show", "0", exit_label)
+    def showCashier(self, exit_label, money_one_name, money_two_name):
+        self.command("cashier", "show", "0", exit_label, money_one_name, money_two_name)
         
     def hideCashier(self):
         self.command("cashier", "hide", "0")

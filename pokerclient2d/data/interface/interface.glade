@@ -2073,7 +2073,7 @@
 					  <property name="right_padding">11</property>
 
 					  <child>
-					    <widget class="GtkLabel" id="label60">
+					    <widget class="GtkLabel" id="money_one_name">
 					      <property name="visible">True</property>
 					      <property name="label" translatable="yes">PLAY MONEY</property>
 					      <property name="use_underline">False</property>
@@ -2441,7 +2441,7 @@
 					  <property name="right_padding">12</property>
 
 					  <child>
-					    <widget class="GtkLabel" id="label32">
+					    <widget class="GtkLabel" id="money_two_name">
 					      <property name="visible">True</property>
 					      <property name="label" translatable="yes">CUSTOM MONEY</property>
 					      <property name="use_underline">False</property>
