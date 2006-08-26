@@ -156,6 +156,7 @@ EXTRA_DIST = \
 	$(wildcard pokerweb/pages/*.php) \
 	$(wildcard pokerweb/pages/*.txt) \
 	pokerweb/conf/constants.php.in \
+	pokerweb/conf/constants_test.php \
 	pokerweb/pages/neteller.py \
 	pokerweb/pages/neteller.cfg \
 	pokerweb/pages/prototype.js \
