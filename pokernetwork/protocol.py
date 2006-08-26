@@ -215,7 +215,7 @@ class UGAMEProtocol(protocol.Protocol):
 
     def triggerTimer(self):
         if not self._timer or not self._timer.active():
-            if self._poll or len(self._queues) > 0:
+            if self._poll and len(self._queues) > 0:
                 self._timer = reactor.callLater(self._poll_frequency, self._processQueues)            
 
     def pushPacket(self, packet):
