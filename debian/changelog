@@ -2,7 +2,11 @@ poker-network (1.0.23-1) unstable; urgency=low
 
   * upstream sync
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 21 Aug 2006 12:17:21 +0200
+  * template fixes from Thomas Huriaux <thomas.huriaux@gmail.com> (closes: #384605)
+
+  * python2.3-pyopenssl is now python-pyopenssl (closes: #384718)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 26 Aug 2006 12:26:47 +0200
 
 poker-network (1.0.22-1) unstable; urgency=low
 
