@@ -5,16 +5,21 @@ A test server with bots can be run as follows:
 $ cd examples
 $ sh run-pokerserver
 
-You will be asked for the root password of the MySQL database so that
-the test database and the test user can be created. The database is
-wipped out each time run-example is run. The server runs on ports
-19480 and above (where the ports used for an installed server are
-19380 and above).
+You must first make sure the MySQL database administrative user
+is root and no password is set. Also make sure the database
+is not listening on incoming connections from the internet or
+you will be in trouble. Hopefully this is the default MySQL setup
+when you first install the server. The database is
+wiped out each time run-pokerserver is run. The server runs on ports
+19480 and above (instead of 19380 and above for an installed server
+so that both a test server and an installed server can run on the
+same machine).
 
-The run-example script will also link the pokerweb directory to 
-/var/www/pokerweb if it is not already there. If your web server
-has php4 (or above), you should then be able to access the web part
-of the poker server at http://localhost/pokerweb/.
+The test-pokerweb script will launch run-pokerserver also link the
+pokerweb directory to /var/www/test-poker-web (if it is not already
+there). If your web server has php5, you should then be able to access
+the web part of the poker server at http://localhost/test-poker-web/.
+Part of the web pages will work with php4 but some require php5.
 
 The logs of the server and the bots can be found in pokerserver.log
 and pokerbot.log.
@@ -22,5 +27,5 @@ and pokerbot.log.
 The 2D client can be run as follows:
 
 $ cd pokerclient2d
-$ python poker2d poker2d-test.xml
+$ GTK2_RC_FILES=data/Aero/gtkrc python poker2d poker2d-test.xml
 
