@@ -49,12 +49,12 @@ function action() {
   global $note;
 
   try {
-    $handle = fopen(dirname(_me()) . "/currency_one.php?command=get_note&value=" . $amount, "r");
+    $handle = fopen(dirname(_me()) . "/" . _cst_currency_one . "?command=get_note&value=" . $amount, "r");
     $line = fgets($handle);
     $note = split("\t", $line);
     fclose($handle);
 
-    $handle = fopen(dirname(_me()) . "/currency_one.php?command=commit&transaction_id=" . $note[2], "r");
+    $handle = fopen(dirname(_me()) . "/" . _cst_currency_one . "?command=commit&transaction_id=" . $note[2], "r");
     $line = fgets($handle);
     fclose($handle);
 

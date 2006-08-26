@@ -28,7 +28,10 @@
 
 ini_set('include_path', "../conf:" . ini_get('include_path'));
 
-require_once 'constants.php';
+if(strpos($_SERVER["SCRIPT_NAME"], 'test'))
+  require_once 'constants_test.php';
+else
+  require_once 'constants.php';
 require_once 'lib_filters.php';
 require_once 'class.poker.php';
 

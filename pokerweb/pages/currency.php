@@ -98,6 +98,13 @@ class currency {
   var $fixedname = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
   function __construct($base = FALSE, $user = FALSE, $password = FALSE) {
+    if(!extension_loaded('mysql')) {
+      $prefix = (PHP_SHLIB_SUFFIX === 'dll') ? 'php_' : '';
+      if(!dl($prefix . 'mysql.' . PHP_SHLIB_SUFFIX)) {
+        throw new Exception("unable to find or load mysql extension");
+      }
+    }
+
     $this->db_persist = $GLOBALS['currency_db_persist'];
     $this->db_host = "localhost";
     $this->db_port = 3306;
@@ -679,7 +686,6 @@ function currency_main($use_headers = True, $return_output = False) {
     print join("\n", $page);
     $status = true;
   } catch(Exception $error) {
-    ob_end_flush();
     print $error->getMessage();
     $status = false;
   }

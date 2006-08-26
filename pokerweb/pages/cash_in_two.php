@@ -82,13 +82,13 @@ function action() {
       return false;
     }
 
-    $handle = fopen(dirname(_me()) . "/currency_two.php?command=get_note&value=" . $amount, "r");
+    $handle = fopen(dirname(_me()) . "/" . _cst_currency_two . "?command=get_note&value=" . $amount, "r");
     $line = fgets($handle);
     $note = split("\t", $line);
     $poker_error .= $line;
     fclose($handle);
 
-    $handle = fopen(dirname(_me()) . "/currency_two.php?command=commit&transaction_id=" . $note[2], "r");
+    $handle = fopen(dirname(_me()) . "/" . _cst_currency_two . "?command=commit&transaction_id=" . $note[2], "r");
     $line = fgets($handle);
     $poker_error .= " transaction " . $line;
     fclose($handle);
