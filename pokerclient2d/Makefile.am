@@ -157,7 +157,7 @@ nobase_poker2d_DATA = \
 # cope with a directory hierarchy including a .libs
 #
 all-local:
-	export PYTHONPATH=${top_srcdir} ; \
+	export PYTHONPATH=${top_srcdir}:${PYTHONPATH} ; \
 	${POKERCONFIGUPGRADE} --verbose=1  --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades ${srcdir}/poker2d.xml.in
 
 install-data-hook:
