@@ -475,6 +475,23 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
       g_free(currency_serial);
     }
+
+    {
+      //moneyone
+      GtkWidget* sl = gui_get_widget(g_tournaments_xml, "money_one_radio");
+      char* label = get_string();
+      gtk_button_set_label(GTK_BUTTON(sl), label);
+      g_free(label);
+    }
+
+    {
+      //moneytwo
+      GtkWidget* sl = gui_get_widget(g_tournaments_xml, "money_two_radio");
+      char* label = get_string();
+      gtk_button_set_label(GTK_BUTTON(sl), label);
+      g_free(label);
+    }
+
   } else if(!strcmp(tag, "hide")) {
     g_lobby_tab_state = none;
     close_tournaments();

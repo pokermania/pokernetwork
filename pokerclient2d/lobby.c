@@ -506,6 +506,22 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
         button = "all_radio";
       }
 
+      {
+        //moneyone
+        GtkWidget* sl = gui_get_widget(g_lobby_xml, "money_one_radio");
+        char* label = get_string();
+        gtk_button_set_label(GTK_BUTTON(sl), label);
+        g_free(label);
+      }
+
+      {
+        //moneytwo
+        GtkWidget* sl = gui_get_widget(g_lobby_xml, "money_two_radio");
+        char* label = get_string();
+        gtk_button_set_label(GTK_BUTTON(sl), label);
+        g_free(label);
+      }
+
       s_disable_buttons = 1;
       radio = gui_get_widget(s_lobby_xml, button);
       g_assert(radio);
