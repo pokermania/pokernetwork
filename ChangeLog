@@ -1,3 +1,10 @@
+2006-08-28  Cedric Pinson  <cpinson@freesheep.org>
+
+	* pokerclient2d/lobby.c, pokerclient2d/tournaments.c, 
+	pokerui/pokerinterface.py, pokerui/pokerrenderer.py
+
+	Add tunable money in lobby and tournament panel
+
 2006-08-26  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.23
