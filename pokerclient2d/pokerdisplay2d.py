@@ -309,10 +309,14 @@ class PokerTable2D:
 
 class PokerDisplay2D(PokerDisplay):
     def __init__(self, *args, **kwargs):
+        pygame.mixer.init()
         PokerDisplay.__init__(self, *args, **kwargs)
         self.settings.notifyUpdates(self.settingsUpdated)
         self.settingsUpdated(self.settings)
         self.id2table = {}
+
+    def __del__(self):
+        pygame.mixer.quit()
 
     def settingsUpdated(self, settings):
         self.verbose = settings.headerGetInt("/settings/@verbose")
@@ -324,7 +328,6 @@ class PokerDisplay2D(PokerDisplay):
             #
             # Load event to sound map
             #
-            pygame.mixer.init()
             self.event2sound = {}
             for (event, file) in self.config.headerGetProperties("/sequence/sounds")[0].iteritems():
                 soundfile = sounddir + "/" + file
@@ -334,8 +337,6 @@ class PokerDisplay2D(PokerDisplay):
                 else:
                     self.error(soundfile + " file does not exist")
 
-            pygame.mixer.quit()
-        
     def message(self, string):
         print "[PokerDisplay2D] " + string
 
