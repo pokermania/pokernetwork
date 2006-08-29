@@ -13,9 +13,9 @@ sys.path.insert(0, "U:/new_pok3d/underware/underware/python/")
 os.environ["path"] += ";U:/new_pok3d/underware/envwin32/python/Lib/site-packages/win32"
 os.environ["path"] += ";U:/new_pok3d/underware/envwin32/python/Lib/site-packages/pywin32_system32"
 
-#if os.name != "posix":
-#    from twisted.internet import win32eventreactor
-#    win32eventreactor.install()
+if os.name != "posix":
+    from twisted.internet import win32eventreactor
+    win32eventreactor.install()
 
 from pokernetwork import upgrade
 from pokerengine import pokerengineconfig
@@ -40,7 +40,17 @@ class UpgradeTestCase(unittest.TestCase):
         self.upgrade = None
 
     def testIsNewVersionAvailable(self):
-        self.upgrade.checkClientVersion( (1, 0, 5) )
+        self.upgrade.registerHandler(upgrade.NEED_UPGRADE, self.needUpgrade)
+        self.upgrade.registerHandler(upgrade.CLIENT_VERSION_OK, self.versionOK)
+        self.upgrade.checkClientVersion( (1, 1, 8) )
+
+    def needUpgrade(self, version):
+        print "Need upgrade to version: " + version
+        reactor.stop()
+
+    def versionOK(self):
+        print "Version is OK"
+        reactor.stop()
 
 def GetTestSuite():
     suite = unittest.TestSuite()
@@ -49,8 +59,9 @@ def GetTestSuite():
     
 def Run(verbose = 2):
     unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
-    
-if __name__ == '__main__':
-    Run()
-    print "TOTO"
 
+#def Run():
+   
+if __name__ == '__main__':
+    reactor.callLater(0, Run)
+    reactor.run()
