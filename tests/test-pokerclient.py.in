@@ -256,6 +256,31 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
 
+    def getUserInfo(self, (client, packet)):
+        print "getUserInfo " + str(packet)
+        game = client.getGame(packet.game_id)
+        self.assertEqual(False, game.isRunning())
+        client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
+        return client.packetDeferred(True, PACKET_POKER_USER_INFO)
+
+    def printUserInfo(self, (client, packet)):
+        print "printUserInfo " + str(packet)
+        self.assertEqual(PACKET_POKER_USER_INFO, packet.type)
+        return (client, packet)
+        
+    def test05_playHand(self):
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            d[index].addCallback(self.login, index)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
+            d[index].addCallback(self.sit)
+            d[index].addCallback(self.allIn)
+            d[index].addCallback(self.getUserInfo)
+            d[index].addCallback(self.printUserInfo)
+            d[index].addCallback(self.quit)
+        return defer.DeferredList(d)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
