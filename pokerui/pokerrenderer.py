@@ -1713,8 +1713,6 @@ class PokerRenderer:
             else:
                 type = self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.currencySerial2Name(self.state_lobby['currency_serial']), self.money['money_one']['name'], self.money['money_two']['name'])
-#        self.showBackgroundLobbyCashier()
-#        self.showClockWindow()
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
@@ -1726,8 +1724,6 @@ class PokerRenderer:
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "hide"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "hide"))
-        #self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "hide"))                
-
 
     def showClockWindow(self):
         self.render(PacketPokerInterfaceCommand(window = "clock_window", command = "show"))
@@ -2042,8 +2038,9 @@ class PokerRenderer:
         elif self.enterStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
             self.showBackgroundLobbyCashier()
             self.showClockWindow()
-        if self.exitStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
+        if self.exitStates(previous_state, next_state, (CASHIER, LOBBY, TOURNAMENTS)):
             self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
+            self.render(PacketPokerInterfaceCommand(window = "tournaments_lobby_tabs_window", command = "hide"))
         elif self.enterStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
             self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
 
