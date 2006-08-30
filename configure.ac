@@ -112,7 +112,7 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, , [AC_MSG_ERROR(glib2 is a mandatory library)])
     PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, , [AC_MSG_ERROR(glade2 is a mandatory library)])
 
-    AC_SUBST(POKER2D_PKGDATADIR, [`eval eval eval echo $datadir/poker2d`])
+    AC_SUBST(POKER2D_PKGDATADIR, [`eval eval eval echo $pkgdatadir/poker2d`])
 
     PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk"
     PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk.glade"
