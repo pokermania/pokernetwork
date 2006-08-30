@@ -39,6 +39,7 @@ EXTRA_DIST = \
 	test-poker-interface.py \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
+	test-upgrade.py \
 	vncpasswd
 
 TESTS_ENVIRONMENT = ./run
