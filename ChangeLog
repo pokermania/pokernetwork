@@ -1,3 +1,10 @@
+2006-08-30  Cedric Pinson  <cpinson@freesheep.org>
+
+	* Release 1.0.23
+
+	* fix typo in cashier panel
+	* fix interface tabs
+
 2006-08-28  Cedric Pinson  <cpinson@freesheep.org>
 
 	* pokerclient2d/lobby.c, pokerclient2d/tournaments.c, 
@@ -6,8 +13,6 @@
 	Add tunable money in lobby and tournament panel
 
 2006-08-26  Loic Dachary  <loic@dachary.org>
-
-	* Release 1.0.23
 
 	* pokernetwork/protocol.py:
 	Only launch the timer if poll AND queue (not OR)
