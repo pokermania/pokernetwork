@@ -1,6 +1,19 @@
-2006-08-30  Cedric Pinson  <cpinson@freesheep.org>
+2006-08-30  cpinson  <cpinson@call>
 
 	* Release 1.0.23
+
+	* pokerui/pokerrenderer.py:
+	Fix the interface problem when removing the interface cache
+
+2006-08-30  Loic Dachary  <loic@dachary.org>
+
+	* configure.ac: poker2d datadir is a subdir of poker-network
+
+2006-08-30  cpinson  <cpinson@call>
+
+	* pokerclient2d/data/interface/interface.glade: Fix typo in cashier
+
+2006-08-30  Cedric Pinson  <cpinson@freesheep.org>
 
 	* fix typo in cashier panel
 	* fix interface tabs
