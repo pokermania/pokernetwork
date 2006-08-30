@@ -43,7 +43,7 @@ Description: GTK poker client to play on a poker-network server
 Package: poker-web
 Section: web
 Architecture: all
-Depends: debconf (>= 0.2.26), php4 | php4-cgi, php4-mysql, apache, python2.3-libxml2, python2.3-pycurl
+Depends: debconf (>= 0.2.26), php4 | php4-cgi, php4-mysql, apache, python2.3-libxml2, python2.3-pycurl, wget
 Description: Web interface to a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
