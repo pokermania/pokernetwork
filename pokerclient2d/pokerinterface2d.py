@@ -24,14 +24,15 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import sys
+import os
 sys.path.insert(0, "..")
 
 import gtk
-try:
-    _pokerinterface = __import__('_pokerinterface' + sys.version[0] + '_' + sys.version[2])
-except:
+if os.path.exists(".libs"):
     sys.path.insert(0, ".libs")    
     _pokerinterface = __import__('_pokerinterface')
+else:
+    _pokerinterface = __import__('_pokerinterface' + sys.version[0] + '_' + sys.version[2])
 
 from pokerui.pokerinterface import PokerInterface
 
