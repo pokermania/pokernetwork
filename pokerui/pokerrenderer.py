@@ -1314,7 +1314,7 @@ class PokerRenderer:
         else:
 
             if min_amount > money_cashier:
-                self.showMessage("You don't have enough money to\nparticipate in the game", None)
+                self.showMessage("You don't have enough money to play on this table.\nTo get money go in menu 'Lobby' and click 'Cash in'.\n(If your are in play money you might need to win more\nmoney to sit at this table)", None)
                 return False
 
             legend = "Which amount do you want to bring at the table?"
