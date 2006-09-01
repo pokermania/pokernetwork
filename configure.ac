@@ -51,7 +51,7 @@ AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox mozilla konqueror epip
 
 AC_PATH_PROG(PHP, [php])
 AC_PATH_PROG(PHPUNIT, [phpunit])
-AC_PATH_PROG(POKERCONFIGUPGRADE, [pokerconfigupgrade])
+AC_PATH_PROG(POKERCONFIGUPGRADE, [pokerconfigupgrade],,[$PATH:/usr/sbin])
 
 if test -z "$POKERCONFIGUPGRADE" ; then AC_MSG_ERROR([pokerconfigupgrade is a mandatory program provided by poker-engine]) ; fi
 
