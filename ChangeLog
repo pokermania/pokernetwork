@@ -1,6 +1,12 @@
-2006-08-31  Loic Dachary  <loic@dachary.org>
+2006-09-01  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.24
+
+	* configure.ac: /usr/sbin is not standard on fc5
+
+2006-08-31  cpinson  <cpinson@call>
+
+	* pokerui/pokerrenderer.py: Change message when not enough money
 
 2006-08-30  cpinson  <cpinson@call>
 
