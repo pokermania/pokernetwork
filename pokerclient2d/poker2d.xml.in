@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="0" display2d="yes" display3d="no" upgrades="@UPGRADES_ENABLE@" delays="true" ping="240" tcptimeout="2000" poker_network_version="1.0.23">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="0" display2d="yes" display3d="no" upgrades="@UPGRADES_ENABLE@" delays="true" ping="240" tcptimeout="2000" poker_network_version="1.0.24">
   <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="5" lag="15"/>
   <screen fullscreen="no" width="1024" height="768"/>
   <name>YOURNAME</name>
@@ -22,4 +22,21 @@
   <rsync path="@RSYNC@" dir="." source="@UPGRADES_SOURCE@" target="@prefix@" upgrades="share/poker-network@MAYBE_PYTHON_VERSION@/upgrades"/>
   <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <data path="@POKER2D_PKGDATADIR@" sounds="@POKER2D_PKGDATADIR@/sounds"/>
+  <!--
+      control_key is the poker2d shortcut (Ctrl+c for call for instance)
+      khotkeys_output is what the kde khotkeys daemon will send to the poker2d window
+          and must match the poker2d shortcut. It's only here to accomodate a different
+          syntax for specifying key sequences.
+      khotkeys_input is the desktop wide binding that khotkeys will use. It must be
+          chosen with care because it will not be available for anything else.
+      In the kcontrol software, check in 'Regional & Accessibility -> Input Actions'.
+      There should be a poker2d entry in the Actions list. Click on it and 
+      make sure it's enabled (i.e. the Disable checkbox is not checked).
+    -->
+  <keys>
+    <key name='call' comment='Call' control_key='c' khotkeys_output='Ctrl+c' khotkeys_input='Win+c' />
+    <key name='check' comment='Check' control_key='p' khotkeys_output='Ctrl+p' khotkeys_input='Win+p' />
+    <key name='raise' comment='Raise' control_key='r' khotkeys_output='Ctrl+r' khotkeys_input='Win+r' />
+    <key name='fold' comment='Fold' control_key='f' khotkeys_output='Ctrl+f' khotkeys_input='Win+f' />
+  </keys>
 </settings>
