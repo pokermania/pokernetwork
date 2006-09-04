@@ -50,7 +50,8 @@ EXTRA_DIST = \
 	run-xwnc \
 	$(wildcard *.png) \
 	poker2D.ico \
-	poker3d-interface/poker3d-interface.vcproj
+	poker3d-interface/poker3d-interface.vcproj \
+	khotkeys.py
 
 man_MANS = poker2d.6
 
