@@ -1,6 +1,58 @@
-2006-09-01  Loic Dachary  <loic@dachary.org>
+2006-09-04  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.24
+
+	* pokerclient2d/Makefile.am: distribute khotkeys.py
+
+	* pokerclient2d/data/interface/interface.glade:
+	button dedicated to keyboard shortcuts
+
+	* pokerclient2d/pokerinterface2d.py: keep the window in a member
+
+	* pokerclient2d/pokerdisplay2d.py:
+	special buttons for hardcoded raise amounts, used for keyboard shortcuts
+
+	* pokerclient2d/poker2d.xml.in: hotkeys definitions
+
+	* pokerclient2d/poker2d.khotkeys: raise variations
+
+	* pokerclient2d/poker2d-test.xml: hotkeys
+
+	* pokerclient2d/client.xml: version bump
+
+	* pokerclient2d/Makefile.am: khotkeys for KDE
+
+	* examples/poker.server.xml: micro limit table
+
+	* examples/poker.server-monotone.xml: version bump
+
+	* examples/poker.bot.xml: no limit bots
+
+	* conf/poker.server.xml.in, conf/poker.client.xml.in, conf/poker.bot.xml.in:
+	version bump
+
+2006-09-03  Loic Dachary  <loic@dachary.org>
+
+	* pokerclient2d/poker2d.khotkeys:
+	khotkeys KDE input actions bindings for poker2d
+
+	* debian/python-poker2d.postinst:
+	Try to update the kde khotkeys of the currently running session
+	so that the user can use it right away.
+
+	* pokerclient2d/poker2d.xml.in:
+	accelerators and kde hotkeys specifications added
+
+	* pokerclient2d/khotkeys.py:
+	Build a khotkeys (KDE) file from the key binding
+	specifications of poker2d.xml.in
+
+2006-09-01  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/__init__.py: bump version
+
+2006-09-01  Loic Dachary  <loic@dachary.org>
+
 
 	* configure.ac: /usr/sbin is not standard on fc5
 
