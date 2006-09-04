@@ -53,6 +53,8 @@ ConditionsCount=0
 
 index=1
 for key in keys:
+    if not key.has_key('khotkeys_output'):
+        continue
     print """
 [Data_1_""" + str(index) + """]
 Comment=""" + key['comment'] + """
@@ -80,7 +82,7 @@ Comment=Poker
 Role=
 RoleType=0
 Title=""" + poker2d_title + """
-TitleType=1
+TitleType=2
 Type=SIMPLE
 WindowTypes=1
 
@@ -101,6 +103,8 @@ Type=SHORTCUT
 
 print """
 [Main]
+Autostart=true
+Disabled=false
 Version=2
 ImportId=poker2d
 """
