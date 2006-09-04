@@ -170,6 +170,12 @@ class PokerTable2D:
                 seat.show()
         self.glade.get_widget("quit").show()
         self.glade.get_widget("rebuy").show()
+        self.glade.get_widget("raise_increase").show() # 1x1 button used for accelerators
+        self.glade.get_widget("raise_decrease").show() # 1x1 button used for accelerators
+        self.glade.get_widget("raise_increase_bb").show() # 1x1 button used for accelerators
+        self.glade.get_widget("raise_decrease_bb").show() # 1x1 button used for accelerators
+        self.glade.get_widget("raise_pot").show() # 1x1 button used for accelerators
+        self.glade.get_widget("raise_half_pot").show() # 1x1 button used for accelerators
         self.updateTableStatus()
         self.glade.get_widget("table_status").show()
         
@@ -351,8 +357,18 @@ class PokerDisplay2D(PokerDisplay):
         x = ( interface.width - width ) / 2
         y = ( interface.height - height ) / 2
         interface.screen.put(window, x, y)
+        self.accelerators()
         window.show()
         
+    def accelerators(self):
+        action_group = gtk.AccelGroup()
+        for key in self.settings.headerGetProperties('/settings/keys/key'):
+            name = key['name']
+            letter = key['control_key']
+            if self.verbose > 1: self.message(name + " is bound to Ctrl+" + letter)
+            self.actions[name].add_accelerator("clicked", action_group, gtk.gdk.keyval_from_name(letter), gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+        self.factory.interface.window.add_accel_group(action_group)
+
     def init(self):
         settings = self.settings
         config = self.config
@@ -365,11 +381,18 @@ class PokerDisplay2D(PokerDisplay):
             "call": self.glade.get_widget("call"),
             "raise": self.glade.get_widget("raise"),
             "raise_range": self.glade.get_widget("raise_range"),
+            "raise_increase": self.glade.get_widget("raise_increase"),
+            "raise_decrease": self.glade.get_widget("raise_decrease"),
+            "raise_increase_bb": self.glade.get_widget("raise_increase_bb"),
+            "raise_decrease_bb": self.glade.get_widget("raise_decrease_bb"),
+            "raise_pot": self.glade.get_widget("raise_pot"),
+            "raise_half_pot": self.glade.get_widget("raise_half_pot"),
             "check": self.glade.get_widget("check"),
             "fold": self.glade.get_widget("fold"),
             }
         self.switch = self.glade.get_widget("switch")
         self.glade.signal_autoconnect(self)
+#        self.actions['check'].add_accelerator("clicked", gtk.AccelGroup(), gtk.gdk.keyval_from_name("p"), gtk.gdk.MOD1_MASK, gtk.ACCEL_VISIBLE)
 
         self.animations = pokeranimation2d.create(self.glade, config, settings)
         
@@ -404,6 +427,50 @@ class PokerDisplay2D(PokerDisplay):
         protocol = self.protocol
         self.renderer.interactorSelected(PacketPokerCall(game_id = protocol.getCurrentGameId(),
                                                          serial = protocol.getSerial()))
+
+    def on_raise_increase_clicked(self, button):
+        #
+        # There seem to be a gtk bug when the slider displacement for a given
+        # value is less than a pixel. In this case the slider does not have to move
+        # which is normal. However, it seems to have a undesirable side effect : the
+        # displayed value is not updated.
+        #
+        range = self.actions['raise_range']
+        adjustment = range.get_adjustment()
+        range.set_value(range.get_value() + adjustment.get_property('step-increment'))
+
+    def on_raise_decrease_clicked(self, button):
+        range = self.actions['raise_range']
+        adjustment = range.get_adjustment()
+        range.set_value(range.get_value() - adjustment.get_property('step-increment'))
+
+    def on_raise_increase_bb_clicked(self, button):
+        game_id = self.protocol.getCurrentGameId()
+        bb = self.id2table[game_id].game.bigBlind()
+        if bb:
+            range = self.actions['raise_range']
+            range.set_value(range.get_value() + (bb / 100.0))
+
+    def on_raise_decrease_bb_clicked(self, button):
+        game_id = self.protocol.getCurrentGameId()
+        bb = self.id2table[game_id].game.bigBlind()
+        if bb:
+            range = self.actions['raise_range']
+            range.set_value(range.get_value() - (bb / 100.0))
+
+    def on_raise_pot_clicked(self, button):
+        game_id = self.protocol.getCurrentGameId()
+        bet_limit = self.id2table[game_id].bet_limit
+        range = self.actions['raise_range']
+        adjustment = range.get_adjustment()
+        range.set_value(min(adjustment.get_property('upper'), bet_limit.pot / 100.0))
+
+    def on_raise_half_pot_clicked(self, button):
+        game_id = self.protocol.getCurrentGameId()
+        bet_limit = self.id2table[game_id].bet_limit
+        range = self.actions['raise_range']
+        adjustment = range.get_adjustment()
+        range.set_value(min(adjustment.get_property('upper'), ( bet_limit.pot / 2.0 ) / 100.0))
 
     def on_raise_clicked(self, button):
         raise_range = self.actions["raise_range"]
@@ -473,7 +540,7 @@ class PokerDisplay2D(PokerDisplay):
                 range.set_value(selected_amount / 100.0)
 
     def render(self, packet):
-        if self.verbose > 3: print "PokerDisplay2D::render: " + str(packet)
+        if self.verbose > 3: self.message(str(packet))
 
         if packet.type == PACKET_QUIT:
             reactor.stop()
