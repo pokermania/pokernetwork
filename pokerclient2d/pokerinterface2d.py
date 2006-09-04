@@ -51,6 +51,7 @@ class PokerInterface2D(PokerInterface):
         self.width = settings.headerGetInt("/settings/screen/@width")
         self.height = settings.headerGetInt("/settings/screen/@height")
         window = gtk.Window()
+        self.window = window
         window.set_default_size(self.width, self.height)
         window.set_title("Poker")
         window.set_name("lobby_window_root")
