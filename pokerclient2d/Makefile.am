@@ -151,7 +151,7 @@ nobase_dist_poker2d_DATA = \
 nobase_poker2d_DATA = \
 	upgrades/1.0.7-1.0.8.xsl
 
-khotkeysdir = /usr/share/apps/khotkeys
+khotkeysdir = ${datadir}/apps/khotkeys
 dist_khotkeys_DATA = poker2d.khotkeys
 
 poker2d.khotkeys: khotkeys.py poker2d.xml.in
