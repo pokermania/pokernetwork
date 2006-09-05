@@ -257,6 +257,7 @@ class PokerService(service.Service):
         return self.poker_auth.auth(name, password)
 
     def updateTourneysSchedule(self):
+        if self.verbose > 2: print "updateTourneysSchedule"
         cursor = self.db.cursor(DictCursor)
 
         sql = ( " select * from tourneys_schedule " )
