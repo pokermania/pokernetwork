@@ -80,7 +80,7 @@ from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokertable import PokerTable
-from pokernetwork.pokeravatar import PokerAvatar
+from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
 
@@ -223,7 +223,7 @@ class PokerService(service.Service):
         pass
 
     def createAvatar(self):
-        return PokerAvatar(self)
+        return pokeravatar.PokerAvatar(self)
 
     def destroyAvatar(self, avatar):
         avatar.connectionLost("Disconnected")
@@ -372,7 +372,7 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         for player in game.playersAll():
             serial = player.serial
-            player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
+            player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
             client = self.serial2client.get(serial, None)
             if client:
                 table.serial2client[serial] = client
@@ -1267,7 +1267,7 @@ class PokerService(service.Service):
 
         cursor = self.db.cursor()
         sql = ( "INSERT pokertables ( serial, name, currency_serial ) VALUES "
-                " ( " + str(id) + ", \"" + description["name"] + "\", " + description["currency_serial"] + " ) " )
+                " ( " + str(id) + ", \"" + description["name"] + "\", " + str(description["currency_serial"]) + " ) " )
         if self.verbose > 1:
             print "createTable: %s" % sql
         cursor.execute(sql)
