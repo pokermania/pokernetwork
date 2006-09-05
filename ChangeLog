@@ -1,6 +1,22 @@
-2006-09-04  Loic Dachary  <loic@dachary.org>
+2006-09-05  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.24
+
+	* pokernetwork/pokerservice.py: print when updating tourney schedule
+
+	* pokernetwork/pokerservice.py: show prize money
+
+	* pokernetwork/pokerservice.py:
+	import missing DEFAULT_PLAYER_USER_DATA from pokeravatar
+
+2006-09-04  Loic Dachary  <loic@dachary.org>
+
+	* pokerclient2d/Makefile.am, pokerclient2d/upgrades/1.0.23-1.0.24.xsl:
+	Add default keyboard shortcuts to existing poker2d.xml files
+
+	* pokerclient2d/Makefile.am: use datadir variable
+
+2006-09-04  Loic Dachary  <loic@dachary.org>
 
 	* pokerclient2d/Makefile.am: distribute khotkeys.py
 
