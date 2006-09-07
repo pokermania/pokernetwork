@@ -252,7 +252,7 @@ class UGAMEProtocol(protocol.Protocol):
                         print "%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length )
                         if self.factory.verbose > 4:
                             print "known types are %s " % PacketNames
-                        buf = buf[type.length:]
+                        buf = buf[1:]
                     self._expected_len = Packet.format_size
                 else:
                     self._expected_len = type.length
