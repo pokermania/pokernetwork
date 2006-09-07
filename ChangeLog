@@ -1,3 +1,15 @@
+2006-09-07  Loic Dachary  <loic@dachary.org>
+
+	* Release 1.0.25
+
+	* pokernetwork/protocol.py:
+	don't rely on the packet length if the packet type is incorrect
+
+2006-09-05  Loic Dachary  <loic@dachary.org>
+
+	* debian/control.breezy, debian/control.dapper, debian/control.hoary:
+	ubuntu uses alsa instead of all
+
 2006-09-05  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.24
