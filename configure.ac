@@ -253,6 +253,7 @@ AC_CONFIG_FILES([
         tests/test-xmlrpc.py
 	tests/test-pokerinteractor.py
 	tests/test-pokerrenderer.py
+	tests/test-protocol.py
         tests/testcurrency.php
         tests/testicurrency.php
         tests/upgrade

@@ -59,6 +59,7 @@ TESTS = coverage-reset \
 	test-xmlrpc.py \
 	test-pokerinteractor.py \
 	test-pokerrenderer.py \
+	test-protocol.py \
 	testcurrency.php \
 	coverage-report \
 	poker-interface
