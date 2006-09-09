@@ -11,13 +11,14 @@
 #
 #    Developers do not need to manually edit POT or PO files.
 #
+# Initial translator: Guilhelm Panaget <guilhelm.panaget@free.fr>
 msgid ""
 msgstr ""
 "Project-Id-Version: poker-network\n"
 "Report-Msgid-Bugs-To: loic@debian.org\n"
-"POT-Creation-Date: 2006-07-23 16:46+0200\n"
-"PO-Revision-Date: 2005-11-12 09:22+0200\n"
-"Last-Translator: Guilhelm Panaget <guilhelm.panaget@free.fr>\n"
+"POT-Creation-Date: 2006-09-04 15:12+0200\n"
+"PO-Revision-Date: 2006-09-04 15:20+0200\n"
+"Last-Translator: Thomas Huriaux <thomas.huriaux@gmail.com>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=iso-8859-1\n"
@@ -26,8 +27,8 @@ msgstr ""
 #. Type: multiselect
 #. Description
 #: ../poker-web.templates:1001
-msgid "Which web server would you like to reconfigure automatically?"
-msgstr "Serveur web à reconfigurer automatiquement ?"
+msgid "Web server(s) to reconfigure automatically:"
+msgstr "Serveur(s) web à reconfigurer automatiquement :"
 
 #. Type: multiselect
 #. Description
@@ -42,7 +43,7 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../poker-web.templates:2001
-msgid "Do you want me to restart ${webserver} now?"
+msgid "Restart ${webserver} now?"
 msgstr "Faut-il redémarrer ${webserver} maintenant ?"
 
 #. Type: boolean
@@ -76,8 +77,8 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../python-poker-network.templates:1001
-msgid "Do you want to configure and run the poker-network server ?"
-msgstr "Configurer et démarrer le serveur poker-network ?"
+msgid "Do you want to configure and run the poker-network server?"
+msgstr "Faut-il configurer et démarrer le serveur poker-network ?"
 
 #. Type: boolean
 #. Description
@@ -103,14 +104,13 @@ msgstr "Annulation de l'installation du serveur poker-network"
 #. Type: note
 #. Description
 #: ../python-poker-network.templates:2001
-#, fuzzy
 msgid ""
 "If you want to run poker-network at a later time, you will need to configure "
 "it by hand or by running dpkg-reconfigure python-poker-network."
 msgstr ""
 "Si vous souhaitez exécuter poker-network ultérieurement, vous devrez le "
-"configurer vous-même ou utiliser la commande « dpkg-"
-"reconfigure python-poker-network »."
+"configurer vous-même ou utiliser la commande « dpkg-reconfigure python-poker-"
+"network »."
 
 #. Type: string
 #. Description
@@ -275,6 +275,3 @@ msgid ""
 msgstr ""
 "Aucune confirmation ne sera demandée puisqu'il ne s'agit pas d'un nouveau "
 "mot de passe."
-
-#~ msgid "poker-network server installation."
-#~ msgstr "Voulez-vous installer poker-network en mode serveur ?"
