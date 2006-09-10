@@ -1,8 +1,10 @@
 poker-network (1.0.25-1) unstable; urgency=low
 
   * upstream sync
+  
+  * fr translation from Thomas Huriaux <thomas.huriaux@gmail.com> (closes: #386705)
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Thu,  7 Sep 2006 13:16:13 +0200
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 10 Sep 2006 01:02:54 +0200
 
 poker-network (1.0.24-1) unstable; urgency=low
 
