@@ -319,4 +319,5 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
 # running test
 if __name__ == '__main__':
+    print @src_dir@
     unittest.main()
