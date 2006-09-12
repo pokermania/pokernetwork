@@ -321,3 +321,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 # running test
 if __name__ == '__main__':
     unittest.main()
+
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-protocol.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/protocol.py' TESTS='coverage-reset test-protocol.py coverage-report' check )"
+# End:
