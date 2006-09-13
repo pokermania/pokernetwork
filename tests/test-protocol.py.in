@@ -196,7 +196,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         vers = Version(protocol_number)
         PROTOCOL_MAJOR = "%03d" % vers.major()
         PROTOCOL_MINOR = "%d%02d" % ( vers.medium(), vers.minor() )
-        self.u._packet = list( 'CGI %s.%s\n' % (PROTOCOL_MAJOR, PROTOCOL_MINOR ))
+        self.u._packet = list( 'CGI %s.%s \n' % (PROTOCOL_MAJOR, PROTOCOL_MINOR ))
         self.u._handleVersion()
         assert self.u._protocol_ok == True ,  "_protocol_ok value unexpected"
 
@@ -318,9 +318,22 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u.established == True
         self.u.dataReceived("packet_2")
 
-# running test
+#------------------------------------------------------------------------
+
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(QueueTestCase))
+    suite.addTest(unittest.makeSuite(UGAMEProtocolTestCase))
+    return suite
+
+def Run(verbose):
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
 if __name__ == '__main__':
-    unittest.main()
+    if Run(int(os.environ.get('VERBOSE_T', 2))).wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 # Local Variables:
 # compile-command: "( cd .. ; ./config.status tests/test-protocol.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/protocol.py' TESTS='coverage-reset test-protocol.py coverage-report' check )"
