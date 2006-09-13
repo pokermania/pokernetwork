@@ -6,6 +6,8 @@
 
 	* tests/coverage.py: updated to 2.6
 
+        * pokernetwork/protocol.py: fix some verbosity control
+
 2006-09-12  Loic Dachary  <loic@dachary.org>
 
 	* tests/conf/poker.client.xml.in, pokerclient2d/poker2d.xml.in, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml:
