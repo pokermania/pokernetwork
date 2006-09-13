@@ -1,6 +1,12 @@
-2006-09-12  Loic Dachary  <loic@dachary.org>
+2006-09-13  griim  <griim@call>
 
 	* Release 1.0.25
+
+	* tests/test-protocol.py.in: added verbosity control
+
+	* tests/coverage.py: updated to 2.6
+
+2006-09-12  Loic Dachary  <loic@dachary.org>
 
 	* tests/conf/poker.client.xml.in, pokerclient2d/poker2d.xml.in, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml:
 	version bump
