@@ -29,6 +29,7 @@
 import time
 from string import split, lower
 from re import match
+import platform
 
 from twisted.internet import reactor, defer
 
@@ -185,7 +186,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.display.underware.Uninit()
         import sys
         import os
-        if os.name != "posix" :
+        if platform.system() == "Windows":
             os.execv("pok3d.exe", ["pok3d.exe", "--restart"])
         else:
             argv = [ sys.executable ]
@@ -331,7 +332,7 @@ class PokerClientFactory(UGAMEClientFactory):
             self.display.underware.Uninit()
         import sys
         import os
-        if os.name != "posix" :
+        if platform.system() == "Windows":
             os.execv(upgrades_dir + "/upgrade.exe", [ upgrades_dir + "/upgrade.exe", '"' + target_dir + '"', '"' + sys.executable + '"' ])
         else:
             os.execv("/bin/sh", [ upgrades_dir + "/upgrade", '-x', upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)

@@ -25,7 +25,8 @@
 #
 import sys
 import os
-if os.name != "posix" :
+import platform
+if platform.system() == "Windows" :
     import win32api, win32pdhutil, win32con, win32process
     from underware import python_mywin32
     from win32com.shell import shell, shellcon
@@ -90,7 +91,7 @@ class PokerChild(dispatch.EventDispatcher):
         self.spawnInDir = None
         self.ready = False
 
-        if os.name != "posix":
+        if platform.system() == "Windows":
             IDLList = shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA)
             localData = shell.SHGetPathFromIDList(IDLList) + "\Pok3d"
             self.poker3drc = localData
@@ -117,7 +118,7 @@ class PokerChild(dispatch.EventDispatcher):
                 print "killing " + " ".join(self.commandLine)
 
         if self.pid:
-            if os.name!="posix":
+            if platform.system() == "Windows":
                 try:
                     tokill=self.commandName
                     killProcName(tokill)
@@ -164,7 +165,7 @@ class PokerChild(dispatch.EventDispatcher):
             if self.verbose:
                 print "spawn in " + self.spawnInDir
             os.chdir(self.spawnInDir)
-        if os.name != "posix":
+        if platform.system() == "Windows":
             commandLine = map(lambda x: "'%s'" % x, self.commandLine)
         else:
             commandLine = self.commandLine
@@ -228,7 +229,7 @@ class PokerChildBrowser(PokerChild):
         return True
 
     def spawn(self):
-        if os.name != "posix" :
+        if platform.system() == "Windows":
             win32api.ShellExecute(0, "", self.commandLine[1], "", "", 1)
             return True
         else:
@@ -255,7 +256,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
         source = settings.headerGet("/settings/rsync/@source")
         proxy = settings.headerGet("/settings/rsync/@proxy")
 
-        if os.name != "posix" :
+        if platform.system() == "Windows":
             #target = settings.headerGet("/settings/rsync/@target")
             try:
                 reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
@@ -274,7 +275,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
                                                                                                                         ( "@TARGET@", target )]
                                                                                   ),
                                                                            rsync)
-        if os.name != "posix":
+        if platform.system() == "Windows":
             self.rsync = map(lambda x: '"' + x + '"', self.rsync)
         return True
 
@@ -282,7 +283,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
         if self.verbose > 1:
             print "PokerRsync::spawn: " + join(self.rsync)
         dir = self.settings.headerGet("/settings/rsync/@dir")
-        if os.name != "posix":
+        if platform.system() == "Windows":
             self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir, win32flags = win32process.DETACHED_PROCESS)
         else:
             childFDs = { 1: 'r', 2: 'r' }

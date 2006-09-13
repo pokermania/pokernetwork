@@ -308,7 +308,7 @@ def run(argv, datadir):
 
     Config.upgrades_repository = datadir + "/upgrades"
     
-    if os.name == "posix":
+    if platform.system() == "Linux":
         default_settingsfile = datadir + "/poker2d.xml"
         if not exists(settingsfile) and exists(default_settingsfile):
             if not exists(user_dir):

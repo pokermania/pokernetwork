@@ -3,7 +3,7 @@ import urllib
 import pycurl
 import libxml2
 import re
-import os
+import platform
 
 def check_digits_only(map, name):
     if map.has_key(name) and not re.match('^[0-9]+$', map[name]):
@@ -105,7 +105,7 @@ class Neteller:
         collect = Collect()
         url = self.URL + self.FORM
         curl = pycurl.Curl()
-        if os.name != "posix":
+        if platform.system() == "Windows":
             curl.setopt(curl.SSL_VERIFYPEER, False)
         curl.setopt(curl.URL, self.URL + self.FORM)
         curl.setopt(curl.WRITEFUNCTION, collect.body_callback)

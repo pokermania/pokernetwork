@@ -172,7 +172,7 @@ class Upgrader(dispatch.EventDispatcher):
             self.publishEvent(CLIENT_VERSION_OK)
 
     def getUpgrade(self, version, excludes):
-        if os.name != "posix":
+        if platform.system() == "Windows":
             upgrades = "/upgrades"
         else:
             upgrades = self.upgrades

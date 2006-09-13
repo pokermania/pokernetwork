@@ -1,5 +1,6 @@
 
 import os
+import platform
 import sys
 
 sys.path.insert(0, "../")
@@ -13,7 +14,7 @@ sys.path.insert(0, "U:/new_pok3d/underware/underware/python/")
 os.environ["path"] += ";U:/new_pok3d/underware/envwin32/python/Lib/site-packages/win32"
 os.environ["path"] += ";U:/new_pok3d/underware/envwin32/python/Lib/site-packages/pywin32_system32"
 
-if os.name != "posix":
+if platform.system() == "Windows":
     from twisted.internet import win32eventreactor
     win32eventreactor.install()
 
