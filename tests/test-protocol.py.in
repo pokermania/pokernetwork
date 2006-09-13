@@ -94,7 +94,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
     def setUp(self):
         self.u = protocol.UGAMEProtocol()
         self.u.transport = FakeTransport()
-        self.u.factory = FakeFactory(6)
+        self.u.factory = FakeFactory(int(os.environ.get('VERBOSE_T', 0)))
 
     def testUGAMEProtocolInit(self):
         """Testing class UGAMEProtocol init"""
