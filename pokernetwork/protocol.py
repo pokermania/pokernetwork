@@ -121,7 +121,7 @@ class UGAMEProtocol(protocol.Protocol):
             self._packet[:] = [buf]
             self._packet_len = len(buf)
             self._expected_len = Packet.format_size
-            if self.factory.verbose > 1:
+            if self.factory and self.factory.verbose > 1:
                 print "protocol established"
             self.protocolEstablished()
             if self._packet_len > 0:
@@ -184,7 +184,8 @@ class UGAMEProtocol(protocol.Protocol):
                 lag = now - queue.packets[0].time__
                 self._lag = lag
                 if queue.delay > now and lag > self._lagmax:
-                    print " => queue %d delay canceled because lag too high" % id
+                    if self.factory and self.factory.verbose > 5:
+		        print " => queue %d delay canceled because lag too high" % id
                     queue.delay = 0
                 #
                 # If time has come, process one packet
@@ -203,7 +204,7 @@ class UGAMEProtocol(protocol.Protocol):
                         queue.delay = delay
                         self._queues[id].delay = delay
                 else:
-                    if self.factory.verbose > 5:
+                    if self.factory and self.factory.verbose > 5:
                         print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )
             #
             # Remove empty queues for which there is no delay
@@ -242,15 +243,16 @@ class UGAMEProtocol(protocol.Protocol):
                     if PacketFactory.has_key(type.type):
                         packet = PacketFactory[type.type]()
                         buf = packet.unpack(buf)
-                        if self.factory.verbose > 4:
+                        if self.factory and self.factory.verbose > 4:
                             print "%s(%d bytes) => %s" % ( self._prefix, type.length, packet )
                         if self._poll:
                             self.pushPacket(packet)
                         else:
                             self._handler(packet)
                     else:
-                        print "%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length )
-                        if self.factory.verbose > 4:
+                        if self.factory and self.factory.verbose > 3:                        
+                            print "%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length )
+                        if self.factory and self.factory.verbose > 4:
                             print "known types are %s " % PacketNames
                         buf = buf[1:]
                     self._expected_len = Packet.format_size
