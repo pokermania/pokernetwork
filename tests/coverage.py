@@ -22,14 +22,19 @@
 # interface and limitations.  See [GDR 2001-12-04b] for requirements and
 # design.
 
-"""Usage:
+r"""Usage:
 
-coverage.py -x MODULE.py [ARG1 ARG2 ...]
+coverage.py -x [-p] MODULE.py [ARG1 ARG2 ...]
     Execute module, passing the given command-line arguments, collecting
-    coverage data.
+    coverage data. With the -p option, write to a temporary file containing
+    the machine name and process ID.
 
 coverage.py -e
     Erase collected coverage data.
+
+coverage.py -c
+    Collect data from multiple coverage files (as created by -p option above)
+    and store it into a single file representing the union of the coverage.
 
 coverage.py -r [-m] [-o dir1,dir2,...] FILE1 FILE2 ...
     Report on the statement coverage for the given files.  With the -m
@@ -49,7 +54,7 @@ coverage.py -a [-d dir] [-o dir1,dir2,...] FILE1 FILE2 ...
 Coverage data is saved in the file .coverage by default.  Set the
 COVERAGE_FILE environment variable to save it somewhere else."""
 
-__version__ = "2.5.20051204"    # see detailed history at the end of this file.
+__version__ = "2.6.20060823"    # see detailed history at the end of this file.
 
 import compiler
 import compiler.visitor
@@ -59,6 +64,7 @@ import string
 import sys
 import threading
 import types
+from socket import gethostname
 
 # 2. IMPLEMENTATION
 #
@@ -98,8 +104,10 @@ class StatementFindingAstVisitor(compiler.visitor.ASTVisitor):
     def doCode(self, node):
         if hasattr(node, 'decorators') and node.decorators:
             self.dispatch(node.decorators)
-        self.doSuite(node, node.code)
-    
+            self.recordAndDispatch(node.code)
+        else:
+            self.doSuite(node, node.code)
+            
     visitFunction = visitClass = doCode
 
     def getFirstLine(self, node):
@@ -228,9 +236,9 @@ class StatementFindingAstVisitor(compiler.visitor.ASTVisitor):
 
 the_coverage = None
 
-class coverage:
-    error = "coverage error"
+class CoverageException(Exception): pass
 
+class coverage:
     # Name of the cache file (unless environment variable is set).
     cache_default = ".coverage"
 
@@ -257,7 +265,7 @@ class coverage:
     def __init__(self):
         global the_coverage
         if the_coverage:
-            raise self.error, "Only one coverage object allowed."
+            raise CoverageException, "Only one coverage object allowed."
         self.usecache = 1
         self.cache = None
         self.exclude_re = ''
@@ -273,7 +281,6 @@ class coverage:
     # objects.
     
     def t(self, f, w, a):                                   #pragma: no cover
-        #print w, f.f_code.co_filename, f.f_lineno
         if w == 'line':
             self.c[(f.f_code.co_filename, f.f_lineno)] = 1
             for c in self.cstack:
@@ -287,23 +294,26 @@ class coverage:
         print __doc__
         sys.exit(1)
 
-    def command_line(self):
+    def command_line(self, argv, help=None):
         import getopt
+        help = help or self.help
         settings = {}
         optmap = {
             '-a': 'annotate',
+            '-c': 'collect',
             '-d:': 'directory=',
             '-e': 'erase',
             '-h': 'help',
             '-i': 'ignore-errors',
             '-m': 'show-missing',
+            '-p': 'parallel-mode',
             '-r': 'report',
             '-x': 'execute',
-            '-o': 'omit=',
+            '-o:': 'omit=',
             }
         short_opts = string.join(map(lambda o: o[1:], optmap.keys()), '')
         long_opts = optmap.values()
-        options, args = getopt.getopt(sys.argv[1:], short_opts, long_opts)
+        options, args = getopt.getopt(argv, short_opts, long_opts)
         for o, a in options:
             if optmap.has_key(o):
                 settings[optmap[o]] = 1
@@ -312,43 +322,52 @@ class coverage:
             elif o[2:] in long_opts:
                 settings[o[2:]] = 1
             elif o[2:] + '=' in long_opts:
-                settings[o[2:]] = a
-            else:
-                self.help("Unknown option: '%s'." % o)
+                settings[o[2:]+'='] = a
+            else:       #pragma: no cover
+                pass    # Can't get here, because getopt won't return anything unknown.
+
         if settings.get('help'):
-            self.help()
+            help()
+
         for i in ['erase', 'execute']:
-            for j in ['annotate', 'report']:
+            for j in ['annotate', 'report', 'collect']:
                 if settings.get(i) and settings.get(j):
-                    self.help("You can't specify the '%s' and '%s' "
+                    help("You can't specify the '%s' and '%s' "
                               "options at the same time." % (i, j))
+
         args_needed = (settings.get('execute')
                        or settings.get('annotate')
                        or settings.get('report'))
-        action = settings.get('erase') or args_needed
+        action = (settings.get('erase') 
+                  or settings.get('collect')
+                  or args_needed)
         if not action:
-            self.help("You must specify at least one of -e, -x, -r, or -a.")
+            help("You must specify at least one of -e, -x, -c, -r, or -a.")
         if not args_needed and args:
-            self.help("Unexpected arguments %s." % args)
+            help("Unexpected arguments: %s" % " ".join(args))
         
-        self.get_ready()
+        self.get_ready(settings.get('parallel-mode'))
         self.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
 
         if settings.get('erase'):
             self.erase()
         if settings.get('execute'):
             if not args:
-                self.help("Nothing to do.")
+                help("Nothing to do.")
             sys.argv = args
             self.start()
             import __main__
             sys.path[0] = os.path.dirname(sys.argv[0])
             execfile(sys.argv[0], __main__.__dict__)
+        if settings.get('collect'):
+            self.collect()
         if not args:
             args = self.cexecuted.keys()
+        
         ignore_errors = settings.get('ignore-errors')
         show_missing = settings.get('show-missing')
         directory = settings.get('directory=')
+
         omit = settings.get('omit=')
         if omit is not None:
             omit = omit.split(',')
@@ -360,17 +379,21 @@ class coverage:
         if settings.get('annotate'):
             self.annotate(args, directory, ignore_errors, omit_prefixes=omit)
 
-    def use_cache(self, usecache):
+    def use_cache(self, usecache, cache_file=None):
         self.usecache = usecache
+        if cache_file and not self.cache:
+            self.cache_default = cache_file
         
-    def get_ready(self):
+    def get_ready(self, parallel_mode=False):
         if self.usecache and not self.cache:
             self.cache = os.environ.get(self.cache_env, self.cache_default)
+            if parallel_mode:
+                self.cache += "." + gethostname() + "." + str(os.getpid())
             self.restore()
         self.analysis_cache = {}
         
-    def start(self):
-        self.get_ready()
+    def start(self, parallel_mode=False):
+        self.get_ready(parallel_mode)
         if self.nesting == 0:                               #pragma: no cover
             sys.settrace(self.t)
             if hasattr(threading, 'settrace'):
@@ -421,17 +444,45 @@ class coverage:
         self.c = {}
         self.cexecuted = {}
         assert self.usecache
-        if not os.path.exists(self.cache):
-            return
+        if os.path.exists(self.cache):
+            self.cexecuted = self.restore_file(self.cache)
+
+    def restore_file(self, file_name):
         try:
-            cache = open(self.cache, 'rb')
+            cache = open(file_name, 'rb')
             import marshal
             cexecuted = marshal.load(cache)
             cache.close()
             if isinstance(cexecuted, types.DictType):
-                self.cexecuted = cexecuted
+                return cexecuted
+            else:
+                return {}
         except:
-            pass
+            return {}
+
+    # collect(). Collect data in multiple files produced by parallel mode
+
+    def collect(self):
+        cache_dir, local = os.path.split(self.cache)
+        for file in os.listdir(cache_dir):
+            if not file.startswith(local):
+                continue
+
+            full_path = os.path.join(cache_dir, file)
+            cexecuted = self.restore_file(full_path)
+            self.merge_data(cexecuted)
+
+    def merge_data(self, new_data):
+        for file_name, file_data in new_data.items():
+            if self.cexecuted.has_key(file_name):
+                self.merge_file_data(self.cexecuted[file_name], file_data)
+            else:
+                self.cexecuted[file_name] = file_data
+
+    def merge_file_data(self, cache_data, new_data):
+        for line_number in new_data.keys():
+            if not cache_data.has_key(line_number):
+                cache_data[line_number] = new_data[line_number]
 
     # canonical_filename(filename).  Return a canonical filename for the
     # file (that is, an absolute path with no redundant components and
@@ -468,7 +519,7 @@ class coverage:
     def morf_filename(self, morf):
         if isinstance(morf, types.ModuleType):
             if not hasattr(morf, '__file__'):
-                raise self.error, "Module has no __file__ attribute."
+                raise CoverageException, "Module has no __file__ attribute."
             file = morf.__file__
         else:
             file = morf
@@ -487,11 +538,11 @@ class coverage:
         ext = os.path.splitext(filename)[1]
         if ext == '.pyc':
             if not os.path.exists(filename[0:-1]):
-                raise self.error, ("No source for compiled code '%s'."
+                raise CoverageException, ("No source for compiled code '%s'."
                                    % filename)
             filename = filename[0:-1]
         elif ext != '.py':
-            raise self.error, "File '%s' not Python source." % filename
+            raise CoverageException, "File '%s' not Python source." % filename
         source = open(filename, 'r')
         lines, excluded_lines = self.find_executable_statements(
             source.read(), exclude=self.exclude_re
@@ -789,7 +840,7 @@ except ImportError:
 
 # Command-line interface.
 if __name__ == '__main__':
-    the_coverage.command_line()
+    the_coverage.command_line(sys.argv[1:])
 
 
 # A. REFERENCES
@@ -858,10 +909,20 @@ if __name__ == '__main__':
 # 2005-12-04 NMB Adapted Greg Rogers' patch for using relative filenames,
 # and sorting and omitting files to report on.
 #
+# 2006-07-23 NMB Applied Joseph Tate's patch for function decorators.
+#
+# 2006-08-21 NMB Applied Sigve Tjora and Mark van der Wal's fixes for argument
+# handling.
+#
+# 2006-08-22 NMB Applied Geoff Bache's parallel mode patch.
+#
+# 2006-08-23 NMB Refactorings to improve testability.  Fixes to command-line
+# logic for parallel mode and collect.
+
 # C. COPYRIGHT AND LICENCE
 #
 # Copyright 2001 Gareth Rees.  All rights reserved.
-# Copyright 2004-2005 Ned Batchelder.  All rights reserved.
+# Copyright 2004-2006 Ned Batchelder.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
