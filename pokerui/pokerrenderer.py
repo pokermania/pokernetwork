@@ -681,7 +681,7 @@ class PokerRenderer:
 		    self.schedulePacket(PacketPokerChatWord(word = word["event"], game_id = game_id, serial = serial))
 		    return word["out"]
 		else:
-		    if self.factory.verbose == 3: print "chat word (%s) not found" % word["in"]
+		    if self.factory.verbose > 3: print "chat word (%s) not found" % word["in"]
 		    return current
 	    words = map(matchChatWord, words)
 	    message = string.join(words)
