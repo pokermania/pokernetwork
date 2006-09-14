@@ -1,6 +1,10 @@
-2006-09-13  Johan Euphrosine  <johan@mekensleep.com>
+2006-09-14  Jerome Jeannin  <griim@mekensleep.com>
 
-	* Release 1.0.25
+        * Release 1.0.25
+
+	* pokernetwork/protocol.py: ajusted verbosity level
+
+2006-09-13  Johan Euphrosine  <johan@mekensleep.com>
 
 	* pokerui/pokerrenderer.py: decreased verbosity of chatFormatMessage
 
