@@ -24,6 +24,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import sys
+import platform
 sys.path.insert(0, "..")
 
 #
@@ -308,13 +309,14 @@ def run(argv, datadir):
 
     Config.upgrades_repository = datadir + "/upgrades"
     
-    if platform.system() == "Linux":
-        default_settingsfile = datadir + "/poker2d.xml"
-        if not exists(settingsfile) and exists(default_settingsfile):
-            if not exists(user_dir):
-                makedirs(user_dir)
-            copy(default_settingsfile, settingsfile)
+    if platform.system() == "Windows":
+        raise UserWarning, "can't infer the location of the settings file on Windows (not yet implemented)"
 
+    default_settingsfile = datadir + "/poker2d.xml"
+    if not exists(settingsfile) and exists(default_settingsfile):
+        if not exists(user_dir):
+            makedirs(user_dir)
+        copy(default_settingsfile, settingsfile)
 
     client = Main(configfile, settingsfile)
 
