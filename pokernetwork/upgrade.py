@@ -25,8 +25,9 @@
 #
 
 import os
+import platform
 
-if os.name != "posix":
+if platform.system() == "Windows":
     import win32api
     import win32con
 
@@ -140,7 +141,7 @@ class Upgrader(dispatch.EventDispatcher):
         self.config = config
         self.settings = settings
         self.target = self.settings.headerGet("/settings/rsync/@target")
-        if os.name != "posix":
+        if platform.system() == "Windows":
             try:
                 reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
             except:
