@@ -184,7 +184,7 @@ class UGAMEProtocol(protocol.Protocol):
                 lag = now - queue.packets[0].time__
                 self._lag = lag
                 if queue.delay > now and lag > self._lagmax:
-                    if self.factory and self.factory.verbose > 5:
+                    if self.factory and self.factory.verbose > 0:
 		        print " => queue %d delay canceled because lag too high" % id
                     queue.delay = 0
                 #
@@ -250,7 +250,7 @@ class UGAMEProtocol(protocol.Protocol):
                         else:
                             self._handler(packet)
                     else:
-                        if self.factory and self.factory.verbose > 3:                        
+                        if self.factory and self.factory.verbose >= 0:                        
                             print "%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length )
                         if self.factory and self.factory.verbose > 4:
                             print "known types are %s " % PacketNames
