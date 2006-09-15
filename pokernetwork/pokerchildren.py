@@ -94,18 +94,18 @@ class PokerChild(dispatch.EventDispatcher):
         if platform.system() == "Windows":
             IDLList = shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA)
             localData = shell.SHGetPathFromIDList(IDLList) + "\Pok3d"
-            self.poker3drc = localData
+            self.pokerrc = localData
         else:
             if settings.headerGet("/settings/user/@path"):
-                self.poker3drc = expanduser(settings.headerGet("/settings/user/@path"))
+                self.pokerrc = expanduser(settings.headerGet("/settings/user/@path"))
             else:
-                self.poker3drc = '.'
+                self.pokerrc = '.'
 
     def kill(self):
         if not self.ready:
             return -1
 
-        path = self.poker3drc + "/" + self.pidFile + ".pid"
+        path = self.pokerrc + "/" + self.pidFile + ".pid"
         if not self.pid:
             if exists(path):
                 fd = file(path, "r")
@@ -143,7 +143,7 @@ class PokerChild(dispatch.EventDispatcher):
         return pid
 
     def savepid(self, what, pid):
-        path = self.poker3drc + "/" + what + ".pid"
+        path = self.pokerrc + "/" + what + ".pid"
         fd = file(path, "w")
         fd.write(str(pid))
         fd.close()
@@ -257,7 +257,6 @@ class PokerRsync(PokerChild, ProcessProtocol):
         proxy = settings.headerGet("/settings/rsync/@proxy")
 
         if platform.system() == "Windows":
-            #target = settings.headerGet("/settings/rsync/@target")
             try:
                 reg_key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER, "Software\Mekensleep\Pok3d")
             except:
@@ -265,6 +264,8 @@ class PokerRsync(PokerChild, ProcessProtocol):
 
             target = win32api.RegQueryValue(reg_key, "")
             win32api.RegCloseKey(reg_key)
+        else:
+            target = settings.headerGet("/settings/rsync/@target")
 
         if proxy:
             environ['RSYNC_PROXY'] = proxy
@@ -289,6 +290,9 @@ class PokerRsync(PokerChild, ProcessProtocol):
             childFDs = { 1: 'r', 2: 'r' }
             self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir,
                                              childFDs = childFDs)
+
+    def line(self, string):
+        print "%s" % string
 
     def errReceived(self, chunk):
         print "ERROR: PokerRsync " + chunk
