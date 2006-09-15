@@ -28,10 +28,36 @@
 from os import environ
 environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network/poker2d/Aero/gtkrc"
 
+import getopt
 import sys
 sys.path.insert(0, "@top_srcdir@")
 
 from pokerclient2d.poker2d import run
 
-run(sys.argv, "@POKER2D_PKGDATADIR@")
+def usage():
+    print """
+poker2d [-h|--help] [settings.xml [config.xml]]
+"""
 
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help" ])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    launcher = False
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit()
+
+    config_file = None
+    settings_file = None
+    if len(args) > 0:
+        settings_file = args[0]
+    if len(args) > 1:
+        config_file = args[1]
+
+    run("@POKER2D_PKGDATADIR@", settings_file, config_file)
+
+main()
