@@ -1,6 +1,51 @@
-2006-09-14  Jerome Jeannin  <griim@mekensleep.com>
+2006-09-15  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.25
+
+	* tests/upgrade-rsync: force automake1.9
+	set pythonpath to use installed module instead of system ones
+
+	* tests/Makefile.am: Add tests/test-pokerchildren.py
+
+	* pokerui/pokerdisplay.py:
+	implement sensible init and render function (quit when received QUIT)
+
+	* pokernetwork/upgrade.py: added verbosity in upgrade function
+
+	* pokernetwork/pokerclient.py:
+	cope with lack of underware member of display in upgrades
+	added verbosity in upgrade function
+
+	* pokernetwork/pokerchildren.py: s/poker3drc/pokerrc/
+	set the target variable for GNU/Linux based upgrades
+	implement a default text based line callback
+
+	* pokerclient2d/poker2d.py:
+	fully implement batch mode (only upgrades), for testin purpose
+	main function (run) has fixed list of arguments for clarity
+
+	* pokerclient2d/poker2d-test.xml, pokerclient2d/client.xml:
+	version bump
+
+	* pokerclient2d/Makefile.am:
+	use pythondir instead of pyexecdir to avoir architecture dependent installation on architecture independant scripts
+
+	* configure.ac: Add tests/test-pokerchildren.py
+
+	* Makefile.am:
+	use pythondir instead of pyexecdir to avoir architecture dependent installation on architecture independant scripts
+
+	* pokerclient2d/poker2d.in: usage help
+
+2006-09-14  Loic Dachary  <loic@dachary.org>
+
+	* pokerclient2d/poker2d.xml.in: no MAYBE_PYTHON_VERSION
+
+	* pokernetwork/upgrade.py: use platform.system
+
+	* pokerclient2d/poker2d.py: add missing import platform
+
+2006-09-14  Jerome Jeannin  <griim@mekensleep.com>
 
 	* pokernetwork/protocol.py: ajusted verbosity level
 

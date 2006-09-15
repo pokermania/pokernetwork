@@ -2,7 +2,7 @@ Release 1.0.25
 
 Bug fixes.
 
-100% test coverage of protocol stack.
+More unit tests (protocol + children).
 
 Packages for etch and edgy.
 
