@@ -173,6 +173,7 @@ class Upgrader(dispatch.EventDispatcher):
             self.publishEvent(CLIENT_VERSION_OK)
 
     def getUpgrade(self, version, excludes):
+        if self.verbose >= 1: print "Upgrader::getUpgrade"
         if platform.system() == "Windows":
             upgrades = "/upgrades"
         else:
