@@ -25,6 +25,9 @@
 #
 #
 
+from pokernetwork.packets import PACKET_QUIT
+from twisted.internet import reactor
+
 class PokerDisplay:
     def __init__(self, *args, **kwargs):
         self.config = kwargs['config']
@@ -34,6 +37,9 @@ class PokerDisplay:
         self.renderer = None
         self.animations = None
         self.finished = False
+
+    def init(self):
+        pass
 
     def setProtocol(self, protocol):
         self.protocol = protocol
@@ -54,7 +60,9 @@ class PokerDisplay:
             return True
 
     def render(self, packet):
-        pass
+        if packet.type == PACKET_QUIT:
+            reactor.stop()
+            return
 
     def showProgressBar(self):
         pass
