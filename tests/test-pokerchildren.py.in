@@ -1,0 +1,166 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os, libxml2
+sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer
+
+twisted.internet.base.DelayedCall.debug = True
+from twisted.python import failure
+
+from pokernetwork import pokerchildren
+from pokernetwork import pokernetworkconfig
+
+config_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<sequence>
+</sequence>
+"""
+
+class PokerChildrenTestCase(unittest.TestCase):
+
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        config = pokernetworkconfig.Config([])
+        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
+        config.header = config.doc.xpathNewContext()
+        self.config = config
+        if not os.path.exists("test-pokerchildren-dir"):
+            os.mkdir("test-pokerchildren-dir")
+
+    def setSettings(self, settings_xml):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+
+    # -----------------------------------------------------------------------------------------------------
+    def tearDown(self):
+        del self.settings
+        del self.config
+
+    # -----------------------------------------------------------------------------------------------------
+    def test01_rsync_ok(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<user path="test-pokerchildren-dir" />
+<rsync source="source" target="target" path="touch" dir="test-pokerchildren-dir" />
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerRsync(self.config, self.settings, ('rsync', '@SOURCE@-sub', '@TARGET@-sub'))
+        d = defer.Deferred()
+        process.spawn()
+        def rsync_done(result):
+            self.failIf(os.path.exists("test-pokerchildren-dir/rsync"), "rsync exists")
+            self.failUnless(os.path.exists("test-pokerchildren-dir/target-sub"), "target-sub")
+            self.failUnless(os.path.exists("test-pokerchildren-dir/source-sub"), "source-sub")
+            return result
+
+        def rsync_failed(logs, reason):
+            d.errback(failure.Failure("rsync_failed " + str(logs) + str(reason)))
+
+        process.registerHandler(pokerchildren.RSYNC_DONE, lambda: d.callback(True))
+        process.registerHandler(pokerchildren.RSYNC_FAILED, rsync_failed)
+        d.addCallback(rsync_done)
+        return d
+
+    # -----------------------------------------------------------------------------------------------------
+    def test02_rsync_fail(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<user path="test-pokerchildren-dir" />
+<rsync source="source" target="target" path="sh" dir="test-pokerchildren-dir" />
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerRsync(self.config, self.settings, ('rsync', '-c', 'exit 5'))
+        d = defer.Deferred()
+        process.spawn()
+        def rsync_done(failed):
+            if not failed:
+                self.fail(failure.Failure("rsync_succeeded but was expected to fail"))
+            return failed
+
+        def rsync_failed(logs, reason):
+            print "rsync_failed as expected : " + str(logs) + str(reason)
+            d.callback(True)
+
+        process.registerHandler(pokerchildren.RSYNC_DONE, lambda: d.callback(None))
+        process.registerHandler(pokerchildren.RSYNC_FAILED, rsync_failed)
+        d.addCallback(rsync_done)
+        return d
+
+
+    # -----------------------------------------------------------------------------------------------------
+    def test03_child_kill(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<web browser="sleep">6</web>
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        d = defer.Deferred()
+        def process_kill(result):
+            self.assertNotEqual(-1, process.kill())
+            return result
+        d.addCallback(process_kill)
+        reactor.callLater(1, lambda: d.callback(True))
+        return d
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    return pokerengineconfig
+
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test03"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerChildrenTestCase))
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerchildren.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerchildren.py' TESTS='coverage-reset test-pokerchildren.py coverage-report' check )"
+# End:
+
