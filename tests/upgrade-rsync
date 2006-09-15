@@ -122,7 +122,7 @@ function install() {
     else
         pushd $top_srcdir
         make maintainer-clean || /bin/true
-        ./bootstrap
+        AUTOMAKE=automake-1.9 ACLOCAL=aclocal-1.9 autoreconf --install
         ./configure --prefix=$ROOT/root --enable-upgrades=$ROOT --with-poker2duserpath=$ROOT
         make install
         patch_preferences root
@@ -140,8 +140,8 @@ function install() {
         # pretend that it's the previous version.
         #
         rsync -aH $ROOT/root/ $ROOT/$version_current
-        patch_version $ROOT/root/share/poker-network*/poker2d/poker2d.xml $version_previous
-        patch_version $ROOT/root/share/poker-network*/poker2d/client.xml $version_previous
+        patch_version $ROOT/root/share/poker-network/poker2d/poker2d.xml $version_previous
+        patch_version $ROOT/root/share/poker-network/poker2d/client.xml $version_previous
         perl -pi -e 's/(version_number)\s*=\s*".*"/$1 = "'$version_previous'"/'  $ROOT/root/lib/python*/site-packages/$MODULE/__init__.py
     fi
 }
@@ -150,6 +150,11 @@ function run() {
     if $is_cygwin ; then
         :
     else
+        for dir in $ROOT/root/lib/python*/site-packages ; do
+            if [ -d $dir/pokerui ] ; then
+                export PYTHONPATH=$dir:$PYTHONPATH
+            fi
+        done
         pushd $ROOT
         $ROOT/root/games/poker2d $ROOT/poker2d.xml
         popd
