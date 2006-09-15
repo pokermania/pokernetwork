@@ -85,6 +85,7 @@ from pokernetwork.pokerpackets import *
 from pokerui import pokerinterface
 from pokerui.pokerrenderer import PokerRenderer
 
+from pokerui.pokerdisplay import PokerDisplay
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D
 from pokerclient2d.pokerinterface2d import PokerInterface2D
 
@@ -193,13 +194,15 @@ class PokerClientFactory2D(PokerClientFactory):
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
-        self.skin = PokerSkin2D(settings = self.settings)
-        self.renderer = PokerRenderer(self)
         self.initDisplay()
+        if self.settings.headerGet("/settings/@batch") != "yes":
+            self.skin = PokerSkin2D(settings = self.settings)
+            self.renderer = PokerRenderer(self)
+            self.initDisplay()
 
-        self.interface = PokerInterface2D(self.settings)
-        self.skin.interfaceReady(self.interface, self.display)
-        self.renderer.interfaceReady(self.interface)
+            self.interface = PokerInterface2D(self.settings)
+            self.skin.interfaceReady(self.interface, self.display)
+            self.renderer.interfaceReady(self.interface)
  
         if self.settings.headerGet("/settings/@upgrades") == "yes":
             self.checkClientVersion((version.major(), version.medium(), version.minor()))
@@ -213,9 +216,13 @@ class PokerClientFactory2D(PokerClientFactory):
             self.showServers()
 
     def failedUpgrade(self, logs, reason):
-        interface = self.interface
-        interface.messageBox("Unable to upgrade software\n" + logs)
-        interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
+        message = "Unable to upgrade software\n" + logs
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            print message
+        else:
+            interface = self.interface
+            interface.messageBox(message)
+            interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
         
     def needUpgrade(self, version):
         if self.settings.headerGet("/settings/@batch") == "yes":
@@ -233,10 +240,14 @@ class PokerClientFactory2D(PokerClientFactory):
             self.quit()
 
     def initDisplay(self):
-        self.display = PokerDisplay2D(settings = self.settings,
-                                      config = self.config,
-                                      factory = self)
-
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            self.display = PokerDisplay(settings = self.settings,
+                                        config = self.config,
+                                        factory = self)
+        else:
+            self.display = PokerDisplay2D(settings = self.settings,
+                                          config = self.config,
+                                          factory = self)
         self.display.init()
             
     def showServers(self):
@@ -302,29 +313,35 @@ class PokerClientFactory2D(PokerClientFactory):
                 self.interface.messageBox("Lost connection to poker\nserver at %s:%d" % ( self.host, self.port ))
                 self.interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, self.quit)
     
-def run(argv, datadir):
+def run(datadir, settings_file, config_file):
     user_dir = expanduser("~/.poker2d")
-    settingsfile = len(argv) > 1 and argv[1] or user_dir + "/poker2d.xml"
-    configfile = len(argv) > 2 and argv[2] or "client.xml"
+    if not settings_file: settings_file = user_dir + "/poker2d.xml"
+    if not config_file: config_file = "client.xml"
 
     Config.upgrades_repository = datadir + "/upgrades"
     
     if platform.system() == "Windows":
         raise UserWarning, "can't infer the location of the settings file on Windows (not yet implemented)"
 
-    default_settingsfile = datadir + "/poker2d.xml"
-    if not exists(settingsfile) and exists(default_settingsfile):
+    default_settings_file = datadir + "/poker2d.xml"
+    if not exists(settings_file) and exists(default_settings_file):
         if not exists(user_dir):
             makedirs(user_dir)
-        copy(default_settingsfile, settingsfile)
+        copy(default_settings_file, settings_file)
 
-    client = Main(configfile, settingsfile)
+    client = Main(config_file, settings_file)
 
     if client.configOk():
         client.run()
 
 if __name__ == "__main__":
-    run(sys.argv, ".")
+    config_file = None
+    settings_file = None
+    if len(sys.argv) > 1:
+        settings_file = sys.argv[1]
+    if len(sys.argv) > 2:
+        config_file = sys.argv[2]
+    run(".", settings_file, config_file)
 #
 # Emacs debug:
 # M-x pdb
