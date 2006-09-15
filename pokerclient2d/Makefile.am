@@ -132,7 +132,7 @@ _pokerinterface2_3_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_3_LIB
 _pokerinterface2_3_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_3_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_3\" -D'VERSION_NAME(w)=w\#\#2_3'
 endif
 
-pokerclient2ddir = ${pyexecdir}/pokerclient2d
+pokerclient2ddir = ${pythondir}/pokerclient2d
 pokerclient2d_PYTHON = \
 	__init__.py \
 	poker2d.py \

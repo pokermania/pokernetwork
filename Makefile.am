@@ -60,7 +60,7 @@ nobase_dist_pkgdata_DATA = \
 	upgrades/poker.server/1.0.13-1.0.14.xsl \
 	upgrades/poker.server/1.0.14-1.0.15.xsl
 
-pokernetworkdir = ${pyexecdir}/pokernetwork
+pokernetworkdir = ${pythondir}/pokernetwork
 pokernetwork_PYTHON = \
 	pokernetwork/__init__.py \
 	pokernetwork/client.py \
@@ -96,7 +96,7 @@ sbin_SCRIPTS = \
 	pokernetwork/pokerbot \
 	database/pokerdatabaseupgrade
 
-pokeruidir = ${pyexecdir}/pokerui
+pokeruidir = ${pythondir}/pokerui
 pokerui_PYTHON = \
 	pokerui/pokerrenderer.py \
 	pokerui/pokerinterface.py \
