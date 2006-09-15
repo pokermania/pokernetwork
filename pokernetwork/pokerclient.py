@@ -183,7 +183,8 @@ class PokerClientFactory(UGAMEClientFactory):
     def restart(self):
         self.children.killall()
         reactor.disconnectAll()
-        self.display.underware.Uninit()
+        if self.display and hasattr(self.display, "underware") and self.display.underware:
+            self.display.underware.Uninit()
         import sys
         import os
         if platform.system() == "Windows":
@@ -326,6 +327,8 @@ class PokerClientFactory(UGAMEClientFactory):
         self.upgrader.getUpgrade(version, excludes)
 
     def upgradeReady(self, target_dir, upgrades_dir):
+        if self.verbose >= 0:
+            print "PokerClientFactory::upgradeReady"
         self.children.killall()
         reactor.disconnectAll()
         if hasattr(self.display, "underware"):
