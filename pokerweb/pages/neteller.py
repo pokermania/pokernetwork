@@ -76,6 +76,9 @@ class Neteller:
         check_digits_only(parameters, 'net_account')
         check_exact_length(parameters, 'net_account', 12)
 
+        check_digits_only(parameters, 'bank_acct_num')
+        check_exact_length(parameters, 'bank_acct_num', 4)
+
         check_digits_only(parameters, 'secure_id')
         check_exact_length(parameters, 'secure_id', 6)
 
