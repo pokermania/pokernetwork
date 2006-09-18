@@ -161,7 +161,8 @@ EXTRA_DIST = \
 	pokerweb/pages/neteller.cfg \
 	pokerweb/pages/prototype.js \
 	pokerweb/conf/htaccess \
-	pokerweb/conf/apache.conf
+	pokerweb/conf/apache.conf \
+	poker-client-specs.odp
 
 clean-local:
 	rm -f */*.py[co]
