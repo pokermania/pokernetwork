@@ -1733,9 +1733,11 @@ class PokerRenderer:
 
     def showBackgroundLobbyCashier(self):
         self.render(PacketPokerInterfaceCommand(window = "background_lobby_cashier_window", command = "show"))
+        self.render(PacketPokerInterfaceCommand(window = "background_window", command = "show"))
 
     def hideBackgroundLobbyCashier(self):
         self.render(PacketPokerInterfaceCommand(window = "background_lobby_cashier_window", command = "hide"))
+        self.render(PacketPokerInterfaceCommand(window = "background_window", command = "hide"))
         
 
     def showOutfit(self):
