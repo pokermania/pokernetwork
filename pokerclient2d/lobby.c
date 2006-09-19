@@ -438,12 +438,12 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 				int	screen_width = gui_width(screen);
 				int	screen_height = gui_height(screen);
 	
-				int	top_left_x = (screen_width - 900) / 2;
-				int	top_left_y = (screen_height - 500) / 2;
+				int	top_left_x = (screen_width - 1000) / 2;
+				int	top_left_y = (screen_height - 450) / 2;
 	
 				{
 					static position_t position;
-					position.x = top_left_x + 350;
+					position.x = screen_width - 650;
 					position.y = top_left_y;
 					gui_place(s_lobby_window, &position, screen);
 				}
@@ -465,7 +465,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 				{
 					static position_t position;
 					position.x = top_left_x;
-					position.y = top_left_y + 400;
+					position.y = top_left_y + 420;
 					gui_place(s_cashier_button_window, &position, screen);
 				}
 				s_lobby_shown = 1;
