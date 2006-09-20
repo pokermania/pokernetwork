@@ -443,7 +443,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 	
 				{
 					static position_t position;
-					position.x = screen_width - 650;
+					position.x = screen_width - 610;
 					position.y = top_left_y;
 					gui_place(s_lobby_window, &position, screen);
 				}
@@ -465,7 +465,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
 				{
 					static position_t position;
 					position.x = top_left_x;
-					position.y = top_left_y + 420;
+					position.y = top_left_y + 435;
 					gui_place(s_cashier_button_window, &position, screen);
 				}
 				s_lobby_shown = 1;
@@ -602,7 +602,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
   } else if(!strcmp(tag, "players")) {
     int players_count = get_int();
     int i;
-    gtk_label_set_text(s_go_to_label, "Go To");
+    gtk_label_set_text(s_go_to_label, "GO TO TABLE");
     gtk_widget_set_sensitive(GTK_WIDGET(s_go_to_button), TRUE);
     gtk_list_store_clear(s_players_store);
     for(i = 0; i < players_count; i++) {

@@ -406,7 +406,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
 				{
 					static position_t position;
-					position.x = screen_width - 620;
+					position.x = screen_width - 610;
 					position.y = top_left_y;
 					gui_place(s_tournaments_window, &position, screen);
 				}
@@ -428,7 +428,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 				{
 					static position_t position;
 					position.x = top_left_x;
-					position.y = top_left_y + 420;
+					position.y = top_left_y + 435;
 					gui_place(s_cashier_button_window, &position, screen);
 				}
 				s_tournaments_window_shown = 1;
@@ -563,9 +563,9 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     can_register = get_int();
     char* label = "";
     if(can_register == 1)
-      label = "Register";
+      label = "REGISTER";
     else if(can_register == 0)
-      label = "Unregister";
+      label = "UNREGISTER";
     gtk_label_set_text(s_register_unregister_label, label);
     gtk_widget_set_sensitive(GTK_WIDGET(s_register_unregister_button), can_register != 2);
     {
