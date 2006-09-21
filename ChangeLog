@@ -1,6 +1,12 @@
-2006-09-16  Loic Dachary  <loic@dachary.org>
+2006-09-16  Cedric Pinson  <cpinson@freesheep.org>
 
         * Release 1.0.26
+
+	* pokerrenderer.py:
+	Add a python event call from the c++ to pass event game
+	Fix the bug when the player want to quit and he is in the outfit editor
+
+2006-09-16  Loic Dachary  <loic@dachary.org>
 
 	* poker-client-specs.odp poker client specs draft document
 	
