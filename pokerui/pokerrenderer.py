@@ -414,7 +414,7 @@ class PokerRenderer:
         if self.verbose:
             print "pythonEvent %s %s" % (event,str(map))
 
-        if event == "quit":
+        if event == "QUIT":
             if self.state == OUTFIT:
                 self.changeState(OUTFIT_DONE)
             else:
@@ -1551,7 +1551,7 @@ class PokerRenderer:
         elif name == "hand_history":
             self.changeState(HAND_LIST)
         elif name == "quit":
-            self.pythonEvent("quit")
+            self.pythonEvent("QUIT")
         elif name == "tables_list":
             self.changeState(LOBBY)
         elif name == "tournaments":
