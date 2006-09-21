@@ -1,6 +1,45 @@
-2006-09-16  Cedric Pinson  <cpinson@freesheep.org>
+2006-09-21  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.26
+
+	* pokerclient2d/Makefile.am: fetch khotkeys.py in the source directory
+
+2006-09-21  cpinson  <cpinson@call>
+
+	* ChangeLog, pokerui/pokerrenderer.py:
+	Fix bug when quitting in outfit editor
+	and add events from c++ to pokerrenderer.py
+
+2006-09-21  proppy  <proppy@call>
+
+	* pokerclient2d/data/Makefile.am, pokerclient2d/data/fonts/neurpoli.ttf:
+	added font
+
+2006-09-20  proppy  <proppy@call>
+
+	* pokerclient2d/data/interface/interface.glade, pokerclient2d/lobby.c, pokerclient2d/tournaments.c:
+	new interface
+
+2006-09-19  proppy  <proppy@call>
+
+	* pokerui/pokerrenderer.py: new background window
+
+	* pokerclient2d/data/interface/interface.glade: new interface.glade
+
+	* pokerclient2d/tournaments.c, pokerclient2d/lobby.c: window placement
+
+2006-09-18  Loic Dachary  <loic@dachary.org>
+
+	* ChangeLog, Makefile.am, NEWS, debian/changelog, pokernetwork/__init__.py:
+	version bump
+
+	* poker-client-specs.odp: poker client specs
+
+2006-09-16  Loic Dachary  <loic@dachary.org>
+
+	* pokerweb/pages/neteller.py: check type and length of bank_acct_num
+
+2006-09-16  Cedric Pinson  <cpinson@freesheep.org>
 
 	* pokerrenderer.py:
 	Add a python event call from the c++ to pass event game
