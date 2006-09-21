@@ -156,7 +156,7 @@ khotkeysdir = ${datadir}/apps/khotkeys
 dist_khotkeys_DATA = poker2d.khotkeys
 
 poker2d.khotkeys: khotkeys.py poker2d.xml.in
-	@PYTHON@ khotkeys.py > poker2d.khotkeys
+	@PYTHON@ ${srcdir}/khotkeys.py > poker2d.khotkeys
 
 #
 # The python interpreter needs to find the binary modules immediately
