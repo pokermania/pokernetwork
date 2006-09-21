@@ -223,7 +223,8 @@ nobase_dist_poker2d_DATA = \
 	Aero/README \
 	Aero/NEWS \
 	Aero/ext-left-active.png \
-	Aero/ext-right-active.png
+	Aero/ext-right-active.png \
+	fonts/neurpoli.ttf
 
 interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
