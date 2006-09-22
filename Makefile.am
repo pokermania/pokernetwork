@@ -116,7 +116,8 @@ dist_pokerdb_DATA = \
 	database/1.0.16-1.0.17.sql \
 	database/1.0.17-1.0.18.sql \
 	database/1.0.21-1.0.22.sql \
-	database/1.0.22-1.0.23.sql
+	database/1.0.22-1.0.23.sql \
+	database/1.0.25-1.0.26.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \
