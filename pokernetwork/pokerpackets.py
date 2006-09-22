@@ -2157,7 +2157,7 @@ serial: integer uniquely identifying a player.
     type = PACKET_POKER_USER_INFO
     rating = 1500
     
-    format = "!IH"
+    format = "!IIH"
     format_size = calcsize(format)
     format_item = "!IIII"
     format_item_size = calcsize(format_item)
@@ -2167,6 +2167,7 @@ serial: integer uniquely identifying a player.
         self.password = kwargs.get("password", "")
         self.email = kwargs.get("email", "")
         self.rating = kwargs.get("rating", 1500)
+        self.affiliate = kwargs.get("affiliate", 0)
         #
         # currency 5, bankroll 200, in_game 3, points 20
         # {5: (200, 3, 20), ...} 
@@ -2175,14 +2176,14 @@ serial: integer uniquely identifying a player.
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
-        block = PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.rating, len(self.money)) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
+        block = PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.rating, self.affiliate, len(self.money)) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
         for (currency, (bankroll, in_game, points)) in self.money.iteritems():
             block += pack(PacketPokerUserInfo.format_item, currency, bankroll, in_game, points)
         return block
         
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
-        (self.rating, length) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
+        (self.rating, self.affiliate, length) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
         block = block[PacketPokerUserInfo.format_size:]
         (block, self.name) = self.unpackstring(block)
         (block, self.password) = self.unpackstring(block)
@@ -2200,7 +2201,7 @@ serial: integer uniquely identifying a player.
         return size
     
     def __str__(self):
-        string = PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, rating = %d, " % ( self.name, self.password, self.email, self.rating )
+        string = PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, rating = %d, affiliate = %d, " % ( self.name, self.password, self.email, self.rating, self.affiliate )
         for (currency, (bankroll, in_game, points)) in self.money.iteritems():
             string += str(currency) + "=" + str(bankroll) + "/" + str(in_game) + "/" + str(points) + " "
         return string
