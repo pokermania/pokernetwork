@@ -1,6 +1,36 @@
-2006-09-21  Loic Dachary  <loic@dachary.org>
+2006-09-22  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.26
+
+	* tests/test-pokerservice.py.in: test setAccount function
+
+	* pokernetwork/pokerservice.py: set affiliate indice when creating user
+
+	* pokernetwork/pokerpackets.py: affiliate indice
+
+	* database/schema.sql.in, database/1.0.25-1.0.26.sql: affiliate tables
+
+	* Makefile.am: database migration to 1.0.26
+
+2006-09-21  Loic Dachary  <loic@dachary.org>
+
+	* conf/poker.client.xml.in, conf/poker.server.xml.in, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml, pokerclient2d/Makefile.am, pokerclient2d/poker2d.xml.in, tests/conf/poker.client.xml.in, conf/poker.bot.xml.in:
+	version update
+
+2006-09-21  cpinson  <cpinson@call>
+
+	* pokerui/pokerrenderer.py: change quit for QUIT
+
+	* gentoo/dev-games/poker-network/poker-network-1.0.26.ebuild:
+	upgrade gentoo package
+
+2006-09-21  cpinson  <cpinson@call>
+
+	* ChangeLog, pokerui/pokerrenderer.py:
+	Fix bug when quitting in outfit editor
+	and add events from c++ to pokerrenderer.py
+
+2006-09-21  Loic Dachary  <loic@dachary.org>
 
 	* pokerclient2d/Makefile.am: fetch khotkeys.py in the source directory
 
