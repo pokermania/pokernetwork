@@ -1713,6 +1713,7 @@ class PokerRenderer:
             else:
                 type = self.state_lobby['type']
             interface.showLobby(self.state_lobby['cashier_label'], type, self.currencySerial2Name(self.state_lobby['currency_serial']), self.money['money_one']['name'], self.money['money_two']['name'])
+        self.render(PacketPokerInterfaceCommand(window = "tournaments_lobby_tabs_window", command = "hide")) # TODO remove reference to tournaments_lobby_tabs_window
         self.render(PacketPokerInterfaceCommand(window = "lobby_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "table_info_window", command = "show"))
         self.render(PacketPokerInterfaceCommand(window = "cashier_button_window", command = "show"))
@@ -2033,7 +2034,7 @@ class PokerRenderer:
     def exitStates(self, previous_state, next_state, states):
         return previous_state in states and next_state not in states
     
-    def updateDecorations(self, previous_state, next_state):
+    def updateInterfaceWindows(self, previous_state, next_state):
         if self.exitStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
             self.hideBackgroundLobbyCashier()
             self.hideClockWindow()
@@ -2416,6 +2417,6 @@ class PokerRenderer:
             self.chatHide()
         if current_state != self.state:
             self.render(PacketPokerRendererState(state = self.state))
+            self.updateInterfaceWindows(current_state, self.state)
 
-            self.updateDecorations(current_state, self.state)
             
