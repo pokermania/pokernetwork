@@ -22,8 +22,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Cedric Pinson <cpinson@freesheep.org>
-
+#
 from twisted.internet import reactor
 
 from string import join
@@ -410,16 +409,6 @@ class PokerRenderer:
     def linetrace(self):
         sys.settrace(global_trace)
 
-    def pythonEvent(self, event, map = None):
-        if self.verbose:
-            print "pythonEvent %s %s" % (event,str(map))
-
-        if event == "QUIT":
-            if self.state == OUTFIT:
-                self.changeState(OUTFIT_DONE)
-            else:
-                self.quit()
-                
     def setProtocol(self, protocol):
         self.protocol = protocol
         if protocol:
@@ -1551,7 +1540,7 @@ class PokerRenderer:
         elif name == "hand_history":
             self.changeState(HAND_LIST)
         elif name == "quit":
-            self.pythonEvent("QUIT")
+            self.quit()
         elif name == "tables_list":
             self.changeState(LOBBY)
         elif name == "tournaments":
