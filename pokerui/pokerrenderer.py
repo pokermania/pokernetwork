@@ -2041,9 +2041,9 @@ class PokerRenderer:
             self.showBackgroundLobbyCashier()
             self.showClockWindow()
         if self.exitStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
-            self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
+            self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window",  command = "hide"))
         elif self.enterStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
-            self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
+            self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window",  command = "show"))
 
     def changeState(self, state, *args, **kwargs):
         if self.state == state:
