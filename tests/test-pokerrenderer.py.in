@@ -84,10 +84,82 @@ class PokerRendererTestCase(unittest.TestCase):
 	self.assertEquals("emThumbUp", self.renderer.protocol.packets[2].word)
 	self.assertEquals("emThumbUp", self.renderer.protocol.packets[3].word)
 
+class PokerRendererUpdateDecorationMockup(PokerRenderer):
+    def __init__(self):
+	self.renderCalled = False
+	self.packet = None
+    def render(self, packet):
+	self.renderCalled = True
+	self.packet = packet
+	pass
+
+from pokerui.pokerrenderer import LOBBY
+from pokerui.pokerrenderer import TOURNAMENTS
+from pokerui.pokerrenderer import CASHIER
+from pokerui.pokerrenderer import LOGIN
+
+class PokerRendererUpdateDecorationTestCase(unittest.TestCase):
+    def setUp(self):
+	self.renderer = PokerRendererUpdateDecorationMockup()
+
+    def tearDown(self):
+        self.renderer = None
+
+    def test_UpdateDecorationMockupLobbyToCashier(self):
+	previous = LOBBY
+	next = CASHIER
+	self.assertEquals(False, self.renderer.renderCalled)
+	self.renderer.updateDecorations(previous, next)
+	self.assertEquals(True, self.renderer.renderCalled)
+	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
+	self.assertEquals("hide", self.renderer.packet.command)	
+
+    def test_UpdateDecorationMockupTournamentsToCashier(self):
+	previous = TOURNAMENTS
+	next = CASHIER
+	self.assertEquals(False, self.renderer.renderCalled)
+	self.renderer.updateDecorations(previous, next)
+	self.assertEquals(True, self.renderer.renderCalled)
+	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
+	self.assertEquals("hide", self.renderer.packet.command)
+
+    def test_UpdateDecorationMockupCashierToLobby(self):
+	previous = CASHIER
+	next = LOBBY
+	self.assertEquals(False, self.renderer.renderCalled)
+	self.renderer.updateDecorations(previous, next)
+	self.assertEquals(True, self.renderer.renderCalled)
+	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
+	self.assertEquals("show", self.renderer.packet.command)
+
+    def test_UpdateDecorationMockupCashierToLobby(self):
+	previous = CASHIER
+	next = TOURNAMENTS
+	self.assertEquals(False, self.renderer.renderCalled)
+	self.renderer.updateDecorations(previous, next)
+	self.assertEquals(True, self.renderer.renderCalled)
+	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
+	self.assertEquals("show", self.renderer.packet.command)
+
+    def test_UpdateDecorationMockupCashierToOther(self):
+	previous = CASHIER
+	next = LOGIN
+	self.assertEquals(False, self.renderer.renderCalled)
+	self.renderer.updateDecorations(previous, next)
+	self.assertEquals(False, self.renderer.renderCalled)
+
+    def test_UpdateDecorationMockupCashierToOther(self):
+	previous = LOBBY
+	next = TOURNAMENTS
+	self.assertEquals(False, self.renderer.renderCalled)
+	self.renderer.updateDecorations(previous, next)
+	self.assertEquals(False, self.renderer.renderCalled)	
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(PokerRendererTestCase))
+    suite.addTest(unittest.makeSuite(PokerRendererUpdateDecorationTestCase))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
