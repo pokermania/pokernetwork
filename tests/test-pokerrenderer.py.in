@@ -84,82 +84,111 @@ class PokerRendererTestCase(unittest.TestCase):
 	self.assertEquals("emThumbUp", self.renderer.protocol.packets[2].word)
 	self.assertEquals("emThumbUp", self.renderer.protocol.packets[3].word)
 
-class PokerRendererUpdateDecorationMockup(PokerRenderer):
+
+class PokerFactoryUpdateInterfaceWindowsMockup:
+    def __init__(self):
+	self.interface = None
+
+class PokerRendererUpdateInterfaceWindowsMockup(PokerRenderer):
     def __init__(self):
 	self.renderCalled = False
 	self.packet = None
+	self.packets = []
+	self.factory = PokerFactoryUpdateInterfaceWindowsMockup()
+
     def render(self, packet):
 	self.renderCalled = True
 	self.packet = packet
-	pass
+	self.packets.append(packet)
 
 from pokerui.pokerrenderer import LOBBY
 from pokerui.pokerrenderer import TOURNAMENTS
 from pokerui.pokerrenderer import CASHIER
 from pokerui.pokerrenderer import LOGIN
 
-class PokerRendererUpdateDecorationTestCase(unittest.TestCase):
-    def setUp(self):
-	self.renderer = PokerRendererUpdateDecorationMockup()
+class PokerRendererUpdateInterfaceWindowsTestCase(unittest.TestCase):
 
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+	self.renderer = PokerRendererUpdateInterfaceWindowsMockup()
+
+    # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
         self.renderer = None
 
-    def test_UpdateDecorationMockupLobbyToCashier(self):
+    # -----------------------------------------------------------------------------------------------------
+    def test_UpdateInterfaceWindowsMockupLobbyToCashier(self):
 	previous = LOBBY
 	next = CASHIER
 	self.assertEquals(False, self.renderer.renderCalled)
-	self.renderer.updateDecorations(previous, next)
+	self.renderer.updateInterfaceWindows(previous, next)
 	self.assertEquals(True, self.renderer.renderCalled)
 	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
 	self.assertEquals("hide", self.renderer.packet.command)	
 
-    def test_UpdateDecorationMockupTournamentsToCashier(self):
+    # -----------------------------------------------------------------------------------------------------
+    def test_UpdateInterfaceWindowsMockupTournamentsToCashier(self):
 	previous = TOURNAMENTS
 	next = CASHIER
 	self.assertEquals(False, self.renderer.renderCalled)
-	self.renderer.updateDecorations(previous, next)
+	self.renderer.updateInterfaceWindows(previous, next)
 	self.assertEquals(True, self.renderer.renderCalled)
 	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
 	self.assertEquals("hide", self.renderer.packet.command)
 
-    def test_UpdateDecorationMockupCashierToLobby(self):
+    # -----------------------------------------------------------------------------------------------------
+    def test_UpdateInterfaceWindowsMockupCashierToLobby(self):
 	previous = CASHIER
 	next = LOBBY
 	self.assertEquals(False, self.renderer.renderCalled)
-	self.renderer.updateDecorations(previous, next)
+	self.renderer.updateInterfaceWindows(previous, next)
 	self.assertEquals(True, self.renderer.renderCalled)
 	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
 	self.assertEquals("show", self.renderer.packet.command)
 
-    def test_UpdateDecorationMockupCashierToLobby(self):
+    # -----------------------------------------------------------------------------------------------------
+    def test_UpdateInterfaceWindowsMockupCashierToLobby(self):
 	previous = CASHIER
 	next = TOURNAMENTS
 	self.assertEquals(False, self.renderer.renderCalled)
-	self.renderer.updateDecorations(previous, next)
+	self.renderer.updateInterfaceWindows(previous, next)
 	self.assertEquals(True, self.renderer.renderCalled)
 	self.assertEquals("lobby_tabs_window", self.renderer.packet.window)
 	self.assertEquals("show", self.renderer.packet.command)
 
-    def test_UpdateDecorationMockupCashierToOther(self):
+    # -----------------------------------------------------------------------------------------------------
+    def test_UpdateInterfaceWindowsMockupCashierToOther(self):
 	previous = CASHIER
 	next = LOGIN
 	self.assertEquals(False, self.renderer.renderCalled)
-	self.renderer.updateDecorations(previous, next)
+	self.renderer.updateInterfaceWindows(previous, next)
 	self.assertEquals(False, self.renderer.renderCalled)
 
-    def test_UpdateDecorationMockupCashierToOther(self):
+    # -----------------------------------------------------------------------------------------------------
+    def test_UpdateInterfaceWindowsMockupCashierToOther(self):
 	previous = LOBBY
 	next = TOURNAMENTS
 	self.assertEquals(False, self.renderer.renderCalled)
-	self.renderer.updateDecorations(previous, next)
-	self.assertEquals(False, self.renderer.renderCalled)	
+	self.renderer.updateInterfaceWindows(previous, next)
+	self.assertEquals(False, self.renderer.renderCalled)
+
+    # -----------------------------------------------------------------------------------------------------
+    def test_ShowLobby(self):
+	self.renderer.showLobby()
+	self.assertEquals("tournaments_lobby_tabs_window", self.renderer.packets[0].window)
+	self.assertEquals("hide", self.renderer.packets[0].command)
+	self.assertEquals("lobby_window", self.renderer.packets[1].window)
+	self.assertEquals("show", self.renderer.packets[1].command)
+	self.assertEquals("table_info_window", self.renderer.packets[2].window)
+	self.assertEquals("show", self.renderer.packets[2].command)
+	self.assertEquals("cashier_button_window", self.renderer.packets[3].window)
+	self.assertEquals("show", self.renderer.packets[3].command)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(PokerRendererTestCase))
-    suite.addTest(unittest.makeSuite(PokerRendererUpdateDecorationTestCase))
+    suite.addTest(unittest.makeSuite(PokerRendererUpdateInterfaceWindowsTestCase))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
