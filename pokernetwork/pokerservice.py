@@ -809,7 +809,7 @@ class PokerService(service.Service):
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)
 
-        sql = ( "SELECT rating,email,name FROM users WHERE serial = " + str(serial) )
+        sql = ( "SELECT rating,affiliate,email,name FROM users WHERE serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getUserInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
@@ -820,7 +820,8 @@ class PokerService(service.Service):
         packet = PacketPokerUserInfo(serial = serial,
                                      name = row['name'],
                                      email = row['email'],
-                                     rating = row['rating'])
+                                     rating = row['rating'],
+                                     affiliate = row['affiliate'])
         sql = ( " SELECT user2money.currency_serial,user2money.amount,user2money.points,CAST(SUM(user2table.bet) + SUM(user2table.money) AS UNSIGNED) AS in_game "
                 "        FROM user2money LEFT JOIN (pokertables,user2table) "
                 "        ON (user2table.user_serial = user2money.user_serial  AND "
@@ -843,6 +844,7 @@ class PokerService(service.Service):
                                          name = user_info.name,
                                          email = user_info.email,
                                          rating = user_info.rating,
+                                         affiliate = user_info.affiliate,
                                          money = user_info.money)
         cursor = self.db.cursor()
         sql = ( "SELECT firstname,lastname,addr_street,addr_street2,addr_zip,addr_town,addr_state,addr_country,phone FROM users_private WHERE serial = " + str(serial) )
@@ -918,7 +920,7 @@ class PokerService(service.Service):
             #
             # User does not exists, create it
             #
-            sql = "insert into users (created, name, password, email) values (%d, '%s', '%s', '%s')" % (time.time(), packet.name, packet.password, packet.email)
+            sql = "INSERT INTO users (created, name, password, email, affiliate) values (%d, '%s', '%s', '%s', '%d')" % (time.time(), packet.name, packet.password, packet.email, packet.affiliate)
             cursor.execute(sql)
             if cursor.rowcount != 1:
                 print " *ERROR* setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
