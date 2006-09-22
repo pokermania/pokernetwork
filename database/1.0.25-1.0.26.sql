@@ -29,5 +29,7 @@ create table affiliates (
   phone varchar(64) default "",
 
   url TEXT,
-  notes TEXT
+  notes TEXT,
+
+  primary key (serial)
 );
