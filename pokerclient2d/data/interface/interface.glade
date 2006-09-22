@@ -5168,7 +5168,7 @@
 				    <widget class="GtkScrolledWindow" id="regular">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+				      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 				      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
 				      <property name="shadow_type">GTK_SHADOW_NONE</property>
 				      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -5220,7 +5220,7 @@
 				    <widget class="GtkScrolledWindow" id="sitngo">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+				      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 				      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
 				      <property name="shadow_type">GTK_SHADOW_NONE</property>
 				      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -5718,7 +5718,7 @@
 			    <widget class="GtkScrolledWindow" id="scrolledwindow3">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+			      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 			      <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 			      <property name="shadow_type">GTK_SHADOW_NONE</property>
 			      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -5912,7 +5912,7 @@
 				    <widget class="GtkScrolledWindow" id="holdem">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+				      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 				      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
 				      <property name="shadow_type">GTK_SHADOW_NONE</property>
 				      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -5964,7 +5964,7 @@
 				    <widget class="GtkScrolledWindow" id="omaha">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+				      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 				      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
 				      <property name="shadow_type">GTK_SHADOW_NONE</property>
 				      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -6016,7 +6016,7 @@
 				    <widget class="GtkScrolledWindow" id="omaha8">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+				      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 				      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
 				      <property name="shadow_type">GTK_SHADOW_NONE</property>
 				      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -6068,7 +6068,7 @@
 				    <widget class="GtkScrolledWindow" id="7stud">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+				      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 				      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
 				      <property name="shadow_type">GTK_SHADOW_NONE</property>
 				      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
@@ -6606,7 +6606,7 @@
 			    <widget class="GtkScrolledWindow" id="scrolledwindow3">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
+			      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 			      <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
 			      <property name="shadow_type">GTK_SHADOW_NONE</property>
 			      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
