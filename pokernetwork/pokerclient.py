@@ -1390,7 +1390,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def protocolInvalid(self, server, client):
         self.schedulePacket(PacketProtocolError(message = "Upgrade the client from\nhttp://mekensleep.org/\nServer version is %s\nClient version is %s" % ( server, client ) ))
         self.publishAllPackets()
-        UGAMEClientProtocol.protocolInvalid(self)
+        UGAMEClientProtocol.protocolInvalid(self, server, client)
 
     def publishDelay(self, delay):
         if self.factory.verbose > 2: self.message("publishDelay: %f delay" % delay)
