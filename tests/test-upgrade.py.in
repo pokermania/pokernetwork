@@ -68,7 +68,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	pass
     def tearDown(self):
 	pass
-    def test_UpgradeFailed(self):
+    def test_CheckClientVersionFailed(self):
 	from pokernetwork import upgrade
 	upgrade.CheckClientVersion = CheckClientVersionMockup
 	client = PokerClientMockup()
