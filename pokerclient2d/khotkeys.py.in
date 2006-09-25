@@ -30,7 +30,7 @@ from pokerengine.pokerengineconfig import Config
 poker2d_title = "Poker"
 
 settings = Config(['.'])
-settings.load('poker2d.xml.in')
+settings.load('poker2d.xml')
 
 keys = settings.headerGetProperties('/settings/keys/key')
 

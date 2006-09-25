@@ -236,6 +236,7 @@ if test x$poker2d = xtrue ; then
         pokerclient2d/poker2d.xml
         pokerclient2d/data/Makefile
         pokerclient2d/upgrades/1.0.7-1.0.8.xsl
+	pokerclient2d/khotkeys.py
         ])
 fi
 
