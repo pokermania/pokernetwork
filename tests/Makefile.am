@@ -39,7 +39,6 @@ EXTRA_DIST = \
 	test-poker-interface.py \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
-	test-upgrade.py \
 	vncpasswd
 
 TESTS_ENVIRONMENT = ./run
@@ -61,6 +60,7 @@ TESTS = coverage-reset \
 	test-pokerinteractor.py \
 	test-pokerrenderer.py \
 	test-protocol.py \
+	test-upgrade.py \
 	testcurrency.php \
 	coverage-report \
 	poker-interface

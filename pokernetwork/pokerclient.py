@@ -317,7 +317,7 @@ class PokerClientFactory(UGAMEClientFactory):
         pass
 
     def failedUpgrade(self, logs, reason):
-        pass
+        raise UserWarning, "upgrade failed reason:%s logs:%s" % (str(reason), str(logs))
 
     def needUpgrade(self, version):
         pass

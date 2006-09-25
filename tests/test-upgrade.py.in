@@ -1,0 +1,117 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#  Johan Euphrosine <johan@mekensleep.com>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+import unittest
+
+from pokernetwork.pokerclient import PokerClientFactory
+from pokernetwork import dispatch
+
+class PokerSettingsMockup:
+    def headerGetInt(self, path):
+	return None
+    def headerGet(self, path):
+	return ""
+    def headerGetProperties(self, path):
+	return None
+
+class  PokerDisplayMockup:
+    def tickProgressBar(self, ratio, message):
+	pass
+
+class PokerClientMockup(PokerClientFactory):
+    def __init__(self):
+	PokerClientFactory.__init__(self, settings = PokerSettingsMockup())
+	self.display = PokerDisplayMockup()
+	self.failedUpgradeCalled = False
+    def failedUpgrade(self, logs, reason):
+	self.failedUpgradeCalled = True
+	PokerClientFactory.failedUpgrade(self, logs, reason)
+
+class CheckClientVersionMockup(dispatch.EventDispatcher):
+    def __init__(self, config, settings, version, callback):
+	dispatch.EventDispatcher.__init__(self)
+	CheckClientVersionMockup.instance = self
+
+class PokerClientUpgradeFailedTestCase(unittest.TestCase):
+# -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+	pass
+    def tearDown(self):
+	pass
+    def test_UpgradeFailed(self):
+	from pokernetwork import upgrade
+	upgrade.CheckClientVersion = CheckClientVersionMockup
+	client = PokerClientMockup()
+	CheckClientVersionMockup.instance = None
+	self.assertEquals(None, CheckClientVersionMockup.instance)
+	client.checkClientVersion(())
+	self.assertNotEqual(None, CheckClientVersionMockup.instance)
+	from pokernetwork.pokerchildren import RSYNC_FAILED
+	self.assertEquals(False, client.failedUpgradeCalled)
+	exceptionRaised = False
+	try:
+		CheckClientVersionMockup.instance.publishEvent(RSYNC_FAILED, "dummy log", "dummy reason")
+	except UserWarning:
+		self.assertEquals(True, client.failedUpgradeCalled)
+		info = sys.exc_info()
+		self.assertEquals("upgrade failed reason:dummy reason logs:dummy log", str(info[1]))
+		exceptionRaised = True
+	self.assertEquals(True, exceptionRaised)
+
+
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(PokerClientUpgradeFailedTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+def GetTestedModule():
+    from pokernetwork import upgrade
+    return upgrade
+  
+# -----------------------------------------------------------------------------------------------------
+def Run(verbose = 2):
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-upgrade.py ) ; ( cd ../tests ; make TESTS='test-upgrade.py' check )"
+# End:

@@ -255,8 +255,9 @@ AC_CONFIG_FILES([
 	tests/test-pokerinteractor.py
 	tests/test-pokerrenderer.py
 	tests/test-protocol.py
+	tests/test-upgrade.py
         tests/testcurrency.php
-        tests/testicurrency.php
+        tests/testicurrency.php	
         tests/upgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
