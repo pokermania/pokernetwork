@@ -65,24 +65,26 @@ class CheckClientVersionMockup(dispatch.EventDispatcher):
 class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-	pass
-    def tearDown(self):
-	pass
-    def test_CheckClientVersionFailed(self):
 	from pokernetwork import upgrade
+	self.checkClientVersionOrig = upgrade.CheckClientVersion
 	upgrade.CheckClientVersion = CheckClientVersionMockup
-	client = PokerClientMockup()
+	self.client = PokerClientMockup()
 	CheckClientVersionMockup.instance = None
+    def tearDown(self):
+	CheckClientVersionMockup.instance = None
+	from pokernetwork import upgrade
+	upgrade.CheckClientVersion = self.checkClientVersionOrig
+    def test_CheckClientVersionFailed(self):
 	self.assertEquals(None, CheckClientVersionMockup.instance)
-	client.checkClientVersion(())
+	self.client.checkClientVersion(())
 	self.assertNotEqual(None, CheckClientVersionMockup.instance)
 	from pokernetwork.pokerchildren import RSYNC_FAILED
-	self.assertEquals(False, client.failedUpgradeCalled)
+	self.assertEquals(False, self.client.failedUpgradeCalled)
 	exceptionRaised = False
 	try:
 		CheckClientVersionMockup.instance.publishEvent(RSYNC_FAILED, "dummy log", "dummy reason")
 	except UserWarning:
-		self.assertEquals(True, client.failedUpgradeCalled)
+		self.assertEquals(True, self.client.failedUpgradeCalled)
 		info = sys.exc_info()
 		self.assertEquals("upgrade failed reason:dummy reason logs:dummy log", str(info[1]))
 		exceptionRaised = True
