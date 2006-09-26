@@ -1,6 +1,12 @@
-2006-09-25  Loic Dachary  <loic@dachary.org>
+2006-09-26  Cedric Pinson  <cpinson@freesheep.org>
 
         * Release 1.0.27
+
+	* pokerui/pokerrenderer.py:
+	Add pythonEvent to receive event from c++
+
+	* test/test-quit.py.in:
+	Test the quit fix
 
 2006-09-22  Johan Euphrosine  <johan@mekensleep.com>
 
