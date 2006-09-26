@@ -1,6 +1,8 @@
 poker-network (1.0.27-1) unstable; urgency=low
 
   * upstream sync
+
+  * Miroslav Kure <kurem@upcase.inf.upol.cz> updates (closes: #389626)
   
   * build dep on mysql-client otherwise @MYSQL@ not properly substituted and upgrade 
     fails
