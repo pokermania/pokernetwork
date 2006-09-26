@@ -70,10 +70,12 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	upgrade.CheckClientVersion = CheckClientVersionMockup
 	self.client = PokerClientMockup()
 	CheckClientVersionMockup.instance = None
+# -----------------------------------------------------------------------------------------------------
     def tearDown(self):
 	CheckClientVersionMockup.instance = None
 	from pokernetwork import upgrade
 	upgrade.CheckClientVersion = self.checkClientVersionOrig
+# -----------------------------------------------------------------------------------------------------
     def test_CheckClientVersionFailed(self):
 	self.assertEquals(None, CheckClientVersionMockup.instance)
 	self.client.checkClientVersion(())
