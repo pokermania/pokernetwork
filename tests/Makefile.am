@@ -58,6 +58,7 @@ TESTS = coverage-reset \
 	test-pokercashier.py \
 	test-xmlrpc.py \
 	test-pokerinteractor.py \
+	test-quit.py \
 	test-pokerrenderer.py \
 	test-protocol.py \
 	test-upgrade.py \

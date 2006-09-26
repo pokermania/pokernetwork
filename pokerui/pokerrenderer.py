@@ -22,7 +22,8 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#
+#  Cedric Pinson <cpinson@freesheep.org>
+
 from twisted.internet import reactor
 
 from string import join
@@ -72,7 +73,6 @@ TOURNAMENTS_REGISTER = "tournaments_register"
 TOURNAMENTS_REGISTER_DONE = "tournaments_register_done"
 TOURNAMENTS_UNREGISTER = "tournaments_unregister"
 TOURNAMENTS_UNREGISTER_DONE = "tournaments_unregister_done"
-LOGOUT = "logout"
 JOINING = "joining"
 JOINING_MY = "joining_my"
 JOINING_DONE = "joining_done"
@@ -83,6 +83,7 @@ LEAVING_CONFIRM = "leaving_confirm"
 CANCELED = "canceled"
 SIT_OUT = "sit_out"
 QUIT = "quit"
+QUIT_DONE = "quit_done"
 
 import linecache
 import os
@@ -364,7 +365,8 @@ class PokerRenderer:
 
         self.state_login = ()
         self.state_outfit = None
-
+        self.quit_state = None
+        
         self.state_tournaments = factory.settings.headerGetProperties("/settings/tournaments")
         if not self.state_tournaments:
             print "CRITICAL: missing /settings/tournaments"
@@ -409,6 +411,16 @@ class PokerRenderer:
     def linetrace(self):
         sys.settrace(global_trace)
 
+    def pythonEvent(self, event, map = None):
+        if self.verbose:
+            print "pythonEvent %s %s" % (event,str(map))
+
+        if event == "QUIT":
+            if self.state == OUTFIT:
+                self.changeState(OUTFIT_DONE)
+            else:
+                self.quit()
+                
     def setProtocol(self, protocol):
         self.protocol = protocol
         if protocol:
@@ -418,9 +430,6 @@ class PokerRenderer:
             protocol.registerLagmax(self.updateLagmax)
             self.interactors.setProtocol(protocol)
             
-    def logout(self):
-        self.changeState(LOGOUT)
-
     def showYesNoBox(self, message):
         self.factory.interface.yesnoBox(message)
         self.render(PacketPokerInterfaceCommand(window = "yesno_window", command = "show"))
@@ -461,18 +470,26 @@ class PokerRenderer:
             if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
                 self.showYesNoBox("Do you really want to quit ?")
                 interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
+                # restore state if don't confirm quit
+                state = self.state
+                self.quit_state = state
                 self.changeState(QUIT)
         else:
+            self.changeState(QUIT)
             self.confirmQuit(True)
 
 
     def confirmQuit(self, response = False):
         self.hideYesNoBox()
         if response:
+            self.changeState(QUIT_DONE)
             if self.protocol:
                 self.sendPacket(PacketQuit())
             self.interactors.destroy()
             self.factory.quit()
+        else:
+            if self.quit_state is not None:
+                self.changeState(self.quit_state)
         
     def autoBlind(self, auto):
         game_id = self.protocol.getCurrentGameId()
@@ -1498,7 +1515,9 @@ class PokerRenderer:
         elif self.state == IDLE:
             pass
         elif self.state == SEARCHING_MY:
-            status = True
+            pass
+        elif self.state == QUIT:
+            pass
         else:
             status = False
         return status
@@ -1540,7 +1559,7 @@ class PokerRenderer:
         elif name == "hand_history":
             self.changeState(HAND_LIST)
         elif name == "quit":
-            self.quit()
+            self.pythonEvent("QUIT")
         elif name == "tables_list":
             self.changeState(LOBBY)
         elif name == "tournaments":
@@ -2035,15 +2054,15 @@ class PokerRenderer:
         return previous_state in states and next_state not in states
     
     def updateInterfaceWindows(self, previous_state, next_state):
-        if self.exitStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
+        if self.exitStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)) and not self.enterStates(previous_state, next_state, (QUIT)):
             self.hideBackgroundLobbyCashier()
             self.hideClockWindow()
-        elif self.enterStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)):
+        elif self.enterStates(previous_state, next_state, (LOBBY, CASHIER, TOURNAMENTS)) and not self.exitStates(previous_state, next_state, (QUIT)):
             self.showBackgroundLobbyCashier()
             self.showClockWindow()
-        if self.exitStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
+        if self.exitStates(previous_state, next_state, (LOBBY, TOURNAMENTS)) and not self.enterStates(previous_state, next_state, (QUIT)):
             self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "hide"))
-        elif self.enterStates(previous_state, next_state, (LOBBY, TOURNAMENTS)):
+        elif self.enterStates(previous_state, next_state, (LOBBY, TOURNAMENTS)) and not self.exitStates(previous_state, next_state, (QUIT)):
             self.render(PacketPokerInterfaceCommand(window = "lobby_tabs_window", command = "show"))
 
     def changeState(self, state, *args, **kwargs):
@@ -2055,12 +2074,14 @@ class PokerRenderer:
 
         if self.verbose > 2: print "changeState %s => %s (args = %s, kwargs = %s)" % ( self.state, state, str(args), str(kwargs) )
         current_state = self.state
-        
-        if state == LOGOUT:
-            if ( self.state == IDLE or self.state == SEARCHING ) and self.protocol.user.isLogged():
-                self.deleteGames()
-                self.protocol.logout()
-                self.changeState(SEARCHING, "all")
+
+        if current_state == QUIT and state != QUIT_DONE:
+            # restore state before quit state and recall changeState so the transition is
+            # as we didn't have a quit request
+            self.state = self.quit_state
+            self.quit_state = None
+            self.hideYesNoBox()
+            self.changeState(state, *args, **kwargs)
 
         elif state == LOBBY and ( self.state2hide() or self.state == SEARCHING_MY ):
             self.state = state
@@ -2395,9 +2416,10 @@ class PokerRenderer:
                 self.showMessage("You cannot do that now", None)
 
         elif state == QUIT:
-            if self.state == OUTFIT:
-                self.hideOutfit()
-                self.factory.interface.showMenu()
+            self.state = state
+
+        elif state == QUIT_DONE:
+            self.state = state
 
         elif state == IDLE:
             self.state2hide()

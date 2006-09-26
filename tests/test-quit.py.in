@@ -27,7 +27,7 @@
 # 
 
 import sys, os
-sys.path.insert(0, "./..")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 from pokerui.pokerrenderer import PokerRenderer
