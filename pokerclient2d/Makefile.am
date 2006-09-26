@@ -52,7 +52,7 @@ EXTRA_DIST = \
 	$(wildcard *.png) \
 	poker2D.ico \
 	poker3d-interface/poker3d-interface.vcproj \
-	khotkeys.py.in
+	khotkeys.py
 
 man_MANS = poker2d.6
 
@@ -156,7 +156,7 @@ khotkeysdir = ${datadir}/apps/khotkeys
 dist_khotkeys_DATA = poker2d.khotkeys
 
 poker2d.khotkeys: khotkeys.py poker2d.xml
-	@PYTHON@ khotkeys.py > poker2d.khotkeys
+	srcdir=${srcdir} @PYTHON@ ${srcdir}/khotkeys.py > poker2d.khotkeys
 
 #
 # The python interpreter needs to find the binary modules immediately
