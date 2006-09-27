@@ -257,6 +257,7 @@ AC_CONFIG_FILES([
 	tests/test-protocol.py
 	tests/test-upgrade.py
 	tests/test-quit.py
+	tests/test-pokerinterface.py
         tests/testcurrency.php
         tests/testicurrency.php	
         tests/upgrade
