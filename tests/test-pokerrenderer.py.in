@@ -24,6 +24,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Johan Euphrosine <johan@mekensleep.com>
 #
 
 import sys, os
