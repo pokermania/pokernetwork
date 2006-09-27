@@ -1,6 +1,20 @@
-2006-09-26  Cedric Pinson  <cpinson@freesheep.org>
+2006-09-27  Johan Euphrosine  <johan@mekensleep.com>
 
         * Release 1.0.27
+
+	* tests/test-pokerinterface.py.in:
+	added test case for bug #7085
+
+	* pokernetwork/dispatch.py (EventDispatcher.publishEvent): 
+	now check that at least one callback is registered before publishing
+	
+	* tests/test-upgrade.py.in: 
+	added test case for failing CheckClientVersion
+
+	* pokernetwork/upgrade.py: 
+	failing upgrade now throw an UserWarning	
+
+2006-09-26  Cedric Pinson  <cpinson@freesheep.org>
 
 	* pokerui/pokerrenderer.py:
 	Add pythonEvent to receive event from c++
