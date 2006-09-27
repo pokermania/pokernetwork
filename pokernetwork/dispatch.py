@@ -56,5 +56,6 @@ class EventDispatcher:
 
 
     def publishEvent(self, name, *args, **kwargs):
-        for cb in self.callbacks[name]:
-            cb(*args, **kwargs)
+	if self.callbacks.has_key(name):
+	    for cb in self.callbacks[name]:
+		cb(*args, **kwargs)
