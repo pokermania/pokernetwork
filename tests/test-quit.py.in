@@ -256,6 +256,13 @@ class PokerRendererTestCase(unittest.TestCase):
 	self.renderer = None
         
     # -----------------------------------------------------------------------------------------------------    
+    def test_StateQUITFromMenu(self):
+        self.renderer.state = LOBBY
+	self.assertEquals(self.renderer.state, LOBBY)
+        self.renderer.handleMenu("quit",None)
+	self.assertEquals(self.renderer.state, QUIT)
+        
+    # -----------------------------------------------------------------------------------------------------    
     def test_StateQUITFromOUTFIT(self):
         self.renderer.state = OUTFIT
 	self.assertEquals(self.renderer.state, OUTFIT)
