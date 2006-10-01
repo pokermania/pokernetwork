@@ -1,10 +1,12 @@
-2006-09-30  Cedric Pinson  <cpinson@freesheep.org>
+2006-10-01  Cedric Pinson  <cpinson@freesheep.org>
 
         * Release 1.0.27
 
 	* test/test-quit.py.in:
 	Update the test to pass in handleMenu (it was missed)
 
+	* Update gentoo package
+	
 2006-09-27  Johan Euphrosine  <johan@mekensleep.com>
 
 
