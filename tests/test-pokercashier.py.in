@@ -312,7 +312,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test05"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
