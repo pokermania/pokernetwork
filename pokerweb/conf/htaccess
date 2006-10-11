@@ -1,3 +1,5 @@
+php_value error_reporting 2037
+
 DirectoryIndex index.php
 Options +FollowSymLinks
 
