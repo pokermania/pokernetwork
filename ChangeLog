@@ -2,6 +2,17 @@
 
         * Release 1.0.27
 
+	* tests/test-pokercashier.py.in:
+	test that getCurrencySerial discards third currency on error
+
+	* pokernetwork/pokercashier.py:
+	getCurrencySerial discards third currency on error
+
+	* pokerweb/conf/htaccess:
+	php_value error_reporting 2037 to reduce verbosity
+
+2006-10-11  Loic Dachary  <loic@dachary.org>
+
 	* pokerweb/conf/htaccess: php_value error_reporting 2037
 	  to reduce verbosity
 
