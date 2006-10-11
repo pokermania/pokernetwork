@@ -74,6 +74,14 @@ class PokerCashier:
         if self.verbose > 2: self.message(sql % self.db.db.literal(url))
         cursor.execute(sql, url)
         if cursor.rowcount == 0:
+            sql = "SELECT COUNT(*) FROM currencies"
+            cursor.execute(sql)
+            (count,) = cursor.fetchone()
+            if count >= 2:
+                cursor.close()
+                raise PacketError(other_type = PACKET_POKER_CASH_IN,
+                                  code = PacketPokerCashIn.REFUSED,
+                                  message = "Invalid currency " + url + " (already 2 currencies) ")
             sql = "INSERT INTO currencies (url) VALUES (%s)"
             if self.verbose > 2: self.message(sql % self.db.db.literal(url))
             try:
