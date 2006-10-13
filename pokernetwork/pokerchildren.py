@@ -230,8 +230,12 @@ class PokerChildBrowser(PokerChild):
 
     def spawn(self):
         if platform.system() == "Windows":
-            win32api.ShellExecute(0, "", self.commandLine[1], "", "", 1)
-            return True
+			try:
+				win32api.ShellExecute(0, "", self.commandLine[1], "", "", 1)
+			except:
+				target = win32api.RegQueryValue(win32con.HKEY_CLASSES_ROOT, "HTTP\shell\open\command")
+				raise Exception("*CRITICAL*: failed to start browser at: %s" % target)
+			return True
         else:
             return PokerChild.spawn(self)
 
