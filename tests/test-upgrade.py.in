@@ -92,11 +92,43 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 		exceptionRaised = True
 	self.assertEquals(True, exceptionRaised)
 
+class PokerSettingsMockupSource:
+    def __init__(self, source):
+	self.source = source
+    def headerGetInt(self, path):
+	return None
+    def headerGet(self, path):
+	if path == "/settings/rsync/@source":
+	    return self.source
+	return ""
+    def headerGetProperties(self, path):
+	return None
+
+class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
+# -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+	pass
+# -----------------------------------------------------------------------------------------------------
+    def tearDown(self):
+	pass
+# -----------------------------------------------------------------------------------------------------
+    def test_CheckClientVersionRemote(self):
+	from pokernetwork.upgrade import CheckClientVersion
+	checkClientVersion = CheckClientVersion(PokerSettingsMockupSource("rsync::poker/update/"), PokerSettingsMockupSource("rsync::foo/bar/"), (0, 0, 0), None)
+	self.assertEquals(False, "--dry-run" in checkClientVersion.rsync)
+	self.assertEquals(False, "--list-only" in checkClientVersion.rsync)
+# -----------------------------------------------------------------------------------------------------
+    def test_CheckClientVersionLocal(self):
+	from pokernetwork.upgrade import CheckClientVersion
+	checkClientVersion = CheckClientVersion(PokerSettingsMockup(), PokerSettingsMockupSource("/usr/share/poker/"), (0, 0, 0), None)
+	self.assertEquals(True, "--dry-run" in checkClientVersion.rsync)
+	self.assertEquals(True, "--list-only" in checkClientVersion.rsync)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(PokerClientUpgradeFailedTestCase))
+    suite.addTest(unittest.makeSuite(PokerClientUpgradeCheckClientVersion))
     return suite
     
 # -----------------------------------------------------------------------------------------------------

@@ -53,7 +53,7 @@ UPGRADE_READY = "//event/pokernetwork/upgrade/upgrade_ready"
 class CheckClientVersion(PokerRsync):
 
     def __init__(self, config, settings, version, callback):
-        if match(".*::", '@SOURCE@'):
+        if match(".*::", settings.headerGet("/settings/rsync/@source")):
             PokerRsync.__init__(self, config, settings, Constants.RSYNC + [ "@SOURCE@/" ])
         else:
             PokerRsync.__init__(self, config, settings, Constants.RSYNC + [ '--dry-run', '--list-only', "@SOURCE@/", "/most/unlikely/directory" ])
