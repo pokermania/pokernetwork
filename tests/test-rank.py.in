@@ -106,7 +106,7 @@ class PokerRendererTestCase(unittest.TestCase):
         
     # -----------------------------------------------------------------------------------------------------
     def test_showRank(self):
-        self.renderer.showYourRank(100, 5, 10, 100)
+        self.renderer.showYourRank(100, 5, 10, 10000)
         self.assertEquals("Tourney 100\n Your rank is 5 on 10\nYou won 100", self.renderer.message)
 
 
