@@ -1,3 +1,13 @@
+2006-10-23  Cedric Pinson  <cpinson@freesheep.org>
+
+        * Release 1.0.29
+
+	* pokernetwork/pokerservice.py:
+	* pokernetwork/pokerpackets.py:
+	* pokerui/pokerrenderer.py:
+	* tests/test-rank.py.in:
+	Add a new packet sent at the end of tournament
+
 2006-10-18  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.29
