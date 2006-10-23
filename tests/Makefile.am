@@ -63,6 +63,7 @@ TESTS = coverage-reset \
 	test-protocol.py \
 	test-upgrade.py \
 	test-pokerinterface.py \
+	test-rank.py \
 	testcurrency.php \
 	coverage-report \
 	poker-interface

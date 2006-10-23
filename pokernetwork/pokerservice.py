@@ -25,7 +25,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #  Henry Precheur <henry@precheur.org> (2004)
-#
+#  Cedric Pinson <cpinson@freesheep.org>
 
 from os.path import exists
 from types import *
@@ -418,6 +418,18 @@ class PokerService(service.Service):
         cursor.close()
 
     def tourneyRemovePlayer(self, tourney, game_id, serial):
+        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
+        prizes = tourney.prizes(tourney_schedule['buy_in'])
+        rank = tourney.getRank(serial)
+        money = 0
+        players = len(tourney.players)
+        if rank-1 < len(prizes):
+            money = prizes[rank-1]
+
+        client = self.serial2client.get(serial, None)
+        if client:
+            packet = PacketPokerTourneyRank(serial = tourney.serial, game_id = game_id, players = players, rank = rank, money = money)
+            client.sendPacketVerbose(packet)
         table = self.getTable(game_id)
         table.kickPlayer(serial)
         cursor = self.db.cursor()

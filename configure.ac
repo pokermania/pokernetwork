@@ -250,6 +250,7 @@ AC_CONFIG_FILES([
         tests/test-pokerlock.py
         tests/test-pokernetworkconfig.py
         tests/test-pokerservice.py
+        tests/test-rank.py
         tests/test-pokerchildren.py
         tests/test-xmlrpc.py
 	tests/test-pokerinteractor.py

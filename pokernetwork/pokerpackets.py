@@ -4023,3 +4023,51 @@ class PacketPokerRake(PacketInt):
         return PacketInt.__str__(self) + " game_id = %d" % self.game_id
 
 PacketFactory[PACKET_POKER_RAKE] = PacketPokerRake
+
+########################################
+
+PACKET_POKER_TOURNEY_RANK = 250
+PacketNames[PACKET_POKER_TOURNEY_RANK] = "PACKET_POKER_TOURNEY_RANK"
+
+class PacketPokerTourneyRank(PacketPokerId):
+    """\
+Semantics: a PACKET_POKER_TOURNEY_RANK sent to the player who leaves the tournament
+
+Direction: server  => client
+
+serial: serial of the tourney
+
+rank: the rank.
+
+players: the number of players in this tourney
+
+money: the money won
+"""
+    
+    type = PACKET_POKER_TOURNEY_RANK
+
+    format = "!III"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.players = kwargs.get("players", 0)
+        self.money = kwargs.get("money", 0)
+        self.rank = kwargs.get("rank", -1)
+        PacketPokerId.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketPokerId.pack(self) + pack(PacketPokerTourneyRank.format, self.players, self.money, self.rank)
+
+    def unpack(self, block):
+        block = PacketPokerId.unpack(self, block)
+        (self.players, self.money, self.rank) = unpack(PacketPokerTourneyRank.format, block[:PacketPokerTourneyRank.format_size])
+        return block[PacketPokerTourneyRank.format_size:]
+
+    def calcsize(self):
+        return PacketPokerId.calcsize(self) + PacketPokerTourneyRank.format_size
+
+    def __str__(self):
+        return PacketPokerId.__str__(self) + "\n\tplayers = %d, tourney = %d, rank %d, won %d" % ( self.players, self.serial, self.rank, self.money )
+
+
+PacketFactory[PACKET_POKER_TOURNEY_RANK] = PacketPokerTourneyRank

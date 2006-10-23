@@ -24,7 +24,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#
+#  Cedric Pinson <cpinson@freesheep.org>
 
 import sys, os
 sys.path.insert(0, "@srcdir@/../..")
@@ -237,6 +237,93 @@ class PokerServiceTestCase(unittest.TestCase):
         self.assertEquals(info.type, PACKET_POKER_PERSONAL_INFO, str(info))
         self.assertEquals(affiliate, info.affiliate)
 
+    # -----------------------------------------------------------------------------------------------------
+
+    class ClientMockup:
+        def __init__(self):
+            self.packet_end_tournament = None
+        def sendPacketVerbose(self, packet):
+            self.packet_end_tournament = packet
+            
+    class TableMockup:
+        def __init__(self):
+            self.serial = None
+        def kickPlayer(self, serial):
+            self.kick_player = serial
+
+    class TourneyMockup:
+        def __init__(self):
+            self.call_rank = None
+            self.serial = 10
+            self.schedule_serial = 1
+            self.players = [0, 2, 4]
+            self.prize = [10,20,30]
+            self.rank = 10
+        def getRank(self, serial):
+            return self.rank
+        
+        def prizes(self, buy_in):
+            return self.prize
+        
+
+    def test09_endOfTournamentsNotInPlayers(self):
+        self.service.startService()
+        self.createUsers()
+        
+        table = self.TableMockup()
+        kickplayer = None
+        def getTableMockup( game_id):
+            return table
+
+        tourney = self.TourneyMockup()
+        self.service.client = self.ClientMockup()
+        self.service.getTable = getTableMockup
+        self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
+        self.assertEquals(self.service.client.packet_end_tournament == None, True)
+
+    def test10_endOfTournamentsNoPrize(self):
+        self.service.startService()
+        self.createUsers()
+        
+        table = self.TableMockup()
+        kickplayer = None
+        def getTableMockup( game_id):
+            return table
+
+        tourney = self.TourneyMockup()
+        tourney.players = [2, self.user1_serial, 10]
+        client = self.ClientMockup()
+        self.service.serial2client[self.user1_serial] = client
+        self.service.getTable = getTableMockup
+        self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
+        self.assertEquals(client.packet_end_tournament != None, True)
+        self.assertEquals(client.packet_end_tournament.serial == tourney.serial, True)
+        self.assertEquals(client.packet_end_tournament.money == 0, True)
+        self.assertEquals(client.packet_end_tournament.rank == 10, True)
+        self.assertEquals(client.packet_end_tournament.players == 3, True)
+
+    def test11_endOfTournamentsPrize(self):
+        self.service.startService()
+        self.createUsers()
+        
+        table = self.TableMockup()
+        kickplayer = None
+        def getTableMockup( game_id):
+            return table
+
+        tourney = self.TourneyMockup()
+        tourney.rank = 2
+        client = self.ClientMockup()
+        self.service.serial2client[self.user1_serial] = client
+        self.service.getTable = getTableMockup
+        self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
+        self.assertEquals(client.packet_end_tournament != None, True)
+        self.assertEquals(client.packet_end_tournament.serial == tourney.serial, True)
+        self.assertEquals(client.packet_end_tournament.money == 20, True)
+        self.assertEquals(client.packet_end_tournament.rank == 2, True)
+        self.assertEquals(client.packet_end_tournament.players == 3, True)
+
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -244,7 +331,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test11"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,

@@ -429,7 +429,11 @@ class PokerRenderer:
             protocol.registerHandler("outbound", None, self._handleConnection)
             protocol.registerLagmax(self.updateLagmax)
             self.interactors.setProtocol(protocol)
-            
+
+    def showYourRank(self, tourney_serial, rank, players, money):
+        msg = "Tourney %d\n Your rank is %d on %d\nYou won %d" % (tourney_serial, rank, players, money/100)
+        self.showMessage(msg, None)
+
     def showYesNoBox(self, message):
         self.factory.interface.yesnoBox(message)
         self.render(PacketPokerInterfaceCommand(window = "yesno_window", command = "show"))
@@ -985,6 +989,9 @@ class PokerRenderer:
         
         elif packet.type == PACKET_POKER_TOURNEY_LIST:
             self.updateTournaments(packet)
+
+        elif packet.type == PACKET_POKER_TOURNEY_RANK:
+            self.showYourRank(packet.serial, packet.rank, packet.players, packet.money)
                 
         elif packet.type == PACKET_POKER_TABLE_DESTROY:
             if self.replayGameId == packet.serial:
@@ -1244,6 +1251,7 @@ class PokerRenderer:
         elif packet.type == PACKET_POKER_STATE:
             if self.state == MUCK and packet.string == "end":
                 self.changeState(IDLE)
+
 
     def readyToPlay(self, game_id):
         if self.factory.getGame(game_id):
