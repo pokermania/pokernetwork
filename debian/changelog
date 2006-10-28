@@ -2,7 +2,9 @@ poker-network (1.0.29-1) unstable; urgency=low
 
   * upstream sync
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 18 Oct 2006 01:52:52 +0200
+  * don't link python module with python libs (closes: #395864)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sat, 28 Oct 2006 19:22:25 +0200
 
 poker-network (1.0.28-1) unstable; urgency=low
 
