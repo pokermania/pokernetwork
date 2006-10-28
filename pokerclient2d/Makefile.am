@@ -105,14 +105,14 @@ libinterface_la_CPPFLAGS = @GLADE_CFLAGS@
 pyexec_LTLIBRARIES = _pokerinterface.la
 _pokerinterface_la_SOURCES = python.c
 _pokerinterface_la_DEPENDENCIES = libinterface.la
-_pokerinterface_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @GLADE_LIBS@ libinterface.la
 _pokerinterface_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"\" -D'VERSION_NAME(w)=w'
 
 if PYTHON_2_5
 py2_5exec_LTLIBRARIES = _pokerinterface2_5.la
 _pokerinterface2_5_la_SOURCES = python.c
 _pokerinterface2_5_la_DEPENDENCIES = libinterface.la
-_pokerinterface2_5_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_5_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_5_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @GLADE_LIBS@ libinterface.la
 _pokerinterface2_5_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_5_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_5\" -D'VERSION_NAME(w)=w\#\#2_5'
 endif
 
@@ -120,7 +120,7 @@ if PYTHON_2_4
 py2_4exec_LTLIBRARIES = _pokerinterface2_4.la
 _pokerinterface2_4_la_SOURCES = python.c
 _pokerinterface2_4_la_DEPENDENCIES = libinterface.la
-_pokerinterface2_4_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_4_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_4_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @GLADE_LIBS@ libinterface.la
 _pokerinterface2_4_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_4_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_4\" -D'VERSION_NAME(w)=w\#\#2_4'
 endif
 
@@ -128,7 +128,7 @@ if PYTHON_2_3
 py2_3exec_LTLIBRARIES = _pokerinterface2_3.la
 _pokerinterface2_3_la_SOURCES = python.c
 _pokerinterface2_3_la_DEPENDENCIES = libinterface.la
-_pokerinterface2_3_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @PYTHON2_3_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_3_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @GLADE_LIBS@ libinterface.la
 _pokerinterface2_3_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_3_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_3\" -D'VERSION_NAME(w)=w\#\#2_3'
 endif
 
