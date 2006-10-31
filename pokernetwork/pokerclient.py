@@ -1404,17 +1404,20 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.publish_packets.append(packet)
         if not self._poll:
             self.publishPacket()
+        else:
+            self.publishPacketTriggerTimer()
             
     def unschedulePackets(self, predicate):
         self.publish_packets = filter(lambda packet: not predicate(packet), self.publish_packets)
+        if self._poll:
+            self.publishPacketTriggerTimer()
         
     def publishPackets(self):
         if not self._poll:
             return
-        
+
         delay = 0.01
-        packets_len = len(self.publish_packets)
-        if packets_len > 0:
+        if len(self.publish_packets) > 0:
             #
             # If time has not come, make sure we are called at a later time
             # to reconsider the situation
@@ -1427,15 +1430,19 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 self.block()
             else:
                 self.publishPacket()
-                if packets_len > 0:
+                if len(self.publish_packets) > 0:
                     self.block()
                 else:
                     self.unblock()
         else:
             self.unblock()
             
+        self.publishPacketTriggerTimer(delay)
+
+    def publishPacketTriggerTimer(self, delay = 0.01):
         if not self.publish_timer or not self.publish_timer.active():
-            self.publish_timer = reactor.callLater(delay, self.publishPackets)
+            if len(self.publish_packets) > 0:
+                self.publish_timer = reactor.callLater(delay, self.publishPackets)
 
     def publishPacket(self):
         packet = self.publish_packets[0]
