@@ -282,6 +282,8 @@ class PokerRsync(PokerChild, ProcessProtocol):
                                                                            rsync)
         if platform.system() == "Windows":
             self.rsync = map(lambda x: '"' + x + '"', self.rsync)
+            import re
+            self.rsync = map(lambda x: re.sub(r'(.):\\(.*)', r'/cygdrive/\1/\2', x), self.rsync)
         return True
 
     def spawn(self):
