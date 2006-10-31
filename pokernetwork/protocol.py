@@ -151,6 +151,7 @@ class UGAMEProtocol(protocol.Protocol):
 
     def unblock(self):
         self._blocked = False
+        self.triggerTimer()
         
     def discardPackets(self, id):
         if self._queues.has_key(id):
