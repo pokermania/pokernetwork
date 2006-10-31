@@ -1,6 +1,13 @@
-2006-10-29  Loic Dachary  <loic@dachary.org>
+2006-10-31  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.30
+
+	* pokerclient2d/pokerdisplay2d.py (PokerDisplay2D.__init__): init the mixer only once
+
+	* pokernetwork/protocol.py (UGAMEProtocol.unblock): trigger timer if queue is not empty
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol.publishPackets): avoid extra calls by
+	  setting the timer only if necessary
 
 2006-10-23  Cedric Pinson  <cpinson@freesheep.org>
 
