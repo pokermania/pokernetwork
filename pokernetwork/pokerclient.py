@@ -1423,8 +1423,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
             if wait_for > 0:
                 if self.factory.verbose > 2:
                     self.message("publishPackets: %f before next packet is sent" % wait_for)
-                    delay = wait_for
-                    self.block()
+                delay = wait_for
+                self.block()
             else:
                 self.publishPacket()
                 if packets_len > 0:
