@@ -19,10 +19,6 @@
 	* tests/test-rank.py.in:
 	Add a new packet sent at the end of tournament
 
-2006-10-18  Loic Dachary  <loic@dachary.org>
-
-        * Release 1.0.29
-
 2006-10-14  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.28
