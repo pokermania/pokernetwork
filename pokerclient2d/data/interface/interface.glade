@@ -3071,6 +3071,12 @@
 	      </child>
 
 	      <child>
+		<widget class="GtkSeparatorMenuItem" id="separator3">
+		  <property name="visible">True</property>
+		</widget>
+	      </child>
+
+	      <child>
 		<widget class="GtkMenuItem" id="requests">
 		  <property name="visible">True</property>
 		  <property name="label" translatable="yes"> MY _ACCOUNT</property>
@@ -3111,6 +3117,12 @@
 	      </child>
 
 	      <child>
+		<widget class="GtkSeparatorMenuItem" id="separator4">
+		  <property name="visible">True</property>
+		</widget>
+	      </child>
+
+	      <child>
 		<widget class="GtkMenuItem" id="options">
 		  <property name="visible">True</property>
 		  <property name="label" translatable="yes"> _OPTIONS</property>
@@ -3143,7 +3155,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> _Auto Select</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <signal name="activate" handler="on_auto_select_activate" last_modification_time="Wed, 16 Mar 2005 11:38:39 GMT"/>
 				</widget>
 			      </child>
@@ -3153,7 +3165,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1024x_768</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1024x768_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -3164,7 +3176,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1280x800</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x800_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3175,7 +3187,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 12_80x1024</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1280x1024_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -3186,7 +3198,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1366x1024</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1336x1024_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3197,7 +3209,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1_400x1050</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1400x1050_activate" last_modification_time="Thu, 26 May 2005 19:29:18 GMT"/>
 				</widget>
@@ -3208,7 +3220,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1600x1_200</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1600x1200_activate" last_modification_time="Tue, 15 Mar 2005 15:28:58 GMT"/>
 				</widget>
@@ -3219,7 +3231,7 @@
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes"> 1680x1050</property>
 				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
+				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
 				  <signal name="activate" handler="on_1680x1050_activate" last_modification_time="Sat, 11 Jun 2005 11:10:44 GMT"/>
 				</widget>
@@ -3297,6 +3309,12 @@
 		      </child>
 		    </widget>
 		  </child>
+		</widget>
+	      </child>
+
+	      <child>
+		<widget class="GtkSeparatorMenuItem" id="separator5">
+		  <property name="visible">True</property>
 		</widget>
 	      </child>
 
@@ -3424,6 +3442,12 @@
 		      </child>
 		    </widget>
 		  </child>
+		</widget>
+	      </child>
+
+	      <child>
+		<widget class="GtkSeparatorMenuItem" id="separator6">
+		  <property name="visible">True</property>
 		</widget>
 	      </child>
 
