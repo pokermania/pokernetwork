@@ -157,12 +157,15 @@ class Upgrader(dispatch.EventDispatcher):
 
     def failed(self, logs, reason):
         self.publishEvent(FAILED, logs, reason)
+
+    def checkClientVersionFailed(self, logs, reason):
+        print "*CRITICAL* checkClientVersionFailed logs:%s reason:%s" % (logs, reason)
     
     def checkClientVersion(self, version):
         if self.verbose > 1: print "Upgrade::checkClientVersion(" + str(version) + ")" 
         self.publishEvent(TICK, 0.0, "Checking for new client version")
         checker = CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
-        checker.registerHandler(RSYNC_FAILED, self.failed)
+        checker.registerHandler(RSYNC_FAILED, self.checkClientVersionFailed)
 
     def checkClientVersionDone(self, need_upgrade, version):
         if need_upgrade:
