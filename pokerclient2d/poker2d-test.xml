@@ -5,7 +5,7 @@
   <screen fullscreen="no" width="1024" height="768"/>
   <name>loic13</name>
   <passwd>loic13</passwd>
-  <remember>yes</remember>
+  <remember>no</remember>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <chat max_chars="40" line_length="20"/>
