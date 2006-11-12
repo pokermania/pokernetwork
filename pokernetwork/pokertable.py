@@ -1059,6 +1059,10 @@ class PokerTable:
             client.error("table refuses to seat player %d" % serial)
             return False
 
+        if seat != -1 and seat not in game.seats_left:
+            client.error("table refuses to seat player %d at seat %d" % ( serial, seat ))
+            return False
+
         amount = 0
         if self.transient:
             amount = game.buyIn()
