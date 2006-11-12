@@ -1318,6 +1318,14 @@ class PokerRenderer:
     def requestBuyIn(self, game):
         player = game.getPlayer(self.protocol.getSerial())
 
+        #
+        # We may enter this function while not seated at the table
+        # if the seat was denied by the server (either wrong seat number
+        # or race condition).
+        #
+        if not player:
+            return False
+
         min_amount = max(0, game.buyIn() - player.money)
         max_amount = game.maxBuyIn() - player.money
 
