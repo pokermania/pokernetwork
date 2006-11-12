@@ -281,6 +281,26 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
 
+    def test06_cannotGetSeat(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
+        def wrongSeat((client, packet),):
+            client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
+                                                   game_id = 100))
+            client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
+                                              game_id = 100,
+                                              seat = 42))
+            return client.packetDeferred(True, PACKET_POKER_SEAT)
+        d.addCallback(wrongSeat)
+        def checkWrongSeat((client, packet),):
+            self.assertEqual(PACKET_POKER_SEAT, packet.type)
+            self.assertEqual(-1, packet.seat)
+            return (client, packet)
+        d.addCallback(checkWrongSeat)
+        d.addCallback(self.quit)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -288,7 +308,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
@@ -305,5 +325,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerclient.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py ../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
 # End:
