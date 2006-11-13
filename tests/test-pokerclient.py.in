@@ -301,6 +301,41 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def test07_rebuy(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 400000))
+        def rebuy((client, packet),):
+            client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
+                                                   game_id = 100))
+            client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
+                                              game_id = 100))
+            client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
+                                               game_id = 100,
+                                               amount = 200000))
+            client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
+                                               game_id = 100,
+                                               amount = 200000))
+            return client.packetDeferred(True, PACKET_POKER_PLAYER_CHIPS)
+        d.addCallback(rebuy)
+        def checkSit((client, packet),):
+            self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+            self.assertEqual(0, packet.money)
+            return client.packetDeferred(True, PACKET_POKER_PLAYER_CHIPS)
+        d.addCallback(checkSit)
+        def checkBuyIn((client, packet),):
+            self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+            self.assertEqual(200000, packet.money)
+            return client.packetDeferred(True, PACKET_POKER_PLAYER_CHIPS)
+        d.addCallback(checkBuyIn)
+        def checkRebuy((client, packet),):
+            self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+            self.assertEqual(400000, packet.money)
+            return (client, packet)
+        d.addCallback(checkRebuy)
+        d.addCallback(self.quit)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -308,7 +343,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
@@ -325,5 +360,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py ../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py ../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py ../pokernetwork/pokerclient.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
 # End:

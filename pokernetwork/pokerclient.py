@@ -896,13 +896,22 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
             elif packet.type == PACKET_POKER_REBUY:
                 forward_packets.remove(packet)
-                game.rebuy(packet.serial, packet.amount)
-                player = game.getPlayer(packet.serial)
-                chips = PacketPokerPlayerChips(game_id = game.id,
-                                               serial = packet.serial,
-                                               money = player.money,
-                                               bet = player.bet)
-                forward_packets.append(chips)
+                if game.rebuy(packet.serial, packet.amount):
+                    #
+                    # If the server says the player rebuys, assume he knows
+                    # that the player can rightfully do so and therefore
+                    # that the buy_in has already been paid. The client fail
+                    # to notice that a player already paid the buy_in 
+                    # when it connects to a table on which said player has
+                    # no chips in front of him.
+                    #
+                    game.buy_in_payed = True
+                    player = game.getPlayer(packet.serial)
+                    chips = PacketPokerPlayerChips(game_id = game.id,
+                                                   serial = packet.serial,
+                                                   money = player.money,
+                                                   bet = player.bet)
+                    forward_packets.append(chips)
 
             elif packet.type == PACKET_POKER_PLAYER_CHIPS:
                 player = game.getPlayer(packet.serial)
