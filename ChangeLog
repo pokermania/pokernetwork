@@ -1,6 +1,27 @@
-2006-11-11  Loic Dachary  <loic@dachary.org>
+2006-11-12  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.31
+
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in, conf/poker.server.xml.in, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml, pokerclient2d/client.xml, pokerclient2d/poker2d-test.xml, pokerclient2d/poker2d.xml.in, pokerui/pokerrenderer.py, tests/conf/poker.client.xml.in:
+	version bump
+
+	* tests/test-pokerclient.py.in:
+	test06_cannotGetSeat: seatPlayer returns if seat number is invalid
+	test07_rebuy(self): run rebuy
+
+	* pokernetwork/pokertable.py:
+	seatPlayer returns if seat number is invalid
+
+	* pokernetwork/pokerclient.py: If the server says the player
+	 rebuys, assume he knows that the player can rightfully do so and
+	 therefore that the buy_in has already been paid. The client fail
+	 to notice that a player already paid the buy_in when it connects
+	 to a table on which said player has no chips in front of him.
+
+2006-11-11  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/__init__.py, debian/changelog, ChangeLog, NEWS:
+	version bump
 
 2006-10-31  Loic Dachary  <loic@dachary.org>
 
