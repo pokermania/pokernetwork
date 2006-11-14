@@ -1,3 +1,10 @@
+2006-11-14  Johan Euphrosine  <johan@mekensleep.com>
+
+	* pokerclient2d/pokerdisplay2d.py (PokerTable2D.render): 
+	* tests/test-pokerdisplay2d.py: 
+	underline nickname when in position
+	
+
 2006-11-12  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.31
