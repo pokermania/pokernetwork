@@ -1,0 +1,129 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Johan Euphrosine <johan@mekensleep.com>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+import unittest
+from pokerclient2d.pokerdisplay2d import PokerPlayer2D, PokerTable2D
+from pokernetwork.pokerpackets import PACKET_POKER_POSITION, PACKET_POKER_PLAYER_ARRIVE
+class PokerPacketPlayerArriveMockup:
+    type = PACKET_POKER_PLAYER_ARRIVE
+    def __init__(self, serial, name):
+        self.serial = serial
+        self.seat = serial
+        self.name = name
+        self.url = "dummy"
+        self.outfit = "red"
+
+class PokerPacketPositionMockup:
+    type = PACKET_POKER_POSITION
+    def __init__(self, position):
+        self.position = position
+        self.serial = position
+
+class PokerWidgetMockup:
+    texts = []
+    def set_text(self, text):
+        pass
+    def show(self):
+        pass
+    def hide(self):
+        pass
+    def get_buffer(self):
+        pass
+    def set_label(self, text):
+        PokerWidgetMockup.texts.append(text)
+    def set_use_markup(self, state):
+        pass
+    def modify_fg(self, state, color):
+        pass
+
+class PokerGladeMockup:
+    def get_widget(self, name):
+        return PokerWidgetMockup()
+
+class PokerTableMockup:
+    verbose = 1
+    glade = PokerGladeMockup()
+    id = 0
+
+class PokerGameMockup:
+    def getMaxHandSize(self):
+        return 0
+    def isTournament(self):
+        return False
+
+class PokerFactoryMockup:
+    def getGame(self, id):
+        return PokerGameMockup()
+
+class PokerProtocolMockup:
+    def getSerial(self):
+        return 0
+
+class PokerDisplayMockup:
+    verbose = 1
+    factory = PokerFactoryMockup()
+    glade = PokerGladeMockup()
+    protocol = PokerProtocolMockup()
+
+class PokerDisplay2DTest(unittest.TestCase):
+    def setUp(self):
+        self.table = PokerTable2D(PokerTableMockup(), PokerDisplayMockup())
+        self.names = ["toto", "titi"]
+        self.namesInPosition = map(lambda x: "<u>%s</u>" % x, self.names)
+        self.table.render(PokerPacketPlayerArriveMockup(0, self.names[0]))
+        self.table.render(PokerPacketPlayerArriveMockup(1, self.names[1]))
+        PokerWidgetMockup.texts = []
+    def tearDown(self):
+        pass
+    def test_packetPlayerPositionNone(self):
+        self.table.render(PokerPacketPositionMockup(-1))
+        self.assertEquals(2, len(PokerWidgetMockup.texts))
+        self.assertEquals(self.names[0], PokerWidgetMockup.texts[0])
+        self.assertEquals(self.names[1], PokerWidgetMockup.texts[1])
+    def test_packetPlayerPosition0(self):
+        self.table.render(PokerPacketPositionMockup(0))
+        self.assertEquals(2, len(PokerWidgetMockup.texts))
+        self.assertEquals(self.namesInPosition[0], PokerWidgetMockup.texts[0])
+        self.assertEquals(self.names[1], PokerWidgetMockup.texts[1])
+    def test_packetPlayerPosition1(self):
+        self.table.render(PokerPacketPositionMockup(1))
+        self.assertEquals(2, len(PokerWidgetMockup.texts))
+        self.assertEquals(self.names[0], PokerWidgetMockup.texts[0])
+        self.assertEquals(self.namesInPosition[1], PokerWidgetMockup.texts[1])
+
+if __name__ == '__main__':
+    unittest.main()
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerdisplay2d.py ) ; ( cd ../tests ; make TESTS='test-pokerdisplay2d.py' check )"
+# End:

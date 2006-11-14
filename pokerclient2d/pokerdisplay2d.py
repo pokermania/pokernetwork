@@ -132,7 +132,7 @@ class PokerPlayer2D:
         elif packet.type == PACKET_POKER_FOLD:
             for card in self.cards:
                 card.hide()
-        
+
 class PokerTable2D:
     def __init__(self, table, display):
         self.display = display
@@ -216,16 +216,6 @@ class PokerTable2D:
 
         if packet.type == PACKET_POKER_TABLE_DESTROY:
             self.deleteTable()
-
-        elif packet.type == PACKET_POKER_SELF_IN_POSITION:
-            pass
-#            glade_file = display.datadir + "/interface/interface2d.glade"
-#            glade = gtk.glade.XML(fname = glade_file, root = "table_action_dialog")
-#            class dialog_actions:
-#                def on_button2_clicked(self, button):
-#                    glade.get_widget("table_action_dialog").hide()
-#
-#            glade.signal_autoconnect(dialog_actions())
             
         elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
             self.serial2player[packet.serial] = PokerPlayer2D(packet, self)
@@ -297,7 +287,16 @@ class PokerTable2D:
             elif self.game.hasLow() and best_cards['low']:
                 winner.set_label(best_cards['low'].hand)
                 winner.show()
-            
+
+        elif packet.type == PACKET_POKER_POSITION:
+            for player in self.serial2player.values():
+                playerInPosition = player.serial == packet.serial
+                name = player.player.name
+                if playerInPosition:
+                    name = "<u>%s</u>" % name 
+                player.name.set_use_markup(True)
+                player.name.set_label(name)
+                
         elif hasattr(packet, "serial") and self.serial2player.has_key(packet.serial):
             self.serial2player[packet.serial].render(packet)
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
