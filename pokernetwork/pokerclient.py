@@ -965,7 +965,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 if game.isBlindAnteRound():
                     game.blindAnteRoundEnd()
 
-                if packet.string == "end":
+                if packet.string == "end" and game.state != "null":
                     game.endState()
 
                 #
