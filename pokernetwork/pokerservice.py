@@ -193,7 +193,7 @@ class PokerService(service.Service):
         self.cancelTimer('checkTourney')
         self.cancelTimer('updateTourney')
         self.shutdown_deferred = defer.Deferred()
-        reactor.callLater(0, self.shutdownCheck)
+        reactor.callLater(0.01, self.shutdownCheck)
         return self.shutdown_deferred
 
     def shutdownCheck(self):
@@ -213,6 +213,7 @@ class PokerService(service.Service):
                 print "Shutdown immediately"
             self.down = True
             self.shutdown_deferred.callback(True)
+            self.shutdown_deferred = False
         else:
             reactor.callLater(10, self.shutdownCheck)
 
