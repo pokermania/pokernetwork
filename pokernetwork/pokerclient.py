@@ -1475,7 +1475,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         else:
             what = 'outbound'
 
-        if self.factory.verbose > 2: self.message("publishPacket: %s: %s" % ( what, packet ) )
+        if self.factory.verbose > 2: self.message("publishPacket(%d): %s: %s" % ( self.getSerial(), what, packet ) )
         if self.callbacks[what].has_key(packet.type):
             callbacks = self.callbacks[what][packet.type]
             for callback in callbacks:
