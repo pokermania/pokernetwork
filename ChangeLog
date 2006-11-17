@@ -1,3 +1,38 @@
+2006-11-17  Loic Dachary  <loic@dachary.org>
+
+        * Release 1.0.31
+
+	* tests/test-pokerclient.py.in:
+	disconnectAll in teardown to avoid reactor leftover
+	test case for processing hand / ready to play logic
+	test case for autodeal_max
+
+	* pokernetwork/pokertable.py: add serials in broadcast debug messages
+	if time to next hand is greater than limit, cap it to autodeal_max
+
+	* pokernetwork/pokerservice.py:
+	shutdown deferred reset to false after launch
+	set reactor delay to 1/100sec instead of 0 for code safeguard
+
+	* pokernetwork/pokerclient.py, pokernetwork/pokeravatar.py:
+	add serial in debug messages
+
+	* pokernetwork/client.py: add serial when sending packets
+
+	* pokerclient2d/Makefile.am: move xsl addition of hotkeys
+
+	* Makefile.am: autodeal max add poker.server/1.0.30-1.0.31.xsl
+
+2006-11-16  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokertable.py (PokerTable.scheduleAutoDeal): 
+	  cap the autodeal delay to two minutes. Any client that slows
+	  down the game by more than two minutes deserves to be listed
+	  as not honouring the PROCESSING_HAND / READY_TO_PLAY protocol.
+
+	* pokerclient2d/Makefile.am (nobase_dist_poker2d_DATA): 
+	  upgrades/1.0.23-1.0.24.xsl
+
 2006-11-14  Johan Euphrosine  <johan@mekensleep.com>
 
 	* pokerclient2d/pokerdisplay2d.py (PokerTable2D.render): 
@@ -6,8 +41,6 @@
 	
 
 2006-11-12  Loic Dachary  <loic@dachary.org>
-
-        * Release 1.0.31
 
 	* conf/poker.bot.xml.in, conf/poker.client.xml.in, conf/poker.server.xml.in, examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml, pokerclient2d/client.xml, pokerclient2d/poker2d-test.xml, pokerclient2d/poker2d.xml.in, pokerui/pokerrenderer.py, tests/conf/poker.client.xml.in:
 	version bump
