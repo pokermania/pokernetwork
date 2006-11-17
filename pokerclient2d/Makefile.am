@@ -41,7 +41,6 @@ EXTRA_DIST = \
 	cygwin/setup.hint \
 	$(wildcard cygwin/*.sh) \
 	upgrades/1.0.7-1.0.8.xsl.in \
-	upgrades/1.0.23-1.0.24.xsl \
 	poker2d.6.in \
 	poker2d.in \
 	poker2d.xml.in \
@@ -147,6 +146,7 @@ nobase_dist_poker2d_DATA = \
 	upgrades/1.0.5-1.0.6.xsl \
 	upgrades/1.0.6-1.0.7.xsl \
 	upgrades/1.0.10-1.0.11.xsl \
+	upgrades/1.0.23-1.0.24.xsl \
 	upgrades/str.replace.function.xsl
 
 nobase_poker2d_DATA = \
