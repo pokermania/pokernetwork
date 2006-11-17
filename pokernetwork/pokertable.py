@@ -203,9 +203,10 @@ class PokerTable:
             packets = ( packets, )
             
         for packet in packets:
+            keys = game.serial2player.keys()
             if self.factory.verbose > 1:
-                print "broadcast %s " % packet
-            for serial in game.serial2player.keys():
+                print "broadcast%s %s " % ( keys, packet )
+            for serial in keys:
                 #
                 # Player may be in game but disconnected.
                 #
@@ -692,6 +693,7 @@ class PokerTable:
         if not self.allReadyToPlay() and delay > 0:
             delta = ( self.game_delay["start"] + delay ) - time.time()
             if delta < 0: delta = 0
+            if delta > float(self.delays["autodeal_max"]): delta = float(self.delays["autodeal_max"])
         else:
             delta = 0
         if self.factory.verbose > 2:
