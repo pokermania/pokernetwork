@@ -48,10 +48,10 @@ from pokernetwork.pokerpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
 
   <listen tcp="19480" />
 
@@ -65,7 +65,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
 settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings display2d="yes" display3d="no" ping="15000" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
-   <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="1" lag="60"/> 
+   <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
   <name>user1</name>
   <passwd>password1</passwd>
@@ -142,12 +142,7 @@ class PokerClientTestCase(unittest.TestCase):
         return arg
         
     def tearDown(self):
-        #
-        # Allow for a few more iterations so that client and server
-        # have an opportunity to finish the session shutdown protocol.
-        #
-        reactor.iterate(0)
-        reactor.iterate(0)
+        reactor.disconnectAll()
         d = self.service.stopService()
         d.addCallback(lambda x: self.p.stopListening())
 #        d.addCallback(self.destroyDb)
@@ -156,9 +151,13 @@ class PokerClientTestCase(unittest.TestCase):
 
     def quit(self, args):
         client = args[0]
+        print "quit " + str(client.getSerial())
         client.sendPacket(PacketQuit())
-        client.transport.loseConnection()
-        return client.connection_lost_deferred
+        if hasattr(client, "transport"):
+            client.transport.loseConnection()
+            return client.connection_lost_deferred
+        else:
+            raise UserWarning, "quit does not have transport %d" % client.getSerial()
         
     def ping(self, client):
         client.sendPacket(PacketPing())
@@ -237,7 +236,7 @@ class PokerClientTestCase(unittest.TestCase):
         else:
             client.sendPacket(PacketPokerCall(serial = packet.serial,
                                               game_id = packet.game_id))
-            
+
         return client.packetDeferred(True, PACKET_POKER_WIN)
         
     def win(self, (client, packet)):
@@ -336,6 +335,59 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def test08_processing_readytoplay(self):
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            d[index].addCallback(self.login, index)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 600000))
+            d[index].addCallback(self.sit)
+            def processingHand((client, packet),):
+                print "processingHand"
+                self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+                client.sendPacket(PacketPokerProcessingHand(serial = client.getSerial(),
+                                                            game_id = 100))
+                return (client, packet)
+            d[index].addCallback(processingHand)
+            d[index].addCallback(self.allIn)
+            def atShowdown((client, packet),):
+                print "atShowdown"
+                client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
+                                                   game_id = 100,
+                                                   amount = 200000))
+                client.sendPacket(PacketPokerSit(serial = client.getSerial(),
+                                                 game_id = 100))
+                return (client, packet)
+            d[index].addCallback(atShowdown)
+            if index == 0:
+                def readyToPlay((client, packet),):
+                    client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
+                                                             game_id = 100))
+                    return (client, packet)
+                d[index].addCallback(readyToPlay)
+            def nextTurn((client, packet),):
+                print "nextTurn"
+                return client.packetDeferred(True, PACKET_POKER_WIN)
+            d[index].addCallback(nextTurn)
+            #
+            # Game will start after the client index=0 times out 
+            # and is marked as bugous because it failed to send
+            # the READY_TO_PLAY packet
+            #
+            if index == 0:
+                def checkBugousClient((client, packet),):
+                    print "checkBugousClient for %d" % client.getSerial()
+                    table = self.service.tables[0]
+                    has_bugous = False
+                    for (serial, server_client) in table.serial2client.iteritems():
+                        if server_client.bugous_processing_hand == True:
+                            has_bugous = True
+                    self.assertEqual(True, has_bugous)
+                    return (client, packet)
+                d[index].addCallback(checkBugousClient)
+            d[index].addCallback(self.quit)
+        return defer.DeferredList(d)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -343,7 +395,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
