@@ -32,7 +32,7 @@ from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.user import User
 
 class UGAMEClientProtocol(UGAMEProtocol):
-    """"""
+    """ """
     def __init__(self):
         self._ping_timer = None
         self.user = User()
@@ -60,7 +60,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
         if self.established != 0:
             self.ping()
             if self.factory.verbose > 2:
-                print "%ssendPacket %s " % ( self._prefix, packet )
+                print "%ssendPacket(%d) %s " % ( self._prefix, self.user.serial, packet )
             self.transport.write(packet.pack())
         else:
             if self.factory.verbose > 2:
