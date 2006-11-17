@@ -58,7 +58,8 @@ nobase_dist_pkgdata_DATA = \
 	upgrades/poker.server/1.0.11-1.0.12.xsl \
 	upgrades/poker.server/1.0.12-1.0.13.xsl \
 	upgrades/poker.server/1.0.13-1.0.14.xsl \
-	upgrades/poker.server/1.0.14-1.0.15.xsl
+	upgrades/poker.server/1.0.14-1.0.15.xsl \
+	upgrades/poker.server/1.0.30-1.0.31.xsl
 
 pokernetworkdir = ${pythondir}/pokernetwork
 pokernetwork_PYTHON = \
