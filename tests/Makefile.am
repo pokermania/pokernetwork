@@ -67,10 +67,11 @@ TESTS = coverage-reset \
 	test-rank.py \
 	test-pokerdisplay2d.py \
 	testcurrency.php \
+	testicurrency.php \
 	coverage-report \
 	poker-interface
 
-.PHONY: coverage-reset coverage-report poker-interface testicurrency
+.PHONY: coverage-reset coverage-report poker-interface 
 
 export top_srcdir
 
