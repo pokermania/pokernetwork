@@ -1,6 +1,20 @@
-2006-11-17  Loic Dachary  <loic@dachary.org>
+2006-11-18  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.31
+
+	* pokernetwork/pokerservice.py:
+	PokerCards is needed for hand history evaluation
+
+	* pokerui/pokerrenderer.py:
+	allow batch mode while in batch mode. It may happen when a player gets
+	disconnected and the destruction of partially constructed tables
+	occur.
+
+2006-11-17  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokerclient.py (PokerClientProtocol._handleConnection): 
+	  don't run endState on PACKET_POKER_STATE if in state null because it
+	  will fail to interpret the dealer position correctly.
 
 	* tests/test-pokerclient.py.in:
 	disconnectAll in teardown to avoid reactor leftover
