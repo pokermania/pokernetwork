@@ -65,15 +65,19 @@ if(!isset($GLOBALS['currency_url'])) {
   }
 }
 
-if(!isset($GLOBALS['currency_values'])) $GLOBALS['currency_values'] = array(1, 2, 5,
-                                                                            10, 20, 50,
-                                                                            100, 200, 500,
-                                                                            1000, 2000, 5000,
-                                                                            10000, 20000, 50000,
-                                                                            100000, 200000, 500000,
-                                                                            1000000, 2000000, 5000000,
-                                                                            10000000, 20000000, 50000000,
-                                                                            100000000, 200000000, 500000000);
+if(!isset($GLOBALS['currency_values'])) $GLOBALS['currency_values'] = array("1", "2", "5",
+                                                                            "10", "20", "50",
+                                                                            "100", "200", "500",
+                                                                            "1000", "2000", "5000",
+                                                                            "10000", "20000", "50000",
+                                                                            "100000", "200000", "500000",
+                                                                            "1000000", "2000000", "5000000",
+                                                                            "10000000", "20000000", "50000000",
+                                                                            "100000000", "200000000", "500000000");
+
+function rbccomp($a, $b) {
+  return bccomp($b, $a);
+}
 
 class currency {
 
@@ -167,7 +171,7 @@ class currency {
 
   function sort_values($values) {
     $values = array_values($values);
-    if(!rsort($values, SORT_NUMERIC)) throw new Exception("sort error on " . $values);
+    if(!usort($values, "rbccomp")) throw new Exception("sort error on " . $values);
     return $values;
   }
 
@@ -221,7 +225,7 @@ class currency {
           if(strlen($table) <= $prefix_length) { // impossible because of the LIKE clause above 
             throw new Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED);
           }
-          $value = intval(substr($table, $prefix_length));
+          $value = substr($table, $prefix_length);
           $this->value2table[$value] = $table;
         }
       }
@@ -235,7 +239,7 @@ class currency {
       $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . " ( " .
         "   rowid INT NOT NULL AUTO_INCREMENT, " .
         "   updated TIMESTAMP, " . 
-        "   value INT NOT NULL, " . 
+        "   value BIGINT NOT NULL, " . 
         "   randname CHAR(40) NOT NULL UNIQUE, " .
         "   valid CHAR DEFAULT 'n' NOT NULL, " .
         "   PRIMARY KEY (rowid, value, randname) " .
@@ -263,7 +267,7 @@ class currency {
 
   function value2table($value) {
     if(in_array($value, $this->values, TRUE)) {
-      return $this->db_prefix . "_${value}";
+      return $this->db_prefix . "_" . $value;
     } else {
       return $this->db_prefix;
     }
@@ -275,7 +279,6 @@ class currency {
   
   function db_check_or_create_table_value($value) {
     $this->db_check_selected();
-    $value = intval($value);
     if(array_key_exists($value, $this->value2table)) {
       return;
     } elseif(in_array($value, $this->values, TRUE)) { 
@@ -333,7 +336,6 @@ class currency {
   }
 
   function _get_note($value, $valid) {
-    $value = intval($value);
     $done = FALSE;
     $this->db_check_or_create_table_value($value);
     $table = $this->value2table($value);
@@ -466,7 +468,6 @@ class currency {
     list( $url, $serial, $name, $value ) = $note;
 
     $serial = intval($serial);
-    $value = intval($value);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
     $result = $this->db_query("SELECT rowid FROM ${table} WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
@@ -478,7 +479,6 @@ class currency {
 
   function change_note($serial, $name, $value) {
     $serial = intval($serial);
-    $value = intval($value);
     $this->check_note($serial, $name, $value);
     $note = $this->_get_note_transaction($value);
     $this->_transaction_add($note[2], 'y', array($this->url, $serial, $name, $value));
@@ -487,7 +487,6 @@ class currency {
 
   function put_note($serial, $name, $value) {
     $serial = intval($serial);
-    $value = intval($value);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
     $this->db_query("UPDATE ${table} SET valid = 'n' WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
@@ -502,7 +501,6 @@ class currency {
 
   function _break_note($serial, $name, $value, $values) {
     $serial = intval($serial);
-    $value = intval($value);
     if($values == FALSE) {
       $values = $this->values;
     } else {
@@ -511,15 +509,15 @@ class currency {
     $to_delete = array($this->url, $serial, $name, $value);
     $notes = array();
     foreach ( $values as $note_value ) {
-      if($value < $note_value) continue;
-      $count = intval($value / $note_value); 
-      $value %= $note_value;
+      if(bccomp($value, $note_value) < 0) continue;
+      $count = intval(bcdiv($value, $note_value)); 
+      $value = bcmod($value, $note_value);
       for($i = 0; $i < $count; $i++)
         array_push($notes, $this->_get_note($note_value, 'n'));
-      if($value <= 0) break;
+      if(!(bccomp($value, 0) > 0)) break;
     }
 
-    if($value > 0) {
+    if(bccomp($value, 0) > 0) {
       array_push($notes, $this->get_note($value));
     }
 
@@ -548,7 +546,7 @@ class currency {
     }
     $notes = array();
     for($i = 0; $i < count($serials); $i++)
-      array_push($notes, array($this->url, intval($serials[$i]), $names[$i], intval($values[$i])));
+      array_push($notes, array($this->url, intval($serials[$i]), $names[$i], $values[$i]));
     return $this->merge_notes($notes, $known_values);
   }
 
@@ -558,16 +556,16 @@ class currency {
     } else {
       $values = $this->sort_values($values);
     }
-    $total = array_reduce($notes, create_function('$a,$b', 'return $a + $b[3];'), 0);
+    $total = array_reduce($notes, create_function('$a,$b', 'return bcadd($a, $b[3]);'), 0);
     $value2count = array();
     foreach ( $values as $note_value ) {
-      if($total < $note_value) continue;
-      $count = intval($total / $note_value); 
-      $total %= $note_value;
+      if(bccomp($total, $note_value) < 0) continue;
+      $count = bcdiv($total, $note_value); 
+      $total = bcmod($total, $note_value);
       $value2count[$note_value] = $count;
-      if($total <= 0) break;
+      if(!(bccomp($total, 0) < 0)) break;
     }
-    if($total > 0) {
+    if(bccomp($total, 0) > 0) {
       $value2count[$total] = 1;
     }
 

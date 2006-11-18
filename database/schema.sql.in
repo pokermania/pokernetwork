@@ -78,11 +78,11 @@ create table users_private (
 drop table if exists user2money;
 
 create table user2money (
-  user_serial int unsigned not null,
-  currency_serial int unsigned not null,
-  amount int not null,
-  rake int default 0 not null,
-  points int default 0 not null,
+  user_serial INT unsigned not null,
+  currency_serial INT unsigned not null,
+  amount BIGINT not null,
+  rake BIGINT default 0 not null,
+  points BIGINT default 0 not null,
 
   primary key (user_serial,currency_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
@@ -105,7 +105,7 @@ create table safe (
   currency_serial INT NOT NULL,
   serial INT NOT NULL,
   name CHAR(40) NOT NULL,
-  value INT NOT NULL,
+  value BIGINT NOT NULL,
 
   primary key (currency_serial, serial, value)
 )  ENGINE=InnoDB CHARSET=utf8;
@@ -116,7 +116,7 @@ create table counter (
   currency_serial INT NOT NULL,
   serial INT NOT NULL,
   name CHAR(40) NOT NULL,
-  value INT NOT NULL,
+  value BIGINT NOT NULL,
   status CHAR DEFAULT 'y' NOT NULL,
   application_data VARCHAR(255) DEFAULT '' NOT NULL,
 
