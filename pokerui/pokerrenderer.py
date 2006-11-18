@@ -273,6 +273,7 @@ class PokerInteractors:
                 self.render(PacketPokerDisplayNode(name = interactor.name, state = "clicked", style = interactor.getClicked(), selection = interactor.selected_value))
         
     def interactorsSyncDisplay(self, game_id):
+        if not self.factory.display: return
         if self.factory.verbose > 3: print "interactorsSyncDisplay"
         game = self.factory.getGame(game_id)
         interactor_set = self.getOrCreateInteractorSet(game_id)
@@ -930,7 +931,6 @@ class PokerRenderer:
             self.restoreGameSate(game)
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
-            if self.stream_mode == False: raise UserWarning, "BATCH_MODE while in BATCH_MODE"
             self.stream_mode = False
             self.render(packet)
 
