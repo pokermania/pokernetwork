@@ -2,6 +2,14 @@
 
         * Release 1.0.31
 
+	* pokerclient2d/Makefile.am:
+	poker2D.xpm and poker2D-16.xpm for kde integration
+
+	* pokerclient2d/poker2D-16.xpm, pokerclient2d/poker2D.xpm:
+	poker2d pixmap
+
+	* debian/python-poker2d.menu: poker2d menu for graphics
+
 	* pokernetwork/pokerservice.py:
 	PokerCards is needed for hand history evaluation
 
