@@ -152,6 +152,11 @@ nobase_dist_poker2d_DATA = \
 nobase_poker2d_DATA = \
 	upgrades/1.0.7-1.0.8.xsl
 
+pixmapsdir = ${datadir}/pixmaps
+dist_pixmaps_DATA = \
+	poker2D.xpm \
+	poker2D-16.xpm 
+
 khotkeysdir = ${datadir}/apps/khotkeys
 dist_khotkeys_DATA = poker2d.khotkeys
 
