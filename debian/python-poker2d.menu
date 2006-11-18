@@ -1,0 +1,9 @@
+?package(poker2d):\
+	needs="x11"\
+	section="Games/Card"\
+	hints="KDE"\
+	title="Poker2D"\
+	icon32x32="/usr/share/pixmaps/poker2D.xpm"\
+	icon16x16="/usr/share/pixmaps/poker2D-16.xpm"\
+	command="/usr/games/poker2d"
+
