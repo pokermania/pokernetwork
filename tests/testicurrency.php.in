@@ -47,7 +47,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     public function get_note()
     {
       $_GET['command'] = 'get_note';
-      $_GET['value'] = 100;
+      $_GET['value'] = '100';
       $output = currency_main(False, True);
       $note = split("\t", $output);
       $this->commit($note[2]);
@@ -65,7 +65,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
     public function test01_get_note()
     {
       $_GET['command'] = 'get_note';
-      $_GET['value'] = 100;
+      $_GET['value'] = '100';
       $output = currency_main(False, True);
       $this->assertEquals(count(split("\n", $output)), 1);
       $this->assertRegExp('|^http://localhost/currency/	1	\w{40}	100$|', $output);
@@ -109,8 +109,8 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $output = currency_main(False, True);
       $lines = split("\n", $output);
       $this->assertEquals(count($lines), 2);
-      $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
-      $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
+      $this->assertRegExp('|http://localhost/currency/	1	.*	100|', $lines[0]);
+      $this->assertRegExp('|http://localhost/currency/	1	.*	200|', $lines[1]);
     }
 
     public function test04_merge_notes_2()
@@ -120,8 +120,8 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $output = currency_main(False, True);
       $lines = split("\n", $output);
       $this->assertEquals(count($lines), 2);
-      $this->assertRegExp('|http://localhost/currency/	1|', $lines[0]);
-      $this->assertRegExp('|http://localhost/currency/	1|', $lines[1]);
+      $this->assertRegExp('|http://localhost/currency/	1	.*	100|', $lines[0]);
+      $this->assertRegExp('|http://localhost/currency/	1	.*	200|', $lines[1]);
     }
 
     public function test05_merge_notes_3()
@@ -142,7 +142,7 @@ class testicurrency extends PHPUnit2_Framework_TestCase
       $this->assertEquals(array(1), $_GET['serial']);
       $_GET['name'] = array($note[2]);
       $_GET['value'] = array($note[3]);
-      $this->assertEquals(array(100), $_GET['value']);
+      $this->assertEquals(array('100'), $_GET['value']);
       $output = currency_main(False, True);
       $lines = split("\n", $output);
       $this->assertEquals(1, count($lines));

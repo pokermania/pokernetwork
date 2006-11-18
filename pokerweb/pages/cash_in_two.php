@@ -94,7 +94,6 @@ function action() {
     fclose($handle);
 
     $note[1] = intval($note[1]);
-    $note[3] = intval($note[3]);
     $poker->cashIn($note);
 
     return true;
