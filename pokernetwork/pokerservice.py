@@ -74,6 +74,7 @@ except ImportError:
 from twisted.python import components
 
 from pokerengine.pokertournament import *
+from pokerengine.pokercards import PokerCards
 
 from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
