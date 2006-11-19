@@ -55,6 +55,7 @@ class PokerInterface2D(PokerInterface):
         window.set_default_size(self.width, self.height)
         window.set_title("Poker")
         window.set_name("lobby_window_root")
+        window.set_icon_from_file(datadir + "/interface/pixmaps/poker2D_16.png")
         self.screen = gtk.Layout()
         self.screen.set_size(self.width, self.height)
         self.screen.set_name("screen")
