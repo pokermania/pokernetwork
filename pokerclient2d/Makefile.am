@@ -157,6 +157,10 @@ dist_pixmaps_DATA = \
 	poker2D.xpm \
 	poker2D-16.xpm 
 
+applicationsdir = ${datadir}/applications
+dist_applications_DATA = \
+	python-poker2d.desktop
+
 khotkeysdir = ${datadir}/apps/khotkeys
 dist_khotkeys_DATA = poker2d.khotkeys
 
