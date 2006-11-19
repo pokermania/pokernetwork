@@ -36,6 +36,7 @@ nobase_dist_poker2d_DATA = \
 	sounds/timeout_notice.wav \
 	sounds/self_in_position.wav \
 	sounds/timeout_warning.wav \
+	interface/pixmaps/poker2D_16.png \
 	interface/pixmaps/cards/small-2c.jpg \
 	interface/pixmaps/cards/small-2d.jpg \
 	interface/pixmaps/cards/small-2h.jpg \
