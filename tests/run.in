@@ -90,6 +90,28 @@ case "$1" in
             trap "$killbackground" EXIT
             sleep 2
             $VALGRIND ../pokerclient2d/poker-interface --port ${INTERFACE_PORT} --datadir=${top_srcdir}/pokerclient2d/data --gtkrc=${top_srcdir}/pokerclient2d/data/Aero/gtkrc --glade=${top_srcdir}/pokerclient2d/data/interface/interface.glade
+        else
+            echo "skip $1 because Xvfb is not known or $FONTPATH is not a directory"
+        fi
+        ;;
+
+*pokerdisplay2d.py) 
+        FONTPATH=/usr/share/fonts/X11/misc
+        INTERFACE_PORT=19579
+        if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
+            export DISPLAY=:21
+            killall -9 @XVFB@ 2> /dev/null || /bin/true
+            sleep 1
+	    # -fbdir framebuffer
+            @XVFB@ ${DISPLAY} -ac -nolisten TCP -screen 0 1024x768x24 &
+            xvfb_pid=$!
+            if [ -z "$xvfb_pid" ] ; then
+                echo "there is a problem to start Xvfb (ignored)"
+            fi
+            @PYTHON@ -u ${srcdir}/coverage.py -x "$1"
+            killall -9 @XVFB@
+        else
+            echo "skip $1 because Xvfb is not known or $FONTPATH is not a directory"
         fi
         ;;
 
