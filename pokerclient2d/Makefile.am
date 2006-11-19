@@ -48,7 +48,7 @@ EXTRA_DIST = \
 	run-interface.bat \
 	run-pokerserver \
 	run-xwnc \
-	$(wildcard *.png) \
+	poker2D_128.png \
 	poker2D.ico \
 	poker3d-interface/poker3d-interface.vcproj \
 	khotkeys.py
