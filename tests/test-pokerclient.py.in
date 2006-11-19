@@ -382,7 +382,7 @@ class PokerClientTestCase(unittest.TestCase):
                     for (serial, server_client) in table.serial2client.iteritems():
                         if server_client.bugous_processing_hand == True:
                             has_bugous = True
-                    self.assertEqual(True, has_bugous)
+                    self.assertEqual(True, has_bugous, "has bugous")
                     return (client, packet)
                 d[index].addCallback(checkBugousClient)
             d[index].addCallback(self.quit)
