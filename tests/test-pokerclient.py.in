@@ -164,6 +164,7 @@ class PokerClientTestCase(unittest.TestCase):
         return (client,)
 
     def test01_ping(self):
+        """ test01_ping """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
@@ -174,6 +175,7 @@ class PokerClientTestCase(unittest.TestCase):
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
 
     def test02_login(self):
+        """ test02_login """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.quit)
@@ -199,6 +201,7 @@ class PokerClientTestCase(unittest.TestCase):
         return d
                                    
     def test03_cashIn(self):
+        """ test03_cashIn """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
@@ -244,6 +247,7 @@ class PokerClientTestCase(unittest.TestCase):
         return (client, packet)
         
     def test04_playHand(self):
+        """ test04_playHand """
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -268,6 +272,7 @@ class PokerClientTestCase(unittest.TestCase):
         return (client, packet)
         
     def test05_playHand(self):
+        """ test05_playHand """
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -281,6 +286,7 @@ class PokerClientTestCase(unittest.TestCase):
         return defer.DeferredList(d)
 
     def test06_cannotGetSeat(self):
+        """ test06_cannotGetSeat """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
@@ -301,6 +307,7 @@ class PokerClientTestCase(unittest.TestCase):
         return d
 
     def test07_rebuy(self):
+        """ test07_rebuy """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 400000))
@@ -336,6 +343,7 @@ class PokerClientTestCase(unittest.TestCase):
         return d
 
     def test08_processing_readytoplay(self):
+        """ test08_processing_readytoplay """
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
