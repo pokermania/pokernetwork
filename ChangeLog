@@ -1,6 +1,38 @@
-2006-11-18  Loic Dachary  <loic@dachary.org>
+2006-11-19  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.31
+
+	* debian/rules: add gnome.mk
+
+	* tests/run.in: test-pokerdisplay2d in XVFB
+
+	* pokerclient2d/python-poker2d.desktop: add
+
+	* pokerclient2d/Makefile.am: python-poker2d.desktop
+
+	* debian/python-poker2d.install: desktop files
+
+	* tests/test-pokerclient.py.in: comment every tests
+
+	* tests/test-pokerclient.py.in: diagnostic
+
+	* debian/python-poker-network.init: LSBize init script
+
+	* debian/python-poker2d.install: add pixmaps to distribution
+
+	* debian/python-poker2d.menu: python-poker2d is the package name
+
+	* pokerclient2d/data/interface/pixmaps/poker2D_16.png, pokerclient2d/data/Makefile.am:
+	add window icon in pixmap distribution directory
+
+	* pokerclient2d/pokerinterface2d.py: set the icon of the window
+
+	* pokerclient2d/poker2D_16.png: moved
+
+	* pokerclient2d/Makefile.am:
+	be specific about the png included in the distribution
+
+2006-11-18  Loic Dachary  <loic@dachary.org>
 
 	* pokerclient2d/Makefile.am:
 	poker2D.xpm and poker2D-16.xpm for kde integration
