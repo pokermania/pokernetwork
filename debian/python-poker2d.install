@@ -4,3 +4,4 @@ debian/tmp/usr/lib/poker-network
 debian/tmp/usr/share/poker-network/poker2d
 debian/tmp/usr/games/poker2d
 debian/tmp/usr/share/man/man6
+debian/tmp/usr/share/pixmaps
