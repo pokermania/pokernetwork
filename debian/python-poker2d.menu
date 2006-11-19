@@ -1,4 +1,4 @@
-?package(poker2d):\
+?package(python-poker2d):\
 	needs="x11"\
 	section="Games/Card"\
 	hints="KDE"\
