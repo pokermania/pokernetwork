@@ -17,6 +17,7 @@ clean:: $(DEB_BUILDDIR)/config.status
 	rm -f $(DEB_SRCDIR)/*cdbs-*
 
 include /usr/share/cdbs/1/class/autotools.mk
+include /usr/share/cdbs/1/class/gnome.mk
 
 DEB_MAKE_CLEAN_TARGET = maintainer-clean
 
