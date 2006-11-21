@@ -178,6 +178,7 @@ class PokerService(service.Service):
 
     def stopService(self):
         deferred = self.shutdown()
+        deferred.addCallback(lambda x: reactor.disconnectAll())
         deferred.addCallback(self.stopServiceFinish)
         return deferred
 
