@@ -1,0 +1,125 @@
+#!@PYTHON@
+# -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
+#
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Loic Dachary <loic@gnu.org>
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+import libxml2
+
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error
+from twisted.python import failure
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+from pokernetwork.pokerdatabase import PokerDatabase
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+class PokerCrashTestCase(unittest.TestCase):
+
+    def destroyDb(self, arg = None):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUpServer(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        #
+        # Setup database
+        #
+        self.db = PokerDatabase(settings)
+        #
+        # Setup server
+        #
+        self.service = pokerservice.PokerService(settings)
+        self.service.verbose = 3
+
+    # -------------------------------------------------
+    def setUp(self):
+        self.destroyDb()
+        self.setUpServer()
+
+    def tearDown(self):
+        self.db.close()
+        return self.service.stopService()
+
+    def test01_cleanupCrashedTables(self):
+        cursor = self.db.cursor()
+        cursor.execute('insert into pokertables (serial, currency_serial) values (142, 1)')
+        cursor.execute('insert into user2table (user_serial, table_serial, money, bet) values (1000, 142, 10, 1)')
+        cursor.execute("insert into users (serial, created, name) values (1000, 0, 'testuser')")
+        cursor.execute("insert into user2money (user_serial, currency_serial, amount) values (1000, 1, 0)")
+        self.service.startService()
+        cursor.execute("select * from user2table")
+        self.assertEqual(0, cursor.rowcount)
+        cursor.execute("select amount from user2money")
+        self.assertEqual(11, cursor.fetchone()[0])
+        cursor.close()
+
+# -----------------------------------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test09"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerCrashTestCase))
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-servercrash.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-servercrash.py coverage-report' check )"
+# End:
