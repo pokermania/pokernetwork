@@ -246,6 +246,7 @@ AC_CONFIG_FILES([
         tests/test-currencyclient.py
         tests/test-pokercashier.py
         tests/test-pokerclient.py
+        tests/test-servercrash.py
         tests/test-pokerdatabase.py
         tests/test-pokerlock.py
         tests/test-pokernetworkconfig.py
