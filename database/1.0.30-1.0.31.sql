@@ -1,3 +1,15 @@
+-- 
+-- Updating the version number makes this script standalone.  It can
+-- be applied by an upgrade logic external to poker-network such as
+-- dbconfig-common which implements the upgrade logic of
+-- pokerdatabase.py. When such a logic is not implemented by a system
+-- administration tool (in fedora for instance), pokerdatabaseupgrade
+-- can be used by the installation scripts to apply the patches.
+--
+UPDATE server SET version = '1.0.31';
+-- 
+-- Money is now a 64 bit value
+--
 ALTER TABLE `user2money` CHANGE COLUMN `amount` `amount` BIGINT not null;
 ALTER TABLE `user2money` CHANGE COLUMN `rake` `rake` BIGINT default 0 not null;
 ALTER TABLE `user2money` CHANGE COLUMN `points` `points` BIGINT default 0 not null;
