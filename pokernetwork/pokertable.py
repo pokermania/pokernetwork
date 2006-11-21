@@ -407,6 +407,9 @@ class PokerTable:
             elif type == "wait_for":
                 pass
             
+            elif type == "rebuy":
+                pass
+            
             elif type == "player_list":
                 pass
             
@@ -585,6 +588,9 @@ class PokerTable:
                 pass
                 
             elif type == "finish":
+                pass
+            
+            elif type == "rebuy":
                 pass
             
             else:
