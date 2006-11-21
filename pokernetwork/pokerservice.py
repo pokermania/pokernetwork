@@ -142,6 +142,7 @@ class PokerService(service.Service):
 
     def startService(self):
         self.db = PokerDatabase(self.settings)
+        self.cleanupCrashedTables()
         self.cleanUp(temporary_users = self.settings.headerGet("/server/users/@temporary"))
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
@@ -154,7 +155,6 @@ class PokerService(service.Service):
         self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
         self._ping_delay = self.settings.headerGetInt("/server/@ping")
         self.chat = self.settings.headerGet("/server/@chat") == "yes"
-        self.cleanupCrashedTables()
         for description in self.settings.headerGetProperties("/server/table"):
             self.createTable(0, description)
         self.tourneys = {}
@@ -744,8 +744,6 @@ class PokerService(service.Service):
 
     def cleanUp(self, temporary_users = ''):
         cursor = self.db.cursor()
-        sql = "delete from user2table"
-        cursor.execute(sql)
 
         if len(temporary_users) > 2:
             sql = "delete session_history from session_history, users where session_history.user_serial = users.serial and users.name like '" + temporary_users + "%'"
@@ -1101,7 +1099,7 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         if currency_serial != '':
            sql = ( "UPDATE user2money,user2table,pokertables SET " +
-                   " user2money.amount = user2money.amount + user2table.money " +
+                   " user2money.amount = user2money.amount + user2table.money + user2table.bet " +
                    " WHERE user2money.user_serial = user2table.user_serial AND " +
                    "       user2money.currency_serial = pokertables.currency_serial AND " +
                    "       pokertables.serial = " + str(table_id) + " AND " +
@@ -1304,11 +1302,13 @@ class PokerService(service.Service):
     def cleanupCrashedTables(self):
         cursor = self.db.cursor()
 
-        sql = ( "select user_serial,table_serial from user2table " )
+        sql = ( "select user_serial,table_serial,currency_serial from pokertables,user2table where user2table.table_serial = pokertables.serial " )
         cursor.execute(sql)
+        if cursor.rowcount > 0 and self.verbose > 1:
+            print "cleanupCrashedTables found %d players" % cursor.rowcount
         for i in xrange(cursor.rowcount):
-            (user_serial, table_serial) = cursor.fetchone()
-            self.leavePlayer(user_serial, table_serial)
+            (user_serial, table_serial, currency_serial) = cursor.fetchone()
+            self.leavePlayer(user_serial, table_serial, currency_serial)
 
         cursor.close()
         self.shutdownTables()
