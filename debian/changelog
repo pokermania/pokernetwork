@@ -4,7 +4,9 @@ poker-network (1.0.31-1) unstable; urgency=low
   
   * was solved by dropping 2.3 support (closes: #392157)
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Fri, 17 Nov 2006 20:03:01 +0100
+  * replace www-config with dbconfig-common (closes: #384603)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 20 Nov 2006 13:34:00 +0100
 
 poker-network (1.0.30-1) unstable; urgency=low
 
