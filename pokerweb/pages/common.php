@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2005, 2006 Mekensleep
 //
 // Mekensleep
@@ -22,63 +23,38 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // Authors:
-//  Morgan Manach <akshell@free.fr>
 //  Loic Dachary <loic@gnu.org>
+//  Morgan Manach <akshell@free.fr>
 //
 
-ini_set('include_path', "../conf:" . ini_get('include_path'));
-
-if(strpos($_SERVER["SCRIPT_NAME"], 'test'))
-  require_once 'constants_test.php';
-else
-  require_once 'constants.php';
+require_once 'constants.php';
 require_once 'lib_filters.php';
-require_once 'class.poker.php';
+require_once 'poker.php';
 
 $hci_header_showed = false;
 
-function hci_header($default = '') {
-  global $hci_header_showed;
-
-  if ($hci_header_showed)
-    return;
-      ?>
-      <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-         <html>
-         <head>
-         <title>PokerNetwork</title>
-         <meta http-equiv="Content-Type" content="text/html; charset=<?php echo _cst_encoding; ?>">	
-         </head>
-         <body>
-         <h1><a href="./">PokerNetwork</a></h1>
-         <?php
-         $hci_header_showed = true;
+function hci_header() {
+  require_once _cst_header;
 }
 
 function hci_footer() {
-            
-      ?>
-      </body>
-          </html>
-          <?php
-          }
+  require_once _cst_footer;
+}
 
 function no_auth_handler($name, $referer) {
   header('Location: login.php?name=' . $name . '&referer=' . urlencode($referer));
   die();
 }
 
-$poker_error = null;
-
-function error_handler($type, $code, $message) {
-  global $poker_error;
-
-  $poker_error = $message;
+try {
+  $poker = new poker(_cst_poker_soap_host);
+} catch(Exception $e) {
+  print "<h3>" . $e->getMessage() . "</h3d>";
+  die();
 }
 
-$poker = new poker(_cst_poker_soap_host);
-$poker->setErrorHandler('error_handler');
 $poker->setNoAuthHandler('no_auth_handler');
 $poker->setTimeoutCookie(_cst_timeout_cookie);
+  
 
 ?>

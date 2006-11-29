@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2005, 2006 Mekensleep
 //
 // Mekensleep
@@ -35,9 +36,12 @@ if(_post_string('submit')) {
   $login = _post_string('login');
   $password = _post_string('password');
 
-  if($poker->login($login, $password) != null) {
-     header('Location: ' . $referer);
-     die();
+  try {
+    $poker->login($login, $password);
+    header('Location: ' . $referer);
+    die();
+  } catch(Exception $e) {
+    $poker_error = $e->getMessage();
   }
 }
 
@@ -62,7 +66,7 @@ if($poker_error) {
 			</tr>
 			<tr>
 				<td><b>Login:</b></td>
-				<td><input type="texte" maxlength="32" name="login" value="<?php echo $name?>" /></td>
+				<td><input type="text" maxlength="32" name="login" value="<?php echo $name?>" /></td>
 			</tr>
 			<tr>
 				<td><b>Password:</b></td>

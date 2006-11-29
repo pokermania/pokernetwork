@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2006 Mekensleep
 //
 // Mekensleep
@@ -693,11 +694,13 @@ function currency_main($use_headers = True, $return_output = False) {
       header('Content-type: text/plain');
     } else {
       header('HTTP/1.0 500 Internal Server Error');
+      error_log(ob_get_contents());
     }
   }
 
   if($return_output) {
     $status = ob_get_contents();
+    error_log($status);
     ob_end_clean();
   } else {
     ob_end_flush();

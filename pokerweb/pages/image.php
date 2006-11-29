@@ -1,11 +1,6 @@
 <?php
 //
-// Copyright (C) 2006 Mekensleep
-//
-// Mekensleep
-// 24 rue vieille du temple
-// 75004 Paris
-//       licensing@mekensleep.com
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,14 +16,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// Authors:
-//  Loic Dachary <loic@gnu.org>
-//
 
-$GLOBALS['currency_db_base'] = 'currency_test_one';
-$GLOBALS['currency_db_user'] = 'root';
-$GLOBALS['currency_db_password'] = '';
-require_once 'currency.php'; 
-currency_main();
+require_once 'common.php';
+
+if($_GET['serial']) {
+  $image = $poker->getPlayerImage($_GET['serial']);
+  if($image != '') {
+    header('Content-type: image/png');
+    imagepng($image);
+  } else {
+    header('Location: default-image.jpg');
+  } 
+} else {
+  header('Location: default-image.jpg');
+}
 
 ?>

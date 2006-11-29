@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2006 Mekensleep
 //
 // Mekensleep
@@ -27,14 +28,77 @@
 
 require_once 'common.php';
 
-if($poker->isLoggedin()) {
-  hci_header();
-
-  echo '<a href="cash_in_one.php">Cash-In Play Money</a><br>';
-  echo '<a href="cash_in_two.php">Cash-In Custom Money</a><br>';
-
-  hci_footer();
-} else {
+if(!($user_info = $poker->isLoggedin())) {
   no_auth_handler(_get_string('name'), $_SERVER['REQUEST_URI']);
 }
+
+if(_post_string('submit')) {
+  try {
+    $amount = _post_string('amount');
+
+    if($amount == '' or $amount < 0)
+      throw new Exception("amount must be greater than zero");
+    
+    $currency_url = dirname(_me()) . "/currency_one.php";
+    $handle = fopen($currency_url . "?command=get_note&autocommit=yes&value=" . $amount, "r");
+    if(!$handle)
+      throw new Exception($currency_url . " request failed, check the server logs");
+
+    $lines = array();
+    while($line = fgets($handle)) {
+      array_push($lines, $line);
+    }
+    fclose($handle);
+
+    $note = split("\t", rtrim($lines[0]));
+
+    if(count($lines) < 1)
+      throw new Exception("currency server returned nothing");
+
+    if(count($note) != 4 || !is_numeric($note[1]) || !is_numeric($note[3]) || (intval($note[3]) != intval($amount))) {
+      error_log(print_r($lines, true));
+      throw new Exception("currency server returned an invalid answer");
+    }
+
+    $poker->cashIn($note);
+
+    header('Location: index.php?comment=Cash%20in%20was%20successful');
+    die();
+  } catch(Exception $error) {
+    $poker_error = $error->getMessage();
+  }
+}
+
+hci_header();
+
+if($poker_error) {
+  print "<h3>" . $poker_error . "</h3>";
+}
+
+?>
+ <!-- ACCOUNT INFORMATION FORM -->
+	<form method="post" enctype="multipart/form-data">
+		<table>
+			<tr>
+				<td></td>
+				<td>Cash-In</td>
+			</tr>
+			<tr>
+				<td><b>Amount:</b></td>
+				<td>
+          <input type="text" name="amount" value="<?php echo $amount; ?>" />
+        </td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<input type="submit" name='submit' value="Ok" />
+				</td>
+			</tr>
+		</table>
+	</form>
+<?php
+
+hci_footer();
+
 ?>

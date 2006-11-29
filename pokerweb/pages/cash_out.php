@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2006 Mekensleep
 //
 // Mekensleep
@@ -27,14 +28,72 @@
 
 require_once 'common.php';
 
-if($poker->isLoggedin()) {
-  hci_header();
-
-  echo '<a href="cash_out_one.php">Cash-Out Play Money</a><br>';
-  echo '<a href="cash_out_two.php">Cash-Out Custom Money</a><br>';
-
-  hci_footer();
-} else {
+if(!($user_info = $poker->isLoggedin())) {
   no_auth_handler(_get_string('name'), $_SERVER['REQUEST_URI']);
 }
+
+if(_post_string('submit')) {
+  try {
+    $amount = _post_string('amount');
+
+    if($amount == '' or $amount < 0)
+      throw new Exception("amount must be greater than zero");
+
+    $currency_url = dirname(_me()) . "/currency_one.php";
+
+    $packet = $poker->cashOut($currency_url, $amount);
+    $poker->cashOutCommit($packet['name']);
+
+    $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
+    if(!$handle)
+      throw new Exception($currency_url . " request failed, check the server logs");
+    $lines = array();
+    while($line = fgets($handle)) {
+      array_push($lines, $line);
+    }
+    fclose($handle);
+
+    if(count($lines) != 1 or rtrim($lines[0]) != 'OK') {
+      error_log(print_r($lines, true));
+      throw new Exception("currency server returned an invalid answer");
+    }
+    header('Location: index.php?comment=Cash%20out%20was%20successful');
+    die();
+  } catch(Exception $error) {
+    $poker_error = $error->getMessage();
+  }
+}
+
+hci_header();
+
+if($poker_error) {
+  print "<h3>" . $poker_error . "</h3>";
+}
+
+?>
+ <!-- ACCOUNT INFORMATION FORM -->
+	<form method="post" enctype="multipart/form-data">
+		<table>
+			<tr>
+				<td></td>
+				<td>Cash-Out</td>
+			</tr>
+			<tr>
+				<td><b>Amount:</b></td>
+				<td>
+          <input type="text" name="amount" value="<?php echo $amount; ?>" />
+        </td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<input type="submit" name='submit' value="Ok" />
+				</td>
+			</tr>
+		</table>
+	</form>
+<?php
+
+hci_footer();
+
 ?>

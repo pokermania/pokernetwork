@@ -6,8 +6,9 @@
 	define('_cst_avatar_max_height', '60');
 	define('_cst_avatar_max_size_kb', '10');
 	define('_cst_encoding', 'iso-8859-1');
-	define('_cst_currency_one', 'currency_test_one.php');
-	define('_cst_currency_two', 'currency_test_two.php');
-	define('_cst_poker_soap_host', 'http://localhost:19482/SOAP');
+	define('_cst_header', 'header_default.php');
+	define('_cst_footer', 'footer_default.php');
+	define('_cst_currency_one', 'currency_one.php');
+	define('_cst_poker_soap_host', 'http://@POKER_SERVER_HOST@:19382/SOAP');
 	define('_cst_avatar_max_size', _cst_avatar_max_size_kb * _cst_kilo_bytes);
 ?>

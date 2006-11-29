@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2005, 2006 Mekensleep
 //
 // Mekensleep
@@ -26,89 +27,81 @@
 //  Loic Dachary <loic@gnu.org>
 //
 
-	require_once 'common.php';
+require_once 'common.php';
 
-function validate() {
-  global $poker_error;
-  global $poker;
+if(_post_string('submit')) {
 
-  $user_name = _post_string('name');
-  $password = _post_string('password');
-  $password2 = _post_string('password2');
-  $password3 = _post_string('password3');
-  $email = _post_string('email');
-  $firstname = _post_string('firstname');
-  $lastname = _post_string('lastname');
-  $addr_street = _post_string('addr_street');
-  $addr_street2 = _post_string('addr_street2');
-  $addr_zip = _post_string('addr_zip');
-  $addr_town = _post_string('addr_town');
-  $addr_state = _post_string('addr_state');
-  $addr_country = _post_string('addr_country');
-  $phone = _post_string('phone');
+  $account = array('name' => _post_string('name'),
+                   'password2' => _post_string('password2'),
+                   'password3' => _post_string('password3'),
+                   'email' => _post_string('email'),
+                   'firstname' => _post_string('firstname'),
+                   'lastname' => _post_string('lastname'),
+                   'addr_street' => _post_string('addr_street'),
+                   'addr_street2' => _post_string('addr_street2'),
+                   'addr_zip' => _post_string('addr_zip'),
+                   'addr_town' => _post_string('addr_town'),
+                   'addr_state' => _post_string('addr_state'),
+                   'addr_country' => _post_string('addr_country'),
+                   'phone' => _post_string('phone'));
 
-  $del_avatar = _post_numeric('del_avatar', 0);
+  try {
 
-  if (strlen($password2) > 0) {
+    if($account['email'] == '')
+      throw new Exception('Email is mandatory');
 
-    if (strtolower($password2) != strtolower($password3)) {
-      $poker_error = 'Password and confirmation must be the same.';
-      return false;
-    }
+    if (strlen($account['password2']) > 0) {
 
-    $set_password = true;
-    $new_password = $password2;
-  } else
-    $set_password = false;
+      if (strtolower($account['password2']) != strtolower($account['password3']))
+        throw new Exception('Password and confirmation must be the same.');
+      $set_password = true;
+      $new_password = $account['password2'];
+    } else
+      $set_password = false;
 
-  if ($del_avatar == 1) {
-    $type_mime = '';
-    $image = '';
-  }
-
-  if (isset($_FILES) && isset($_FILES['picture']) && $_FILES['picture']['size'] > 0) {
-    require_once 'lib_images.php';
-    list($type_mime, $image) = upload_avatar ('picture', _cookie_numeric('serial'));
-  }
-
-  $setAccountPacket =	array(
+    $setAccountPacket =	array(
                               'type' => 'PacketPokerSetAccount', 
-                              'name' => $user_name, 
-                              'email' => $email,
-                              'firstname' => $firstname,
-                              'lastname' => $lastname,
-                              'addr_street' => $addr_street,
-                              'addr_street2' => $addr_street2,
-                              'addr_zip' => $addr_zip,
-                              'addr_town' => $addr_town,
-                              'addr_state' => $addr_state,
-                              'addr_country' => $addr_country,
-                              'phone' => $phone
+                              'name' => $account['name'], 
+                              'email' => $account['email'],
+                              'firstname' => $account['firstname'],
+                              'lastname' => $account['lastname'],
+                              'addr_street' => $account['addr_street'],
+                              'addr_street2' => $account['addr_street2'],
+                              'addr_zip' => $account['addr_zip'],
+                              'addr_town' => $account['addr_town'],
+                              'addr_state' => $account['addr_state'],
+                              'addr_country' => $account['addr_country'],
+                              'phone' => $account['phone']
                               );
 
-  if (isset($type_mime)) {
-    $setAccountPacket['skin_image_type'] = $type_mime;
-    $setAccountPacket['skin_image'] = new soapval ('skin_image', 'base64Binary', base64_encode($image));
+    if ($set_password)
+      $setAccountPacket['password'] = $new_password;
+
+    if($_FILES['image']['name'])
+      $poker->setPlayerImage($_FILES['image']['tmp_name'], $_FILES['image']['type']);
+
+    $poker->send($setAccountPacket);
+
+    header('Location: index.php?comment=Account%20information%20updated%20successfully');
+    die();
+
+  } catch(Exception $e) {
+    $poker_error = $e->getMessage();
   }
-
-  if ($set_password)
-    $setAccountPacket['password'] = $new_password;
-
-  return $poker->send($setAccountPacket) != null;
+} else {
+  try {
+    $account = $poker->getPersonalInfo();
+    $serial = $account['serial'];
+  } catch(Exception $e) {
+    $poker_error = $e->getMessage();
+  }
 }
 
-if(_post_string('submit') && validate()) {
-  header('Location: index.php?comment=Account%20information%20updated%20successfully');
-  die();
-}
+  hci_header();
 
-$PacketPokerPersonalInfo = $poker->getPersonalInfo();
-
-	hci_header();
-
-if($poker_error) {
-  print "<h3>" . $poker_error . "</h3>";
-}
+  if($poker_error) {
+    print "<h3>" . $poker_error . "</h3>";
+  }
 
 ?>
  <!-- ACCOUNT INFORMATION FORM -->
@@ -119,120 +112,64 @@ if($poker_error) {
 				<td>Edit Account</td>
 			</tr>
 			<tr>
-				<td><b>Login:</b></td>
-				<td>
-          <?php if ($PacketPokerPersonalInfo != false) echo $PacketPokerPersonalInfo['name']; ?>
-          <input type="hidden" name="name" value="<?php echo $PacketPokerPersonalInfo['name']; ?>" />
-        </td>
+				<td><b>Login*:</b></td>
+				<td><input type="hidden" id="name" name="name" value="<?php print $account['name'] ?>"><?php print $account['name'] ?></td>
 			</tr>
 			<tr>
-				<td><b>Actual password:</b></td>
-				<td><input type="password" size="20" maxlength="32" name="password"<?php
-	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password'], ENT_QUOTES, _cst_encoding).'"';
-				?> /></td>
+				<td><b>New password*:</b></td>
+				<td><input type="password" size="20" maxlength="32" id="password2" name="password2" /></td>
 			</tr>
 			<tr>
-				<td><b>New password:</b></td>
-				<td><input type="password" size="20" maxlength="32" name="password2"<?php
-	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password2'], ENT_QUOTES, _cst_encoding).'"';
-				?> /></td>
+				<td><b>New Password confirmation*:</b></td>
+				<td><input type="password" size="20" maxlength="32" id="password3" name="password3" /></td>
 			</tr>
 			<tr>
-				<td><b>New password confirmation:</b></td>
-				<td><input type="password" size="20" maxlength="32" name="password3"<?php
-	if (isset($account))
-		echo ' value="'.htmlspecialchars($account['password3'], ENT_QUOTES, _cst_encoding).'"';
-				?> /></td>
-			</tr>
-			<tr>
-				<td><b>Email:</b></td>
-				<td><input type="text" size="32" maxlength="128" name="email" value="<?php
-	if (isset($account))
-		echo htmlspecialchars($account['email'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['email']; ?>" /></td>
+				<td><b>Email*:</b></td>
+				<td><input type="text" size="32" maxlength="128" id="email" name="email" value="<?php print $account['email'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>Phone:</b></td>
-				<td><input type="text" size="40" maxlength="64" name="phone" value="<?php
-	if (isset($account))
-		echo htmlspecialchars($account['phone'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['phone']; ?>" /></td>
+				<td><input type="text" size="40" maxlength="64" id="phone" name="phone" value="<?php print $account['phone'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>First Name:</b></td>
-				<td><textarea name="firstname" cols="40" rows="4"><?php
-	if (isset($account))
-		echo htmlspecialchars($account['firstname'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['firstname']; ?></textarea></td>
+				<td><textarea id="firstname" name="firstname" cols="30" rows="3"><?php print $account['firstname'] ?></textarea></td>
 			</tr>
 			<tr>
 				<td><b>Last Name:</b></td>
-				<td><textarea name="lastname" cols="40" rows="4"><?php
-	if (isset($account))
-		echo htmlspecialchars($account['lastname'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['lastname']; ?></textarea></td>
+				<td><textarea id="lastname" name="lastname" cols="30" rows="3"><?php print $account['lastname'] ?></textarea></td>
 			</tr>
 			<tr>
 				<td><b>Street:</b></td>
-				<td><textarea name="addr_street" cols="40" rows="4"><?php
-	if (isset($account))
-		echo htmlspecialchars($account['addr_street'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['addr_street']; ?></textarea></td>
+				<td><textarea id="addr_street" name="addr_street" cols="30" rows="3"><?php print $account['addr_street'] ?></textarea></td>
 			</tr>
 			<tr>
 				<td><b>Street 2:</b></td>
-				<td><textarea name="addr_street2" cols="40" rows="4"><?php
-	if (isset($account))
-		echo htmlspecialchars($account['addr_street2'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['addr_street2']; ?></textarea></td>
+				<td><textarea id="addr_street2" name="addr_street2" cols="30" rows="3"><?php print $account['addr_street2'] ?></textarea></td>
 			</tr>
 			<tr>
 				<td><b>Zip code:</b></td>
-				<td><input type="text" size="20" maxlength="64" name="addr_zip" value="<?php
-	if (isset($account))
-		echo htmlspecialchars($account['addr_zip'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['addr_zip']; ?>" /></td>
+				<td><input type="text" size="20" maxlength="64" id="addr_zip" name="addr_zip" value="<?php print $account['addr_zip'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>Town:</b></td>
-				<td><input type="text" size="50" maxlength="64" name="addr_town" value="<?php
-	if (isset($account))
-		echo htmlspecialchars($account['addr_town'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['addr_town']; ?>" /></td>
+				<td><input type="text" size="50" maxlength="64" id="addr_town" name="addr_town" value="<?php print $account['addr_town'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>State:</b></td>
-				<td><input type="text" size="50" maxlength="128" name="addr_state" value="<?php
-	if (isset($account))
-		echo htmlspecialchars($account['addr_state'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false) 
-		echo $PacketPokerPersonalInfo['addr_state']; ?>" /></td>
+				<td><input type="text" size="50" maxlength="128" id="addr_state" name="addr_state" value="<?php print $account['addr_state'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>Country:</b></td>
 				<td>
-				
-					<select name="addr_country">
+					<select id="addr_country" name="addr_country">
 <?php
-	if (isset($account))
-		$addr_country = htmlspecialchars($account['addr_country'], ENT_QUOTES, _cst_encoding);
-	elseif ($PacketPokerPersonalInfo != false)
-		$addr_country = $PacketPokerPersonalInfo['addr_country'];
 
 	$countries = file('country.txt');
 	foreach ($countries as $country) {
 		list ($code, $name) = explode (';', $country);
-		echo '<option value="'.$name.'"'.($country == $addr_country?
+		$name = str_replace("\r\n", '', $name);
+		echo '<option value="'.$name.'"'.($name == $account['addr_country']?
 			' selected="selected"':'').'>'.$name.'</option>'."\r\n";
 	}
 ?>
@@ -242,28 +179,8 @@ if($poker_error) {
 			<tr>
 				<td></td>
 				<td>
-					<b>Avatar<sup>*</sup>:</b><br />
-<?php
-	if (true) { //$avatar != ''
-?>
-					
-					<input type="checkbox" name="del_avatar" value="1" /> Delete avatar.<br />
-<?php
-	}
-?>
-				</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td>
-					<input type="file" name="picture" /><br />
-<?php 
-	echo '<sup>*</sup>Avatar limits: '._cst_avatar_max_width.'x'.
-		_cst_avatar_max_height.', Size in KB: '.(_cst_avatar_max_size / 1024);
-?>
-				</td>
-			</tr>
-			<tr>
+                                        <img src="image.php?serial=<? print $serial ?>" />
+					<b>Avatar<sup>*</sup>: <input type="file" name="image"></b><br />
 				<td></td>
 				<td>
 					<input type="submit" name='submit' value="Ok" />

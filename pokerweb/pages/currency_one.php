@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2006 Mekensleep
 //
 // Mekensleep
@@ -26,6 +27,8 @@
 //
 
 $GLOBALS['currency_db_base'] = 'currency_one';
+$GLOBALS['currency_db_user'] = 'currency';
+$GLOBALS['currency_db_password'] = 'currency';
 require_once 'currency.php'; 
 currency_main();
 

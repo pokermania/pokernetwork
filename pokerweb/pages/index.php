@@ -1,5 +1,6 @@
 <?php
 //
+// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2005, 2006 Mekensleep
 //
 // Mekensleep
@@ -27,7 +28,12 @@
 //
 require_once 'common.php';
 
-$is_logged_in = $poker->isLoggedin();
+try {
+  $user_info = $poker->isLoggedin();
+} catch(Exception $e) {
+  print "<h3>" . $e->getMessage() . "</h3>";
+  die();
+}
 
 if($poker_error) print "<h3>" . $poker_error . "</h3>";
 
@@ -35,19 +41,23 @@ hci_header();
 
 print "<h3>" . _get_string('comment') . "</h3>";
 
-if($is_logged_in) {
-  $info = $poker->getPersonalInfo();
+if($user_info) {
   if($poker_error) print "<h3>" . $poker_error . "</h3>";
-  echo '<h2>'.$infos['name'].'</h2>';
+  echo '<h2>'.$user_info['name'].'</h2>';
   echo '<!-- HOME IS LOGGED IN -->';
-  echo '<a href="logout.php">logout</a><br>';
-  echo '<a href="edit_account.php">Edit Account</a><br>';
-  echo '<a href="cash_in.php">Cash-In</a><br>';
-  echo '<a href="cash_out.php">Cash-Out</a><br>';
+  if(is_array($user_info['money'])) {
+    foreach ( $user_info['money'] as $currency => $state ) {
+      print "bankroll ".$state[0].", in game ".$state[1].", point ".$state[2]." <p>";
+    }
+  }
+  echo '<a href="logout.php" id="logout">logout</a><br>';
+  echo '<a href="edit_account.php" id="edit_account">Edit Account</a><br>';
+  echo '<a href="cash_in.php" id="cash_in">Cash-In</a><br>';
+  echo '<a href="cash_out.php" id="cash_out">Cash-Out</a><br>';
 } else {
   echo '<!-- HOME NOT LOGGED IN -->';
-  echo '<a href="login.php">login</a><br>';
-  echo '<a href="create_account.php">Create Account</a><br>';
+  echo '<a href="login.php" id="login">login</a><br>';
+  echo '<a href="create_account.php" id="create_account">Create Account</a><br>';
 }
 
 hci_footer();
