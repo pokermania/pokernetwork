@@ -1,0 +1,219 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>test-create_account</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">test-create_account</td></tr>
+</thead><tbody>
+<tr>
+	<td>deleteCookie</td>
+	<td>TWISTED_SESSION</td>
+	<td>/</td>
+</tr>
+<tr>
+	<td>deleteCookie</td>
+	<td>serial</td>
+	<td>/</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>../../create_account.php</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>email</td>
+	<td>som@mail.com</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>login name must be at least 5 characters long</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name</td>
+	<td>111111111111111111111111</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>type = 226, code = 2</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>email</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name</td>
+	<td>user111</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>password</td>
+	<td>pass111</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>password2</td>
+	<td>pass111</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>phone</td>
+	<td>phone</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>firstname</td>
+	<td>first name</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>lastname</td>
+	<td>last name</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>addr_street</td>
+	<td>street</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>addr_street2</td>
+	<td>street2</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>addr_zip</td>
+	<td>zipcode</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>addr_town</td>
+	<td>town</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>addr_state</td>
+	<td>state</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>addr_country</td>
+	<td>label=Fiji</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Email is mandatory</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>password</td>
+	<td>pass111</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>password2</td>
+	<td>pass111</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>phone</td>
+	<td>phone</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>firstname</td>
+	<td>first name</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>lastname</td>
+	<td>last name</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_street</td>
+	<td>street</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_street2</td>
+	<td>street2</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_street</td>
+	<td>street</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_zip</td>
+	<td>zipcode</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_town</td>
+	<td>town</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_state</td>
+	<td>state</td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>addr_country</td>
+	<td>Fiji</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>email</td>
+	<td>user111@foo.com</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyLocation</td>
+	<td>*/index.php*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyText</td>
+	<td>logout</td>
+	<td>logout</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>logout</td>
+	<td></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>
