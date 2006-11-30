@@ -94,19 +94,19 @@ if($poker_error) {
 				<td>Create Account</td>
 			</tr>
 			<tr>
-				<td><b>Login*:</b></td>
+				<td><b>Login<sup>*</sup>:</b></td>
 				<td><input type="text" size="20" maxlength="32" id="name" name="name" value="<?php print $account['name'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Password*:</b></td>
+				<td><b>Password<sup>*</sup>:</b></td>
 				<td><input type="password" size="20" maxlength="32" id="password" name="password" /></td>
 			</tr>
 			<tr>
-				<td><b>Password confirmation*:</b></td>
+				<td><b>Password confirmation<sup>*</sup>:</b></td>
 				<td><input type="password" size="20" maxlength="32" id="password2" name="password2" /></td>
 			</tr>
 			<tr>
-				<td><b>Email*:</b></td>
+				<td><b>Email<sup>*</sup>:</b></td>
 				<td><input type="text" size="32" maxlength="128" id="email" name="email" value="<?php print $account['email'] ?>" /></td>
 			</tr>
 			<tr>
