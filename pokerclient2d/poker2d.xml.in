@@ -17,7 +17,7 @@
   <vprogram>no</vprogram>
   
   <handlist start="0" count="100"/>
-  <web browser="@WWWBROWSER@">http://@POKER_SERVER_HOST@/poker-web/</web>
+  <web browser="@WWWBROWSER@">http://@POKER_WWW_HOST@/poker-web/</web>
   <user path="~/.poker2d"/>
   <rsync path="@RSYNC@" dir="." source="@UPGRADES_SOURCE@" target="@prefix@" upgrades="share/poker-network/upgrades"/>
   <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
