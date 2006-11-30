@@ -32,7 +32,7 @@ else
   POKER2D_SUBDIRS = 
 endif
 
-SUBDIRS = ${POKER2D_SUBDIRS} tests
+SUBDIRS = ${POKER2D_SUBDIRS} pokerweb tests
 
 pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
@@ -144,7 +144,6 @@ EXTRA_DIST = \
 	examples/run-pokerserver \
 	examples/test-pokerweb \
 	tests/upgrade.in \
-	tests/pokerweb \
 	database/pokerdatabaseupgrade.in \
         poker-network.pc.in \
         pokernetwork/pokerserver.in \
@@ -156,21 +155,11 @@ EXTRA_DIST = \
         conf/poker.bot.xml.in \
         conf/poker.client.xml.in \
         conf/poker.server.xml.in \
-	$(wildcard pokerweb/pages/*.php) \
-	$(wildcard pokerweb/pages/*.txt) \
-	pokerweb/conf/constants.php.in \
-	pokerweb/conf/constants_test.php \
-	pokerweb/pages/neteller.py \
-	pokerweb/pages/neteller.cfg \
-	pokerweb/pages/prototype.js \
-	pokerweb/conf/htaccess \
-	pokerweb/conf/apache.conf \
 	poker-client-specs.odp
 
 clean-local:
 	rm -f */*.py[co]
 	rm -f examples/*.log
-	rm -f pokerweb/pages/constants.php pokerweb/pages/constants.php.ref pokerweb/pages/.htaccess
 
 all-local:
 	export PYTHONPATH=${srcdir} ; \
