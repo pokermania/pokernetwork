@@ -182,6 +182,15 @@ AC_ARG_WITH(poker-server-host,
     [ POKER_SERVER_HOST=localhost ] )
 AC_SUBST(POKER_SERVER_HOST)
 
+AC_ARG_WITH(poker-www-host,
+[  --with-www-server-host=<hostname>
+                          fully qualified host name of the 
+                          default web server to which the
+                          poker client will connect (default localhost). ],
+    [ POKER_WWW_HOST=$with_poker_www_host ],
+    [ POKER_WWW_HOST=localhost ] )
+AC_SUBST(POKER_WWW_HOST)
+
 AC_ARG_WITH(poker-database,
 [  --with-poker-database=<name>
                           name of the MySQL database the poker
@@ -262,6 +271,7 @@ AC_CONFIG_FILES([
 	tests/test-pokerinterface.py
 	tests/test-pokerdisplay2d.py
         tests/testcurrency.php
+        tests/testpoker.php
         tests/testicurrency.php	
         tests/upgrade
 ], [chmod +x $ac_file])
@@ -271,12 +281,13 @@ AC_CONFIG_FILES([
         pokernetwork/pokerserver.8
         pokernetwork/pokerbot
         pokernetwork/pokerbot.8
-        pokerweb/conf/constants.php
+        pokerweb/pages/constants.php.ref
         database/schema.sql
         database/pokerdatabaseupgrade.8
         conf/poker.bot.xml
         conf/poker.client.xml
         conf/poker.server.xml
+        pokerweb/Makefile
         tests/Makefile
         Makefile
 ])
