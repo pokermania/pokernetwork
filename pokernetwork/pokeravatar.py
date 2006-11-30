@@ -202,6 +202,10 @@ class PokerAvatar:
             self.sendPacketVerbose(self.getPlayerInfo())
             return
 
+        if packet.type == PACKET_POKER_GET_PLAYER_IMAGE:
+            self.sendPacketVerbose(self.service.getPlayerImage(packet.serial))
+            return
+
         if packet.type == PACKET_POKER_GET_USER_INFO:
             if self.getSerial() == packet.serial:
                 self.getUserInfo(packet.serial)
@@ -225,6 +229,18 @@ class PokerAvatar:
                     self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_PLAYER_INFO,
                                                        code = PACKET_POKER_PLAYER_INFO,
                                                        message = "Failed to save set player information"))
+            else:
+                print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
+            return
+                
+        elif packet.type == PACKET_POKER_PLAYER_IMAGE:
+            if self.getSerial() == packet.serial:
+                if self.service.setPlayerImage(packet):
+                    self.sendPacketVerbose(PacketAck())
+                else:
+                    self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_PLAYER_IMAGE,
+                                                       code = PACKET_POKER_PLAYER_IMAGE,
+                                                       message = "Failed to save set player image"))
             else:
                 print "attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() )
             return
