@@ -21,64 +21,17 @@ _Description: Hostname or IP address of the default poker-network server:
  The clients based on poker-network installed on the same machine will be
  able to use this poker-network server host as a default, if needed.
 
-Template: python-poker-network/db/host
+Template: python-poker-network/www
 Type: string
-Default: poker.pokersource.info
-_Description: MySQL server host name:
- Please enter the the hostname or the IP address of the machine
- where the MySQL server is running.
+Default: pokersource.info
+_Description: Hostname or IP address of the default poker-network web server:
+ The clients based on poker-network installed on the same machine will be
+ able to use this address to connect to the web part of the poker server.
 
-Template: python-poker-network/db/name
-Type: string
-Default: pokernetwork
-_Description: poker-network database name:
- This is the name of the database that poker-network will use. A new
- database of that name will be created on the MySQL server.
-
-Template: python-poker-network/db/user/name
-Type: string
-Default: pokernetwork
-_Description: MySQL user name dedicated to poker-network:
- This is the user name that poker-network will use to access the database.
- A MySQL user of that name will be created on the MySQL server, with
- permissions restricted to the database dedicated to poker-network.
-
-Template: python-poker-network/db/user/password
-Type: password
-_Description: Password for the poker-network MySQL user:
- This is the password that poker-network will use, along with the MySQL
- user name you chose, to access the poker-network database.
-
-Template: python-poker-network/db/user/password/confirm
-Type: password
-_Description: Retype the password of the poker-network MySQL user:
- This is the password that poker-network will use, along with the MySQL
- user name you chose, to access the poker-network database.
-
-Template: python-poker-network/db/user/password/mismatch
-Type: text
-_Description: Passwords mismatch
- The poker-network MySQL user passwords you entered do not match. Please
- try again.
-
-Template: python-poker-network/db/admin/name
-Type: string
-Default: root
-_Description: MySQL server administrator user name:
- The MySQL server administrator user will be used only during
- the installation process to do the following:
- .
-  (1) The poker-network database
-  (2) The MySQL user that poker-network will use to access the
- database
- .
- The 'root' user usually have permission to create databases and users.
-
-Template: python-poker-network/db/admin/password
-Type: password
-_Description: MySQL server administrator password (if any):
- This is the password that will be used along with the MySQL server
- administrator name.
- .
- NOTE: This password will not be asked twice, since it's not a new
- password.
+Template: python-poker-network/bots
+Type: boolean
+Default: false
+_Description: Do you want to run the poker-network robots?
+ Robot players are simple minded poker players that can be used to
+ exercise the poker server when there are not enough human players
+ connected.
