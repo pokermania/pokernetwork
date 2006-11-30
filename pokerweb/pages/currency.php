@@ -605,7 +605,7 @@ class currency {
     //
     foreach ( $value2count as $value => $count ) {
       for($i = 0; $i < $count; $i++)
-        array_push($new_notes, $this->_get_note($value, 'n'));
+        array_push($new_notes, $this->_get_note(strval($value), 'n'));
     }
 
     $transaction_id = $new_notes[0][2];

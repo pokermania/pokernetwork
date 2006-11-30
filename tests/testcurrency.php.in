@@ -25,15 +25,16 @@
 //
 
 ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
-ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/conf");
 
-require_once 'PHPUnit2/Framework/TestCase.php';
+require_once 'PHPUnit/Framework/TestCase.php';
 
 require_once 'currency.php';
 
 $GLOBALS['currency_db_base'] = 'currencytest';
+$GLOBALS['currency_db_user'] = 'root';
+$GLOBALS['currency_db_password'] = '';
 
-class testcurrency extends PHPUnit2_Framework_TestCase
+class testcurrency extends PHPUnit_Framework_TestCase
 {
     private $currency;
   
@@ -114,6 +115,28 @@ class testcurrency extends PHPUnit2_Framework_TestCase
       $this->assertEquals(40, strlen($other_note[2]));
       $this->assertNotEquals($note[2], $other_note[2]);
       $this->assertEquals('100', $other_note[3]);
+      $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
+      $this->assertEquals($other_note, $this->currency->_check_note($other_note));
+    }
+
+    //
+    // Checks that the 5000 special table is used when merging 2000+3000
+    //
+    public function test03_merge_note_5000()
+    {
+      $note1 = $this->currency->get_note('2000');
+      $this->assertEquals(TRUE, $this->currency->commit($note1[2]));
+      $note2 = $this->currency->get_note('3000');
+      $this->assertEquals(TRUE, $this->currency->commit($note2[2]));
+
+      $notes = $this->currency->merge_notes(array($note1, $note2));
+      $other_note = $notes[0];
+      $this->assertEquals('http://fake/', $other_note[0]);
+      $this->assertEquals(1, $other_note[1], "serial");
+      $this->assertEquals(40, strlen($other_note[2]));
+      $this->assertNotEquals($note1[2], $other_note[2]);
+      $this->assertNotEquals($note2[2], $other_note[2]);
+      $this->assertEquals('5000', $other_note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
       $this->assertEquals($other_note, $this->currency->_check_note($other_note));
     }
