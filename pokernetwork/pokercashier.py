@@ -105,7 +105,12 @@ class PokerCashier:
         return currency_serial
 
     def cashGeneralFailure(self, reason, packet):
-        if self.verbose > 2: self.message("cashGeneralFailure: " + str(reason) + " packet = " + str(packet))
+        if self.verbose > 2: 
+            self.message("cashGeneralFailure: " + str(reason) + " packet = " + str(packet))
+            from twisted.python import failure
+            from twisted.web import error
+            if isinstance(reason, failure.Failure) and isinstance(reason.value, error.Error):
+                self.message("cashGeneralFailure: response = %s" % reason.value.response)
         if hasattr(packet, "currency_serial"):
             self.unlock(packet.currency_serial)
             del packet.currency_serial
@@ -254,21 +259,23 @@ class PokerCashier:
             cursor = self.db.cursor()
             cursor.execute("START TRANSACTION")
             try:
+                zero_or_one = lambda numrows: (numrows == 0 or numrows == 1)
+                one = lambda numrows: numrows == 1
                 sqls = []
-                sqls.append(( "DELETE FROM safe WHERE currency_serial = %s" % currency_serial, 1))
+                sqls.append(( "DELETE FROM safe WHERE currency_serial = %s" % currency_serial, one))
                 sqls.append(( "INSERT INTO safe SELECT currency_serial, serial, name, value FROM counter " +
                               "       WHERE currency_serial = " + str(currency_serial) + " AND " +
-                              "             status = 'r' ", 1))
-                sqls.append(( "DELETE FROM counter WHERE currency_serial = %s and status = 'r'" % currency_serial, 1))
-                sqls.append(( "UPDATE counter SET status = 'c' WHERE currency_serial = %s " % currency_serial , 1))
-                for ( sql, rowcount ) in sqls:
+                              "             status = 'r' ", zero_or_one))
+                sqls.append(( "DELETE FROM counter WHERE currency_serial = %s and status = 'r'" % currency_serial, zero_or_one))
+                sqls.append(( "UPDATE counter SET status = 'c' WHERE currency_serial = %s " % currency_serial , one))
+                for ( sql, numrowsp ) in sqls:
                     if self.verbose > 2: self.message(sql)
-                    if cursor.execute(sql) < rowcount:
-                        self.error(sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount))
+                    if not numrowsp(cursor.execute(sql)):
+                        message = sql + " affected " + str(cursor.rowcount) + " records "
+                        self.error(message)
                         raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                           code = PacketPokerCashOut.SAFE,
                                           message = message)
-
 
                 packet = self.cashOutCollect(currency_serial, transaction_id)
                 sql = ( "UPDATE user2money SET amount = amount - " + str(packet.value) +
@@ -322,7 +329,12 @@ class PokerCashier:
         try:
             sql = ( "INSERT INTO counter ( transaction_id, user_serial, currency_serial, serial, name, value, status, application_data ) VALUES " +
                     "                    ( %s,             %s,          %s,              %s,     %s,   %s,    %s,     %s )" )
-            cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, server_note[1], server_note[2], server_note[3], 'r', packet.application_data ))
+            #
+            # Just forget about a zero value note that is provided by
+            # the currencyclient for the sake of code consistency
+            #
+            if int(server_note[3]) > 0:
+                cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, server_note[1], server_note[2], server_note[3], 'r', packet.application_data ))
             cursor.execute(sql, ( transaction_id, packet.serial, packet.currency_serial, user_note[1], user_note[2], user_note[3], 'u', packet.application_data ))
             cursor.execute("COMMIT")
             cursor.close()
