@@ -36,7 +36,7 @@ from time import sleep
 
 verbose = 0
 
-step = 1
+step = .1
 class InterfaceProtocol(Protocol):
     def connectionMade(self):
         if self.factory.module:
@@ -58,7 +58,7 @@ class InterfaceProtocol(Protocol):
             #self.lobby()
             self.muck()
             self.check_warning()
-            reactor.callLater(60, lambda: self.command('quit'))
+            reactor.callLater(step * 120, lambda: self.command('quit'))
 
     def command(self, *args):
         global verbose
@@ -66,27 +66,27 @@ class InterfaceProtocol(Protocol):
         self.transport.write("\000".join(args) + "\000")
 
     def tournaments(self):
-        delay = 5
+        delay = step * 5
         reactor.callLater(delay, lambda: self.command("tournaments", "show", "cashier_label", "sit_n_go", "n"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("tournaments", "sit_n_go",
                                                             "1",
                                                             "2",
                                                             "1", "Sitngo 1", "registering", "5/10",
                                                             "2", "Sitngo 2", "registering", "7/10"))
         return
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("tournaments", "sit_n_go",
                                                             "2",
                                                             "1", "Sitngo 3", "registering", "5/10",
                                                             "2", "Sitngo 4", "registering", "7/10"))
-        delay += 1 
+        delay += step 
         reactor.callLater(delay, lambda: self.command("tournaments", "regular",
                                                             "2",
                                                             "10", "2004/05/07", "Regular 1", "registering", "250",
                                                             "20", "2003/04/06", "Regular 2", "registering", "312"))
         
-        delay += 1 
+        delay += step 
         reactor.callLater(delay, lambda: self.command("tournaments", "players",
                                                             "20",
                                                             "player 1",
@@ -128,14 +128,14 @@ class InterfaceProtocol(Protocol):
         packet = [ "cashier", "show", "%d" % len(messages) ]
         packet.extend(messages)
 	packet.append("exit_label")
-        reactor.callLater(5, lambda: self.command(*packet))
+        reactor.callLater(step * 5, lambda: self.command(*packet))
 
     def menu(self):
         delay = 0
         reactor.callLater(delay, lambda: self.command("menu", "show"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("menu", "set", "resolution", "1024x768"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("menu", "set", "shadow", "yes"))
         
     def message_box(self):
@@ -145,9 +145,9 @@ class InterfaceProtocol(Protocol):
     def blind(self):
         delay = 0
         reactor.callLater(delay, lambda: self.command("blind", "show"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("blind", "blind message", "Pay the blind ?", "yes"))
-        delay += 10
+        delay += step * 10
         reactor.callLater(delay, lambda: self.command("blind", "hide"))
 
     def yesno(self):
@@ -169,16 +169,16 @@ class InterfaceProtocol(Protocol):
     def chat(self):
         delay = 0
         reactor.callLater(delay, lambda: self.command("chat", "show"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("chat", "line", "line 1\n"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("chat", "line", "line 2\n"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("chat", "line", "line 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\n"))
         reactor.callLater(delay, lambda: self.command("chat", "line", "line 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\nline 2\n"))
-        delay += 1
+        delay += step
         reactor.callLater(delay, lambda: self.command("chat", "line", "line 3\n"))
-        delay += 20
+        delay += step * 20
         reactor.callLater(delay, lambda: self.command("chat", "hide"))
         
     def buy_in(self):
@@ -211,13 +211,15 @@ class InterfaceProtocol(Protocol):
         self.command("lobby", "show", "Cashier", "holdem", "n")
 
     def outfits(self):
-        reactor.callLater(0, lambda: self.command("outfit", "show"))
+        delay = 0
+        reactor.callLater(delay, lambda: self.command("outfit", "show"))
         packet = ( "outfit", "set", "female", "2", 
                    "Slot", "1", "5", "2",
                    "1",
                    "Opacity", "opacity", "0", "5", "2",
                    "file", "1", "opacity_%d.png" )
-        reactor.callLater(1, lambda: self.command(*packet))
+        delay += step
+        reactor.callLater(delay, lambda: self.command(*packet))
         packet = ( "outfit", "set", "male", "8", 
                    "Slot", "1", "5", "2",
                    "3",
@@ -227,7 +229,8 @@ class InterfaceProtocol(Protocol):
                    "detailcolor", "3", "#ff00ff", "#ff1111", "#11ff11", 
                    "Opacity", "opacity", "0", "2", "0",
                    "file", "1", "opacity_%d.png" )
-        reactor.callLater(2, lambda: self.command(*packet))
+        delay += step
+        reactor.callLater(delay, lambda: self.command(*packet))
         
     def sit_actions(self):
         delay = 0
