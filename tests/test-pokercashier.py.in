@@ -242,6 +242,37 @@ class PokerCashierTestCase(unittest.TestCase):
         d.addCallback(self.check03_cashOutCommit)
         return d
 
+    def test03_cashOut_failure(self):
+        d = self.test01_cashIn()
+
+        def cashOutFailure(packet):
+            currencyclient.FakeCurrencyFailure = True
+            return packet
+        d.addCallback(cashOutFailure)
+        d.addCallback(self.cashOut)
+
+        self.failed = False
+
+        def check_cashOutFailure(reason):
+            currencyclient.FakeCurrencyFailure = False
+            from twisted.python import failure
+            from twisted.web import error
+            self.failUnless(isinstance(reason, failure.Failure))
+            self.failUnless(isinstance(reason.value, error.Error))
+            self.assertEqual("(page content)", reason.value.response)
+            self.failed = True
+            return True
+        d.addErrback(check_cashOutFailure)
+
+        def check_failed(*args):
+            currencyclient.FakeCurrencyFailure = False
+            self.failUnless(self.failed, "cash out did not fail but was expected to fail")
+            del self.failed
+
+        d.addCallback(check_failed)
+
+        return d
+
     def cashQuery(self, packet):
         result = self.cashier.cashQuery(PacketPokerCashQuery(application_data = 'appdata'))
         self.assertEqual(PacketAck(), result)
@@ -312,7 +343,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test03_cashOut_fail"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
