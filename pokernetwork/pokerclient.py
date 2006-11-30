@@ -1,5 +1,6 @@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
