@@ -25,12 +25,10 @@ DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode --disable-static
 
 DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-server-host=%HOST% \
-		--with-poker-database=%DATABASE% \
-		--with-poker-dbhost=%DBHOST% \
-		--with-poker-dbuser=%USER% \
-		--with-poker-dbuser-password=%PASS% \
-		--with-poker-dbroot=%ROOT_USER% \
-		--with-poker-dbroot-password=%ROOT_PASS%
+		--with-poker-database=_DBC_DBNAME_ \
+		--with-poker-dbhost=_DBC_DBSERVER_ \
+		--with-poker-dbuser=_DBC_DBUSER_ \
+		--with-poker-dbuser-password=_DBC_DBPASS_
 
 DEB_MAKE_CHECK_TARGET = check
 
@@ -52,11 +50,4 @@ binary-install/python-poker-network::
 binary-install/python-poker2d::
 	-dh_pycentral -ppython-poker2d
 	dh_python -ppython-poker2d
-
-install/poker-web ::
-	ln -fs /etc/poker-web/htaccess pokerweb/pages/.htaccess
-	ln -fs /etc/poker-web/constants.php pokerweb/pages/constants.php
-	cp pokerweb/conf/constants.php pokerweb/pages/constants.php.ref
-	mkdir -p debian/poker-web/var/www
-	ln -fs /usr/share/poker-web debian/poker-web/var/www/poker-web
 
