@@ -214,7 +214,8 @@ class poker {
 
     $packets = $this->send(array('type' => 'PacketPokerPlayerImage',
                                  'serial' => $this->serial,
-                                 'image' => $image_base64));
+                                 'image' => $image_base64,
+                                 'image_type' => 'image/png'));
     if($packets[0]['type'] == 'PacketAck') {
       return true;
     } else {
