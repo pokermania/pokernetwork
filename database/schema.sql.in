@@ -24,93 +24,95 @@
 -- Authors:
 --  Loic Dachary <loic@gnu.org>
 --
-drop table if exists server;
+DROP TABLE IF EXISTS server;
 
-create table server (
-  version varchar(16) not null
+CREATE TABLE server (
+  version VARCHAR(16) NOT NULL
 ) ENGINE=InnoDB CHARSET=utf8;
 
-insert into server (version) values ("@PACKAGE_VERSION@");
+INSERT INTO server (version) VALUES ("@PACKAGE_VERSION@");
 
-drop table if exists users;
+DROP TABLE IF EXISTS users;
 
-create table users (
-  serial int unsigned not null auto_increment,
-  created int unsigned not null,
-  name varchar(32),
-  email varchar(128),
-  affiliate int unsigned default 0,
-  skin_url varchar(32) default "random",
-  skin_outfit text,
-  skin_image blob,
-  skin_image_type varchar(32),
-  password varchar(32),
-  privilege int default 1,
+CREATE TABLE users (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  created INT UNSIGNED NOT NULL,
+  name VARCHAR(32),
+  email VARCHAR(128),
+  affiliate INT UNSIGNED DEFAULT 0,
+  skin_url VARCHAR(32) DEFAULT "random",
+  skin_outfit TEXT,
+  skin_image TEXT,
+  skin_image_type VARCHAR(32),
+  password VARCHAR(32),
+  privilege INT DEFAULT 1,
 
-  rating int default 1000,
-  future_rating float default 1000,
-  games_count int default 0,
+  rating INT DEFAULT 1000,
+  future_rating FLOAT DEFAULT 1000,
+  games_count INT DEFAULT 0,
   
-  primary key (serial),
-  unique key name_idx (name),
-  unique key email_idx (email)
+  PRIMARY KEY (serial),
+  UNIQUE KEY name_idx (name),
+  UNIQUE KEY email_idx (email)
 ) ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists users_private;
+DROP TABLE IF EXISTS users_private;
 
-create table users_private (
-  serial int unsigned not null,
-  firstname varchar(255) default "",
-  lastname varchar(255) default "",
-  addr_street varchar(255) default "",
-  addr_street2 varchar(255) default "",
-  addr_zip varchar(64) default "",
-  addr_town varchar(64) default "",
-  addr_state varchar(128) default "",
-  addr_country varchar(64) default "",
-  phone varchar(64) default "",
-  verified char default 'n',
-  verified_time int default 0,
+CREATE TABLE users_private (
+  serial INT UNSIGNED NOT NULL,
+  firstname VARCHAR(255) DEFAULT "",
+  lastname VARCHAR(255) DEFAULT "",
+  addr_street VARCHAR(255) DEFAULT "",
+  addr_street2 VARCHAR(255) DEFAULT "",
+  addr_zip VARCHAR(64) DEFAULT "",
+  addr_town VARCHAR(64) DEFAULT "",
+  addr_state VARCHAR(128) DEFAULT "",
+  addr_country VARCHAR(64) DEFAULT "",
+  phone VARCHAR(64) DEFAULT "",
+  verified CHAR DEFAULT 'n',
+  verified_time INT DEFAULT 0,
 
-  primary key (serial)
+  PRIMARY KEY (serial)
 ) ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists user2money;
+DROP TABLE IF EXISTS user2money;
 
-create table user2money (
-  user_serial INT unsigned not null,
-  currency_serial INT unsigned not null,
-  amount BIGINT not null,
-  rake BIGINT default 0 not null,
-  points BIGINT default 0 not null,
+CREATE TABLE user2money (
+  user_serial INT UNSIGNED NOT NULL,
+  currency_serial INT UNSIGNED NOT NULL,
+  amount BIGINT NOT NULL,
+  rake BIGINT DEFAULT 0 NOT NULL,
+  points BIGINT DEFAULT 0 NOT NULL,
 
-  primary key (user_serial,currency_serial)
+  PRIMARY KEY (user_serial,currency_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists currencies;
+DROP TABLE IF EXISTS currencies;
 
-create table currencies (
+CREATE TABLE currencies (
   serial INT NOT NULL AUTO_INCREMENT UNIQUE,
   url CHAR(255) NOT NULL UNIQUE,
   symbol CHAR(8),
   name CHAR(32),
   cash_out INT,
 
-  primary key (serial, url)
+  PRIMARY KEY (serial, url)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists safe;
+DROP TABLE IF EXISTS safe;
 
-create table safe (
+CREATE TABLE safe (
   currency_serial INT NOT NULL,
   serial INT NOT NULL,
   name CHAR(40) NOT NULL,
   value BIGINT NOT NULL,
 
-  primary key (currency_serial, serial, value)
+  PRIMARY KEY (currency_serial, serial, value)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-create table counter (
+DROP TABLE IF EXISTS counter;
+
+CREATE TABLE counter (
   transaction_id CHAR(40) NOT NULL,
   user_serial INT NOT NULL,
   currency_serial INT NOT NULL,
@@ -120,98 +122,98 @@ create table counter (
   status CHAR DEFAULT 'y' NOT NULL,
   application_data VARCHAR(255) DEFAULT '' NOT NULL,
 
-  primary key (currency_serial, name, serial)
+  PRIMARY KEY (currency_serial, name, serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists user2table;
+DROP TABLE IF EXISTS user2table;
 
-create table user2table (
-  user_serial int unsigned not null,
-  table_serial int unsigned not null,
-  money int default 0 not null,
-  bet int default 0 not null,
+CREATE TABLE user2table (
+  user_serial INT UNSIGNED NOT NULL,
+  table_serial INT UNSIGNED NOT NULL,
+  money INT DEFAULT 0 NOT NULL,
+  bet INT DEFAULT 0 NOT NULL,
 
-  primary key (user_serial,table_serial)
+  PRIMARY KEY (user_serial,table_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists pokertables;
+DROP TABLE IF EXISTS pokertables;
 
-create table pokertables (
-  serial int unsigned not null auto_increment,
-  name varchar(32),
+CREATE TABLE pokertables (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(32),
   currency_serial INT NOT NULL,
 
-  primary key (serial)
+  PRIMARY KEY (serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists hands;
+DROP TABLE IF EXISTS hands;
 
-create table hands (
-  serial int unsigned not null auto_increment,
-  created timestamp not null,
-  name varchar(32),
-  description text not null,
+CREATE TABLE hands (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  created TIMESTAMP NOT NULL,
+  name VARCHAR(32),
+  description TEXT NOT NULL,
 
-  primary key (serial)
+  PRIMARY KEY (serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists user2hand;
+DROP TABLE IF EXISTS user2hand;
 
-create table user2hand (
-  user_serial int not null,
-  hand_serial int not null,
+CREATE TABLE user2hand (
+  user_serial INT NOT NULL,
+  hand_serial INT NOT NULL,
 
-  primary key (user_serial, hand_serial)
+  PRIMARY KEY (user_serial, hand_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists session;
+DROP TABLE IF EXISTS session;
 
-create table session (
-  user_serial int not null,
-  started int default 0,
-  ended int default 0,
-  ip varchar(16),
+CREATE TABLE session (
+  user_serial INT NOT NULL,
+  started INT DEFAULT 0,
+  ended INT DEFAULT 0,
+  ip VARCHAR(16),
 
-  primary key (user_serial, ip)
+  PRIMARY KEY (user_serial, ip)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists session_history;
+DROP TABLE IF EXISTS session_history;
 
-create table session_history (
-  user_serial int not null,
-  started int default 0,
-  ended int default 0,
-  ip varchar(16),
+CREATE TABLE session_history (
+  user_serial INT NOT NULL,
+  started INT DEFAULT 0,
+  ended INT DEFAULT 0,
+  ip VARCHAR(16),
 
-  key session_history_serial (user_serial)
+  KEY session_history_serial (user_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists tourneys_schedule;
+DROP TABLE IF EXISTS tourneys_schedule;
 
-create table tourneys_schedule (
-  serial int unsigned not null auto_increment,
-  name varchar(32),
-  description_short varchar(64),
-  description_long text,
-  players_quota int default 10,
-  variant varchar(32),
-  betting_structure varchar(32),
-  seats_per_game int default 10,
-  currency_serial int,
-  buy_in int,
-  rake int,
-  sit_n_go char default 'y',
-  breaks_interval int default 60,
-  rebuy_delay int default 0,
-  add_on int default 0,
-  add_on_delay int default 60,
-  start_time int default 0,
+CREATE TABLE tourneys_schedule (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(32),
+  description_short VARCHAR(64),
+  description_long TEXT,
+  players_quota INT DEFAULT 10,
+  variant VARCHAR(32),
+  betting_structure VARCHAR(32),
+  seats_per_game INT DEFAULT 10,
+  currency_serial INT,
+  buy_in INT,
+  rake INT,
+  sit_n_go CHAR DEFAULT 'y',
+  breaks_interval INT DEFAULT 60,
+  rebuy_delay INT DEFAULT 0,
+  add_on INT DEFAULT 0,
+  add_on_delay INT DEFAULT 60,
+  start_time INT DEFAULT 0,
 
-  register_time int default 0,
-  respawn char default 'n',
-  respawn_interval int default 0,
+  register_time INT DEFAULT 0,
+  respawn CHAR DEFAULT 'n',
+  respawn_interval INT DEFAULT 0,
 
-  primary key (serial)
+  PRIMARY KEY (serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 --
@@ -298,45 +300,45 @@ INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `descrip
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular1', 'Omaha8 No Limit, 200 + 10', 'Omaha8 No Limit, 200 + 10', '1000', 'omaha8', 'level-15-30-no-limit', '10', 1, '20000', '1000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 12 hour), unix_timestamp(now() + interval 11 hour), 'n', '0');
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular2', 'Omaha8 No Limit, 2000 + 100', 'Omaha8 No Limit, 2000 + 100', '1000', 'omaha8', 'level-15-30-no-limit', '10', 1, '200000', '10000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 13 hour), unix_timestamp(now() + interval 12 hour), 'n', '0');
 
-drop table if exists tourneys;
+DROP TABLE IF EXISTS tourneys;
 
-create table tourneys (
-  serial int unsigned not null auto_increment,
-  name varchar(32),
-  description_short varchar(64),
-  description_long text,
-  players_quota int default 10,
-  variant varchar(32),
-  betting_structure varchar(32),
-  seats_per_game int default 10,
-  currency_serial int,
-  buy_in int,
-  rake int,
-  sit_n_go char default 'y',
-  breaks_interval int default 60,
-  rebuy_delay int default 0,
-  add_on int default 0,
-  add_on_delay int default 60,
-  start_time int default 0,
+CREATE TABLE tourneys (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(32),
+  description_short VARCHAR(64),
+  description_long TEXT,
+  players_quota INT DEFAULT 10,
+  variant VARCHAR(32),
+  betting_structure VARCHAR(32),
+  seats_per_game INT DEFAULT 10,
+  currency_serial INT,
+  buy_in INT,
+  rake INT,
+  sit_n_go CHAR DEFAULT 'y',
+  breaks_interval INT DEFAULT 60,
+  rebuy_delay INT DEFAULT 0,
+  add_on INT DEFAULT 0,
+  add_on_delay INT DEFAULT 60,
+  start_time INT DEFAULT 0,
 
-  finish_time int default 0,
-  state varchar(32) default "registering",
-  schedule_serial int,
-  add_on_count int default 0,
-  rebuy_count int default 0,
+  finish_time INT DEFAULT 0,
+  state VARCHAR(32) DEFAULT "registering",
+  schedule_serial INT,
+  add_on_count INT DEFAULT 0,
+  rebuy_count INT DEFAULT 0,
 
-  primary key (serial)
+  PRIMARY KEY (serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
-drop table if exists user2tourney;
+DROP TABLE IF EXISTS user2tourney;
 
-create table user2tourney (
-  user_serial int not null,
-  tourney_serial int not null,
-  table_serial int,
-  rank int default -1,
+CREATE TABLE user2tourney (
+  user_serial INT NOT NULL,
+  tourney_serial INT NOT NULL,
+  table_serial INT,
+  rank INT DEFAULT -1,
 
-  primary key (user_serial, tourney_serial)
+  PRIMARY KEY (user_serial, tourney_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 --
@@ -350,11 +352,11 @@ INSERT INTO users_private (serial) VALUES (2);
 INSERT INTO users (serial, name, password, privilege) VALUES (3, 'admin_web', 'REPLACE', 1);
 INSERT INTO users_private (serial) VALUES (3);
 
-drop table if exists users_transactions;
+DROP TABLE IF EXISTS users_transactions;
 --
 -- Transactions between users
 --
-create table users_transactions (
+CREATE TABLE users_transactions (
   from_serial INT UNSIGNED NOT null,
   to_serial INT UNSIGNED NOT null,
   modified TIMESTAMP,
@@ -363,41 +365,41 @@ create table users_transactions (
   status CHAR DEFAULT 'n',
   notes TEXT,
 
-  key (from_serial,to_serial)
+  KEY (from_serial,to_serial)
 );
 
-drop table if exists affiliates;
+DROP TABLE IF EXISTS affiliates;
 --
 -- Affiliate description
 --
 create table affiliates (
-  serial int unsigned not null auto_increment,
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   modified TIMESTAMP,
-  created int unsigned not null,
+  created INT UNSIGNED NOT NULL,
 
-  users_count int unsigned default 0,
-  users_rake int unsigned default 0,
-  users_points int unsigned default 0,
+  users_count INT UNSIGNED DEFAULT 0,
+  users_rake INT UNSIGNED DEFAULT 0,
+  users_points INT UNSIGNED DEFAULT 0,
 
   --
   -- percentage of the rake assigned to the affiliate
   --
-  share int unsigned default 0, 
+  share INT UNSIGNED DEFAULT 0, 
 
-  companyname varchar(255) default "",
-  firstname varchar(255) default "",
-  lastname varchar(255) default "",
-  addr_street varchar(255) default "",
-  addr_street2 varchar(255) default "",
-  addr_zip varchar(64) default "",
-  addr_town varchar(64) default "",
-  addr_state varchar(128) default "",
-  addr_country varchar(64) default "",
-  phone varchar(64) default "",
+  companyname VARCHAR(255) DEFAULT "",
+  firstname VARCHAR(255) DEFAULT "",
+  lastname VARCHAR(255) DEFAULT "",
+  addr_street VARCHAR(255) DEFAULT "",
+  addr_street2 VARCHAR(255) DEFAULT "",
+  addr_zip VARCHAR(64) DEFAULT "",
+  addr_town VARCHAR(64) DEFAULT "",
+  addr_state VARCHAR(128) DEFAULT "",
+  addr_country VARCHAR(64) DEFAULT "",
+  phone VARCHAR(64) DEFAULT "",
 
   url TEXT,
   notes TEXT,
 
-  primary key (serial)
+  PRIMARY KEY (serial)
 );
 
