@@ -19,3 +19,4 @@ ALTER TABLE `counter` CHANGE COLUMN `value` `value` BIGINT NOT NULL;
 --- Image is stored in text form
 ---
 ALTER TABLE `users` CHANGE COLUMN `skin_image` `skin_image` TEXT NOT NULL;
+ALTER TABLE `users` CHANGE COLUMN `skin_image_type` `skin_image_type` VARCHAR(32) DEFAULT "image/png";

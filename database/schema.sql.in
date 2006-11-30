@@ -43,7 +43,7 @@ CREATE TABLE users (
   skin_url VARCHAR(32) DEFAULT "random",
   skin_outfit TEXT,
   skin_image TEXT,
-  skin_image_type VARCHAR(32),
+  skin_image_type VARCHAR(32) DEFAULT "image/png",
   password VARCHAR(32),
   privilege INT DEFAULT 1,
 
