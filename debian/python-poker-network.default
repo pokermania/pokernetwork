@@ -1,0 +1,9 @@
+#
+# python-poker-network default
+#
+
+#
+# Run bots that will connect to the poker server as instructed
+# in /etc/poker-network/poker.bot.xml
+#
+RUN_BOTS=false
