@@ -112,19 +112,19 @@ if(_post_string('submit')) {
 				<td>Edit Account</td>
 			</tr>
 			<tr>
-				<td><b>Login*:</b></td>
+				<td><b>Login<sup>*</sup>:</b></td>
 				<td><input type="hidden" id="name" name="name" value="<?php print $account['name'] ?>"><?php print $account['name'] ?></td>
 			</tr>
 			<tr>
-				<td><b>New password*:</b></td>
+				<td><b>New password<sup>*</sup>:</b></td>
 				<td><input type="password" size="20" maxlength="32" id="password2" name="password2" /></td>
 			</tr>
 			<tr>
-				<td><b>New Password confirmation*:</b></td>
+				<td><b>New Password confirmation<sup>*</sup>:</b></td>
 				<td><input type="password" size="20" maxlength="32" id="password3" name="password3" /></td>
 			</tr>
 			<tr>
-				<td><b>Email*:</b></td>
+				<td><b>Email<sup>*</sup>:</b></td>
 				<td><input type="text" size="32" maxlength="128" id="email" name="email" value="<?php print $account['email'] ?>" /></td>
 			</tr>
 			<tr>
@@ -180,7 +180,7 @@ if(_post_string('submit')) {
 				<td></td>
 				<td>
                                         <img src="image.php?serial=<? print $serial ?>" />
-					<b>Avatar<sup>*</sup>: <input type="file" name="image"></b><br />
+					<b>Avatar: <input type="file" name="image"></b><br />
 				<td></td>
 				<td>
 					<input type="submit" name='submit' value="Ok" />
