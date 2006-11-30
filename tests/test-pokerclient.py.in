@@ -374,7 +374,7 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(readyToPlay)
             def nextTurn((client, packet),):
                 print "nextTurn"
-                return client.packetDeferred(True, PACKET_POKER_WIN)
+                return client.packetDeferred(True, PACKET_POKER_START)
             d[index].addCallback(nextTurn)
             #
             # Game will start after the client index=0 times out 
@@ -521,7 +521,7 @@ class PokerClientTestCase(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test13"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
