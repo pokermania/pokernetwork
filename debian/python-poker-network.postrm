@@ -2,7 +2,10 @@
 
 set -e
 
-if [ "${DH_VERBOSE:-0}" -gt 0 ] ; then set -x ; fi
+. /usr/share/debconf/confmodule
+. /usr/share/dbconfig-common/dpkg/postrm.mysql
+
+dbc_go python-poker-network $@
 
 if [ "$1" = "purge" ]; then
     rm -f /etc/poker-network/poker.{bot,client,server}.xml
