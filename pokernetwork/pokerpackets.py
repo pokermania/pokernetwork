@@ -4071,3 +4071,48 @@ money: the money won
 
 
 PacketFactory[PACKET_POKER_TOURNEY_RANK] = PacketPokerTourneyRank
+
+########################################
+
+PACKET_POKER_PLAYER_IMAGE = 251
+PacketNames[PACKET_POKER_PLAYER_IMAGE] = "POKER_PLAYER_IMAGE"
+
+class PacketPokerPlayerImage(PacketSerial):
+    """ """
+
+    type = PACKET_POKER_PLAYER_IMAGE
+    image = ""
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.has_key("image"):
+            self.image = kwargs["image"]
+        PacketSerial.__init__(self, *args, **kwargs)
+        
+    def pack(self):
+        return PacketSerial.pack(self) + self.packstring(self.image)
+
+    def unpack(self, block):
+        block = PacketSerial.unpack(self, block)
+        (block, self.image) = self.unpackstring(block)
+        return block
+    
+    def calcsize(self):
+        return PacketSerial.calcsize(self) + self.calcsizestring(self.image)
+
+    def __str__(self):
+        return PacketSerial.__str__(self) + " image = %s" % self.image
+
+
+PacketFactory[PACKET_POKER_PLAYER_IMAGE] = PacketPokerPlayerImage
+
+########################################
+
+PACKET_POKER_GET_PLAYER_IMAGE = 252
+PacketNames[PACKET_POKER_GET_PLAYER_IMAGE] = "POKER_GET_PLAYER_IMAGE"
+
+class PacketPokerGetPlayerImage(PacketSerial):
+
+    type = PACKET_POKER_GET_PLAYER_IMAGE
+
+PacketFactory[PACKET_POKER_GET_PLAYER_IMAGE] = PacketPokerGetPlayerImage
+
