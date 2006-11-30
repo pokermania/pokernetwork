@@ -30,7 +30,7 @@ COOKIES=$0.cookies
 rm -f ${COOKIES}
 #DUMP_HEADERS='--dump-header /dev/tty'
 touch run-pokerserver.launching
-sh run-pokerserver &
+DONT_RUN_BOTS=1 sh -x run-pokerserver &
 pokerserver_pid=$!
 trap "kill $pokerserver_pid ; rm -f $0.{cookies,out}" EXIT INT QUIT
 lockfile run-pokerserver.launching
@@ -42,6 +42,8 @@ if [ "$(chase /var/www/test-poker-web)" != "$(chase ../pokerweb/pages)" ] ; then
 fi
 
 rm -f ../pokerweb/pages/constants.php
-sed -e 's/@POKER_SERVER_HOST@:19382/localhost:19482/' < ../pokerweb/conf/constants.php.in > ../pokerweb/pages/constants.php
+sed -e 's/@POKER_SERVER_HOST@:19382/localhost:19482/' < ../pokerweb/pages/constants.php.ref.in > ../pokerweb/pages/constants.php
 
-. ../tests/pokerweb
+echo "Now run http://localhost/test-poker-web/selenium-core-0.8.1/core/TestRunner.html?test=../../tests/TestSuite.html"
+wait
+#. ../tests/pokerweb
