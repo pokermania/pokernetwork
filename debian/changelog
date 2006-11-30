@@ -5,6 +5,13 @@ poker-network (1.0.31-1) unstable; urgency=low
   * was solved by dropping 2.3 support (closes: #392157)
 
   * replace www-config with dbconfig-common (closes: #384603)
+  
+  * poker2d depends on a web browser (closes: #374630)
+  
+  * defaults is now pokersource.info that has the proper URLs (closes: #374635)
+  
+  * libsdl1.2debian depends on libsdl1.2debian-alsa by default therefore remove
+    the -all dependency (closes: #385552)
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 20 Nov 2006 13:34:00 +0100
 
