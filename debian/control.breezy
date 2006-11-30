@@ -12,7 +12,7 @@ Architecture: all
 Suggests: mysql-server
 Conflicts: python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, adduser, python-poker-engine (>= 1.0.16), python2.4-twisted, python2.4-mysqldb, python-soappy, python2.4-pyopenssl, debconf, wwwconfig-common, mysql-client, apg, rsync
+Depends: ${python:Depends}, ${misc:Depends}, adduser, python-poker-engine (>= 1.0.16), python2.4-twisted, python2.4-mysqldb, python-soappy, python2.4-pyopenssl, dbconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
@@ -29,7 +29,7 @@ Description: multiplayer poker server and client library
 Package: python-poker2d
 Section: python
 Architecture: any
-Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), python2.4-glade2, python2.4-pygame, python2.4-gtk2, libsdl1.2debian-alsa, rsync
+Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), python2.4-glade2, python2.4-pygame, python2.4-gtk2, libsdl1.2debian-alsa, rsync, firefox | galeon | chimera2 | lynx | konqueror
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Conflicts: python2.4-python-poker2d (<< 1.0.21)
@@ -43,7 +43,7 @@ Description: GTK poker client to play on a poker-network server
 Package: poker-web
 Section: web
 Architecture: all
-Depends: debconf (>= 0.2.26), php4 | php4-cgi, php4-mysql, apache, php4-pear
+Depends: ${misc:Depends}, dbconfig-common, php4 | php4-cgi, php4-mysql, apache, php4-pear
 Description: Web interface to a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
