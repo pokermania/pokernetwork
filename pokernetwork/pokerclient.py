@@ -114,6 +114,7 @@ class PokerClientFactory(UGAMEClientFactory):
         # so that the caller does not have to check the existence of the
         # attribute when catching an exception.
         #
+        self.crashing = False
         self.interface = None
         self.display = None
         self.children = None
@@ -1203,6 +1204,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return packets
 
     def connectionLost(self, reason):
+        if self.factory.crashing:
+            print "connectionLost: crashing, just return."
+            return
         if self.factory.verbose:
             print "connectionLost: noticed, aborting all tables."
         self.abortAllTables()
