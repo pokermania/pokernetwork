@@ -42,27 +42,34 @@ function run() {
     ${PYTHON} -u ../pokernetwork/pokerserver.py ${SERVER_CONFIG} > pokerserver.log 2>&1 &
     server_pid=$!
     echo "Server now running as process $server_pid with logs in pokerserver.log"
-    sleep 3 # wait for server to bootstrap
-    while : 
-      do
-      ${PYTHON} -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
-      bot_pid=$!
-      trap "rm -f ${LOCK} ; kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
-      rm -f ${LAUNCHING}
-      echo "Bots now running as process $bot_pid with logs in pokerbot.log"
-      wait $bot_pid
-      exit 0
-      if wait $bot_pid
-          then
-          if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
-              then
-              exit -1
-          fi
-          sleep 1
-      else
-          break
-      fi
-    done
+    if [ "$DONT_RUN_BOTS" ] ; then
+        trap "rm -f ${LOCK} ; kill $server_pid" SIGINT SIGQUIT EXIT
+        sleep 3 # wait for server to bootstrap
+        rm -f ${LAUNCHING}
+        wait $server_pid
+    else
+        sleep 3 # wait for server to bootstrap
+        while : 
+        do
+            ${PYTHON} -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
+            bot_pid=$!
+            trap "rm -f ${LOCK} ; kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
+            rm -f ${LAUNCHING}
+            echo "Bots now running as process $bot_pid with logs in pokerbot.log"
+            wait $bot_pid
+            exit 0
+            if wait $bot_pid
+            then
+                if grep 'Traceback\|CRITICAL\|ERROR' poker{bot,server}.log
+                then
+                    exit -1
+                fi
+                sleep 1
+            else
+                break
+            fi
+        done
+    fi
 }
 
 function usage() {
