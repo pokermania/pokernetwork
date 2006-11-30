@@ -1,6 +1,7 @@
 #
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -778,6 +779,24 @@ class PokerService(service.Service):
         cursor.close()
         return money
 
+    def cashIn(self, packet):
+        return self.cashier.cashIn(packet)
+
+    def cashOut(self, packet):
+        return self.cashier.cashOut(packet)
+
+    def cashQuery(self, packet):
+        return self.cashier.cashQuery(packet)
+
+    def cashOutCommit(self, packet):
+        count = self.cashier.cashOutCommit(packet)
+        if count in (0, 1):
+            return PacketAck()
+        else:
+            return PacketError(code = PacketPokerCashOutCommit.INVALID_TRANSACTION,
+                               message = "transaction " + packet.transaction_id + " affected " + str(count) + " rows instead of zero or one",
+                               other_type = PACKET_POKER_CASH_OUT_COMMIT)
+
     def getPlayerInfo(self, serial):
         placeholder = PacketPokerPlayerInfo(serial = serial,
                                             name = "anonymous",
@@ -800,24 +819,6 @@ class PokerService(service.Service):
                                      name = name,
                                      url = skin_url,
                                      outfit = skin_outfit)
-
-    def cashIn(self, packet):
-        return self.cashier.cashIn(packet)
-
-    def cashOut(self, packet):
-        return self.cashier.cashOut(packet)
-
-    def cashQuery(self, packet):
-        return self.cashier.cashQuery(packet)
-
-    def cashOutCommit(self, packet):
-        count = self.cashier.cashOutCommit(packet)
-        if count in (0, 1):
-            return PacketAck()
-        else:
-            return PacketError(code = PacketPokerCashOutCommit.INVALID_TRANSACTION,
-                               message = "transaction " + packet.transaction_id + " affected " + str(count) + " rows instead of zero or one",
-                               other_type = PACKET_POKER_CASH_OUT_COMMIT)
 
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)
@@ -1006,6 +1007,40 @@ class PokerService(service.Service):
             return False
         return True
 
+
+    def getPlayerImage(self, serial):
+        placeholder = PacketPokerPlayerImage(serial = serial)
+
+        if serial == 0:
+            return placeholder
+
+        cursor = self.db.cursor()
+        sql = ( "select skin_image,skin_image_type from users where serial = " + str(serial) )
+        cursor.execute(sql)
+        if cursor.rowcount != 1:
+            print " *ERROR* getPlayerImage(%d) expected one row got %d" % ( serial, cursor.rowcount )
+            return placeholder
+        (skin_image, skin_image_type) = cursor.fetchone()
+        if skin_image == None:
+            skin_image = ""
+        cursor.close()
+        return PacketPokerPlayerImage(serial = serial,
+                                      image = skin_image,
+                                      image_type = skin_image_type)
+
+    def setPlayerImage(self, player_image):
+        cursor = self.db.cursor()
+        sql = ( "update users set "
+                " skin_image = '" + player_image.image + "', "
+                " skin_image_type = '" + player_image.image_type + "' "
+                " where serial = " + str(player_image.serial) )
+        if self.verbose > 1:
+            print "setPlayerInfo: %s" % sql
+        cursor.execute(sql)
+        if cursor.rowcount != 1 and cursor.rowcount != 0:
+            print " *ERROR* setPlayerImage: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql )
+            return False
+        return True
 
     def getName(self, serial):
         if serial == 0:
