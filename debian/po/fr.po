@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker-network\n"
 "Report-Msgid-Bugs-To: loic@debian.org\n"
-"POT-Creation-Date: 2006-09-04 15:12+0200\n"
+"POT-Creation-Date: 2006-11-30 12:19+0100\n"
 "PO-Revision-Date: 2006-09-04 15:20+0200\n"
 "Last-Translator: Thomas Huriaux <thomas.huriaux@gmail.com>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
@@ -131,147 +131,127 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../python-poker-network.templates:4001
-msgid "MySQL server host name:"
-msgstr "Nom d'hôte du serveur MySQL :"
+#, fuzzy
+msgid "Hostname or IP address of the default poker-network web server:"
+msgstr "Nom d'hôte ou adresse IP du serveur poker-network par défaut :"
 
 #. Type: string
 #. Description
 #: ../python-poker-network.templates:4001
+#, fuzzy
 msgid ""
-"Please enter the the hostname or the IP address of the machine where the "
-"MySQL server is running."
-msgstr "Veuillez indiquer le nom d'hôte ou l'adresse IP du serveur MySQL."
+"The clients based on poker-network installed on the same machine will be "
+"able to use this address to connect to the web part of the poker server."
+msgstr ""
+"Vous pouvez indiquer le serveur poker-network que les clients installés sur "
+"cette même machine pourront utiliser par défaut."
 
-#. Type: string
+#. Type: boolean
 #. Description
 #: ../python-poker-network.templates:5001
-msgid "poker-network database name:"
-msgstr "Nom de la base de données de poker-network :"
+#, fuzzy
+msgid "Do you want to run the poker-network robots?"
+msgstr "Faut-il configurer et démarrer le serveur poker-network ?"
 
-#. Type: string
+#. Type: boolean
 #. Description
 #: ../python-poker-network.templates:5001
 msgid ""
-"This is the name of the database that poker-network will use. A new database "
-"of that name will be created on the MySQL server."
+"Robot players are simple minded poker players that can be used to exercise "
+"the poker server when there are not enough human players connected."
 msgstr ""
-"Veuillez indiquer la base de données qu'utilisera poker-network. Si cette "
-"base de données n'existe pas, elle sera créée sur le serveur MySQL."
 
-#. Type: string
-#. Description
-#: ../python-poker-network.templates:6001
-msgid "MySQL user name dedicated to poker-network:"
-msgstr "Identifiant de l'utilisateur MySQL dédié à poker-network :"
+#~ msgid "MySQL server host name:"
+#~ msgstr "Nom d'hôte du serveur MySQL :"
 
-#. Type: string
-#. Description
-#: ../python-poker-network.templates:6001
-msgid ""
-"This is the user name that poker-network will use to access the database. A "
-"MySQL user of that name will be created on the MySQL server, with "
-"permissions restricted to the database dedicated to poker-network."
-msgstr ""
-"Veuillez indiquer l'identifiant de l'utilisateur que poker-network utilisera "
-"pour accéder à la base de données. Un utilisateur avec cet identifiant sera "
-"créé sur le serveur MySQL, ses droits d'accès seront limités à la base de "
-"données utilisée par poker-network."
+#~ msgid ""
+#~ "Please enter the the hostname or the IP address of the machine where the "
+#~ "MySQL server is running."
+#~ msgstr "Veuillez indiquer le nom d'hôte ou l'adresse IP du serveur MySQL."
 
-#. Type: password
-#. Description
-#: ../python-poker-network.templates:7001
-msgid "Password for the poker-network MySQL user:"
-msgstr "Mot de passe pour l'utilisateur MySQL de poker-network :"
+#~ msgid "poker-network database name:"
+#~ msgstr "Nom de la base de données de poker-network :"
 
-#. Type: password
-#. Description
-#. Type: password
-#. Description
-#: ../python-poker-network.templates:7001
-#: ../python-poker-network.templates:8001
-msgid ""
-"This is the password that poker-network will use, along with the MySQL user "
-"name you chose, to access the poker-network database."
-msgstr ""
-"Veuillez choisir le mot de passe de l'identifiant créé pour accéder à la "
-"base de données poker-network."
+#~ msgid ""
+#~ "This is the name of the database that poker-network will use. A new "
+#~ "database of that name will be created on the MySQL server."
+#~ msgstr ""
+#~ "Veuillez indiquer la base de données qu'utilisera poker-network. Si cette "
+#~ "base de données n'existe pas, elle sera créée sur le serveur MySQL."
 
-#. Type: password
-#. Description
-#: ../python-poker-network.templates:8001
-msgid "Retype the password of the poker-network MySQL user:"
-msgstr "Confirmation du mot de passe de l'utilisateur MySQL de poker-network :"
+#~ msgid "MySQL user name dedicated to poker-network:"
+#~ msgstr "Identifiant de l'utilisateur MySQL dédié à poker-network :"
 
-#. Type: text
-#. Description
-#: ../python-poker-network.templates:9001
-msgid "Passwords mismatch"
-msgstr "Mots de passe différents"
+#~ msgid ""
+#~ "This is the user name that poker-network will use to access the database. "
+#~ "A MySQL user of that name will be created on the MySQL server, with "
+#~ "permissions restricted to the database dedicated to poker-network."
+#~ msgstr ""
+#~ "Veuillez indiquer l'identifiant de l'utilisateur que poker-network "
+#~ "utilisera pour accéder à la base de données. Un utilisateur avec cet "
+#~ "identifiant sera créé sur le serveur MySQL, ses droits d'accès seront "
+#~ "limités à la base de données utilisée par poker-network."
 
-#. Type: text
-#. Description
-#: ../python-poker-network.templates:9001
-msgid ""
-"The poker-network MySQL user passwords you entered do not match. Please try "
-"again."
-msgstr ""
-"Le mot de passe et sa confirmation ne concordent pas. Veuillez recommencer."
+#~ msgid "Password for the poker-network MySQL user:"
+#~ msgstr "Mot de passe pour l'utilisateur MySQL de poker-network :"
 
-#. Type: string
-#. Description
-#: ../python-poker-network.templates:10001
-msgid "MySQL server administrator user name:"
-msgstr "Identifiant de l'administrateur du serveur MySQL :"
+#~ msgid ""
+#~ "This is the password that poker-network will use, along with the MySQL "
+#~ "user name you chose, to access the poker-network database."
+#~ msgstr ""
+#~ "Veuillez choisir le mot de passe de l'identifiant créé pour accéder à la "
+#~ "base de données poker-network."
 
-#. Type: string
-#. Description
-#: ../python-poker-network.templates:10001
-msgid ""
-"The MySQL server administrator user will be used only during the "
-"installation process to do the following:"
-msgstr ""
-"Veuillez indiquer l'identifiant de l'administrateur du serveur MySQL. Il "
-"servira à la création de :"
+#~ msgid "Retype the password of the poker-network MySQL user:"
+#~ msgstr ""
+#~ "Confirmation du mot de passe de l'utilisateur MySQL de poker-network :"
 
-#. Type: string
-#. Description
-#: ../python-poker-network.templates:10001
-msgid ""
-" (1) The poker-network database\n"
-" (2) The MySQL user that poker-network will use to access the\n"
-"database"
-msgstr ""
-" - la base de données poker-network ;\n"
-" - l'utilisateur MySQL que poker-network utilisera pour y accéder."
+#~ msgid "Passwords mismatch"
+#~ msgstr "Mots de passe différents"
 
-#. Type: string
-#. Description
-#: ../python-poker-network.templates:10001
-msgid "The 'root' user usually have permission to create databases and users."
-msgstr ""
-"L'identifiant « root » a généralement le droit de créer des bases de données "
-"et des utilisateurs."
+#~ msgid ""
+#~ "The poker-network MySQL user passwords you entered do not match. Please "
+#~ "try again."
+#~ msgstr ""
+#~ "Le mot de passe et sa confirmation ne concordent pas. Veuillez "
+#~ "recommencer."
 
-#. Type: password
-#. Description
-#: ../python-poker-network.templates:11001
-msgid "MySQL server administrator password (if any):"
-msgstr "Mot de passe de l'administrateur du serveur MySQL (s'il en a un) :"
+#~ msgid "MySQL server administrator user name:"
+#~ msgstr "Identifiant de l'administrateur du serveur MySQL :"
 
-#. Type: password
-#. Description
-#: ../python-poker-network.templates:11001
-msgid ""
-"This is the password that will be used along with the MySQL server "
-"administrator name."
-msgstr ""
-"Veuillez indiquer le mot de passe de l'administrateur du serveur MySQL."
+#~ msgid ""
+#~ "The MySQL server administrator user will be used only during the "
+#~ "installation process to do the following:"
+#~ msgstr ""
+#~ "Veuillez indiquer l'identifiant de l'administrateur du serveur MySQL. Il "
+#~ "servira à la création de :"
 
-#. Type: password
-#. Description
-#: ../python-poker-network.templates:11001
-msgid ""
-"NOTE: This password will not be asked twice, since it's not a new password."
-msgstr ""
-"Aucune confirmation ne sera demandée puisqu'il ne s'agit pas d'un nouveau "
-"mot de passe."
+#~ msgid ""
+#~ " (1) The poker-network database\n"
+#~ " (2) The MySQL user that poker-network will use to access the\n"
+#~ "database"
+#~ msgstr ""
+#~ " - la base de données poker-network ;\n"
+#~ " - l'utilisateur MySQL que poker-network utilisera pour y accéder."
+
+#~ msgid ""
+#~ "The 'root' user usually have permission to create databases and users."
+#~ msgstr ""
+#~ "L'identifiant « root » a généralement le droit de créer des bases de "
+#~ "données et des utilisateurs."
+
+#~ msgid "MySQL server administrator password (if any):"
+#~ msgstr "Mot de passe de l'administrateur du serveur MySQL (s'il en a un) :"
+
+#~ msgid ""
+#~ "This is the password that will be used along with the MySQL server "
+#~ "administrator name."
+#~ msgstr ""
+#~ "Veuillez indiquer le mot de passe de l'administrateur du serveur MySQL."
+
+#~ msgid ""
+#~ "NOTE: This password will not be asked twice, since it's not a new "
+#~ "password."
+#~ msgstr ""
+#~ "Aucune confirmation ne sera demandée puisqu'il ne s'agit pas d'un nouveau "
+#~ "mot de passe."
