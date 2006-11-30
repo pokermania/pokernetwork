@@ -67,6 +67,8 @@ cat <<'EOF' | QUERY_STRING='""" + query + """' @PHP@ --define extension=mysql.so
 <?
   ini_set('include_path', '@srcdir@/../../pokerweb/pages:' . ini_get('include_path'));
   $GLOBALS['currency_db_base'] = 'currencytest';
+  $GLOBALS['currency_db_user'] = 'root';
+  $GLOBALS['currency_db_password'] = '';
   require 'currency.php';
   parse_str(getenv('QUERY_STRING'), $_GET);
   currency_main(False);
@@ -247,6 +249,28 @@ EOF
                 self.assertEqual(30, notes[1][3])
                 self.assertEqual(30, notes[2][3])
                 self.assertEqual(10, notes[3][3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(breakNote)
+        return d
+
+    # -----------------------------------------------------------------------------    
+    def test08_breakNote_zero(self):
+        d = self.getCommitedNote('http://fake/', 100)
+
+        def breakNote(result):
+            #print "breakNote " + str(result)
+            note_to_break = result[0]
+            d = self.client.breakNote(note_to_break, 100, 0)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                #print "broken notes " + str(result)
+                notes = result
+                self.assertEqual(2, len(notes))
+                self.assertEqual(100, notes[0][3])
+                self.assertEqual(0, notes[1][3])
                 return result
             d.addBoth(validate)
             return d
