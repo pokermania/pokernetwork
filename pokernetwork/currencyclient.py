@@ -104,8 +104,17 @@ class RealCurrencyClient:
         return deferred
 
     def breakNote(self, note, *values):
-        deferred = self.request(url = note[0], command = 'break_note', note = note, values = values)
-        deferred.addCallback(self.parseResultNote)
+        deferred = False
+        if len(values) == 2:
+            numeric_values = map(int, values)
+            numeric_values.sort()
+            if numeric_values[0] == 0:
+                notes = [ note, [ note[0], 0, '', 0 ] ]
+                deferred = defer.Deferred()
+                reactor.callLater(0, lambda: deferred.callback(notes))
+        if not deferred:
+            deferred = self.request(url = note[0], command = 'break_note', note = note, values = values)
+            deferred.addCallback(self.parseResultNote)
         return deferred
 
     def commit(self, url, transaction_id):
@@ -118,7 +127,14 @@ class RealCurrencyClient:
 	deferred.addCallback(validate)
 	return deferred
         
+from twisted.python import failure
+from twisted.web import error
+
 CurrencyClient = RealCurrencyClient
+
+FakeCurrencyFailure = False
+
+Verbose = False
 
 class FakeCurrencyClient:
 
@@ -128,23 +144,37 @@ class FakeCurrencyClient:
         self.commit_result = True
         
     def breakNote(self, (url, serial, name, value), *values):
+        if Verbose: print "breakNote vaues %s" % str(values)
+        if values: 
+            values = map(int, values)
+            values.sort()
+            values.reverse()
+
         notes = []
-        for note_value in values:
-            if value < note_value: continue
-            count = value / note_value
-            value %= note_value
-            for i in xrange(count):
+        if values[-1] == 0:
+            notes.append((url, serial, name, value))
+            notes.append((url, 0, '', 0))
+        else:
+            for note_value in values:
+                if value < note_value: continue
+                count = value / note_value
+                value %= note_value
+                for i in xrange(count):
+                    notes.append((url, self.serial, "%040d" % self.serial, note_value))
+                    self.serial += 1
+                if value <= 0: break
+            if value > 0:
                 notes.append((url, self.serial, "%040d" % self.serial, note_value))
                 self.serial += 1
-            if value <= 0: break
-        if value > 0:
-            notes.append((url, self.serial, "%040d" % self.serial, note_value))
-            self.serial += 1
         d = defer.Deferred()
-        reactor.callLater(0, lambda: d.callback(notes))
+        if FakeCurrencyFailure:
+            reactor.callLater(0, lambda: d.errback(failure.Failure(error.Error(500, "breakNote: fake error", "(page content)"))))
+        else:
+            reactor.callLater(0, lambda: d.callback(notes))
         return d
 
     def mergeNotes(self, *notes):
+        if Verbose: print "mergeNotes"
         self.serial += 1
         result = list(notes[0])
         result[1] = self.serial
@@ -157,6 +187,7 @@ class FakeCurrencyClient:
     meltNotes = mergeNotes
 
     def changeNote(self, note):
+        if Verbose: print "changeNote"
         self.serial += 1
         result = note.copy()
         result[1] = self.serial
@@ -166,17 +197,20 @@ class FakeCurrencyClient:
         return d
 
     def _buildNote(self, url, value):
+        if Verbose: print "_buildNote"
         self.serial += 1
         name = "%040d" % self.serial
         return ( url, self.serial, name, value )
 
     def getNote(self, url, value):
+        if Verbose: print "getNote"
         note = self._buildNote(url, value)
         d = defer.Deferred()
         reactor.callLater(0, lambda: d.callback(note))
         return d
 
     def checkNote(self, note):
+        if Verbose: print "checkNote"
         if self.check_note_result:
             result = note
         else:
@@ -186,6 +220,7 @@ class FakeCurrencyClient:
         return d
 
     def commit(self, url, transaction_id):
+        if Verbose: print "commit"
         if self.commit_result:
             result = "OK"
         else:
