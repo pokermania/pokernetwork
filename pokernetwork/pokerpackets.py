@@ -4082,26 +4082,26 @@ class PacketPokerPlayerImage(PacketSerial):
     """ """
 
     type = PACKET_POKER_PLAYER_IMAGE
-    image = ""
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("image"):
-            self.image = kwargs["image"]
+        self.image = kwargs.get("image", '')
+        self.image_type = kwargs.get("image_type", 'image/png')
         PacketSerial.__init__(self, *args, **kwargs)
         
     def pack(self):
-        return PacketSerial.pack(self) + self.packstring(self.image)
+        return PacketSerial.pack(self) + self.packstring(self.image) + self.packstring(self.image_type)
 
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
         (block, self.image) = self.unpackstring(block)
+        (block, self.image_type) = self.unpackstring(block)
         return block
     
     def calcsize(self):
-        return PacketSerial.calcsize(self) + self.calcsizestring(self.image)
+        return PacketSerial.calcsize(self) + self.calcsizestring(self.image) + self.calcsizestring(self.image_type)
 
     def __str__(self):
-        return PacketSerial.__str__(self) + " image = %s" % self.image
+        return PacketSerial.__str__(self) + " image = %s, image_type = %s" % ( self.image, self.image_type )
 
 
 PacketFactory[PACKET_POKER_PLAYER_IMAGE] = PacketPokerPlayerImage
