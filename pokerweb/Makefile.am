@@ -1,0 +1,72 @@
+#
+# Copyright (C) Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+MAINTAINERCLEANFILES = Makefile.in
+
+EXTRA_DIST = \
+	pages/tests/README \
+	pages/tests/test-cash.html \
+	pages/tests/test-create_account.html \
+	pages/tests/test-edit_account.html \
+	pages/tests/test-index.html \
+	pages/tests/test-login.html \
+	pages/tests/TestSuite.html
+
+poker_web_sysconfdir = ${sysconfdir}/poker-web
+dist_poker_web_sysconf_DATA = \
+	conf/htaccess \
+	conf/apache.conf
+
+poker_web_databasedir = ${datadir}/poker-web/database
+dist_poker_web_database_DATA = \
+	database/schema.sql
+
+poker_webdir = ${datadir}/poker-web
+dist_poker_web_DATA = \
+	pages/cash_in.php \
+	pages/cash_out.php \
+	pages/common.php \
+	pages/constants.php.ref \
+	pages/country.txt \
+	pages/create_account.php \
+	pages/currency_one.php \
+	pages/currency.php \
+	pages/default-image.jpg \
+	pages/edit_account.php \
+	pages/footer_default.php \
+	pages/header_default.php \
+	pages/image.php \
+	pages/index.php \
+	pages/lib_filters.php \
+	pages/login.php \
+	pages/logout.php \
+	pages/nusoap.php \
+	pages/poker.php \
+	pages/prototype.js
+
+all-local:
+	cd pages ; ln -fs constants.php.ref constants.php
+	cd pages ; ln -fs ../conf/htaccess .htaccess
+
+clean-local:
+	rm -f pages/constants.php
+	rm -f pages/.htaccess
+
+install-data-local:
+	mkdir -p ${DESTDIR}${poker_webdir}
+	ln -fs ${poker_web_sysconfdir}/constants.php ${DESTDIR}${poker_webdir}/constants.php
+	ln -fs ${poker_web_sysconfdir}/htaccess ${DESTDIR}${poker_webdir}/.htaccess
