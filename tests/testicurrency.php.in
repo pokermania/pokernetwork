@@ -28,14 +28,16 @@
 ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
 ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/conf");
 
-require_once 'PHPUnit2/Framework/TestCase.php';
+require_once 'PHPUnit/Framework/TestCase.php';
 
 $GLOBALS['currency_url'] = 'http://localhost/currency/';
 $GLOBALS['currency_db_base'] = 'currencytest';
+$GLOBALS['currency_db_user'] = 'root';
+$GLOBALS['currency_db_password'] = '';
 
 require_once 'currency.php';
 
-class testicurrency extends PHPUnit2_Framework_TestCase
+class testicurrency extends PHPUnit_Framework_TestCase
 {
     protected function setUp()
     {
