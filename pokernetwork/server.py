@@ -29,6 +29,7 @@ import sys
 from twisted.internet import reactor, protocol, defer
 
 from pokernetwork.protocol import UGAMEProtocol
+from pokernetwork.packets import PacketError
 
 class PokerServerProtocol(UGAMEProtocol):
     """UGAMEServerProtocol"""
@@ -71,6 +72,7 @@ class PokerServerProtocol(UGAMEProtocol):
             packet = packets.pop(0)
             if isinstance(packet, defer.Deferred):
                 packet.addCallback(self.unshiftPacket, packets)
+                packet.addErrback(self.deferredError, packets)
                 #
                 # No packet may be received while sending the answer to
                 # a previous packet.
@@ -79,6 +81,11 @@ class PokerServerProtocol(UGAMEProtocol):
                 break
             else:
                 self.sendPacket(packet)
+
+    def deferredError(self, reason, packets):
+        packet = PacketError(message = str(reason))
+        packets.insert(0, packet)
+        self.sendPackets(packets)
 
     def unshiftPacket(self, packet, packets):
         packets.insert(0, packet)
