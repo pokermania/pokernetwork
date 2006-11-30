@@ -1,6 +1,208 @@
-2006-11-19  Loic Dachary  <loic@dachary.org>
+2006-11-30  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.31
+
+	* tests/testpoker.php.in: unit test covering 100% of pages/poker.php
+
+	* tests/testicurrency.php.in: use root mysql user for tests
+
+	* tests/testcurrency.php.in, pokerweb/pages/currency.php:
+	_merge_notes must always be called with a string value (not numerical)
+	otherwise the usage of special tables is compromized
+
+	* tests/test-pokerservice.py.in: test setPlayerImage and getPlayerImage
+
+	* tests/test-pokerclient.py.in: test setPlayer and getPlayer
+	test cashOut (success and error)
+
+	* tests/test-pokercashier.py.in: test cashOut failure
+
+	* tests/test-poker-interface.py:
+	define time unit in a variable and change all delays to use this time
+	unit in order to reduce the time spent in this test
+
+	* tests/test-currencyclient.py.in: use root mysql user for tests
+	check that breakNotes withdrawing the full available amount works
+
+	* tests/pokerweb: selenium replaces curl based tests
+
+	* tests/Makefile.am: unit tests for poker.php
+
+	* pokerweb/pages/poker.php: send image_type with setPlayerImage packets
+
+	* pokerweb/pages/edit_account.php, pokerweb/pages/create_account.php:
+	add stars on mandatory fields
+
+	* pokernetwork/server.py:
+	should a deferred return on error, translate this condition into a
+	PacketError that is sent to the client. It typically happens when a
+	money transaction fails. If such a packet is not returned, the client
+	waits forever instead of gracefully handling an error notification.
+
+	* pokernetwork/pokerservice.py:
+	getPlayerImage and setPlayerImage handle the GET_PLAYER_IMAGE and PLAYER_IMAGE
+	packet types
+
+	* pokernetwork/pokerpackets.py:
+	player_image packet also carries the image mime type
+
+	* examples/test-pokerweb: set the currency user and password to root
+
+	* database/schema.sql.in, database/1.0.30-1.0.31.sql:
+	avatar image_type defaults to image/png
+
+	* pokernetwork/currencyclient.py, pokernetwork/pokeravatar.py, pokernetwork/pokercashier.py, pokernetwork/pokerclient.py, pokernetwork/pokerpackets.py:
+	copyright updates
+
+	* pokernetwork/pokerpackets.py:
+	new packets: PACKET_POKER_PLAYER_IMAGE and PACKET_POKER_GET_PLAYER_IMAGE
+
+	* pokernetwork/pokerclient.py:
+	don't abort all tables if the client factory has the crashing flag set. This allows for
+	running the reactor some more after catching a SIGSEGV, in order to wait for the process
+	child death.
+
+	* pokernetwork/pokercashier.py:
+	Failure message now prints the content of the web page if the failure is a web "server error"
+	this special case was necessary because the default str method of the web error object does not
+	print the content of the page.
+
+	cashOut special case handling fix : if cashOut all money from the safe. In this case the
+	currency server is expected to return two notes : one of the total amount and the other with
+	zero. The zero value note is discarded and the code gracefully behaves when there is no bank
+	note going back to the safe (i.e. the user has a note and there's nothing left in the safe).
+
+	* pokernetwork/pokeravatar.py:
+	forward PACKET_POKER_GET_PLAYER_IMAGE and PACKET_POKER_PLAYER_IMAGE packet to pokerservice
+
+	* pokernetwork/currencyclient.py:
+	breakNote : if one of the two values is zero, just return the note and
+	a fake zero value note (also handled in FakeCurrencyClient). Added
+	FakeCurrencyClient verbosity and ability to fail on demand with
+	FakeCurrencyFailure for test purposes
+
+	* pokerclient2d/poker2d.xml.in:
+	POKER_WWW_HOST replaces POKER_SERVER_HOST for the web part
+
+	* examples/test-pokerweb:
+	run-pokerserver without bots (DONT_RUN_BOTS=yes) and wait for selenium
+	tests to be run manually instead of launching a curl based test suite
+
+	* examples/run-pokerserver:
+	can run the test server without bot if DONT_RUN_BOTS=yes
+
+	* debian/rules:
+	use dbconfig-common variable names instead of %SOME% in configure
+	kill manual installation of pokerweb that now has its own installation
+
+	* debian/python-poker-network.templates: dbconfig for poker database
+	prompt for poker-web host
+
+	* debian/python-poker-network.postrm: dbconfig for poker database
+
+	* debian/python-poker-network.postinst: dbconfig for poker database
+	edit defaults for bots according to user answer
+	replace %HOST% in client files from /usr/share to /etc instead of /etc inplace
+
+	* debian/python-poker-network.links:
+	mysql schema and upgrades made available to dbconfig-common
+
+	* debian/python-poker-network.init:
+	by default bots are not run (controled by default file)
+
+	* debian/python-poker-network.default: by default bots are not run
+
+	* debian/python-poker-network.config: dbconfig for poker database
+
+	* debian/poker-web.prerm: dbconfig for poker web database and currency
+
+	* debian/poker-web.preinst:
+	phpunit2 release installation with rc for xdebug using pear channels
+
+	* debian/poker-web.postrm, debian/poker-web.postinst:
+	dbconfig for poker web database and currency
+
+	* debian/poker-web.links: link to poker web schema
+
+	* debian/poker-web.install:
+	install is now cleanly grouped in directories instead of being manually handled by rules file
+
+	* debian/poker-web.dirs: link to poker web schema
+
+	* debian/poker-web.config: dbconfig for poker web database and currency
+
+	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.hoary, debian/control.sarge, debian/control.unstable:
+	dbconfig depends
+
+	* debian/changelog: fix all debian bugs
+
+	* database/schema.sql.in:
+	skin_image is a text instead of blob because it's a lot easier to handle in various languages
+	upcase all SQL keywords
+
+	* database/1.0.30-1.0.31.sql:
+	skin_image is a text instead of blob because it's a lot easier to handle in various languages
+
+	* conf/poker.bot.xml.in:
+	POKER_WWW_HOST replaces POKER_SERVER_HOST for the web part
+
+	* configure.ac: pokerweb address
+	pokerweb constants file change
+
+	* Makefile.am: pokerweb subdir
+
+2006-11-29  Loic Dachary  <loic@dachary.org>
+
+	* pokerweb/conf/apache.conf, pokerweb/conf/constants.php.in, pokerweb/conf/constants_test.php, pokerweb/conf/htaccess, pokerweb/database/schema.sql, pokerweb/pages/cash_in.php, pokerweb/pages/cash_in_one.php, pokerweb/pages/cash_in_two.php, pokerweb/pages/cash_out.php, pokerweb/pages/cash_out_one.php, pokerweb/pages/cash_out_two.php, pokerweb/pages/class.poker.php, pokerweb/pages/common.php, pokerweb/pages/constants.php.ref.in, pokerweb/pages/create_account.php, pokerweb/pages/currency.php, pokerweb/pages/currency_one.php, pokerweb/pages/currency_test_one.php, pokerweb/pages/currency_test_two.php, pokerweb/pages/currency_two.php, pokerweb/pages/default-image.jpg, pokerweb/pages/edit_account.php, pokerweb/pages/footer_default.php, pokerweb/pages/header_default.php, pokerweb/pages/image.php, pokerweb/pages/index.php, pokerweb/pages/lib_images.php, pokerweb/pages/login.php, pokerweb/pages/logout.php, pokerweb/pages/neteller.cfg, pokerweb/pages/neteller.py, pokerweb/pages/poker.php:
+	complete rework
+
+	* pokerweb/pages/tests/README, pokerweb/pages/tests/TestSuite.html, pokerweb/pages/tests/test-cash.html, pokerweb/pages/tests/test-create_account.html, pokerweb/pages/tests/test-edit_account.html, pokerweb/pages/tests/test-index.html, pokerweb/pages/tests/test-login.html:
+	http://openqa.org/ selenium testsuite
+
+2006-11-25  Loic Dachary  <loic@dachary.org>
+
+	* debian/python-poker2d.install: include kde shortcuts
+
+2006-11-21  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-servercrash.py.in: server recover from crash
+
+	* tests/test-pokerclient.py.in:
+	don't terminate connections in the test : the service does it
+	test shutdown server while game running
+
+	* pokernetwork/pokertable.py:
+	ignore rebuy event in game history to avoid spurious error messages
+
+	* pokernetwork/pokerservice.py:
+	cleanupCrashedTables called before cleanup of temporary users
+	call leavePlayer with currency_serial
+	cleanUp must not delete user2table, cleanupCrashedTables does not
+	leavePlayer grabs the player bet in addition to the money : may happen when the server crashes
+
+	* debian/changelog: dbconfig-common switch
+
+	* database/1.0.30-1.0.31.sql: update version number
+
+	* configure.ac: server crash and recovery test case
+
+	* pokernetwork/pokerservice.py:
+	disconnectall before closing the database otherwise the tables don't get updated
+
+2006-11-20  cpinson  <cpinson@call>
+
+	* gentoo/dev-games/poker-network/poker-network-1.0.27.ebuild: down
+
+	* gentoo/dev-games/poker-network/poker-network-1.0.30-r1.ebuild: up
+
+2006-11-20  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokerdatabase.py:
+	allow SQL upgrade scripts to touch the version
+
+	* debian/python-poker-network.prerm: prerm needed for dbconfig-common
+
+2006-11-19  Loic Dachary  <loic@dachary.org>
 
 	* debian/rules: add gnome.mk
 
