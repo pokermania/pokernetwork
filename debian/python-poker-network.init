@@ -39,6 +39,16 @@
 #                    bots running according to /etc/poker-network
 ### END INIT INFO
 
+#
+# Run bots that will connect to the poker server as instructed
+# in /etc/poker-network/poker.bot.xml
+#
+RUN_BOTS=false
+
+# Include python-poker-network defaults if available
+if [ -f /etc/default/python-poker-network ] ; then
+    . /etc/default/python-poker-network
+fi
 
 twistd=/usr/bin/twistd
 reactor=poll
@@ -84,33 +94,43 @@ case "$1" in
 	    --pidfile=${serverpidfile} --python ${serverscript} \
 	    --logfile=${serverlogfile} --quiet ${more_args} \
 	    --reactor=${reactor}
-	${python} ${twistd} \
-	    --pidfile=${botpidfile} --python ${botscript} \
-	    --logfile=${botlogfile} --quiet ${more_args} \
-	    --reactor=${reactor}
+        if $RUN_BOTS ; then
+	    ${python} ${twistd} \
+	        --pidfile=${botpidfile} --python ${botscript} \
+	        --logfile=${botlogfile} --quiet ${more_args} \
+	        --reactor=${reactor}
+        else
+            echo "Bots are disabled, edit /etc/default/python-poker-network to enable them."
+        fi
 	echo ${name}
 	;;
   stop)
 	echo -n "Stopping poker server ..."
 	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${serverpidfile} || true
 	echo " done."
-	echo -n "Stopping poker bots ..."
-	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
-	echo "done"
+        if $RUN_BOTS ; then
+	    echo -n "Stopping poker bots ..."
+	    start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
+	    echo "done"
+        fi
 	;;
   rebot)
-	echo -n "Stopping poker bots ..."
-	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
-	echo "done"
-	echo -n "Wait 10 minutes ..."
-        sleep 600
-	echo "done"
-	echo -n "Starting poker bots ..."
-	${python} ${twistd} \
-	    --pidfile=${botpidfile} --python ${botscript} \
-	    --logfile=${botlogfile} --quiet ${more_args} \
-	    --reactor=${reactor}
-	echo "done"
+        if $RUN_BOTS ; then
+	    echo -n "Stopping poker bots ..."
+	    start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
+	    echo "done"
+	    echo -n "Wait 10 minutes ..."
+            sleep 600
+	    echo "done"
+	    echo -n "Starting poker bots ..."
+	    ${python} ${twistd} \
+	        --pidfile=${botpidfile} --python ${botscript} \
+	        --logfile=${botlogfile} --quiet ${more_args} \
+	        --reactor=${reactor}
+	    echo "done"
+        else
+            echo "Bots are disabled"
+        fi
 	;;
   restart|force-reload)
 	#
