@@ -17,25 +17,9 @@ set -e
 # the debian-policy package
 #
 . /usr/share/debconf/confmodule
-db_version 2.0
+. /usr/share/dbconfig-common/dpkg/postinst.mysql
 
-get_db_params () {
-  db_get "python-poker-network/db/host"
-  dbserver="$RET"
-  db_get "python-poker-network/db/name"
-  dbname="$RET"
-  db_get "python-poker-network/db/admin/name"
-  dbadmin="$RET"
-  db_get "python-poker-network/db/admin/password"
-  dbadmpass="$RET"
-  db_reset "python-poker-network/db/admin/password"
-  db_get "python-poker-network/db/user/name"
-  dbuser="$RET"
-  db_get "python-poker-network/db/user/password"
-  dbpass="$RET"
-  db_reset "python-poker-network/db/user/password"
-  db_reset "python-poker-network/db/user/password/confirm"
-}
+db_version 2.0
 
 pokernetwork_group=pokernetwork
 pokernetwork_user=pokernetwork
@@ -88,33 +72,25 @@ case "$1" in
 	if [ $RET = "false" ]; then
 	    touch /etc/poker-network/lockfile
 	else
-	    get_db_params
-	    . /usr/share/wwwconfig-common/mysql-createdb.sh
-	    . /usr/share/wwwconfig-common/mysql-createuser.sh
-	    . /usr/share/wwwconfig-common/mysql.get
+	    dbc_generate_include="template:/etc/poker-network/poker.server.xml"
+            dbc_generate_include_args="-O $pokernetwork_user:$pokernetwork_group -m 600 -o template_infile=/usr/share/poker-network/conf/poker.server.xml"
+            dbc_first_version="1.0.31"
+            dbc_go python-poker-network $@
 
-	    sed  -e "s/\%DBHOST\%/$dbserver/" -e "s/\%PASS\%/$dbpass/" -e "s/\%USER\%/$dbuser/" -e "s/\%ROOT_PASS\%/$dbadmpass/" -e "s/\%ROOT_USER\%/$dbadmin/" -e "s/\%DATABASE\%/$dbname/" /etc/poker-network/poker.server.xml > $tmpfile
-            if diff $tmpfile /etc/poker-network/poker.server.xml > /dev/null
-            then
-                rm $tmpfile
-            else
-                mv  $tmpfile /etc/poker-network/poker.server.xml
-                chmod 600 /etc/poker-network/poker.server.xml
+	    db_get "python-poker-network/bots"
+            sed -e "s/^RUN_BOTS=.*/RUN_BOTS=$RET/" < /etc/default/python-poker-network > $tmpfile
+            if ! diff $tmpfile /etc/default/python-poker-network ; then
+                mv $tmpfile /etc/default/python-poker-network
             fi
 
- 	    if ! eval $mysqlcmd -h "$dbserver" -f -e "\"use $dbname; show tables;\"" | grep -e "user2table" > /dev/null 2>&1 ; then
- 		$mysqlcmd  -h "$dbserver" --password="$dbpass" -u $dbuser $dbname < /usr/share/poker-network/schema.sql
-            else
-                /usr/sbin/pokerdatabaseupgrade /etc/poker-network/poker.server.xml
- 	    fi
             rm -f /etc/poker-network/lockfile
 	fi
 
-        for conf_file in /etc/poker-network/poker.client.xml /etc/poker-network/poker.bot.xml ; do
-            if grep '%HOST%' $conf_file > /dev/null ; then
-                sed -e "s/\%HOST\%/$poker_network_host/" $conf_file > $tmpfile
-                mv $tmpfile $conf_file
-                chmod 644 $conf_file
+        for conf_file in poker.client.xml poker.bot.xml ; do
+            sed -e "s/\%HOST\%/$poker_network_host/" /usr/share/poker-network/conf/$conf_file > $tmpfile
+            if ! diff $tmpfile /etc/poker-network/$conf_file > /dev/null ; then
+                mv $tmpfile /etc/poker-network/$conf_file
+                chmod 644 /etc/poker-network/$conf_file
             fi
         done
 
