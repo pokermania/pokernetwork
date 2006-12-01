@@ -24,3 +24,237 @@
 # Johan Euphrosine <proppy@aminche.com> 
 #
 # -*- shell-script -*-
+
+style "raise_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "raise.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "fold_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "fold.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "check_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "check.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "call_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "call.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "sit_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "get_seat.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+# Johan Euphrosine <proppy@aminche.com> 
+#
+# -*- shell-script -*-
+
+style "raise_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "raise.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "fold_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "fold.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "check_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "check.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "call_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "call.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "quit_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "exit.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "rebuy_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "rebuy.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "dealer_button"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "dealer.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "table_background"
+{
+    bg_pixmap[NORMAL] = "table.png"
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "table.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+style "player_frame"
+{
+    bg_pixmap[NORMAL] = "player.png"
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "player.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
+widget "game_window*raise" style "raise_button"
+widget "game_window*fold" style "fold_button"
+widget "game_window*check" style "check_button"
+widget "game_window*call" style "call_button"
+widget "game_window*sit_*" style "sit_button"
+widget "game_window*quit" style "quit_button"
+widget "game_window*rebuy" style "rebuy_button"
+widget "game_window*dealer*" style "dealer_button"
+widget "game_window*table" style "table_background"
+widget "game_window*player_frame*" style "player_frame"
