@@ -27,7 +27,8 @@ MAINTAINERCLEANFILES = \
 	Makefile.in
 
 EXTRA_DIST = \
-	root2window.pl
+	root2window.pl \
+	skin/gtkrc
 
 pkgdatadir=@pkgdatadir@
 
