@@ -36,17 +36,23 @@ if(_post_string('submit')) {
   try {
     $amount = _post_string('amount');
 
+    if(!is_numeric($amount))
+      throw new Exception("amount must be numeric");
+    
     if($amount == '' or $amount < 0)
       throw new Exception("amount must be greater than zero");
 
-    $currency_url = dirname(_me()) . "/currency_one.php";
+    $amount *= 100;
+    
+    $currency_one_public = ereg("^http", _cst_currency_one_public) ? _cst_currency_one_public : (dirname(_me()) . "/" . _cst_currency_one_public);
+                                                                                                 $currency_one_private = ereg("^http", _cst_currency_one_private) ? _cst_currency_one_private : (dirname(_me()) . "/" . _cst_currency_one_private);
 
-    $packet = $poker->cashOut($currency_url, $amount);
+    $packet = $poker->cashOut($currency_one_private, $amount);
     $poker->cashOutCommit($packet['name']);
 
-    $handle = fopen($currency_url . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
+    $handle = fopen($currency_one_public . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
     if(!$handle)
-      throw new Exception($currency_url . " request failed, check the server logs");
+      throw new Exception($currency_one_public . " request failed, check the server logs");
     $lines = array();
     while($line = fgets($handle)) {
       array_push($lines, $line);

@@ -36,13 +36,20 @@ if(_post_string('submit')) {
   try {
     $amount = _post_string('amount');
 
+    if(!is_numeric($amount))
+      throw new Exception("amount must be numeric");
+    
     if($amount == '' or $amount < 0)
       throw new Exception("amount must be greater than zero");
+
+    $amount *= 100;
     
-    $currency_url = dirname(_me()) . "/currency_one.php";
-    $handle = fopen($currency_url . "?command=get_note&autocommit=yes&value=" . $amount, "r");
+    $currency_one_public = ereg("^http", _cst_currency_one_public) ? _cst_currency_one_public : (dirname(_me()) . "/" . _cst_currency_one_public);
+    $currency_one_private = ereg("^http", _cst_currency_one_private) ? _cst_currency_one_private : (dirname(_me()) . "/" . _cst_currency_one_private);
+
+    $handle = fopen($currency_one_public . "?command=get_note&autocommit=yes&value=" . $amount, "r");
     if(!$handle)
-      throw new Exception($currency_url . " request failed, check the server logs");
+      throw new Exception($currency_one_public . " request failed, check the server logs");
 
     $lines = array();
     while($line = fgets($handle)) {
@@ -55,7 +62,9 @@ if(_post_string('submit')) {
     if(count($lines) < 1)
       throw new Exception("currency server returned nothing");
 
-    if(count($note) != 4 || !is_numeric($note[1]) || !is_numeric($note[3]) || (intval($note[3]) != intval($amount))) {
+    $note[0] = $currency_one_private;
+
+     if(count($note) != 4 || !is_numeric($note[1]) || !is_numeric($note[3]) || (intval($note[3]) != intval($amount))) {
       error_log(print_r($lines, true));
       throw new Exception("currency server returned an invalid answer");
     }
