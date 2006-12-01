@@ -24,7 +24,11 @@ case "$1" in
     configure)
         db_get "python-poker-network/host"
         poker_network_host="$RET"
-        sed -e "s/\%HOST\%/$poker_network_host/" < /usr/share/poker-network/poker2d/poker2d.xml.ref > /usr/share/poker-network/poker2d/poker2d.xml
+        db_get "python-poker-network/www"
+        poker_network_www="$RET"
+        sed -e "s/\%HOST\%/$poker_network_host/" \
+            -e "s/\%WWW\%/$poker_network_www/" \
+            < /usr/share/poker-network/poker2d/poker2d.xml.ref > /usr/share/poker-network/poker2d/poker2d.xml
         #
         # Try to update the kde khotkeys of the currently running session
         # so that the user can use it right away.
