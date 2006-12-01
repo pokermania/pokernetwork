@@ -366,7 +366,7 @@ class PokerClientTestCase(unittest.TestCase):
                                                  game_id = 100))
                 return (client, packet)
             d[index].addCallback(atShowdown)
-            if index == 0:
+            if index == 1:
                 def readyToPlay((client, packet),):
                     client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
                                                              game_id = 100))
