@@ -47,7 +47,7 @@ if($user_info) {
   echo '<!-- HOME IS LOGGED IN -->';
   if(is_array($user_info['money'])) {
     foreach ( $user_info['money'] as $currency => $state ) {
-      print "bankroll ".$state[0].", in game ".$state[1].", point ".$state[2]." <p>";
+      print "bankroll ".substr($state[0], 0, -2).".".substr($state[0], -2).", in game ".$state[1].", point ".$state[2]." (currency ".$currency.")<p>";
     }
   }
   echo '<a href="logout.php" id="logout">logout</a><br>';
