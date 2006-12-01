@@ -699,7 +699,8 @@ class PokerTable:
         if not self.allReadyToPlay() and delay > 0:
             delta = ( self.game_delay["start"] + delay ) - time.time()
             if delta < 0: delta = 0
-            if delta > float(self.delays["autodeal_max"]): delta = float(self.delays["autodeal_max"])
+            autodeal_max = float(self.delays.get("autodeal_max", 120))
+            if delta > autodeal_max: delta = autodeal_max
         else:
             delta = 0
         if self.factory.verbose > 2:
