@@ -1,6 +1,33 @@
-2006-11-30  Loic Dachary  <loic@dachary.org>
+2006-12-01  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.31
+
+	* conf/poker.server.xml.in, pokernetwork/pokertable.py:
+	autodeal_max default value
+
+	* debian/control.unstable, debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.hoary, debian/control.sarge, debian/poker-web.postinst, debian/poker-web.postrm:
+	ucf the constant.php file so that it's not overriden after each installation
+
+	* tests/test-pokerclient.py.in: inverted readytoplay sent
+
+	* pokerweb/pages/tests/test-index.html: wait after goback
+
+	* pokerweb/pages/index.php: display values in units, not in cents
+
+	* pokerweb/pages/edit_account.php, pokerweb/pages/create_account.php:
+	firstname and lastname are input instead of textarea
+
+	* pokerweb/pages/constants.php.ref.in:
+	distinguish money server public and private url
+
+	* pokerweb/pages/cash_out.php, pokerweb/pages/cash_in.php:
+	distinguish money server public and private url
+	display values in units, not in cents
+
+	* debian/python-poker-network.postinst, debian/rules, debian/python-poker2d.postinst:
+	%WWW% substitution
+
+2006-11-30  Loic Dachary  <loic@dachary.org>
 
 	* tests/testpoker.php.in: unit test covering 100% of pages/poker.php
 
