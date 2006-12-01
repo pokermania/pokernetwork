@@ -133,11 +133,11 @@ if(_post_string('submit')) {
 			</tr>
 			<tr>
 				<td><b>First Name:</b></td>
-				<td><textarea id="firstname" name="firstname" cols="30" rows="3"><?php print $account['firstname'] ?></textarea></td>
+				<td><input type="text" size="32" maxlength="32" id="firstname" name="firstname" value="<?php print $account['firstname'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>Last Name:</b></td>
-				<td><textarea id="lastname" name="lastname" cols="30" rows="3"><?php print $account['lastname'] ?></textarea></td>
+				<td><input type="text" size="32" maxlength="32" id="lastname" name="lastname" value="<?php print $account['lastname'] ?>" /></td>
 			</tr>
 			<tr>
 				<td><b>Street:</b></td>
