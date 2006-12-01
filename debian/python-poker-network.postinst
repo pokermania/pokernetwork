@@ -66,6 +66,8 @@ case "$1" in
 
         db_get "python-poker-network/host"
         poker_network_host="$RET"
+        db_get "python-poker-network/www"
+        poker_network_www="$RET"
 
 	db_get "python-poker-network/skip"
         tmpfile=`mktemp`
