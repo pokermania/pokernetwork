@@ -17,6 +17,9 @@ if [ "$1" = "purge" ]; then
     done
 
     rmdir --ignore-fail-on-non-empty /etc/poker-web || true
+
+    ucf --purge /etc/poker-web/constants.php
+
 fi
 
 . /usr/share/debconf/confmodule
