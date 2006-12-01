@@ -8,7 +8,8 @@
 	define('_cst_encoding', 'iso-8859-1');
 	define('_cst_header', 'header_default.php');
 	define('_cst_footer', 'footer_default.php');
-	define('_cst_currency_one', 'currency_one.php');
+	define('_cst_currency_one_public', 'currency_one.php');
+	define('_cst_currency_one_private', 'currency_one.php');
 	define('_cst_poker_soap_host', 'http://@POKER_SERVER_HOST@:19382/SOAP');
 	define('_cst_avatar_max_size', _cst_avatar_max_size_kb * _cst_kilo_bytes);
 ?>
