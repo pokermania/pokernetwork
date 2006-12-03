@@ -134,6 +134,7 @@ class PokerService(service.Service):
     def __init__(self, settings):
         self.settings = settings
         self.verbose = self.settings.headerGetInt("/server/@verbose")
+        self.delays = settings.headerGetProperties("/server/delays")[0]
         self.db = None
         self.cashier = None
         self.poker_auth = None
@@ -150,6 +151,7 @@ class PokerService(service.Service):
         self.poker_auth = PokerAuth(self.db, self.settings)
         self.dirs = split(self.settings.headerGet("/server/path"))
         self.serial2client = {}
+        self.avatars = []
         self.tables = []
         self.table_serial = 100
         self.shutting_down = False
@@ -162,6 +164,7 @@ class PokerService(service.Service):
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
         self.updateTourneysSchedule()
+        self.messageCheck()
         self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
@@ -195,6 +198,7 @@ class PokerService(service.Service):
         self.shutting_down = True
         self.cancelTimer('checkTourney')
         self.cancelTimer('updateTourney')
+        self.cancelTimer('messages')
         self.shutdown_deferred = defer.Deferred()
         reactor.callLater(0.01, self.shutdownCheck)
         return self.shutdown_deferred
@@ -227,9 +231,15 @@ class PokerService(service.Service):
         pass
 
     def createAvatar(self):
-        return pokeravatar.PokerAvatar(self)
+        avatar = pokeravatar.PokerAvatar(self)
+        self.avatars.append(avatar)
+        return avatar
 
     def destroyAvatar(self, avatar):
+        if avatar in self.avatars:
+            self.avatars.remove(avatar)
+        else:
+            print "*ERROR* PokerService: avatar %s is not in the list of known avatars" % str(avatar)
         avatar.connectionLost("Disconnected")
 
     def sessionStart(self, serial, ip):
@@ -1368,6 +1378,23 @@ class PokerService(service.Service):
         if cursor.rowcount != 1:
             print " *ERROR* deleted %d rows (expected 1): %s " % ( cursor.rowcount, sql )
         cursor.close()
+
+    def broadcast(self, packet):
+        for avatar in self.avatars:
+            avatar.sendPacketVerbose(packet)
+
+    def messageCheck(self):
+        cursor = self.db.cursor()
+        cursor.execute("SELECT serial,message FROM messages WHERE " + 
+                       "       sent = 'n' AND send_date < CURRENT_TIMESTAMP()")
+        rows = cursor.fetchall()
+        for (serial, message) in rows:
+            self.broadcast(PacketMessage(string = message))
+            cursor.execute("UPDATE messages SET sent = 'y' WHERE serial = %d" % serial)
+        cursor.close()
+        self.cancelTimer('messages')
+        delay = int(self.delays.get('messages', 60))
+        self.timer['messages'] = reactor.callLater(delay, self.messageCheck)
 
 class PokerAuth:
 
