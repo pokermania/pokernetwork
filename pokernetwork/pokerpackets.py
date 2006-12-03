@@ -63,12 +63,9 @@ from struct import pack, unpack, calcsize
 from types import IntType, LongType
 from pokernetwork.packets import *
 
-poker_packets_serial = 50
-
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SEATS = poker_packets_serial
+PACKET_POKER_SEATS = 50 # %SEQ%
 PacketNames[PACKET_POKER_SEATS] = "POKER_SEATS"
 
 class PacketPokerSeats(Packet):
@@ -127,8 +124,7 @@ PacketFactory[PACKET_POKER_SEATS] = PacketPokerSeats
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_ID = poker_packets_serial
+PACKET_POKER_ID = 51 # %SEQ%
 PacketNames[PACKET_POKER_ID] = "POKER_ID"
 
 class PacketPokerId(PacketSerial):
@@ -162,8 +158,7 @@ PacketFactory[PACKET_POKER_ID] = PacketPokerId
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_MESSAGE = poker_packets_serial
+PACKET_POKER_MESSAGE = 52 # %SEQ%
 PacketNames[PACKET_POKER_MESSAGE] = "POKER_MESSAGE"
 
 class PacketPokerMessage(PacketPokerId):
@@ -196,8 +191,7 @@ PacketFactory[PACKET_POKER_MESSAGE] = PacketPokerMessage
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_ERROR = poker_packets_serial
+PACKET_POKER_ERROR = 53 # %SEQ%
 PacketNames[PACKET_POKER_ERROR] = "ERROR"
 
 class PacketPokerError(PacketPokerId):
@@ -240,8 +234,7 @@ PacketFactory[PACKET_POKER_ERROR] = PacketPokerError
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_POSITION = poker_packets_serial
+PACKET_POKER_POSITION = 54 # %SEQ%
 PacketNames[PACKET_POKER_POSITION] = "POKER_POSITION"
 
 class PacketPokerPosition(Packet):
@@ -293,8 +286,7 @@ PacketFactory[PACKET_POKER_POSITION] = PacketPokerPosition
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_INT = poker_packets_serial
+PACKET_POKER_INT = 55 # %SEQ%
 PacketNames[PACKET_POKER_INT] = "POKER_INT"
 
 class PacketPokerInt(PacketPokerId):
@@ -328,8 +320,7 @@ PacketFactory[PACKET_POKER_INT] = PacketPokerInt
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BET = poker_packets_serial
+PACKET_POKER_BET = 56 # %SEQ%
 PacketNames[PACKET_POKER_BET] = "POKER_BET"
 
 class PacketPokerBet(PacketPokerInt):
@@ -341,8 +332,7 @@ PacketFactory[PACKET_POKER_BET] = PacketPokerBet
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_FOLD = poker_packets_serial
+PACKET_POKER_FOLD = 57 # %SEQ%
 PacketNames[PACKET_POKER_FOLD] = "POKER_FOLD"
 
 class PacketPokerFold(PacketPokerId):
@@ -361,8 +351,7 @@ PacketFactory[PACKET_POKER_FOLD] = PacketPokerFold
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_STATE = poker_packets_serial
+PACKET_POKER_STATE = 58 # %SEQ%
 PacketNames[PACKET_POKER_STATE] = "POKER_STATE"
 
 class PacketPokerState(PacketPokerId):
@@ -419,8 +408,7 @@ PacketFactory[PACKET_POKER_STATE] = PacketPokerState
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_WIN = poker_packets_serial
+PACKET_POKER_WIN = 59 # %SEQ%
 PacketNames[PACKET_POKER_WIN] = "POKER_WIN"
 
 class PacketPokerWin(PacketPokerId):
@@ -502,8 +490,7 @@ PacketFactory[PACKET_POKER_WIN] = PacketPokerWin
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CARDS = poker_packets_serial
+PACKET_POKER_CARDS = 60 # %SEQ%
 PacketNames[PACKET_POKER_CARDS] = "POKER_CARDS"
 
 class PacketPokerCards(PacketPokerId):
@@ -539,8 +526,7 @@ PacketFactory[PACKET_POKER_CARDS] = PacketPokerCards
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_CARDS = poker_packets_serial
+PACKET_POKER_PLAYER_CARDS = 61 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_CARDS] = "POKER_PLAYER_CARDS"
 
 class PacketPokerPlayerCards(PacketPokerCards):
@@ -580,8 +566,7 @@ PacketFactory[PACKET_POKER_PLAYER_CARDS] = PacketPokerPlayerCards
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BOARD_CARDS = poker_packets_serial
+PACKET_POKER_BOARD_CARDS = 62 # %SEQ%
 PacketNames[PACKET_POKER_BOARD_CARDS] = "POKER_BOARD_CARDS"
 
 class PacketPokerBoardCards(PacketPokerCards):
@@ -620,65 +605,7 @@ PacketFactory[PACKET_POKER_BOARD_CARDS] = PacketPokerBoardCards
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BEST_CARDS = poker_packets_serial
-PacketNames[PACKET_POKER_BEST_CARDS] = "POKER_BEST_CARDS"
-
-class PacketPokerBestCards(PacketPokerCards):
-    """\
-Semantics: ordered list  of five "bestcards" hand for
-player "serial" in game "game_id" that won the "side"
-side of the pot. The "board", if not empty, is the list
-of community cards at showdown. Also provides the
-"cards" of the player.
-
-Direction: client <=> client
-
-cards: list of integers describing the player cards:
-
-       2h/00  2d/13  2c/26  2s/39
-       3h/01  3d/14  3c/27  3s/40
-       4h/02  4d/15  4c/28  4s/41
-       5h/03  5d/16  5c/29  5s/42
-       6h/04  6d/17  6c/30  6s/43
-       7h/05  7d/18  7c/31  7s/44
-       8h/06  8d/19  8c/32  8s/45
-       9h/07  9d/20  9c/33  9s/46
-       Th/08  Td/21  Tc/34  Ts/47
-       Jh/09  Jd/22  Jc/35  Js/48
-       Qh/10  Qd/23  Qc/36  Qs/49
-       Kh/11  Kd/24  Kc/37  Ks/50
-       Ah/12  Ad/25  Ac/38  As/51
-       
-bestcards: list of integers describing the winning combination cards:
-board: list of integers describing the community cards:
-hand: readable string of the name best hand
-besthand: 0 if it's not the best hand and 1 if it's the best hand
-         best hand is the hand that win the most money
-       
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_BEST_CARDS
-
-    def __init__(self, *args, **kwargs):
-        self.side = kwargs.get("side", "")
-        self.hand = kwargs.get("hand", "")
-        self.bestcards = kwargs.get("bestcards", [])
-        self.board = kwargs.get("board", [])
-        self.besthand = kwargs.get("besthand", 0)
-        PacketPokerCards.__init__(self, *args, **kwargs)
-        
-    def __str__(self):
-        return PacketPokerCards.__str__(self) + " side = %s, hand = %s, bestcards = %s, board = %s , besthand %s" % ( self.side, self.hand, str(self.bestcards), str(self.board), str(self.besthand) )
-
-PacketFactory[PACKET_POKER_BEST_CARDS] = PacketPokerBestCards
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS = poker_packets_serial
+PACKET_POKER_CHIPS = 63 # %SEQ%
 PacketNames[PACKET_POKER_CHIPS] = "POKER_CHIPS"
 
 class PacketPokerChips(PacketPokerId):
@@ -712,8 +639,7 @@ PacketFactory[PACKET_POKER_CHIPS] = PacketPokerChips
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_CHIPS = poker_packets_serial
+PACKET_POKER_PLAYER_CHIPS = 64 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_CHIPS] = "POKER_PLAYER_CHIPS"
 
 class PacketPokerPlayerChips(PacketPokerChips):
@@ -760,40 +686,7 @@ PacketFactory[PACKET_POKER_PLAYER_CHIPS] = PacketPokerPlayerChips
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_POT_CHIPS = poker_packets_serial
-PacketNames[PACKET_POKER_POT_CHIPS] = "POKER_POT_CHIPS"
-
-class PacketPokerPotChips(Packet):
-    """\
-Semantics: the "bet" put in the "index" pot of the "game_id" game.
-
-Direction: client <=> client
-
-Context: this packet is sent at least each time the pot "index" is
-updated.
-
-bet: list of pairs ( chip_value, chip_count ).
-index: integer uniquely identifying a side pot in the range [0,10[
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_POT_CHIPS
-
-    def __init__(self, *args, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        self.index = kwargs.get("index", 0)
-        self.bet = kwargs.get("bet", [])
-
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, pot = %s, index = %d" % ( self.game_id, self.bet, self.index )
-
-PacketFactory[PACKET_POKER_POT_CHIPS] = PacketPokerPotChips
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_CHECK = poker_packets_serial
+PACKET_POKER_CHECK = 65 # %SEQ%
 PacketNames[PACKET_POKER_CHECK] = "POKER_CHECK"
 
 class PacketPokerCheck(PacketPokerId):
@@ -813,8 +706,7 @@ PacketFactory[PACKET_POKER_CHECK] = PacketPokerCheck
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_START = poker_packets_serial
+PACKET_POKER_START = 66 # %SEQ%
 PacketNames[PACKET_POKER_START] = "POKER_START"
 
 class PacketPokerStart(PacketPokerId):
@@ -881,8 +773,7 @@ PacketFactory[PACKET_POKER_START] = PacketPokerStart
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_IN_GAME = poker_packets_serial
+PACKET_POKER_IN_GAME = 67 # %SEQ%
 PacketNames[PACKET_POKER_IN_GAME] = "POKER_IN_GAME"
 
 class PacketPokerInGame(PacketPokerId):
@@ -897,6 +788,8 @@ packet changing the state "blindAnte" to something else is sent).
 The later case happen when a player refuses to pay the blind or
 the ante. When the hand is running and is past the "blindAnte" round,
 no PACKET_POKER_IN_GAME packet is sent.
+
+Direction: server => client
 
 players: list of serials of players participating in the hand.
 game_id: integer uniquely identifying a game.
@@ -930,8 +823,7 @@ PacketFactory[PACKET_POKER_IN_GAME] = PacketPokerInGame
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CALL = poker_packets_serial
+PACKET_POKER_CALL = 68 # %SEQ%
 PacketNames[PACKET_POKER_CALL] = "POKER_CALL"
 
 class PacketPokerCall(PacketPokerId):
@@ -950,8 +842,7 @@ PacketFactory[PACKET_POKER_CALL] = PacketPokerCall
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_RAISE = poker_packets_serial
+PACKET_POKER_RAISE = 69 # %SEQ%
 PacketNames[PACKET_POKER_RAISE] = "POKER_RAISE"
 
 class PacketPokerRaise(PacketPokerBet):
@@ -977,52 +868,7 @@ PacketFactory[PACKET_POKER_RAISE] = PacketPokerRaise
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CLIENT_ACTION = poker_packets_serial
-PacketNames[PACKET_POKER_CLIENT_ACTION] = "POKER_CLIENT_ACTION"
-
-class PacketPokerClientAction(PacketPokerId):
-    """
-
-    The action available/not available to the player
-    
-    """
-
-    type = PACKET_POKER_CLIENT_ACTION
-    display = 0
-    action = ""
-    format = "!B"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("display"):
-            self.display = kwargs["display"]
-        if kwargs.has_key("action"):
-            self.action = kwargs["action"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-        
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerClientAction.format, self.display) + self.packstring(self.action)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.display,) = unpack(PacketPokerClientAction.format, block[:PacketPokerClientAction.format_size])
-        block = block[PacketPokerClientAction.format_size:]
-        (block, self.action) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerClientAction.format_size + self.calcsizestring(self.action)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " display = %d, action = %s" % ( self.display, self.action )
-
-PacketFactory[PACKET_POKER_CLIENT_ACTION] = PacketPokerClientAction
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_DEALER = poker_packets_serial
+PACKET_POKER_DEALER = 70 # %SEQ%
 PacketNames[PACKET_POKER_DEALER] = "POKER_DEALER"
 
 class PacketPokerDealer(Packet):
@@ -1071,8 +917,7 @@ PacketFactory[PACKET_POKER_DEALER] = PacketPokerDealer
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TABLE_JOIN = poker_packets_serial
+PACKET_POKER_TABLE_JOIN = 71 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_JOIN] = "POKER_TABLE_JOIN"
 
 class PacketPokerTableJoin(PacketPokerId):
@@ -1092,77 +937,7 @@ PacketFactory[PACKET_POKER_TABLE_JOIN] = PacketPokerTableJoin
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BET_LIMIT = poker_packets_serial
-PacketNames[PACKET_POKER_BET_LIMIT] = "POKER_BET_LIMIT"
-
-class PacketPokerBetLimit(PacketPokerId):
-    """\
-Semantics: a raise must be at least "min" and most "max".
-A call means wagering an amount of "call". The suggested
-step to slide between "min" and "max" is "step". The step
-is guaranteed to be an integral divisor of "call". The
-player would be allin for the amount "allin". The player
-would match the pot if betting "pot".
-
-Context: this packet is issued each time a position change
-occurs.
-
-Direction: client <=> client
-
-min: the minimum amount of a raise.
-max: the maximum amount of a raise.
-step: a hint for sliding in the [min, max] interval.
-call: the amount of a call.
-allin: the amount for which the player goes allin.
-pot: the amount in the pot.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_BET_LIMIT
-    min = 0
-    max = 0
-    step = 0
-    call = 0
-    allin = 0
-    pot = 0
-    format = "!IIIIII"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("min"):
-            self.min = kwargs["min"]
-        if kwargs.has_key("max"):
-            self.max = kwargs["max"]
-        if kwargs.has_key("step"):
-            self.step = kwargs["step"]
-        if kwargs.has_key("call"):
-            self.call = kwargs["call"]
-        if kwargs.has_key("allin"):
-            self.allin = kwargs["allin"]
-        if kwargs.has_key("pot"):
-            self.pot = kwargs["pot"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerBetLimit.format, self.min, self.max, self.step, self.call, self.allin, self.pot)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.min, self.max, self.step, self.call, self.allin, self.pot) = unpack(PacketPokerBetLimit.format, block[:PacketPokerBetLimit.format_size])
-        return block[PacketPokerBetLimit.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerBetLimit.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " min = %d, max = %d, step = %s, call = %s, allin = %s, pot = %s" % (self.min, self.max, self.step, self.call, self.allin, self.pot)
-
-PacketFactory[PACKET_POKER_BET_LIMIT] = PacketPokerBetLimit
-
-########################################
-poker_packets_serial += 1
-PACKET_POKER_TABLE_SELECT = poker_packets_serial
+PACKET_POKER_TABLE_SELECT = 72 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_SELECT] = "POKER_TABLE_SELECT"
 
 class PacketPokerTableSelect(PacketString):
@@ -1183,8 +958,7 @@ string: currency<tabulation>variant
 PacketFactory[PACKET_POKER_TABLE_SELECT] = PacketPokerTableSelect
 
 ########################################
-poker_packets_serial += 1
-PACKET_POKER_TABLE = poker_packets_serial
+PACKET_POKER_TABLE = 73 # %SEQ%
 PacketNames[PACKET_POKER_TABLE] = "POKER_TABLE"
 
 class PacketPokerTable(Packet):
@@ -1269,8 +1043,7 @@ PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TABLE_LIST = poker_packets_serial
+PACKET_POKER_TABLE_LIST = 74 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_LIST] = "POKER_TABLE_LIST"
 
 class PacketPokerTableList(PacketList):
@@ -1311,8 +1084,7 @@ PacketFactory[PACKET_POKER_TABLE_LIST] = PacketPokerTableList
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SIT = poker_packets_serial
+PACKET_POKER_SIT = 75 # %SEQ%
 PacketNames[PACKET_POKER_SIT] = "POKER_SIT"
 
 class PacketPokerSit(PacketPokerId):
@@ -1337,20 +1109,7 @@ PacketFactory[PACKET_POKER_SIT] = PacketPokerSit
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SIT_REQUEST = poker_packets_serial
-PacketNames[PACKET_POKER_SIT_REQUEST] = "POKER_SIT_REQUEST"
-
-class PacketPokerSitRequest(PacketPokerSit):
-
-    type = PACKET_POKER_SIT_REQUEST
-
-PacketFactory[PACKET_POKER_SIT_REQUEST] = PacketPokerSitRequest
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_TABLE_DESTROY = poker_packets_serial
+PACKET_POKER_TABLE_DESTROY = 76 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_DESTROY] = "POKER_TABLE_DESTROY"
 
 class PacketPokerTableDestroy(PacketPokerId):
@@ -1362,8 +1121,7 @@ PacketFactory[PACKET_POKER_TABLE_DESTROY] = PacketPokerTableDestroy
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TIMEOUT_WARNING = poker_packets_serial
+PACKET_POKER_TIMEOUT_WARNING = 77 # %SEQ%
 PacketNames[PACKET_POKER_TIMEOUT_WARNING] = "POKER_TIMEOUT_WARNING"
 
 class PacketPokerTimeoutWarning(PacketPokerId):
@@ -1405,8 +1163,7 @@ PacketFactory[PACKET_POKER_TIMEOUT_WARNING] = PacketPokerTimeoutWarning
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TIMEOUT_NOTICE = poker_packets_serial
+PACKET_POKER_TIMEOUT_NOTICE = 78 # %SEQ%
 PacketNames[PACKET_POKER_TIMEOUT_NOTICE] = "POKER_TIMEOUT_NOTICE"
 
 class PacketPokerTimeoutNotice(PacketPokerId):
@@ -1426,8 +1183,7 @@ PacketFactory[PACKET_POKER_TIMEOUT_NOTICE] = PacketPokerTimeoutNotice
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SEAT = poker_packets_serial
+PACKET_POKER_SEAT = 79 # %SEQ%
 PacketNames[PACKET_POKER_SEAT] = "POKER_SEAT"
 
 class PacketPokerSeat(PacketPokerId):
@@ -1479,8 +1235,7 @@ PacketFactory[PACKET_POKER_SEAT] = PacketPokerSeat
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TABLE_MOVE = poker_packets_serial
+PACKET_POKER_TABLE_MOVE = 80 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_MOVE] = "POKER_TABLE_MOVE"
 
 class PacketPokerTableMove(PacketPokerSeat):
@@ -1528,8 +1283,7 @@ PacketFactory[PACKET_POKER_TABLE_MOVE] = PacketPokerTableMove
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_LEAVE = poker_packets_serial
+PACKET_POKER_PLAYER_LEAVE = 81 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_LEAVE] = "POKER_PLAYER_LEAVE"
 
 class PacketPokerPlayerLeave(PacketPokerSeat):
@@ -1557,8 +1311,7 @@ PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SIT_OUT = poker_packets_serial
+PACKET_POKER_SIT_OUT = 82 # %SEQ%
 PacketNames[PACKET_POKER_SIT_OUT] = "POKER_SIT_OUT"
 
 class PacketPokerSitOut(PacketPokerId):
@@ -1588,8 +1341,7 @@ PacketFactory[PACKET_POKER_SIT_OUT] = PacketPokerSitOut
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TABLE_QUIT = poker_packets_serial
+PACKET_POKER_TABLE_QUIT = 83 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_QUIT] = "POKER_TABLE_QUIT"
 
 class PacketPokerTableQuit(PacketPokerId):
@@ -1612,8 +1364,7 @@ PacketFactory[PACKET_POKER_TABLE_QUIT] = PacketPokerTableQuit
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BUY_IN = poker_packets_serial
+PACKET_POKER_BUY_IN = 84 # %SEQ%
 PacketNames[PACKET_POKER_BUY_IN] = "POKER_BUY_IN"
 
 class PacketPokerBuyIn(PacketPokerId):
@@ -1664,8 +1415,7 @@ PacketFactory[PACKET_POKER_BUY_IN] = PacketPokerBuyIn
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_REBUY = poker_packets_serial
+PACKET_POKER_REBUY = 85 # %SEQ%
 PacketNames[PACKET_POKER_REBUY] = "POKER_REBUY"
 
 class PacketPokerRebuy(PacketPokerBuyIn):
@@ -1676,8 +1426,7 @@ PacketFactory[PACKET_POKER_REBUY] = PacketPokerRebuy
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CHAT = poker_packets_serial
+PACKET_POKER_CHAT = 86 # %SEQ%
 PacketNames[PACKET_POKER_CHAT] = "POKER_CHAT"
 
 class PacketPokerChat(PacketPokerId):
@@ -1709,30 +1458,7 @@ PacketFactory[PACKET_POKER_CHAT] = PacketPokerChat
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_NO_CARDS = poker_packets_serial
-PacketNames[PACKET_POKER_PLAYER_NO_CARDS] = "POKER_PLAYER_NO_CARDS"
-
-class PacketPokerPlayerNoCards(PacketPokerId):
-    """\
-Semantics: the player "serial" has no cards in game "game_id".
-
-Direction: client <=> client
-
-Context: inferred at showdown.
-
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-    
-    type = PACKET_POKER_PLAYER_NO_CARDS
-
-PacketFactory[PACKET_POKER_PLAYER_NO_CARDS] = PacketPokerPlayerNoCards
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_INFO = poker_packets_serial
+PACKET_POKER_PLAYER_INFO = 87 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_INFO] = "POKER_PLAYER_INFO"
 
 class PacketPokerPlayerInfo(PacketPokerId):
@@ -1780,8 +1506,7 @@ PacketFactory[PACKET_POKER_PLAYER_INFO] = PacketPokerPlayerInfo
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_ARRIVE = poker_packets_serial
+PACKET_POKER_PLAYER_ARRIVE = 88 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_ARRIVE] = "POKER_PLAYER_ARRIVE"
 
 class PacketPokerPlayerArrive(PacketPokerPlayerInfo):
@@ -1865,211 +1590,9 @@ game_id: integer uniquely identifying a game.
 
 PacketFactory[PACKET_POKER_PLAYER_ARRIVE] = PacketPokerPlayerArrive
 
-######################################## 
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS_PLAYER2BET = poker_packets_serial
-PacketNames[PACKET_POKER_CHIPS_PLAYER2BET] = "POKER_CHIPS_PLAYER2BET"
-
-class PacketPokerChipsPlayer2Bet(PacketPokerId):
-    """\
-Semantics: move "chips" from the player "serial" money chip stack
-to the bet chip stack.
-
-Direction: client <=> client
-
-chips: 
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_CHIPS_PLAYER2BET
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs["chips"]
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s" % ( self.chips )
-
-PacketFactory[PACKET_POKER_CHIPS_PLAYER2BET] = PacketPokerChipsPlayer2Bet
-
-######################################## 
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS_BET2POT = poker_packets_serial
-PacketNames[PACKET_POKER_CHIPS_BET2POT] = "POKER_CHIPS_BET2POT"
-
-class PacketPokerChipsBet2Pot(PacketPokerId):
-    """\
-Semantics: move "chips" from the player "serial" bet chip stack
-to the "pot" pot.
-
-Direction: client <=> client
-
-Context: the pot index is by definition in the range [0,9] because
-it starts at 0 and because there cannot be more pots than players.
-The creation of side pots is inferred by the client when a player
-is all-in and it is guaranteed that pots are numbered sequentially.
-
-pot: the pot index in the range [0,9].
-chips: list of integers counting the number of chips to move.
-     The value of each chip is, respectively:
-     1 2 5 10 20 25 50 100 250 500 1000 2000 5000.
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_CHIPS_BET2POT
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs["chips"]
-        self.pot = kwargs["pot"]
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s, pot = %d" % ( self.chips, self.pot )
-    
-PacketFactory[PACKET_POKER_CHIPS_BET2POT] = PacketPokerChipsBet2Pot
-
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS_POT2PLAYER = poker_packets_serial
-PacketNames[PACKET_POKER_CHIPS_POT2PLAYER] = "POKER_CHIPS_POT2PLAYER"
-
-class PacketPokerChipsPot2Player(PacketPokerId):
-    """\
-Semantics: move "chips" from the pot "pot" to the player "serial"
-money chip stack. The string "reason" explains why these chips 
-are granted to the player. If reason is "win", it means the player
-won the chips either because all other players folded or because
-he had the best hand at showdown. If reason is "uncalled", it means
-the chips are returned to him because no other player was will or
-able to call his wager. If reason is "left-over", it means the chips
-are granted to him because there was an odd chip while splitting the pot.
-
-Direction: client <=> client
-
-Context: the pot index is by definition in the range [0,9] because
-it starts at 0 and because there cannot be more pots than players.
-The creation of side pots is inferred by the client when a player
-is all-in and it is guaranteed that pots are numbered sequentially.
-
-reason: may be one of "win", "uncalled", "left-over"
-pot: the pot index in the range [0,9].
-chips: list of integers counting the number of chips to move.
-     The value of each chip is, respectively:
-     1 2 5 10 20 25 50 100 250 500 1000 2000 5000.
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_CHIPS_POT2PLAYER
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs.get("chips", [])
-        self.pot = kwargs.get("pot", -1)
-        self.reason = kwargs.get("reason", "")
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s, pot = %d, reason = %s" % ( self.chips, self.pot, self.reason )
-    
-PacketFactory[PACKET_POKER_CHIPS_POT2PLAYER] = PacketPokerChipsPot2Player
-
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS_POT_MERGE = poker_packets_serial
-PacketNames[PACKET_POKER_CHIPS_POT_MERGE] = "POKER_CHIPS_POT_MERGE"
-
-class PacketPokerChipsPotMerge(PacketPokerId):
-    """\
-Semantics: merge the pots whose indexes are listed in
-"sources" into a single pot at index "destination" in game "game_id".
-
-Direction: client <=> client
-
-Context: when generating PACKET_POKER_CHIPS_POT2PLAYER packets, if
-multiple packet can be avoided by merging pots (e.g. when one player
-wins all the pots).
-
-destination: a pot index in the range [0,9].
-sources: list of pot indexes in the range [0,9].
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_CHIPS_POT_MERGE
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.sources = kwargs["sources"]
-        self.destination = kwargs["destination"]
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " sources = %s, destination = %d" % ( self.sources, self.destination )
-
-PacketFactory[PACKET_POKER_CHIPS_POT_MERGE] = PacketPokerChipsPotMerge
-
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS_POT_RESET = poker_packets_serial
-PacketNames[PACKET_POKER_CHIPS_POT_RESET] = "POKER_CHIPS_POT_RESET"
-
-class PacketPokerChipsPotReset(PacketPokerId):
-    """\
-Semantics: all pots for game "game_id" are set to zero.
-
-Direction: client <=> client
-
-Context: it is inferred after a PACKET_POKER_TABLE or a
- PACKET_POKER_START packet is sent by the server. It is inferred
-after the pot is distributed (i.e. after the game terminates
-because a PACKET_POKER_WIN or PACKET_POKER_CANCELED is received).
-
-game_id: integer uniquely identifying a game.
-"""
-    
-    type = PACKET_POKER_CHIPS_POT_RESET
-
-PacketFactory[PACKET_POKER_CHIPS_POT_RESET] = PacketPokerChipsPotReset
-
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_END_ROUND = poker_packets_serial
-PacketNames[PACKET_POKER_END_ROUND] = "POKER_END_ROUND"
-
-class PacketPokerEndRound(PacketPokerId):
-    """\
-Semantics: closes a betting round for game "game_id".
-
-Direction: client <=> client
-
-Context: inferred at the end of a sequence of packet related to
-a betting round. Paying the blind / ante is not considered a
-betting round. This packet is sent when the client side
-knows that the round is finished but before the corresponding
-packet (PACKET_POKER_STATE) has been received from the server.
-It will be followed by the POKER_BEGIN_ROUND packet, either
-immediatly if the server has no delay between betting rounds
-or later if the server waits a few seconds between two betting
-rounds.
-It is not inferred at the end of the last betting round.
-
-game_id: integer uniquely identifying a game.
-"""
-    
-    type = PACKET_POKER_END_ROUND
-
-PacketFactory[PACKET_POKER_END_ROUND] = PacketPokerEndRound
-
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_HAND_SELECT = poker_packets_serial
+PACKET_POKER_HAND_SELECT = 89 # %SEQ%
 PacketNames[PACKET_POKER_HAND_SELECT] = "POKER_HAND_SELECT"
 
 class PacketPokerHandSelect(PacketString):
@@ -2122,8 +1645,7 @@ PacketFactory[PACKET_POKER_HAND_SELECT] = PacketPokerHandSelect
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_HAND_LIST = poker_packets_serial
+PACKET_POKER_HAND_LIST = 90 # %SEQ%
 PacketNames[PACKET_POKER_HAND_LIST] = "POKER_HAND_LIST"
 
 class PacketPokerHandList(PacketPokerHandSelect):
@@ -2169,21 +1691,7 @@ PacketFactory[PACKET_POKER_HAND_LIST] = PacketPokerHandList
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_HAND_REPLAY = poker_packets_serial
-PacketNames[PACKET_POKER_HAND_REPLAY] = "POKER_HAND_REPLAY"
-
-class PacketPokerHandReplay(PacketPokerId):
-    """ """
-
-    type = PACKET_POKER_HAND_REPLAY
-
-PacketFactory[PACKET_POKER_HAND_REPLAY] = PacketPokerHandReplay
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_HAND_SELECT_ALL = poker_packets_serial
+PACKET_POKER_HAND_SELECT_ALL = 91 # %SEQ%
 PacketNames[PACKET_POKER_HAND_SELECT_ALL] = "POKER_HAND_SELECT_ALL"
 
 class PacketPokerHandSelectAll(PacketString):
@@ -2209,23 +1717,9 @@ in the PACKET_POKER_START packet.
 
 PacketFactory[PACKET_POKER_HAND_SELECT_ALL] = PacketPokerHandSelectAll
 
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_CHIPS_BET2PLAYER = poker_packets_serial
-PacketNames[PACKET_POKER_CHIPS_BET2PLAYER] = "POKER_CHIPS_BET2PLAYER"
-
-class PacketPokerChipsBet2player(PacketPokerChipsPlayer2Bet):
-    """chips move from bet to player"""
-
-    type = PACKET_POKER_CHIPS_BET2PLAYER
-
-PacketFactory[PACKET_POKER_CHIPS_BET2PLAYER] = PacketPokerChipsBet2player
-
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_USER_INFO = poker_packets_serial
+PACKET_POKER_USER_INFO = 92 # %SEQ%
 PacketNames[PACKET_POKER_USER_INFO] = "POKER_USER_INFO"
 
 class PacketPokerUserInfo(PacketSerial):
@@ -2303,8 +1797,7 @@ PacketFactory[PACKET_POKER_USER_INFO] = PacketPokerUserInfo
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_GET_USER_INFO = poker_packets_serial
+PACKET_POKER_GET_USER_INFO = 93 # %SEQ%
 PacketNames[PACKET_POKER_GET_USER_INFO] = "POKER_GET_USER_INFO"
 
 class PacketPokerGetUserInfo(PacketSerial):
@@ -2326,8 +1819,7 @@ PacketFactory[PACKET_POKER_GET_USER_INFO] = PacketPokerGetUserInfo
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_ANTE = poker_packets_serial
+PACKET_POKER_ANTE = 94 # %SEQ%
 PacketNames[PACKET_POKER_ANTE] = "POKER_ANTE"
 
 class PacketPokerAnte(PacketPokerInt):
@@ -2356,8 +1848,7 @@ PacketFactory[PACKET_POKER_ANTE] = PacketPokerAnte
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BLIND = poker_packets_serial
+PACKET_POKER_BLIND = 95 # %SEQ%
 PacketNames[PACKET_POKER_BLIND] = "POKER_BLIND"
 
 class PacketPokerBlind(PacketPokerInt):
@@ -2414,8 +1905,7 @@ PacketFactory[PACKET_POKER_BLIND] = PacketPokerBlind
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_WAIT_BIG_BLIND = poker_packets_serial
+PACKET_POKER_WAIT_BIG_BLIND = 96 # %SEQ%
 PacketNames[PACKET_POKER_WAIT_BIG_BLIND] = "POKER_WAIT_BIG_BLIND"
 
 class PacketPokerWaitBigBlind(PacketPokerId):
@@ -2443,8 +1933,7 @@ PacketFactory[PACKET_POKER_WAIT_BIG_BLIND] = PacketPokerWaitBigBlind
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_AUTO_BLIND_ANTE = poker_packets_serial
+PACKET_POKER_AUTO_BLIND_ANTE = 97 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_BLIND_ANTE] = "POKER_AUTO_BLIND_ANTE"
 
 class PacketPokerAutoBlindAnte(PacketPokerId):
@@ -2467,8 +1956,7 @@ PacketFactory[PACKET_POKER_AUTO_BLIND_ANTE] = PacketPokerAutoBlindAnte
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_NOAUTO_BLIND_ANTE = poker_packets_serial
+PACKET_POKER_NOAUTO_BLIND_ANTE = 98 # %SEQ%
 PacketNames[PACKET_POKER_NOAUTO_BLIND_ANTE] = "POKER_NOAUTO_BLIND_ANTE"
 
 class PacketPokerNoautoBlindAnte(PacketPokerId):
@@ -2491,8 +1979,7 @@ PacketFactory[PACKET_POKER_NOAUTO_BLIND_ANTE] = PacketPokerNoautoBlindAnte
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CANCELED = poker_packets_serial
+PACKET_POKER_CANCELED = 99 # %SEQ%
 PacketNames[PACKET_POKER_CANCELED] = "POKER_CANCELED"
 
 class PacketPokerCanceled(PacketPokerInt):
@@ -2516,79 +2003,7 @@ PacketFactory[PACKET_POKER_CANCELED] = PacketPokerCanceled
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_DISPLAY_NODE = poker_packets_serial
-PacketNames[PACKET_POKER_DISPLAY_NODE] = "POKER_DISPLAY_NODE"
-
-class PacketPokerDisplayNode(Packet):
-    """request POKER_DISPLAY_NODE packet"""
-    
-    type = PACKET_POKER_DISPLAY_NODE
-
-    def __init__(self, *args, **kwargs):
-        self.game_id = kwargs.get("game_id", "")
-        self.name = kwargs.get("name", "")
-        self.state = kwargs.get("state", "")
-        self.style = kwargs.get("style", "")
-        self.selection = kwargs.get("selection", None)
-
-    def __str__(self):
-        return Packet.__str__(self) + "game_id = %s, name = %s, state = %s, style = %s, selection = %s " % ( str(self.game_id), self.name, self.state, self.style, self.selection )
-
-PacketFactory[PACKET_POKER_DISPLAY_NODE] = PacketPokerDisplayNode
-
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_DEAL_CARDS = poker_packets_serial
-PacketNames[PACKET_POKER_DEAL_CARDS] = "POKER_DEAL_CARDS"
-
-class PacketPokerDealCards(PacketPokerId):
-    """\
-Semantics: deal "numberOfCards" down cards for each player listed
-in "serials" in game "game_id".
-
-Direction: client <=> client
-
-Context: inferred after the beginning of a betting round (i.e.
-after the PACKET_POKER_STATE packet is received) and after
-the chips involved in the previous betting round have been
-sorted (i.e. after PACKET_POKER_CHIPS_BET2POT packets are
-inferred). Contrary to the PACKET_POKER_PLAYER_CARDS,
-this packet is only sent if cards must be dealt. It
-is guaranteed that this packet will always occur before
-the PACKET_POKER_PLAYER_CARDS that specify the cards to
-be dealt and that these packets will follow immediately
-after it (no other packet will be inserted between this packet
-and the first PACKET_POKER_PLAYER_CARDS). It is also guaranteed
-that exactly one PACKET_POKER_PLAYER_CARDS will occur for each
-serial listed in "serials".
-
-numberOfCards: number of cards to be dealt.
-serials: integers uniquely identifying players.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_DEAL_CARDS
-    numberOfCards = 0
-    serials = []
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("numberOfCards"):
-            self.numberOfCards = kwargs["numberOfCards"] or 2
-        if kwargs.has_key("serials"):
-            self.serials = kwargs["serials"] or []
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " number of cards = %d, serials = %s" % ( self.numberOfCards, self.serials )
-
-PacketFactory[PACKET_POKER_DEAL_CARDS] = PacketPokerDealCards
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_BLIND_REQUEST = poker_packets_serial
+PACKET_POKER_BLIND_REQUEST = 100 # %SEQ%
 PacketNames[PACKET_POKER_BLIND_REQUEST] = "POKER_BLIND_REQUEST"
 
 class PacketPokerBlindRequest(PacketPokerBlind):
@@ -2638,8 +2053,7 @@ PacketFactory[PACKET_POKER_BLIND_REQUEST] = PacketPokerBlindRequest
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_ANTE_REQUEST = poker_packets_serial
+PACKET_POKER_ANTE_REQUEST = 101 # %SEQ%
 PacketNames[PACKET_POKER_ANTE_REQUEST] = "POKER_ANTE_REQUEST"
 
 class PacketPokerAnteRequest(PacketPokerAnte):
@@ -2664,8 +2078,7 @@ PacketFactory[PACKET_POKER_ANTE_REQUEST] = PacketPokerAnteRequest
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_AUTO_FOLD = poker_packets_serial
+PACKET_POKER_AUTO_FOLD = 102 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_FOLD] = "POKER_AUTO_FOLD"
 
 class PacketPokerAutoFold(PacketPokerId):
@@ -2690,8 +2103,7 @@ PacketFactory[PACKET_POKER_AUTO_FOLD] = PacketPokerAutoFold
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_WAIT_FOR = poker_packets_serial
+PACKET_POKER_WAIT_FOR = 103 # %SEQ%
 PacketNames[PACKET_POKER_WAIT_FOR] = "POKER_WAIT_FOR"
 
 class PacketPokerWaitFor(PacketPokerId):
@@ -2741,107 +2153,7 @@ PacketFactory[PACKET_POKER_WAIT_FOR] = PacketPokerWaitFor
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CHAT_HISTORY = poker_packets_serial
-PacketNames[PACKET_POKER_CHAT_HISTORY] = "POKER_CHAT_HISTORY"
-
-class PacketPokerChatHistory(Packet):
-    """chat history show"""
-
-    type = PACKET_POKER_CHAT_HISTORY
-
-    def __init__(self, *args, **kwargs):
-        self.show = kwargs.get("show", "no")
-
-PacketFactory[PACKET_POKER_CHAT_HISTORY] = PacketPokerChatHistory
-
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_DISPLAY_CARD = poker_packets_serial
-PacketNames[PACKET_POKER_DISPLAY_CARD] = "POKER_DISPLAY_CARD"
-
-class PacketPokerDisplayCard(PacketPokerId):
-    """Hide a player card"""
-
-    type = PACKET_POKER_DISPLAY_CARD
-    index = []
-    display = 0
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.index = kwargs.get("index", [] )
-        self.display = kwargs.get("display", 0 )
-
-PacketFactory[PACKET_POKER_DISPLAY_CARD] = PacketPokerDisplayCard
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_SELF_IN_POSITION = poker_packets_serial
-PacketNames[PACKET_POKER_SELF_IN_POSITION] = "POKER_SELF_IN_POSITION"
-
-class PacketPokerSelfInPosition(PacketPokerPosition):
-    """\
-Semantics: the player authenticated for this connection
-is in position. Otherwise identical to PACKET_POKER_POSITION.
-
-"""
-
-    type = PACKET_POKER_SELF_IN_POSITION
-
-PacketFactory[PACKET_POKER_SELF_IN_POSITION] = PacketPokerSelfInPosition
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_SELF_LOST_POSITION = poker_packets_serial
-PacketNames[PACKET_POKER_SELF_LOST_POSITION] = "POKER_SELF_LOST_POSITION"
-
-class PacketPokerSelfLostPosition(PacketPokerPosition):
-    """\
-Semantics: the player authenticated for this connection
-is in position. Otherwise identical to PACKET_POKER_POSITION.
-
-"""
-
-    type = PACKET_POKER_SELF_LOST_POSITION
-
-PacketFactory[PACKET_POKER_SELF_LOST_POSITION] = PacketPokerSelfLostPosition
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_HIGHEST_BET_INCREASE = poker_packets_serial
-PacketNames[PACKET_POKER_HIGHEST_BET_INCREASE] = "POKER_HIGHEST_BET_INCREASE"
-
-class PacketPokerHighestBetIncrease(PacketPokerId):
-    """\
-Semantics: a wager was made in game "game_id" that increases
-the highest bet amount. 
-
-Direction: client <=> client
-
-Context: inferred whenever a wager is made that changes
-the highest bet (live blinds are considered a wager, antes are not).
-Inferred once per blindAnte round: when the
-first big blind is posted. It is therefore guaranteed not to be posted
-if a game is canceled because noone wanted to pay the big blind, even
-if someone already posted the small blind. In all other betting rounds it
-is inferred for each raise.
-
-game_id: integer uniquely identifying a game.
-"""
-    
-    type = PACKET_POKER_HIGHEST_BET_INCREASE
-
-PacketFactory[PACKET_POKER_HIGHEST_BET_INCREASE] = PacketPokerHighestBetIncrease
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_STREAM_MODE = poker_packets_serial
+PACKET_POKER_STREAM_MODE = 104 # %SEQ%
 PacketNames[PACKET_POKER_STREAM_MODE] = "POKER_STREAM_MODE"
 
 class PacketPokerStreamMode(PacketPokerId):
@@ -2866,8 +2178,7 @@ PacketFactory[PACKET_POKER_STREAM_MODE] = PacketPokerStreamMode
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BATCH_MODE = poker_packets_serial
+PACKET_POKER_BATCH_MODE = 105 # %SEQ%
 PacketNames[PACKET_POKER_BATCH_MODE] = "POKER_BATCH_MODE"
 
 class PacketPokerBatchMode(PacketPokerId):
@@ -2900,8 +2211,7 @@ PacketFactory[PACKET_POKER_BATCH_MODE] = PacketPokerBatchMode
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_LOOK_CARDS = poker_packets_serial
+PACKET_POKER_LOOK_CARDS = 106 # %SEQ%
 PacketNames[PACKET_POKER_LOOK_CARDS] = "POKER_LOOK_CARDS"
 
 class PacketPokerLookCards(PacketPokerId):
@@ -2926,92 +2236,9 @@ game_id: integer uniquely identifying a game.
 
 PacketFactory[PACKET_POKER_LOOK_CARDS] = PacketPokerLookCards
 
-
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_WIN = poker_packets_serial
-PacketNames[PACKET_POKER_PLAYER_WIN] = "POKER_PLAYER_WIN"
-
-class PacketPokerPlayerWin(PacketPokerId):
-    """\
-Semantics: the player "serial" win.
-
-Direction: client <=> client
-
-Context: when a PacketPokerWin arrive from server. The packet is generated
-from PACKET_PLAYER_WIN. For each player that wins something a packet
-PlayerWin is generated.
-
-serial: integer uniquely identifying a player.
-"""
-    type = PACKET_POKER_PLAYER_WIN
-
-PacketFactory[PACKET_POKER_PLAYER_WIN] = PacketPokerPlayerWin
-
-########################################
-poker_packets_serial += 1
-PACKET_POKER_ANIMATION_PLAYER_NOISE = poker_packets_serial
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_NOISE] = "POKER_ANIMATION_PLAYER_NOISE"
-
-class PacketPokerAnimationPlayerNoise(PacketPokerId):
-    """\
-Semantics: the player "serial" play or stop noise animation.
-
-Direction: client <=> client
-
-Context: a PacketPokerPlayerNoise is send to the client c++ to stop or start
-player's noise animation.
-
-serial: integer uniquely identifying a player.
-action: string that contain "start" or "stop".
-"""
-    type = PACKET_POKER_ANIMATION_PLAYER_NOISE
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("action"):
-            self.action = kwargs["action"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return Packet.__str__(self) + " serial = %d, action = %s" % ( self.serial, self.action )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_NOISE] = PacketPokerAnimationPlayerNoise
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_ANIMATION_PLAYER_FOLD = poker_packets_serial
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_FOLD] = "POKER_ANIMATION_PLAYER_FOLD"
-
-class PacketPokerAnimationPlayerFold(PacketPokerId):
-    """\
-Semantics: the player "serial" play an animation fold.
-
-Direction: client <=> client
-
-Context: a PacketPokerPlayerNoise is send to the client c++ to stop or start
-player's noise animation.
-
-serial: integer uniquely identifying a player.
-animation: string used to select an animation fold.
-"""
-    type = PACKET_POKER_ANIMATION_PLAYER_FOLD
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("animation"):
-            self.animation = kwargs["animation"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, animation fold = %s" % ( self.serial, self.animation )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_FOLD] = PacketPokerAnimationPlayerFold
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST = poker_packets_serial
+PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST = 107 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST] = "POKER_TABLE_REQUEST_PLAYERS_LIST"
 
 class PacketPokerTableRequestPlayersList(PacketPokerId):
@@ -3029,8 +2256,7 @@ PacketFactory[PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST] = PacketPokerTableRequest
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYERS_LIST = poker_packets_serial
+PACKET_POKER_PLAYERS_LIST = 108 # %SEQ%
 PacketNames[PACKET_POKER_PLAYERS_LIST] = "POKER_PLAYERS_LIST"
 
 class PacketPokerPlayersList(PacketPokerId):
@@ -3084,8 +2310,7 @@ PacketFactory[PACKET_POKER_PLAYERS_LIST] = PacketPokerPlayersList
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PERSONAL_INFO = poker_packets_serial
+PACKET_POKER_PERSONAL_INFO = 109 # %SEQ%
 PacketNames[PACKET_POKER_PERSONAL_INFO] = "POKER_PERSONAL_INFO"
 
 class PacketPokerPersonalInfo(PacketPokerUserInfo):
@@ -3153,8 +2378,7 @@ PacketFactory[PACKET_POKER_PERSONAL_INFO] = PacketPokerPersonalInfo
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_GET_PERSONAL_INFO = poker_packets_serial
+PACKET_POKER_GET_PERSONAL_INFO = 110 # %SEQ%
 PacketNames[PACKET_POKER_GET_PERSONAL_INFO] = "POKER_GET_PERSONAL_INFO"
 
 class PacketPokerGetPersonalInfo(PacketSerial):
@@ -3177,57 +2401,7 @@ serial: integer uniquely identifying a player.
 PacketFactory[PACKET_POKER_GET_PERSONAL_INFO] = PacketPokerGetPersonalInfo
 
 ########################################
-
-poker_packets_serial += 1
-PACKET_POKER_ANIMATION_PLAYER_BET = poker_packets_serial
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_BET] = "POKER_PLAYER_ANIMATION_BET"
-
-class PacketPokerAnimationPlayerBet(PacketPokerId):
-    """\
-"""
-    type = PACKET_POKER_ANIMATION_PLAYER_BET
-
-    def __init__(self, *args, **kwargs):
-        self.animation = kwargs.get("animation", "")
-        self.chips = kwargs.get("chips", [])
-        self.amount = 0
-        for i in xrange(len(self.chips) / 2):
-            self.amount += self.chips[i*2] * self.chips[i*2 + 1]
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, chips %s , animation %s" % ( self.serial ,self.animation, self.chips )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_BET] = PacketPokerAnimationPlayerBet
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_ANIMATION_PLAYER_CHIPS = poker_packets_serial
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_CHIPS] = "POKER_PLAYER_ANIMATION_CHIPS"
-
-class PacketPokerAnimationPlayerChips(PacketPokerId):
-    """\
-"""
-    type = PACKET_POKER_ANIMATION_PLAYER_CHIPS
-
-    def __init__(self, *args, **kwargs):
-        self.animation = kwargs.get("animation", "")
-        self.chips = kwargs.get("chips", [])
-        self.state = kwargs.get("state", "")
-        self.amount = 0
-        for i in xrange(len(self.chips) / 2):
-            self.amount += self.chips[i*2] * self.chips[i*2 + 1]
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, chips %s , animation %s" % ( self.serial ,self.animation, self.chips )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_CHIPS] = PacketPokerAnimationPlayerChips
-
-########################################
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_SELECT = poker_packets_serial
+PACKET_POKER_TOURNEY_SELECT = 111 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_SELECT] = "POKER_TOURNEY_SELECT"
 
 class PacketPokerTourneySelect(PacketString):
@@ -3245,8 +2419,7 @@ string: a valid SQL WHERE expression.
 PacketFactory[PACKET_POKER_TOURNEY_SELECT] = PacketPokerTourneySelect
 
 ########################################
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY = poker_packets_serial
+PACKET_POKER_TOURNEY = 112 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY] = "POKER_TOURNEY"
 
 class PacketPokerTourney(Packet):
@@ -3298,8 +2471,7 @@ PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_INFO = poker_packets_serial
+PACKET_POKER_TOURNEY_INFO = 113 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_INFO] = "POKER_TOURNEY_INFO"
 
 class PacketPokerTourneyInfo(PacketPokerTourney):
@@ -3329,8 +2501,7 @@ PacketFactory[PACKET_POKER_TOURNEY_INFO] = PacketPokerTourneyInfo
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_LIST = poker_packets_serial
+PACKET_POKER_TOURNEY_LIST = 114 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_LIST] = "POKER_TOURNEY_LIST"
 
 class PacketPokerTourneyList(PacketList):
@@ -3371,8 +2542,7 @@ PacketFactory[PACKET_POKER_TOURNEY_LIST] = PacketPokerTourneyList
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST = poker_packets_serial
+PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST = 115 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST] = "POKER_TOURNEY_REQUEST_PLAYERS_LIST"
 
 class PacketPokerTourneyRequestPlayersList(PacketPokerId):
@@ -3390,8 +2560,7 @@ PacketFactory[PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST] = PacketPokerTourneyReq
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_REGISTER = poker_packets_serial
+PACKET_POKER_TOURNEY_REGISTER = 116 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_REGISTER] = "POKER_TOURNEY_REGISTER"
 
 class PacketPokerTourneyRegister(PacketPokerId):
@@ -3408,8 +2577,7 @@ PacketFactory[PACKET_POKER_TOURNEY_REGISTER] = PacketPokerTourneyRegister
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_UNREGISTER = poker_packets_serial
+PACKET_POKER_TOURNEY_UNREGISTER = 117 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_UNREGISTER] = "POKER_TOURNEY_UNREGISTER"
 
 class PacketPokerTourneyUnregister(PacketPokerId):
@@ -3425,52 +2593,7 @@ PacketFactory[PACKET_POKER_TOURNEY_UNREGISTER] = PacketPokerTourneyUnregister
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_ANIMATION_DEALER_CHANGE = poker_packets_serial
-PacketNames[PACKET_POKER_ANIMATION_DEALER_CHANGE] = "POKER_PLAYER_DEALER_CHANGE"
-
-class PacketPokerAnimationDealerChange(PacketPokerId):
-    """\
-"""
-    type = PACKET_POKER_ANIMATION_DEALER_CHANGE
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
-        
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
-    
-PacketFactory[PACKET_POKER_ANIMATION_DEALER_CHANGE] = PacketPokerAnimationDealerChange
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_ANIMATION_DEALER_BUTTON = poker_packets_serial
-PacketNames[PACKET_POKER_ANIMATION_DEALER_BUTTON] = "POKER_PLAYER_DEALER_BUTTON"
-
-class PacketPokerAnimationDealerButton(PacketPokerId):
-    """\
-"""
-    type = PACKET_POKER_ANIMATION_DEALER_BUTTON
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
-        
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
-    
-PacketFactory[PACKET_POKER_ANIMATION_DEALER_BUTTON] = PacketPokerAnimationDealerButton
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_PLAYERS_LIST = poker_packets_serial
+PACKET_POKER_TOURNEY_PLAYERS_LIST = 118 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_PLAYERS_LIST] = "POKER_TOURNEY_PLAYERS_LIST"
 
 class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
@@ -3481,46 +2604,7 @@ PacketFactory[PACKET_POKER_TOURNEY_PLAYERS_LIST] = PacketPokerTourneyPlayersList
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_BEGIN_ROUND = poker_packets_serial
-PacketNames[PACKET_POKER_BEGIN_ROUND] = "POKER_BEGIN_ROUND"
-
-class PacketPokerBeginRound(PacketPokerId):
-    """\
-Semantics: opens a betting round for game "game_id".
-
-Direction: client <=> client
-
-Context: inferred when the client knows that a betting round will
-begin although it does not yet received information from the server to
-initialize it. Paying the blind / ante is not considered a betting
-round. It follows the POKER_END_ROUND packet, either
-immediatly if the server has no delay between betting rounds
-or later if the server waits a few seconds between two betting
-rounds.
-
-Example applied to holdem:
-
-         state
-
-         blind     END
-BEGIN    preflop   END
-BEGIN    flop      END
-BEGIN    turn      END
-BEGIN    river
-         end
-
-game_id: integer uniquely identifying a game.
-"""
-    
-    type = PACKET_POKER_BEGIN_ROUND
-
-PacketFactory[PACKET_POKER_BEGIN_ROUND] = PacketPokerBeginRound
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_HAND_HISTORY = poker_packets_serial
+PACKET_POKER_HAND_HISTORY = 119 # %SEQ%
 PacketNames[PACKET_POKER_HAND_HISTORY] = "POKER_HAND_HISTORY"
 
 class PacketPokerHandHistory(PacketPokerId):
@@ -3551,74 +2635,9 @@ class PacketPokerHandHistory(PacketPokerId):
 
 PacketFactory[PACKET_POKER_HAND_HISTORY] = PacketPokerHandHistory
 
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_CURRENT_GAMES = poker_packets_serial
-PacketNames[PACKET_POKER_CURRENT_GAMES] = "POKER_CURRENT_GAMES"
-
-class PacketPokerCurrentGames(Packet):
-
-    type = PACKET_POKER_CURRENT_GAMES
-
-    format = "!B"
-    format_size = calcsize(format)
-    format_element = "!I"
-
-    def __init__(self, *args, **kwargs):
-        self.game_ids = kwargs.get("game_ids", [])
-        self.count = kwargs.get("count", 0)
-
-    def pack(self):
-        return Packet.pack(self) + self.packlist(self.game_ids, PacketPokerCurrentGames.format_element) + pack(PacketPokerCurrentGames.format, self.count)
-        
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.game_ids) = self.unpacklist(block, PacketPokerCurrentGames.format_element)
-        (self.count,) = unpack(PacketPokerCurrentGames.format, block[:PacketPokerCurrentGames.format_size])
-        return block[PacketPokerCurrentGames.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizelist(self.game_ids, PacketPokerCurrentGames.format_element) + PacketPokerCurrentGames.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " count = %d, game_ids = %s" % ( self.count, self.game_ids )
-
-PacketFactory[PACKET_POKER_CURRENT_GAMES] = PacketPokerCurrentGames
-
-######################################## Display packet
-
-poker_packets_serial += 1
-PACKET_POKER_END_ROUND_LAST = poker_packets_serial
-PacketNames[PACKET_POKER_END_ROUND_LAST] = "POKER_END_ROUND_LAST"
-
-class PacketPokerEndRoundLast(PacketPokerId):
-    
-    type = PACKET_POKER_END_ROUND_LAST
-
-PacketFactory[PACKET_POKER_END_ROUND_LAST] = PacketPokerEndRoundLast
-
-######################################## Stop or Start animation
-
-poker_packets_serial += 1
-PACKET_POKER_PYTHON_ANIMATION = poker_packets_serial
-PacketNames[PACKET_POKER_PYTHON_ANIMATION] = "POKER_PYTHON_ANIMATION"
-
-class PacketPokerPythonAnimation(PacketPokerId):
-    
-    type = PACKET_POKER_PYTHON_ANIMATION
-
-    def __init__(self, *args, **kwargs):
-        self.animation =  kwargs.get("animation", "none")
-        
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-PacketFactory[PACKET_POKER_PYTHON_ANIMATION] = PacketPokerPythonAnimation
-
 ######################################## 
 
-poker_packets_serial += 1
-PACKET_POKER_SET_ACCOUNT = poker_packets_serial
+PACKET_POKER_SET_ACCOUNT = 120 # %SEQ%
 PacketNames[PACKET_POKER_SET_ACCOUNT] = "POKER_SET_ACCOUNT"
 
 class PacketPokerSetAccount(PacketPokerPersonalInfo):
@@ -3641,8 +2660,7 @@ PacketFactory[PACKET_POKER_SET_ACCOUNT] = PacketPokerSetAccount
 
 ######################################## 
 
-poker_packets_serial += 1
-PACKET_POKER_CREATE_ACCOUNT = poker_packets_serial
+PACKET_POKER_CREATE_ACCOUNT = 121 # %SEQ%
 PacketNames[PACKET_POKER_CREATE_ACCOUNT] = "POKER_CREATE_ACCOUNT"
 
 class PacketPokerCreateAccount(PacketPokerSetAccount):
@@ -3651,71 +2669,9 @@ class PacketPokerCreateAccount(PacketPokerSetAccount):
 
 PacketFactory[PACKET_POKER_CREATE_ACCOUNT] = PacketPokerCreateAccount
 
-
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SIT_OUT_NEXT_TURN = poker_packets_serial
-PacketNames[PACKET_POKER_SIT_OUT_NEXT_TURN] = "POKER_SIT_OUT_NEXT_TURN"
-
-class PacketPokerSitOutNextTurn(PacketPokerSitOut):
-
-    type = PACKET_POKER_SIT_OUT_NEXT_TURN
-
-PacketFactory[PACKET_POKER_SIT_OUT_NEXT_TURN] = PacketPokerSitOutNextTurn
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_RENDERER_STATE = poker_packets_serial
-PacketNames[PACKET_POKER_RENDERER_STATE] = "POKER_RENDERER_STATE"
-
-class PacketPokerRendererState(Packet):
-
-    type = PACKET_POKER_RENDERER_STATE
-
-    def __init__(self, *args, **kwargs):
-        self.state =  kwargs.get("state", "idle")
-
-PacketFactory[PACKET_POKER_RENDERER_STATE] = PacketPokerRendererState
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_CHAT_WORD = poker_packets_serial
-PacketNames[PACKET_POKER_CHAT_WORD] = "POKER_CHAT_WORD"
-
-class PacketPokerChatWord(PacketPokerId):
-    type = PACKET_POKER_CHAT_WORD
-
-    def __init__(self, *args, **kwargs):
-        self.word = kwargs.get("word", "no word")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-PacketFactory[PACKET_POKER_CHAT_WORD] = PacketPokerChatWord
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_SHOWDOWN = poker_packets_serial
-PacketNames[PACKET_POKER_SHOWDOWN] = "POKER_SHOWDOWN"
-
-class PacketPokerShowdown(PacketPokerId):
-    type = PACKET_POKER_SHOWDOWN
-
-    def __init__(self, *args, **kwargs):
-        self.showdown_stack = kwargs.get("showdown_stack", {})
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " showdown_stack = %s" % self.showdown_stack
-
-PacketFactory[PACKET_POKER_SHOWDOWN] = PacketPokerShowdown
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_SELF = poker_packets_serial
+PACKET_POKER_PLAYER_SELF = 122 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_SELF] = "POKER_PLAYER_SELF"
 
 class PacketPokerPlayerSelf(PacketPokerId):
@@ -3728,8 +2684,7 @@ PacketFactory[PACKET_POKER_PLAYER_SELF] = PacketPokerPlayerSelf
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_GET_PLAYER_INFO = poker_packets_serial
+PACKET_POKER_GET_PLAYER_INFO = 123 # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
 
 class PacketPokerGetPlayerInfo(Packet):
@@ -3742,8 +2697,7 @@ PacketFactory[PACKET_POKER_GET_PLAYER_INFO] = PacketPokerGetPlayerInfo
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_ROLES = poker_packets_serial
+PACKET_POKER_ROLES = 124 # %SEQ%
 PacketNames[PACKET_POKER_ROLES] = "POKER_ROLES"
 
 class PacketPokerRoles(PacketSerial):
@@ -3779,8 +2733,7 @@ PacketFactory[PACKET_POKER_ROLES] = PacketPokerRoles
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_SET_ROLE = poker_packets_serial
+PACKET_POKER_SET_ROLE = 125 # %SEQ%
 PacketNames[PACKET_POKER_SET_ROLE] = "POKER_SET_ROLE"
 
 class PacketPokerSetRole(PacketPokerRoles):
@@ -3794,8 +2747,7 @@ PacketFactory[PACKET_POKER_SET_ROLE] = PacketPokerSetRole
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_READY_TO_PLAY = poker_packets_serial
+PACKET_POKER_READY_TO_PLAY = 126 # %SEQ%
 PacketNames[PACKET_POKER_READY_TO_PLAY] = "POKER_READY_TO_PLAY"
 
 class PacketPokerReadyToPlay(PacketPokerId):
@@ -3815,8 +2767,7 @@ PacketFactory[PACKET_POKER_READY_TO_PLAY] = PacketPokerReadyToPlay
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PROCESSING_HAND = poker_packets_serial
+PACKET_POKER_PROCESSING_HAND = 127 # %SEQ%
 PacketNames[PACKET_POKER_PROCESSING_HAND] = "POKER_PROCESSING_HAND"
 
 class PacketPokerProcessingHand(PacketPokerId):
@@ -3837,79 +2788,9 @@ game_id: integer uniquely identifying a game.
 
 PacketFactory[PACKET_POKER_PROCESSING_HAND] = PacketPokerProcessingHand
 
-
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CLIENT_PLAYER_CHIPS = poker_packets_serial
-PacketNames[PACKET_POKER_CLIENT_PLAYER_CHIPS] = "POKER_CLIENT_PLAYER_CHIPS"
-
-class PacketPokerClientPlayerChips(Packet):
-    type = PACKET_POKER_CLIENT_PLAYER_CHIPS
-
-    def __init__(self, *args, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        self.serial = kwargs.get("serial", 0)
-        self.bet = kwargs.get("bet", [])
-        self.money = kwargs.get("money", [])
-
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, serial = %d, bet = %s, money = %s" % ( self.game_id, self.serial, self.bet, self.money )
-
-PacketFactory[PACKET_POKER_CLIENT_PLAYER_CHIPS] = PacketPokerClientPlayerChips
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_INTERFACE_COMMAND = poker_packets_serial
-PacketNames[PACKET_POKER_INTERFACE_COMMAND] = "PACKET_POKER_INTERFACE_COMMAND"
-
-class PacketPokerInterfaceCommand(Packet):
-    type = PACKET_POKER_INTERFACE_COMMAND
-
-    def __init__(self, *args, **kwargs):
-        self.window = kwargs.get("window", None)
-        self.command = kwargs.get("command", None)
-
-    def __str__(self):
-        return Packet.__str__(self) + " window = %s, command = %s" % ( self.window, self.command )
-
-PacketFactory[PACKET_POKER_INTERFACE_COMMAND] = PacketPokerInterfaceCommand
-
-
-########################################
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_ME_LOOK_CARDS = poker_packets_serial
-PacketNames[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = "PACKET_POKER_PLAYER_ME_LOOK_CARDS"
-
-class PacketPokerPlayerMeLookCards(PacketPokerId):
-    """\
-Semantics: the player "serial" is looking at his cards
-in game "game_id".
-
-Direction: client <=> client
-
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
-        self.when = kwargs.get("when", "now")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    type = PACKET_POKER_PLAYER_ME_LOOK_CARDS
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
-
-PacketFactory[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = PacketPokerPlayerMeLookCards
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_MUCK_REQUEST = poker_packets_serial
+PACKET_POKER_MUCK_REQUEST = 128 # %SEQ%
 PacketNames[PACKET_POKER_MUCK_REQUEST] = "POKER_MUCK_REQUEST"
 
 class PacketPokerMuckRequest(PacketPokerId):
@@ -3949,8 +2830,7 @@ PacketFactory[PACKET_POKER_MUCK_REQUEST] = PacketPokerMuckRequest
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_AUTO_MUCK = poker_packets_serial
+PACKET_POKER_AUTO_MUCK = 129 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_MUCK] = "POKER_AUTO_MUCK"
 
 class PacketPokerAutoMuck(PacketPokerId):
@@ -3981,8 +2861,7 @@ PacketFactory[PACKET_POKER_AUTO_MUCK] = PacketPokerAutoMuck
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_MUCK_ACCEPT = poker_packets_serial
+PACKET_POKER_MUCK_ACCEPT = 130 # %SEQ%
 PacketNames[PACKET_POKER_MUCK_ACCEPT] = "POKER_MUCK_ACCEPT"
 
 class PacketPokerMuckAccept(PacketPokerId):
@@ -3992,33 +2871,13 @@ PacketFactory[PACKET_POKER_MUCK_ACCEPT] = PacketPokerMuckAccept
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_MUCK_DENY = poker_packets_serial
+PACKET_POKER_MUCK_DENY = 131 # %SEQ%
 PacketNames[PACKET_POKER_MUCK_DENY] = "POKER_MUCK_DENY"
 
 class PacketPokerMuckDeny(PacketPokerId):
     type = PACKET_POKER_MUCK_DENY
 
 PacketFactory[PACKET_POKER_MUCK_DENY] = PacketPokerMuckDeny
-
-########################################
-
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON = poker_packets_serial
-PacketNames[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = "POKER_PLAYER_ME_IN_FIRST_PERSON"
-
-class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
-    def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    type = PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
-
-PacketFactory[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = PacketPokerPlayerMeInFirstPerson
 
 ########################################
 
@@ -4061,8 +2920,7 @@ class PacketPokerMoneyTransfert(PacketSerial):
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CASH_IN = poker_packets_serial
+PACKET_POKER_CASH_IN = 132 # %SEQ%
 PacketNames[PACKET_POKER_CASH_IN] = "POKER_CASH_IN"
 
 class PacketPokerCashIn(PacketPokerMoneyTransfert):
@@ -4078,8 +2936,7 @@ PacketFactory[PACKET_POKER_CASH_IN] = PacketPokerCashIn
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CASH_OUT = poker_packets_serial
+PACKET_POKER_CASH_OUT = 133 # %SEQ%
 PacketNames[PACKET_POKER_CASH_OUT] = "POKER_CASH_OUT"
 
 class PacketPokerCashOut(PacketPokerMoneyTransfert):
@@ -4093,8 +2950,7 @@ PacketFactory[PACKET_POKER_CASH_OUT] = PacketPokerCashOut
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CASH_OUT_COMMIT = poker_packets_serial
+PACKET_POKER_CASH_OUT_COMMIT = 134 # %SEQ%
 PacketNames[PACKET_POKER_CASH_OUT_COMMIT] = "POKER_CASH_OUT_COMMIT"
 
 class PacketPokerCashOutCommit(Packet):
@@ -4124,8 +2980,7 @@ PacketFactory[PACKET_POKER_CASH_OUT_COMMIT] = PacketPokerCashOutCommit
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_CASH_QUERY = poker_packets_serial
+PACKET_POKER_CASH_QUERY = 135 # %SEQ%
 PacketNames[PACKET_POKER_CASH_QUERY] = "POKER_CASH_QUERY"
 
 class PacketPokerCashQuery(Packet):
@@ -4155,8 +3010,7 @@ PacketFactory[PACKET_POKER_CASH_QUERY] = PacketPokerCashQuery
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_RAKE = poker_packets_serial
+PACKET_POKER_RAKE = 136 # %SEQ%
 PacketNames[PACKET_POKER_RAKE] = "POKER_RAKE"
 
 class PacketPokerRake(PacketInt):
@@ -4189,8 +3043,7 @@ PacketFactory[PACKET_POKER_RAKE] = PacketPokerRake
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_TOURNEY_RANK = poker_packets_serial
+PACKET_POKER_TOURNEY_RANK = 137 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_RANK] = "PACKET_POKER_TOURNEY_RANK"
 
 class PacketPokerTourneyRank(PacketPokerId):
@@ -4238,8 +3091,7 @@ PacketFactory[PACKET_POKER_TOURNEY_RANK] = PacketPokerTourneyRank
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_PLAYER_IMAGE = poker_packets_serial
+PACKET_POKER_PLAYER_IMAGE = 138 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_IMAGE] = "POKER_PLAYER_IMAGE"
 
 class PacketPokerPlayerImage(PacketSerial):
@@ -4272,8 +3124,7 @@ PacketFactory[PACKET_POKER_PLAYER_IMAGE] = PacketPokerPlayerImage
 
 ########################################
 
-poker_packets_serial += 1
-PACKET_POKER_GET_PLAYER_IMAGE = poker_packets_serial
+PACKET_POKER_GET_PLAYER_IMAGE = 139 # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_IMAGE] = "POKER_GET_PLAYER_IMAGE"
 
 class PacketPokerGetPlayerImage(PacketSerial):
@@ -4282,3 +3133,7 @@ class PacketPokerGetPlayerImage(PacketSerial):
 
 PacketFactory[PACKET_POKER_GET_PLAYER_IMAGE] = PacketPokerGetPlayerImage
 
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 50 if(!defined($s)); s/\\d+\\s+#/$s #/; $s++; }' pokerpackets.py"
+# End:
