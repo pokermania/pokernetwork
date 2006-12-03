@@ -3133,6 +3133,18 @@ class PacketPokerGetPlayerImage(PacketSerial):
 
 PacketFactory[PACKET_POKER_GET_PLAYER_IMAGE] = PacketPokerGetPlayerImage
 
+########################################
+
+PACKET_POKER_HAND_REPLAY = 140 # %SEQ%
+PacketNames[PACKET_POKER_HAND_REPLAY] = "POKER_HAND_REPLAY"
+
+class PacketPokerHandReplay(PacketPokerId):
+    """ """
+
+    type = PACKET_POKER_HAND_REPLAY
+
+PacketFactory[PACKET_POKER_HAND_REPLAY] = PacketPokerHandReplay
+
 # Interpreted by emacs
 # Local Variables:
 # compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 50 if(!defined($s)); s/\\d+\\s+#/$s #/; $s++; }' pokerpackets.py"
