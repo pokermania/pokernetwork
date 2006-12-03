@@ -1,6 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -72,7 +73,7 @@ class PokerTable:
         game.setMaxPlayers(int(description["seats"]))
         self.skin = description.get("skin", "default")
         self.currency_serial = int(description.get("currency_serial", 0))
-        self.playerTimeout = int(description["player_timeout"])        
+        self.playerTimeout = int(description.get("player_timeout", 60))
         self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = description.has_key("transient")
         self.tourney = description.get("tourney", None)
@@ -132,13 +133,15 @@ class PokerTable:
     def createCache(self):
         return { "board": PokerCards(), "pockets": {} }
     
-    def beginTurn(self):
+    def cancelDealTimeout(self):
         info = self.timer_info
         if info.has_key("dealTimeout"):
             if info["dealTimeout"].active():
                 info["dealTimeout"].cancel()
             del info["dealTimeout"]
 
+    def beginTurn(self):
+        self.cancelDealTimeout()
         if not self.isRunning():
             self.historyReset()
             hand_serial = self.factory.getHandSerial()
@@ -705,6 +708,12 @@ class PokerTable:
             delta = 0
         if self.factory.verbose > 2:
             print "Autodeal scheduled in %f seconds" % delta
+        if delta > 1:
+            autodeal_warning = float(self.delays.get("autodeal_warning", 15))
+            if delta > autodeal_warning:
+                self.broadcast(PacketPokerMessage(game_id = self.game.id,
+                                                  string = "Next hand will be dealt in %d seconds" % int(delta)))
+
         info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
 
     def updatePlayerUserData(self, serial, key, value):
