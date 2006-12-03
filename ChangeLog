@@ -2,6 +2,38 @@
 
         * Release 1.0.32
 
+	* tests/conf/poker.client.xml.in: bump version
+
+	* tests/test-pokerclient.py.in:
+	test14 : poll the messages database table looking for messages to broadcast to all clients
+
+	* pokernetwork/pokerservice.py:
+	a list of avatars is maintained for broadcast purposes
+	poll the messages database table looking for messages to broadcast to all clients
+
+	* pokernetwork/pokerpackets.py:
+	pokerclientpackets for client2client packets separated from pokerpackets
+	complete renumbering of packets
+	command line renumbering procedure embedded
+
+	* pokernetwork/pokerclientpackets.py, pokernetwork/pokerbot.py, pokernetwork/pokerclient.py, pokerui/pokeranimation.py, pokerui/pokerchat.py, pokerui/pokerrenderer.py, tests/test-pokerdisplay2d.py.in, tests/test-pokerinteractor.py.in, tests/test-pokerinterface.py.in, tests/test-xmlrpc.py.in:
+	pokerclientpackets for client2client packets separated from pokerpackets
+
+	* pokernetwork/pokeravatar.py: string representation of avatar
+
+	* pokernetwork/__init__.py, pokerclient2d/poker2d.py, pokerclient2d/pokerdisplay2d.py:
+	version bump and protocol bump
+
+	* examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml:
+	version bump
+
+	* database/schema.sql.in, database/1.0.31-1.0.32.sql: messages table
+
+	* conf/poker.server.xml.in: version bump
+	messages database poll interval time
+
+	* Makefile.am: messages table
+
 	* tests/test-pokertable.py.in: test-pokertable
 
 	* tests/test-pokerclient.py.in: rename test05
