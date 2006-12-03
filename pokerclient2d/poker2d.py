@@ -80,7 +80,7 @@ except:
 from twisted.internet import error
 
 from pokernetwork.pokerclient import PokerClientFactory, PokerSkin
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 
 from pokerui import pokerinterface
 from pokerui.pokerrenderer import PokerRenderer

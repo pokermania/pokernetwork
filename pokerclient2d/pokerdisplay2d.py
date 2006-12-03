@@ -29,7 +29,7 @@ import pygame
 
 from twisted.internet import reactor
 
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 from pokerclient2d import pokeranimation2d
 from pokerengine.pokerchips import PokerChips
 
