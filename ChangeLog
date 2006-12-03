@@ -1,6 +1,48 @@
-2006-12-02  Loic Dachary  <loic@dachary.org>
+2006-12-03  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.32
+
+	* tests/test-pokertable.py.in: test-pokertable
+
+	* tests/test-pokerclient.py.in: rename test05
+
+	* tests/Makefile.am: test-pokertable
+
+	* pokerui/pokerrenderer.py:
+	POKER_MESSAGE + MESSAGE is displayed with showMessage
+
+	* pokernetwork/protocol.py: copyright updates
+
+	* pokernetwork/pokertable.py: player_timeout defaults to 60
+	cancelDealTimeout as a function for test access
+	if the autodeal delta is above the autodeal_warning threshold,
+	issue a warning to the client
+
+	* pokernetwork/pokerserver.py: bump version
+
+	* pokernetwork/pokerpackets.py: new PACKET_POKER_MESSAGE
+	each packet has a serial number that is calculated instead of static
+
+	* pokernetwork/pokerclient.py: PACKET_POKER_MESSAGE has precendence
+	PACKET_MESSAGE is an outbound packet
+
+	* pokernetwork/packets.py:
+	message package for server notification on arbitrary subjects
+
+	* pokerclient2d/poker2d.xml.in: bump version
+
+	* conf/poker.server.xml.in:
+	default autodeal_warning="15" and version bump
+
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in: bump version
+
+	* configure.ac: pokertable tests
+
+	* Makefile.am: copyright updates
+
+2006-12-02  Loic Dachary  <loic@dachary.org>
+
+	* debian/changelog, NEWS, ChangeLog: version bump
 
 2006-12-01  Loic Dachary  <loic@dachary.org>
 
