@@ -256,6 +256,7 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def isOutbound(self, packet):
         return ( packet.type == PACKET_ERROR or
+                 packet.type == PACKET_MESSAGE or
                  packet.type == PACKET_POKER_HAND_LIST or
                  packet.type == PACKET_POKER_PLAYER_INFO or
                  packet.type == PACKET_POKER_USER_INFO or
@@ -1374,6 +1375,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
              self.getGame(packet.game_id) ):
             if ( packet.type == PACKET_POKER_CHAT and
                  not match("^Dealer:", packet.message) ):
+                return True
+
+            elif packet.type == PACKET_POKER_MESSAGE:
                 return True
 
             elif ( packet.type == PACKET_POKER_PLAYER_ARRIVE and
