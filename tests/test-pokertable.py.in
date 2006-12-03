@@ -1,0 +1,195 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+import sys, os
+sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "..")
+
+import libxml2
+from pprint import pprint
+from string import split
+import time
+
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokertable, pokernetworkconfig
+from pokernetwork.pokerpackets import *
+from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
+
+settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" autodeal="yes" >
+  <delays autodeal="2" autodeal_max="2" autodeal_warning="0" round="0" position="0" showdown="0" finish="0" />
+
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+class MockService:
+
+    def __init__(self, settings):
+        self.settings = settings
+        self.verbose = settings.headerGetInt("/server/@verbose")
+        self.dirs = split(settings.headerGet("/server/path"))
+        self.simultaneous = 4
+        self.shutting_down = False
+        self.hand_serial = 0
+        self.chat = False
+
+    def seatPlayer(self, serial, game_id, amount):
+        return True
+
+    def buyInPlayer(self, serial, game_id, currency_serial, amount):
+        return amount
+
+    def getHandSerial(self):
+        self.hand_serial += 1
+        return self.hand_serial
+
+    def tableMoneyAndBet(self, table_id):
+        return (0, 0)
+
+class MockClient:
+
+    def __init__(self, serial):
+        self.serial = serial
+        self.deferred = None
+        self.type = None
+        self.tables = []
+        self.packets = []
+
+    def waitFor(self, type):
+        self.deferred = defer.Deferred()
+        self.type = type
+        return self.deferred
+
+    def lookForPacket(self, type):
+        for packet in self.packets:
+            if packet.type == type:
+                return True
+        return False
+
+    def error(self, message):
+        print "MockClient: error: " + message
+
+    def join(self, table):
+        pass
+
+    def sitPlayer(self, table, serial):
+        table.game.sit(serial)
+
+    def addPlayer(self, table, seat):
+        self.tables.append(table)
+        if table.game.addPlayer(self.serial, seat):
+            player = table.game.getPlayer(self.serial)
+            player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
+
+    def sendPacket(self, packet):
+#        print "sendPacket: " + str(packet)
+        self.packets.append(packet)
+        if self.deferred:
+            if self.type == packet.type:
+                self.deferred.callback(packet)
+
+    def getSerial(self):
+        return self.serial
+
+    def setMoney(self, table, amount):
+        return table.game.payBuyIn(self.serial, amount)
+
+    def getName(self):
+        return "name%d" % self.serial
+
+class PokerTableTestCase(unittest.TestCase):
+
+    # -------------------------------------------------------------------
+    def setUp(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.table = pokertable.PokerTable(MockService(settings), 100, 
+                                           { 'name': "table1",
+                                             'variant': "holdem",
+                                             'betting_structure': "2-4-limit",
+                                             'seats': 4,
+                                             'currency_serial': 0
+                                             })
+        self.clients = {}
+
+    # -------------------------------------------------------------------
+    def tearDown(self):
+        self.table.cancelPlayerTimers()
+        self.table.cancelDealTimeout()
+        del self.table
+
+    def createPlayer(self, serial):
+        client = MockClient(serial)
+        self.clients[serial] = client
+        self.table.joinPlayer(client, serial)
+        self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
+        self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+        self.table.sitPlayer(client, serial)
+
+    # -------------------------------------------------------------------
+    def test01_autodeal(self):
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.scheduleAutoDeal()
+        return defer.DeferredList((self.clients[1].waitFor(PACKET_POKER_START),
+                                   self.clients[2].waitFor(PACKET_POKER_START)))
+
+    # -------------------------------------------------------------------
+    def test02_autodeal_warning(self):
+        self.createPlayer(1)
+        self.table.processingHand(1)
+        self.table.game_delay["delay"] = 2
+        self.table.game_delay["start"] = time.time()
+        self.createPlayer(2)
+        self.table.scheduleAutoDeal()
+        self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_MESSAGE))
+        self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_MESSAGE))
+
+# -------------------------------------------------------------------
+
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test12"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerTableTestCase))
+    return runner.TrialRunner(reporter.TextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokertable.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py' TESTS='coverage-reset test-pokertable.py coverage-report' check )"
+# End:
+

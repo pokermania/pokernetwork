@@ -53,6 +53,7 @@ TESTS = coverage-reset \
 	test-pokernetworkconfig.py \
 	test-pokerdatabase.py \
 	test-pokerservice.py \
+	test-pokertable.py \
 	test-pokerchildren.py \
 	test-pokerclient.py \
 	test-pokerlock.py \
