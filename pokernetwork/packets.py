@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -453,3 +454,20 @@ class PacketProtocolError(PacketError):
     type = PACKET_PROTOCOL_ERROR
 
 PacketFactory[PACKET_PROTOCOL_ERROR] = PacketProtocolError
+
+########################################
+
+PACKET_MESSAGE = 16
+PacketNames[PACKET_MESSAGE] = "MESSAGE"
+
+class PacketMessage(PacketString):
+    """
+    server => client
+    Informative messages
+    """
+
+    type = PACKET_MESSAGE
+
+PacketFactory[PACKET_MESSAGE] = PacketMessage
+
+### !!!!!! NO SERIAL >= 50 !!!!!! ####
