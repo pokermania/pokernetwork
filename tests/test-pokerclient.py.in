@@ -44,11 +44,11 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" />
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="2" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
@@ -518,10 +518,19 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def test14_messages(self):
+        d = self.client_factory[0].established_deferred
+        def waitForMessage(client):
+            db = self.service.db.db
+            db.query("INSERT INTO messages (send_date, message) VALUES (CURRENT_TIMESTAMP + INTERVAL 2 SECOND, 'the message')")
+            return client.packetDeferred(True, PACKET_MESSAGE)
+        d.addCallback(waitForMessage)
+        return d
+
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+    loader.methodPrefix = "test14"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     return runner.TrialRunner(reporter.TextReporter,
