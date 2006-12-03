@@ -49,6 +49,9 @@ class PokerAvatar:
         self.bugous_processing_hand = False
         self.noqueuePackets()
 
+    def __str__(self):
+        print "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
+
     def setProtocol(self, protocol):
         self.protocol = protocol
 
