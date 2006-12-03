@@ -34,7 +34,7 @@ sys.path.insert(0, "..")
 import unittest
 
 from pokerui.pokerrenderer import PokerInteractors
-from pokernetwork.pokerpackets import PACKET_POKER_HIGHEST_BET_INCREASE, PACKET_POKER_FOLD, PACKET_POKER_CHECK, PACKET_POKER_CALL, PACKET_POKER_RAISE
+from pokernetwork.pokerclientpackets import PACKET_POKER_HIGHEST_BET_INCREASE, PACKET_POKER_FOLD, PACKET_POKER_CHECK, PACKET_POKER_CALL, PACKET_POKER_RAISE
 
 class PokerInterfaceMockup:
     def __init__(self):

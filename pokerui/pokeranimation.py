@@ -29,7 +29,7 @@ from pprint import pprint
 from twisted.internet import reactor
 from twisted.internet import defer
 
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 from random import choice, uniform, randint
 from time import time
 

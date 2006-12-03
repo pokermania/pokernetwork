@@ -39,7 +39,7 @@ from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 from pokerengine import pokergame
 
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokerclient import ABSOLUTE_LAGMAX
 from pokernetwork.pokerchildren import PokerChildBrowser
 from pokernetwork.user import checkNameAndPassword

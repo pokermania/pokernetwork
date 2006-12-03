@@ -41,7 +41,7 @@ twisted.internet.base.DelayedCall.debug = True
 from pokernetwork import pokerservice, pokernetworkconfig, user
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >

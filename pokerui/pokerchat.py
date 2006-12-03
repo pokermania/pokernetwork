@@ -24,7 +24,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 
 class PokerChat:
     chat2type = {

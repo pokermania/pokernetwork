@@ -35,7 +35,7 @@ import unittest
 
 from pokerui.pokerrenderer import PokerRenderer, PokerInteractors
 from pokerui.pokerinterface import PokerInterface, INTERFACE_CHECK_WARNING
-from pokernetwork.pokerpackets import PACKET_POKER_FOLD
+from pokernetwork.pokerclientpackets import PACKET_POKER_FOLD
 
 class PokerGameMockup:
     def __init__(self):

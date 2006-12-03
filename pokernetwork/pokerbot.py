@@ -41,7 +41,7 @@ from twisted.internet import reactor, error
 from pokerengine.pokertournament import *
 
 from pokernetwork import pokernetworkconfig
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
 from pokernetwork.user import checkName
 
