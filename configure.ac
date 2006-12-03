@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -260,6 +261,7 @@ AC_CONFIG_FILES([
         tests/test-pokerlock.py
         tests/test-pokernetworkconfig.py
         tests/test-pokerservice.py
+        tests/test-pokertable.py
         tests/test-rank.py
         tests/test-pokerchildren.py
         tests/test-xmlrpc.py
