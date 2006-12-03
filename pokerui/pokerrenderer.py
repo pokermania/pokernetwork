@@ -1035,6 +1035,9 @@ class PokerRenderer:
         elif packet.type == PACKET_AUTH_OK:
             if self.verbose: print "login accepted"
 
+        elif packet.type == PACKET_MESSAGE:
+            self.showMessage(packet.string, None)
+
         elif packet.type == PACKET_SERIAL:
             self.handleSerial(packet)
             self.changeState(SEARCHING_MY)
@@ -1054,11 +1057,14 @@ class PokerRenderer:
                                                           serial = self.protocol.getSerial()))
             self.render(packet)
 
+        elif packet.type == PACKET_POKER_MESSAGE:
+            self.showMessage(packet.string, None)
+
         elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
-             self.sitActionsUpdate()
+            self.sitActionsUpdate()
 
         elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
-             self.sitActionsUpdate()
+            self.sitActionsUpdate()
 
         elif packet.type == PACKET_POKER_CANCELED:
             self.changeState(CANCELED)
