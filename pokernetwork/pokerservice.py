@@ -1381,7 +1381,10 @@ class PokerService(service.Service):
 
     def broadcast(self, packet):
         for avatar in self.avatars:
-            avatar.sendPacketVerbose(packet)
+            if hasattr(avatar, "protocol") and avatar.protocol:
+                avatar.sendPacketVerbose(packet)
+            else:
+                print "broadcast: avatar %s excluded" % str(avatar)
 
     def messageCheck(self):
         cursor = self.db.cursor()
