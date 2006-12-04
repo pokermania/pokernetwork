@@ -8,7 +8,8 @@ set -e
 dbc_go python-poker-network $@
 
 if [ "$1" = "purge" ]; then
-    rm -f /etc/poker-network/poker.{bot,client,server}.xml
+    ucf --purge /etc/poker-network/poker.bot.client
+    ucf --purge /etc/poker-network/poker.client.client
     rm -f /etc/poker-network/poker.pem
     rm -f /etc/poker-network/lockfile
 fi
