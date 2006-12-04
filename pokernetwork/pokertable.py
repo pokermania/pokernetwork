@@ -645,6 +645,7 @@ class PokerTable:
                 self.factory.tourneyEndTurn(self.tourney, game.id)
         
     def autoDeal(self):
+        self.cancelDealTimeout()
         if not self.allReadyToPlay():
             #
             # All clients that fail to send a PokerReadyToPlay packet
@@ -662,10 +663,37 @@ class PokerTable:
         self.beginTurn()
         self.update()
         
+    def autoDealCheck(self, autodeal_check, delta):
+        if self.factory.verbose > 2:
+            print "autoDealCheck"
+        self.cancelDealTimeout()
+        if autodeal_check > delta:
+            if self.factory.verbose > 2:
+                print "Autodeal scheduled in %f seconds" % delta
+            self.timer_info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
+            return
+        game = self.game
+        #
+        # Issue a poker message to all players that are ready
+        # to play.
+        #
+        serials = []
+        for player in game.playersAll():
+            if ( player.getUserData()['ready'] == True and
+                 self.serial2client.has_key(player.serial) ):
+                serials.append(player.serial)
+        if serials:
+            packet = PacketPokerMessage(game_id = self.game.id,
+                                        string = "Waiting for players.\nNext hand will be dealt shortly.\n(maximum %d seconds)" % int(delta))
+            for serial in serials:
+                client = self.serial2client[serial]
+                client.sendPacket(packet)
+        if self.factory.verbose > 2:
+            print "AutodealCheck(2) scheduled in %f seconds" % delta
+        self.timer_info["dealTimeout"] = reactor.callLater(autodeal_check, self.autoDealCheck, autodeal_check, delta - autodeal_check)
+
     def scheduleAutoDeal(self):
-        info = self.timer_info
-        if info.has_key("dealTimeout") and info["dealTimeout"].active():
-            info["dealTimeout"].cancel()
+        self.cancelDealTimeout()
         if self.factory.shutting_down:
             if self.factory.verbose > 2:
                 print "Not autodealing because server is shutting down"
@@ -707,14 +735,9 @@ class PokerTable:
         else:
             delta = 0
         if self.factory.verbose > 2:
-            print "Autodeal scheduled in %f seconds" % delta
-        if delta > 1:
-            autodeal_warning = float(self.delays.get("autodeal_warning", 15))
-            if delta > autodeal_warning:
-                self.broadcast(PacketPokerMessage(game_id = self.game.id,
-                                                  string = "Next hand will be dealt in %d seconds" % int(delta)))
-
-        info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
+            print "AutodealCheck scheduled in %f seconds" % delta
+        autodeal_check = max(0.01, float(self.delays.get("autodeal_check", 15)))
+        self.timer_info["dealTimeout"] = reactor.callLater(min(autodeal_check, delta), self.autoDealCheck, autodeal_check, delta)
 
     def updatePlayerUserData(self, serial, key, value):
         game = self.game
