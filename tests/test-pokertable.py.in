@@ -38,7 +38,7 @@ from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" autodeal="yes" >
-  <delays autodeal="2" autodeal_max="2" autodeal_warning="0" round="0" position="0" showdown="0" finish="0" />
+  <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
@@ -105,11 +105,11 @@ class MockClient:
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
 
     def sendPacket(self, packet):
-#        print "sendPacket: " + str(packet)
+        print "sendPacket: " + str(packet)
         self.packets.append(packet)
         if self.deferred:
             if self.type == packet.type:
-                self.deferred.callback(packet)
+                reactor.callLater(0, lambda: self.deferred.callback(packet))
 
     def getSerial(self):
         return self.serial
@@ -138,8 +138,8 @@ class PokerTableTestCase(unittest.TestCase):
 
     # -------------------------------------------------------------------
     def tearDown(self):
-        self.table.cancelPlayerTimers()
         self.table.cancelDealTimeout()
+        self.table.cancelPlayerTimers()
         del self.table
 
     def createPlayer(self, serial):
@@ -159,15 +159,14 @@ class PokerTableTestCase(unittest.TestCase):
                                    self.clients[2].waitFor(PACKET_POKER_START)))
 
     # -------------------------------------------------------------------
-    def test02_autodeal_warning(self):
+    def test02_autodeal_check(self):
         self.createPlayer(1)
         self.table.processingHand(1)
         self.table.game_delay["delay"] = 2
         self.table.game_delay["start"] = time.time()
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
-        self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_MESSAGE))
-        self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_MESSAGE))
+        return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
 
 # -------------------------------------------------------------------
 
