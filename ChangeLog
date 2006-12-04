@@ -1,6 +1,37 @@
-2006-12-03  Loic Dachary  <loic@dachary.org>
+2006-12-04  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.32
+
+	* pokerclient2d/upgrades/1.0.31-1.0.32.xsl: ping=10
+
+	* upgrades/poker.server/1.0.31-1.0.32.xsl: ping=20
+
+	* pokernetwork/server.py: copyright update
+
+	* pokernetwork/pokertable.py:
+	autoDealCheck send warning messages every 15 seconds to players who are waiting for other players
+
+	* pokernetwork/pokerservice.py:
+	safeguard broadcast for avatars that don't have protocol
+
+	* pokerclient2d/poker2d.xml.in: ping = 10
+
+	* pokerclient2d/poker2d-test.xml: version bump + ping = 10
+
+	* pokerclient2d/client.xml: version bump
+
+	* examples/poker.bot.xml: distribute less money to bots
+
+	* conf/poker.server.xml.in: autodeal_check replaces autodeal_warning
+
+	* Makefile.am: upgrade for server conf : ping reduced to 20s
+
+	* conf/poker.bot.xml.in: don't prefix with pages
+
+	* pokernetwork/pokerpackets.py, pokernetwork/pokerclientpackets.py:
+	hand_replays belongs to pokerpackets.py
+
+2006-12-03  Loic Dachary  <loic@dachary.org>
 
 	* tests/conf/poker.client.xml.in: bump version
 
@@ -47,7 +78,7 @@
 
 	* pokernetwork/pokertable.py: player_timeout defaults to 60
 	cancelDealTimeout as a function for test access
-	if the autodeal delta is above the autodeal_warning threshold,
+	if the autodeal delta is above the autodeal_check threshold,
 	issue a warning to the client
 
 	* pokernetwork/pokerserver.py: bump version
@@ -64,7 +95,7 @@
 	* pokerclient2d/poker2d.xml.in: bump version
 
 	* conf/poker.server.xml.in:
-	default autodeal_warning="15" and version bump
+	default autodeal_check="15" and version bump
 
 	* conf/poker.bot.xml.in, conf/poker.client.xml.in: bump version
 
