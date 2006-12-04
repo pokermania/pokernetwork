@@ -7,7 +7,7 @@
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <path>/etc/poker-engine</path> 
-  <currency>wget --quiet -O- 'http://localhost/test-poker-web/currency_test_one.php?command=get_note&amp;value=500000000&amp;count=10&amp;autocommit=yes'</currency>
+  <currency>wget --quiet -O- 'http://localhost/test-poker-web/currency_one.php?command=get_note&amp;value=500000&amp;count=10&amp;autocommit=yes'</currency>
 
   <table name="One" count="4"/> 
   <table name="Two" count="4"/> 
