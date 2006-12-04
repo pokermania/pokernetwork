@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
