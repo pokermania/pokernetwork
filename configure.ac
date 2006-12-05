@@ -48,7 +48,7 @@ AC_SUBST(MYSQL)
 AC_PATH_PROG(VALGRIND, [valgrind])
 AC_PATH_PROG(XVFB, [Xvfb], ,[$PATH:/usr/bin/X11:/usr/X11R6/bin])
 AC_PATH_PROG(PERL, [perl])
-AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox mozilla konqueror epiphany dillo links])
+AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox iceweasel mozilla konqueror epiphany dillo links])
 
 AC_PATH_PROG(PHP, [php])
 AC_PATH_PROG(PHPUNIT, [phpunit])
@@ -184,13 +184,19 @@ AC_ARG_WITH(poker-server-host,
 AC_SUBST(POKER_SERVER_HOST)
 
 AC_ARG_WITH(poker-www-host,
-[  --with-www-server-host=<hostname>
+[  --with-poker-www-host=<hostname>
                           fully qualified host name of the 
                           default web server to which the
                           poker client will connect (default localhost). ],
     [ POKER_WWW_HOST=$with_poker_www_host ],
     [ POKER_WWW_HOST=localhost ] )
 AC_SUBST(POKER_WWW_HOST)
+
+AC_ARG_WITH(wwwbrowser,
+[  --with-wwwbrowser=<browser>
+                     full path of web browser (default autodetect). ],
+    [ WWWBROWSER=$with_wwwbrowser ] )
+AC_SUBST(WWWBROWSER)
 
 AC_ARG_WITH(poker-database,
 [  --with-poker-database=<name>
