@@ -87,11 +87,14 @@ case "$1" in
 	fi
 
         for conf_file in poker.client.xml poker.bot.xml ; do
-            sed -e "s/\%HOST\%/$poker_network_host/" \
-                -e "s/\%WWW\%/$poker_network_www/" \
-                /usr/share/poker-network/conf/$conf_file > $tmpfile
-            ucf $tmpfile /etc/poker-network/$conf_file
-            chmod 644 /etc/poker-network/$conf_file
+            if egrep '%(HOST|WWW)%' /etc/poker-network/$conf_file > /dev/null
+            then
+                sed -e "s/\%HOST\%/$poker_network_host/" \
+                    -e "s/\%WWW\%/$poker_network_www/" \
+                    < /etc/poker-network/$conf_file > $tmpfile
+                mv $tmpfile /etc/poker-network/$conf_file
+                chmod 644 /etc/poker-network/$conf_file
+            fi
         done
 
     ;;
