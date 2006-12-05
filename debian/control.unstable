@@ -29,7 +29,7 @@ Description: multiplayer poker server and client library
 Package: python-poker2d
 Section: python
 Architecture: any
-Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), python-glade2, python-pygame, python-gtk2, libsdl1.2debian, rsync, iceweasel | galeon | chimera2 | lynx | konqueror
+Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), python-glade2, python-pygame, python-gtk2, libsdl1.2debian, rsync
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Conflicts: python2.3-python-poker2d (<< 1.0.21), python2.4-python-poker2d (<< 1.0.21)
