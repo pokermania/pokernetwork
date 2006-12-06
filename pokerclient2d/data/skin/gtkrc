@@ -356,6 +356,20 @@ style "dealer_widget"
     }
 }
 
+style "sit_widget"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "get_seat.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+
 
 widget "game_window" style "table_background"
 widget "game_window*player" style "player_widget"
@@ -378,3 +392,4 @@ widget "game_window*raise_background" style "raise_background"
 widget "game_window*raise_range" style "raise_range_widget"
 widget "game_window*raise_text" style "raise_text"
 widget "game_window*dealer*" style "dealer_widget"
+widget "game_window*sit*" style "sit_widget"
