@@ -330,6 +330,12 @@ def table_status_widget(name):
     textview.get_buffer().set_text("table: aminche\nblind 100-100")
     return textview
 
+def accelerator_widget(name):
+    button = gtk.Button()
+    button.set_name(name)
+    button.set_size_request(1, 1)
+    return button
+
 class GameWindowGlade:
     def __init__(self):
 	self.widgets = {}
@@ -444,7 +450,17 @@ class GameWindowGlade:
 	table_status = table_status_widget("table_status")
 	fixed.put(table_status, 800-200, 600-100)
 	self.set_widget(table_status)
-
+	
+	accelerators_name = ("raise_increase",
+			     "raise_decrease",
+			     "raise_increase_bb",
+			     "raise_decrease_bb",
+			     "raise_pot",
+			     "raise_half_pot")
+	accelerators = map(accelerator_widget, accelerators_name)
+	map(lambda accelerator: fixed.put(accelerator, 0, 0), accelerators)
+	map(lambda accelerator: self.set_widget(accelerator), accelerators)
+	
     def set_widget(self, widget):
 	self.widgets[widget.get_name()] = widget
     def get_widget(self, name):
@@ -488,12 +504,12 @@ class GameWindowGladeTest(unittest.TestCase):
         rebuy = glade.get_widget("rebuy")
 	rebuy.hide()
 	rebuy.show()
-        #self.glade.get_widget("raise_increase").show() # 1x1 button used for accelerators
-        #self.glade.get_widget("raise_decrease").show() # 1x1 button used for accelerators
-        #self.glade.get_widget("raise_increase_bb").show() # 1x1 button used for accelerators
-        #self.glade.get_widget("raise_decrease_bb").show() # 1x1 button used for accelerators
-        #self.glade.get_widget("raise_pot").show() # 1x1 button used for accelerators
-        #self.glade.get_widget("raise_half_pot").show() # 1x1 button used for accelerators
+	glade.get_widget("raise_increase").show() # 1x1 button used for accelerators
+        glade.get_widget("raise_decrease").show() # 1x1 button used for accelerators
+        glade.get_widget("raise_increase_bb").show() # 1x1 button used for accelerators
+        glade.get_widget("raise_decrease_bb").show() # 1x1 button used for accelerators
+        glade.get_widget("raise_pot").show() # 1x1 button used for accelerators
+        glade.get_widget("raise_half_pot").show() # 1x1 button used for accelerators
 	call = glade.get_widget("call")
 	raise_ = glade.get_widget("raise")
 	raise_range = glade.get_widget("raise_range")
@@ -502,8 +518,8 @@ class GameWindowGladeTest(unittest.TestCase):
 	
 
 if __name__ == '__main__':
-    glade = GameWindowGlade()
-    game_window = glade.get_widget("game_window")
-    game_window.show_all()
-    gtk.main()
-    #unittest.main()
+    #glade = GameWindowGlade()
+    #game_window = glade.get_widget("game_window")
+    #game_window.show_all()
+    #gtk.main()
+    unittest.main()
