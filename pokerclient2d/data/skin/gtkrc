@@ -1,182 +1,244 @@
-#
-# Copyright (C) 2004, 2005, 2006 Mekensleep
-#
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-#
-# Authors:
-# Johan Euphrosine <proppy@aminche.com> 
-#
 # -*- shell-script -*-
+style "player_widget"
+{
+    bg[NORMAL] = "#557385"
+    bg[ACTIVE] = "#557385"
+    bg_pixmap[NORMAL] = "player.png"
+    bg_pixmap[ACTIVE] = "player_active.png"
+}
 
-style "raise_button"
+style "table_background"
+{
+    bg_pixmap[NORMAL] = "table_background.png"
+}
+
+style "bet_widget"
 {
     engine "pixmap"
     {
 	image
 	{
 	    function	= BOX
-	    file	= "raise.png"
+	    file	= "bet.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
+    fg[INSENSITIVE] = "#000000"
+    font_name="FreeSans Bold 6"
 }
 
-style "fold_button"
+style "board_widget"
+{
+    fg[NORMAL] = "#ffffff"
+    font_name="FreeSans Bold 9"
+}
+
+style "pot_widget"
 {
     engine "pixmap"
     {
 	image
 	{
 	    function	= BOX
-	    file	= "fold.png"
+	    file	= "pot.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
+    fg[INSENSITIVE] = "#000000"
+    font_name="FreeSans Bold 6"
 }
 
-style "check_button"
+style "switch_table_widget"
+{
+    bg_pixmap[NORMAL] = "tables_dock.png"
+    bg[NORMAL] = "#557385"
+    bg[ACTIVE] = "#557385"
+}
+
+style "switch_table_radio1"
 {
     engine "pixmap"
     {
 	image
 	{
+	    state	= NORMAL
 	    function	= BOX
-	    file	= "check.png"
+	    file	= "table1_normal.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= PRELIGHT
+	    function	= BOX
+	    file	= "table1_active.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= ACTIVE
+	    function	= BOX
+	    file	= "table1_active.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
 }
-
-style "call_button"
+style "switch_table_radio2"
 {
     engine "pixmap"
     {
 	image
 	{
+	    state	= NORMAL
 	    function	= BOX
-	    file	= "call.png"
+	    file	= "table2_normal.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= PRELIGHT
+	    function	= BOX
+	    file	= "table2_active.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= ACTIVE
+	    function	= BOX
+	    file	= "table2_active.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
 }
-
-style "sit_button"
+style "switch_table_radio3"
 {
     engine "pixmap"
     {
 	image
 	{
+	    state	= NORMAL
 	    function	= BOX
-	    file	= "get_seat.png"
+	    file	= "table3_normal.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= PRELIGHT
+	    function	= BOX
+	    file	= "table3_active.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= ACTIVE
+	    function	= BOX
+	    file	= "table3_active.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+
 }
-
-#
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-#
-# Authors:
-# Johan Euphrosine <proppy@aminche.com> 
-#
-# -*- shell-script -*-
-
-style "raise_button"
+style "switch_table_radio4"
 {
     engine "pixmap"
     {
 	image
 	{
+	    state	= NORMAL
 	    function	= BOX
-	    file	= "raise.png"
+	    file	= "table4_normal.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= PRELIGHT
+	    function	= BOX
+	    file	= "table4_active.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+    engine "pixmap"
+    {
+	image
+	{
+	    state	= ACTIVE
+	    function	= BOX
+	    file	= "table4_active.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
 }
-
-style "fold_button"
+style "switch_table_radio5"
 {
     engine "pixmap"
     {
 	image
 	{
+	    state	= NORMAL
 	    function	= BOX
-	    file	= "fold.png"
+	    file	= "table5_normal.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
-}
-
-style "check_button"
-{
     engine "pixmap"
     {
 	image
 	{
+	    state	= PRELIGHT
 	    function	= BOX
-	    file	= "check.png"
+	    file	= "table5_active.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
-}
-
-style "call_button"
-{
     engine "pixmap"
     {
 	image
 	{
+	    state	= ACTIVE
 	    function	= BOX
-	    file	= "call.png"
+	    file	= "table5_active.png"
 	    border	= { 0, 0, 0, 0 }
 	    stretch	= TRUE
 	}
     }
 }
-
-style "quit_button"
+style "quit_widget"
 {
     engine "pixmap"
     {
@@ -189,8 +251,7 @@ style "quit_button"
 	}
     }
 }
-
-style "rebuy_button"
+style "rebuy_widget"
 {
     engine "pixmap"
     {
@@ -203,8 +264,85 @@ style "rebuy_button"
 	}
     }
 }
+style "check_widget"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "check.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+style "call_widget"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "call.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+style "fold_widget"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "fold.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+style "raise_widget"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= BOX
+	    file	= "raise.png"
+	    border	= { 0, 0, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+style "raise_background"
+{
+    bg[NORMAL] = "#557385"
+    bg[ACTIVE] = "#557385"
+    bg_pixmap[NORMAL] = "raise_slider_dock.png"
+}
+style "raise_range_widget"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    function	= SLIDER
+	    orientation = HORIZONTAL
+	    file	= "raise_slider.png"
+	    border	= { 2, 2, 0, 0 }
+	    stretch	= TRUE
+	}
+    }
+}
+style "raise_text"
+{
+    fg[INSENSITIVE] = "#000000"
+    font_name="FreeSans Bold 10"
+}
 
-style "dealer_button"
+style "dealer_widget"
 {
     engine "pixmap"
     {
@@ -218,42 +356,25 @@ style "dealer_button"
     }
 }
 
-style "table_background"
-{
-    bg_pixmap[NORMAL] = "table.png"
-    engine "pixmap"
-    {
-	image
-	{
-	    function	= BOX
-	    file	= "table.png"
-	    border	= { 0, 0, 0, 0 }
-	    stretch	= TRUE
-	}
-    }
-}
 
-style "player_frame"
-{
-    bg_pixmap[NORMAL] = "player.png"
-    engine "pixmap"
-    {
-	image
-	{
-	    function	= BOX
-	    file	= "player.png"
-	    border	= { 0, 0, 0, 0 }
-	    stretch	= TRUE
-	}
-    }
-}
-
-widget "game_window*raise" style "raise_button"
-widget "game_window*fold" style "fold_button"
-widget "game_window*check" style "check_button"
-widget "game_window*call" style "call_button"
-widget "game_window*sit_*" style "sit_button"
-widget "game_window*quit" style "quit_button"
-widget "game_window*rebuy" style "rebuy_button"
-widget "game_window*dealer*" style "dealer_button"
-widget "game_window*table" style "table_background"
+widget "game_window" style "table_background"
+widget "game_window*player" style "player_widget"
+widget "game_window*bet*" style "bet_widget"
+widget "game_window*board*" style "board_widget"
+widget "game_window*pot*" style "pot_widget"
+widget "game_window*switch_table" style "switch_table_widget"
+widget "game_window*switch_table*radio1" style "switch_table_radio1"
+widget "game_window*switch_table*radio2" style "switch_table_radio2"
+widget "game_window*switch_table*radio3" style "switch_table_radio3"
+widget "game_window*switch_table*radio4" style "switch_table_radio4"
+widget "game_window*switch_table*radio5" style "switch_table_radio5"
+widget "game_window*quit" style "quit_widget"
+widget "game_window*rebuy" style "rebuy_widget"
+widget "game_window*check" style "check_widget"
+widget "game_window*call" style "call_widget"
+widget "game_window*fold" style "fold_widget"
+widget "game_window*raise" style "raise_widget"
+widget "game_window*raise_background" style "raise_background"
+widget "game_window*raise_range" style "raise_range_widget"
+widget "game_window*raise_text" style "raise_text"
+widget "game_window*dealer*" style "dealer_widget"
