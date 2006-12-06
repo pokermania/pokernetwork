@@ -150,7 +150,14 @@ def bet_widget(name):
     button.set_name(name)
     return button
 
-def board_widget(cards):
+
+def winner_widget(name):
+    label = gtk.Label()
+    label.set_name(name)
+    label.set_label("Five of a kind")
+    return label
+
+def board_widget(cards, winners):
     root = gtk.Alignment()
     root.set_property("xalign", 0.5)
     root.set_property("yalign", 0.5)
@@ -158,14 +165,13 @@ def board_widget(cards):
     vbox = gtk.VBox()
     root.add(vbox)
     vbox.set_name("board")
-    label = gtk.Label()
-    vbox.add(label)
-    label.set_label("Five of a kind")
 
     hbox = gtk.HBox()
     vbox.add(hbox)
-    for card in cards:
-	hbox.add(card)
+    map(hbox.add, cards)
+
+    map(vbox.add, winners)
+
     return root
 
 
@@ -412,7 +418,10 @@ class GameWindowGlade:
 
 	cards = map(lambda card_index: card_widget("board%d" % card_index), range(1, 6))
 	map(lambda card: self.set_widget(card), cards)
-	vbox.add(board_widget(cards))
+	
+	winners = map(lambda winner_index: winner_widget("winner%d" % winner_index), range(9))
+	map(lambda winner: self.set_widget(winner), winners)
+	vbox.add(board_widget(cards, winners))
 	
 	pots = map(lambda pot_index: pot_widget("pot%d" % pot_index), range(9))
 	map(lambda pot: self.set_widget(pot), pots)
@@ -463,7 +472,8 @@ class GameWindowGladeTest(unittest.TestCase):
         pots = map(lambda x: glade.get_widget("pot%d" % x), xrange(9))
 	pots[0].set_label("$100")
         dealer_buttons = map(lambda x: glade.get_widget("dealer%d" % x), xrange(10))
-        #winners = map(lambda x: glade.get_widget("winner%d" % x), xrange(9))
+        winners = map(lambda x: glade.get_widget("winner%d" % x), xrange(9))
+	winners[0].set_label("hi card")
         seats = map(lambda x: glade.get_widget("sit_seat%d" % x), xrange(10))
 	seats[0].show()
 	seats[0].hide()
@@ -492,8 +502,8 @@ class GameWindowGladeTest(unittest.TestCase):
 	
 
 if __name__ == '__main__':
-    #glade = GameWindowGlade()
-    #game_window = glade.get_widget("game_window")
-    #game_window.show_all()
-    #gtk.main()
-    unittest.main()
+    glade = GameWindowGlade()
+    game_window = glade.get_widget("game_window")
+    game_window.show_all()
+    gtk.main()
+    #unittest.main()
