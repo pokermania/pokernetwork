@@ -59,7 +59,7 @@ class PokerPlayer2D:
         glade = self.table.glade
         self.seat = seat
         self.name = glade.get_widget("name_seat%d" % seat)
-        self.name.set_text(self.player.name)
+        self.name.set_label(self.player.name)
         self.name.show()
         self.money = glade.get_widget("money_seat%d" % seat)
         self.money.show()
@@ -73,11 +73,11 @@ class PokerPlayer2D:
 
     def updateChips(self, bet, money):
         if bet > 0:
-            self.bet.set_text(PokerChips.tostring(bet))
+            self.bet.set_label(PokerChips.tostring(bet))
             self.bet.show()
         else:
             self.bet.hide()
-        self.money.set_text(PokerChips.tostring(money))
+        self.money.set_label(PokerChips.tostring(money))
 
     def updateCards(self):
         game = self.table.game
