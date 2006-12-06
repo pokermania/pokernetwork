@@ -311,6 +311,12 @@ def game_action_widget(check, call, fold, raise_, raise_slider):
     entry.set_property("xalign", 0.5)
     return vbox
 
+def sit_widget(name):
+    button = gtk.Button()
+    button.set_name(name)
+    button.set_size_request(102, 101)
+    return button
+
 class GameWindowGlade:
     def __init__(self):
 	self.widgets = {}
@@ -384,10 +390,14 @@ class GameWindowGlade:
 	    dealer = dealer_widget("dealer%d" % seat)
 	    self.set_widget(dealer)
 
-	    fixed.put(seat_widget(player_widget(*player_infos), 
-				  showdown_widget(cards), bet, dealer), x, y)
+	    player = player_widget(*player_infos)
+	    fixed.put(seat_widget(player, showdown_widget(cards), bet, dealer), x, y)
 
-		
+	    sit = sit_widget("sit_seat%d" % seat)
+	    self.set_widget(sit)
+	    
+	    fixed.put(sit, x-10, y-10)
+	    
 	vbox = gtk.VBox()
 
 	cards = map(lambda card_index: card_widget("board%d" % card_index), range(1, 6))
@@ -466,8 +476,8 @@ class GameWindowGladeTest(unittest.TestCase):
 	
 
 if __name__ == '__main__':
-    #glade = GameWindowGlade()
-    #game_window = glade.get_widget("game_window")
-    #game_window.show_all()
-    #gtk.main()
-    unittest.main()
+    glade = GameWindowGlade()
+    game_window = glade.get_widget("game_window")
+    game_window.show_all()
+    gtk.main()
+    #unittest.main()
