@@ -317,6 +317,13 @@ def sit_widget(name):
     button.set_size_request(102, 101)
     return button
 
+def table_status_widget(name):
+    textview = gtk.TextView()
+    textview.set_name(name)
+    textview.set_size_request(200, 100)
+    textview.get_buffer().set_text("table: aminche\nblind 100-100")
+    return textview
+
 class GameWindowGlade:
     def __init__(self):
 	self.widgets = {}
@@ -400,7 +407,7 @@ class GameWindowGlade:
 	    self.set_widget(sit)
 	    
 	    fixed.put(sit, x-10, y-10)
-	    
+
 	vbox = gtk.VBox()
 
 	cards = map(lambda card_index: card_widget("board%d" % card_index), range(1, 6))
@@ -424,6 +431,10 @@ class GameWindowGlade:
 			raise_slider_widget())
 	map(lambda game_action: self.set_widget(game_action), game_actions)
 	fixed.put(game_action_widget(*game_actions), 600, 0)
+
+	table_status = table_status_widget("table_status")
+	fixed.put(table_status, 800-200, 600-100)
+	self.set_widget(table_status)
 
     def set_widget(self, widget):
 	self.widgets[widget.get_name()] = widget
@@ -456,8 +467,8 @@ class GameWindowGladeTest(unittest.TestCase):
         seats = map(lambda x: glade.get_widget("sit_seat%d" % x), xrange(10))
 	seats[0].show()
 	seats[0].hide()
-        #self.table_status = self.glade.get_widget("table_status").get_buffer()
-        #self.table_status.set_label("\n".join(lines))
+        self.table_status = glade.get_widget("table_status").get_buffer()
+        self.table_status.set_text("\n".join(("salut", "les", "aminches")))
 	fixed = glade.get_widget("game_fixed")
 	children = fixed.get_children()
 	self.assert_(len(children) > 0)
