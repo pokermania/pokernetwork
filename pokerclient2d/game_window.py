@@ -193,7 +193,7 @@ def pots_widget(pots):
 
 def switch_table_widget():
     box = gtk.EventBox()
-    box.set_name("switch_table")
+    box.set_name("switch")
     box.set_size_request(139, 52)
 
     alignment = gtk.Alignment()
@@ -232,13 +232,13 @@ def rebuy_widget():
     button.set_name("rebuy")
     return button
 
-def table_action_widget(quit_widget, rebuy_widget):
+def table_action_widget(quit, rebuy, switch):
     vbox = gtk.VBox(False, 5)
     hbox = gtk.HBox(False, 5)
     vbox.add(hbox)
-    hbox.add(align_center(quit_widget))
-    hbox.add(align_center(rebuy_widget))
-    vbox.add(switch_table_widget())
+    hbox.add(align_center(quit))
+    hbox.add(align_center(rebuy))
+    vbox.add(switch)
     return vbox
 
 def check_widget():
@@ -434,7 +434,7 @@ class GameWindowGlade:
 	vbox.add(pots_widget(pots))
 	
 	fixed.put(vbox, 220, 240)
-	table_actions = (quit_widget(), rebuy_widget())
+	table_actions = (quit_widget(), rebuy_widget(), switch_table_widget())
 	map(lambda table_action: self.set_widget(table_action), table_actions)
 	fixed.put(table_action_widget(*table_actions), 0, 0)
 
@@ -465,7 +465,11 @@ class GameWindowGlade:
 	self.widgets[widget.get_name()] = widget
     def get_widget(self, name):
 	return self.widgets[name]
-    
+    def relative_file(self, file):
+	pass
+    def signal_autoconnect(self, instance):
+	pass
+
 class GameWindowGladeTest(unittest.TestCase):
     def setUp(self):
 	pass
@@ -515,7 +519,9 @@ class GameWindowGladeTest(unittest.TestCase):
 	raise_range = glade.get_widget("raise_range")
 	check = glade.get_widget("check")
 	fold = glade.get_widget("fold")
-	
+	glade.relative_file("")
+	glade.get_widget("switch")
+	glade.signal_autoconnect(self)
 
 if __name__ == '__main__':
     #glade = GameWindowGlade()

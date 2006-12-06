@@ -50,14 +50,14 @@ style "pot_widget"
     font_name="FreeSans Bold 6"
 }
 
-style "switch_table_widget"
+style "switch_widget"
 {
     bg_pixmap[NORMAL] = "tables_dock.png"
     bg[NORMAL] = "#557385"
     bg[ACTIVE] = "#557385"
 }
 
-style "switch_table_radio1"
+style "switch_radio1"
 {
     engine "pixmap"
     {
@@ -93,7 +93,7 @@ style "switch_table_radio1"
 	}
     }
 }
-style "switch_table_radio2"
+style "switch_radio2"
 {
     engine "pixmap"
     {
@@ -129,7 +129,7 @@ style "switch_table_radio2"
 	}
     }
 }
-style "switch_table_radio3"
+style "switch_radio3"
 {
     engine "pixmap"
     {
@@ -166,7 +166,7 @@ style "switch_table_radio3"
     }
 
 }
-style "switch_table_radio4"
+style "switch_radio4"
 {
     engine "pixmap"
     {
@@ -202,7 +202,7 @@ style "switch_table_radio4"
 	}
     }
 }
-style "switch_table_radio5"
+style "switch_radio5"
 {
     engine "pixmap"
     {
@@ -376,12 +376,12 @@ widget "game_window*player" style "player_widget"
 widget "game_window*bet*" style "bet_widget"
 widget "game_window*board*" style "board_widget"
 widget "game_window*pot*" style "pot_widget"
-widget "game_window*switch_table" style "switch_table_widget"
-widget "game_window*switch_table*radio1" style "switch_table_radio1"
-widget "game_window*switch_table*radio2" style "switch_table_radio2"
-widget "game_window*switch_table*radio3" style "switch_table_radio3"
-widget "game_window*switch_table*radio4" style "switch_table_radio4"
-widget "game_window*switch_table*radio5" style "switch_table_radio5"
+widget "game_window*switch" style "switch_widget"
+widget "game_window*switch*radio1" style "switch_radio1"
+widget "game_window*switch*radio2" style "switch_radio2"
+widget "game_window*switch*radio3" style "switch_radio3"
+widget "game_window*switch*radio4" style "switch_radio4"
+widget "game_window*switch*radio5" style "switch_radio5"
 widget "game_window*quit" style "quit_widget"
 widget "game_window*rebuy" style "rebuy_widget"
 widget "game_window*check" style "check_widget"
