@@ -336,7 +336,10 @@ class GameWindowGlade:
 	alignment.add(table)
     
 	fixed = gtk.Fixed()
+	fixed.set_name("game_fixed")
+	self.set_widget(fixed)
 	game_window.add(fixed)
+
     
 	width = 800
 	height = 600
@@ -455,7 +458,9 @@ class GameWindowGladeTest(unittest.TestCase):
 	seats[0].hide()
         #self.table_status = self.glade.get_widget("table_status").get_buffer()
         #self.table_status.set_label("\n".join(lines))
-	#fixed = self.glade.get_widget("game_fixed")
+	fixed = glade.get_widget("game_fixed")
+	children = fixed.get_children()
+	self.assert_(len(children) > 0)
         quit = glade.get_widget("quit")
 	quit.hide()
 	quit.show()
@@ -476,8 +481,8 @@ class GameWindowGladeTest(unittest.TestCase):
 	
 
 if __name__ == '__main__':
-    glade = GameWindowGlade()
-    game_window = glade.get_widget("game_window")
-    game_window.show_all()
-    gtk.main()
-    #unittest.main()
+    #glade = GameWindowGlade()
+    #game_window = glade.get_widget("game_window")
+    #game_window.show_all()
+    #gtk.main()
+    unittest.main()
