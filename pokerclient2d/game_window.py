@@ -32,40 +32,31 @@ def align_right(widget):
     align.add(widget)
     return align    
     
-def seat_widget_up(player, showdown, bet, dealer):    
+def seat_widget_up(player, showdown, dealer):    
     return vbox(align_center(player), 
 		align_center(showdown),
-		hbox(align_center(bet),
-		     align_center(dealer)))
+		align_center(dealer))
 
-def seat_widget_down(player, showdown, bet, dealer):
-    return vbox(hbox(align_center(dealer),
-		     align_center(bet)),
+def seat_widget_down(player, showdown, dealer):
+    return vbox(align_center(dealer),
 		align_center(showdown),
 		align_center(player))
 
-def seat_widget_up_left(player, showdown, bet, dealer):
+def seat_widget_up_left(player, showdown, dealer):
     return vbox(align_left(player),
-		hbox(showdown,
-		     vbox(align_center(dealer),
-			  align_center(bet))))
+		hbox(showdown, align_center(dealer)))
 
-def seat_widget_down_left(player, showdown, bet, dealer):
-    return vbox(hbox(showdown,
-		     vbox(align_center(dealer),
-			  align_center(bet))),
+
+def seat_widget_down_left(player, showdown, dealer):
+    return vbox(hbox(showdown, align_center(dealer)),
 		align_left(player))
 
-def seat_widget_up_right(player, showdown, bet, dealer):
+def seat_widget_up_right(player, showdown, dealer):
     return vbox(align_right(player),
-		hbox(vbox(align_center(bet),
-			  align_center(dealer)),
-		     showdown))
+		hbox(align_center(dealer), showdown))
 
-def seat_widget_down_right(player, showdown, bet, dealer):
-    return vbox(hbox(vbox(align_center(bet),
-			  align_center(dealer)),
-		     align_center(showdown)),
+def seat_widget_down_right(player, showdown, dealer):
+    return vbox(hbox(align_center(dealer), align_center(showdown)),
 		align_right(player))
 #    vbox = gtk.VBox(False, 5)
 #    hbox = gtk.HBox(False, 5)
@@ -116,7 +107,7 @@ def player_widget(player_name, player_stack):
     image.set_from_file("data/skin/Kspades.png")
     vbox.add(image)
     
-    vbox.add(player_name)
+    #vbox.add(player_name)
     vbox.add(player_stack)
     return event_box
 
@@ -415,11 +406,13 @@ class GameWindowGlade:
 	    self.set_widget(dealer)
 
 	    player = player_widget(*player_infos)
-	    fixed.put(seat_widget(player, showdown_widget(cards), bet, dealer), x, y)
+	    fixed.put(seat_widget(player, showdown_widget(cards), dealer), x, y)
 
 	    sit = sit_widget("sit_seat%d" % seat)
 	    self.set_widget(sit)
 	    
+	    fixed.put(bet, x, y)
+	    fixed.put(player_infos[0], x, y)
 	    fixed.put(sit, x-10, y-10)
 
 	vbox = gtk.VBox()
@@ -531,6 +524,10 @@ class GameWindowGladeTest(unittest.TestCase):
 	widget_pots = []
         for pot in map(lambda x: glade.get_widget("pot%d" % x), xrange(9)):
             widget_pots.append((pot, screen.child_get_property(pot, "x"), screen.child_get_property(pot, "y")))
+        for bet in map(lambda x: glade.get_widget("bet_seat%d" % x), xrange(10)):
+            widget_pots.append((bet, screen.child_get_property(bet, "x"), screen.child_get_property(bet, "y")))
+        for bet in map(lambda x: glade.get_widget("name_seat%d" % x), xrange(10)):
+            widget_pots.append((bet, screen.child_get_property(bet, "x"), screen.child_get_property(bet, "y")))
 
 if __name__ == '__main__':
     #glade = GameWindowGlade()
