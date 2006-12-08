@@ -331,13 +331,7 @@ class GameWindowGlade:
     def __init__(self):
 	self.widgets = {}
 	gtk.rc_parse("data/skin/gtkrc")
-	game_toplevel = gtk.Window()
-	game_toplevel.set_name("game_toplevel")
-	game_toplevel.set_size_request(800, 600)
-	game_toplevel.set_resizable(False)
-	#self.set_widget(game_toplevel)
 	game_window = gtk.EventBox()
-	#game_toplevel.add(game_window)
 	game_window.set_name("game_window")
 	self.set_widget(game_window)
 
@@ -483,7 +477,7 @@ class GameWindowGladeTest(unittest.TestCase):
         bet.set_label("$100")
         cards = map(lambda x: glade.get_widget("card%d_seat%d" % ( x, seat )), xrange(1,8))
 	cards[0].set_from_file("Kspades.png")
-	#toplevel = glade.get_widget("game_toplevel")
+	toplevel = glade.get_widget("game_toplevel")
         board = map(lambda x: glade.get_widget("board%d" % x), xrange(1,6))
 	board[0].set_from_file("Kspades.png")
         pots = map(lambda x: glade.get_widget("pot%d" % x), xrange(9))
@@ -530,8 +524,14 @@ class GameWindowGladeTest(unittest.TestCase):
             widget_pots.append((bet, screen.child_get_property(bet, "x"), screen.child_get_property(bet, "y")))
 
 if __name__ == '__main__':
-    #glade = GameWindowGlade()
-    #game_toplevel = glade.get_widget("game_toplevel")
-    #game_toplevel.show_all()
-    #gtk.main()
-    unittest.main()
+    glade = GameWindowGlade()
+
+    game_toplevel = gtk.Window()
+    game_toplevel.set_name("game_toplevel")
+    game_toplevel.set_size_request(800, 600)
+    game_toplevel.set_resizable(False)
+    game_window = glade.get_widget("game_window")
+    game_toplevel.add(game_window)
+    game_toplevel.show_all()
+    gtk.main()
+    #unittest.main()
