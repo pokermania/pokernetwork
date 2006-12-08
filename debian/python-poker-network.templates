@@ -1,4 +1,4 @@
-Template: python-poker-network/skip
+Template: python-poker-network/configure
 Type: boolean
 Default: false
 _Description: Do you want to configure and run the poker-network server?
