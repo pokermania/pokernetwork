@@ -185,7 +185,7 @@ def pot_widget(name):
     button.set_name(name)
     return button
     
-def pots_widget(pots):
+def pots_widget(pots):    
     hbox = gtk.HBox()
     for pot in pots:
 	hbox.add(pot)
@@ -344,9 +344,9 @@ class GameWindowGlade:
 	game_toplevel.set_name("game_toplevel")
 	game_toplevel.set_size_request(800, 600)
 	game_toplevel.set_resizable(False)
-	self.set_widget(game_toplevel)
+	#self.set_widget(game_toplevel)
 	game_window = gtk.EventBox()
-	game_toplevel.add(game_window)
+	#game_toplevel.add(game_window)
 	game_window.set_name("game_window")
 	self.set_widget(game_window)
 
@@ -401,14 +401,13 @@ class GameWindowGlade:
 	
 	for seat in range(0, len(seats)):
 	    (seat_widget, x, y) = seats[seat]
-	    seat_index = seat + 1
-	    player_infos = (player_name_widget("name_seat%d" % seat_index),
-			    player_stack_widget("money_seat%d" % seat_index))
+	    player_infos = (player_name_widget("name_seat%d" % seat),
+			    player_stack_widget("money_seat%d" % seat))
 	    map(self.set_widget, player_infos)
-	    bet = bet_widget("bet_seat%d" % seat_index)
+	    bet = bet_widget("bet_seat%d" % seat)
 	    self.set_widget(bet)
 	    cards = map(lambda card_index: 
-			card_widget("card%d_seat%d" % (card_index, seat_index)), 
+			card_widget("card%d_seat%d" % (card_index, seat)), 
 			range(1, 8))
 	    map(self.set_widget, cards)
 
@@ -434,7 +433,9 @@ class GameWindowGlade:
 	
 	pots = map(lambda pot_index: pot_widget("pot%d" % pot_index), range(9))
 	map(self.set_widget, pots)
-	vbox.add(pots_widget(pots))
+	for pot in pots:
+	    fixed.put(pot, 0, 0)
+	#vbox.add(pots_widget(pots))
 	
 	fixed.put(vbox, 220, 240)
 	table_actions = (quit_widget(), rebuy_widget(), switch_table_widget())
@@ -489,7 +490,7 @@ class GameWindowGladeTest(unittest.TestCase):
         bet.set_label("$100")
         cards = map(lambda x: glade.get_widget("card%d_seat%d" % ( x, seat )), xrange(1,8))
 	cards[0].set_from_file("Kspades.png")
-        window = glade.get_widget("game_toplevel")
+	#toplevel = glade.get_widget("game_toplevel")
         board = map(lambda x: glade.get_widget("board%d" % x), xrange(1,6))
 	board[0].set_from_file("Kspades.png")
         pots = map(lambda x: glade.get_widget("pot%d" % x), xrange(9))
@@ -525,6 +526,11 @@ class GameWindowGladeTest(unittest.TestCase):
 	glade.relative_file("")
 	glade.get_widget("switch")
 	glade.signal_autoconnect(self)
+
+	screen = glade.get_widget("game_fixed")
+	widget_pots = []
+        for pot in map(lambda x: glade.get_widget("pot%d" % x), xrange(9)):
+            widget_pots.append((pot, screen.child_get_property(pot, "x"), screen.child_get_property(pot, "y")))
 
 if __name__ == '__main__':
     #glade = GameWindowGlade()
