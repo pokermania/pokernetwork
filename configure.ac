@@ -135,6 +135,7 @@ for module in modules.split('.'):
         path = list(( pathname, ))
 "
 
+PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES libxml2"
 PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES twisted"
 PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES MySQLdb"
 AC_ARG_ENABLE(openssl, [  --disable-openssl do not use openssl], [], [
