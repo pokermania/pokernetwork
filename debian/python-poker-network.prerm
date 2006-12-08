@@ -1,7 +1,11 @@
 #!/bin/sh -e
 
 . /usr/share/debconf/confmodule
-. /usr/share/dbconfig-common/dpkg/prerm.mysql
-dbc_go python-poker-network $@
+
+db_get "python-poker-network/configure"
+if [ $RET != "false" ]; then
+    . /usr/share/dbconfig-common/dpkg/prerm.mysql
+    dbc_go python-poker-network $@
+fi
 
 #DEBHELPER#

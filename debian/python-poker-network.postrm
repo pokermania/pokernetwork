@@ -3,9 +3,12 @@
 set -e
 
 . /usr/share/debconf/confmodule
-. /usr/share/dbconfig-common/dpkg/postrm.mysql
 
-dbc_go python-poker-network $@
+db_get "python-poker-network/configure"
+if [ $RET != "false" ]; then
+    . /usr/share/dbconfig-common/dpkg/postrm.mysql
+    dbc_go python-poker-network $@
+fi
 
 if [ "$1" = "purge" ]; then
     ucf --purge /etc/poker-network/poker.bot.client
