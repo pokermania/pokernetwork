@@ -669,7 +669,7 @@ class PokerTable:
         self.cancelDealTimeout()
         if autodeal_check > delta:
             if self.factory.verbose > 2:
-                print "Autodeal scheduled in %f seconds" % delta
+                print "Autodeal for %d scheduled in %f seconds" % ( self.game.id, delta )
             self.timer_info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
             return
         game = self.game
@@ -689,7 +689,7 @@ class PokerTable:
                 client = self.serial2client[serial]
                 client.sendPacket(packet)
         if self.factory.verbose > 2:
-            print "AutodealCheck(2) scheduled in %f seconds" % delta
+            print "AutodealCheck(2) for %d scheduled in %f seconds" % ( self.game.id, delta )
         self.timer_info["dealTimeout"] = reactor.callLater(autodeal_check, self.autoDealCheck, autodeal_check, delta - autodeal_check)
 
     def scheduleAutoDeal(self):
