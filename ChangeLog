@@ -1,6 +1,82 @@
-2006-12-04  Loic Dachary  <loic@dachary.org>
+2006-12-08  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.32
+
+	* pokerclient2d/data/Makefile.am: add skin images
+
+	* pokernetwork/pokertable.py:
+	disambiguate notification message of autodeal by adding the table number
+
+	* pokerclient2d/tournaments.c: don't set title on widgets
+
+	* configure.ac:
+	depend on libxml2 (not strictly necessary as poker-engine already does, but does not hurt either)
+
+	* debian/python-poker-network.config, debian/python-poker-network.templates:
+	rename misleading tag /skip into /configure
+
+	* debian/python-poker-network.postinst, debian/python-poker-network.postrm, debian/python-poker-network.prerm:
+	don't call dbconfig-common if poker-network was not configured
+
+2006-12-06  proppy  <proppy@call>
+
+	* pokerclient2d/data/skin/gtkrc, pokerclient2d/game_window.py:
+	switch table
+
+	* pokerclient2d/game_window.py: accelerator_widget
+
+	* pokerclient2d/game_window.py: winner widget
+
+	* pokerclient2d/data/skin/table_background.png: table background data
+
+	* pokerclient2d/data/skin/10clubs.png, pokerclient2d/data/skin/10diamonds.png, pokerclient2d/data/skin/10hearts.png, pokerclient2d/data/skin/10spades.png, pokerclient2d/data/skin/2clubs.png, pokerclient2d/data/skin/2diamonds.png, pokerclient2d/data/skin/2hearts.png, pokerclient2d/data/skin/2spades.png, pokerclient2d/data/skin/3clubs.png, pokerclient2d/data/skin/3diamonds.png, pokerclient2d/data/skin/3hearts.png, pokerclient2d/data/skin/3spades.png, pokerclient2d/data/skin/4clubs.png, pokerclient2d/data/skin/4diamonds.png, pokerclient2d/data/skin/4hearts.png, pokerclient2d/data/skin/4spades.png, pokerclient2d/data/skin/5clubs.png, pokerclient2d/data/skin/5diamonds.png, pokerclient2d/data/skin/5hearts.png, pokerclient2d/data/skin/5spades.png, pokerclient2d/data/skin/6clubs.png, pokerclient2d/data/skin/6diamonds.png, pokerclient2d/data/skin/6hearts.png, pokerclient2d/data/skin/6spades.png, pokerclient2d/data/skin/7clubs.png, pokerclient2d/data/skin/7diamonds.png, pokerclient2d/data/skin/7hearts.png, pokerclient2d/data/skin/7spades.png, pokerclient2d/data/skin/8clubs.png, pokerclient2d/data/skin/8diamonds.png, pokerclient2d/data/skin/8hearts.png, pokerclient2d/data/skin/8spades.png, pokerclient2d/data/skin/9clubs.png, pokerclient2d/data/skin/9diamonds.png, pokerclient2d/data/skin/9hearts.png, pokerclient2d/data/skin/9spades.png, pokerclient2d/data/skin/Aclubs.png, pokerclient2d/data/skin/Adiamonds.png, pokerclient2d/data/skin/Ahearts.png, pokerclient2d/data/skin/Aspades.png, pokerclient2d/data/skin/Jclubs.png, pokerclient2d/data/skin/Jdiamonds.png, pokerclient2d/data/skin/Jhearts.png, pokerclient2d/data/skin/Jspades.png, pokerclient2d/data/skin/Kclubs.png, pokerclient2d/data/skin/Kdiamonds.png, pokerclient2d/data/skin/Khearts.png, pokerclient2d/data/skin/Kspades.png, pokerclient2d/data/skin/Qclubs.png, pokerclient2d/data/skin/Qdiamonds.png, pokerclient2d/data/skin/Qhearts.png, pokerclient2d/data/skin/Qspades.png, pokerclient2d/data/skin/bet.png, pokerclient2d/data/skin/call.png, pokerclient2d/data/skin/card_back.png, pokerclient2d/data/skin/check.png, pokerclient2d/data/skin/dealer.png, pokerclient2d/data/skin/exit.png, pokerclient2d/data/skin/fold.png, pokerclient2d/data/skin/get_seat.png, pokerclient2d/data/skin/mokup.png, pokerclient2d/data/skin/player.png, pokerclient2d/data/skin/player_active.png, pokerclient2d/data/skin/pot.png, pokerclient2d/data/skin/raise.png, pokerclient2d/data/skin/raise_slider.png, pokerclient2d/data/skin/raise_slider_dock.png, pokerclient2d/data/skin/rebuy.png, pokerclient2d/data/skin/table.png, pokerclient2d/data/skin/table1_active.png, pokerclient2d/data/skin/table1_normal.png, pokerclient2d/data/skin/table2_active.png, pokerclient2d/data/skin/table2_normal.png, pokerclient2d/data/skin/table3_active.png, pokerclient2d/data/skin/table3_normal.png, pokerclient2d/data/skin/table4_active.png, pokerclient2d/data/skin/table4_normal.png, pokerclient2d/data/skin/table5_active.png, pokerclient2d/data/skin/table5_normal.png, pokerclient2d/data/skin/tables_dock.png:
+	new hud data
+
+	* pokerclient2d/pokerdisplay2d.py: set_text->set_label
+
+	* pokerclient2d/data/skin/gtkrc: added sit_widget
+
+	* pokerclient2d/game_window.py: added table_status and test
+
+	* pokerclient2d/game_window.py: test for game_fixed
+
+	* pokerclient2d/game_window.py: sit_widget skinned
+
+	* pokerclient2d/data/skin/gtkrc: new skin
+
+	* pokerclient2d/Makefile.am, pokerclient2d/game_window.py:
+	game_window in progress
+
+2006-12-05  Loic Dachary  <loic@dachary.org>
+
+	* Makefile.am: upgrades for bot and client
+
+	* debian/python-poker-network.postinst: don't ucf generated files
+
+	* pokerclient2d/Makefile.am: add missing upgrade file
+
+	* debian/rules: absolute path
+
+	* debian/rules: set default browser to x-www-browser
+
+	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.sarge, debian/control.unstable:
+	don't depend on browser
+
+	* configure.ac: --with-wwwbrowser overrides autodetect of browser
+
+2006-12-04  Loic Dachary  <loic@dachary.org>
+
+	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.hoary, debian/control.sarge, debian/control.unstable, debian/python-poker-network.postinst, debian/python-poker-network.postrm:
+	poker.bot.xml and poker.client.xml are handled with ucf
+
+	* conf/poker.client.xml.in, conf/poker.bot.xml.in, upgrades/poker.bot/1.0.31-1.0.32.xsl, upgrades/poker.client/1.0.31-1.0.32.xsl:
+	ping=10
+
+	* tests/test-pokertable.py.in:
+	don't re-entrant test (callLater the callback)
+	modify test to check that the player ready receives notification that the player not ready is stalling
+
+2006-12-04  Loic Dachary  <loic@dachary.org>
 
 	* pokerclient2d/upgrades/1.0.31-1.0.32.xsl: ping=10
 
