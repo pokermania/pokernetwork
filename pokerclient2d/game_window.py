@@ -340,12 +340,15 @@ class GameWindowGlade:
     def __init__(self):
 	self.widgets = {}
 	gtk.rc_parse("data/skin/gtkrc")
-	game_window = gtk.Window()
+	game_toplevel = gtk.Window()
+	game_toplevel.set_name("game_toplevel")
+	game_toplevel.set_size_request(800, 600)
+	game_toplevel.set_resizable(False)
+	self.set_widget(game_toplevel)
+	game_window = gtk.EventBox()
+	game_toplevel.add(game_window)
 	game_window.set_name("game_window")
-	game_window.set_size_request(800, 600)
-	game_window.set_resizable(False)
-	self.widgets["game_window"] = game_window
-	self.widgets["game_toplevel"] = game_window
+	self.set_widget(game_window)
 
         alignment = gtk.Alignment()
 	alignment.set_property("xalign", 0.5)
@@ -524,8 +527,8 @@ class GameWindowGladeTest(unittest.TestCase):
 	glade.signal_autoconnect(self)
 
 if __name__ == '__main__':
-    #glade = GameWindowGlade()
-    #game_window = glade.get_widget("game_window")
-    #game_window.show_all()
-    #gtk.main()
-    unittest.main()
+    glade = GameWindowGlade()
+    game_toplevel = glade.get_widget("game_toplevel")
+    game_toplevel.show_all()
+    gtk.main()
+    #unittest.main()
