@@ -370,7 +370,8 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
     s_lobby_tabs_window = gui_get_widget(g_lobby_tabs_xml, "lobby_tabs_window");
     g_assert(s_lobby_tabs_window);
-    gtk_window_set_title(s_lobby_tabs_window,"tournaments_lobby_tabs_window");
+    if(!screen)
+      gtk_window_set_title(s_lobby_tabs_window,"tournaments_lobby_tabs_window");
     if(screen) gtk_layout_put(screen, s_lobby_tabs_window, 0, 0);
     gtk_widget_set_size_request(s_lobby_tabs_window, gui_width(screen), -1);
 
@@ -380,7 +381,8 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
 
     s_cashier_button_window = gui_get_widget(g_cashier_button_xml, "cashier_button_window");
     g_assert(s_cashier_button_window);
-    gtk_window_set_title(s_cashier_button_window,"tournaments_cashier_button_window");
+    if(!screen)
+      gtk_window_set_title(s_cashier_button_window,"tournaments_cashier_button_window");
     if(screen) gtk_layout_put(screen, s_cashier_button_window, 0, 0);
     s_cashier_button = GTK_BUTTON(gui_get_widget(g_cashier_button_xml, "cashier_button"));
     g_assert(s_cashier_button);
