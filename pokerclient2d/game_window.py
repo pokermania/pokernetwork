@@ -404,13 +404,13 @@ class GameWindowGlade:
 	    seat_index = seat + 1
 	    player_infos = (player_name_widget("name_seat%d" % seat_index),
 			    player_stack_widget("money_seat%d" % seat_index))
-	    map(lambda player_info: self.set_widget(player_info), player_infos)
+	    map(self.set_widget, player_infos)
 	    bet = bet_widget("bet_seat%d" % seat_index)
 	    self.set_widget(bet)
 	    cards = map(lambda card_index: 
 			card_widget("card%d_seat%d" % (card_index, seat_index)), 
 			range(1, 8))
-	    map(lambda card: self.set_widget(card), cards)
+	    map(self.set_widget, cards)
 
 	    dealer = dealer_widget("dealer%d" % seat)
 	    self.set_widget(dealer)
@@ -426,19 +426,19 @@ class GameWindowGlade:
 	vbox = gtk.VBox()
 
 	cards = map(lambda card_index: card_widget("board%d" % card_index), range(1, 6))
-	map(lambda card: self.set_widget(card), cards)
+	map(self.set_widget, cards)
 	
 	winners = map(lambda winner_index: winner_widget("winner%d" % winner_index), range(9))
-	map(lambda winner: self.set_widget(winner), winners)
+	map(self.set_widget, winners)
 	vbox.add(board_widget(cards, winners))
 	
 	pots = map(lambda pot_index: pot_widget("pot%d" % pot_index), range(9))
-	map(lambda pot: self.set_widget(pot), pots)
+	map(self.set_widget, pots)
 	vbox.add(pots_widget(pots))
 	
 	fixed.put(vbox, 220, 240)
 	table_actions = (quit_widget(), rebuy_widget(), switch_table_widget())
-	map(lambda table_action: self.set_widget(table_action), table_actions)
+	map(self.set_widget, table_actions)
 	fixed.put(table_action_widget(*table_actions), 0, 0)
 
 	
@@ -447,7 +447,7 @@ class GameWindowGlade:
 			fold_widget(),
 			raise_widget(),
 			raise_slider_widget())
-	map(lambda game_action: self.set_widget(game_action), game_actions)
+	map(self.set_widget, game_actions)
 	fixed.put(game_action_widget(*game_actions), 600, 0)
 
 	table_status = table_status_widget("table_status")
@@ -462,7 +462,7 @@ class GameWindowGlade:
 			     "raise_half_pot")
 	accelerators = map(accelerator_widget, accelerators_name)
 	map(lambda accelerator: fixed.put(accelerator, 0, 0), accelerators)
-	map(lambda accelerator: self.set_widget(accelerator), accelerators)
+	map(self.set_widget, accelerators)
 	
     def set_widget(self, widget):
 	self.widgets[widget.get_name()] = widget
@@ -527,8 +527,8 @@ class GameWindowGladeTest(unittest.TestCase):
 	glade.signal_autoconnect(self)
 
 if __name__ == '__main__':
-    glade = GameWindowGlade()
-    game_toplevel = glade.get_widget("game_toplevel")
-    game_toplevel.show_all()
-    gtk.main()
-    #unittest.main()
+    #glade = GameWindowGlade()
+    #game_toplevel = glade.get_widget("game_toplevel")
+    #game_toplevel.show_all()
+    #gtk.main()
+    unittest.main()
