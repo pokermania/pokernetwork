@@ -133,7 +133,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	exceptionRaised = False
 	try:
             self.client.checkClientVersion((1,1,20))
-	    CheckClientVersionMockup.instance.line("1.1.19")
+ 	    CheckClientVersionMockup.instance.line("1.1.19")
 	    CheckClientVersionMockup.instance.line("1.1.20")
  	    CheckClientVersionMockup.instance.failed("dummy log", "dummy reason")
 	except UserWarning:
@@ -149,6 +149,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	exceptionRaised = False
 	try:
             self.client.checkClientVersion((1,1,20))
+ 	    CheckClientVersionMockup.instance.line("salut les aminches")
  	    CheckClientVersionMockup.instance.failed("dummy log", "dummy reason")
 	except UserWarning:
             exceptionRaised = True
