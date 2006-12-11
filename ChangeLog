@@ -1,12 +1,12 @@
+2006-12-11  Loic Dachary  <loic@dachary.org>
+
+        * Release 1.0.33
+
 2006-12-11  Johan Euphrosine (proppy)  <proppy@aminche.com>
 
 	* pokernetwork/upgrade.py: 
 	* tests/test-upgrade.py.in:
-	fixed checkClientVersion hang and updated corresponding test
-
-2006-12-11  Loic Dachary  <loic@dachary.org>
-
-        * Release 1.0.33
+	fixed checkClientVersion hang and refactored corresponding test
 
 2006-12-08  Loic Dachary  <loic@dachary.org>
 
