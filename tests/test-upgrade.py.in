@@ -63,11 +63,6 @@ class PokerClientMockup(PokerClientFactory):
     def needUpgrade(self, version):
         self.needUpgradeCalled = True
 
-class PokerRsyncMockup(dispatch.EventDispatcher):
-    def __init__(self, config, settings, rsync):
-	dispatch.EventDispatcher.__init__(self)
-	PokerRsyncMockup.instance = self
-
 from pokernetwork.upgrade import CheckClientVersion
 class CheckClientVersionMockup(CheckClientVersion):
     def __init__(self, config, settings, version, callback):
