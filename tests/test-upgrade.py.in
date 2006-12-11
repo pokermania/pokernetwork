@@ -119,12 +119,11 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
             self.client.checkClientVersion((1,1,20))
 	    CheckClientVersionMockup.instance.line("1.1.20")
 	    CheckClientVersionMockup.instance.line("1.1.21")
-            from pokernetwork.pokerchildren import RSYNC_FAILED
-	    CheckClientVersionMockup.instance.publishEvent(RSYNC_FAILED, "dummy log", "dummy reason")
+	    CheckClientVersionMockup.instance.failed("dummy log", "dummy reason")
 	except UserWarning:
             exceptionRaised = True
 	self.assertEquals(False, exceptionRaised)
-        self.assertEquals("*CRITICAL* checkClientVersionFailed logs:dummy log reason:dummy reason\n", self.output.getvalue())
+        self.assertEquals("*CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason\n", self.output.getvalue())
 	self.assertEquals(True, self.client.needUpgradeCalled)
 	self.assertEquals(False, self.client.clientVersionOkCalled)
 	self.assertEquals(False, self.client.failedUpgradeCalled)
@@ -136,12 +135,11 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
             self.client.checkClientVersion((1,1,20))
 	    CheckClientVersionMockup.instance.line("1.1.19")
 	    CheckClientVersionMockup.instance.line("1.1.20")
-            from pokernetwork.pokerchildren import RSYNC_FAILED
-	    CheckClientVersionMockup.instance.publishEvent(RSYNC_FAILED, "dummy log", "dummy reason")
+ 	    CheckClientVersionMockup.instance.failed("dummy log", "dummy reason")
 	except UserWarning:
             exceptionRaised = True
 	self.assertEquals(False, exceptionRaised)
-        self.assertEquals("*CRITICAL* checkClientVersionFailed logs:dummy log reason:dummy reason\n", self.output.getvalue())
+        self.assertEquals("*CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason\n", self.output.getvalue())
 	self.assertEquals(False, self.client.needUpgradeCalled)
 	self.assertEquals(True, self.client.clientVersionOkCalled)
 	self.assertEquals(False, self.client.failedUpgradeCalled)
@@ -151,12 +149,11 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	exceptionRaised = False
 	try:
             self.client.checkClientVersion((1,1,20))
-            from pokernetwork.pokerchildren import RSYNC_FAILED
-	    CheckClientVersionMockup.instance.publishEvent(RSYNC_FAILED, "dummy log", "dummy reason")
+ 	    CheckClientVersionMockup.instance.failed("dummy log", "dummy reason")
 	except UserWarning:
             exceptionRaised = True
 	self.assertEquals(True, exceptionRaised)
-        self.assertEquals("*CRITICAL* checkClientVersionFailed logs:dummy log reason:dummy reason\n", self.output.getvalue())
+        self.assertEquals("*CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason\n", self.output.getvalue())
 	self.assertEquals(False, self.client.needUpgradeCalled)
 	self.assertEquals(False, self.client.clientVersionOkCalled)
 	self.assertEquals(True, self.client.failedUpgradeCalled)

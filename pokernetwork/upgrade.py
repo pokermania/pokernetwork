@@ -83,6 +83,13 @@ class CheckClientVersion(PokerRsync):
     def done(self):
         self.callback(self.need_upgrade, "%d.%d.%d" % self.version)
 
+    def failed(self, logs, reason):
+        print "*CRITICAL* CheckClientVersion.failed logs:%s reason:%s" % (logs, reason)
+        if self.line_called:
+	    self.done()
+        else:
+	    self.publishEvent(RSYNC_FAILED, logs, reason)
+
 DRY_RUN_DONE = "//event/pokernetwork/upgrade/dry_run_done"
 
 class DryrunUpgrade(PokerRsync):
@@ -159,19 +166,12 @@ class Upgrader(dispatch.EventDispatcher):
 
     def failed(self, logs, reason):
         self.publishEvent(FAILED, logs, reason)
-
-    def checkClientVersionFailed(self, checker, logs, reason):
-        print "*CRITICAL* checkClientVersionFailed logs:%s reason:%s" % (logs, reason)
-        if checker.line_called:
-	    self.checkClientVersionDone(checker.need_upgrade, "%d.%d.%d" % checker.version)
-        else:
-	    self.failed(logs, reason)
     
     def checkClientVersion(self, version):
         if self.verbose > 1: print "Upgrade::checkClientVersion(" + str(version) + ")" 
         self.publishEvent(TICK, 0.0, "Checking for new client version")
         checker = CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
-        checker.registerHandler(RSYNC_FAILED, lambda logs,reason: self.checkClientVersionFailed(checker, logs, reason))
+        checker.registerHandler(RSYNC_FAILED, self.failed)
 
     def checkClientVersionDone(self, need_upgrade, version):
         if need_upgrade:
