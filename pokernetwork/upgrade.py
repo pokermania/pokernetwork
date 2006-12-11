@@ -64,13 +64,13 @@ class CheckClientVersion(PokerRsync):
         self.callback = callback
         self.spawn()
         self.need_upgrade = False
-        self.line_called = False
+        self.version_matched = False
 
     def line(self, line):
-        self.line_called = True
         if self.verbose > 2: print line
         result = match(".*(\d+).(\d+).(\d+)$", line)
         if result:
+	    self.version_matched = True
             result = tuple(map(int, result.groups()))
             if self.verbose > 2:
                 print "compare %s against %s" % ( str(result), str(self.version))
@@ -85,7 +85,7 @@ class CheckClientVersion(PokerRsync):
 
     def failed(self, logs, reason):
         print "*CRITICAL* CheckClientVersion.failed logs:%s reason:%s" % (logs, reason)
-        if self.line_called:
+        if self.version_matched:
 	    self.done()
         else:
 	    self.publishEvent(RSYNC_FAILED, logs, reason)
