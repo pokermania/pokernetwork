@@ -64,8 +64,10 @@ class CheckClientVersion(PokerRsync):
         self.callback = callback
         self.spawn()
         self.need_upgrade = False
+        self.line_called = False
 
     def line(self, line):
+        self.line_called = True
         if self.verbose > 2: print line
         result = match(".*(\d+).(\d+).(\d+)$", line)
         if result:
@@ -158,14 +160,18 @@ class Upgrader(dispatch.EventDispatcher):
     def failed(self, logs, reason):
         self.publishEvent(FAILED, logs, reason)
 
-    def checkClientVersionFailed(self, logs, reason):
+    def checkClientVersionFailed(self, checker, logs, reason):
         print "*CRITICAL* checkClientVersionFailed logs:%s reason:%s" % (logs, reason)
+        if checker.line_called:
+	    self.checkClientVersionDone(checker.need_upgrade, "%d.%d.%d" % checker.version)
+        else:
+	    self.failed(logs, reason)
     
     def checkClientVersion(self, version):
         if self.verbose > 1: print "Upgrade::checkClientVersion(" + str(version) + ")" 
         self.publishEvent(TICK, 0.0, "Checking for new client version")
         checker = CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
-        checker.registerHandler(RSYNC_FAILED, self.checkClientVersionFailed)
+        checker.registerHandler(RSYNC_FAILED, lambda logs,reason: self.checkClientVersionFailed(checker, logs, reason))
 
     def checkClientVersionDone(self, need_upgrade, version):
         if need_upgrade:
