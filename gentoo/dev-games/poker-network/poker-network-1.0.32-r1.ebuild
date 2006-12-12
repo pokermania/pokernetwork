@@ -27,5 +27,9 @@ src_unpack() {
 }
 
 src_install () {
+    emake -j1
+}
+
+src_install () {
 	make install DESTDIR=${D} || die "einstall failed"
 }
