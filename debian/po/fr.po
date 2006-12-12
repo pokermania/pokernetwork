@@ -17,18 +17,18 @@ msgstr ""
 "Project-Id-Version: poker-network\n"
 "Report-Msgid-Bugs-To: loic@debian.org\n"
 "POT-Creation-Date: 2006-11-30 12:19+0100\n"
-"PO-Revision-Date: 2006-09-04 15:20+0200\n"
+"PO-Revision-Date: 2006-12-03 15:20+0200\n"
 "Last-Translator: Thomas Huriaux <thomas.huriaux@gmail.com>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: multiselect
 #. Description
 #: ../poker-web.templates:1001
 msgid "Web server(s) to reconfigure automatically:"
-msgstr "Serveur(s) web à reconfigurer automatiquement :"
+msgstr "Serveur(s) web Ã  reconfigurer automatiquementÂ :"
 
 #. Type: multiselect
 #. Description
@@ -37,14 +37,14 @@ msgid ""
 "poker-web supports any web server that PHP does, but this automatic "
 "configuration process only supports Apache."
 msgstr ""
-"Poker-web peut gérer les mêmes serveurs web que PHP, mais la configuration "
+"Poker-web peut gÃ©rer les mÃªmes serveurs web que PHP, mais la configuration "
 "automatique n'est possible qu'avec Apache."
 
 #. Type: boolean
 #. Description
 #: ../poker-web.templates:2001
 msgid "Restart ${webserver} now?"
-msgstr "Faut-il redémarrer ${webserver} maintenant ?"
+msgstr "Faut-il redÃ©marrer ${webserver} maintenantÂ ?"
 
 #. Type: boolean
 #. Description
@@ -54,15 +54,15 @@ msgid ""
 "be restarted. You can also restart ${webserver} manually executing /etc/init."
 "d/${webserver} restart"
 msgstr ""
-"Pour activer la nouvelle configuration, ${webserver} doit être redémarré. "
-"Vous pouvez aussi redémarrer ${webserver} en utilisant la commande « /etc/"
-"init.d/${webserver} restart »."
+"Pour activer la nouvelle configuration, ${webserver} doit Ãªtre redÃ©marrÃ©. "
+"Vous pouvez aussi redÃ©marrer ${webserver} en utilisant la commande Â«Â /etc/"
+"init.d/${webserver}Â restartÂ Â»."
 
 #. Type: string
 #. Description
 #: ../poker-web.templates:3001
 msgid "Hostname or IP address of the poker-network server:"
-msgstr "Nom d'hôte ou adresse IP du serveur poker-network :"
+msgstr "Nom d'hÃ´te ou adresse IP du serveur poker-networkÂ :"
 
 #. Type: string
 #. Description
@@ -72,13 +72,13 @@ msgid ""
 "It will be queried via its SOAP interface."
 msgstr ""
 "Veuillez indiquer le serveur poker-network pour lequel poker-web fournira "
-"une interface web. Il sera interrogé via son interface SOAP."
+"une interface web. Il sera interrogÃ© via son interface SOAP."
 
 #. Type: boolean
 #. Description
 #: ../python-poker-network.templates:1001
 msgid "Do you want to configure and run the poker-network server?"
-msgstr "Faut-il configurer et démarrer le serveur poker-network ?"
+msgstr "Faut-il configurer et dÃ©marrer le serveur poker-networkÂ ?"
 
 #. Type: boolean
 #. Description
@@ -89,10 +89,10 @@ msgid ""
 "the poker-network server on this machine, you will be prompted for the "
 "hostname or the IP address of a running poker-network server."
 msgstr ""
-"Vous allez configurer et démarrer le serveur poker-network. Assurez-vous de "
-"posséder les droits d'administration sur un serveur MySQL opérationnel. Si "
-"vous ne souhaitez pas exécuter poker-network en mode serveur sur cette "
-"machine, il vous sera demandé le nom d'hôte ou l'adresse IP d'un serveur "
+"Vous allez configurer et dÃ©marrer le serveur poker-network. Assurez-vous de "
+"possÃ©der les droits d'administration sur un serveur MySQL opÃ©rationnel. Si "
+"vous ne souhaitez pas exÃ©cuter poker-network en mode serveur sur cette "
+"machine, il vous sera demandÃ© le nom d'hÃ´te ou l'adresse IP d'un serveur "
 "poker-network actif."
 
 #. Type: note
@@ -108,15 +108,15 @@ msgid ""
 "If you want to run poker-network at a later time, you will need to configure "
 "it by hand or by running dpkg-reconfigure python-poker-network."
 msgstr ""
-"Si vous souhaitez exécuter poker-network ultérieurement, vous devrez le "
-"configurer vous-même ou utiliser la commande « dpkg-reconfigure python-poker-"
-"network »."
+"Si vous souhaitez exÃ©cuter poker-network ultÃ©rieurement, vous devrez le "
+"configurer vous-mÃªme ou utiliser la commande Â«Â dpkg-reconfigureÂ python-poker-"
+"networkÂ Â»."
 
 #. Type: string
 #. Description
 #: ../python-poker-network.templates:3001
 msgid "Hostname or IP address of the default poker-network server:"
-msgstr "Nom d'hôte ou adresse IP du serveur poker-network par défaut :"
+msgstr "Nom d'hÃ´te ou adresse IP du serveur poker-network par dÃ©fautÂ :"
 
 #. Type: string
 #. Description
@@ -125,33 +125,31 @@ msgid ""
 "The clients based on poker-network installed on the same machine will be "
 "able to use this poker-network server host as a default, if needed."
 msgstr ""
-"Vous pouvez indiquer le serveur poker-network que les clients installés sur "
-"cette même machine pourront utiliser par défaut."
+"Vous pouvez indiquer le serveur poker-network que les clients installÃ©s sur "
+"cette mÃªme machine pourront utiliser par dÃ©faut."
 
 #. Type: string
 #. Description
 #: ../python-poker-network.templates:4001
-#, fuzzy
 msgid "Hostname or IP address of the default poker-network web server:"
-msgstr "Nom d'hôte ou adresse IP du serveur poker-network par défaut :"
+msgstr "Nom d'hÃ´te ou adresse IP du serveur web poker-network par dÃ©fautÂ :"
 
 #. Type: string
 #. Description
 #: ../python-poker-network.templates:4001
-#, fuzzy
 msgid ""
 "The clients based on poker-network installed on the same machine will be "
 "able to use this address to connect to the web part of the poker server."
 msgstr ""
-"Vous pouvez indiquer le serveur poker-network que les clients installés sur "
-"cette même machine pourront utiliser par défaut."
+"Veuillez indiquer l'adresse que les clients basÃ©s sur poker-network, "
+"installÃ©s sur la mÃªme machine, pourront utiliser pour se connecter au "
+"serveur web de poker-network."
 
 #. Type: boolean
 #. Description
 #: ../python-poker-network.templates:5001
-#, fuzzy
 msgid "Do you want to run the poker-network robots?"
-msgstr "Faut-il configurer et démarrer le serveur poker-network ?"
+msgstr "Faut-il lancer les robots poker-networkÂ ?"
 
 #. Type: boolean
 #. Description
@@ -160,98 +158,5 @@ msgid ""
 "Robot players are simple minded poker players that can be used to exercise "
 "the poker server when there are not enough human players connected."
 msgstr ""
-
-#~ msgid "MySQL server host name:"
-#~ msgstr "Nom d'hôte du serveur MySQL :"
-
-#~ msgid ""
-#~ "Please enter the the hostname or the IP address of the machine where the "
-#~ "MySQL server is running."
-#~ msgstr "Veuillez indiquer le nom d'hôte ou l'adresse IP du serveur MySQL."
-
-#~ msgid "poker-network database name:"
-#~ msgstr "Nom de la base de données de poker-network :"
-
-#~ msgid ""
-#~ "This is the name of the database that poker-network will use. A new "
-#~ "database of that name will be created on the MySQL server."
-#~ msgstr ""
-#~ "Veuillez indiquer la base de données qu'utilisera poker-network. Si cette "
-#~ "base de données n'existe pas, elle sera créée sur le serveur MySQL."
-
-#~ msgid "MySQL user name dedicated to poker-network:"
-#~ msgstr "Identifiant de l'utilisateur MySQL dédié à poker-network :"
-
-#~ msgid ""
-#~ "This is the user name that poker-network will use to access the database. "
-#~ "A MySQL user of that name will be created on the MySQL server, with "
-#~ "permissions restricted to the database dedicated to poker-network."
-#~ msgstr ""
-#~ "Veuillez indiquer l'identifiant de l'utilisateur que poker-network "
-#~ "utilisera pour accéder à la base de données. Un utilisateur avec cet "
-#~ "identifiant sera créé sur le serveur MySQL, ses droits d'accès seront "
-#~ "limités à la base de données utilisée par poker-network."
-
-#~ msgid "Password for the poker-network MySQL user:"
-#~ msgstr "Mot de passe pour l'utilisateur MySQL de poker-network :"
-
-#~ msgid ""
-#~ "This is the password that poker-network will use, along with the MySQL "
-#~ "user name you chose, to access the poker-network database."
-#~ msgstr ""
-#~ "Veuillez choisir le mot de passe de l'identifiant créé pour accéder à la "
-#~ "base de données poker-network."
-
-#~ msgid "Retype the password of the poker-network MySQL user:"
-#~ msgstr ""
-#~ "Confirmation du mot de passe de l'utilisateur MySQL de poker-network :"
-
-#~ msgid "Passwords mismatch"
-#~ msgstr "Mots de passe différents"
-
-#~ msgid ""
-#~ "The poker-network MySQL user passwords you entered do not match. Please "
-#~ "try again."
-#~ msgstr ""
-#~ "Le mot de passe et sa confirmation ne concordent pas. Veuillez "
-#~ "recommencer."
-
-#~ msgid "MySQL server administrator user name:"
-#~ msgstr "Identifiant de l'administrateur du serveur MySQL :"
-
-#~ msgid ""
-#~ "The MySQL server administrator user will be used only during the "
-#~ "installation process to do the following:"
-#~ msgstr ""
-#~ "Veuillez indiquer l'identifiant de l'administrateur du serveur MySQL. Il "
-#~ "servira à la création de :"
-
-#~ msgid ""
-#~ " (1) The poker-network database\n"
-#~ " (2) The MySQL user that poker-network will use to access the\n"
-#~ "database"
-#~ msgstr ""
-#~ " - la base de données poker-network ;\n"
-#~ " - l'utilisateur MySQL que poker-network utilisera pour y accéder."
-
-#~ msgid ""
-#~ "The 'root' user usually have permission to create databases and users."
-#~ msgstr ""
-#~ "L'identifiant « root » a généralement le droit de créer des bases de "
-#~ "données et des utilisateurs."
-
-#~ msgid "MySQL server administrator password (if any):"
-#~ msgstr "Mot de passe de l'administrateur du serveur MySQL (s'il en a un) :"
-
-#~ msgid ""
-#~ "This is the password that will be used along with the MySQL server "
-#~ "administrator name."
-#~ msgstr ""
-#~ "Veuillez indiquer le mot de passe de l'administrateur du serveur MySQL."
-
-#~ msgid ""
-#~ "NOTE: This password will not be asked twice, since it's not a new "
-#~ "password."
-#~ msgstr ""
-#~ "Aucune confirmation ne sera demandée puisqu'il ne s'agit pas d'un nouveau "
-#~ "mot de passe."
+"Les robots sont des joueurs de poker rudimentaires qui peuvent Ãªtre utilisÃ©s "
+"si le nombre de joueurs humains connectÃ©s n'est pas suffisant."
