@@ -1,8 +1,12 @@
 poker-network (1.0.33-1) unstable; urgency=low
 
   * upstream sync
+  
+  * python-poker-network.links: add missing 1.0.32
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 11 Dec 2006 15:22:54 +0100
+  * french translation (closes: #402798)
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 12 Dec 2006 22:26:17 +0100
 
 poker-network (1.0.32-1) unstable; urgency=low
 
