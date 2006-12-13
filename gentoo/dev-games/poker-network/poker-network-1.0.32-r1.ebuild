@@ -13,7 +13,18 @@ LICENSE="GPL-2.1"
 KEYWORDS="x86 amd64"
 IUSE=""
 
-DEPEND=">=sys-devel/automake-1.9.0 dev-util/pkgconfig >=dev-lang/python-2.4.0 dev-python/soappy dev-python/mysql-python dev-python/pygtk dev-python/twisted dev-util/glade dev-libs/glib >=dev-games/poker-engine-1.0.19 dev-games/pypoker-eval net-misc/rsync"
+DEPEND=">=sys-devel/automake-1.9.0 
+      dev-util/pkgconfig 
+      >=dev-lang/python-2.4.0 
+      dev-python/soappy 
+      dev-python/mysql-python 
+      dev-python/pygtk 
+      dev-python/twisted 
+      dev-util/glade 
+      dev-libs/glib 
+      >=dev-games/poker-engine-1.0.19 
+      dev-games/pypoker-eval 
+      net-misc/rsync"
 
 src_unpack() {
 	unpack ${MY_P}
@@ -24,10 +35,6 @@ src_unpack() {
 		  epatch $i
 		done
 	fi
-}
-
-src_install () {
-    emake -j1
 }
 
 src_install () {
