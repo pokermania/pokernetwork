@@ -1,3 +1,5 @@
+UPDATE server SET version = '1.0.32';
+
 DROP TABLE IF EXISTS messages;
 
 CREATE TABLE messages (
