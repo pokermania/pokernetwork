@@ -285,7 +285,7 @@ class PokerServiceTestCase(unittest.TestCase):
         def getRank(self, serial):
             return self.rank
         
-        def prizes(self, buy_in):
+        def prizes(self):
             return self.prize
         
 
