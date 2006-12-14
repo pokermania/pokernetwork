@@ -281,7 +281,7 @@ class PokerService(service.Service):
         sql = ( " SELECT * FROM tourneys_schedule WHERE " + 
                 "          active = 'y' AND " + 
                 "          ( respawn = 'y' OR " + 
-                "            register_time > UNIX_TIMESTAMP(NOW()) )" )
+                "            register_time < UNIX_TIMESTAMP(NOW()) )" )
         cursor.execute(sql)
         result = cursor.fetchall()
         self.tourneys_schedule = dict(zip(map(lambda schedule: schedule['serial'], result), result))
@@ -653,17 +653,18 @@ class PokerService(service.Service):
         #
         currency_serial = tourney.currency_serial
         withdraw = tourney.buy_in + tourney.rake
-        sql = ( "UPDATE user2money SET amount = amount + " + str(withdraw) +
-                " WHERE user_serial = " + str(serial) + " AND " +
-                "       currency_serial = " + str(currency_serial) )
-        if self.verbose > 1:
-            print "tourneyUnregister: %s" % sql
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
-            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
-                               code = PacketPokerTourneyUnregister.SERVER_ERROR,
-                               message = "Server error")
+        if withdraw > 0:
+            sql = ( "UPDATE user2money SET amount = amount + " + str(withdraw) +
+                    " WHERE user_serial = " + str(serial) + " AND " +
+                    "       currency_serial = " + str(currency_serial) )
+            if self.verbose > 1:
+                print "tourneyUnregister: %s" % sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1:
+                print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+                return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                                   code = PacketPokerTourneyUnregister.SERVER_ERROR,
+                                   message = "Server error")
         #
         # Unregister
         #
