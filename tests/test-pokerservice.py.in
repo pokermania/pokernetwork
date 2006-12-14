@@ -30,7 +30,9 @@ import sys, os
 sys.path.insert(0, "@srcdir@/../..")
 sys.path.insert(0, "..")
 
+from string import split
 import libxml2
+import random
 from MySQLdb.cursors import DictCursor
 from pprint import pprint
 
@@ -40,10 +42,18 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
+from pokerengine import pokertournament, pokergame
 from pokernetwork import pokerservice, pokernetworkconfig, user
 from pokernetwork import currencyclient
+from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
+
+class ConstantShuffler:
+    def shuffle(self, what):
+        what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
+
+pokergame.shuffler = ConstantShuffler()
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -73,23 +83,25 @@ class PokerServiceTestCase(unittest.TestCase):
     def destroyDb(self):
         os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
+        self.db = pokerdatabase.PokerDatabase(settings)
         self.service = pokerservice.PokerService(settings)
+        self.default_money = 10000000
 #        self.service.verbose = 0
-        self.service.verbose = 3
+#        self.service.verbose = 4
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def tearDown(self):
         d = self.service.stopService()
-        d.addCallback(lambda x: self.destroyDb())
+#        d.addCallback(lambda x: self.destroyDb())
         return d
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
         ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
@@ -98,12 +110,22 @@ class PokerServiceTestCase(unittest.TestCase):
         self.assertEquals("user1", name)
         self.assertEquals(user.User.REGULAR, privilege)
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def createUsers(self):
-        ( (self.user1_serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
-        ( (self.user2_serial, name, privilege), message ) = self.service.auth("user2", "password1", "role1")
+        cursor = self.db.cursor()
+        for user_number in (1, 2, 3):
+            cursor.execute("INSERT INTO users (name, password, created) VALUES ('user%d', 'password%d', 0)" % ( user_number, user_number ))
+            self.assertEqual(1, cursor.rowcount)
+            if self.default_money > 0:
+                cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 1, %d)" % ( cursor.lastrowid, self.default_money ) )
+                self.assertEqual(1, cursor.rowcount)
+        cursor.close()
 
-    # -----------------------------------------------------------------------------------------------------
+        ( (self.user1_serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
+        ( (self.user2_serial, name, privilege), message ) = self.service.auth("user2", "password2", "role1")
+        ( (self.user3_serial, name, privilege), message ) = self.service.auth("user3", "password3", "role1")
+
+    # ----------------------------------------------------------------
     def cashIn(self):
 
         self.currency1_serial = 1
@@ -134,10 +156,11 @@ class PokerServiceTestCase(unittest.TestCase):
 
         return defer.DeferredList((d1, d2, d3), fireOnOneErrback = True)
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test04_getUserInfo(self):
         self.service.startService()
 
+        self.default_money = 0
         self.createUsers()
         #
         # No cash in means no money
@@ -175,7 +198,7 @@ class PokerServiceTestCase(unittest.TestCase):
         d.addCallback(step2)
         return d
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test05_getPersonalInfo(self):
         self.service.startService()
 
@@ -183,7 +206,7 @@ class PokerServiceTestCase(unittest.TestCase):
         info = self.service.getPersonalInfo(self.user1_serial)
         self.assertEquals(self.user1_serial, info.serial)
         
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test06_updatePlayerRake(self):
         self.service.startService()
 
@@ -217,7 +240,7 @@ class PokerServiceTestCase(unittest.TestCase):
         d.addCallback(self.cashOutCommit)
         return d
                 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test07_cashOut(self):
         self.service.startService()
 
@@ -226,7 +249,7 @@ class PokerServiceTestCase(unittest.TestCase):
         d.addCallback(self.cashOut)
         return d
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test08_setAccount(self):
         self.service.startService()
         affiliate = 3
@@ -237,7 +260,7 @@ class PokerServiceTestCase(unittest.TestCase):
         self.assertEquals(info.type, PACKET_POKER_PERSONAL_INFO, str(info))
         self.assertEquals(affiliate, info.affiliate)
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
 
     class ClientMockup:
         def __init__(self):
@@ -324,7 +347,7 @@ class PokerServiceTestCase(unittest.TestCase):
         self.assertEquals(client.packet_end_tournament.players == 3, True)
 
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def test12_playerImage(self):
         self.service.startService()
 
@@ -337,22 +360,177 @@ class PokerServiceTestCase(unittest.TestCase):
         player_image2 = self.service.getPlayerImage(self.user2_serial)
         self.assertEquals("", player_image2.image)
         
-# -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
+    def test13_checkTourneysSchedule_spawn_regular(self):
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.5
+
+        #
+        # A regular tournament starts registration now
+        #
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE tourneys_schedule SET register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND) WHERE name = 'regular1'")
+        self.assertEqual(1, cursor.rowcount)
+        cursor.close()
+
+        self.service.startService()
+        d = defer.Deferred()
+        def checkTourneys(status):
+            self.failUnless(filter(lambda tourney: tourney.sit_n_go == 'n', self.service.tourneys.values()))
+            self.failUnless(filter(lambda tourney: tourney.name == 'regular1', self.service.tourneys.values()))
+        d.addCallback(checkTourneys)
+        reactor.callLater(2, lambda: d.callback(True))
+
+        return d
+        
+    # ----------------------------------------------------------------
+    def test14_checkTourneysSchedule_cancel_regular(self):
+        pokerservice.DELETE_OLD_TOURNEYS_DELAY = 0
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
+
+        #
+        # A regular tournament starts registration now
+        #
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE tourneys_schedule SET register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND) , start_time = UNIX_TIMESTAMP(NOW() + INTERVAL 3 SECOND ) WHERE name = 'regular1'")
+        self.assertEqual(1, cursor.rowcount)
+        cursor.close()
+
+        self.service.startService()
+        self.createUsers()
+
+        #
+        # Register a user who will be re-imbursed when the tournament is canceled
+        #
+        d1 = defer.Deferred()
+        def registerPlayer(status):
+            (regular,) = filter(lambda tourney: tourney.name == 'regular1', self.service.tourneys.values())
+            self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                    game_id = regular.serial))
+            self.assertEquals(self.default_money - regular.buy_in - regular.rake, self.service.getMoney(self.user1_serial, 1))
+            self.assertEquals([ self.user1_serial ], regular.players)
+            
+        d1.addCallback(registerPlayer)
+        reactor.callLater(2, lambda: d1.callback(True))
+
+        d2 = defer.Deferred()
+        def checkTourneys(status):
+            self.assertEquals([], filter(lambda tourney: tourney['name'] == 'regular1', self.service.tourneys_schedule.values()))
+            self.assertEquals([], filter(lambda tourney: tourney.name == 'regular1', self.service.tourneys.values()))
+            self.assertEquals(self.default_money, self.service.getMoney(self.user1_serial, 1))
+        d2.addCallback(checkTourneys)
+        reactor.callLater(4, lambda: d2.callback(True))
+
+        return defer.DeferredList((d1, d2), fireOnOneErrback = True)
+        
+    # ----------------------------------------------------------------
+    def test15_runTourney(self):
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
+
+        self.service.startService()
+        self.createUsers()
+
+        (heads_up,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = heads_up.serial))
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user2_serial,
+                                                                game_id = heads_up.serial))
+                                     
+        d = defer.Deferred()
+        def checkTourneys(status):
+            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
+            game = heads_up.games[0]
+            in_position = game.getSerialInPosition()
+            game.callNraise(in_position, game.maxBuyIn())
+            in_position = game.getSerialInPosition()
+            game.call(in_position)
+            self.service.tables[2].update() # two tables already in settings
+            
+        d.addCallback(checkTourneys)
+        reactor.callLater(3, lambda: d.callback(True))
+
+        return d
+
+    # ----------------------------------------------------------------
+    def test16_runTourney_freeroll(self):
+        self.runTourney_freeroll(True)
+
+    # ----------------------------------------------------------------
+    def test17_runTourney_freeroll(self):
+        self.runTourney_freeroll(False)
+
+    # ----------------------------------------------------------------
+    def runTourney_freeroll(self, has_bailor):
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
+
+        #
+        # A regular tournament starts registration now
+        #
+        cursor = self.db.cursor()
+        prize = 100
+        cursor.execute("UPDATE tourneys_schedule SET buy_in = 0, prize_min = %d WHERE name = 'sitngo2'" % prize )
+        self.assertEqual(1, cursor.rowcount)
+        cursor.close()
+
+        self.service.startService()
+        self.createUsers()
+
+        (heads_up,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
+        if has_bailor:
+            heads_up.bailor_serial = self.user3_serial 
+        else:
+            heads_up.bailor_serial = 42
+
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = heads_up.serial))
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user2_serial,
+                                                                game_id = heads_up.serial))
+                                     
+        d = defer.Deferred()
+        def checkTourneys(status):
+            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
+            game = heads_up.games[0]
+            in_position = game.getSerialInPosition()
+            game.callNraise(in_position, game.maxBuyIn())
+            in_position = game.getSerialInPosition()
+            game.call(in_position)
+            self.service.tables[2].update() # two tables already in settings
+            self.assertEquals(self.default_money, self.service.getMoney(self.user1_serial, 1), "user1")
+            if has_bailor:
+                self.assertEquals(self.default_money + prize, self.service.getMoney(self.user2_serial, 1), "user2")
+            else:
+                self.assertEquals(self.default_money, self.service.getMoney(self.user2_serial, 1), "user2")
+            if has_bailor:
+                self.assertEquals(self.default_money - prize, self.service.getMoney(self.user3_serial, 1), "user3")
+            else:
+                self.assertEquals(self.default_money, self.service.getMoney(self.user3_serial, 1), "user3")
+            
+        d.addCallback(checkTourneys)
+        reactor.callLater(3, lambda: d.callback(True))
+
+        return d
+        
+# ----------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
 
-# -----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test12"
+#    loader.methodPrefix = "test14"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
-    return runner.TrialRunner(reporter.TextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#       reporter.TextReporter,
+#	tracebackFormat='verbose',
+        tracebackFormat='default',
+        ).run(suite)
 
-# -----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
