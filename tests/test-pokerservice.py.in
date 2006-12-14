@@ -393,7 +393,7 @@ class PokerServiceTestCase(unittest.TestCase):
         # A regular tournament starts registration now
         #
         cursor = self.db.cursor()
-        cursor.execute("UPDATE tourneys_schedule SET register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND) , start_time = UNIX_TIMESTAMP(NOW() + INTERVAL 3 SECOND ) WHERE name = 'regular1'")
+        cursor.execute("UPDATE tourneys_schedule SET register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND) , start_time = UNIX_TIMESTAMP(NOW() + INTERVAL 7 SECOND ) WHERE name = 'regular1'")
         self.assertEqual(1, cursor.rowcount)
         cursor.close()
 
@@ -412,7 +412,7 @@ class PokerServiceTestCase(unittest.TestCase):
             self.assertEquals([ self.user1_serial ], regular.players)
             
         d1.addCallback(registerPlayer)
-        reactor.callLater(2, lambda: d1.callback(True))
+        reactor.callLater(3, lambda: d1.callback(True))
 
         d2 = defer.Deferred()
         def checkTourneys(status):
@@ -420,7 +420,7 @@ class PokerServiceTestCase(unittest.TestCase):
             self.assertEquals([], filter(lambda tourney: tourney.name == 'regular1', self.service.tourneys.values()))
             self.assertEquals(self.default_money, self.service.getMoney(self.user1_serial, 1))
         d2.addCallback(checkTourneys)
-        reactor.callLater(4, lambda: d2.callback(True))
+        reactor.callLater(10, lambda: d2.callback(True))
 
         return defer.DeferredList((d1, d2), fireOnOneErrback = True)
         
