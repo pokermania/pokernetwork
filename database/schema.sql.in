@@ -69,6 +69,8 @@ CREATE TABLE users_private (
   addr_state VARCHAR(128) DEFAULT "",
   addr_country VARCHAR(64) DEFAULT "",
   phone VARCHAR(64) DEFAULT "",
+  gender CHAR DEFAULT '',
+  birthdate DATE,
   verified CHAR DEFAULT 'n',
   verified_time INT DEFAULT 0,
 
@@ -196,12 +198,16 @@ CREATE TABLE tourneys_schedule (
   description_short VARCHAR(64),
   description_long TEXT,
   players_quota INT DEFAULT 10,
+  players_min INT DEFAULT 2,
   variant VARCHAR(32),
   betting_structure VARCHAR(32),
   seats_per_game INT DEFAULT 10,
+  player_timeout INT DEFAULT 60,
   currency_serial INT,
-  buy_in INT,
-  rake INT,
+  prize_min INT DEFAULT 0,
+  bailor_serial INT DEFAULT 0,
+  buy_in INT DEFAULT 0,
+  rake INT DEFAULT 0,
   sit_n_go CHAR DEFAULT 'y',
   breaks_interval INT DEFAULT 60,
   rebuy_delay INT DEFAULT 0,
@@ -210,10 +216,14 @@ CREATE TABLE tourneys_schedule (
   start_time INT DEFAULT 0,
 
   register_time INT DEFAULT 0,
+  active CHAR DEFAULT 'y',
   respawn CHAR DEFAULT 'n',
   respawn_interval INT DEFAULT 0,
 
-  PRIMARY KEY (serial)
+  PRIMARY KEY (serial),
+  KEY tourneys_schedule_active_index (active),
+  KEY tourneys_schedule_register_time_index (register_time)
+
 )  ENGINE=InnoDB CHARSET=utf8;
 
 --
@@ -295,10 +305,10 @@ VALUES ( 'Ositngo50', 'Sit and Go 5 tables, Omaha', 'Sit and Go 5 tables', '50',
 
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular1', 'Holdem No Limit, 200 + 10', 'Holdem No Limit, 200 + 10', '1000', 'holdem', 'level-15-30-no-limit', '10', 1, '20000', '1000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 8 hour), unix_timestamp(now() + interval 7 hour), 'n', '0');
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular2', 'Holdem No Limit, 2000 + 100', 'Holdem No Limit, 2000 + 100', '1000', 'holdem', 'level-15-30-no-limit', '10', 1, '200000', '10000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 9 hour), unix_timestamp(now() + interval 8 hour), 'n', '0');
-INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular1', 'Omaha No Limit, 200 + 10', 'Omaha No Limit, 200 + 10', '1000', 'omaha', 'level-15-30-no-limit', '10', 1, '20000', '1000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 10 hour), unix_timestamp(now() + interval 9 hour), 'n', '0');
-INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular2', 'Omaha No Limit, 2000 + 100', 'Omaha No Limit, 2000 + 100', '1000', 'omaha', 'level-15-30-no-limit', '10', 1, '200000', '10000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 11 hour), unix_timestamp(now() + interval 10 hour), 'n', '0');
-INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular1', 'Omaha8 No Limit, 200 + 10', 'Omaha8 No Limit, 200 + 10', '1000', 'omaha8', 'level-15-30-no-limit', '10', 1, '20000', '1000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 12 hour), unix_timestamp(now() + interval 11 hour), 'n', '0');
-INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular2', 'Omaha8 No Limit, 2000 + 100', 'Omaha8 No Limit, 2000 + 100', '1000', 'omaha8', 'level-15-30-no-limit', '10', 1, '200000', '10000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 13 hour), unix_timestamp(now() + interval 12 hour), 'n', '0');
+INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular3', 'Omaha No Limit, 200 + 10', 'Omaha No Limit, 200 + 10', '1000', 'omaha', 'level-15-30-no-limit', '10', 1, '20000', '1000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 10 hour), unix_timestamp(now() + interval 9 hour), 'n', '0');
+INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular4', 'Omaha No Limit, 2000 + 100', 'Omaha No Limit, 2000 + 100', '1000', 'omaha', 'level-15-30-no-limit', '10', 1, '200000', '10000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 11 hour), unix_timestamp(now() + interval 10 hour), 'n', '0');
+INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular5', 'Omaha8 No Limit, 200 + 10', 'Omaha8 No Limit, 200 + 10', '1000', 'omaha8', 'level-15-30-no-limit', '10', 1, '20000', '1000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 12 hour), unix_timestamp(now() + interval 11 hour), 'n', '0');
+INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`) VALUES ('', 'regular6', 'Omaha8 No Limit, 2000 + 100', 'Omaha8 No Limit, 2000 + 100', '1000', 'omaha8', 'level-15-30-no-limit', '10', 1, '200000', '10000', 'n', '60', '30', '1', '60', unix_timestamp(now() + interval 13 hour), unix_timestamp(now() + interval 12 hour), 'n', '0');
 
 DROP TABLE IF EXISTS tourneys;
 
@@ -308,12 +318,16 @@ CREATE TABLE tourneys (
   description_short VARCHAR(64),
   description_long TEXT,
   players_quota INT DEFAULT 10,
+  players_min INT DEFAULT 2,
   variant VARCHAR(32),
   betting_structure VARCHAR(32),
   seats_per_game INT DEFAULT 10,
+  player_timeout INT DEFAULT 60,
   currency_serial INT,
-  buy_in INT,
-  rake INT,
+  prize_min INT DEFAULT 0,
+  bailor_serial INT DEFAULT 0,
+  buy_in INT DEFAULT 0,
+  rake INT DEFAULT 0,
   sit_n_go CHAR DEFAULT 'y',
   breaks_interval INT DEFAULT 60,
   rebuy_delay INT DEFAULT 0,
@@ -327,7 +341,9 @@ CREATE TABLE tourneys (
   add_on_count INT DEFAULT 0,
   rebuy_count INT DEFAULT 0,
 
-  PRIMARY KEY (serial)
+  PRIMARY KEY (serial),
+  KEY tourneys_start_time_index (start_time)
+
 )  ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS user2tourney;
@@ -366,7 +382,7 @@ CREATE TABLE users_transactions (
   notes TEXT,
 
   KEY (from_serial,to_serial)
-);
+) ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS affiliates;
 --
@@ -401,7 +417,7 @@ create table affiliates (
   notes TEXT,
 
   PRIMARY KEY (serial)
-);
+) ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS messages;
 
@@ -412,4 +428,4 @@ CREATE TABLE messages (
   sent CHAR DEFAULT 'n',
 
   PRIMARY KEY (serial, send_date, sent)
-)  ENGINE=InnoDB CHARSET=utf8;
+) ENGINE=InnoDB CHARSET=utf8;
