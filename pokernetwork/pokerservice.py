@@ -86,6 +86,10 @@ from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
 
+UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
+CHECK_TOURNEYS_SCHEDULE_DELAY = 60
+DELETE_OLD_TOURNEYS_DELAY = 15 * 60
+
 class IPokerService(Interface):
 
     def createAvatar(self):
@@ -188,7 +192,7 @@ class PokerService(service.Service):
 
     def cancelTimer(self, key):
         if self.timer.has_key(key):
-           if self.verbose: print "cancelTimer " + key
+           if self.verbose > 3: print "cancelTimer " + key
            timer = self.timer[key]
            if timer.active():
               timer.cancel()
@@ -271,47 +275,79 @@ class PokerService(service.Service):
         return self.poker_auth.auth(name, password)
 
     def updateTourneysSchedule(self):
-        if self.verbose > 2: print "updateTourneysSchedule"
+        if self.verbose > 3: print "updateTourneysSchedule"
         cursor = self.db.cursor(DictCursor)
 
-        sql = ( " select * from tourneys_schedule " )
+        sql = ( " SELECT * FROM tourneys_schedule WHERE " + 
+                "          active = 'y' AND " + 
+                "          ( respawn = 'y' OR " + 
+                "            register_time > UNIX_TIMESTAMP(NOW()) )" )
         cursor.execute(sql)
         result = cursor.fetchall()
         self.tourneys_schedule = dict(zip(map(lambda schedule: schedule['serial'], result), result))
         cursor.close()
         self.checkTourneysSchedule()
         self.cancelTimer('updateTourney')
-        self.timer['updateTourney'] = reactor.callLater(10 * 60, self.updateTourneysSchedule)
+        self.timer['updateTourney'] = reactor.callLater(UPDATE_TOURNEYS_SCHEDULE_DELAY, self.updateTourneysSchedule)
 
     def checkTourneysSchedule(self):
-        if self.verbose > 4: print "checkTourneysSchedule"
+        if self.verbose > 3: print "checkTourneysSchedule"
+        #
+        # Respawning tournaments
+        # 
         for schedule in filter(lambda schedule: schedule['respawn'] == 'y', self.tourneys_schedule.values()):
             schedule_serial = schedule['serial']
             if ( not self.schedule2tourneys.has_key(schedule_serial) or
                  not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial]) ):
                 self.spawnTourney(schedule)
+        #
+        # One time tournaments
+        # 
         now = time.time()
-        for tourney in filter(lambda tourney: tourney.state == TOURNAMENT_STATE_COMPLETE, self.tourneys.values()):
-            if now - tourney.finish_time > 15 * 60:
+        one_time = []
+        for serial in self.tourneys_schedule.keys():
+            schedule = self.tourneys_schedule[serial]
+            if ( schedule['respawn'] == 'n' and 
+                 int(schedule['register_time']) < now ):
+                one_time.append(schedule)
+                del self.tourneys_schedule[serial]
+        for schedule in one_time:
+            self.spawnTourney(schedule)
+
+        #
+        # Update tournaments with time clock
+        # 
+        for tourney in filter(lambda tourney: tourney.sit_n_go == 'n', self.tourneys.values()):
+            tourney.updateRunning()
+        #
+        # Forget about old tournaments 
+        #
+        for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED), self.tourneys.values()):
+            if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
                 self.deleteTourney(tourney)
+
         self.cancelTimer('checkTourney')
-        self.timer['checkTourney'] = reactor.callLater(60, self.checkTourneysSchedule)
+        self.timer['checkTourney'] = reactor.callLater(CHECK_TOURNEYS_SCHEDULE_DELAY, self.checkTourneysSchedule)
 
     def spawnTourney(self, schedule):
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
-                       " (schedule_serial, name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay )"
+                       " (schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay )"
                        " VALUES "
-                       " (%s,              %s,   %s,                %s,               %s,            %s,      %s,                %s,             %s,              %s,     %s,   %s,       %s,              %s,          %s,     %s )",
+                       " (%s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,              %s,          %s,     %s )",
                        ( schedule['serial'],
                          schedule['name'],
                          schedule['description_short'],
                          schedule['description_long'],
                          schedule['players_quota'],
+                         schedule['players_min'],
                          schedule['variant'],
                          schedule['betting_structure'],
                          schedule['seats_per_game'],
+                         schedule['player_timeout'],
                          schedule['currency_serial'],
+                         schedule['prize_min'],
+                         schedule['bailor_serial'],
                          schedule['buy_in'],
                          schedule['rake'],
                          schedule['sit_n_go'],
@@ -327,19 +363,26 @@ class PokerService(service.Service):
             tourney_serial = cursor.lastrowid
         else:
             tourney_serial = cursor.insert_id()
+        if schedule['respawn'] == 'n':
+            cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s" % schedule['serial'])
         cursor.close()
 
+        schedule['start_time'] = int(schedule['start_time'])
+        schedule['register_time'] = int(schedule['register_time'])
         tourney = PokerTournament(dirs = self.dirs, **schedule)
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
         tourney.schedule_serial = schedule['serial']
         tourney.currency_serial = schedule['currency_serial']
+        tourney.bailor_serial = schedule['bailor_serial']
+        tourney.player_timeout = int(schedule['player_timeout'])
         tourney.callback_new_state = self.tourneyNewState
         tourney.callback_create_game = self.tourneyCreateTable
         tourney.callback_game_filled = self.tourneyGameFilled
         tourney.callback_destroy_game = self.tourneyDestroyGame
         tourney.callback_move_player = self.tourneyMovePlayer
         tourney.callback_remove_player = self.tourneyRemovePlayer
+        tourney.callback_cancel = self.tourneyCancel
         if not self.schedule2tourneys.has_key(schedule['serial']):
             self.schedule2tourneys[schedule['serial']] = []
         self.schedule2tourneys[schedule['serial']].append(tourney)
@@ -368,21 +411,37 @@ class PokerService(service.Service):
             self.tourneyFinished(tourney)
 
     def tourneyFinished(self, tourney):
-        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
-        prizes = tourney.prizes(tourney_schedule['buy_in'])
+        prizes = tourney.prizes()
         winners = tourney.winners[:len(prizes)]
         cursor = self.db.cursor()
+        #
+        # Guaranteed prize pool is withdrawn from a given account if and only if
+        # the buy in of the players is not enough.
+        #
+        bail = tourney.prize_min - ( tourney.buy_in * tourney.registered )
+        if bail > 0:
+            sql = ( "UPDATE user2money SET amount = amount - " + str(bail) + " WHERE " + 
+                    "       user_serial = " + str(tourney.bailor_serial) + " AND " +
+                    "       currency_serial = " + str(tourney.currency_serial) + " AND " +
+                    "       amount >= " + str(bail) )
+            if self.verbose > 2: print "tourneyFinished: bailor pays " + sql
+            cursor.execute(sql)
+            if cursor.rowcount != 1: 
+                print " *ERROR* tourneyFinished: bailor failed to provide requested money modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+                cursor.close()
+                return
+            
         while prizes:
             prize = prizes.pop(0)
             serial = winners.pop(0)
             sql = "UPDATE user2money SET amount = amount + " + str(prize) + " WHERE user_serial = " + str(serial) + " AND currency_serial = " + str(tourney.currency_serial)
             if self.verbose > 2: print "tourneyFinished: " + sql
             cursor.execute(sql)
-            if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            if cursor.rowcount != 1: print " *ERROR* tourneyFinished: modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+        
         cursor.close()
 
     def tourneyGameFilled(self, tourney, game):
-        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
         table = self.getTable(game.id)
         cursor = self.db.cursor()
         for player in game.playersAll():
@@ -403,13 +462,12 @@ class PokerService(service.Service):
         table.update()
 
     def tourneyCreateTable(self, tourney):
-        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
         table = self.createTable(0, { 'name': tourney.name + str(self.table_serial),
                                       'variant': tourney.variant,
                                       'betting_structure': tourney.betting_structure,
                                       'seats': tourney.seats_per_game,
                                       'currency_serial': 0,
-                                      'player_timeout': 60,
+                                      'player_timeout': tourney.player_timeout,
                                       'transient': True,
                                       'tourney': tourney,
                                       })
@@ -432,8 +490,10 @@ class PokerService(service.Service):
         cursor.close()
 
     def tourneyRemovePlayer(self, tourney, game_id, serial):
-        tourney_schedule = self.tourneys_schedule[tourney.schedule_serial]
-        prizes = tourney.prizes(tourney_schedule['buy_in'])
+        #
+        # Inform the player about its position and prize
+        #
+        prizes = tourney.prizes()
         rank = tourney.getRank(serial)
         money = 0
         players = len(tourney.players)
@@ -442,7 +502,11 @@ class PokerService(service.Service):
 
         client = self.serial2client.get(serial, None)
         if client:
-            packet = PacketPokerTourneyRank(serial = tourney.serial, game_id = game_id, players = players, rank = rank, money = money)
+            packet = PacketPokerTourneyRank(serial = tourney.serial,
+                                            game_id = game_id,
+                                            players = players,
+                                            rank = rank,
+                                            money = money)
             client.sendPacketVerbose(packet)
         table = self.getTable(game_id)
         table.kickPlayer(serial)
@@ -518,35 +582,35 @@ class PokerService(service.Service):
         #
         # Buy in
         #
-        schedule = self.tourneys_schedule[tourney.schedule_serial]
-        currency_serial = schedule['currency_serial']
-        withdraw = schedule['buy_in'] + schedule['rake']
-        sql = ( "UPDATE user2money SET amount = amount - " + str(withdraw) +
-                " WHERE user_serial = " + str(serial) + " AND " +
-                "       currency_serial = " + str(currency_serial) + " AND " +
-                "       amount >= " + str(withdraw)
-                )
-        if self.verbose > 1:
-            print "tourneyRegister: %s" % sql
-        cursor.execute(sql)
-        if cursor.rowcount == 0:
-            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
-                                message = "Not enough money to enter the tournament %d" % tourney_serial)
-            if client: client.sendPacketVerbose(error)
-            print error
-            return False
-        if cursor.rowcount != 1:
-            print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
-            if client:
-                client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                                     code = PacketPokerTourneyRegister.SERVER_ERROR,
-                                                     message = "Server error"))
-            return False
+        currency_serial = tourney.currency_serial
+        withdraw = tourney.buy_in + tourney.rake
+        if withdraw > 0:
+            sql = ( "UPDATE user2money SET amount = amount - " + str(withdraw) +
+                    " WHERE user_serial = " + str(serial) + " AND " +
+                    "       currency_serial = " + str(currency_serial) + " AND " +
+                    "       amount >= " + str(withdraw)
+                    )
+            if self.verbose > 1:
+                print "tourneyRegister: %s" % sql
+            cursor.execute(sql)
+            if cursor.rowcount == 0:
+                error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                    code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
+                                    message = "Not enough money to enter the tournament %d" % tourney_serial)
+                if client: client.sendPacketVerbose(error)
+                print error
+                return False
+            if cursor.rowcount != 1:
+                print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+                if client:
+                    client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                                         code = PacketPokerTourneyRegister.SERVER_ERROR,
+                                                         message = "Server error"))
+                return False
         #
         # Register
         #
-        sql = "insert into user2tourney (user_serial, tourney_serial) values (%d, %d)" % ( serial, tourney_serial )
+        sql = "INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % ( serial, tourney_serial )
         if self.verbose > 4: print "tourneyRegister: " + sql
         cursor.execute(sql)
         if cursor.rowcount != 1:
@@ -560,7 +624,7 @@ class PokerService(service.Service):
         cursor.close()
 
         # notify success
-        client.sendPacketVerbose(packet)
+        if client: client.sendPacketVerbose(packet)
         tourney.register(serial)
         return True
 
@@ -587,9 +651,8 @@ class PokerService(service.Service):
         #
         # Refund buy in
         #
-        schedule = self.tourneys_schedule[tourney.schedule_serial]
-        currency_serial = schedule['currency_serial']
-        withdraw = schedule['buy_in'] + schedule['rake']
+        currency_serial = tourney.currency_serial
+        withdraw = tourney.buy_in + tourney.rake
         sql = ( "UPDATE user2money SET amount = amount + " + str(withdraw) +
                 " WHERE user_serial = " + str(serial) + " AND " +
                 "       currency_serial = " + str(currency_serial) )
@@ -618,6 +681,14 @@ class PokerService(service.Service):
         tourney.unregister(serial)
 
         return packet
+
+    def tourneyCancel(self, tourney):
+        if self.verbose > 1: print "tourneyCancel " + str(tourney.players)
+        for serial in tourney.players:
+            packet = self.tourneyUnregister(PacketPokerTourneyUnregister(game_id = tourney.serial,
+                                                                         serial = serial))
+            if packet.type == PACKET_ERROR:
+                print "*ERROR* tourneyCancel: " + str(packet)
 
     def getHandSerial(self):
         cursor = self.db.cursor()
@@ -1414,8 +1485,8 @@ class PokerAuth:
 
     def auth(self, name, password):
         cursor = self.db.cursor()
-        cursor.execute("select serial, password, privilege from users "
-                       "where name = '%s'" % name)
+        cursor.execute("SELECT serial, password, privilege FROM users "
+                       "WHERE name = '%s'" % name)
         numrows = int(cursor.rowcount)
         serial = 0
         privilege = User.REGULAR
