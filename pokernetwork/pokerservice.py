@@ -437,7 +437,14 @@ class PokerService(service.Service):
             sql = "UPDATE user2money SET amount = amount + " + str(prize) + " WHERE user_serial = " + str(serial) + " AND currency_serial = " + str(tourney.currency_serial)
             if self.verbose > 2: print "tourneyFinished: " + sql
             cursor.execute(sql)
-            if cursor.rowcount != 1: print " *ERROR* tourneyFinished: modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
+            if cursor.rowcount == 0:
+                sql = ( "INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, %d, %d)" %
+                        ( serial, tourney.currency_serial, prize ) )
+                if self.verbose > 2: print "tourneyFinished: " + sql
+                cursor.execute(sql)
+
+            if cursor.rowcount != 1: 
+                print " *ERROR* tourneyFinished: affected %d rows (expected 1): %s " % ( cursor.rowcount, sql )
         
         cursor.close()
 
