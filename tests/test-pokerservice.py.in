@@ -116,15 +116,20 @@ class PokerServiceTestCase(unittest.TestCase):
         for user_number in (1, 2, 3):
             cursor.execute("INSERT INTO users (name, password, created) VALUES ('user%d', 'password%d', 0)" % ( user_number, user_number ))
             self.assertEqual(1, cursor.rowcount)
-            if self.default_money > 0:
-                cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 1, %d)" % ( cursor.lastrowid, self.default_money ) )
-                self.assertEqual(1, cursor.rowcount)
-        cursor.close()
 
         ( (self.user1_serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
         ( (self.user2_serial, name, privilege), message ) = self.service.auth("user2", "password2", "role1")
         ( (self.user3_serial, name, privilege), message ) = self.service.auth("user3", "password3", "role1")
 
+        for user_number in (self.user1_serial, self.user2_serial, self.user3_serial):
+            if self.default_money > 0:
+                cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 1, %d)" % ( user_number, self.default_money ) )
+                self.assertEqual(1, cursor.rowcount)
+            if self.default_money > 0 and user_number == self.user3_serial:
+                cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 2, %d)" % ( user_number, self.default_money ) )
+                self.assertEqual(1, cursor.rowcount)
+
+        cursor.close()
     # ----------------------------------------------------------------
     def cashIn(self):
 
@@ -379,7 +384,7 @@ class PokerServiceTestCase(unittest.TestCase):
             self.failUnless(filter(lambda tourney: tourney.sit_n_go == 'n', self.service.tourneys.values()))
             self.failUnless(filter(lambda tourney: tourney.name == 'regular1', self.service.tourneys.values()))
         d.addCallback(checkTourneys)
-        reactor.callLater(2, lambda: d.callback(True))
+        reactor.callLater(3, lambda: d.callback(True))
 
         return d
         
@@ -471,7 +476,7 @@ class PokerServiceTestCase(unittest.TestCase):
         #
         cursor = self.db.cursor()
         prize = 100
-        cursor.execute("UPDATE tourneys_schedule SET buy_in = 0, prize_min = %d WHERE name = 'sitngo2'" % prize )
+        cursor.execute("UPDATE tourneys_schedule SET currency_serial = 2, buy_in = 0, prize_min = %d WHERE name = 'sitngo2'" % prize )
         self.assertEqual(1, cursor.rowcount)
         cursor.close()
 
@@ -498,15 +503,14 @@ class PokerServiceTestCase(unittest.TestCase):
             in_position = game.getSerialInPosition()
             game.call(in_position)
             self.service.tables[2].update() # two tables already in settings
-            self.assertEquals(self.default_money, self.service.getMoney(self.user1_serial, 1), "user1")
             if has_bailor:
+                self.assertEquals(0, self.service.getMoney(self.user1_serial, 2), "bailor user1")
+                self.assertEquals(prize, self.service.getMoney(self.user2_serial, 2), "bailor user2")
+                self.assertEquals(self.default_money - prize, self.service.getMoney(self.user3_serial, 2), "bailor user3")
+            else:
+                self.assertEquals(self.default_money, self.service.getMoney(self.user1_serial, 1), "user1")
                 self.assertEquals(self.default_money + prize, self.service.getMoney(self.user2_serial, 1), "user2")
-            else:
-                self.assertEquals(self.default_money, self.service.getMoney(self.user2_serial, 1), "user2")
-            if has_bailor:
                 self.assertEquals(self.default_money - prize, self.service.getMoney(self.user3_serial, 1), "user3")
-            else:
-                self.assertEquals(self.default_money, self.service.getMoney(self.user3_serial, 1), "user3")
             
         d.addCallback(checkTourneys)
         reactor.callLater(3, lambda: d.callback(True))
@@ -520,7 +524,7 @@ def GetTestedModule():
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test14"
+    loader.methodPrefix = "test16"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     return runner.TrialRunner(
