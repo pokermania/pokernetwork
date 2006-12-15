@@ -624,7 +624,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     time_t	_time;
     char	date_buffer[8];
     time(&_time);
-    struct tm*	_tm = localtime(&_time);
+    struct tm*	_tm = gmtime(&_time);
     snprintf(date_buffer, sizeof (date_buffer), "%02d:%02d",
              _tm->tm_hour, _tm->tm_min);
     gtk_label_set_text(GTK_LABEL(s_clock_label), date_buffer);
