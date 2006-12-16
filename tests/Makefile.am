@@ -40,8 +40,7 @@ EXTRA_DIST = \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
 	vncpasswd \
-	test-fc.py \
-	test-gladegen.py
+	test-fc.py
 
 TESTS_ENVIRONMENT = ./run
 #
@@ -68,6 +67,7 @@ TESTS = coverage-reset \
 	test-pokerinterface.py \
 	test-rank.py \
 	test-pokerdisplay2d.py \
+	test-gladegen.py \
 	testcurrency.php \
 	testpoker.php \
 	testicurrency.php \
