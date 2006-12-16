@@ -121,7 +121,7 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=true			# for AM_CONDITION
 ])
 
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.16,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.21,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
 
 python_script="
 import imp
