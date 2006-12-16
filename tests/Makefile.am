@@ -40,7 +40,8 @@ EXTRA_DIST = \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
 	vncpasswd \
-	test-fc.py
+	test-fc.py \
+	test-gladegen.py
 
 TESTS_ENVIRONMENT = ./run
 #
