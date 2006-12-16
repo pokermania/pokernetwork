@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), python-dev, automake1.9, cdbs, pkg-config, debconf, po-debconf, mysql-client, python2.4-mysqldb, python2.4-pyopenssl, python-soappy, python2.4-glade2, python2.4-twisted, python2.4-pygame, python-poker-engine (>= 1.0.21), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php-pear, php5-cgi
+Build-Depends: debhelper (>= 4.0.0), python-dev, automake1.9, cdbs, pkg-config, debconf, po-debconf, mysql-client, python2.4-mysqldb, python2.4-pyopenssl, python-soappy, python2.4-glade2, python2.4-twisted, python2.4-pygame, python-poker-engine (>= 1.0.21), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php-pear, php5-cgi, php5-mysql
 XS-Python-Version: >=2.4
 Standards-Version: 3.6.1.1
 
