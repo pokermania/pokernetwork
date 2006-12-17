@@ -63,12 +63,14 @@ Other GNU/Linux or Unices :
         make ; make install
         If the GTK client is not wanted, ./configure --disable-poker2d
 
-        Create a mysql database for the server, a mysql user and populate the database:
+        If this is your first installation, you need to fill the
+        MySQL root user name and password in ${pkgsysconfdir}/poker.server.xml.
+        It will be used to create the poker database and user.
 
-        mysqladmin -u root -p create pokernetwork
-        mysql -u root -p pokernetwork < /usr/local/share/poker-network/schema.sql 
-        mysql -u root -p -e "insert into user (Host, User, Password, Select_priv, Insert_priv, Update_priv, Delete_priv) values ('localhost', 'pokernetwork', password('pokernetwork'), 'Y', 'Y', 'Y', 'Y')" mysql
-        mysqladmin -u root -p reload
+        If you already have a previous version installed, you must upgrade
+        your database using:
+
+        database/pokerdatabaseupgrade --upgrades=database conf/poker.server.xml
 
 Others : the client part is known to work but there is no howto
 
