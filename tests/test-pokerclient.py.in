@@ -48,11 +48,11 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" />
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="2" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
@@ -274,8 +274,8 @@ class PokerClientTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_USER_INFO, packet.type)
         return (client, packet)
         
-    def test05_playHand(self):
-        """ test05_playHand """
+    def test05_userInfo(self):
+        """ test05_userInfo """
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -370,7 +370,7 @@ class PokerClientTestCase(unittest.TestCase):
                                                  game_id = 100))
                 return (client, packet)
             d[index].addCallback(atShowdown)
-            if index == 0:
+            if index == 1:
                 def readyToPlay((client, packet),):
                     client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
                                                              game_id = 100))
@@ -378,7 +378,7 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(readyToPlay)
             def nextTurn((client, packet),):
                 print "nextTurn"
-                return client.packetDeferred(True, PACKET_POKER_WIN)
+                return client.packetDeferred(True, PACKET_POKER_START)
             d[index].addCallback(nextTurn)
             #
             # Game will start after the client index=0 times out 
@@ -409,7 +409,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.sit)
             d[index].addCallback(self.allIn)
         return defer.DeferredList(d)
-
 
     def test10_playerImage(self):
         """ test10_login """
