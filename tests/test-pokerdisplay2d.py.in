@@ -24,14 +24,16 @@
 #
 # Authors:
 #  Johan Euphrosine <johan@mekensleep.com>
-#
+#  Jerome Jeannin   <jerome@mekensleep.com>
 
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
-from pokerclient2d.pokerdisplay2d import PokerPlayer2D, PokerTable2D
+
+from pokernetwork.pokernetworkconfig import Config
+from pokerclient2d.pokerdisplay2d import PokerDisplay2D, PokerPlayer2D, PokerTable2D
 from pokernetwork.pokerclientpackets import PACKET_POKER_POSITION, PACKET_POKER_PLAYER_ARRIVE
 class PokerPacketPlayerArriveMockup:
     type = PACKET_POKER_PLAYER_ARRIVE
@@ -94,7 +96,7 @@ class PokerDisplayMockup:
     glade = PokerGladeMockup()
     protocol = PokerProtocolMockup()
 
-class PokerDisplay2DTest(unittest.TestCase):
+class PokerTable2DTest(unittest.TestCase):
     def setUp(self):
         self.table = PokerTable2D(PokerTableMockup(), PokerDisplayMockup())
         self.names = ["toto", "titi"]
@@ -119,6 +121,22 @@ class PokerDisplay2DTest(unittest.TestCase):
         self.assertEquals(2, len(PokerWidgetMockup.texts))
         self.assertEquals(self.names[0], PokerWidgetMockup.texts[0])
         self.assertEquals(self.namesInPosition[1], PokerWidgetMockup.texts[1])
+
+class PokerDisplay2DTest(unittest.TestCase):
+    def setUp(self):
+	my_settings = Config([''])
+	my_settings.load("conf/poker2d.xml")
+	my_config = Config([''])
+	my_config.load("conf/client.xml")
+	self.display2d = PokerDisplay2D(settings = my_settings, config = my_config, factory = None);
+
+    def tearDown(self):
+	pass
+
+    def test_TestInit(self):
+	self.display2d.init()
+	self.assertNotEqual(None, self.display2d.glade)
+
 
 if __name__ == '__main__':
     unittest.main()
