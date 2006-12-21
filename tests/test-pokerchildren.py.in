@@ -31,6 +31,7 @@ sys.path.insert(0, "@srcdir@/../..")
 sys.path.insert(0, "..")
 
 from twisted.trial import unittest, runner, reporter
+from twisted.trial import util
 import twisted.internet.base
 from twisted.internet import reactor, defer
 
@@ -44,6 +45,16 @@ config_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <sequence>
 </sequence>
 """
+
+class PokerRsyncMockup(pokerchildren.PokerRsync):
+    def __init__(self, config, settings, rsync):
+        pokerchildren.PokerRsync.__init__(self, config, settings,rsync)
+        self.call_publishEvent = []
+
+    def publishEvent(self, event, logs, reason):
+        self.call_publishEvent.append((event, logs, reason))
+    
+            
 
 class PokerChildrenTestCase(unittest.TestCase):
 
@@ -137,14 +148,65 @@ class PokerChildrenTestCase(unittest.TestCase):
         reactor.callLater(1, lambda: d.callback(True))
         return d
 
+    # -----------------------------------------------------------------------------------------------------
+    def test04_rsync_fail_host_does_not_respond(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<user path="test-pokerchildren-dir" />
+<rsync source="" target="" path="rsync" dir="" />
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = PokerRsyncMockup(self.config, self.settings, ('-avhn ',"dabada"))
+        process.errReceived("rsync: failed to connect to tatawin")
+        d = defer.Deferred()
+        class ReasonMockup:
+            def __init__(self):
+                self.value = "test"
+        reason = ReasonMockup()
+
+        process.processEnded(reason)
+        self.assertEquals(2, len(process.call_publishEvent))
+        (event, dummy1, dummy2) = process.call_publishEvent[0]
+        self.assertEquals(pokerchildren.RSYNC_HOST_DOES_NOT_RESPOND, event)
+        (event, dummy1, dummy2) = process.call_publishEvent[1]
+        self.assertEquals(pokerchildren.RSYNC_FAILED, event)
+
+    # -----------------------------------------------------------------------------------------------------
+
+    def test05_rsync_fail_no_network(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<user path="test-pokerchildren-dir" />
+<rsync source="" target="" path="rsync" dir="" />
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = PokerRsyncMockup(self.config, self.settings, ('-avhn ',"dabada"))
+        process.errReceived("rsync: getaddrinfo: poker.pok3d.com 873: Temporary failure in name resolution")
+        d = defer.Deferred()
+        class ReasonMockup:
+            def __init__(self):
+                self.value = "test"
+        reason = ReasonMockup()
+
+        process.processEnded(reason)
+        self.assertEquals(2, len(process.call_publishEvent))
+        (event, dummy1, dummy2) = process.call_publishEvent[0]
+        self.assertEquals(pokerchildren.RSYNC_NO_NETWORK, event)
+        (event, dummy1, dummy2) = process.call_publishEvent[1]
+        self.assertEquals(pokerchildren.RSYNC_FAILED, event)
+
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
 
 # -----------------------------------------------------------------------------------------------------
 def Run():
+    util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+    loader.methodPrefix = "test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
