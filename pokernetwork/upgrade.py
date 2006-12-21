@@ -35,7 +35,7 @@ from re import match
 
 from pokernetwork import dispatch
 
-from pokernetwork.pokerchildren import PokerRsync, RSYNC_DONE, RSYNC_FAILED
+from pokernetwork.pokerchildren import PokerRsync, RSYNC_DONE, RSYNC_FAILED, RSYNC_NO_NETWORK, RSYNC_HOST_DOES_NOT_RESPOND
 
 class Constants:
     EXCLUDES = []
@@ -49,6 +49,8 @@ TICK = "//event/pokernetwork/upgrade/tick"
 NEED_UPGRADE = "//event/pokernetwork/upgrade/need_upgrade"
 CLIENT_VERSION_OK = "//event/pokernetwork/upgrade/client_version_ok"
 UPGRADE_READY = "//event/pokernetwork/upgrade/upgrade_ready"
+NO_NETWORK = "//event/pokernetwork/upgrade/no_network"
+HOST_DOES_NOT_RESPOND = "//event/pokernetwork/upgrade/host_does_not_respond"
 
 class CheckClientVersion(PokerRsync):
 
@@ -166,11 +168,21 @@ class Upgrader(dispatch.EventDispatcher):
 
     def failed(self, logs, reason):
         self.publishEvent(FAILED, logs, reason)
-    
+
+    def checkClientVersionFailedNoNetwork(self, logs, reason):
+        self.publishEvent(NO_NETWORK,logs, reason)
+        print "*CRITICAL* checkClientVersionFailedNoNetwork logs:%s reason:%s" % (logs, reason)
+        
+    def checkClientVersionFailedHostDoesNotRespond(self, logs, reason):
+        self.publishEvent(HOST_DOES_NOT_RESPOND,logs, reason)
+        print "*CRITICAL* checkClientVersionFailedHostDoesNotRespond logs:%s reason:%s" % (logs, reason)
+        
     def checkClientVersion(self, version):
         if self.verbose > 1: print "Upgrade::checkClientVersion(" + str(version) + ")" 
         self.publishEvent(TICK, 0.0, "Checking for new client version")
         checker = CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
+        checker.registerHandler(RSYNC_NO_NETWORK, self.checkClientVersionFailedNoNetwork)
+        checker.registerHandler(RSYNC_HOST_DOES_NOT_RESPOND, self.checkClientVersionFailedHostDoesNotRespond)
         checker.registerHandler(RSYNC_FAILED, self.failed)
 
     def checkClientVersionDone(self, need_upgrade, version):
