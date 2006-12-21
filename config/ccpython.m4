@@ -63,7 +63,7 @@ if test "$PYTHON" ; then
     PYTHON_LIBS="-L$python]$2[clibdir $python]$2[linkflags"
     
     _CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CFLAGS ${PYTHON_CFLAGS}"
+    CPPFLAGS="$CPPFLAGS ${PYTHON_CFLAGS}"
     
     echo checking python includes in $python]$2[includedir
     
