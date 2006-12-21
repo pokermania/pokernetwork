@@ -299,6 +299,7 @@ AC_CONFIG_FILES([
         conf/poker.server.xml
         pokerweb/Makefile
         tests/Makefile
+        tests/conf/poker2d.xml
         Makefile
 ])
 AC_OUTPUT
