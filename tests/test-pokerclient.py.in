@@ -411,6 +411,126 @@ class PokerClientTestCase(unittest.TestCase):
         return defer.DeferredList(d)
 
 
+    def test10_playerImage(self):
+        """ test10_login """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        def setPlayerImage((client, packet),):
+            client.sendPacket(PacketPokerPlayerImage(serial = client.getSerial(),
+                                                     image = "2345"))
+            return client.packetDeferred(True, PACKET_ACK)
+        d.addCallback(setPlayerImage)
+        def getPlayerImage((client, packet),):
+            self.assertEqual(PACKET_ACK, packet.type)
+            client.sendPacket(PacketPokerGetPlayerImage(serial = client.getSerial()))
+            return client.packetDeferred(True, PACKET_POKER_PLAYER_IMAGE)
+        d.addCallback(getPlayerImage)
+        def checkPlayerImage((client, packet),):
+            self.assertEqual(PACKET_POKER_PLAYER_IMAGE, packet.type)
+            self.assertEqual("2345", packet.image)
+            return (client, packet)
+        d.addCallback(checkPlayerImage)
+        d.addCallback(self.quit)
+        return d
+
+    def cashOut(self, client, url, value):
+        client.sendPacket(PacketPokerCashOut(serial = client.getSerial(), url = url, value = value))
+        return client.packetDeferred(True, PACKET_POKER_CASH_OUT)
+
+    def cashOutCommit(self, (client, packet)):
+        self.assertEquals(PACKET_POKER_CASH_OUT, packet.type)
+        client.sendPacket(PacketPokerCashOutCommit(serial = client.getSerial(), transaction_id = packet.name))
+        return client.packetDeferred(True, PACKET_ACK)
+
+    def test11_cashOut_zero(self):
+        """ test11_cashOut_zero """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
+        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
+        d.addCallback(self.check_cashIn)
+        d.addCallback(lambda (client, packet): self.cashOut(client, "ONE", 100))
+        d.addCallback(self.cashOutCommit)
+        def check_cashOut((client, packet),):
+            print "check_cashOut_zero"
+            client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
+            d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
+            def validate((client, packet),):
+                print "check_cashOut " + str(packet)
+                self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
+                self.assertEquals(2, len(packet.money))
+                self.assertEquals([1, 2], packet.money.keys())
+                self.assertEquals(0, packet.money[1][0])
+                self.assertEquals(200, packet.money[2][0])
+                return (client, packet)
+            d.addCallback(validate)
+            return d
+        d.addCallback(check_cashOut)
+        d.addCallback(self.quit)
+        return d
+
+    def test12_cashOut(self):
+        """ test12_cashOut """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
+        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
+        d.addCallback(self.check_cashIn)
+        d.addCallback(lambda (client, packet): self.cashOut(client, "ONE", 50))
+        d.addCallback(self.cashOutCommit)
+        def check_cashOut((client, packet),):
+            print "check_cashOut"
+            client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
+            d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
+            def validate((client, packet),):
+                print "check_cashOut " + str(packet)
+                self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
+                self.assertEquals(2, len(packet.money))
+                self.assertEquals([1, 2], packet.money.keys())
+                self.assertEquals(50, packet.money[1][0])
+                self.assertEquals(200, packet.money[2][0])
+                return (client, packet)
+            d.addCallback(validate)
+            return d
+        d.addCallback(check_cashOut)
+        d.addCallback(self.quit)
+        return d
+
+    def test13_cashOut_failure(self):
+        """ test12_cashOut """
+        currencyclient.Verbose = True
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
+        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
+        d.addCallback(self.check_cashIn)
+        def cashOutFail((client, packet),):
+            currencyclient.FakeCurrencyFailure = True
+            client.sendPacket(PacketPokerCashOut(serial = client.getSerial(), url = "ONE", value = 50))
+            client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
+            return client.packetDeferred(True, PACKET_POKER_USER_INFO)
+
+        d.addCallback(cashOutFail)
+        def check_cashOutFail((client, packet),):
+            print "check_cashOutFail " + str(packet)
+            self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
+            self.assertEquals(2, len(packet.money))
+            self.assertEquals([1, 2], packet.money.keys())
+            self.assertEquals(100, packet.money[1][0])
+            self.assertEquals(200, packet.money[2][0])
+            return (client, packet)
+        d.addCallback(check_cashOutFail)
+        d.addCallback(self.quit)
+        return d
+
+    def test14_messages(self):
+        d = self.client_factory[0].established_deferred
+        def waitForMessage(client):
+            db = self.service.db.db
+            db.query("INSERT INTO messages (send_date, message) VALUES (CURRENT_TIMESTAMP + INTERVAL 2 SECOND, 'the message')")
+            return client.packetDeferred(True, PACKET_MESSAGE)
+        d.addCallback(waitForMessage)
+        return d
 
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -576,7 +696,6 @@ def Run():
     suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
     suite.addTest(loader.loadClass(PokerClientFactoryTestCase2))
     return runner.TrialRunner(reporter.TextReporter,
-#                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
 
