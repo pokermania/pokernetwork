@@ -245,6 +245,8 @@ from twisted.internet import error
 
 RSYNC_DONE = "//event/pokernetwork/pokerchildren/rsync_done"
 RSYNC_FAILED = "//event/pokernetwork/pokerchildren/rsync_failed"
+RSYNC_NO_NETWORK = "//event/pokernetwork/pokerchildren/rsync_no_network"
+RSYNC_HOST_DOES_NOT_RESPOND = "//event/pokernetwork/pokerchildren/rsync_host_does_not_respond"
 
 class PokerRsync(PokerChild, ProcessProtocol):
 
@@ -319,6 +321,14 @@ class PokerRsync(PokerChild, ProcessProtocol):
         self.publishEvent(RSYNC_DONE)
         
     def failed(self, logs, reason):
+        host_does_not_respond = "failed to connect to"
+        if logs.find(host_does_not_respond) != -1:
+            self.publishEvent(RSYNC_HOST_DOES_NOT_RESPOND, logs,reason)
+
+        errror_no_network = ("getaddrinfo", "Temporary failure in name resolution")
+        if logs.find(errror_no_network[0]) != -1 and logs.find(errror_no_network[1]):
+            self.publishEvent(RSYNC_NO_NETWORK, logs,reason)
+
         self.publishEvent(RSYNC_FAILED, logs,reason)
         
     def outConnectionLost(self):
