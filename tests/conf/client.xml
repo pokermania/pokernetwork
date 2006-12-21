@@ -1,41 +1,34 @@
-<?xml version='1.0'  encoding='iso-8859-1' ?> <!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
-
-<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="poker.sequence.xsd">
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.0.33">
 
   <money_one name="PLAY MONEY" unit="" cent="" serial="1"/>
   <money_two name="CUSTOM MONEY" unit="C" cent="cts" serial="2"/>
 
-  <cashier enter="Cashier" exit="Exit Cashier" />
+  <chips>1 2 5 10 20 25 50 100 200 500 1000 2000 2500 5000 10000 25000 50000 100000 200000 500000 1000000 2000000 5000000 10000000</chips>
+
+  <cashier enter="Cashier" exit="Exit Cashier"/>
+
+  <sounds POKER_SELF_IN_POSITION="self_in_position.wav" POKER_TIMEOUT_WARNING="timeout_warning.wav" POKER_TIMEOUT_NOTICE="timeout_notice.wav"/>
 
   <interactors2d>
     <check>
-      <map enabled_default="Check"
-           enabled_clicked="Check"
-           enabled_clicked_in_position="Check"
-           scheduled_default="(Check)"
-           scheduled_clicked="(Check)"
-           activated_default="Check"
-           activated_clicked="Check" />
+      <map enabled_default="Check" enabled_clicked="Check" enabled_clicked_in_position="Check" scheduled_default="(Check)" scheduled_clicked="(Check)" activated_default="Check" activated_clicked="Check"/>
     </check>
     <fold>
-      <map enabled_default="Fold"
-           enabled_clicked="Fold"
-           enabled_clicked_in_position="Fold"
-           scheduled_default="(Fold)"
-           scheduled_clicked="(Fold)"
-           activated_default="Fold"
-           activated_clicked="Fold" />
+      <map enabled_default="Fold" enabled_clicked="Fold" enabled_clicked_in_position="Fold" scheduled_default="(Fold)" scheduled_clicked="(Fold)" activated_default="Fold" activated_clicked="Fold"/>
     </fold>
-    <shadowstacks>
-      <map enabled_default="enabled"
-           enabled_clicked="enabled"
-           enabled_clicked_in_position="enabled"
-           scheduled_default="scheduled"
-           scheduled_clicked="scheduled"
-           activated_default="activated"
-           activated_clicked="activated" />
-    </shadowstacks>
+    <call>
+      <map enabled_default="Call" enabled_clicked="Call" enabled_clicked_in_position="Call" scheduled_default="(Call)" scheduled_clicked="(Call)" activated_default="Call" activated_clicked="Call"/>
+    </call>
+    <raise>
+      <map enabled_default="Raise" enabled_clicked="Raise" enabled_clicked_in_position="Raise" scheduled_default="(Raise)" scheduled_clicked="(Raise)" activated_default="Raise" activated_clicked="Raise"/>
+    </raise>
   </interactors2d>
 
+  <credits>
+  </credits>
+  <licenses list="http://www.gnu.org/licenses/license-list.html">
+   <gnu_gpl_v2>http://gnu.org/licenses/gpl.txt</gnu_gpl_v2>
+  </licenses>
 </sequence>
