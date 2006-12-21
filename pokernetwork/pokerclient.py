@@ -173,12 +173,34 @@ class PokerClientFactory(UGAMEClientFactory):
         self.upgrader.registerHandler(upgrade.NEED_UPGRADE, self.needUpgrade)
         self.upgrader.registerHandler(upgrade.UPGRADE_READY, self.upgradeReady)
         self.upgrader.registerHandler(upgrade.FAILED, self.failedUpgrade)
+        self.upgrader.registerHandler(upgrade.HOST_DOES_NOT_RESPOND, self.failedUpgradeHostDoesNotRespond)
+        self.upgrader.registerHandler(upgrade.NO_NETWORK, self.failedUpgradeNoNetwork)
         self.interface = None
 
     def __del__(self):
         if hasattr(self, "games"):
             del self.games
 
+    def resolve(self, url):
+        return reactor.resolve(url,(1,1))
+
+    def checkNetwork(self, url):
+        d = self.resolve(url)
+        d.addCallback(self.hostResolved).addErrback(self.hostNotResolved)
+        return d
+    
+    def hostNotResolved(self, d):
+        self.networkNotAvailable()
+        
+    def hostResolved(self, d):
+        self.networkAvailable()
+
+    def networkNotAvailable(self):
+        pass
+    
+    def networkAvailable(self):
+        pass
+        
     def upgradeTick(self, ratio, message):
         self.display.tickProgressBar(ratio, message)
 
@@ -329,6 +351,12 @@ class PokerClientFactory(UGAMEClientFactory):
         self.display.showProgressBar()
         self.upgrader.getUpgrade(version, excludes)
 
+    def failedUpgradeHostDoesNotRespond(self, logs, reason):
+        pass
+
+    def failedUpgradeNoNetwork(self, logs, reason):
+        pass
+
     def upgradeReady(self, target_dir, upgrades_dir):
         if self.verbose >= 0:
             print "PokerClientFactory::upgradeReady"
@@ -383,7 +411,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def getCurrentGameId(self):
         return self.currentGameId
-        
+    
     def connectionMade(self):
         "connectionMade"
         if self.factory.delays_enable:
