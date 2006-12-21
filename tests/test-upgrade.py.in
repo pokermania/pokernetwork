@@ -32,6 +32,7 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
+from twisted.trial import runner
 
 from pokernetwork.pokerclient import PokerClientFactory
 from pokernetwork import dispatch
@@ -47,9 +48,15 @@ class PokerSettingsMockup:
 from pokernetwork.upgrade import CheckClientVersion
 from pokernetwork.pokerchildren import RSYNC_FAILED
 class CheckClientVersionMockup(CheckClientVersion):
-    def __init__(self, version):
-	CheckClientVersion.__init__(self, PokerSettingsMockup(), PokerSettingsMockup(), version, self.rsyncDone)
-	self.registerHandler(RSYNC_FAILED, self.rsyncFailed)
+    instance = None
+    def __init__(self, config = PokerSettingsMockup(), settings = PokerSettingsMockup(), version = (1,1,20), callback = None):
+        CheckClientVersionMockup.instance = self
+        callback_was_none = callback
+        if callback is None:
+            callback = self.rsyncDone
+	CheckClientVersion.__init__(self, config, settings, version, callback)
+        if callback_was_none is None:
+            self.registerHandler(RSYNC_FAILED, self.rsyncFailed)
  	self.rsyncFailedCalled = False
 	self.rsyncDoneCalled = False
 	self.needUpgrade = False
@@ -119,6 +126,8 @@ class PokerSettingsMockupSource:
     def headerGetProperties(self, path):
 	return None
 
+
+
 class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
@@ -139,11 +148,68 @@ class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
 	self.assertEquals(True, "--dry-run" in checkClientVersion.rsync)
 	self.assertEquals(True, "--list-only" in checkClientVersion.rsync)
 
+
+
+from pokernetwork import upgrade
+
+class ReasonMockup:
+    def __init__(self):
+        self.value = ""
+        
+class UpgraderMockup(upgrade.Upgrader):
+    def __init__(self, *args, **kwargs):
+        upgrade.Upgrader.__init__(self, *args, **kwargs)
+        self.call_failed = False
+        self.call_checkClientVersionFailed = False
+        self.call_checkClientVersionFailedHostDoesNotRespond = False
+        self.call_checkClientVersionFailedNoNetwork = False
+        self.verbose = 0
+        upgrade.CheckClientVersion = CheckClientVersionMockup
+
+    def checkClientVersion(self, version):
+        upgrade.Upgrader.checkClientVersion(self, version)
+        
+    def failed(self, logs, reason):
+        self.call_failed = True
+
+    def checkClientVersionFailedNoNetwork(self, logs, reason):
+        self.call_checkClientVersionFailedNoNetwork = True
+        
+    def checkClientVersionFailedHostDoesNotRespond(self, logs, reason):
+        self.call_checkClientVersionFailedHostDoesNotRespond = True
+        
+
+    
+class UpgraderTestCase(unittest.TestCase):
+# -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        pass
+    def tearDown(self):
+        pass
+        
+# -----------------------------------------------------------------------------------------------------
+    def testCheckClientVersionFailed1(self):
+	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        self.upgrade.checkClientVersion((1, 1, 20))
+        CheckClientVersionMockup.instance.errors.append("failed to connect to")
+        CheckClientVersionMockup.instance.processEnded(ReasonMockup())
+	self.assertEquals(True, self.upgrade.call_failed)
+
+    def testCheckClientVersionFailed2(self):
+	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        self.upgrade.checkClientVersion((1, 1, 20))
+        CheckClientVersionMockup.instance.errors.append("getaddrinfo")
+        CheckClientVersionMockup.instance.errors.append("Temporary failure in name resolution")
+        CheckClientVersionMockup.instance.processEnded(ReasonMockup())
+	self.assertEquals(True, self.upgrade.call_failed)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
+    loader = runner.TestLoader()
     suite.addTest(unittest.makeSuite(PokerClientUpgradeFailedTestCase))
     suite.addTest(unittest.makeSuite(PokerClientUpgradeCheckClientVersion))
+    suite.addTest(loader.loadClass(UpgraderTestCase))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
