@@ -72,11 +72,11 @@ installReactor(reactor)
 # Workaround for the twisted-2.0 bug 
 # http://twistedmatrix.com/bugs/issue1083
 #
-try:
-    from twisted.internet.base import BlockingResolver
-    reactor.installResolver(BlockingResolver())
-except:
-    pass
+#try:
+#    from twisted.internet.base import BlockingResolver
+#    reactor.installResolver(BlockingResolver())
+#except:
+#    pass
 from twisted.internet import error
 
 from pokernetwork.pokerclient import PokerClientFactory, PokerSkin
@@ -203,7 +203,19 @@ class PokerClientFactory2D(PokerClientFactory):
             self.interface = PokerInterface2D(self.settings)
             self.skin.interfaceReady(self.interface, self.display)
             self.renderer.interfaceReady(self.interface)
- 
+
+        self.checkNetwork("pokersource.info")
+
+    def networkNotAvailable(self):
+        message = "No network available or maybe your firewall block your connexion\n"
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            print message
+        else:
+            interface = self.interface
+            interface.messageBox(message)
+            interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
+
+    def networkAvailable(self):
         if self.settings.headerGet("/settings/@upgrades") == "yes":
             self.checkClientVersion((version.major(), version.medium(), version.minor()))
         else:
@@ -214,6 +226,24 @@ class PokerClientFactory2D(PokerClientFactory):
             self.quit()
         else:
             self.showServers()
+
+    def failedUpgradeNoNetwork(self, logs, reason):
+        message = "No network available or maybe your firewall block your connexion\n" + logs
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            print message
+        else:
+            interface = self.interface
+            interface.messageBox(message)
+            interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
+
+    def failedUpgradeHostNotFound(self, logs, reason):
+        message = "Host not found\n" + logs
+        if self.settings.headerGet("/settings/@batch") == "yes":
+            print message
+        else:
+            interface = self.interface
+            interface.messageBox(message)
+            interface.registerHandler(pokerinterface.INTERFACE_MESSAGE_BOX, lambda: self.quit())
 
     def failedUpgrade(self, logs, reason):
         message = "Unable to upgrade software\n" + logs
