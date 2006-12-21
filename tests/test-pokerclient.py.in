@@ -32,23 +32,27 @@ sys.path.insert(0, "..")
 
 import libxml2
 
+from pokerclient2d.poker2d import PokerClientFactory2D
+import socket
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer, error
 from twisted.python import failure
 
+from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
+from pokerui import pokerinterface
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerclientpackets import *
+from pokernetwork.pokerpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="2" />
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
@@ -270,8 +274,8 @@ class PokerClientTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_USER_INFO, packet.type)
         return (client, packet)
         
-    def test05_userInfo(self):
-        """ test05_userInfo """
+    def test05_playHand(self):
+        """ test05_playHand """
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -366,7 +370,7 @@ class PokerClientTestCase(unittest.TestCase):
                                                  game_id = 100))
                 return (client, packet)
             d[index].addCallback(atShowdown)
-            if index == 1:
+            if index == 0:
                 def readyToPlay((client, packet),):
                     client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
                                                              game_id = 100))
@@ -374,7 +378,7 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(readyToPlay)
             def nextTurn((client, packet),):
                 print "nextTurn"
-                return client.packetDeferred(True, PACKET_POKER_START)
+                return client.packetDeferred(True, PACKET_POKER_WIN)
             d[index].addCallback(nextTurn)
             #
             # Game will start after the client index=0 times out 
@@ -406,133 +410,171 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.allIn)
         return defer.DeferredList(d)
 
-    def test10_playerImage(self):
-        """ test10_login """
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.login, 0)
-        def setPlayerImage((client, packet),):
-            client.sendPacket(PacketPokerPlayerImage(serial = client.getSerial(),
-                                                     image = "2345"))
-            return client.packetDeferred(True, PACKET_ACK)
-        d.addCallback(setPlayerImage)
-        def getPlayerImage((client, packet),):
-            self.assertEqual(PACKET_ACK, packet.type)
-            client.sendPacket(PacketPokerGetPlayerImage(serial = client.getSerial()))
-            return client.packetDeferred(True, PACKET_POKER_PLAYER_IMAGE)
-        d.addCallback(getPlayerImage)
-        def checkPlayerImage((client, packet),):
-            self.assertEqual(PACKET_POKER_PLAYER_IMAGE, packet.type)
-            self.assertEqual("2345", packet.image)
-            return (client, packet)
-        d.addCallback(checkPlayerImage)
-        d.addCallback(self.quit)
-        return d
 
-    def cashOut(self, client, url, value):
-        client.sendPacket(PacketPokerCashOut(serial = client.getSerial(), url = url, value = value))
-        return client.packetDeferred(True, PACKET_POKER_CASH_OUT)
 
-    def cashOutCommit(self, (client, packet)):
-        self.assertEquals(PACKET_POKER_CASH_OUT, packet.type)
-        client.sendPacket(PacketPokerCashOutCommit(serial = client.getSerial(), transaction_id = packet.name))
-        return client.packetDeferred(True, PACKET_ACK)
+class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
+    def __init__(self, *args, **kwargs):
+        pokerclient.PokerClientFactory.__init__(self, *args, **kwargs)
+        self.call_networkNotAvailable = False
+        self.call_networkAvailable = False
+        self.rsync_host_no_network = False
+        self.rsync_host_not_responding = False
+        self.resolve_return_error = False
 
-    def test11_cashOut_zero(self):
-        """ test11_cashOut_zero """
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.login, 0)
-        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
-        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
-        d.addCallback(self.check_cashIn)
-        d.addCallback(lambda (client, packet): self.cashOut(client, "ONE", 100))
-        d.addCallback(self.cashOutCommit)
-        def check_cashOut((client, packet),):
-            print "check_cashOut_zero"
-            client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
-            d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
-            def validate((client, packet),):
-                print "check_cashOut " + str(packet)
-                self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
-                self.assertEquals(2, len(packet.money))
-                self.assertEquals([1, 2], packet.money.keys())
-                self.assertEquals(0, packet.money[1][0])
-                self.assertEquals(200, packet.money[2][0])
-                return (client, packet)
-            d.addCallback(validate)
-            return d
-        d.addCallback(check_cashOut)
-        d.addCallback(self.quit)
-        return d
+    def resolve(self, url):
+        if self.resolve_return_error is True:
+            return defer.fail(url)
+        else:
+            return defer.succeed(url)
 
-    def test12_cashOut(self):
-        """ test12_cashOut """
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.login, 0)
-        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
-        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
-        d.addCallback(self.check_cashIn)
-        d.addCallback(lambda (client, packet): self.cashOut(client, "ONE", 50))
-        d.addCallback(self.cashOutCommit)
-        def check_cashOut((client, packet),):
-            print "check_cashOut"
-            client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
-            d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
-            def validate((client, packet),):
-                print "check_cashOut " + str(packet)
-                self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
-                self.assertEquals(2, len(packet.money))
-                self.assertEquals([1, 2], packet.money.keys())
-                self.assertEquals(50, packet.money[1][0])
-                self.assertEquals(200, packet.money[2][0])
-                return (client, packet)
-            d.addCallback(validate)
-            return d
-        d.addCallback(check_cashOut)
-        d.addCallback(self.quit)
-        return d
+    def networkNotAvailable(self):
+        self.call_networkNotAvailable = True
 
-    def test13_cashOut_failure(self):
-        """ test12_cashOut """
-        currencyclient.Verbose = True
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.login, 0)
-        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 100))
-        d.addCallback(lambda (client, packet): self.cashIn(client, "TWO", 200))
-        d.addCallback(self.check_cashIn)
-        def cashOutFail((client, packet),):
-            currencyclient.FakeCurrencyFailure = True
-            client.sendPacket(PacketPokerCashOut(serial = client.getSerial(), url = "ONE", value = 50))
-            client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
-            return client.packetDeferred(True, PACKET_POKER_USER_INFO)
+    def networkAvailable(self):
+        self.call_networkAvailable = True
 
-        d.addCallback(cashOutFail)
-        def check_cashOutFail((client, packet),):
-            print "check_cashOutFail " + str(packet)
-            self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
-            self.assertEquals(2, len(packet.money))
-            self.assertEquals([1, 2], packet.money.keys())
-            self.assertEquals(100, packet.money[1][0])
-            self.assertEquals(200, packet.money[2][0])
-            return (client, packet)
-        d.addCallback(check_cashOutFail)
-        d.addCallback(self.quit)
-        return d
+    def failedUpgradeHostDoesNotRespond(self, logs, reason):
+        self.rsync_host_not_responding = True
 
-    def test14_messages(self):
-        d = self.client_factory[0].established_deferred
-        def waitForMessage(client):
-            db = self.service.db.db
-            db.query("INSERT INTO messages (send_date, message) VALUES (CURRENT_TIMESTAMP + INTERVAL 2 SECOND, 'the message')")
-            return client.packetDeferred(True, PACKET_MESSAGE)
-        d.addCallback(waitForMessage)
-        return d
+    def failedUpgradeNoNetwork(self, logs, reason):
+        self.rsync_host_no_network = True
+
+class PokerClientFactoryTestCase(unittest.TestCase):
+
+    def setUp(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
+        settings.header = settings.doc.xpathNewContext()
+        self.client_factory = PokerClientFactoryMockup(settings = settings)
+
+    def tearDown(self):
+        pass
+
+    def checkResultFalse(self, d):
+        self.assertEqual(True, self.client_factory.call_networkNotAvailable)
+        self.assertEqual(False, self.client_factory.call_networkAvailable)
+
+    def checkResultTrue(self, d):
+        self.assertEqual(False, self.client_factory.call_networkNotAvailable)
+        self.assertEqual(True, self.client_factory.call_networkAvailable)
+
+    def testCheckNetworkSucess(self):
+        self.resolve_return_error = False
+        return self.client_factory.checkNetwork("dummy").addCallback(self.checkResultTrue)
+
+    def testCheckNetworkError(self):
+        self.resolve_return_error = True
+        return self.client_factory.checkNetwork("dummy").addErrback(self.checkResultFalse)
+
+
+class InterfaceMockup(dispatch.EventDispatcher):
+    def __init__(self):
+        dispatch.EventDispatcher.__init__(self)
+        self.msg = None
+        
+    def messageBox(self, msg):
+        self.msg = msg
+
+class SettingMockup:
+    def __init__(self):
+        self.return_batch = False
+        self.return_upgrade = False
+        
+    def headerGet(self, path):
+        if path == "/settings/@batch":
+            return self.return_batch
+        if path == "/settings/@upgrades":
+            return self.return_upgrade
+        return None
+
+class PokerClientFactoryMockup2(PokerClientFactory2D):
+    def __init__(self, *args, **kwargs):
+        self.interface = InterfaceMockup()
+        self.settings = SettingMockup()
+        self.call_quit = False
+        self.call_clientVersionOk = False
+        self.call_checkClientVersion = False
+
+    def quit(self):
+        self.call_quit = True
+
+    def clientVersionOk(self):
+        self.call_clientVersionOk = True
+
+    def checkClientVersion(self, arg):
+        self.call_checkClientVersion = True
+
+class PokerClientFactoryTestCase2(unittest.TestCase):
+
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+
+    def testNetworkNotAvailableNoBatch(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.networkNotAvailable()
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual("No network available or maybe your firewall block your connexion\n", self.client_factory.interface.msg)
+        self.assertEqual(True, self.client_factory.call_quit)
+
+    def testNetworkNotAvailableBatch(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.settings.return_batch = "yes"
+        self.client_factory.networkNotAvailable()
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual(False, self.client_factory.call_quit)
+
+    def testNetworkAvailableUpgradeNo(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.networkAvailable()
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual(True, self.client_factory.call_clientVersionOk)
+
+    def testNetworkAvailableUpgradeYes(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.settings.return_upgrade = "yes"
+        self.client_factory.networkAvailable()
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual(True, self.client_factory.call_checkClientVersion)
+
+    def testFailedUpgradeNoNetworkNoBatch(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.failedUpgradeNoNetwork("mockup", None)
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual("No network available or maybe your firewall block your connexion\nmockup", self.client_factory.interface.msg)
+        self.assertEqual(True, self.client_factory.call_quit)
+
+    def testFailedUpgradeNoNetworkBatch(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.settings.return_batch = "yes"
+        self.client_factory.failedUpgradeNoNetwork("mockup", None)
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual(False, self.client_factory.call_quit)
+
+    def testFailedHostNotFoundNoBatch(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.failedUpgradeHostNotFound("mockup", None)
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual("Host not found\nmockup", self.client_factory.interface.msg)
+        self.assertEqual(True, self.client_factory.call_quit)
+
+    def testFailedHostNotFoundBatch(self):
+        self.client_factory = PokerClientFactoryMockup2()
+        self.client_factory.settings.return_batch = "yes"
+        self.client_factory.failedUpgradeHostNotFound("mockup", None)
+        self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
+        self.assertEqual(False, self.client_factory.call_quit)
 
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test14"
+    loader.methodPrefix = "test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
+    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
+    suite.addTest(loader.loadClass(PokerClientFactoryTestCase2))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
