@@ -123,6 +123,9 @@ case "$1" in
 
 *.py)   @PYTHON@ -u ${srcdir}/coverage.py -x "$1" ;;
 
+*test-unittestmain) ./$1
+	;;
+
 *) 
         echo unknown test $1
         exit 1

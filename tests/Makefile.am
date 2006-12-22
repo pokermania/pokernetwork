@@ -72,7 +72,17 @@ TESTS = coverage-reset \
 	testpoker.php \
 	testicurrency.php \
 	coverage-report \
-	poker-interface
+	poker-interface \
+        test-unittestmain
+
+noinst_PROGRAMS = test-unittestmain 
+
+test_unittestmain_SOURCES = test-unittestmain.cpp \
+                            test-unittestgui.cpp \
+                            $(top_builddir)/pokerclient2d/gui.c
+                    
+test_unittestmain_CPPFLAGS = @UNITTESTCPP_CFLAGS@ @GLIB_CFLAGS@ @GLADE_CFLAGS@
+test_unittestmain_LDFLAGS = @UNITTESTCPP_LIBS@ @GLIB_LIBS@ @GLADE_LIBS@
 
 .PHONY: coverage-reset coverage-report poker-interface 
 
