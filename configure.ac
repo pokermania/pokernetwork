@@ -244,6 +244,8 @@ AC_ARG_WITH(poker-dbroot-password,
     [ POKER_DBROOT_PASSWORD= ] )
 AC_SUBST(POKER_DBROOT_PASSWORD)
 
+AM_UNITTEST
+
 # Generate files
 if test x$poker2d = xtrue ; then
         AC_CONFIG_FILES([
