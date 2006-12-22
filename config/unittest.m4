@@ -34,7 +34,7 @@ AC_ARG_ENABLE(unittest, [  --disable-unittest do not build coverage unittest], [
      unittest=true                        # for AM_CONDITION
    fi
 ])
-AM_CONDITIONAL([COVERAGE], [test x$unittest = xtrue])     # For use in Makefile.am
+AM_CONDITIONAL([UNITTEST], [test x$unittest = xtrue])     # For use in Makefile.am
 
 ])
 
