@@ -52,7 +52,7 @@ GladeXML*	gui_load_widget(const char* widget_name)
   else if (g_file_test("../../poker3d-interface/interface.glade", G_FILE_TEST_EXISTS))
     filename = "../../poker3d-interface/interface.glade";
   g_message("reading glade file %s", filename);
-  GladeXML*	xml = glade_xml_new(filename, widget_name, NULL);
+  GladeXML*	xml = glade_xml_new(filename, widget_name, "poker2d");
   if (!xml)
     {
       g_critical("unable to load glade file %s", filename);

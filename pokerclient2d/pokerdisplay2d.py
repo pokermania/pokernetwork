@@ -38,6 +38,10 @@ from pokerui.pokerdisplay import PokerDisplay
 import gtk
 import gtk.glade
 
+import gettext
+application = 'poker2d'
+gettext.install(application)
+
 class PokerPlayer2D:
     def __init__(self, player, table):
         self.table = table
@@ -313,6 +317,7 @@ class PokerTable2D:
                     self.seats[packet.seat].show()
 
 class PokerDisplay2D(PokerDisplay):
+
     def __init__(self, *args, **kwargs):
         PokerDisplay.__init__(self, *args, **kwargs)
         pygame.mixer.init()
@@ -375,7 +380,7 @@ class PokerDisplay2D(PokerDisplay):
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
         glade_file = self.datadir + "/interface/interface2d.glade"
-        self.glade = gtk.glade.XML(fname = glade_file, root = "game_window")
+        self.glade = gtk.glade.XML(fname = glade_file, root = "game_window", domain=application)
         self.actions = {
             "call": self.glade.get_widget("call"),
             "raise": self.glade.get_widget("raise"),
