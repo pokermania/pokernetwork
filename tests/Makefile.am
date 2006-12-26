@@ -42,6 +42,12 @@ EXTRA_DIST = \
 	vncpasswd \
 	test-fc.py
 
+if UNITTEST
+  TEST_CPART = test-unittestmain
+else
+  TEST_CPART = 
+endif
+
 TESTS_ENVIRONMENT = ./run
 #
 # Do NOT sort entries because the order matters 
@@ -72,7 +78,8 @@ TESTS = coverage-reset \
 	testpoker.php \
 	testicurrency.php \
 	coverage-report \
-	poker-interface  
+	poker-interface \
+        ${TEST_CPART}        
 
 
 if UNITTEST
