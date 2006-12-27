@@ -1,6 +1,62 @@
-2006-12-27 Jerome Jeannin  <jerome@mekensleep.com>
+2006-12-27  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.33
+
+	* conf/poker.server.xml.in: add autodeal_tournament_min
+
+	* tests/test-pokertable.py.in:
+	test all autodeal cases involving tournament tables.
+
+	* tests/test-pokerlock.py.in: use verbose text reporter
+
+	* tests/test-pokerclient.py.in:
+	add sitngo tests (sitout + sit, timeout, play without special cases)
+	add constant shuffler for players in tournament and cards
+	set the ROLE when login
+	parameter in the allin function to control the sit out
+	add check_or_call function to help fake a player behaviour
+	externalize readyToPlay and processingHand as they may be of use in other tests
+
+	* pokernetwork/pokertable.py:
+	ensure a minimun hand duration for tournament tables
+	fix client.PacketPokerError error (should be sendPacketVerbose)
+
+	* pokernetwork/pokerservice.py: add missing start time to tourney
+
+	* pokernetwork/pokerpackets.py:
+	cope with possible string affiliate arguments
+
+	* pokernetwork/pokerlock.py: better verbosity
+
+	* pokerclient2d/poker2d-test.xml, pokerclient2d/client.xml:
+	version bump
+
+	* examples/poker.bot.xml: sitngo robot player
+
+2006-12-27  Johan Euphrosine  <proppy@aminche.com>
+
+	* tests/run.in: bashism require bash
+
+	* configure.ac: configure now checks for bash
+
+	* tests/test-pokerdisplay2d.py.in, pokerclient2d/pokerdisplay2d.py:
+	added new cards gfx (jpg to png)
+
+	* tests/test-pokerdisplay2d.py.in: setUp
+
+	* tests/test-pokerdisplay2d.py.in, pokerclient2d/pokerdisplay2d.py:
+	small-back.jpg->small-back.png
+
+	* tests/test-pokerdisplay2d.py.in: typo
+
+	* pokerclient2d/pokerdisplay2d.py: jpg to png
+
+	* tests/test-pokerdisplay2d.py.in:
+	added test for jpg to png name change
+
+	* pokerclient2d/data/Makefile.am: added new cards
+
+2006-12-27 Jerome Jeannin  <jerome@mekensleep.com>
 
 	* I18N support
 
