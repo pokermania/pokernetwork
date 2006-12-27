@@ -145,8 +145,9 @@ class PokerTable2DTest(unittest.TestCase):
 
 class PokerDisplay2DTest(unittest.TestCase):
     def setUp(self):
+
 	my_settings = Config([''])
-	my_settings.load("@top_srcdir@/tests/conf/poker2d.xml")
+	my_settings.load("./conf/poker2d.xml")
 	my_config = Config([''])
 	my_config.load("@top_srcdir@/tests/conf/client.xml")
 	self.display2d = PokerDisplay2D(settings = my_settings, config = my_config, factory = None);
