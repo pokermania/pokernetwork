@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.0"
+   width="800"
+   height="600"
+   id="game_window">
+  <defs
+     id="defs4" />
+  <g
+     id="game_fixed">
+    <image
+       xlink:href="table_background.png"
+       x="0.98279238"
+       y="-0.73710114"
+       width="800"
+       height="600"
+       id="game_background" />
+    <image
+       xlink:href="dealer.png"
+       x="162.31781"
+       y="213.36116"
+       width="24"
+       height="24"
+       id="dealer0" />
+    <image
+       xlink:href="dealer.png"
+       x="135.35153"
+       y="307.74316"
+       width="24"
+       height="24"
+       id="dealer9" />
+    <image
+       xlink:href="dealer.png"
+       x="211.435"
+       y="398.27286"
+       width="24"
+       height="24"
+       id="dealer8" />
+    <image
+       xlink:href="dealer.png"
+       x="348.19263"
+       y="398.27286"
+       width="24"
+       height="24"
+       id="dealer7" />
+    <image
+       xlink:href="dealer.png"
+       x="481.09793"
+       y="399.23596"
+       width="24"
+       height="24"
+       id="dealer6" />
+    <image
+       xlink:href="dealer.png"
+       x="283.66611"
+       y="178.20866"
+       width="24"
+       height="24"
+       id="dealer1" />
+    <image
+       xlink:href="dealer.png"
+       x="427.16534"
+       y="178.20866"
+       width="24"
+       height="24"
+       id="dealer2" />
+    <image
+       xlink:href="dealer.png"
+       x="560.07062"
+       y="179.17177"
+       width="24"
+       height="24"
+       id="dealer3" />
+    <image
+       xlink:href="dealer.png"
+       x="634.22791"
+       y="278.85074"
+       width="24"
+       height="24"
+       id="dealer4" />
+    <image
+       xlink:href="dealer.png"
+       x="600.52008"
+       y="371.30655"
+       width="24"
+       height="24"
+       id="dealer5" />
+    <image
+       xlink:href="bet.png"
+       x="144.08949"
+       y="243.70039"
+       width="34"
+       height="34"
+       id="bet_seat0" />
+    <image
+       xlink:href="bet.png"
+       x="147.20235"
+       y="333.97275"
+       width="34"
+       height="34"
+       id="bet_seat9" />
+    <image
+       xlink:href="bet.png"
+       x="246.81323"
+       y="392.33853"
+       width="34"
+       height="34"
+       id="bet_seat8" />
+    <image
+       xlink:href="bet.png"
+       x="379.88715"
+       y="394.67316"
+       width="34"
+       height="34"
+       id="bet_seat7" />
+    <image
+       xlink:href="bet.png"
+       x="509.84827"
+       y="393.11673"
+       width="34"
+       height="34"
+       id="bet_seat6" />
+    <image
+       xlink:href="bet.png"
+       x="607.90271"
+       y="335.52917"
+       width="34"
+       height="34"
+       id="bet_seat5" />
+    <image
+       xlink:href="bet.png"
+       x="611.01556"
+       y="248.36964"
+       width="34"
+       height="34"
+       id="bet_seat4" />
+    <image
+       xlink:href="bet.png"
+       x="524.63428"
+       y="174.43968"
+       width="34"
+       height="34"
+       id="bet_seat3" />
+    <image
+       xlink:href="bet.png"
+       x="387.66928"
+       y="175.99611"
+       width="34"
+       height="34"
+       id="bet_seat2" />
+    <image
+       xlink:href="bet.png"
+       x="246.03502"
+       y="176.77432"
+       width="34"
+       height="34"
+       id="bet_seat1" />
+    <image
+       xlink:href="player.png"
+       x="25.861681"
+       y="128.44835"
+       width="102"
+       height="101"
+       id="sit_seat0" />
+    <image
+       xlink:href="player.png"
+       x="26.042801"
+       y="398.52722"
+       width="102"
+       height="101"
+       id="sit_seat9" />
+    <image
+       xlink:href="player.png"
+       x="211.92136"
+       y="490.75201"
+       width="102"
+       height="101"
+       id="sit_seat8" />
+    <image
+       xlink:href="player.png"
+       x="347.79184"
+       y="491.53024"
+       width="102"
+       height="101"
+       id="sit_seat7" />
+    <image
+       xlink:href="player.png"
+       x="480.62119"
+       y="491.71509"
+       width="102"
+       height="101"
+       id="sit_seat6" />
+    <image
+       xlink:href="player.png"
+       x="679.01605"
+       y="398.29614"
+       width="102"
+       height="101"
+       id="sit_seat5" />
+    <image
+       xlink:href="player.png"
+       x="679.01605"
+       y="128.63322"
+       width="102"
+       height="101"
+       id="sit_seat4" />
+    <image
+       xlink:href="player.png"
+       x="487.36273"
+       y="7.2849135"
+       width="102"
+       height="101"
+       id="sit_seat3" />
+    <image
+       xlink:href="player.png"
+       x="352.53128"
+       y="6.3218298"
+       width="102"
+       height="101"
+       id="sit_seat2" />
+    <image
+       xlink:href="player.png"
+       x="213.8475"
+       y="6.3218312"
+       width="102"
+       height="101"
+       id="sit_seat1" />
+    <image
+       xlink:href="10spades.png"
+       x="290.4494"
+       y="258.04669"
+       width="37"
+       height="52"
+       id="board1" />
+    <image
+       xlink:href="10spades.png"
+       x="330.13812"
+       y="258.82489"
+       width="37"
+       height="52"
+       id="board2" />
+    <image
+       xlink:href="10spades.png"
+       x="368.27042"
+       y="258.04669"
+       width="37"
+       height="52"
+       id="board3" />
+    <image
+       xlink:href="10spades.png"
+       x="407.95914"
+       y="258.82492"
+       width="37"
+       height="52"
+       id="board4" />
+    <image
+       xlink:href="10spades.png"
+       x="446.86966"
+       y="258.82489"
+       width="37"
+       height="52"
+       id="board5" />
+    <image
+       xlink:href="pot.png"
+       x="225.02335"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot0" />
+    <image
+       xlink:href="pot.png"
+       x="263.93384"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot1" />
+    <image
+       xlink:href="pot.png"
+       x="302.06613"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot2" />
+    <image
+       xlink:href="pot.png"
+       x="337.86383"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot3" />
+    <image
+       xlink:href="pot.png"
+       x="374.43967"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot4" />
+    <image
+       xlink:href="pot.png"
+       x="411.01556"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot5" />
+    <image
+       xlink:href="pot.png"
+       x="446.81323"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot6" />
+    <image
+       xlink:href="pot.png"
+       x="484.94553"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot7" />
+    <image
+       xlink:href="pot.png"
+       x="521.52142"
+       y="321.52139"
+       width="34"
+       height="34"
+       id="pot8" />
+    <image
+       xlink:href="name.png"
+       x="46.042789"
+       y="194.83463"
+       width="62"
+       height="15"
+       id="name_seat0" />
+    <image
+       xlink:href="money.png"
+       x="49.099216"
+       y="209.06419"
+       width="59"
+       height="13"
+       id="money_seat0" />
+    <image
+       xlink:href="name.png"
+       x="46.042801"
+       y="462.53891"
+       width="62"
+       height="15"
+       id="name_seat9" />
+    <image
+       xlink:href="money.png"
+       x="46.764591"
+       y="477.54669"
+       width="59"
+       height="13"
+       id="money_seat9" />
+    <image
+       xlink:href="winner.png"
+       x="298.10275"
+       y="234.20183"
+       width="176"
+       height="20"
+       id="winner0" />
+    <image
+       xlink:href="winner.png"
+       x="299.78635"
+       y="314.45282"
+       width="176"
+       height="20"
+       id="winner1" />
+    <image
+       xlink:href="exit.png"
+       x="25.230156"
+       y="18.746033"
+       width="67"
+       height="26"
+       id="quit" />
+    <image
+       xlink:href="rebuy.png"
+       x="98.246025"
+       y="19.539679"
+       width="67"
+       height="26"
+       id="rebuy" />
+    <image
+       xlink:href="tables_dock.png"
+       x="28.119055"
+       y="47.809521"
+       width="139"
+       height="52"
+       id="switch" />
+    <image
+       xlink:href="name.png"
+       x="229.31746"
+       y="551.86914"
+       width="62"
+       height="15"
+       id="name_seat8" />
+    <image
+       xlink:href="money.png"
+       x="230.03925"
+       y="566.87689"
+       width="59"
+       height="13"
+       id="money_seat8" />
+    <image
+       xlink:href="name.png"
+       x="365.82541"
+       y="554.25006"
+       width="62"
+       height="15"
+       id="name_seat7" />
+    <image
+       xlink:href="money.png"
+       x="366.54718"
+       y="569.25787"
+       width="59"
+       height="13"
+       id="money_seat7" />
+    <image
+       xlink:href="name.png"
+       x="499.15872"
+       y="553.45642"
+       width="62"
+       height="15"
+       id="name_seat6" />
+    <image
+       xlink:href="money.png"
+       x="499.88052"
+       y="568.46417"
+       width="59"
+       height="13"
+       id="money_seat6" />
+    <image
+       xlink:href="name.png"
+       x="699.15875"
+       y="459.80563"
+       width="62"
+       height="15"
+       id="name_seat5" />
+    <image
+       xlink:href="money.png"
+       x="699.88055"
+       y="474.81342"
+       width="59"
+       height="13"
+       id="money_seat5" />
+    <image
+       xlink:href="name.png"
+       x="697.57141"
+       y="192.34532"
+       width="62"
+       height="15"
+       id="name_seat4" />
+    <image
+       xlink:href="money.png"
+       x="698.29321"
+       y="207.3531"
+       width="59"
+       height="13"
+       id="money_seat4" />
+    <image
+       xlink:href="name.png"
+       x="508.68253"
+       y="72.504051"
+       width="62"
+       height="15"
+       id="name_seat3" />
+    <image
+       xlink:href="money.png"
+       x="509.40433"
+       y="87.511833"
+       width="59"
+       height="13"
+       id="money_seat3" />
+    <image
+       xlink:href="name.png"
+       x="372.17459"
+       y="70.123093"
+       width="62"
+       height="15"
+       id="name_seat2" />
+    <image
+       xlink:href="money.png"
+       x="372.89639"
+       y="85.130875"
+       width="59"
+       height="13"
+       id="money_seat2" />
+    <image
+       xlink:href="name.png"
+       x="232.49207"
+       y="69.329437"
+       width="62"
+       height="15"
+       id="name_seat1" />
+    <image
+       xlink:href="money.png"
+       x="233.21385"
+       y="84.337219"
+       width="59"
+       height="13"
+       id="money_seat1" />
+    <image
+       xlink:href="check.png"
+       x="638.31744"
+       y="18.333334"
+       width="44"
+       height="30"
+       id="check" />
+    <image
+       xlink:href="call.png"
+       x="686.73016"
+       y="19.126986"
+       width="44"
+       height="30"
+       id="call" />
+    <image
+       xlink:href="fold.png"
+       x="735.93652"
+       y="17.539684"
+       width="44"
+       height="30"
+       id="fold" />
+    <image
+       xlink:href="raise.png"
+       x="639.90472"
+       y="53.253963"
+       width="44"
+       height="30"
+       id="raise" />
+    <image
+       xlink:href="raise_slider_dock.png"
+       x="686.33331"
+       y="51.984127"
+       width="94"
+       height="50"
+       id="raise_range" />
+  </g>
+</svg>
