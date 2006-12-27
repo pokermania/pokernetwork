@@ -1754,7 +1754,7 @@ serial: integer uniquely identifying a player.
         self.password = kwargs.get("password", "")
         self.email = kwargs.get("email", "")
         self.rating = kwargs.get("rating", 1500)
-        self.affiliate = kwargs.get("affiliate", 0)
+        self.affiliate = int(kwargs.get("affiliate", 0))
         #
         # currency 5, bankroll 200, in_game 3, points 20
         # {5: (200, 3, 20), ...} 
