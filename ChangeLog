@@ -1,9 +1,32 @@
 2006-12-27  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.0.33
-	
-	* pokerclient2d/data/svg2gtk.py, tests/test-svg2gtk.py.in: 
-	add svg2gtk conversion tool
+
+	* pokerclient2d/Makefile.am, pokerclient2d/gamewindow.py: added gamewindow.py
+
+	* pokerclient2d/data/interface/pixmaps/.jpg, configure.ac, tests/Makefile.am, pokerclient2d/Makefile.am, pokerclient2d/game_window.py, pokerclient2d/gladegen.py:
+	removed old files
+
+	* pokerclient2d/data/pygtk.py, pokerclient2d/data/Makefile.am:
+	added sample pygtk application using new skin
+
+	* pokerclient2d/data/skin/mockup.svg, pokerclient2d/data/skin/money.png, pokerclient2d/data/skin/name.png, pokerclient2d/data/skin/winner.png:
+	new placeholder data
+
+	* pokerclient2d/data/Makefile.am: add mockup.glade and gtkrc generation
+
+	* pokerclient2d/data/skin/mokup.png: remove duplicate data
+
+	* pokerclient2d/data/skin/gtkrc: removed generated gtkrc
+
+	* pokerclient2d/data/skin/.png:
+	remove duplicate data
+
+	* pokerclient2d/data/interface/mockup.svg, pokerclient2d/data/Makefile.am:
+	add mockup.svg
+
+	* configure.ac, pokerclient2d/data/Makefile.am, pokerclient2d/data/svg2gtk.py, tests/Makefile.am, tests/test-svg2gtk.py.in:
+	added svg2gtk conversion tool
 
 2006-12-27  Loic Dachary  <loic@dachary.org>
 
