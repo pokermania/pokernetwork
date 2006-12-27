@@ -74,6 +74,7 @@ TESTS = coverage-reset \
 	test-rank.py \
 	test-pokerdisplay2d.py \
 	test-gladegen.py \
+	test-svg2gtk.py \
 	testcurrency.php \
 	testpoker.php \
 	testicurrency.php \
