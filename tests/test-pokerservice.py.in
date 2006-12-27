@@ -49,11 +49,19 @@ from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 
-class ConstantShuffler:
+class ConstantDeckShuffler:
     def shuffle(self, what):
         what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
 
-pokergame.shuffler = ConstantShuffler()
+from pokerengine import pokergame
+pokergame.shuffler = ConstantDeckShuffler()
+
+class ConstantPlayerShuffler:
+    def shuffle(self, what):
+        what.sort()
+
+from pokerengine import pokertournament
+pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
