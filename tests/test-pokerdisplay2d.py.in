@@ -190,10 +190,11 @@ class PokerTableMockup:
     game = PokerGameMockup()
 
 class PokerPlayer2DCardTest(unittest.TestCase):
-    def test_updateCard(self):
-        PokerHandMockup.list = (255, 255)
+    def setUp(self):
         PokerWidgetMockup.files = []
         self.player = PokerPlayer2D(PokerPlayerMockup(), PokerTableMockup())
+    def test_updateCardBack(self):
+        PokerHandMockup.list = (255, 255)
         self.player.updateCards()
         back = "pixmaps/cards/small-back.png"
         self.assertEquals(2, len(PokerWidgetMockup.files))
