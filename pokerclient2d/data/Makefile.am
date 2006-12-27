@@ -172,6 +172,59 @@ nobase_dist_poker2d_DATA = \
 	interface/pixmaps/cards/small-Th.jpg \
 	interface/pixmaps/cards/small-Ts.jpg \
 	interface/pixmaps/cards/small-back.jpg \
+	interface/pixmaps/cards/small-2c.png \
+	interface/pixmaps/cards/small-2d.png \
+	interface/pixmaps/cards/small-2h.png \
+	interface/pixmaps/cards/small-2s.png \
+	interface/pixmaps/cards/small-3c.png \
+	interface/pixmaps/cards/small-3d.png \
+	interface/pixmaps/cards/small-3h.png \
+	interface/pixmaps/cards/small-3s.png \
+	interface/pixmaps/cards/small-4c.png \
+	interface/pixmaps/cards/small-4d.png \
+	interface/pixmaps/cards/small-4h.png \
+	interface/pixmaps/cards/small-4s.png \
+	interface/pixmaps/cards/small-5c.png \
+	interface/pixmaps/cards/small-5d.png \
+	interface/pixmaps/cards/small-5h.png \
+	interface/pixmaps/cards/small-5s.png \
+	interface/pixmaps/cards/small-6c.png \
+	interface/pixmaps/cards/small-6d.png \
+	interface/pixmaps/cards/small-6h.png \
+	interface/pixmaps/cards/small-6s.png \
+	interface/pixmaps/cards/small-7c.png \
+	interface/pixmaps/cards/small-7d.png \
+	interface/pixmaps/cards/small-7h.png \
+	interface/pixmaps/cards/small-7s.png \
+	interface/pixmaps/cards/small-8c.png \
+	interface/pixmaps/cards/small-8d.png \
+	interface/pixmaps/cards/small-8h.png \
+	interface/pixmaps/cards/small-8s.png \
+	interface/pixmaps/cards/small-9c.png \
+	interface/pixmaps/cards/small-9d.png \
+	interface/pixmaps/cards/small-9h.png \
+	interface/pixmaps/cards/small-9s.png \
+	interface/pixmaps/cards/small-Ac.png \
+	interface/pixmaps/cards/small-Ad.png \
+	interface/pixmaps/cards/small-Ah.png \
+	interface/pixmaps/cards/small-As.png \
+	interface/pixmaps/cards/small-Jc.png \
+	interface/pixmaps/cards/small-Jd.png \
+	interface/pixmaps/cards/small-Jh.png \
+	interface/pixmaps/cards/small-Js.png \
+	interface/pixmaps/cards/small-Kc.png \
+	interface/pixmaps/cards/small-Kd.png \
+	interface/pixmaps/cards/small-Kh.png \
+	interface/pixmaps/cards/small-Ks.png \
+	interface/pixmaps/cards/small-Qc.png \
+	interface/pixmaps/cards/small-Qd.png \
+	interface/pixmaps/cards/small-Qh.png \
+	interface/pixmaps/cards/small-Qs.png \
+	interface/pixmaps/cards/small-Tc.png \
+	interface/pixmaps/cards/small-Td.png \
+	interface/pixmaps/cards/small-Th.png \
+	interface/pixmaps/cards/small-Ts.png \
+	interface/pixmaps/cards/small-back.png \
 	interface/interface2d.glade \
 	interface/interface.glade \
 	interface/interface.gladep \
