@@ -42,21 +42,9 @@ EXTRA_DIST = \
 	skin/exit.png \
 	skin/fold.png \
 	skin/get_seat.png \
-	skin/Jclubs.png \
-	skin/Jdiamonds.png \
-	skin/Jhearts.png \
-	skin/Jspades.png \
-	skin/Kclubs.png \
-	skin/Kdiamonds.png \
-	skin/Khearts.png \
-	skin/Kspades.png \
 	skin/player_active.png \
 	skin/player.png \
 	skin/pot.png \
-	skin/Qclubs.png \
-	skin/Qdiamonds.png \
-	skin/Qhearts.png \
-	skin/Qspades.png \
 	skin/raise.png \
 	skin/raise_slider_dock.png \
 	skin/raise_slider.png \
