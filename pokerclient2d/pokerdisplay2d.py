@@ -248,7 +248,7 @@ class PokerTable2D:
                 if i >= board_length:
                     self.board[i].hide()
                 else:
-                    self.board[i].set_from_file(self.glade.relative_file("pixmaps/cards/small-%s.jpg" % board[i]))
+                    self.board[i].set_from_file(self.glade.relative_file("pixmaps/cards/small-%s.png" % board[i]))
                     self.board[i].show()
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
