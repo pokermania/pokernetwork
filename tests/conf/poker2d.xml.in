@@ -21,5 +21,5 @@
   <user path="~/.poker2d"/>
   <rsync path="@RSYNC@" dir="." source="@UPGRADES_SOURCE@/@target_os@" target="@prefix@" upgrades="share/poker-network/upgrades" />
   <path>@POKER2D_PKGDATADIR@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
-  <data path="../pokerclient2d/data" sounds="../pokerclient2d/data/sounds" />
+  <data path="@top_srcdir@/pokerclient2d/data" sounds="@top_srcdir@/pokerclient2d/data/sounds" />
 </settings>
