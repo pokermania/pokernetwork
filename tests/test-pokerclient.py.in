@@ -32,7 +32,7 @@ sys.path.insert(0, "..")
 
 import libxml2
 
-from pokerclient2d.poker2d import PokerClientFactory2D
+#from pokerclient2d.poker2d import PokerClientFactory2D
 import socket
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
