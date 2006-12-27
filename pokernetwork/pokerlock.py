@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -60,14 +61,14 @@ class PokerLock(threading.Thread):
         
     def main(self):
         while 1:
-            if self.verbose > 2: print "PokerLock::loop"
+            if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") loop"
             try:
                 ( name, function, timeout, deferred ) = self.q.get(timeout = PokerLock.queue_timeout)
             except Queue.Empty:
                 #
                 # When timeout, silently terminate the thread
                 #
-                print "PokerLock:: thread " + str(thread.get_ident()) + " timeout"
+                print "PokerLock::(" + str(thread.get_ident()) + ") timeout"
                 break
 
             if not name:
@@ -99,7 +100,7 @@ class PokerLock(threading.Thread):
         return d
         
     def __acquire(self, name, timeout):
-        if self.verbose > 2: print "PokerLock::__acquire %s %d" % ( name, timeout )
+        if self.verbose > 2: print "PokerLock::__acquire(%s) %s %d" % ( str(thread.get_ident()), name, timeout )
         tick = timeout
         while 1:
             if self.lock.acquire(0):
@@ -107,13 +108,13 @@ class PokerLock(threading.Thread):
             tick -= 1
             if tick <= 0:
                 raise Exception(PokerLock.TIMED_OUT, name)
-            if self.verbose > 2: print "PokerLock::sleep 1"
+            if self.verbose > 2: print "PokerLock::__acquire(%s) sleep 1" % str(thread.get_ident())
             time.sleep(1)
         self.db.query("SELECT GET_LOCK('%s', %d)" % ( name, timeout))
         result = self.db.store_result()
         if result.fetch_row()[0][0] != 1:
             raise Exception(PokerLock.TIMED_OUT, name)
-        if self.verbose > 2: print "PokerLock::__acquire got MySQL lock"
+        if self.verbose > 2: print "PokerLock::__acquire(%s) got MySQL lock" % str(thread.get_ident())
 
     def release(self, name):
         if self.verbose > 2: print "PokerLock::release"
