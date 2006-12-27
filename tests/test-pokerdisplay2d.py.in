@@ -34,7 +34,7 @@ import unittest
 
 from pokernetwork.pokernetworkconfig import Config
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D, PokerPlayer2D, PokerTable2D
-from pokernetwork.pokerclientpackets import PACKET_POKER_POSITION, PACKET_POKER_PLAYER_ARRIVE
+from pokernetwork.pokerclientpackets import PACKET_POKER_POSITION, PACKET_POKER_PLAYER_ARRIVE, PACKET_POKER_BOARD_CARDS
 class PokerPacketPlayerArriveMockup:
     type = PACKET_POKER_PLAYER_ARRIVE
     def __init__(self, serial, name):
@@ -50,8 +50,14 @@ class PokerPacketPositionMockup:
         self.position = position
         self.serial = position
 
+class PokerPacketBoardCardsMockup:
+    type = PACKET_POKER_BOARD_CARDS
+
 class PokerWidgetMockup:
     texts = []
+    files = []
+    def __init__(self):
+        pass
     def set_text(self, text):
         pass
     def show(self):
@@ -66,17 +72,29 @@ class PokerWidgetMockup:
         pass
     def modify_fg(self, state, color):
         pass
+    def set_from_file(self, file):
+        PokerWidgetMockup.files.append(file)
 
 class PokerGladeMockup:
     def get_widget(self, name):
         return PokerWidgetMockup()
+    def relative_file(self, file):
+        return file
 
 class PokerTableMockup:
     verbose = 1
     glade = PokerGladeMockup()
     id = 0
 
+class PokerEvalMockup:
+    cards = None
+    def card2string(self, cards):
+        return PokerEvalMockup.cards
+class PokerBoardMockup:
+    cards = (0, 0, 0)
 class PokerGameMockup:
+    eval = PokerEvalMockup()
+    board = PokerBoardMockup()
     def getMaxHandSize(self):
         return 0
     def isTournament(self):
@@ -137,6 +155,16 @@ class PokerDisplay2DTest(unittest.TestCase):
 	self.display2d.init()
 	self.assertNotEqual(None, self.display2d.glade)
 
+class PokerDisplay2dCardTest(unittest.TestCase):
+    def test_PokerTableRenderPacketBoardCards(self):
+        self.table = PokerTable2D(PokerTableMockup(), PokerDisplayMockup())
+        cards = ("As", "Ac", "Ad")
+        cards2files = map(lambda card: "pixmaps/cards/small-%s.png" % card, cards)
+        PokerEvalMockup.cards = cards
+        self.table.render(PokerPacketBoardCardsMockup())
+        self.assertEquals(len(cards2files), len(PokerWidgetMockup.files))
+        for i in range(0, len(cards2files)):
+            self.assertEquals(cards2files[i], PokerWidgetMockup.files[i])
 
 if __name__ == '__main__':
     unittest.main()
