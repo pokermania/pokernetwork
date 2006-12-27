@@ -332,9 +332,9 @@ class PokerService(service.Service):
     def spawnTourney(self, schedule):
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
-                       " (schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay )"
+                       " (schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay, start_time)"
                        " VALUES "
-                       " (%s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,              %s,          %s,     %s )",
+                       " (%s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,              %s,          %s,     %s,           %s )",
                        ( schedule['serial'],
                          schedule['name'],
                          schedule['description_short'],
@@ -354,7 +354,8 @@ class PokerService(service.Service):
                          schedule['breaks_interval'],
                          schedule['rebuy_delay'],
                          schedule['add_on'],
-                         schedule['add_on_delay'] ) )
+                         schedule['add_on_delay'],
+                         schedule['start_time'] ) )
         if self.verbose > 2: print "spawnTourney: " + str(schedule)
         #
         # Accomodate with MySQLdb versions < 1.1
@@ -456,7 +457,10 @@ class PokerService(service.Service):
             player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
             client = self.serial2client.get(serial, None)
             if client:
+                if self.verbose > 2: print "tourneyGameFilled: player %d connected" % serial
                 table.serial2client[serial] = client
+            else:
+                if self.verbose > 2: print "tourneyGameFilled: player %d disconnected" % serial
             self.seatPlayer(serial, game.id, game.buyIn())
 
             if client:
