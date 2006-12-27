@@ -1,6 +1,11 @@
-2006-12-27  Loic Dachary  <loic@dachary.org>
+2006-12-27  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.0.33
+	
+	* pokerclient2d/data/svg2gtk.py, tests/test-svg2gtk.py.in: 
+	add svg2gtk conversion tool
+
+2006-12-27  Loic Dachary  <loic@dachary.org>
 
 	* conf/poker.server.xml.in: add autodeal_tournament_min
 
@@ -42,18 +47,6 @@
 	* tests/test-pokerdisplay2d.py.in, pokerclient2d/pokerdisplay2d.py:
 	added new cards gfx (jpg to png)
 
-	* tests/test-pokerdisplay2d.py.in: setUp
-
-	* tests/test-pokerdisplay2d.py.in, pokerclient2d/pokerdisplay2d.py:
-	small-back.jpg->small-back.png
-
-	* tests/test-pokerdisplay2d.py.in: typo
-
-	* pokerclient2d/pokerdisplay2d.py: jpg to png
-
-	* tests/test-pokerdisplay2d.py.in:
-	added test for jpg to png name change
-
 	* pokerclient2d/data/Makefile.am: added new cards
 
 2006-12-27 Jerome Jeannin  <jerome@mekensleep.com>
@@ -61,12 +54,6 @@
 	* I18N support
 
 	* added po subdir
-
-2006-12-27  Johan Euphrosine  <proppy@aminche.com>
-
-	* pokerclient2d/pokerdisplay2d.py (PokerTable2D.render): 
-	added new cards gfx (jpg to png)
-	added corresponding testcases
 
 2006-12-21  Cedric Pinson  <cpinson@freesheep.org>
 
