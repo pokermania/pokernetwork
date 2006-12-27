@@ -155,7 +155,7 @@ class PokerDisplay2DTest(unittest.TestCase):
 	self.display2d.init()
 	self.assertNotEqual(None, self.display2d.glade)
 
-class PokerDisplay2dCardTest(unittest.TestCase):
+class PokerDisplay2DCardTest(unittest.TestCase):
     def test_PokerTableRenderPacketBoardCards(self):
         self.table = PokerTable2D(PokerTableMockup(), PokerDisplayMockup())
         cards = ("As", "Ac", "Ad")
