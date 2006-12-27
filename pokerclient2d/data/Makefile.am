@@ -29,6 +29,7 @@ MAINTAINERCLEANFILES = \
 EXTRA_DIST = \
 	root2window.pl \
 	svg2gtk.py \
+	interface/mockup.svg \
 	skin/10clubs.png \
 	skin/10diamonds.png \
 	skin/10hearts.png \
