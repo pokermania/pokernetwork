@@ -646,6 +646,7 @@ class PokerClientTestCase(unittest.TestCase):
                     return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
                 d[index].addCallback(callNraise)
                     
+            d[index].addCallback(self.check_or_call)
             d[index].addCallback(lambda arg: self.allIn(arg, sit_out = False))
             d[index].addCallback(self.tourneyRank)
             d[index].addCallback(self.quit)
@@ -661,10 +662,7 @@ class PokerClientTestCase(unittest.TestCase):
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
-            if index == 0:
-                d[index].addCallback(self.login, index, 2)
-            else:
-                d[index].addCallback(self.login, index, 3)
+            d[index].addCallback(self.login, index)
             d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000000))
 
             d[index].addCallback(self.search_sitngo2)
@@ -865,7 +863,6 @@ def Run():
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase2))
     return runner.TrialRunner(
-#        reporter.TextReporter,
         reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
