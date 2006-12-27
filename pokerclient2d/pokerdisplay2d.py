@@ -97,7 +97,7 @@ class PokerPlayer2D:
                 self.cards[card_slot].hide()
             else:
                 if cards_numbers[card_index] == 255:
-                    self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-back.jpg"))
+                    self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-back.png"))
                 else:
                     self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-%s.jpg" % cards_names[card_index]))
                 self.cards[card_slot].show()

@@ -93,12 +93,15 @@ class PokerEvalMockup:
 class PokerBoardMockup:
     cards = (0, 0, 0)
 class PokerGameMockup:
+    id = 0
     eval = PokerEvalMockup()
     board = PokerBoardMockup()
     def getMaxHandSize(self):
         return 0
     def isTournament(self):
         return False
+    def getPlayer(self, id):
+        return PokerPlayerMockup()
 
 class PokerFactoryMockup:
     def getGame(self, id):
@@ -165,6 +168,37 @@ class PokerDisplay2DCardTest(unittest.TestCase):
         self.assertEquals(len(cards2files), len(PokerWidgetMockup.files))
         for i in range(0, len(cards2files)):
             self.assertEquals(cards2files[i], PokerWidgetMockup.files[i])
+
+class PokerHandMockup:
+    list = (0, 0)
+    def tolist(self, arg):
+        return PokerHandMockup.list
+
+class PokerPlayerMockup:
+    serial = 1
+    seat = 0
+    name = ""
+    url = ""
+    outfit = "white"
+    hand = PokerHandMockup()
+
+class PokerTableMockup:
+    id = 0
+    verbose = 5
+    cards_slots = (0, 1)
+    glade = PokerGladeMockup()
+    game = PokerGameMockup()
+
+class PokerPlayer2DCardTest(unittest.TestCase):
+    def test_updateCard(self):
+        PokerHandMockup.list = (255, 255)
+        PokerWidgetMockup.files = []
+        self.player = PokerPlayer2D(PokerPlayerMockup(), PokerTableMockup())
+        self.player.updateCards()
+        back = "pixmaps/cards/small-back.png"
+        self.assertEquals(2, len(PokerWidgetMockup.files))
+        for i in range(len(PokerWidgetMockup.files)):
+            self.assertEquals(back, PokerWidgetMockup.files[i])
 
 if __name__ == '__main__':
     unittest.main()
