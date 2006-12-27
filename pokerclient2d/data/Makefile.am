@@ -83,59 +83,6 @@ nobase_dist_poker2d_DATA = \
 	sounds/self_in_position.wav \
 	sounds/timeout_warning.wav \
 	interface/pixmaps/poker2D_16.png \
-	interface/pixmaps/cards/small-2c.jpg \
-	interface/pixmaps/cards/small-2d.jpg \
-	interface/pixmaps/cards/small-2h.jpg \
-	interface/pixmaps/cards/small-2s.jpg \
-	interface/pixmaps/cards/small-3c.jpg \
-	interface/pixmaps/cards/small-3d.jpg \
-	interface/pixmaps/cards/small-3h.jpg \
-	interface/pixmaps/cards/small-3s.jpg \
-	interface/pixmaps/cards/small-4c.jpg \
-	interface/pixmaps/cards/small-4d.jpg \
-	interface/pixmaps/cards/small-4h.jpg \
-	interface/pixmaps/cards/small-4s.jpg \
-	interface/pixmaps/cards/small-5c.jpg \
-	interface/pixmaps/cards/small-5d.jpg \
-	interface/pixmaps/cards/small-5h.jpg \
-	interface/pixmaps/cards/small-5s.jpg \
-	interface/pixmaps/cards/small-6c.jpg \
-	interface/pixmaps/cards/small-6d.jpg \
-	interface/pixmaps/cards/small-6h.jpg \
-	interface/pixmaps/cards/small-6s.jpg \
-	interface/pixmaps/cards/small-7c.jpg \
-	interface/pixmaps/cards/small-7d.jpg \
-	interface/pixmaps/cards/small-7h.jpg \
-	interface/pixmaps/cards/small-7s.jpg \
-	interface/pixmaps/cards/small-8c.jpg \
-	interface/pixmaps/cards/small-8d.jpg \
-	interface/pixmaps/cards/small-8h.jpg \
-	interface/pixmaps/cards/small-8s.jpg \
-	interface/pixmaps/cards/small-9c.jpg \
-	interface/pixmaps/cards/small-9d.jpg \
-	interface/pixmaps/cards/small-9h.jpg \
-	interface/pixmaps/cards/small-9s.jpg \
-	interface/pixmaps/cards/small-Ac.jpg \
-	interface/pixmaps/cards/small-Ad.jpg \
-	interface/pixmaps/cards/small-Ah.jpg \
-	interface/pixmaps/cards/small-As.jpg \
-	interface/pixmaps/cards/small-Jc.jpg \
-	interface/pixmaps/cards/small-Jd.jpg \
-	interface/pixmaps/cards/small-Jh.jpg \
-	interface/pixmaps/cards/small-Js.jpg \
-	interface/pixmaps/cards/small-Kc.jpg \
-	interface/pixmaps/cards/small-Kd.jpg \
-	interface/pixmaps/cards/small-Kh.jpg \
-	interface/pixmaps/cards/small-Ks.jpg \
-	interface/pixmaps/cards/small-Qc.jpg \
-	interface/pixmaps/cards/small-Qd.jpg \
-	interface/pixmaps/cards/small-Qh.jpg \
-	interface/pixmaps/cards/small-Qs.jpg \
-	interface/pixmaps/cards/small-Tc.jpg \
-	interface/pixmaps/cards/small-Td.jpg \
-	interface/pixmaps/cards/small-Th.jpg \
-	interface/pixmaps/cards/small-Ts.jpg \
-	interface/pixmaps/cards/small-back.jpg \
 	interface/pixmaps/cards/small-2c.png \
 	interface/pixmaps/cards/small-2d.png \
 	interface/pixmaps/cards/small-2h.png \
