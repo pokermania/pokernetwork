@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -1996,17 +1997,16 @@ class PokerRenderer:
         else:
             current_game = self.factory.getGame(current_game_id)
             if current_game:
+                #
+                # Do not hold a game we do not display
+                #
+                self.readyToPlay(current_game_id)
                 if not current_game.isSeated(serial):
                     #
                     # Forget about tables where we do not sit
                     #
                     self.protocol.sendPacket(PacketPokerTableQuit(game_id = current_game_id,
                                                                   serial = serial))
-                else:
-                    #
-                    # Do not hold a game we do not display
-                    #
-                    self.readyToPlay(current_game_id)
                     
             game = self.factory.getGame(game_id)
             
