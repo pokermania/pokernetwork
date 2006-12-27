@@ -29,7 +29,11 @@ MAINTAINERCLEANFILES = \
 EXTRA_DIST = \
 	root2window.pl \
 	svg2gtk.py \
+	pygtk.py \
 	skin/mockup.svg \
+	skin/winner.png \
+	skin/name.png \
+	skin/money.png \
 	skin/bet.png \
 	skin/call.png \
 	skin/card_back.png \
@@ -46,7 +50,6 @@ EXTRA_DIST = \
 	skin/Kdiamonds.png \
 	skin/Khearts.png \
 	skin/Kspades.png \
-	skin/mokup.png \
 	skin/player_active.png \
 	skin/player.png \
 	skin/pot.png \
