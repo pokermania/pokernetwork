@@ -39,8 +39,9 @@
 
   <table name="Thirty" count="4"/>
   <table name="Fourty" count="4"/>
-
-  <tournament name="sitngo4" count="3"/>
+-->
+  <tournament name="sitngo2" count="1"/>
+<!--
   <tournament name="sitngo8" count="7"/>
   <tournament name="sitngo20" count="19"/>
   <tournament name="sitngo50" count="49"/>
