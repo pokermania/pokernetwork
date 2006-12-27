@@ -1,0 +1,743 @@
+# translation of poker2d.po to
+# French translations for pokerclient package.
+# Copyright (C) 2006 THE pokerclient'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the pokerclient package.
+# griim <griim.work@gmail.com>, 2006.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: poker2d\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-12-27 11:20+0100\n"
+"PO-Revision-Date: 2006-12-26 14:53+0100\n"
+"Last-Translator: Jerome Jeannin <griim.work@gmail.com>\n"
+"Language-Team:  \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#: pokerclient2d/data/interface/interface.glade:8
+msgid "login_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:100
+msgid "<b>Login</b>"
+msgstr "<b>Identifiant</b>"
+
+#: pokerclient2d/data/interface/interface.glade:167
+msgid "<b>Password</b>"
+msgstr "<b>Mot de passe</b>"
+
+#: pokerclient2d/data/interface/interface.glade:198
+msgid "_Remember password"
+msgstr "_Mémorise mot de passe"
+
+#: pokerclient2d/data/interface/interface.glade:256
+msgid "Create Account"
+msgstr "Créer un compte"
+
+#: pokerclient2d/data/interface/interface.glade:280
+msgid "chooser_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:348
+#: pokerclient2d/data/interface/interface.glade:10685
+msgid "..."
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:387
+msgid "sit_actions_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:441
+msgid "auto post blinds"
+msgstr "Blind automatique"
+
+#: pokerclient2d/data/interface/interface.glade:461
+msgid "sit out next hand"
+msgstr "sortir à la prochaine main"
+
+#: pokerclient2d/data/interface/interface.glade:487
+msgid "blind_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:627
+msgid "Post blind"
+msgstr "Payer le blind"
+
+#: pokerclient2d/data/interface/interface.glade:653
+msgid "Auto Post"
+msgstr "Blind auto"
+
+#: pokerclient2d/data/interface/interface.glade:724
+msgid "WAIT FOR BIG BLIND"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:761
+msgid "buy_in_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:894
+msgid "Which amount do you want to bring at the table ?"
+msgstr "Combien de jetons apporter à la table ?"
+
+#: pokerclient2d/data/interface/interface.glade:929
+msgid "The maximum"
+msgstr "Le maximum"
+
+#: pokerclient2d/data/interface/interface.glade:951
+#, fuzzy
+msgid "(maximum$)"
+msgstr "Le maximum"
+
+#: pokerclient2d/data/interface/interface.glade:980
+msgid "Another amount : "
+msgstr "Autre montant : "
+
+#: pokerclient2d/data/interface/interface.glade:1007
+msgid "sdfdsf"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1081
+msgid "chat_history_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1168
+msgid "chat_entry_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1280
+msgid "clock_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1334
+msgid "00:00"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1361
+msgid "cashier_button_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1405
+msgid "exit_cashier_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1449
+msgid "personal_information_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1532
+msgid "Player ID"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1583
+msgid "Email"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1640
+msgid "Mailing Address"
+msgstr "Adresse email"
+
+#: pokerclient2d/data/interface/interface.glade:1679
+msgid "account_status_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1803
+#: pokerclient2d/data/interface/interface.glade:2171
+msgid "Available:"
+msgstr "Disponible:"
+
+#: pokerclient2d/data/interface/interface.glade:1828
+#: pokerclient2d/data/interface/interface.glade:1923
+#: pokerclient2d/data/interface/interface.glade:2012
+#: pokerclient2d/data/interface/interface.glade:2549
+#: pokerclient2d/data/interface/interface.glade:2615
+msgid "0"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:1898
+#: pokerclient2d/data/interface/interface.glade:2266
+msgid "In play:"
+msgstr "En jeu:"
+
+#: pokerclient2d/data/interface/interface.glade:1987
+#: pokerclient2d/data/interface/interface.glade:2355
+msgid "Total:"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2078
+#: pokerclient2d/data/interface/interface.glade:5426
+#: pokerclient2d/data/interface/interface.glade:6300
+msgid "PLAY MONEY"
+msgstr "PLAY MONEY"
+
+#: pokerclient2d/data/interface/interface.glade:2196
+#: pokerclient2d/data/interface/interface.glade:2291
+#: pokerclient2d/data/interface/interface.glade:2380
+msgid "0$"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2446
+#: pokerclient2d/data/interface/interface.glade:5481
+#: pokerclient2d/data/interface/interface.glade:6369
+msgid "CUSTOM MONEY"
+msgstr "CUSTOM MONEY"
+
+#: pokerclient2d/data/interface/interface.glade:2524
+msgid "Points:"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2590
+msgid "frequent player cash"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2664
+msgid "hand_history_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2787
+msgid "Previous"
+msgstr "Précédent"
+
+#: pokerclient2d/data/interface/interface.glade:2826
+msgid "Next"
+msgstr "Suivant"
+
+#: pokerclient2d/data/interface/interface.glade:2921
+#: pokerclient2d/data/interface/interface.glade:9645
+msgid "Quit"
+msgstr "Quitter"
+
+#: pokerclient2d/data/interface/interface.glade:2957
+msgid "menu_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2998
+msgid "Lobby Lobby"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:2999
+msgid " _LOBBY"
+msgstr "_LOBBY"
+
+#: pokerclient2d/data/interface/interface.glade:3009
+msgid " T_ables List"
+msgstr "Liste des t_ables"
+
+#: pokerclient2d/data/interface/interface.glade:3018
+msgid " _Tournaments"
+msgstr "_Tournois"
+
+#: pokerclient2d/data/interface/interface.glade:3027
+msgid " _Login"
+msgstr "_Identification"
+
+#: pokerclient2d/data/interface/interface.glade:3036
+msgid " _Cashier"
+msgstr "_Caissier"
+
+#: pokerclient2d/data/interface/interface.glade:3045
+msgid " Cash I_n"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3054
+msgid " Cash _Out"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3063
+msgid " _Quit"
+msgstr "_Quitter"
+
+#: pokerclient2d/data/interface/interface.glade:3082
+msgid " MY _ACCOUNT"
+msgstr "MON _COMPTE"
+
+#: pokerclient2d/data/interface/interface.glade:3091
+msgid " _Edit Account"
+msgstr "_Editer mon compte"
+
+#: pokerclient2d/data/interface/interface.glade:3100
+msgid " _Change Outfit"
+msgstr "_Changer de panoplie"
+
+#: pokerclient2d/data/interface/interface.glade:3109
+msgid " _Hand History"
+msgstr "_Historique des mains"
+
+#: pokerclient2d/data/interface/interface.glade:3128
+msgid " _OPTIONS"
+msgstr "_OPTIONS"
+
+#: pokerclient2d/data/interface/interface.glade:3137
+msgid " _Full Screen"
+msgstr "_Plein écran"
+
+#: pokerclient2d/data/interface/interface.glade:3147
+msgid " _Screen Resolution"
+msgstr "_Résolution"
+
+#: pokerclient2d/data/interface/interface.glade:3156
+msgid " _Auto Select"
+msgstr "Sélection _Auto"
+
+#: pokerclient2d/data/interface/interface.glade:3166
+msgid " 1024x_768"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3177
+msgid " 1280x800"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3188
+msgid " 12_80x1024"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3199
+msgid " 1366x1024"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3210
+msgid " 1_400x1050"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3221
+msgid " 1600x1_200"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3232
+msgid " 1680x1050"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3243
+msgid " 1_920x1200"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3258
+msgid " S_ound Effects"
+msgstr "Effets s_onores"
+
+#: pokerclient2d/data/interface/interface.glade:3268
+msgid " _High Quality Graphics"
+msgstr "_Effets graphiques avancés"
+
+#: pokerclient2d/data/interface/interface.glade:3284
+msgid " _Auto Post Blind"
+msgstr "_Blinds automatiques"
+
+#: pokerclient2d/data/interface/interface.glade:3294
+msgid " _Remember Me"
+msgstr "_Se souvenir de moi"
+
+#: pokerclient2d/data/interface/interface.glade:3304
+msgid " _Always Muck"
+msgstr "_Toujours cacher mes cartes"
+
+#: pokerclient2d/data/interface/interface.glade:3324
+msgid " _ABOUT"
+msgstr "_A PROPOS"
+
+#: pokerclient2d/data/interface/interface.glade:3334
+msgid "Software released under the GNU GPL"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3335
+msgid "_Credits & Licenses"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3356
+#: pokerclient2d/data/interface/interface.glade:11177
+msgid "Credits"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3371
+msgid "GNU General  Public License v2 or later"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3380
+msgid "GNU Lesser General Public License v2.1 or later"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3389
+msgid "OpenSceneGraph Public License, Version 0.0"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3398
+msgid "MIT or X11 License"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3407
+msgid "Python 2.4.2 License"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3416
+msgid "Zope Public License (ZPL) Version 2.1"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3425
+msgid "libJPEG License"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3434
+msgid "OpenSSL License"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3457
+msgid " _QUIT"
+msgstr "_QUITTER"
+
+#: pokerclient2d/data/interface/interface.glade:3471
+msgid "outfit_slots_male_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3769
+msgid "outfit_params"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:3892
+#: pokerclient2d/data/interface/interface.glade:4057
+#: pokerclient2d/data/interface/interface.glade:4222
+#: pokerclient2d/data/interface/interface.glade:4387
+#: pokerclient2d/data/interface/interface.glade:4552
+msgid "label70"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:4633
+msgid "outfit_ok_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:4680
+msgid "outfit_sex_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:4763
+msgid "outfit_slots_female_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5060
+msgid "outfit_random_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5107
+#, fuzzy
+msgid "tournaments_window"
+msgstr "_Tournois"
+
+#: pokerclient2d/data/interface/interface.glade:5223
+#: pokerclient2d/data/interface/interface.glade:10284
+msgid "Regular"
+msgstr "Tournois"
+
+#: pokerclient2d/data/interface/interface.glade:5275
+msgid "Sit  and go"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5371
+#: pokerclient2d/data/interface/interface.glade:6231
+msgid "ALL"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5562
+msgid "Tournaments: 0"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5618
+#: pokerclient2d/data/interface/interface.glade:6508
+msgid "Players: 0"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5677
+msgid "tournament_info_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5851
+msgid "lobby_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:5967
+#: pokerclient2d/data/interface/interface.glade:9974
+msgid "Holdem"
+msgstr "Holdem"
+
+#: pokerclient2d/data/interface/interface.glade:6019
+#: pokerclient2d/data/interface/interface.glade:10036
+msgid "Omaha"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6071
+#: pokerclient2d/data/interface/interface.glade:10098
+msgid "Omaha H/L"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6123
+msgid "Stud 7"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6452
+msgid "Tables: 0"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6566
+msgid "table_info_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6739
+msgid "game_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6782
+#: pokerclient2d/data/interface/interface.glade:6807
+#: pokerclient2d/data/interface/interface.glade:6832
+#: pokerclient2d/data/interface/interface.glade:6857
+#: pokerclient2d/data/interface/interface.glade:6882
+#: pokerclient2d/data/interface/interface.glade:6957
+#: pokerclient2d/data/interface/interface.glade:6982
+#: pokerclient2d/data/interface/interface.glade:7007
+#: pokerclient2d/data/interface/interface.glade:7032
+#: pokerclient2d/data/interface/interface.glade:7057
+#: pokerclient2d/data/interface/interface.glade:7082
+#: pokerclient2d/data/interface/interface.glade:7107
+#: pokerclient2d/data/interface/interface.glade:7182
+#: pokerclient2d/data/interface/interface.glade:7232
+#: pokerclient2d/data/interface/interface.glade:7320
+#: pokerclient2d/data/interface/interface.glade:7345
+#: pokerclient2d/data/interface/interface.glade:7370
+#: pokerclient2d/data/interface/interface.glade:8594
+#: pokerclient2d/data/interface/interface.glade:8683
+#: pokerclient2d/data/interface/interface.glade:8708
+#: pokerclient2d/data/interface/interface.glade:8733
+#: pokerclient2d/data/interface/interface.glade:8758
+#: pokerclient2d/data/interface/interface.glade:8802
+#: pokerclient2d/data/interface/interface.glade:9618
+msgid "name_seat1"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:6907
+#: pokerclient2d/data/interface/interface.glade:6932
+#: pokerclient2d/data/interface/interface.glade:7132
+#: pokerclient2d/data/interface/interface.glade:7157
+#: pokerclient2d/data/interface/interface.glade:7207
+#: pokerclient2d/data/interface/interface.glade:8569
+msgid "money_seat1"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:7283
+#: pokerclient2d/data/interface/interface.glade:7302
+#: pokerclient2d/data/interface/interface.glade:8148
+#: pokerclient2d/data/interface/interface.glade:8263
+#: pokerclient2d/data/interface/interface.glade:8784
+#: pokerclient2d/data/interface/interface.glade:9562
+#: pokerclient2d/data/interface/interface.glade:9581
+#: pokerclient2d/data/interface/interface.glade:9600
+#: pokerclient2d/data/interface/interface.glade:9697
+#: pokerclient2d/data/interface/interface.glade:9716
+msgid "Click to sit at the table"
+msgstr "Cliquer ici pour s'assoir a la table"
+
+#: pokerclient2d/data/interface/interface.glade:7285
+#: pokerclient2d/data/interface/interface.glade:7304
+#: pokerclient2d/data/interface/interface.glade:8150
+#: pokerclient2d/data/interface/interface.glade:8265
+#: pokerclient2d/data/interface/interface.glade:8786
+#: pokerclient2d/data/interface/interface.glade:9564
+#: pokerclient2d/data/interface/interface.glade:9583
+#: pokerclient2d/data/interface/interface.glade:9602
+#: pokerclient2d/data/interface/interface.glade:9699
+#: pokerclient2d/data/interface/interface.glade:9718
+msgid "Get a seat"
+msgstr "Place libre"
+
+#: pokerclient2d/data/interface/interface.glade:8828
+msgid "Fold"
+msgstr "Coucher"
+
+#: pokerclient2d/data/interface/interface.glade:8845
+msgid "Raise"
+msgstr "Miser"
+
+#: pokerclient2d/data/interface/interface.glade:8861
+#: pokerclient2d/data/interface/interface.glade:8886
+#: pokerclient2d/data/interface/interface.glade:8911
+#: pokerclient2d/data/interface/interface.glade:8936
+#: pokerclient2d/data/interface/interface.glade:8961
+#: pokerclient2d/data/interface/interface.glade:8986
+#: pokerclient2d/data/interface/interface.glade:9011
+#: pokerclient2d/data/interface/interface.glade:9036
+#: pokerclient2d/data/interface/interface.glade:9061
+#: pokerclient2d/data/interface/interface.glade:9086
+msgid "D"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9111
+msgid "pot0*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9136
+msgid "pot1*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9161
+msgid "pot2*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9186
+msgid "pot3*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9211
+msgid "pot4*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9236
+msgid "pot5*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9261
+msgid "pot6*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9286
+msgid "pot8*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9311
+msgid "pot7*****"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9336
+#: pokerclient2d/data/interface/interface.glade:9361
+#: pokerclient2d/data/interface/interface.glade:9386
+#: pokerclient2d/data/interface/interface.glade:9411
+#: pokerclient2d/data/interface/interface.glade:9436
+#: pokerclient2d/data/interface/interface.glade:9461
+#: pokerclient2d/data/interface/interface.glade:9486
+#: pokerclient2d/data/interface/interface.glade:9511
+#: pokerclient2d/data/interface/interface.glade:9536
+msgid "readable hand value at showdown "
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9663
+msgid "Rebuy"
+msgstr "Recave"
+
+#: pokerclient2d/data/interface/interface.glade:9680
+msgid "Switch"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9735
+msgid "Call"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9753
+msgid "Check"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9791
+#: pokerclient2d/data/interface/interface.glade:9867
+msgid "Raise Increase"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9810
+msgid "Raise Decrease"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9829
+msgid "Raise Pot"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9848
+msgid "Raise half pot"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9886
+msgid "Raise decrease BB"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:9908
+msgid "lobby_tabs_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10160
+msgid "Stud"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10222
+msgid "Sit & Go"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10318
+msgid "yesno_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10492
+msgid "are you ready to die !"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10532
+msgid "window1"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10724
+msgid "muck_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:10892
+msgid "ALWAYS HIDE"
+msgstr "TOUJOURS CACHER"
+
+#: pokerclient2d/data/interface/interface.glade:10911
+msgid "Hand is over, what do you want to do ?"
+msgstr "La main est finie, que voulez-vous faire ?"
+
+#: pokerclient2d/data/interface/interface.glade:10950
+msgid "check_warning_window"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11118
+msgid "CANCEL"
+msgstr "ANNULER"
+
+#: pokerclient2d/data/interface/interface.glade:11137
+msgid "Checking is free. What do you want to do?"
+msgstr "Le Check est gratuit. Que voulez-vous faire ?"
+
+#: pokerclient2d/data/interface/interface.glade:11347
+msgid "Credits for poker-network"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11391
+msgid "dialog1"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11422
+msgid "button2"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11436
+msgid "button3"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11449
+msgid "button4"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11462
+msgid "button5"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11475
+msgid "button6"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11488
+msgid "button7"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11501
+msgid "button8"
+msgstr ""
+
+#: pokerclient2d/data/interface/interface.glade:11514
+msgid "button9"
+msgstr ""
