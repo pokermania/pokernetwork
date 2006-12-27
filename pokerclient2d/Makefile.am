@@ -137,9 +137,7 @@ pokerclient2d_PYTHON = \
 	poker2d.py \
 	pokeranimation2d.py \
 	pokerdisplay2d.py \
-	game_window.py \
-	pokerinterface2d.py \
-	gladegen.py
+	pokerinterface2d.py
 
 poker2ddir = ${pkgdatadir}/poker2d
 nobase_dist_poker2d_DATA = \

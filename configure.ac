@@ -290,7 +290,6 @@ AC_CONFIG_FILES([
 	tests/test-quit.py
 	tests/test-pokerinterface.py
 	tests/test-pokerdisplay2d.py
-	tests/test-gladegen.py
 	tests/test-svg2gtk.py
         tests/testcurrency.php
         tests/testpoker.php
