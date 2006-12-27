@@ -1,4 +1,4 @@
-#!/bin/sh
+#!@BASH@
 #
 # Copyright (C) 2006 Mekensleep
 #
