@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/python
 # -*- mode: python -*-
 #
 # Copyright (C) 2006 Mekensleep
