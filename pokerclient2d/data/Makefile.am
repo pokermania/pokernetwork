@@ -329,9 +329,9 @@ interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
 skin/mockup.glade:
-	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir} svg2gtk.py --glade > skin/mockup.glade
+	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > skin/mockup.glade
 skin/gtkrc:
-	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir} svg2gtk.py --gtkrc > skin/gtkrc
+	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > skin/gtkrc
 
 clean-local:
 	rm -f interface/interface2d.glade
