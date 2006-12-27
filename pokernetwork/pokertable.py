@@ -732,6 +732,17 @@ class PokerTable:
             if delta < 0: delta = 0
             autodeal_max = float(self.delays.get("autodeal_max", 120))
             if delta > autodeal_max: delta = autodeal_max
+        elif self.transient:
+            all_auto = True
+            for player in game.playersAll():
+                if not player.isAuto():
+                    all_auto = False
+                    delta = 0
+                    break
+            if all_auto:
+                delta = self.delays.get("autodeal_tournament_min", 15)
+                if time.time() - self.game_delay["start"] > delta:
+                    delta = 0
         else:
             delta = 0
         if self.factory.verbose > 2:
@@ -946,11 +957,11 @@ class PokerTable:
                     self.update()
             else:
                 client.error("cannot leave a closed table")
-                client.PacketPokerError(game_id = game.id,
-                                        serial = serial,
-                                        other_type = PACKET_POKER_PLAYER_LEAVE,
-                                        code = PacketPokerPlayerLeave.TOURNEY,
-                                        message = "Cannot leave tournament table")
+                client.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                                                          serial = serial,
+                                                          other_type = PACKET_POKER_PLAYER_LEAVE,
+                                                          code = PacketPokerPlayerLeave.TOURNEY,
+                                                          message = "Cannot leave tournament table"))
                 return False
 
         return True
