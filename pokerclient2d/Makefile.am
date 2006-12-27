@@ -51,7 +51,8 @@ EXTRA_DIST = \
 	poker2D_128.png \
 	poker2D.ico \
 	poker3d-interface/poker3d-interface.vcproj \
-	khotkeys.py
+	khotkeys.py \
+	gamewindow.py
 
 man_MANS = poker2d.6
 
