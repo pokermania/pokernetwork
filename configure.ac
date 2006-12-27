@@ -41,6 +41,14 @@ AC_PROG_LIBTOOL
 
 AM_MAINTAINER_MODE
 
+# GETTEXT STUFF
+GETTEXT_PACKAGE=poker2d
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package])
+
+AM_GLIB_GNU_GETTEXT
+
+
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(WGET, [wget])
 AC_PATH_PROG(MYSQL, [mysql])
@@ -304,6 +312,7 @@ AC_CONFIG_FILES([
         tests/Makefile
         tests/conf/poker2d.xml
         Makefile
+        po/Makefile.in
 ])
 AC_OUTPUT
 
