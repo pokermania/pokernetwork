@@ -50,6 +50,20 @@ from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerclientpackets import *
 
+class ConstantDeckShuffler:
+    def shuffle(self, what):
+        what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
+
+from pokerengine import pokergame
+pokergame.shuffler = ConstantDeckShuffler()
+
+class ConstantPlayerShuffler:
+    def shuffle(self, what):
+        what.sort()
+
+from pokerengine import pokertournament
+pokertournament.shuffler = ConstantPlayerShuffler()
+
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="2" />
@@ -124,7 +138,7 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(setUpProtocol)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory[index])
                       
-    # -----------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------
     def setUp(self):
         self.destroyDb()
         self.setUpServer()
@@ -174,6 +188,7 @@ class PokerClientTestCase(unittest.TestCase):
         return d
 
     def login(self, client, index):
+        client.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
         client.sendPacket(PacketLogin(name = 'user%d' % index, password = 'password1'))
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
 
@@ -227,23 +242,41 @@ class PokerClientTestCase(unittest.TestCase):
                                          game_id = 100))
         return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
         
-    def allIn(self, (client, packet)):
-        print "allIn"
+    def allIn(self, (client, packet), sit_out = True):
         self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
         self.assertEqual(client.getSerial(), packet.serial)
-        client.sendPacket(PacketPokerSitOut(serial = packet.serial,
-                                            game_id = packet.game_id))
+        if sit_out:
+            client.sendPacket(PacketPokerSitOut(serial = packet.serial,
+                                                game_id = packet.game_id))
         game = client.getGame(packet.game_id)
         player = game.getPlayer(packet.serial)
         if game.canRaise(player.serial):
+            print "(A) ALLIN RAISE"
             client.sendPacket(PacketPokerRaise(serial = packet.serial,
                                                game_id = packet.game_id,
                                                amount = player.money))
         else:
+            print "(A) ALLIN CALL"
             client.sendPacket(PacketPokerCall(serial = packet.serial,
                                               game_id = packet.game_id))
 
         return client.packetDeferred(True, PACKET_POKER_WIN)
+        
+    def check_or_call(self, (client, packet)):
+        self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+        self.assertEqual(client.getSerial(), packet.serial)
+        game = client.getGame(packet.game_id)
+        player = game.getPlayer(packet.serial)
+        if game.canCheck(player.serial):
+            print "(A) CHECK"
+            client.sendPacket(PacketPokerCheck(serial = packet.serial,
+                                               game_id = packet.game_id))
+        else:
+            print "(A) CALL"
+            client.sendPacket(PacketPokerCall(serial = packet.serial,
+                                              game_id = packet.game_id))
+
+        return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
         
     def win(self, (client, packet)):
         print "win " + str(packet)
@@ -345,6 +378,18 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def processingHand(self, (client, packet),):
+        print "processingHand"
+        self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+        client.sendPacket(PacketPokerProcessingHand(serial = client.getSerial(),
+                                                    game_id = 100))
+        return (client, packet)
+
+    def readyToPlay(self, (client, packet),):
+        client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
+                                                 game_id = 100))
+        return (client, packet)
+
     def test08_processing_readytoplay(self):
         """ test08_processing_readytoplay """
         d = [None, None]
@@ -353,13 +398,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.login, index)
             d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 600000))
             d[index].addCallback(self.sit)
-            def processingHand((client, packet),):
-                print "processingHand"
-                self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
-                client.sendPacket(PacketPokerProcessingHand(serial = client.getSerial(),
-                                                            game_id = 100))
-                return (client, packet)
-            d[index].addCallback(processingHand)
+            d[index].addCallback(self.processingHand)
             d[index].addCallback(self.allIn)
             def atShowdown((client, packet),):
                 print "atShowdown"
@@ -371,11 +410,7 @@ class PokerClientTestCase(unittest.TestCase):
                 return (client, packet)
             d[index].addCallback(atShowdown)
             if index == 1:
-                def readyToPlay((client, packet),):
-                    client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
-                                                             game_id = 100))
-                    return (client, packet)
-                d[index].addCallback(readyToPlay)
+                d[index].addCallback(self.readyToPlay)
             def nextTurn((client, packet),):
                 print "nextTurn"
                 return client.packetDeferred(True, PACKET_POKER_START)
@@ -530,6 +565,144 @@ class PokerClientTestCase(unittest.TestCase):
             return client.packetDeferred(True, PACKET_MESSAGE)
         d.addCallback(waitForMessage)
         return d
+
+    def sitngo(self, (client, packet)):
+        client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
+                                               game_id = 100))
+        client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
+                                          game_id = 100))
+        client.sendPacket(PacketPokerAutoBlindAnte(serial = client.getSerial(),
+                                                   game_id = 100))
+        client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
+                                           game_id = 100,
+                                           amount = 200000))
+        client.sendPacket(PacketPokerSit(serial = client.getSerial(),
+                                         game_id = 100))
+        return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+        
+    def search_sitngo2(self, (client, packet),):
+        client.sendPacket(PacketPokerTourneySelect(string = "sitngo2"))
+        return client.packetDeferred(True, PACKET_POKER_TOURNEY_LIST)
+
+    def register_sitngo2(self, (client, packet),):
+        self.assertEqual(PACKET_POKER_TOURNEY_LIST, packet.type)
+        self.assertEqual(1, len(packet.packets))
+        tourney = packet.packets[0]
+        client.sendPacket(PacketPokerTourneyRegister(serial = client.getSerial(),
+                                                     game_id = tourney.serial))
+        return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+
+    def tourneyRank(self, (client, packet), ):
+        self.assertEqual(PACKET_POKER_WIN, packet.type)
+        return client.packetDeferred(True, PACKET_POKER_TOURNEY_RANK)
+
+    # -----------------------------------------------
+    def test15_playTourney(self):
+        """ Play regular tourney, all players go allin immediately. Simplest case, no tricks. """
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            d[index].addCallback(self.login, index)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000000))
+
+            d[index].addCallback(self.search_sitngo2)
+            d[index].addCallback(self.register_sitngo2)
+            d[index].addCallback(lambda arg: self.allIn(arg, sit_out = False))
+            d[index].addCallback(self.tourneyRank)
+            d[index].addCallback(self.quit)
+
+        return defer.DeferredList(d)
+
+    # -----------------------------------------------
+    def test16_playTourney_sitout_sit(self):
+        """ Play regular tourney, one player sits out and sits back immediately afterwards. """
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            if index == 0:
+                d[index].addCallback(self.login, index, 2)
+            else:
+                d[index].addCallback(self.login, index, 3)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000000))
+
+            d[index].addCallback(self.search_sitngo2)
+            d[index].addCallback(self.register_sitngo2)
+            if index == 1:
+                def sitout((client, packet),):
+                    print "(A) SITOUT"
+                    self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+                    client.sendPacket(PacketPokerSitOut(serial = packet.serial,
+                                                        game_id = packet.game_id))
+                    client.sendPacket(PacketPokerSit(serial = packet.serial,
+                                                     game_id = packet.game_id))
+                    return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+                d[index].addCallback(sitout)
+            else:
+                def callNraise((client, packet),):
+                    print "(A) CALLNRAISE"
+                    self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+                    game = client.getGame(packet.game_id)
+                    player = game.getPlayer(packet.serial)
+                    client.sendPacket(PacketPokerRaise(serial = packet.serial,
+                                                       game_id = packet.game_id,
+                                                       amount = player.money))
+                    return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+                d[index].addCallback(callNraise)
+                    
+            d[index].addCallback(lambda arg: self.allIn(arg, sit_out = False))
+            d[index].addCallback(self.tourneyRank)
+            d[index].addCallback(self.quit)
+
+        return defer.DeferredList(d)
+
+    # -----------------------------------------------
+    def test17_playTourney_timeout_sit(self):
+        """ Play regular tourney, one player timesout out and sits back immediately afterwards. """
+        self.service.settings.headerSet("/server/delays/@showdown", '20')
+        for tourney  in self.service.tourneys.values():
+            tourney.player_timeout = 10
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            if index == 0:
+                d[index].addCallback(self.login, index, 2)
+            else:
+                d[index].addCallback(self.login, index, 3)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000000))
+
+            d[index].addCallback(self.search_sitngo2)
+            d[index].addCallback(self.register_sitngo2)
+            if index == 1:
+                def timeout((client, packet),):
+                    print "(A) TIMEOUT"
+                    self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+                    return client.packetDeferred(True, PACKET_POKER_TIMEOUT_NOTICE)
+                d[index].addCallback(timeout)
+                def sitback((client, packet),):
+                    print "(A) SITBACK"
+                    self.assertEqual(PACKET_POKER_TIMEOUT_NOTICE, packet.type)
+                    client.sendPacket(PacketPokerSit(serial = packet.serial,
+                                                     game_id = packet.game_id))
+                    return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+                d[index].addCallback(sitback)
+            else:
+                def callNraise((client, packet),):
+                    print "(A) CALLNRAISE"
+                    self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+                    game = client.getGame(packet.game_id)
+                    player = game.getPlayer(packet.serial)
+                    client.sendPacket(PacketPokerRaise(serial = packet.serial,
+                                                       game_id = packet.game_id,
+                                                       amount = player.money))
+                    return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+                d[index].addCallback(callNraise)
+                    
+            d[index].addCallback(self.check_or_call)
+            d[index].addCallback(lambda arg: self.allIn(arg, sit_out = False))
+            d[index].addCallback(self.tourneyRank)
+            d[index].addCallback(self.quit)
+
+        return defer.DeferredList(d)
 
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -686,19 +859,22 @@ class PokerClientFactoryTestCase2(unittest.TestCase):
         self.client_factory.interface.publishEvent(pokerinterface.INTERFACE_MESSAGE_BOX)
         self.assertEqual(False, self.client_factory.call_quit)
 
-# -----------------------------------------------------------------------------------------------------
+# ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test"
+#    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
-    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
-    suite.addTest(loader.loadClass(PokerClientFactoryTestCase2))
-    return runner.TrialRunner(reporter.TextReporter,
+#    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
+#    suite.addTest(loader.loadClass(PokerClientFactoryTestCase2))
+    return runner.TrialRunner(
+#        reporter.TextReporter,
+        reporter.VerboseTextReporter,
+#                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
 
-# -----------------------------------------------------------------------------------------------------
+# ------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
