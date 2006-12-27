@@ -160,70 +160,70 @@
        height="34"
        id="bet_seat1" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="25.861681"
        y="128.44835"
        width="102"
        height="101"
        id="sit_seat0" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="26.042801"
        y="398.52722"
        width="102"
        height="101"
        id="sit_seat9" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="211.92136"
        y="490.75201"
        width="102"
        height="101"
        id="sit_seat8" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="347.79184"
        y="491.53024"
        width="102"
        height="101"
        id="sit_seat7" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="480.62119"
        y="491.71509"
        width="102"
        height="101"
        id="sit_seat6" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="679.01605"
        y="398.29614"
        width="102"
        height="101"
        id="sit_seat5" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="679.01605"
        y="128.63322"
        width="102"
        height="101"
        id="sit_seat4" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="487.36273"
        y="7.2849135"
        width="102"
        height="101"
        id="sit_seat3" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="352.53128"
        y="6.3218298"
        width="102"
        height="101"
        id="sit_seat2" />
     <image
-       xlink:href="player.png"
+       xlink:href="get_seat.png"
        x="213.8475"
        y="6.3218312"
        width="102"
@@ -329,45 +329,45 @@
        id="pot8" />
     <image
        xlink:href="name.png"
-       x="46.042789"
-       y="194.83463"
-       width="62"
-       height="15"
+       x="36.861679"
+       y="164.83463"
+       width="80"
+       height="25"
        id="name_seat0" />
     <image
        xlink:href="money.png"
-       x="49.099216"
-       y="209.06419"
-       width="59"
-       height="13"
+       x="36.861679"
+       y="195.06419"
+       width="80"
+       height="25"
        id="money_seat0" />
     <image
        xlink:href="name.png"
-       x="46.042801"
-       y="462.53891"
-       width="62"
-       height="15"
+       x="34.542801"
+       y="438.53891"
+       width="85"
+       height="25"
        id="name_seat9" />
     <image
        xlink:href="money.png"
-       x="46.764591"
-       y="477.54669"
-       width="59"
-       height="13"
+       x="37.042801"
+       y="467.54669"
+       width="80"
+       height="25"
        id="money_seat9" />
     <image
        xlink:href="winner.png"
-       x="298.10275"
-       y="234.20183"
-       width="176"
-       height="20"
+       x="298.94455"
+       y="228.20183"
+       width="180"
+       height="25"
        id="winner0" />
     <image
        xlink:href="winner.png"
-       x="299.78635"
+       x="298.94455"
        y="314.45282"
-       width="176"
-       height="20"
+       width="180"
+       height="25"
        id="winner1" />
     <image
        xlink:href="exit.png"
@@ -392,115 +392,115 @@
        id="switch" />
     <image
        xlink:href="name.png"
-       x="229.31746"
-       y="551.86914"
-       width="62"
-       height="15"
+       x="222.92136"
+       y="531.86914"
+       width="80"
+       height="25"
        id="name_seat8" />
     <image
        xlink:href="money.png"
-       x="230.03925"
-       y="566.87689"
-       width="59"
-       height="13"
+       x="222.92136"
+       y="558.87689"
+       width="80"
+       height="25"
        id="money_seat8" />
     <image
        xlink:href="name.png"
-       x="365.82541"
-       y="554.25006"
-       width="62"
-       height="15"
+       x="358.79184"
+       y="530.25006"
+       width="80"
+       height="25"
        id="name_seat7" />
     <image
        xlink:href="money.png"
-       x="366.54718"
-       y="569.25787"
-       width="59"
-       height="13"
+       x="358.79184"
+       y="559.25787"
+       width="80"
+       height="25"
        id="money_seat7" />
     <image
        xlink:href="name.png"
-       x="499.15872"
-       y="553.45642"
-       width="62"
-       height="15"
+       x="491.62119"
+       y="529.45642"
+       width="80"
+       height="25"
        id="name_seat6" />
     <image
        xlink:href="money.png"
-       x="499.88052"
-       y="568.46417"
-       width="59"
-       height="13"
+       x="491.62119"
+       y="558.46417"
+       width="80"
+       height="25"
        id="money_seat6" />
     <image
        xlink:href="name.png"
-       x="699.15875"
-       y="459.80563"
-       width="62"
-       height="15"
+       x="690.01605"
+       y="433.80563"
+       width="80"
+       height="25"
        id="name_seat5" />
     <image
        xlink:href="money.png"
-       x="699.88055"
-       y="474.81342"
-       width="59"
-       height="13"
+       x="690.01605"
+       y="462.81342"
+       width="80"
+       height="25"
        id="money_seat5" />
     <image
        xlink:href="name.png"
-       x="697.57141"
-       y="192.34532"
-       width="62"
-       height="15"
+       x="690.01605"
+       y="166.34532"
+       width="80"
+       height="25"
        id="name_seat4" />
     <image
        xlink:href="money.png"
-       x="698.29321"
-       y="207.3531"
-       width="59"
-       height="13"
+       x="690.01605"
+       y="195.3531"
+       width="80"
+       height="25"
        id="money_seat4" />
     <image
        xlink:href="name.png"
-       x="508.68253"
-       y="72.504051"
-       width="62"
-       height="15"
+       x="498.36273"
+       y="42.504051"
+       width="80"
+       height="25"
        id="name_seat3" />
     <image
        xlink:href="money.png"
-       x="509.40433"
-       y="87.511833"
-       width="59"
-       height="13"
+       x="498.36273"
+       y="71.511833"
+       width="80"
+       height="25"
        id="money_seat3" />
     <image
        xlink:href="name.png"
-       x="372.17459"
-       y="70.123093"
-       width="62"
-       height="15"
+       x="363.53128"
+       y="42.123093"
+       width="80"
+       height="25"
        id="name_seat2" />
     <image
        xlink:href="money.png"
-       x="372.89639"
-       y="85.130875"
-       width="59"
-       height="13"
+       x="363.53128"
+       y="71.130875"
+       width="80"
+       height="25"
        id="money_seat2" />
     <image
        xlink:href="name.png"
-       x="232.49207"
-       y="69.329437"
-       width="62"
-       height="15"
+       x="224.8475"
+       y="43.329437"
+       width="80"
+       height="25"
        id="name_seat1" />
     <image
        xlink:href="money.png"
-       x="233.21385"
-       y="84.337219"
-       width="59"
-       height="13"
+       x="224.8475"
+       y="74.337219"
+       width="80"
+       height="25"
        id="money_seat1" />
     <image
        xlink:href="check.png"
