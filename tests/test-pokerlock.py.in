@@ -141,7 +141,9 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"
     suite = loader.loadClass(PokerLockTestCase)
-    return runner.TrialRunner(reporter.TextReporter,
+    return runner.TrialRunner(
+                              reporter.VerboseTextReporter,
+#                              reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
