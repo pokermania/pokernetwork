@@ -74,6 +74,7 @@ class MockClient:
     def __init__(self, serial):
         self.serial = serial
         self.deferred = None
+        self.raise_if_packet = None
         self.type = None
         self.tables = []
         self.packets = []
@@ -82,6 +83,9 @@ class MockClient:
         self.deferred = defer.Deferred()
         self.type = type
         return self.deferred
+
+    def raiseIfPacket(self, type):
+        self.raise_if_packet = type
 
     def lookForPacket(self, type):
         for packet in self.packets:
@@ -108,7 +112,9 @@ class MockClient:
         print "sendPacket: " + str(packet)
         self.packets.append(packet)
         if self.deferred:
-            if self.type == packet.type:
+            if self.raise_if_packet and packet.type == self.raise_if_packet:
+                reactor.callLater(0, lambda: self.deferred.errback(packet))
+            elif self.type == packet.type:
                 reactor.callLater(0, lambda: self.deferred.callback(packet))
 
     def getSerial(self):
@@ -168,14 +174,49 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
 
+    # -------------------------------------------------------------------
+    def test03_autodeal_transient(self):
+        """ Transient tables hand deal has a minimum duration if all players are in auto mode """
+        self.createPlayer(1)
+        self.table.game.autoPlayer(1)
+        self.createPlayer(2)
+        self.table.game.autoPlayer(2)
+        self.table.transient = True
+        self.table.game_delay["start"] = time.time()
+        self.table.scheduleAutoDeal()
+        return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
+
+    # -------------------------------------------------------------------
+    def test04_autodeal_transient_now(self):
+        """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
+        self.createPlayer(1)
+        self.table.game.autoPlayer(1)
+        self.createPlayer(2)
+        self.table.game.autoPlayer(2)
+        self.table.game_delay["start"] = time.time() - 300
+        self.table.transient = True
+        self.table.scheduleAutoDeal()
+        self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
+        return self.clients[2].waitFor(PACKET_POKER_START)
+
+    # -------------------------------------------------------------------
+    def test05_autodeal_transient_normal(self):
+        """ Transient tables hand deal normaly if at least one player is not in auto mode """
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.transient = True
+        self.table.scheduleAutoDeal()
+        self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
+        return self.clients[2].waitFor(PACKET_POKER_START)
+
 # -------------------------------------------------------------------
 
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test12"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
-    return runner.TrialRunner(reporter.TextReporter,
+    return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
