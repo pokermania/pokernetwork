@@ -29,47 +29,7 @@ MAINTAINERCLEANFILES = \
 EXTRA_DIST = \
 	root2window.pl \
 	svg2gtk.py \
-	interface/mockup.svg \
-	skin/10clubs.png \
-	skin/10diamonds.png \
-	skin/10hearts.png \
-	skin/10spades.png \
-	skin/2clubs.png \
-	skin/2diamonds.png \
-	skin/2hearts.png \
-	skin/2spades.png \
-	skin/3clubs.png \
-	skin/3diamonds.png \
-	skin/3hearts.png \
-	skin/3spades.png \
-	skin/4clubs.png \
-	skin/4diamonds.png \
-	skin/4hearts.png \
-	skin/4spades.png \
-	skin/5clubs.png \
-	skin/5diamonds.png \
-	skin/5hearts.png \
-	skin/5spades.png \
-	skin/6clubs.png \
-	skin/6diamonds.png \
-	skin/6hearts.png \
-	skin/6spades.png \
-	skin/7clubs.png \
-	skin/7diamonds.png \
-	skin/7hearts.png \
-	skin/7spades.png \
-	skin/8clubs.png \
-	skin/8diamonds.png \
-	skin/8hearts.png \
-	skin/8spades.png \
-	skin/9clubs.png \
-	skin/9diamonds.png \
-	skin/9hearts.png \
-	skin/9spades.png \
-	skin/Aclubs.png \
-	skin/Adiamonds.png \
-	skin/Ahearts.png \
-	skin/Aspades.png \
+	skin/mockup.svg \
 	skin/bet.png \
 	skin/call.png \
 	skin/card_back.png \
@@ -78,7 +38,6 @@ EXTRA_DIST = \
 	skin/exit.png \
 	skin/fold.png \
 	skin/get_seat.png \
-	skin/gtkrc \
 	skin/Jclubs.png \
 	skin/Jdiamonds.png \
 	skin/Jhearts.png \
@@ -230,6 +189,8 @@ nobase_dist_poker2d_DATA = \
 	interface/interface2d.glade \
 	interface/interface.glade \
 	interface/interface.gladep \
+	skin/mockup.glade \
+	skin/gtkrc \
 	Aero/gtkrc \
 	Aero/tooltip.png \
 	Aero/handle.png \
@@ -367,6 +328,8 @@ nobase_dist_poker2d_DATA = \
 interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
+	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir} svg2gtk.py --glade > skin/mockup.glade
+	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir} svg2gtk.py --gtkrc > skin/gtkrc
 
 clean-local:
 	rm -f interface/interface2d.glade
