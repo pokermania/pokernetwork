@@ -263,6 +263,8 @@ nobase_dist_poker2d_DATA = \
 	Aero/ext-right-active.png \
 	fonts/FreeSerif.ttf
 
+all-local: interface/interface2d.glade
+
 interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
