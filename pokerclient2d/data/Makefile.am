@@ -128,7 +128,7 @@ nobase_dist_poker2d_DATA = \
 	interface/table5_normal.png \
 	interface/table_background.png \
 	interface/table.png \
-	interface/tables_dock.png
+	interface/tables_dock.png \
 	Aero/gtkrc \
 	Aero/tooltip.png \
 	Aero/handle.png \
