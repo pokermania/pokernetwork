@@ -179,6 +179,8 @@ class PokerDisplay2DTest(unittest.TestCase):
 	pass
 
     def test_TestInit(self):
+        os.system("echo '--------------------------------' ; find ../pokerclient2d/data")
+        os.system("echo '--------------------------------' ; find ..")
         self.display2d.datadir = "../pokerclient2d/data"
 	self.display2d.init()
 	self.assertNotEqual(None, self.display2d.glade)
