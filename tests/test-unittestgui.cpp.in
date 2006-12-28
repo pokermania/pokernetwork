@@ -42,7 +42,7 @@ TEST( Gui_loadWidget )
   gtk_init(NULL, NULL);
 
   static GladeXML*	test_gladeXml = 0;
-  gui_set_glade_file("./conf/interface.glade");
+  gui_set_glade_file("@top_srcdir@/pokerclient2d/data/interface/interface.glade");
   test_gladeXml = gui_load_widget("login_window");
   CHECK( 0 != test_gladeXml);
 }
