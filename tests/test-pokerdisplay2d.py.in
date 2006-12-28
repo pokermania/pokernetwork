@@ -29,8 +29,14 @@
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
-
 import unittest
+
+class rc_parseMockup:
+    gtkrc = None
+    def __init__(self, gtkrc):
+        rc_parseMockup.gtkrc = gtkrc
+import gtk
+gtk.rc_parse = rc_parseMockup
 
 from pokernetwork.pokernetworkconfig import Config
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D, PokerPlayer2D, PokerTable2D
@@ -56,12 +62,13 @@ class PokerPacketBoardCardsMockup:
 class PokerWidgetMockup:
     texts = []
     files = []
-    def __init__(self):
-        pass
+    show_called = {}
+    def __init__(self, name):
+        self.name = name
     def set_text(self, text):
         pass
     def show(self):
-        pass
+        PokerWidgetMockup.show_called[self.name] = True
     def hide(self):
         pass
     def get_buffer(self):
@@ -74,10 +81,12 @@ class PokerWidgetMockup:
         pass
     def set_from_file(self, file):
         PokerWidgetMockup.files.append(file)
+    def get_children(self):
+        return ()
 
 class PokerGladeMockup:
     def get_widget(self, name):
-        return PokerWidgetMockup()
+        return PokerWidgetMockup(name)
     def relative_file(self, file):
         return file
 
@@ -96,12 +105,20 @@ class PokerGameMockup:
     id = 0
     eval = PokerEvalMockup()
     board = PokerBoardMockup()
+    name = ""
+    hand_serial = 0
     def getMaxHandSize(self):
         return 0
     def isTournament(self):
         return False
     def getPlayer(self, id):
         return PokerPlayerMockup()
+    def getVariantName(self):
+        return ""
+    def getBettingStructureName(self):
+        return ""
+    def isRunning(self):
+        return True
 
 class PokerFactoryMockup:
     def getGame(self, id):
@@ -109,6 +126,8 @@ class PokerFactoryMockup:
 
 class PokerProtocolMockup:
     def getSerial(self):
+        return 0
+    def getCurrentGameId(self):
         return 0
 
 class PokerDisplayMockup:
@@ -120,6 +139,7 @@ class PokerDisplayMockup:
 class PokerTable2DTest(unittest.TestCase):
     def setUp(self):
         self.table = PokerTable2D(PokerTableMockup(), PokerDisplayMockup())
+        self.table.table_status = PokerWidgetMockup("table_status")
         self.names = ["toto", "titi"]
         self.namesInPosition = map(lambda x: "<u>%s</u>" % x, self.names)
         self.table.render(PokerPacketPlayerArriveMockup(0, self.names[0]))
@@ -142,6 +162,9 @@ class PokerTable2DTest(unittest.TestCase):
         self.assertEquals(2, len(PokerWidgetMockup.texts))
         self.assertEquals(self.names[0], PokerWidgetMockup.texts[0])
         self.assertEquals(self.namesInPosition[1], PokerWidgetMockup.texts[1])
+    def test_reset(self):
+        self.table.reset()
+        self.assertEquals(True, PokerWidgetMockup.show_called["game_background"])
 
 class PokerDisplay2DTest(unittest.TestCase):
     def setUp(self):
@@ -159,6 +182,7 @@ class PokerDisplay2DTest(unittest.TestCase):
         self.display2d.datadir = "../pokerclient2d/data"
 	self.display2d.init()
 	self.assertNotEqual(None, self.display2d.glade)
+        self.assertEqual("../pokerclient2d/data/skin/gtkrc", rc_parseMockup.gtkrc)
 
 class PokerDisplay2DCardTest(unittest.TestCase):
     def test_PokerTableRenderPacketBoardCards(self):

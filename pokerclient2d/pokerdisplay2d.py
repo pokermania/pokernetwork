@@ -169,6 +169,7 @@ class PokerTable2D:
         for widget in fixed.get_children():
             if widget.get_name() != "switch":
                 widget.hide()
+        self.glade.get_widget("game_background").show()
         if not self.game.isTournament():
             for seat in self.seats:
                 seat.show()
@@ -376,11 +377,12 @@ class PokerDisplay2D(PokerDisplay):
     def init(self):
         settings = self.settings
         config = self.config
-        gtkrc = self.datadir + "/interface/gtkrc"
+        gtkrc = self.datadir + "/skin/gtkrc"
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
-        glade_file = self.datadir + "/interface/interface2d.glade"
-        self.glade = gtk.glade.XML(fname = glade_file, root = "game_window", domain=application)
+        glade_file = self.datadir + "/skin/mockup.glade"
+        from gamewindow import GameWindowGlade
+        self.glade = GameWindowGlade(glade_file)
         self.actions = {
             "call": self.glade.get_widget("call"),
             "raise": self.glade.get_widget("raise"),
