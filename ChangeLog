@@ -1,6 +1,119 @@
-2006-12-27  Johan Euphrosine  <proppy@aminche.com>
+2006-12-28  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.0.33
+
+	* pokerclient2d/pokerdisplay2d.py, tests/test-pokerdisplay2d.py.in:
+	bind on_sit_seat%d_clicked to on_sit_clicked
+
+2006-12-28  loic  <loic@durebuntu>
+
+	* tests/test-pokerdisplay2d.py.in: fix the datadir
+
+2006-12-28  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/pokerdisplay2d.py, pokerclient2d/data/Makefile.am, pokerclient2d/data/interface/.png, pokerclient2d/data/pygtk.py, tests/test-gamewindow.py.in, tests/test-pokerdisplay2d.py.in:
+	removed skin directory
+
+	* pokerclient2d/poker2d.in: removed Aero skin as default
+
+	* pokerclient2d/data/Makefile.am:
+	move data from EXTRA_DIST to poker2d_DATA
+
+	* pokerclient2d/Makefile.am: gamewindow from EXTRA_DIST to _PYTHON
+
+	* pokerclient2d/gamewindow.py, pokerclient2d/pokerdisplay2d.py, tests/test-pokerdisplay2d.py.in:
+	switch to GladeWindowGlade for game_window widget
+
+2006-12-28  loic  <loic@durebuntu>
+
+	* tests/test-pokerclient.py.in, tests/test-clientserver.py.in:
+	client setup and connection are separate in order to control the order in which the clients are connected
+
+2006-12-28  Johan Euphrosine  <proppy@aminche.com>
+
+	* tests/test-gamewindow.py.in, pokerclient2d/gamewindow.py:
+	splitted gamewindow test
+
+2006-12-28  griim  <griim@durebuntu>
+
+	* tests/test-pokerdisplay2d.py.in: fixed datapath
+
+2006-12-28  Johan Euphrosine  <proppy@aminche.com>
+
+	* configure.ac, tests/Makefile.am, tests/test-gamewindow.py.in:
+	added test for gamewindow
+
+2006-12-28  griim  <griim@durebuntu>
+
+	* configure.ac: changed GETTEXT settings
+
+	* po/Makefile.in.in, po/Makevars, po/fr.po: define gettext domain
+
+2006-12-28  loic  <loic@durebuntu>
+
+	* debian/changelog, debian/po/es.po: spanish translation
+
+2006-12-28  griim  <griim@durebuntu>
+
+	* tests/test-unittestgui.cpp, tests/test-unittestgui.cpp.in:
+	changed test-unittestgui.cpp to test-unittest.cpp.in
+
+	* configure.ac: added tests/test-unittestgui.cpp to AC_CONFIG_FILES
+
+2006-12-27  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/Makefile.am: removed old data
+
+2006-12-27  loic  <loic@durebuntu>
+
+	* tests/test-pokerclient.py.in: fix login calls and play options
+
+	* pokerui/pokerrenderer.py: readytoplay when switching tables
+
+2006-12-27  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/gamewindow.py: added gamewindow.py
+
+2006-12-27  griim  <griim@durebuntu>
+
+	* tests/test-pokerdisplay2d.py.in: fixed path
+
+	* tests/conf/poker2d.xml.in: changed data path
+
+2006-12-27  loic  <loic@durebuntu>
+
+	* tests/test-pokerclient.py.in: don't control verbosity
+
+	* tests/test-pokerclient.py.in: no dependency to client2d
+
+2006-12-27  griim  <griim@durebuntu>
+
+	* po/Makefile.in.in:
+	Makefile.in.in doesn't delete itself anymore (using make maintainer-clean)
+
+	* tests/test-pokerdisplay2d.py.in: fixed configuration file path
+
+2006-12-27  loic  <loic@durebuntu>
+
+	* tests/test-pokerservice.py.in:
+	use constant shuffler for both tournaments and cards
+
+	* tests/test-pokerclient.py.in: don't depend on pokerclient2d
+
+	* ChangeLog: *** empty log message ***
+
+2006-12-27  griim  <griim@durebuntu>
+
+	* configure.ac: added GETTEXT support
+
+	* ChangeLog: I18N
+
+	* Makefile.am: added po as subdir
+
+	* po/ChangeLog, po/LINGUAS, po/Makefile.in.in, po/POTFILES.in, po/POTFILES.skip, po/fr.po:
+	I18N support
+
+2006-12-27  Johan Euphrosine  <proppy@aminche.com>
 
 	* pokerclient2d/Makefile.am, pokerclient2d/gamewindow.py: added gamewindow.py
 
