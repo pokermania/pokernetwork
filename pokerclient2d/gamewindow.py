@@ -30,9 +30,9 @@ import gtk.glade
 import unittest
 
 class GameWindowGlade:
-    def __init__(self):
+    def __init__(self, glade_file):
         self.widgets = {}
-        self.glade = gtk.glade.XML('data/skin/mockup.glade')
+        self.glade = gtk.glade.XML(glade_file)
         window = self.glade.get_widget('game_window')
         fixed = self.glade.get_widget('game_fixed')
         window.remove(fixed)
@@ -107,90 +107,3 @@ class GameWindowGlade:
     def signal_autoconnect(self, instance):
         return self.glade.signal_autoconnect(instance)
 
-class GameWindowGladeTest(unittest.TestCase):
-    def test_getWidget(self):
-	glade = GameWindowGlade()
-	seat = 1
-	name = glade.get_widget("name_seat%d" % seat)
-	name.set_label("proppy")
-        money = glade.get_widget("money_seat%d" % seat)
-        money.set_label("$100")
-        bet = glade.get_widget("bet_seat%d" % seat)
-        bet.set_label("$100")
-        cards = map(lambda x: glade.get_widget("card%d_seat%d" % ( x, seat )), xrange(1,8))
-	cards[0].set_from_file("Kspades.png")
-	toplevel = glade.get_widget("game_toplevel")
-        board = map(lambda x: glade.get_widget("board%d" % x), xrange(1,6))
-	board[0].set_from_file("Kspades.png")
-        pots = map(lambda x: glade.get_widget("pot%d" % x), xrange(9))
-	pots[0].set_label("$100")
-        dealer_buttons = map(lambda x: glade.get_widget("dealer%d" % x), xrange(10))
-        winners = map(lambda x: glade.get_widget("winner%d" % x), xrange(9))
-	winners[0].set_label("hi card")
-        seats = map(lambda x: glade.get_widget("sit_seat%d" % x), xrange(10))
-	seats[0].show()
-	seats[0].hide()
-        self.table_status = glade.get_widget("table_status").get_buffer()
-        self.table_status.set_text("\n".join(("salut", "les", "aminches")))
-	fixed = glade.get_widget("game_fixed")
-	children = fixed.get_children()
-	self.assert_(len(children) > 0)
-        quit = glade.get_widget("quit")
-	quit.hide()
-	quit.show()
-        rebuy = glade.get_widget("rebuy")
-	rebuy.hide()
-	rebuy.show()
-	glade.get_widget("raise_increase").show() # 1x1 button used for accelerators
-        glade.get_widget("raise_decrease").show() # 1x1 button used for accelerators
-        glade.get_widget("raise_increase_bb").show() # 1x1 button used for accelerators
-        glade.get_widget("raise_decrease_bb").show() # 1x1 button used for accelerators
-        glade.get_widget("raise_pot").show() # 1x1 button used for accelerators
-        glade.get_widget("raise_half_pot").show() # 1x1 button used for accelerators
-	call = glade.get_widget("call")
-        call.hide()
-	raise_ = glade.get_widget("raise")
-        raise_.hide()
-	raise_range = glade.get_widget("raise_range")
-        raise_range.hide()
-	check = glade.get_widget("check")
-        check.hide()
-	fold = glade.get_widget("fold")
-        fold.hide()
-	glade.relative_file("")
-	glade.get_widget("switch")
-	glade.signal_autoconnect(self)
-
-	screen = glade.get_widget("game_fixed")
-	widget_pots = []
-        for pot in map(lambda x: glade.get_widget("pot%d" % x), xrange(9)):
-            widget_pots.append((pot, screen.child_get_property(pot, "x"), screen.child_get_property(pot, "y")))
-        for bet in map(lambda x: glade.get_widget("bet_seat%d" % x), xrange(10)):
-            widget_pots.append((bet, screen.child_get_property(bet, "x"), screen.child_get_property(bet, "y")))
-        for name in map(lambda x: glade.get_widget("name_seat%d" % x), xrange(10)):
-            widget_pots.append((name, screen.child_get_property(name, "x"), screen.child_get_property(name, "y")))
-
-class SignalHandler:
-    def on_sit_seat0_clicked(self, widget):
-        print "on_sit_seat0_clicked"
-    def on_game_background_clicked(self, widget):
-        print "on_game_background_clicked"
-
-if __name__ == '__main__':
-    #unittest.main()
-    glade = GameWindowGlade()
-    handler = SignalHandler()
-    glade.signal_autoconnect(handler)
-    gtk.rc_parse("data/skin/mockup.gtkrc")
-    window = gtk.Window()
-    event = glade.get_widget("game_window")
-    name_seat = glade.get_widget("name_seat0")
-    name_seat.set_label("proppy")
-    fixed = glade.get_widget("game_fixed")
-    fixed.remove(name_seat)
-    fixed.put(name_seat, 100, 100)
-    window.add(event)
-    window.set_resizable(False)
-    window.set_size_request(800, 600)
-    window.show_all()
-    gtk.main()
