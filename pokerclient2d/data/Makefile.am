@@ -30,7 +30,7 @@ EXTRA_DIST = \
 	root2window.pl \
 	svg2gtk.py \
 	pygtk.py \
-	skin/mockup.svg
+	interface/mockup.svg
 
 pkgdatadir=@pkgdatadir@
 
@@ -96,39 +96,39 @@ nobase_dist_poker2d_DATA = \
 	interface/interface2d.glade \
 	interface/interface.glade \
 	interface/interface.gladep \
-	skin/mockup.glade \
-	skin/gtkrc \
-	skin/winner.png \
-	skin/name.png \
-	skin/money.png \
-	skin/bet.png \
-	skin/call.png \
-	skin/card_back.png \
-	skin/check.png \
-	skin/dealer.png \
-	skin/exit.png \
-	skin/fold.png \
-	skin/get_seat.png \
-	skin/player_active.png \
-	skin/player.png \
-	skin/pot.png \
-	skin/raise.png \
-	skin/raise_slider_dock.png \
-	skin/raise_slider.png \
-	skin/rebuy.png \
-	skin/table1_active.png \
-	skin/table1_normal.png \
-	skin/table2_active.png \
-	skin/table2_normal.png \
-	skin/table3_active.png \
-	skin/table3_normal.png \
-	skin/table4_active.png \
-	skin/table4_normal.png \
-	skin/table5_active.png \
-	skin/table5_normal.png \
-	skin/table_background.png \
-	skin/table.png \
-	skin/tables_dock.png
+	interface/mockup.glade \
+	interface/gtkrc \
+	interface/winner.png \
+	interface/name.png \
+	interface/money.png \
+	interface/bet.png \
+	interface/call.png \
+	interface/card_back.png \
+	interface/check.png \
+	interface/dealer.png \
+	interface/exit.png \
+	interface/fold.png \
+	interface/get_seat.png \
+	interface/player_active.png \
+	interface/player.png \
+	interface/pot.png \
+	interface/raise.png \
+	interface/raise_slider_dock.png \
+	interface/raise_slider.png \
+	interface/rebuy.png \
+	interface/table1_active.png \
+	interface/table1_normal.png \
+	interface/table2_active.png \
+	interface/table2_normal.png \
+	interface/table3_active.png \
+	interface/table3_normal.png \
+	interface/table4_active.png \
+	interface/table4_normal.png \
+	interface/table5_active.png \
+	interface/table5_normal.png \
+	interface/table_background.png \
+	interface/table.png \
+	interface/tables_dock.png
 	Aero/gtkrc \
 	Aero/tooltip.png \
 	Aero/handle.png \
@@ -268,10 +268,10 @@ all-local: interface/interface2d.glade
 interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
-skin/mockup.glade:
-	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > skin/mockup.glade
-skin/gtkrc:
-	cat ${srcdir}/skin/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > skin/gtkrc
+interface/mockup.glade:
+	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > interface/mockup.glade
+interface/gtkrc:
+	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/gtkrc
 
 clean-local:
 	rm -f interface/interface2d.glade

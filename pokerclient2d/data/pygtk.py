@@ -29,8 +29,8 @@
 import gtk
 import gtk.glade
 if __name__ == '__main__':
-    gtk.rc_parse("skin/gtkrc")
-    glade = gtk.glade.XML('skin/mockup.glade')
+    gtk.rc_parse("interface/gtkrc")
+    glade = gtk.glade.XML('interface/mockup.glade')
     window = glade.get_widget('game_window')
     window.show_all()
     gtk.main()

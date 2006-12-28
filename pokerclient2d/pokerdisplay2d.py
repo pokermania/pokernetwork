@@ -377,10 +377,10 @@ class PokerDisplay2D(PokerDisplay):
     def init(self):
         settings = self.settings
         config = self.config
-        gtkrc = self.datadir + "/skin/gtkrc"
+        gtkrc = self.datadir + "/interface/gtkrc"
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
-        glade_file = self.datadir + "/skin/mockup.glade"
+        glade_file = self.datadir + "/interface/mockup.glade"
         from gamewindow import GameWindowGlade
         self.glade = GameWindowGlade(glade_file)
         self.actions = {

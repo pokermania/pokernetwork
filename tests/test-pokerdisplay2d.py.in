@@ -184,11 +184,11 @@ class PokerDisplay2DTest(unittest.TestCase):
         # make distcheck will fail to find it in the build
         #
         self.display2d.datadir = "../pokerclient2d/data"
-        if not os.path.exists(self.display2d.datadir . "/skin/mockup.glade"):
+        if not os.path.exists(self.display2d.datadir . "/interface/mockup.glade"):
             self.display2d.datadir = "@top_srcdir@/pokerclient2d/data"
 	self.display2d.init()
 	self.assertNotEqual(None, self.display2d.glade)
-        self.assertEqual("../pokerclient2d/data/skin/gtkrc", rc_parseMockup.gtkrc)
+        self.assertEqual("../pokerclient2d/data/interface/gtkrc", rc_parseMockup.gtkrc)
 
 class PokerDisplay2DCardTest(unittest.TestCase):
     def test_PokerTableRenderPacketBoardCards(self):
