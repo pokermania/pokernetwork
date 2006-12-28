@@ -405,6 +405,26 @@ class PokerDisplay2D(PokerDisplay):
     def on_switch_clicked(self, button):
         self.renderer.rotateTable()
 
+    def on_sit_seat0_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat1_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat2_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat3_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat4_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat5_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat6_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat7_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat8_clicked(self, button):
+        self.on_sit_clicked(button)
+    def on_sit_seat9_clicked(self, button):
+        self.on_sit_clicked(button)
     def on_sit_clicked(self, button):
         seat = int(button.get_name()[-1])
         protocol = self.protocol

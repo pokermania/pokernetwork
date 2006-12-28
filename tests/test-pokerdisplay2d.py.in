@@ -240,7 +240,47 @@ class PokerPlayer2DCardTest(unittest.TestCase):
         self.player.updateCards()
         self.assertEquals(2, len(PokerWidgetMockup.files))
         for i in range(len(PokerWidgetMockup.files)):
-            self.assertEquals(cards2files[i], PokerWidgetMockup.files[i])        
+            self.assertEquals(cards2files[i], PokerWidgetMockup.files[i])
+
+class PokerDisplay2DMockup(PokerDisplay2D):
+    def __init__(self):
+        self.sit_clicked_called = False
+    def on_sit_clicked(self, button):
+        self.sit_clicked_called = True
+        
+class PokerDisplay2DSignalTest(unittest.TestCase):
+    def setUp(self):
+        self.display = PokerDisplay2DMockup()
+    def test_onSitSeat0Clicked(self):
+        self.display.on_sit_seat0_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat1Clicked(self):
+        self.display.on_sit_seat1_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat2Clicked(self):
+        self.display.on_sit_seat2_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat3Clicked(self):
+        self.display.on_sit_seat3_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat4Clicked(self):
+        self.display.on_sit_seat4_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat5Clicked(self):
+        self.display.on_sit_seat5_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat6Clicked(self):
+        self.display.on_sit_seat6_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat7Clicked(self):
+        self.display.on_sit_seat7_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat8Clicked(self):
+        self.display.on_sit_seat8_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
+    def test_onSitSeat9Clicked(self):
+        self.display.on_sit_seat9_clicked(None)
+        self.assertEquals(True, self.display.sit_clicked_called)
 
 if __name__ == '__main__':
     unittest.main()
