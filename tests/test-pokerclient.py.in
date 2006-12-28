@@ -136,15 +136,21 @@ class PokerClientTestCase(unittest.TestCase):
             return client
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
-        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[index])
+        return d
                       
     # ------------------------------------------------------
     def setUp(self):
         self.destroyDb()
         self.setUpServer()
         self.client_factory = [None, None]
+        def connectClient1(client): 
+            reactor.connectTCP('127.0.0.1', self.port, self.client_factory[1])
+            return client
+
+        d = self.setUpClient(0)
+        d.addCallback(connectClient1)
         self.setUpClient(1)
-        return self.setUpClient(0)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
 
     def cleanSessions(self, arg):
         #
@@ -394,6 +400,7 @@ class PokerClientTestCase(unittest.TestCase):
         """ test08_processing_readytoplay """
         d = [None, None]
         for index in (0,1):
+            print "INDEX " + str(index)
             d[index] = self.client_factory[index].established_deferred
             d[index].addCallback(self.login, index)
             d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 600000))
@@ -624,7 +631,7 @@ class PokerClientTestCase(unittest.TestCase):
 
             d[index].addCallback(self.search_sitngo2)
             d[index].addCallback(self.register_sitngo2)
-            if index == 1:
+            if index == 0:
                 def sitout((client, packet),):
                     print "(A) SITOUT"
                     self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
@@ -667,7 +674,7 @@ class PokerClientTestCase(unittest.TestCase):
 
             d[index].addCallback(self.search_sitngo2)
             d[index].addCallback(self.register_sitngo2)
-            if index == 1:
+            if index == 0:
                 def timeout((client, packet),):
                     print "(A) TIMEOUT"
                     self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)

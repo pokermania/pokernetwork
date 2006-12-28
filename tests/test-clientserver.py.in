@@ -95,13 +95,13 @@ class ClientServer(unittest.TestCase):
             return client
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
-        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[index])
-        print "Connecting on 127.0.0.1:" + str(self.port)
 
     def setUp(self):
         self.setUpServer()
         self.client_factory = [None, None]
-        return self.setUpClient(0)
+        self.setUpClient(0)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
+        print "Connecting on 127.0.0.1:" + str(self.port)
 
     def cleanSessions(self, arg):
         #
