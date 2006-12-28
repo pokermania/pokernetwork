@@ -40,15 +40,15 @@ class GameWindowGlade:
         event.set_name("game_window")
         self.widgets[event.get_name()] = event
         event.add(fixed)
-        for seat_index in range(0, 10):
+        for seat_index in xrange(0, 10):
             seat = self.glade.get_widget('sit_seat%d' % seat_index)
             (x, y) = (fixed.child_get_property(seat, 'x'), fixed.child_get_property(seat, 'y'))
-            for card_index in range(1, 8):
+            for card_index in xrange(1, 8):
                 image = gtk.Image()
                 image.set_name("card%d_seat%d" % (card_index, seat_index))
                 fixed.put(image, x+(card_index-1)*10, y+20)
                 self.widgets[image.get_name()] = image
-        for board_index in range(1, 6):
+        for board_index in xrange(1, 6):
             board = self.glade.get_widget('board%d' % board_index)
             (x, y) = (fixed.child_get_property(board, 'x'), fixed.child_get_property(board, 'y'))           
             image = gtk.Image()
@@ -59,7 +59,7 @@ class GameWindowGlade:
         winner_up = self.glade.get_widget('winner0')
         (x, y) = (fixed.child_get_property(winner_up, 'x'), fixed.child_get_property(winner_up, 'y'))
         fixed.remove(winner_up)
-        for winner_index in range(4):
+        for winner_index in xrange(4):
             winner = gtk.Label()
             winner.set_name('winner%d' % winner_index)
             self.widgets[winner.get_name()] = winner
@@ -67,7 +67,7 @@ class GameWindowGlade:
         winner_down = self.glade.get_widget('winner1')
         (x, y) = (fixed.child_get_property(winner_down, 'x'), fixed.child_get_property(winner_down, 'y'))
         fixed.remove(winner_down)
-        for winner_index in range(4, 9):
+        for winner_index in xrange(4, 9):
             winner = gtk.Label()
             winner.set_name('winner%d' % winner_index)
             self.widgets[winner.get_name()] = winner
@@ -94,7 +94,19 @@ class GameWindowGlade:
         fixed.put(raise_range, x, y)
         raise_range.set_name("raise_range")
         self.widgets[raise_range.get_name()] = raise_range
-        #self.glade.get_widget("game_window").show_all()
+        names = map(lambda seat: self.glade.get_widget("name_seat%d" % seat), xrange(10))
+        def button2label(button):
+            label = gtk.Label()
+            label.set_name(button.get_name())
+            self.widgets[label.get_name()] = label
+            x = fixed.child_get_property(button, 'x')
+            y = fixed.child_get_property(button, 'y')
+            fixed.remove(button)
+            fixed.put(label, x, y)
+        map(button2label, names)
+        moneys = map(lambda seat: self.glade.get_widget("money_seat%d" % seat), xrange(10))
+        map(button2label, moneys)
+        self.glade.get_widget("game_fixed").show_all()
             
     def get_widget(self, name):
         if self.widgets.has_key(name):
