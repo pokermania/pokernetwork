@@ -26,7 +26,6 @@
 #  Loic Dachary <loic@gnu.org>
 #
 from os import environ
-environ['GTK2_RC_FILES'] = "@prefix@/share/poker-network/poker2d/Aero/gtkrc"
 
 import getopt
 import sys
