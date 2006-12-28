@@ -51,8 +51,7 @@ EXTRA_DIST = \
 	poker2D_128.png \
 	poker2D.ico \
 	poker3d-interface/poker3d-interface.vcproj \
-	khotkeys.py \
-	gamewindow.py
+	khotkeys.py
 
 man_MANS = poker2d.6
 
@@ -138,7 +137,8 @@ pokerclient2d_PYTHON = \
 	poker2d.py \
 	pokeranimation2d.py \
 	pokerdisplay2d.py \
-	pokerinterface2d.py
+	pokerinterface2d.py \
+	gamewindow.py
 
 poker2ddir = ${pkgdatadir}/poker2d
 nobase_dist_poker2d_DATA = \
