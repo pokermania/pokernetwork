@@ -30,38 +30,7 @@ EXTRA_DIST = \
 	root2window.pl \
 	svg2gtk.py \
 	pygtk.py \
-	skin/mockup.svg \
-	skin/winner.png \
-	skin/name.png \
-	skin/money.png \
-	skin/bet.png \
-	skin/call.png \
-	skin/card_back.png \
-	skin/check.png \
-	skin/dealer.png \
-	skin/exit.png \
-	skin/fold.png \
-	skin/get_seat.png \
-	skin/player_active.png \
-	skin/player.png \
-	skin/pot.png \
-	skin/raise.png \
-	skin/raise_slider_dock.png \
-	skin/raise_slider.png \
-	skin/rebuy.png \
-	skin/table1_active.png \
-	skin/table1_normal.png \
-	skin/table2_active.png \
-	skin/table2_normal.png \
-	skin/table3_active.png \
-	skin/table3_normal.png \
-	skin/table4_active.png \
-	skin/table4_normal.png \
-	skin/table5_active.png \
-	skin/table5_normal.png \
-	skin/table_background.png \
-	skin/table.png \
-	skin/tables_dock.png
+	skin/mockup.svg
 
 pkgdatadir=@pkgdatadir@
 
@@ -129,6 +98,37 @@ nobase_dist_poker2d_DATA = \
 	interface/interface.gladep \
 	skin/mockup.glade \
 	skin/gtkrc \
+	skin/winner.png \
+	skin/name.png \
+	skin/money.png \
+	skin/bet.png \
+	skin/call.png \
+	skin/card_back.png \
+	skin/check.png \
+	skin/dealer.png \
+	skin/exit.png \
+	skin/fold.png \
+	skin/get_seat.png \
+	skin/player_active.png \
+	skin/player.png \
+	skin/pot.png \
+	skin/raise.png \
+	skin/raise_slider_dock.png \
+	skin/raise_slider.png \
+	skin/rebuy.png \
+	skin/table1_active.png \
+	skin/table1_normal.png \
+	skin/table2_active.png \
+	skin/table2_normal.png \
+	skin/table3_active.png \
+	skin/table3_normal.png \
+	skin/table4_active.png \
+	skin/table4_normal.png \
+	skin/table5_active.png \
+	skin/table5_normal.png \
+	skin/table_background.png \
+	skin/table.png \
+	skin/tables_dock.png
 	Aero/gtkrc \
 	Aero/tooltip.png \
 	Aero/handle.png \
