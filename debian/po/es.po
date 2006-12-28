@@ -1,0 +1,267 @@
+# Spanish/Spain translation of poker-network.
+# This file is distributed under the same license as the poker-network package.
+#
+# Initial translator:
+#  - Jose Ignacio Méndez González <jose_ignacio_aky@hotmail.com>, 2006.
+# Updated by:
+#  - Javier Fernández-Sanguino <jfs@debian.org>, 2006
+#
+#
+#
+#  Traductores, si no conoce el formato PO, merece la pena leer la 
+#  documentación de gettext, especialmente las secciones dedicadas a este
+#  formato, por ejemplo ejecutando:
+#         info -n '(gettext)PO Files'
+#         info -n '(gettext)Header Entry'
+#
+# Equipo de traducción al español, por favor lean antes de traducir
+# los siguientes documentos:
+#
+# - El proyecto de traducción de Debian al español
+#   http://www.debian.org/intl/spanish/
+#   especialmente las notas y normas de traducción en
+#   http://www.debian.org/intl/spanish/notas
+#
+# - La guía de traducción de po's de debconf:
+#   /usr/share/doc/po-debconf/README-trans
+#   o http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
+# Si tiene dudas o consultas sobre esta traducción consulte con el último
+# traductor (campo Last-Translator) y ponga en copia a la lista de
+# traducción de Debian al español (<debian-l10n-spanish@lists.debian.org>)
+msgid ""
+msgstr ""
+"Project-Id-Version: poker-network 1.0.32-1\n"
+"Report-Msgid-Bugs-To: loic@debian.org\n"
+"POT-Creation-Date: 2006-11-30 12:19+0100\n"
+"PO-Revision-Date: 2006-12-27 19:31+0100\n"
+"Last-Translator: Javier Fernández-Sanguino <jfs@debian.org>\n"
+"Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: multiselect
+#. Description
+#: ../poker-web.templates:1001
+msgid "Web server(s) to reconfigure automatically:"
+msgstr "Servidor/es web a reconfigurar automáticamente:"
+
+#. Type: multiselect
+#. Description
+#: ../poker-web.templates:1001
+msgid ""
+"poker-web supports any web server that PHP does, but this automatic "
+"configuration process only supports Apache."
+msgstr ""
+"poker-web da soporte a cualquier servidor web que tenga soporte de PHP, pero "
+"este proceso de configuración automática sólo da soporte a Apache."
+
+#. Type: boolean
+#. Description
+#: ../poker-web.templates:2001
+msgid "Restart ${webserver} now?"
+msgstr "¿Quiere que reinicie ${webserver} ahora?"
+
+#. Type: boolean
+#. Description
+#: ../poker-web.templates:2001
+msgid ""
+"Remember that in order to activate the new configuration ${webserver} has to "
+"be restarted. You can also restart ${webserver} manually executing /etc/init."
+"d/${webserver} restart"
+msgstr "Recuerde, que para activar la nueva configuración ${webserver} tiene que reiniciarse. Usted también puede reiniciar ${webserver} manualmente ejecutando «/etc/init.d/${webserver} restart»."
+
+#. Type: string
+#. Description
+#: ../poker-web.templates:3001
+msgid "Hostname or IP address of the poker-network server:"
+msgstr "Nombre o dirección IP del servidor poker-network:"
+
+#. Type: string
+#. Description
+#: ../poker-web.templates:3001
+msgid ""
+"The poker-network server for which poker-web provides a web based interface. "
+"It will be queried via its SOAP interface."
+msgstr ""
+"El servidor de poker-network cuyo poker-web proporciona una interfaz basada "
+"en web, Recibirá peticiones a través de su interfaz SOAP."
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:1001
+msgid "Do you want to configure and run the poker-network server?"
+msgstr "¿Quiere configurar y ejecutar el servidor de poker-network?"
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:1001
+msgid ""
+"If you want to configure and run a poker-network server, make sure you have "
+"administrative rights on a running MySQL server. If you do not want to run "
+"the poker-network server on this machine, you will be prompted for the "
+"hostname or the IP address of a running poker-network server."
+msgstr ""
+"Si usted quiere configurar y ejecutar un servidor de poker-network, "
+"asegúrese de que tiene permisos de administrador en el servidor MySQL. Si no "
+"quiere ejecutar el servidor de poker-network en este equipo, se le pedirá el "
+"nombre del servidor o la dirección IP de un servidor poker-network que se "
+"esté ejecutando."
+
+#. Type: note
+#. Description
+#: ../python-poker-network.templates:2001
+msgid "Skipping poker-network server installation"
+msgstr "Omitiendo instalación del servidor poker-network"
+
+#. Type: note
+#. Description
+#: ../python-poker-network.templates:2001
+msgid ""
+"If you want to run poker-network at a later time, you will need to configure "
+"it by hand or by running dpkg-reconfigure python-poker-network."
+msgstr "Si quiere ejecutar poker-network más tarde, necesitará configurarlo manualmente o ejecutando «dpkg-reconfigure python-poker-network»."
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:3001
+msgid "Hostname or IP address of the default poker-network server:"
+msgstr ""
+"Nombre del servidor o dirección IP del servidor poker-network por omisión:"
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:3001
+msgid ""
+"The clients based on poker-network installed on the same machine will be "
+"able to use this poker-network server host as a default, if needed."
+msgstr ""
+"Los clientes basados en poker-network instalados en el mismo equipo, serán "
+"capaces de usar este servidor por omisión de poker-network, si se necesita."
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:4001
+msgid "Hostname or IP address of the default poker-network web server:"
+msgstr ""
+"Nombre del servidor o dirección IP del servidor poker-network por omisión:"
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:4001
+msgid ""
+"The clients based on poker-network installed on the same machine will be "
+"able to use this address to connect to the web part of the poker server."
+msgstr "Los clientes basados en poker-network y que estén instalados en el mismo equipo utilizarán este servidor de poker-network para conectarse al interfaz web del servidor de poker."
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:5001
+msgid "Do you want to run the poker-network robots?"
+msgstr "¿Quiere ejecutar los robots de poker-network?"
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:5001
+msgid ""
+"Robot players are simple minded poker players that can be used to exercise "
+"the poker server when there are not enough human players connected."
+msgstr "Los jugadores robot son jugadores de poker de mente muy simple que pueden utilizarse para probar el servidor de poker cuando no hay suficientes jugadores humanos conectados."
+
+#~ msgid "MySQL server host name:"
+#~ msgstr "Nombre del servidor servidor de MySQL:"
+
+#~ msgid ""
+#~ "Please enter the the hostname or the IP address of the machine where the "
+#~ "MySQL server is running."
+#~ msgstr ""
+#~ "Por favor, introduzca el nombre o la dirección IP del equipo donde se "
+#~ "está ejecutando el servidor MySQL."
+
+#~ msgid "poker-network database name:"
+#~ msgstr "Nombre de la base de datos de poker-network:"
+
+#~ msgid ""
+#~ "This is the name of the database that poker-network will use. A new "
+#~ "database of that name will be created on the MySQL server."
+#~ msgstr ""
+#~ "Éste es el nombre de la base de datos que usará poker-network. Se creará "
+#~ "una nueva base de datos con ese nombre en el servidor MySQL."
+
+#~ msgid "MySQL user name dedicated to poker-network:"
+#~ msgstr "Nombre del usuario de MySQL dedicado a poker-network:"
+
+#~ msgid ""
+#~ "This is the user name that poker-network will use to access the database. "
+#~ "A MySQL user of that name will be created on the MySQL server, with "
+#~ "permissions restricted to the database dedicated to poker-network."
+#~ msgstr ""
+#~ "Éste es el nombre de usuario que poker-network usará para acceder a la "
+#~ "base de datos. Se creará un usuario en el servidor MySQL con ese nombre "
+#~ "con permisos restringidos a la base de datos dedicada a poker-network."
+
+#~ msgid "Password for the poker-network MySQL user:"
+#~ msgstr "Contraseña del usuario de MySQL para poker-network:"
+
+#~ msgid "Retype the password of the poker-network MySQL user:"
+#~ msgstr "Reescriba la contraseña del usuario de MySQL para poker-network:"
+
+#~ msgid ""
+#~ "This is the password that poker-network will use, along with the MySQL "
+#~ "user name you chose, to access the poker-network database."
+#~ msgstr ""
+#~ "Ésta es la contraseña que usará poker-network junto con el nombre del "
+#~ "usuario de MySQL que eligió para acceder a la base de datos poker-network."
+
+#~ msgid "Passwords mismatch"
+#~ msgstr "Las contraseñas no coinciden"
+
+#~ msgid ""
+#~ "The poker-network MySQL user passwords you entered do not match. Please "
+#~ "try again."
+#~ msgstr ""
+#~ "Las contraseñas del usuario de MySQL de poker-network que ha introducido "
+#~ "no coinciden. Por favor, inténtelo de nuevo."
+
+#~ msgid "MySQL server administrator user name:"
+#~ msgstr "Nombre del usuario administrador del servidor MySQL:"
+
+#~ msgid ""
+#~ "The MySQL server administrator user will be used only during the "
+#~ "installation process to do the following:"
+#~ msgstr ""
+#~ "El usuario administrador del servidor MySQL se usará sólo durante el "
+#~ "proceso de instalación para lo hacer lo siguiente:"
+
+#~ msgid ""
+#~ " (1) The poker-network database\n"
+#~ " (2) The MySQL user that poker-network will use to access the\n"
+#~ "database"
+#~ msgstr ""
+#~ " (1) La base de datos poker-network\n"
+#~ " (2)El usuario de MySQL que usará poker-network para acceder a la base de "
+#~ "datos\n"
+
+#~ msgid ""
+#~ "The 'root' user usually have permission to create databases and users."
+#~ msgstr ""
+#~ "El usuario «root» normalmente tiene permisos para crear bases de datos y "
+#~ "usuarios."
+
+#~ msgid "MySQL server administrator password (if any):"
+#~ msgstr "Contraseña de administrador del servidor MySQL (si hay alguna):"
+
+#~ msgid ""
+#~ "This is the password that will be used along with the MySQL server "
+#~ "administrator name."
+#~ msgstr ""
+#~ "Ésta es la contraseña que se usará junto con el nombre del administrador "
+#~ "del servidor MySQL."
+
+#~ msgid ""
+#~ "NOTE: This password will not be asked twice, since it's not a new "
+#~ "password."
+#~ msgstr ""
+#~ "NOTA: Esta contraseña no se preguntará dos veces, ya que no es una "
+#~ "contraseña nueva."

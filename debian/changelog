@@ -5,6 +5,8 @@ poker-network (1.0.33-1) unstable; urgency=low
   * python-poker-network.links: add missing 1.0.32
 
   * french translation (closes: #402798)
+  
+  * spanish translation (closes: #404707)
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 12 Dec 2006 22:26:17 +0100
 
