@@ -5,7 +5,7 @@
 	* pokerclient2d/pokerdisplay2d.py, tests/test-pokerdisplay2d.py.in:
 	bind on_sit_seat%d_clicked to on_sit_clicked
 
-2006-12-28  loic  <loic@durebuntu>
+2006-12-28  loic  <loic@dachary.org>
 
 	* tests/test-pokerdisplay2d.py.in: fix the datadir
 
@@ -24,7 +24,7 @@
 	* pokerclient2d/gamewindow.py, pokerclient2d/pokerdisplay2d.py, tests/test-pokerdisplay2d.py.in:
 	switch to GladeWindowGlade for game_window widget
 
-2006-12-28  loic  <loic@durebuntu>
+2006-12-28  loic  <loic@dachary.org>
 
 	* tests/test-pokerclient.py.in, tests/test-clientserver.py.in:
 	client setup and connection are separate in order to control the order in which the clients are connected
@@ -34,7 +34,7 @@
 	* tests/test-gamewindow.py.in, pokerclient2d/gamewindow.py:
 	splitted gamewindow test
 
-2006-12-28  griim  <griim@durebuntu>
+2006-12-28  griim  <griim@mekensleep.com>
 
 	* tests/test-pokerdisplay2d.py.in: fixed datapath
 
@@ -43,17 +43,17 @@
 	* configure.ac, tests/Makefile.am, tests/test-gamewindow.py.in:
 	added test for gamewindow
 
-2006-12-28  griim  <griim@durebuntu>
+2006-12-28  griim  <griim@mekensleep.com>
 
 	* configure.ac: changed GETTEXT settings
 
 	* po/Makefile.in.in, po/Makevars, po/fr.po: define gettext domain
 
-2006-12-28  loic  <loic@durebuntu>
+2006-12-28  loic  <loic@dachary.org>
 
 	* debian/changelog, debian/po/es.po: spanish translation
 
-2006-12-28  griim  <griim@durebuntu>
+2006-12-28  griim  <griim@mekensleep.com>
 
 	* tests/test-unittestgui.cpp, tests/test-unittestgui.cpp.in:
 	changed test-unittestgui.cpp to test-unittest.cpp.in
@@ -64,7 +64,7 @@
 
 	* pokerclient2d/data/Makefile.am: removed old data
 
-2006-12-27  loic  <loic@durebuntu>
+2006-12-27  loic  <loic@dachary.org>
 
 	* tests/test-pokerclient.py.in: fix login calls and play options
 
@@ -74,35 +74,33 @@
 
 	* pokerclient2d/gamewindow.py: added gamewindow.py
 
-2006-12-27  griim  <griim@durebuntu>
+2006-12-27  griim  <griim@mekensleep.com>
 
 	* tests/test-pokerdisplay2d.py.in: fixed path
 
 	* tests/conf/poker2d.xml.in: changed data path
 
-2006-12-27  loic  <loic@durebuntu>
+2006-12-27  loic  <loic@dachary.org>
 
 	* tests/test-pokerclient.py.in: don't control verbosity
 
 	* tests/test-pokerclient.py.in: no dependency to client2d
 
-2006-12-27  griim  <griim@durebuntu>
+2006-12-27  griim  <griim@mekensleep.com>
 
 	* po/Makefile.in.in:
 	Makefile.in.in doesn't delete itself anymore (using make maintainer-clean)
 
 	* tests/test-pokerdisplay2d.py.in: fixed configuration file path
 
-2006-12-27  loic  <loic@durebuntu>
+2006-12-27  loic  <loic@dachary.org>
 
 	* tests/test-pokerservice.py.in:
 	use constant shuffler for both tournaments and cards
 
 	* tests/test-pokerclient.py.in: don't depend on pokerclient2d
 
-	* ChangeLog: *** empty log message ***
-
-2006-12-27  griim  <griim@durebuntu>
+2006-12-27  griim  <griim@mekensleep.com>
 
 	* configure.ac: added GETTEXT support
 
