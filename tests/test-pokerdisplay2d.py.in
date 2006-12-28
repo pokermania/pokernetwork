@@ -31,13 +31,6 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 import unittest
 
-class rc_parseMockup:
-    gtkrc = None
-    def __init__(self, gtkrc):
-        rc_parseMockup.gtkrc = gtkrc
-import gtk
-gtk.rc_parse = rc_parseMockup
-
 from pokernetwork.pokernetworkconfig import Config
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D, PokerPlayer2D, PokerTable2D
 from pokernetwork.pokerclientpackets import PACKET_POKER_POSITION, PACKET_POKER_PLAYER_ARRIVE, PACKET_POKER_BOARD_CARDS
@@ -188,7 +181,6 @@ class PokerDisplay2DTest(unittest.TestCase):
             self.display2d.datadir = "@top_srcdir@/pokerclient2d/data"
 	self.display2d.init()
 	self.assertNotEqual(None, self.display2d.glade)
-        self.assertEqual("../pokerclient2d/data/interface/gtkrc", rc_parseMockup.gtkrc)
 
 class PokerDisplay2DCardTest(unittest.TestCase):
     def test_PokerTableRenderPacketBoardCards(self):
