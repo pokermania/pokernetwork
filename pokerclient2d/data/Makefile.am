@@ -98,6 +98,7 @@ nobase_dist_poker2d_DATA = \
 	interface/interface.gladep \
 	interface/mockup.glade \
 	interface/gtkrc \
+	interface/status.png \
 	interface/winner.png \
 	interface/name.png \
 	interface/money.png \

@@ -72,10 +72,15 @@ class GameWindowGlade:
             winner.set_name('winner%d' % winner_index)
             self.widgets[winner.get_name()] = winner
             fixed.put(winner, x, y + (winner_index-5)*10)
-        table_status = gtk.TextView()
-        table_status.set_name("table_status")
-        fixed.put(table_status, 0, 0)
-        self.widgets[table_status.get_name()] = table_status
+        def button2textview(button):            
+            table_status = gtk.TextView()
+            table_status.set_name(button.get_name())
+            self.widgets[table_status.get_name()] = table_status
+            x = fixed.child_get_property(button, 'x')
+            y = fixed.child_get_property(button, 'y')
+            fixed.remove(button)
+            fixed.put(table_status, x, y)
+        button2textview(self.glade.get_widget("table_status"))
 	accelerators = ("raise_increase",
                         "raise_decrease",
                         "raise_increase_bb",        
