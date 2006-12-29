@@ -1,0 +1,16 @@
+# -*- shell-script -*-
+
+style "bet_seat_style_font" = "bet_seat0_style"
+{
+  font_name="FreeSans Bold 8"
+}
+
+style "pot_style_font" = "pot_style"
+{
+  font_name="FreeSans Bold 8"
+}
+
+widget "*bet_seat*" style "bet_seat_style_font"
+widget "*pot*" style "pot_style_font"
+
+include "gtkrc.mockup"

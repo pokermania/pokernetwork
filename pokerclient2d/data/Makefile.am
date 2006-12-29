@@ -98,6 +98,7 @@ nobase_dist_poker2d_DATA = \
 	interface/interface.gladep \
 	interface/mockup.glade \
 	interface/gtkrc \
+	interface/gtkrc.mockup \
 	interface/status.png \
 	interface/winner.png \
 	interface/name.png \
@@ -272,7 +273,7 @@ interface/interface2d.glade: interface/interface.glade
 interface/mockup.glade:
 	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > interface/mockup.glade
 interface/gtkrc:
-	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/gtkrc
+	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/gtkrc.mockup
 
 clean-local:
 	rm -f interface/interface2d.glade
