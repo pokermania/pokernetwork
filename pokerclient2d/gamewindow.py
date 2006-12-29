@@ -87,13 +87,16 @@ class GameWindowGlade:
             button.set_name(accelerator)
             fixed.put(button, 0, 0)
             self.widgets[button.get_name()] = button
-        raise_range = self.glade.get_widget("raise_range")
-        (x, y) = (fixed.child_get_property(raise_range, 'x'), fixed.child_get_property(raise_range, 'y'))
-        fixed.remove(raise_range)
-        raise_range = gtk.HScale()
-        fixed.put(raise_range, x, y)
-        raise_range.set_name("raise_range")
-        self.widgets[raise_range.get_name()] = raise_range
+        def button2hscale(button):
+            hscale = gtk.HScale()
+            hscale.set_name(button.get_name())
+            self.widgets[hscale.get_name()] = hscale
+            x = fixed.child_get_property(button, 'x')
+            y = fixed.child_get_property(button, 'y')
+            hscale.set_size_request(*button.size_request())
+            fixed.remove(button)
+            fixed.put(hscale, x, y)
+        button2hscale(self.glade.get_widget("raise_range"))
         names = map(lambda seat: self.glade.get_widget("name_seat%d" % seat), xrange(10))
         def button2label(button):
             label = gtk.Label()
@@ -118,4 +121,3 @@ class GameWindowGlade:
 
     def signal_autoconnect(self, instance):
         return self.glade.signal_autoconnect(instance)
-
