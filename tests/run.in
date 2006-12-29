@@ -95,7 +95,7 @@ case "$1" in
         fi
         ;;
 
-*pokerdisplay2d.py) 
+*pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py) 
         FONTPATH=/usr/share/fonts/X11/misc
         INTERFACE_PORT=19579
         if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
