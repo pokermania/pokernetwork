@@ -13,7 +13,7 @@ export PKG_CONFIG_PATH=/usr/share/pkgconfig
 
 include /usr/share/cdbs/1/rules/debhelper.mk
 
-clean:: $(DEB_BUILDDIR)/config.status
+clean:: # $(DEB_BUILDDIR)/config.status
 	rm -f $(DEB_SRCDIR)/*cdbs-*
 
 include /usr/share/cdbs/1/class/autotools.mk
