@@ -538,7 +538,7 @@
        height="50"
        id="raise_range" />
     <image
-       xlink:href="/home/proppy/Desktop/20061228/poker-network/pokerclient2d/data/interface/status.png"
+       xlink:href="status.png"
        x="628.19409"
        y="11.148649"
        width="150"
