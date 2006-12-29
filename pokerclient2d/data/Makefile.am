@@ -272,7 +272,7 @@ interface/interface2d.glade: interface/interface.glade
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
 interface/mockup.glade:
 	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > interface/mockup.glade
-interface/gtkrc:
+interface/gtkrc.mockup:
 	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/gtkrc.mockup
 
 clean-local:
