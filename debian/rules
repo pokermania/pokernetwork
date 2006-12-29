@@ -19,9 +19,10 @@ clean:: $(DEB_BUILDDIR)/config.status
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/class/gnome.mk
 
-DEB_MAKE_CLEAN_TARGET = maintainer-clean
+#DEB_MAKE_CLEAN_TARGET = maintainer-clean
 
-DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode --disable-static
+#DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode --disable-static
+DEB_CONFIGURE_EXTRA_FLAGS = --disable-static
 
 DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-server-host=%HOST% \
@@ -36,14 +37,14 @@ DEB_MAKE_CHECK_TARGET = check
 
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
-$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
-	AUTOMAKE=automake-1.9 ACLOCAL=aclocal-1.9 autoreconf --install
-	chmod a+x $@
+#$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
+#	AUTOMAKE=automake-1.9 ACLOCAL=aclocal-1.9 autoreconf --install
+#	chmod a+x $@
 
 # override in order to add dependency to configure (should be a :: rule instead of a : rule)
-$(DEB_BUILDDIR)/config.status: $(DEB_SRCDIR)/configure
-	chmod a+x $(DEB_CONFIGURE_SCRIPT)
-	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
+#$(DEB_BUILDDIR)/config.status: $(DEB_SRCDIR)/configure
+#	chmod a+x $(DEB_CONFIGURE_SCRIPT)
+#	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
 
 binary-install/python-poker-network::
 	-dh_pycentral -ppython-poker-network
