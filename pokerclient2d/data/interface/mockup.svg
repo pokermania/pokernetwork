@@ -505,37 +505,44 @@
     <image
        xlink:href="check.png"
        x="638.31744"
-       y="18.333334"
+       y="508.33334"
        width="44"
        height="30"
        id="check" />
     <image
        xlink:href="call.png"
        x="686.73016"
-       y="19.126986"
+       y="509.12698"
        width="44"
        height="30"
        id="call" />
     <image
        xlink:href="fold.png"
        x="735.93652"
-       y="17.539684"
+       y="507.53967"
        width="44"
        height="30"
        id="fold" />
     <image
        xlink:href="raise.png"
        x="639.90472"
-       y="53.253963"
+       y="543.25397"
        width="44"
        height="30"
        id="raise" />
     <image
        xlink:href="raise_slider_dock.png"
        x="686.33331"
-       y="51.984127"
+       y="541.98413"
        width="94"
        height="50"
        id="raise_range" />
+    <image
+       xlink:href="/home/proppy/Desktop/20061228/poker-network/pokerclient2d/data/interface/status.png"
+       x="628.19409"
+       y="11.148649"
+       width="150"
+       height="75"
+       id="table_status" />
   </g>
 </svg>
