@@ -5,7 +5,7 @@
 
 <widget class="GtkWindow" id="login_window">
   <property name="width_request">200</property>
-  <property name="title" translatable="yes">login_window</property>
+  <property name="title">login_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_CENTER</property>
   <property name="modal">False</property>
@@ -84,7 +84,7 @@
 			      <property name="editable">True</property>
 			      <property name="visibility">True</property>
 			      <property name="max_length">0</property>
-			      <property name="text" translatable="yes"></property>
+			      <property name="text"></property>
 			      <property name="has_frame">True</property>
 			      <property name="invisible_char">*</property>
 			      <property name="activates_default">False</property>
@@ -151,7 +151,7 @@
 			      <property name="editable">True</property>
 			      <property name="visibility">False</property>
 			      <property name="max_length">0</property>
-			      <property name="text" translatable="yes"></property>
+			      <property name="text"></property>
 			      <property name="has_frame">True</property>
 			      <property name="invisible_char">*</property>
 			      <property name="activates_default">False</property>
@@ -221,7 +221,7 @@
 			  <property name="visible">True</property>
 			  <property name="can_default">True</property>
 			  <property name="can_focus">True</property>
-			  <property name="label">OK</property>
+			  <property name="label" translatable="yes">OK</property>
 			  <property name="use_underline">True</property>
 			  <property name="relief">GTK_RELIEF_NONE</property>
 			  <property name="focus_on_click">True</property>
@@ -234,7 +234,7 @@
 			  <property name="visible">True</property>
 			  <property name="can_default">True</property>
 			  <property name="can_focus">True</property>
-			  <property name="label">CANCEL</property>
+			  <property name="label" translatable="yes">CANCEL</property>
 			  <property name="use_underline">True</property>
 			  <property name="relief">GTK_RELIEF_NONE</property>
 			  <property name="focus_on_click">True</property>
@@ -277,7 +277,7 @@
 
 <widget class="GtkWindow" id="chooser_window">
   <property name="border_width">2</property>
-  <property name="title" translatable="yes">chooser_window</property>
+  <property name="title">chooser_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_CENTER</property>
   <property name="modal">False</property>
@@ -320,7 +320,7 @@
 		  <property name="visible">True</property>
 		  <property name="can_default">True</property>
 		  <property name="can_focus">True</property>
-		  <property name="label">OK</property>
+		  <property name="label" translatable="yes">OK</property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NONE</property>
 		  <property name="focus_on_click">True</property>
@@ -345,7 +345,7 @@
 	      <child>
 		<widget class="GtkLabel" id="chooser_label">
 		  <property name="visible">True</property>
-		  <property name="label" translatable="yes">...</property>
+		  <property name="label">...</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -384,7 +384,7 @@
 </widget>
 
 <widget class="GtkWindow" id="sit_actions_window">
-  <property name="title" translatable="yes">sit_actions_window</property>
+  <property name="title">sit_actions_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -484,7 +484,7 @@
 </widget>
 
 <widget class="GtkWindow" id="blind_window">
-  <property name="title" translatable="yes">blind_window</property>
+  <property name="title">blind_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -536,7 +536,7 @@
 		      <property name="width_request">38</property>
 		      <property name="height_request">19</property>
 		      <property name="sensitive">False</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">False</property>
@@ -555,7 +555,7 @@
 		    <widget class="GtkRadioButton" id="blind_msg_head_middle">
 		      <property name="height_request">19</property>
 		      <property name="sensitive">False</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">False</property>
@@ -575,7 +575,7 @@
 		      <property name="width_request">2</property>
 		      <property name="height_request">19</property>
 		      <property name="sensitive">False</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">False</property>
@@ -685,7 +685,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">YES</property>
+			      <property name="label" translatable="yes">YES</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -703,7 +703,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">NO</property>
+			      <property name="label" translatable="yes">NO</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -758,7 +758,7 @@
 </widget>
 
 <widget class="GtkWindow" id="buy_in_window">
-  <property name="title" translatable="yes">buy_in_window</property>
+  <property name="title">buy_in_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -809,7 +809,7 @@
 		      <property name="width_request">51</property>
 		      <property name="height_request">19</property>
 		      <property name="sensitive">False</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">False</property>
@@ -828,7 +828,7 @@
 		    <widget class="GtkRadioButton" id="buyin_msg_head_middle">
 		      <property name="height_request">19</property>
 		      <property name="sensitive">False</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">False</property>
@@ -848,7 +848,7 @@
 		      <property name="width_request">2</property>
 		      <property name="height_request">19</property>
 		      <property name="sensitive">False</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">False</property>
@@ -948,7 +948,7 @@
 			  <child>
 			    <widget class="GtkLabel" id="max_label">
 			      <property name="visible">True</property>
-			      <property name="label" translatable="yes">(maximum$)</property>
+			      <property name="label">(maximum$)</property>
 			      <property name="use_underline">False</property>
 			      <property name="use_markup">False</property>
 			      <property name="justify">GTK_JUSTIFY_RIGHT</property>
@@ -1004,7 +1004,7 @@
 			      <property name="editable">True</property>
 			      <property name="visibility">True</property>
 			      <property name="max_length">0</property>
-			      <property name="text" translatable="yes">sdfdsf</property>
+			      <property name="text">sdfdsf</property>
 			      <property name="has_frame">True</property>
 			      <property name="invisible_char">*</property>
 			      <property name="activates_default">False</property>
@@ -1044,7 +1044,7 @@
 			    <widget class="GtkButton" id="ok">
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">OK</property>
+			      <property name="label" translatable="yes">OK</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -1078,7 +1078,7 @@
 <widget class="GtkWindow" id="chat_history_window">
   <property name="width_request">500</property>
   <property name="height_request">200</property>
-  <property name="title" translatable="yes">chat_history_window</property>
+  <property name="title">chat_history_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1149,7 +1149,7 @@
 		      <property name="left_margin">0</property>
 		      <property name="right_margin">0</property>
 		      <property name="indent">0</property>
-		      <property name="text" translatable="yes"></property>
+		      <property name="text"></property>
 		    </widget>
 		  </child>
 		</widget>
@@ -1165,7 +1165,7 @@
 <widget class="GtkWindow" id="chat_entry_window">
   <property name="width_request">500</property>
   <property name="height_request">25</property>
-  <property name="title" translatable="yes">chat_entry_window</property>
+  <property name="title">chat_entry_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1230,7 +1230,7 @@
 			  <property name="editable">True</property>
 			  <property name="visibility">True</property>
 			  <property name="max_length">80</property>
-			  <property name="text" translatable="yes"></property>
+			  <property name="text"></property>
 			  <property name="has_frame">False</property>
 			  <property name="invisible_char">*</property>
 			  <property name="activates_default">False</property>
@@ -1248,7 +1248,7 @@
 			<widget class="GtkToggleButton" id="history_button">
 			  <property name="width_request">16</property>
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes"></property>
+			  <property name="label"></property>
 			  <property name="use_underline">True</property>
 			  <property name="relief">GTK_RELIEF_NORMAL</property>
 			  <property name="focus_on_click">False</property>
@@ -1277,7 +1277,7 @@
 </widget>
 
 <widget class="GtkWindow" id="clock_window">
-  <property name="title" translatable="yes">clock_window</property>
+  <property name="title">clock_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1331,7 +1331,7 @@
 		  <child>
 		    <widget class="GtkLabel" id="clock_label">
 		      <property name="visible">True</property>
-		      <property name="label" translatable="yes">00:00</property>
+		      <property name="label">00:00</property>
 		      <property name="use_underline">False</property>
 		      <property name="use_markup">False</property>
 		      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -1358,7 +1358,7 @@
 </widget>
 
 <widget class="GtkWindow" id="cashier_button_window">
-  <property name="title" translatable="yes">cashier_button_window</property>
+  <property name="title">cashier_button_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1390,7 +1390,7 @@
 	  <property name="height_request">112</property>
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <property name="label" translatable="yes"></property>
+	  <property name="label"></property>
 	  <property name="use_underline">True</property>
 	  <property name="relief">GTK_RELIEF_NORMAL</property>
 	  <property name="focus_on_click">False</property>
@@ -1402,7 +1402,7 @@
 </widget>
 
 <widget class="GtkWindow" id="exit_cashier_window">
-  <property name="title" translatable="yes">exit_cashier_window</property>
+  <property name="title">exit_cashier_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1434,7 +1434,7 @@
 	  <property name="height_request">55</property>
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <property name="label" translatable="yes"></property>
+	  <property name="label"></property>
 	  <property name="use_underline">True</property>
 	  <property name="relief">GTK_RELIEF_NORMAL</property>
 	  <property name="focus_on_click">True</property>
@@ -1446,7 +1446,7 @@
 </widget>
 
 <widget class="GtkWindow" id="personal_information_window">
-  <property name="title" translatable="yes">personal_information_window</property>
+  <property name="title">personal_information_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1519,7 +1519,7 @@
 			      <property name="editable">False</property>
 			      <property name="visibility">True</property>
 			      <property name="max_length">0</property>
-			      <property name="text" translatable="yes"></property>
+			      <property name="text"></property>
 			      <property name="has_frame">False</property>
 			      <property name="invisible_char">*</property>
 			      <property name="activates_default">False</property>
@@ -1570,7 +1570,7 @@
 			      <property name="editable">False</property>
 			      <property name="visibility">True</property>
 			      <property name="max_length">0</property>
-			      <property name="text" translatable="yes"></property>
+			      <property name="text"></property>
 			      <property name="has_frame">False</property>
 			      <property name="invisible_char">*</property>
 			      <property name="activates_default">False</property>
@@ -1630,7 +1630,7 @@
 			      <property name="left_margin">0</property>
 			      <property name="right_margin">0</property>
 			      <property name="indent">0</property>
-			      <property name="text" translatable="yes"></property>
+			      <property name="text"></property>
 			    </widget>
 			  </child>
 
@@ -1676,7 +1676,7 @@
 </widget>
 
 <widget class="GtkWindow" id="account_status_window">
-  <property name="title" translatable="yes">account_status_window</property>
+  <property name="title">account_status_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -1825,7 +1825,7 @@
 						      <child>
 							<widget class="GtkLabel" id="money_one_available">
 							  <property name="visible">True</property>
-							  <property name="label" translatable="yes">0</property>
+							  <property name="label">0</property>
 							  <property name="use_underline">False</property>
 							  <property name="use_markup">False</property>
 							  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -1920,7 +1920,7 @@
 						      <child>
 							<widget class="GtkLabel" id="money_one_in_game">
 							  <property name="visible">True</property>
-							  <property name="label" translatable="yes">0</property>
+							  <property name="label">0</property>
 							  <property name="use_underline">False</property>
 							  <property name="use_markup">False</property>
 							  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2009,7 +2009,7 @@
 						  <child>
 						    <widget class="GtkLabel" id="money_one_total">
 						      <property name="visible">True</property>
-						      <property name="label" translatable="yes">0</property>
+						      <property name="label">0</property>
 						      <property name="use_underline">False</property>
 						      <property name="use_markup">False</property>
 						      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2193,7 +2193,7 @@
 						      <child>
 							<widget class="GtkLabel" id="money_two_available">
 							  <property name="visible">True</property>
-							  <property name="label" translatable="yes">0$</property>
+							  <property name="label">0$</property>
 							  <property name="use_underline">False</property>
 							  <property name="use_markup">False</property>
 							  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2288,7 +2288,7 @@
 						      <child>
 							<widget class="GtkLabel" id="money_two_in_game">
 							  <property name="visible">True</property>
-							  <property name="label" translatable="yes">0$</property>
+							  <property name="label">0$</property>
 							  <property name="use_underline">False</property>
 							  <property name="use_markup">False</property>
 							  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2377,7 +2377,7 @@
 						  <child>
 						    <widget class="GtkLabel" id="money_two_total">
 						      <property name="visible">True</property>
-						      <property name="label" translatable="yes">0$</property>
+						      <property name="label">0$</property>
 						      <property name="use_underline">False</property>
 						      <property name="use_markup">False</property>
 						      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2546,7 +2546,7 @@
 				  <child>
 				    <widget class="GtkLabel" id="label56">
 				      <property name="visible">True</property>
-				      <property name="label" translatable="yes">0</property>
+				      <property name="label">0</property>
 				      <property name="use_underline">False</property>
 				      <property name="use_markup">False</property>
 				      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2612,7 +2612,7 @@
 			      <child>
 				<widget class="GtkLabel" id="label58">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">0</property>
+				  <property name="label">0</property>
 				  <property name="use_underline">False</property>
 				  <property name="use_markup">False</property>
 				  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -2661,7 +2661,7 @@
 </widget>
 
 <widget class="GtkWindow" id="hand_history_window">
-  <property name="title" translatable="yes">hand_history_window</property>
+  <property name="title">hand_history_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -2885,7 +2885,7 @@
 				  <property name="left_margin">0</property>
 				  <property name="right_margin">0</property>
 				  <property name="indent">0</property>
-				  <property name="text" translatable="yes"></property>
+				  <property name="text"></property>
 				</widget>
 			      </child>
 			    </widget>
@@ -2954,7 +2954,7 @@
 </widget>
 
 <widget class="GtkWindow" id="menu_window">
-  <property name="title" translatable="yes">menu_window</property>
+  <property name="title">menu_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -3163,7 +3163,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1024x768">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1024x_768</property>
+				  <property name="label"> 1024x_768</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3174,7 +3174,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1280x800">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1280x800</property>
+				  <property name="label"> 1280x800</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3185,7 +3185,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1280x1024">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 12_80x1024</property>
+				  <property name="label"> 12_80x1024</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3196,7 +3196,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1336x1024">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1366x1024</property>
+				  <property name="label"> 1366x1024</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3207,7 +3207,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1400x1050">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1_400x1050</property>
+				  <property name="label"> 1_400x1050</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3218,7 +3218,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1600x1200">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1600x1_200</property>
+				  <property name="label"> 1600x1_200</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3229,7 +3229,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1680x1050">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1680x1050</property>
+				  <property name="label"> 1680x1050</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3240,7 +3240,7 @@
 			      <child>
 				<widget class="GtkRadioMenuItem" id="1920x1200">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes"> 1_920x1200</property>
+				  <property name="label"> 1_920x1200</property>
 				  <property name="use_underline">True</property>
 				  <property name="active">True</property>
 				  <property name="group">auto_select</property>
@@ -3468,7 +3468,7 @@
 </widget>
 
 <widget class="GtkWindow" id="outfit_slots_male_window">
-  <property name="title" translatable="yes">outfit_slots_male_window</property>
+  <property name="title">outfit_slots_male_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -3528,7 +3528,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3553,7 +3553,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3579,7 +3579,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3605,7 +3605,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3631,7 +3631,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3657,7 +3657,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3683,7 +3683,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3709,7 +3709,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3735,7 +3735,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -3766,7 +3766,7 @@
 
 <widget class="GtkWindow" id="outfit_params_window">
   <property name="width_request">300</property>
-  <property name="title" translatable="yes">outfit_params</property>
+  <property name="title">outfit_params</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -3868,7 +3868,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -3889,7 +3889,7 @@
 		      <child>
 			<widget class="GtkLabel" id="slot_label">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">label70</property>
+			  <property name="label">label70</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -3929,7 +3929,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4033,7 +4033,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4054,7 +4054,7 @@
 		      <child>
 			<widget class="GtkLabel" id="param1_label">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">label70</property>
+			  <property name="label">label70</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -4094,7 +4094,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4198,7 +4198,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4219,7 +4219,7 @@
 		      <child>
 			<widget class="GtkLabel" id="param2_label">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">label70</property>
+			  <property name="label">label70</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -4259,7 +4259,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4363,7 +4363,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4384,7 +4384,7 @@
 		      <child>
 			<widget class="GtkLabel" id="param3_label">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">label70</property>
+			  <property name="label">label70</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -4424,7 +4424,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4528,7 +4528,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4549,7 +4549,7 @@
 		      <child>
 			<widget class="GtkLabel" id="param4_label">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">label70</property>
+			  <property name="label">label70</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -4589,7 +4589,7 @@
 			      <property name="height_request">30</property>
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label" translatable="yes"></property>
+			      <property name="label"></property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NORMAL</property>
 			      <property name="focus_on_click">True</property>
@@ -4630,7 +4630,7 @@
 </widget>
 
 <widget class="GtkWindow" id="outfit_ok_window">
-  <property name="title" translatable="yes">outfit_ok_window</property>
+  <property name="title">outfit_ok_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -4662,7 +4662,7 @@
 	  <property name="height_request">33</property>
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <property name="label" translatable="yes"></property>
+	  <property name="label"></property>
 	  <property name="use_underline">True</property>
 	  <property name="relief">GTK_RELIEF_NORMAL</property>
 	  <property name="focus_on_click">True</property>
@@ -4677,7 +4677,7 @@
 </widget>
 
 <widget class="GtkWindow" id="outfit_sex_window">
-  <property name="title" translatable="yes">outfit_sex_window</property>
+  <property name="title">outfit_sex_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -4715,7 +4715,7 @@
 	      <property name="height_request">75</property>
 	      <property name="visible">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes"></property>
+	      <property name="label"></property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -4737,7 +4737,7 @@
 	      <property name="height_request">75</property>
 	      <property name="visible">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes"></property>
+	      <property name="label"></property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -4760,7 +4760,7 @@
 </widget>
 
 <widget class="GtkWindow" id="outfit_slots_female_window">
-  <property name="title" translatable="yes">outfit_slots_female_window</property>
+  <property name="title">outfit_slots_female_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -4820,7 +4820,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -4845,7 +4845,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -4871,7 +4871,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -4897,7 +4897,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -4923,7 +4923,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -4949,7 +4949,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -4975,7 +4975,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -5001,7 +5001,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -5027,7 +5027,7 @@
 		      <property name="height_request">70</property>
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
-		      <property name="label" translatable="yes"></property>
+		      <property name="label"></property>
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
@@ -5057,7 +5057,7 @@
 </widget>
 
 <widget class="GtkWindow" id="outfit_random_window">
-  <property name="title" translatable="yes">outfit_random_window</property>
+  <property name="title">outfit_random_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -5089,7 +5089,7 @@
 	  <property name="height_request">41</property>
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <property name="label" translatable="yes"></property>
+	  <property name="label"></property>
 	  <property name="use_underline">True</property>
 	  <property name="relief">GTK_RELIEF_NORMAL</property>
 	  <property name="focus_on_click">True</property>
@@ -5104,7 +5104,7 @@
 </widget>
 
 <widget class="GtkWindow" id="tournaments_window">
-  <property name="title" translatable="yes">tournaments_window</property>
+  <property name="title">tournaments_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -5559,7 +5559,7 @@
 						  <child>
 						    <widget class="GtkLabel" id="tournaments_label">
 						      <property name="visible">True</property>
-						      <property name="label" translatable="yes">Tournaments: 0</property>
+						      <property name="label">Tournaments: 0</property>
 						      <property name="use_underline">False</property>
 						      <property name="use_markup">False</property>
 						      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -5615,7 +5615,7 @@
 						  <child>
 						    <widget class="GtkLabel" id="players_label">
 						      <property name="visible">True</property>
-						      <property name="label" translatable="yes">Players: 0</property>
+						      <property name="label">Players: 0</property>
 						      <property name="use_underline">False</property>
 						      <property name="use_markup">False</property>
 						      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -5674,7 +5674,7 @@
 </widget>
 
 <widget class="GtkWindow" id="tournament_info_window">
-  <property name="title" translatable="yes">tournament_info_window</property>
+  <property name="title">tournament_info_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -5808,7 +5808,7 @@
 				  <child>
 				    <widget class="GtkLabel" id="label_register_unregister">
 				      <property name="visible">True</property>
-				      <property name="label" translatable="yes"></property>
+				      <property name="label"></property>
 				      <property name="use_underline">False</property>
 				      <property name="use_markup">False</property>
 				      <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -5848,7 +5848,7 @@
 </widget>
 
 <widget class="GtkWindow" id="lobby_window">
-  <property name="title" translatable="yes">lobby_window</property>
+  <property name="title">lobby_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -6449,7 +6449,7 @@
 						  <child>
 						    <widget class="GtkLabel" id="tables_label">
 						      <property name="visible">True</property>
-						      <property name="label" translatable="yes">Tables: 0</property>
+						      <property name="label">Tables: 0</property>
 						      <property name="use_underline">False</property>
 						      <property name="use_markup">False</property>
 						      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6505,7 +6505,7 @@
 						  <child>
 						    <widget class="GtkLabel" id="players_label">
 						      <property name="visible">True</property>
-						      <property name="label" translatable="yes">Players: 0</property>
+						      <property name="label">Players: 0</property>
 						      <property name="use_underline">False</property>
 						      <property name="use_markup">False</property>
 						      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6563,7 +6563,7 @@
 </widget>
 
 <widget class="GtkWindow" id="table_info_window">
-  <property name="title" translatable="yes">table_info_window</property>
+  <property name="title">table_info_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -6696,7 +6696,7 @@
 				  <child>
 				    <widget class="GtkLabel" id="label_go_to">
 				      <property name="visible">True</property>
-				      <property name="label" translatable="yes"></property>
+				      <property name="label"></property>
 				      <property name="use_underline">False</property>
 				      <property name="use_markup">False</property>
 				      <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -6736,7 +6736,7 @@
 </widget>
 
 <widget class="GtkWindow" id="game_window">
-  <property name="title" translatable="yes">game_window</property>
+  <property name="title">game_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -6779,7 +6779,7 @@
 		<widget class="GtkLabel" id="bet_seat1">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6804,7 +6804,7 @@
 		<widget class="GtkLabel" id="bet_seat2">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6829,7 +6829,7 @@
 		<widget class="GtkLabel" id="name_seat4">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6854,7 +6854,7 @@
 		<widget class="GtkLabel" id="money_seat4">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6879,7 +6879,7 @@
 		<widget class="GtkLabel" id="bet_seat4">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6904,7 +6904,7 @@
 		<widget class="GtkLabel" id="name_seat5">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">money_seat1</property>
+		  <property name="label">money_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6929,7 +6929,7 @@
 		<widget class="GtkLabel" id="money_seat5">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">money_seat1</property>
+		  <property name="label">money_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6954,7 +6954,7 @@
 		<widget class="GtkLabel" id="bet_seat5">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -6979,7 +6979,7 @@
 		<widget class="GtkLabel" id="name_seat6">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7004,7 +7004,7 @@
 		<widget class="GtkLabel" id="money_seat6">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7029,7 +7029,7 @@
 		<widget class="GtkLabel" id="bet_seat6">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7054,7 +7054,7 @@
 		<widget class="GtkLabel" id="name_seat7">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7079,7 +7079,7 @@
 		<widget class="GtkLabel" id="money_seat7">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7104,7 +7104,7 @@
 		<widget class="GtkLabel" id="bet_seat7">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7129,7 +7129,7 @@
 		<widget class="GtkLabel" id="name_seat9">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">money_seat1</property>
+		  <property name="label">money_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7154,7 +7154,7 @@
 		<widget class="GtkLabel" id="money_seat9">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">money_seat1</property>
+		  <property name="label">money_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7179,7 +7179,7 @@
 		<widget class="GtkLabel" id="bet_seat9">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7204,7 +7204,7 @@
 		<widget class="GtkLabel" id="money_seat0">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">money_seat1</property>
+		  <property name="label">money_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7229,7 +7229,7 @@
 		<widget class="GtkLabel" id="bet_seat0">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7267,7 +7267,7 @@
 		  <property name="left_margin">0</property>
 		  <property name="right_margin">0</property>
 		  <property name="indent">0</property>
-		  <property name="text" translatable="yes"></property>
+		  <property name="text"></property>
 		</widget>
 		<packing>
 		  <property name="x">600</property>
@@ -7317,7 +7317,7 @@
 		<widget class="GtkLabel" id="bet_seat8">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7342,7 +7342,7 @@
 		<widget class="GtkLabel" id="money_seat8">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7367,7 +7367,7 @@
 		<widget class="GtkLabel" id="name_seat8">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8566,7 +8566,7 @@
 		<widget class="GtkLabel" id="money_seat1">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">money_seat1</property>
+		  <property name="label">money_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8591,7 +8591,7 @@
 		<widget class="GtkLabel" id="name_seat1">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8680,7 +8680,7 @@
 		<widget class="GtkLabel" id="name_seat2">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8705,7 +8705,7 @@
 		<widget class="GtkLabel" id="money_seat2">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8730,7 +8730,7 @@
 		<widget class="GtkLabel" id="money_seat3">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8755,7 +8755,7 @@
 		<widget class="GtkLabel" id="name_seat3">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -8799,7 +8799,7 @@
 		<widget class="GtkLabel" id="bet_seat3">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9108,7 +9108,7 @@
 		<widget class="GtkLabel" id="pot0">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot0*****</property>
+		  <property name="label">pot0*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9133,7 +9133,7 @@
 		<widget class="GtkLabel" id="pot1">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot1*****</property>
+		  <property name="label">pot1*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9158,7 +9158,7 @@
 		<widget class="GtkLabel" id="pot2">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot2*****</property>
+		  <property name="label">pot2*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9183,7 +9183,7 @@
 		<widget class="GtkLabel" id="pot3">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot3*****</property>
+		  <property name="label">pot3*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9208,7 +9208,7 @@
 		<widget class="GtkLabel" id="pot4">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot4*****</property>
+		  <property name="label">pot4*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9233,7 +9233,7 @@
 		<widget class="GtkLabel" id="pot5">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot5*****</property>
+		  <property name="label">pot5*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9258,7 +9258,7 @@
 		<widget class="GtkLabel" id="pot6">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot6*****</property>
+		  <property name="label">pot6*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9283,7 +9283,7 @@
 		<widget class="GtkLabel" id="pot8">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot8*****</property>
+		  <property name="label">pot8*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9308,7 +9308,7 @@
 		<widget class="GtkLabel" id="pot7">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">pot7*****</property>
+		  <property name="label">pot7*****</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9615,7 +9615,7 @@
 		<widget class="GtkLabel" id="name_seat0">
 		  <property name="width_request">100</property>
 		  <property name="height_request">23</property>
-		  <property name="label" translatable="yes">name_seat1</property>
+		  <property name="label">name_seat1</property>
 		  <property name="use_underline">False</property>
 		  <property name="use_markup">False</property>
 		  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -9905,7 +9905,7 @@
 
 <widget class="GtkWindow" id="lobby_tabs_window">
   <property name="height_request">84</property>
-  <property name="title" translatable="yes">lobby_tabs_window</property>
+  <property name="title">lobby_tabs_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -10315,7 +10315,7 @@
 </widget>
 
 <widget class="GtkWindow" id="yesno_window">
-  <property name="title" translatable="yes">yesno_window</property>
+  <property name="title">yesno_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_CENTER</property>
   <property name="modal">False</property>
@@ -10360,7 +10360,7 @@
 		  <property name="width_request">79</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10379,7 +10379,7 @@
 		<widget class="GtkRadioButton" id="yesno_msg_head_middle">
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10399,7 +10399,7 @@
 		  <property name="width_request">2</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10457,7 +10457,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">YES</property>
+			      <property name="label" translatable="yes">YES</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -10470,7 +10470,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">NO</property>
+			      <property name="label" translatable="yes">NO</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -10489,7 +10489,7 @@
 		      <child>
 			<widget class="GtkLabel" id="yesno_message">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">are you ready to die !</property>
+			  <property name="label">are you ready to die !</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -10529,7 +10529,7 @@
 
 <widget class="GtkWindow" id="message_window">
   <property name="visible">True</property>
-  <property name="title" translatable="yes">window1</property>
+  <property name="title">window1</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -10574,7 +10574,7 @@
 		  <property name="width_request">79</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10593,7 +10593,7 @@
 		<widget class="GtkRadioButton" id="message_msg_head_middle">
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10613,7 +10613,7 @@
 		  <property name="width_request">2</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10665,7 +10665,7 @@
 			  <property name="visible">True</property>
 			  <property name="can_default">True</property>
 			  <property name="can_focus">True</property>
-			  <property name="label">OK</property>
+			  <property name="label" translatable="yes">OK</property>
 			  <property name="use_underline">True</property>
 			  <property name="relief">GTK_RELIEF_NONE</property>
 			  <property name="focus_on_click">True</property>
@@ -10682,7 +10682,7 @@
 		      <child>
 			<widget class="GtkLabel" id="message_label">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">...</property>
+			  <property name="label">...</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">True</property>
 			  <property name="justify">GTK_JUSTIFY_CENTER</property>
@@ -10721,7 +10721,7 @@
 </widget>
 
 <widget class="GtkWindow" id="muck_window">
-  <property name="title" translatable="yes">muck_window</property>
+  <property name="title">muck_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_CENTER</property>
   <property name="modal">False</property>
@@ -10766,7 +10766,7 @@
 		  <property name="width_request">79</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10785,7 +10785,7 @@
 		<widget class="GtkRadioButton" id="muck_msg_head_middle">
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10805,7 +10805,7 @@
 		  <property name="width_request">2</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -10863,7 +10863,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">SHOW CARDS</property>
+			      <property name="label" translatable="yes">SHOW CARDS</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -10876,7 +10876,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">HIDE CARDS</property>
+			      <property name="label" translatable="yes">HIDE CARDS</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -10947,7 +10947,7 @@
 </widget>
 
 <widget class="GtkWindow" id="check_warning_window">
-  <property name="title" translatable="yes">check_warning_window</property>
+  <property name="title">check_warning_window</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_CENTER</property>
   <property name="modal">False</property>
@@ -10992,7 +10992,7 @@
 		  <property name="width_request">79</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -11011,7 +11011,7 @@
 		<widget class="GtkRadioButton" id="check_warning_msg_head_middle">
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -11031,7 +11031,7 @@
 		  <property name="width_request">2</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -11089,7 +11089,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">CHECK</property>
+			      <property name="label" translatable="yes">CHECK</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -11102,7 +11102,7 @@
 			      <property name="visible">True</property>
 			      <property name="can_default">True</property>
 			      <property name="can_focus">True</property>
-			      <property name="label">FOLD</property>
+			      <property name="label" translatable="yes">FOLD</property>
 			      <property name="use_underline">True</property>
 			      <property name="relief">GTK_RELIEF_NONE</property>
 			      <property name="focus_on_click">True</property>
@@ -11219,7 +11219,7 @@
 		  <property name="width_request">79</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -11238,7 +11238,7 @@
 		<widget class="GtkRadioButton" id="credits_msg_head_middle">
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -11258,7 +11258,7 @@
 		  <property name="width_request">2</property>
 		  <property name="height_request">19</property>
 		  <property name="sensitive">False</property>
-		  <property name="label" translatable="yes"></property>
+		  <property name="label"></property>
 		  <property name="use_underline">True</property>
 		  <property name="relief">GTK_RELIEF_NORMAL</property>
 		  <property name="focus_on_click">False</property>
@@ -11310,7 +11310,7 @@
 			  <property name="visible">True</property>
 			  <property name="can_default">True</property>
 			  <property name="can_focus">True</property>
-			  <property name="label">OK</property>
+			  <property name="label" translatable="yes">OK</property>
 			  <property name="use_underline">True</property>
 			  <property name="relief">GTK_RELIEF_NONE</property>
 			  <property name="focus_on_click">True</property>
@@ -11388,7 +11388,7 @@
 
 <widget class="GtkDialog" id="table_action_dialog">
   <property name="visible">True</property>
-  <property name="title" translatable="yes">dialog1</property>
+  <property name="title">dialog1</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">True</property>
@@ -11419,7 +11419,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button2</property>
+	      <property name="label">button2</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11433,7 +11433,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button3</property>
+	      <property name="label">button3</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11446,7 +11446,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button4</property>
+	      <property name="label">button4</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11459,7 +11459,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button5</property>
+	      <property name="label">button5</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11472,7 +11472,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button6</property>
+	      <property name="label">button6</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11485,7 +11485,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button7</property>
+	      <property name="label">button7</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11498,7 +11498,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button8</property>
+	      <property name="label">button8</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
@@ -11511,7 +11511,7 @@
 	      <property name="visible">True</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label" translatable="yes">button9</property>
+	      <property name="label">button9</property>
 	      <property name="use_underline">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
