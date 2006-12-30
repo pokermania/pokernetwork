@@ -1,4 +1,5 @@
 #!@BASH@
+# -*- sh -*-
 #
 # Copyright (C) 2006 Mekensleep
 #
@@ -95,7 +96,7 @@ case "$1" in
         fi
         ;;
 
-*pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py) 
+*pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py|*unittestmain) 
         FONTPATH=/usr/share/fonts/X11/misc
         INTERFACE_PORT=19579
         if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
@@ -108,7 +109,11 @@ case "$1" in
             if [ -z "$xvfb_pid" ] ; then
                 echo "there is a problem to start Xvfb (ignored)"
             fi
-            @PYTHON@ -u ${srcdir}/coverage.py -x "$1"
+            if expr "$1" : "*.py" > /dev/null ; then
+                @PYTHON@ -u ${srcdir}/coverage.py -x "$1"
+            else
+                ./$1
+            fi
             killall -9 @XVFB@
         else
             echo "skip $1 because Xvfb is not known or $FONTPATH is not a directory"
@@ -122,9 +127,6 @@ case "$1" in
         ;;
 
 *.py)   @PYTHON@ -u ${srcdir}/coverage.py -x "$1" ;;
-
-*test-unittestmain) ./$1
-	;;
 
 *) 
         echo unknown test $1
