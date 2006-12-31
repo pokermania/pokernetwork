@@ -67,6 +67,7 @@ if test "$PYTHON" ; then
     
     echo checking python includes in $python]$2[includedir
     
+    unset ac_cv_header_Python_h
     AC_CHECK_HEADER([Python.h],
           have_python_headers="yes",
           have_python_headers="no" )
