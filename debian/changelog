@@ -7,6 +7,8 @@ poker-network (1.0.33-1) unstable; urgency=low
   * french translation (closes: #402798)
   
   * spanish translation (closes: #404707)
+  
+  * poker2d depends on gtk2-engines-pixbuf
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 12 Dec 2006 22:26:17 +0100
 
