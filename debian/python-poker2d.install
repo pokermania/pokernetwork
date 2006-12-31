@@ -7,3 +7,4 @@ debian/tmp/usr/share/man/man6
 debian/tmp/usr/share/pixmaps
 debian/tmp/usr/share/applications
 debian/tmp/usr/share/apps
+debian/tmp/usr/share/locale
