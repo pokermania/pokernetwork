@@ -162,7 +162,8 @@ EXTRA_DIST = \
         conf/poker.bot.xml.in \
         conf/poker.client.xml.in \
         conf/poker.server.xml.in \
-	poker-client-specs.odp
+	poker-client-specs.odp \
+	po/Makevars.template
 
 clean-local:
 	rm -f */*.py[co]
