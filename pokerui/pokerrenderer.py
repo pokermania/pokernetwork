@@ -48,6 +48,10 @@ from pokerui import pokerinterface
 from pokerui.pokerinteractor import PokerInteractor, PokerInteractorSet
 from pokerui.pokerchat import PokerChat
 
+import gettext
+
+gettext.install("poker2d")
+
 LOBBY = "lobby"
 SEARCHING_MY = "searching_my"
 SEARCHING_MY_CANCEL = "searching_my_cancel"
@@ -433,7 +437,7 @@ class PokerRenderer:
             self.interactors.setProtocol(protocol)
 
     def showYourRank(self, tourney_serial, rank, players, money):
-        msg = "Tourney %d\n Your rank is %d on %d\nYou won %d" % (tourney_serial, rank, players, money/100)
+        msg = _("Tourney %(num_tourney)d\n Your rank is %(your_rank)d on %(num_players)d\nYou won %(my_prize)d") % {'num_tourney' : tourney_serial, 'your_rank' : rank, 'num_players' :  players, 'my_prize' : money/100 }
         self.showMessage(msg, None)
 
     def showYesNoBox(self, message):
@@ -474,7 +478,7 @@ class PokerRenderer:
         interface = self.factory.interface
         if interface:
             if not interface.callbacks.has_key(pokerinterface.INTERFACE_YESNO):
-                self.showYesNoBox("Do you really want to quit ?")
+                self.showYesNoBox( _("Do you really want to quit ?") )
                 interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.confirmQuit)
                 # restore state if don't confirm quit
                 state = self.state
@@ -530,7 +534,7 @@ class PokerRenderer:
     def payAnte(self, game, amount):
         interface = self.factory.interface
         if interface and not interface.callbacks.has_key(pokerinterface.INTERFACE_POST_BLIND):
-            message = "Pay the ante (%d) ?" % amount
+            message = _("Pay the ante (%d) ?") % amount
             self.showBlind(message,"no")
             interface.registerHandler(pokerinterface.INTERFACE_POST_BLIND, lambda *args: self.changeState(PAY_BLIND_ANTE_SEND, 'ante', *args))
             
@@ -561,14 +565,14 @@ class PokerRenderer:
     def payBlind(self, game, amount, dead, state):
         interface = self.factory.interface
         if interface and not interface.callbacks.has_key(pokerinterface.INTERFACE_POST_BLIND):
-            message = "Pay the "
+            message = _("Pay the ")
             if dead > 0:
-                message += "big blind (%s) + dead (%s)" % ( PokerChips.tostring(amount), PokerChips.tostring(dead) )
+                message += _("big blind (%(bblind_)s) + dead (%(dead_)s)") % { 'bblind_' : PokerChips.tostring(amount), 'dead_' : PokerChips.tostring(dead) }
             elif state == "big" or state == "late":
-                message += "big blind (%s)" % PokerChips.tostring(amount)
+                message += _("big blind (%s)") % PokerChips.tostring(amount)
             else:
-                message += "small blind (%s)" % PokerChips.tostring(amount)
-            message += "?"
+                message += _("small blind (%s)") % PokerChips.tostring(amount)
+            message += " ?"
             wait_blind = ( state == "late" or state == "big_and_dead" ) and "yes" or "no"
             self.showBlind(message, wait_blind)
             interface.registerHandler(pokerinterface.INTERFACE_POST_BLIND, lambda *args: self.changeState(PAY_BLIND_ANTE_SEND, 'blind', *args))
@@ -1158,7 +1162,7 @@ class PokerRenderer:
                 
         elif packet.type == PACKET_POKER_SEAT:
             if packet.seat == 255:
-                self.showMessage("This seat is busy", None)
+                self.showMessage( _("This seat is busy"), None)
                 self.changeState(IDLE)
             else:
                 if not game.isTournament():
@@ -1337,34 +1341,35 @@ class PokerRenderer:
         max_amount = game.maxBuyIn() - player.money
 
         if max_amount <= 0:
-            self.showMessage("You can't bring more money\nto the table", None)
+            self.showMessage( _("You can't bring more money\nto the table"), None)
             return False
 
         money_cashier = 0
+       
         if self.protocol.user_info.money.has_key(game.currency_serial):
             money_cashier = self.protocol.user_info.money[game.currency_serial][0]
 
         if player.isBuyInPayed():
             if money_cashier <= 0:
-                self.showMessage("You have no money left", None)
+                self.showMessage( _("You have no money left"), None)
                 self.sitActionsUpdate()
                 return False
 
-            legend = "How much do you want to rebuy?"
+            legend = _("How much do you want to rebuy?")
         else:
 
             if min_amount > money_cashier:
-                self.showMessage("You don't have enough money to play on this table.\nTo get money go in menu 'Lobby' and click 'Cash in'.\n(If your are in play money you might need to win more\nmoney to sit at this table)", None)
+                self.showMessage( _("You don't have enough money to play on this table.\nTo get money go in menu 'Lobby' and click 'Cash in'.\n(if you are in play money you might need to win more\nmoney to sit at this table)"), None)
                 return False
 
-            legend = "Which amount do you want to bring at the table?"
+            legend = _("Which amount do you want to bring at the table?")
         
         interface = self.factory.interface
 
         if max_amount >= money_cashier:
-            label = "All your bankroll"
+            label = _("All your bankroll")
         else:
-            label = "Maximum buy in"
+            label = _("Maximum buy in")
         max_amount = min(max_amount, money_cashier)
         interface.buyInParams(min_amount, max_amount, legend, label)
         self.showBuyIn()
@@ -1594,22 +1599,22 @@ class PokerRenderer:
             settings.headerSet("/settings/screen/@width", width)
             settings.headerSet("/settings/screen/@height", height)
             settings.save()
-            self.queryRestart("Screen resolution changed")
+            self.queryRestart(_("Screen resolution changed"))
         elif name == "display":
             settings.headerSet("/settings/@display2d", value == "2d" and "yes" or "no")
             settings.headerSet("/settings/@display3d", value == "3d" and "yes" or "no")
             settings.save()
-            self.queryRestart("Display changed to " + value)
+            self.queryRestart(_("Display changed to ") + value)
         elif name == "fullscreen":
             settings.headerSet("/settings/screen/@fullscreen", value)
             settings.save()
-            self.queryRestart("Screen resolution changed")
+            self.queryRestart(_("Screen resolution changed"))
         elif name == "graphics":
             settings.headerSet("/settings/shadow", value)
             settings.headerSet("/settings/vprogram", value)
             settings.headerSet("/settings/glow", value)
             settings.save()
-            self.queryRestart("Graphics quality changed")
+            self.queryRestart(_("Graphics quality changed"))
         elif name == "sound":
             display = self.factory.display
             value = display.setSoundEnabled(value=="yes")
@@ -1643,8 +1648,8 @@ class PokerRenderer:
     def queryRestart(self, message):
         interface = self.factory.interface
         self.showYesNoBox(message + "\n" +
-                          "The game must be restarted for this change to take effect\n" +
-                          "Do you want to restart the game now ?")
+                          _("The game must be restarted for this change to take effect\n") +
+                          _("Do you want to restart the game now ?"))
         interface.registerHandler(pokerinterface.INTERFACE_YESNO, self.wantToRestart)
 
         
@@ -1941,7 +1946,7 @@ class PokerRenderer:
             if hands:
                 interface.showHands(hands, state["start"], state["count"], state["total"])
             else:
-                self.showMessage("Your hand history is empty", None)
+                self.showMessage(_("Your hand history is empty"), None)
                 self.changeState(IDLE)
 
     def showHandHistory(self, hand_serial, history, serial2name):
@@ -2153,7 +2158,7 @@ class PokerRenderer:
 
         elif state == LOGIN:
             if self.protocol.user.isLogged():
-                self.showMessage("Already logged in", None)
+                self.showMessage(_("Already logged in"), None)
             else:
                 self.state2hide()
                 self.factory.interface.showMenu()
@@ -2185,7 +2190,7 @@ class PokerRenderer:
 
             else:
                 print "*CRITICAL*; should not be here"
-                self.showMessage("You cannot do that now", None)
+                self.showMessage(_("You cannot do that now"), None)
 
         elif state == USER_INFO:
             self.state2hide()
@@ -2295,19 +2300,19 @@ class PokerRenderer:
                                                                      auto_muck = pokergame.AUTO_MUCK_NEVER))
                     self.state = state
                 else:
-                    self.showMessage("You cannot do that now", None)
+                    self.showMessage(_("You cannot do that now"), None)
                     
             elif self.canHideInterface():
                 def login_callback(success):
                     if success:
                         self.changeState(SEATING, *args, **kwargs)
                     else:
-                        self.showMessage("You must be logged in to get a seat", None)
+                        self.showMessage(_("You must be logged in to get a seat"), None)
                 self.changeState(LOGIN, login_callback)
 
             else:
                 print "*CRITICAL*; should not be here"
-                self.showMessage("You cannot do that now", None)
+                self.showMessage(_("You cannot do that now"), None)
 
         elif state == LEAVING_DONE and self.state == LEAVING:
             self.hideBlind()
@@ -2358,10 +2363,10 @@ class PokerRenderer:
             interface = self.factory.interface
             if game and game.getPlayer(serial):
                 if game.isInGame(serial):
-                    self.showYesNoBox("Do you really want to fold your hand\nand leave the table ?")
+                    self.showYesNoBox(_("Do you really want to fold your hand\nand leave the table ?"))
                     interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
                 else:
-                    self.showYesNoBox("Do you really want to leave the table ?")
+                    self.showYesNoBox(_("Do you really want to leave the table ?"))
                     interface.registerHandler(pokerinterface.INTERFACE_YESNO, confirm)
             else:
                 self.changeState(LEAVING, *args)
@@ -2383,7 +2388,7 @@ class PokerRenderer:
         elif state == OUTFIT:
             if self.protocol and self.protocol.user.isLogged():
                 if self.isSeated():
-                    self.showMessage("You must leave the table to change your outfit", None)
+                    self.showMessage(_("You must leave the table to change your outfit"), None)
                 else:
                     if self.state2hide():
                         self.showOutfit()
@@ -2401,7 +2406,7 @@ class PokerRenderer:
 
             else:
                 print "*CRITICAL*; should not be here"
-                self.showMessage("You cannot do that now", None)
+                self.showMessage(_("You cannot do that now"), None)
 
         elif state == OUTFIT_DONE and self.state == OUTFIT:
             self.hideOutfit()
@@ -2422,7 +2427,7 @@ class PokerRenderer:
                     self.state_hands["start"] = 0
                     self.queryHands()
                 else:
-                    self.showMessage("You cannot do that now", None)
+                    self.showMessage(_("You cannot do that now"), None)
 
             elif self.canHideInterface():
                 state = self.state
@@ -2435,7 +2440,7 @@ class PokerRenderer:
 
             else:
                 print "*CRITICAL*; should not be here"
-                self.showMessage("You cannot do that now", None)
+                self.showMessage(_("You cannot do that now"), None)
 
         elif state == QUIT:
             self.state = state
