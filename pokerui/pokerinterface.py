@@ -33,6 +33,10 @@ from time import time, strftime, gmtime
 from pokerengine.pokerchips import PokerChips
 from pokernetwork import dispatch
 
+import gettext
+
+gettext.install("poker2d")
+
 INTERFACE_READY = "//event/poker3d/pokerinterface/ready"
 INTERFACE_GONE = "//event/poker3d/pokerinterface/gone"
 
@@ -139,7 +143,7 @@ class PokerInterface(dispatch.EventDispatcher):
         self.command(*packet)
 
     def updateTournaments(self, players_count, tournaments_count, current_tournament, tournaments):
-        self.command('tournaments', 'info', "Players: %d" % players_count, "Tournaments: %d" % tournaments_count)
+        self.command('tournaments', 'info', _("Players: %d") % players_count, _("Tournaments: %d") % tournaments_count)
         sit_n_go = filter(lambda tournament: tournament.sit_n_go == 'y', tournaments)
         selected_index = 2
         if sit_n_go:
@@ -208,7 +212,7 @@ class PokerInterface(dispatch.EventDispatcher):
                 packet.extend(table)
             self.command(*packet)
 
-        self.command('lobby', 'info', "Players: %d" % players_count, "Tables: %d" % tables_count)
+        self.command('lobby', 'info', _("Players: %d") % players_count, _("Tables: %d") % tables_count)
             
     def showLobby(self, cashier_label, page, currency_serial, money_one_name, money_two_name):
         self.command("lobby", "show", cashier_label, page, currency_serial, money_one_name, money_two_name)
