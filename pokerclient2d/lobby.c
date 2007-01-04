@@ -34,6 +34,8 @@
 #include "interface_io.h"
 #include "dispatcher.h"
 
+#include <libintl.h>
+
 #define VARIANT_HOLDEM 0
 #define VARIANT_OMAHA 1
 #define VARIANT_OMAHA8 2
@@ -271,12 +273,16 @@ static void on_cashier_button_pressed(GtkButton* button, gpointer data)
 int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_lobby_tabs_xml, GladeXML* g_cashier_button_xml, GladeXML* g_clock_xml, GtkLayout* screen, int init)
 {
   static int s_selected_table = 0;
-	s_screen = screen;
+  s_screen = screen;
 
   if(init) {
+
+    textdomain ("poker2d");
+
     int i;
     s_lobby_xml = g_lobby_xml;
     s_lobby_window = gui_get_widget(g_lobby_xml, "lobby_window");
+
     g_assert(s_lobby_window);
     set_nil_draw_focus(s_lobby_window);
     if(screen) gtk_layout_put(screen, s_lobby_window, 0, 0);
@@ -291,8 +297,10 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
                                                G_TYPE_STRING, G_TYPE_STRING
                                                );
       snprintf(tmp, 32, "%s_treeview", s_variants_names[i]);
+      
       GtkTreeView* treeview = GTK_TREE_VIEW(gui_get_widget(g_lobby_xml, tmp));
       GtkTreeSelection*	selection = gtk_tree_view_get_selection(treeview);
+
       g_signal_connect(selection, "changed", (GCallback)on_lobby_list_treeview_selection_changed, &s_selected_table);
       s_variants_selection[i] = selection;
       g_signal_connect(treeview, "row-activated", (GCallback)on_row_activated, &s_selected_table);
@@ -306,7 +314,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         GtkCellRenderer* pixbuf_renderer = gtk_cell_renderer_pixbuf_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "My");
+        gtk_tree_view_column_set_title(column, gettext("My") );
         gtk_tree_view_column_pack_start(column, pixbuf_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, pixbuf_renderer, "pixbuf", TABLE_COLUMN_MY);
       }
@@ -341,19 +349,19 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", INDEX); \
       }
 #define TABLE_COLUMN_NAME 2
-      SET_COLUMN("Name", TABLE_COLUMN_NAME);
+      SET_COLUMN( gettext("Name"), TABLE_COLUMN_NAME);
 #define TABLE_COLUMN_STRUCTURE 3
-      SET_COLUMN("Structure", TABLE_COLUMN_STRUCTURE);
+      SET_COLUMN( gettext("Structure"), TABLE_COLUMN_STRUCTURE);
 #define TABLE_COLUMN_SEATS 4
-      SET_COLUMN("Seats", TABLE_COLUMN_SEATS);
+      SET_COLUMN( gettext("Seats"), TABLE_COLUMN_SEATS);
 #define TABLE_COLUMN_AVG_POT 5
-      SET_COLUMN("Avg.pot", TABLE_COLUMN_AVG_POT);
+      SET_COLUMN( gettext("Avg.pot"), TABLE_COLUMN_AVG_POT);
 #define TABLE_COLUMN_HANDS_PER_HOUR 6
-      SET_COLUMN("Hands/h", TABLE_COLUMN_HANDS_PER_HOUR);
+      SET_COLUMN( gettext("Hands/h"), TABLE_COLUMN_HANDS_PER_HOUR);
 #define TABLE_COLUMN_PERCENT_FLOP 7
-      SET_COLUMN("Flop%", TABLE_COLUMN_PERCENT_FLOP);
+      SET_COLUMN( gettext("Flop%"), TABLE_COLUMN_PERCENT_FLOP);
 #define TABLE_COLUMN_PLAYING 8
-      SET_COLUMN("Playing", TABLE_COLUMN_PLAYING);
+      SET_COLUMN( gettext("Playing"), TABLE_COLUMN_PLAYING);
 #define TABLE_COLUMN_OBSERVING 9
 #define TABLE_COLUMN_WAITING 10
 #define TABLE_COLUMN_TIMEOUT 11
@@ -379,7 +387,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Players");
+        gtk_tree_view_column_set_title(column, gettext("Players") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", 0);
       }
@@ -387,7 +395,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Chips");
+        gtk_tree_view_column_set_title(column, gettext("Chips") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", 1);
       }
@@ -422,6 +430,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
   }
 
   char* tag = get_string();
+
   if(!strcmp(tag, "show")) {
     g_lobby_tab_state = lobby;
     {
@@ -429,12 +438,11 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
       gtk_button_set_label(s_cashier_button, label);
       g_free(label);
     }
-
     if (screen != NULL || s_lobby_shown == 0)
       {
-				/*
-				 * calculate windows position
-				 */
+				//
+				// calculate windows position
+				//
 				int	screen_width = gui_width(screen);
 				int	screen_height = gui_height(screen);
 	
@@ -534,6 +542,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     g_lobby_tab_state = none;
     close_lobby();
   } else if(!strcmp(tag, "info")) {
+
     char* players_count = get_string();
     char* tables_count = get_string();
     gtk_label_set_text(s_players_label, players_count);
@@ -602,7 +611,7 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
   } else if(!strcmp(tag, "players")) {
     int players_count = get_int();
     int i;
-    gtk_label_set_text(s_go_to_label, "GO TO TABLE");
+    gtk_label_set_text(s_go_to_label, gettext("GO TO TABLE") );
     gtk_widget_set_sensitive(GTK_WIDGET(s_go_to_button), TRUE);
     gtk_list_store_clear(s_players_store);
     for(i = 0; i < players_count; i++) {
@@ -617,9 +626,9 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
     }
   }
 
-  /*
-   * set clock time
-   */
+  //
+  // set clock time
+  //
   {
     time_t	_time;
     char	date_buffer[8];
@@ -631,6 +640,6 @@ int	handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_
   }
 
   g_free(tag);
-  
+
   return TRUE;
 }

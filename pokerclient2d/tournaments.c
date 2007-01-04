@@ -34,6 +34,8 @@
 #include "interface_io.h"
 #include "dispatcher.h"
 
+#include <libintl.h>
+
 extern enum lobby_tab_state g_lobby_tab_state;
 static GladeXML* s_tournaments_xml = 0;
 static GtkWidget*	s_tournaments_window = 0;
@@ -247,6 +249,9 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
   static int s_selected_tournament = 0;
 
   if(init) {
+
+    textdomain ("poker2d");    
+
 		s_screen = screen;
 
     s_tournaments_xml = g_tournaments_xml;
@@ -272,7 +277,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Title");
+        gtk_tree_view_column_set_title(column, gettext("Title") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", SIT_N_GO_TITLE);
       }
@@ -280,7 +285,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "State");
+        gtk_tree_view_column_set_title(column, gettext("State") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", SIT_N_GO_STATE);
       }
@@ -288,7 +293,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Players");
+        gtk_tree_view_column_set_title(column, gettext("Players") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", SIT_N_GO_PLAYERS);
       }
@@ -309,7 +314,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Date");
+        gtk_tree_view_column_set_title(column, gettext("Date") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", REGULAR_DATE);
       }
@@ -317,7 +322,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Title");
+        gtk_tree_view_column_set_title(column, gettext("Title") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", REGULAR_TITLE);
       }
@@ -325,7 +330,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "State");
+        gtk_tree_view_column_set_title(column, gettext("State") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", REGULAR_STATE);
       }
@@ -333,7 +338,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Players");
+        gtk_tree_view_column_set_title(column, gettext("Players") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", REGULAR_PLAYERS);
       }
@@ -358,7 +363,7 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
       {
         GtkTreeViewColumn* column = gtk_tree_view_column_new();
         gtk_tree_view_append_column(treeview, column);
-        gtk_tree_view_column_set_title(column, "Players");
+        gtk_tree_view_column_set_title(column, gettext("Players") );
         gtk_tree_view_column_pack_start(column, text_renderer, TRUE);
         gtk_tree_view_column_add_attribute(column, text_renderer, "text", 0);
       }
@@ -565,9 +570,9 @@ int	handle_tournaments(GladeXML* g_tournaments_xml, GladeXML* g_tournament_info_
     can_register = get_int();
     char* label = "";
     if(can_register == 1)
-      label = "REGISTER";
+      label = gettext("REGISTER");
     else if(can_register == 0)
-      label = "UNREGISTER";
+      label = gettext("UNREGISTER");
     gtk_label_set_text(s_register_unregister_label, label);
     gtk_widget_set_sensitive(GTK_WIDGET(s_register_unregister_button), can_register != 2);
     {
