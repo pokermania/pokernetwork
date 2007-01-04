@@ -36,7 +36,7 @@ from pokerui.pokerinterface import INTERFACE_YESNO
 from pokernetwork.packets import PacketQuit, PacketSerial, PACKET_QUIT
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclientpackets import *
-# , PacketPokerId, PACKET_POKER_GET_PERSONAL_INFO, PACKET_POKER_GET_USER_INFO
+from pokerui.pokerinterface import PokerInterface
 
 import unittest
 
@@ -132,11 +132,13 @@ class UserInfoMockup:
     def __init__(self, bankroll):
         self.money = {0:[bankroll]} 
 
-class PokerInterfaceMockup:
+class PokerInterfaceMockup(PokerInterface):
     def __init__(self):
 	self.callbacks = {}
         self.legend = None
         self.label = None
+        self.message = None
+        self._command = None
         pass
 
     def showMenu(self):
@@ -151,6 +153,10 @@ class PokerInterfaceMockup:
     def buyInParams(self, min_amount, max_amount, legend, label):
         self.legend = legend
         self.label = label
+        pass
+
+    def command(self, *args):
+        (self._command) = args
         pass
 
 class PokerFactoryMockup:
@@ -207,7 +213,12 @@ class SettingsMockup:
 
     def save(self):
         pass
-        
+
+class TournamentMockup:
+    def __init__(self):
+        self.sit_n_go = False
+        self.regular = False
+        pass
 
 class PokerRendererTestCase(unittest.TestCase):
     
@@ -322,9 +333,34 @@ class PokerRendererTestCase(unittest.TestCase):
         self.renderer.quit()
         self.assertEquals("Do you really want to quit ?", self.renderer.message)
 
+
+#------------------------------------------------------------------------------------------------------
+
+class PokerInterfaceTestCase(unittest.TestCase):
+
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+	self.interface = PokerInterfaceMockup()
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+	self.interface = None
+        
+    # -----------------------------------------------------------------------------------------------------
+    def test_updateTournaments(self):
+        self.interface.updateTournaments(1,1,1,(TournamentMockup(),TournamentMockup()))
+        self.assertEquals(('tournaments', 'info', 'Players: 1', 'Tournaments: 1'), self.interface._command)
+
+    #------------------------------------------------------------------------------------------------------
+    def test_updateLobby(self):
+        self.interface.updateLobby(1,1,1,1,1,())
+        print self.interface._command
+        self.assertEquals(('lobby', 'info', 'Players: 1', 'Tables: 1'), self.interface._command)
+
 def GetTestSuite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(PokerRendererTestCase))
+    suite.addTest(unittest.makeSuite(PokerInterfaceTestCase))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
