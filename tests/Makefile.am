@@ -85,14 +85,16 @@ TESTS = coverage-reset \
 
 if UNITTEST
 
-noinst_PROGRAMS = test-unittestmain 
+noinst_PROGRAMS = test-unittestmain
 
 test_unittestmain_SOURCES = test-unittestmain.cpp \
                             test-unittestgui.cpp \
-                            $(top_builddir)/pokerclient2d/gui.c
-                    
-test_unittestmain_CPPFLAGS = @UNITTESTCPP_CFLAGS@ @GLIB_CFLAGS@ @GLADE_CFLAGS@
-test_unittestmain_LDFLAGS = @UNITTESTCPP_LIBS@ @GLIB_LIBS@ @GLADE_LIBS@
+                            test-unittestlobby.cpp \
+                            test-unittesttournaments.cpp \
+                            io_mockup.c
+
+test_unittestmain_CPPFLAGS = @UNITTESTCPP_CFLAGS@ @GLADE_CFLAGS@ @PYTHON_CFLAGS@
+test_unittestmain_LDFLAGS = @UNITTESTCPP_LIBS@ @GLADE_LIBS@ @top_builddir@/pokerclient2d/libinterface.la
 
 endif
 
