@@ -740,7 +740,7 @@ class PokerTable:
                     delta = 0
                     break
             if all_auto:
-                delta = self.delays.get("autodeal_tournament_min", 15)
+                delta = int(self.delays.get("autodeal_tournament_min", 15))
                 if time.time() - self.game_delay["start"] > delta:
                     delta = 0
         else:
