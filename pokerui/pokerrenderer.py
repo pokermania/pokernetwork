@@ -1299,25 +1299,25 @@ class PokerRenderer:
             if self.verbose > 2: print "sitActionsUpdate: " + str(player)
                 
             if player.wait_for == "big":
-                interface.sitActionsSitOut("yes", "wait for big blind")
+                interface.sitActionsSitOut("yes", _("wait for big blind"))
             elif player.wait_for:
-                interface.sitActionsSitOut("yes", "wait for %s blind" % player.wait_for, "insensitive")
+                interface.sitActionsSitOut("yes", _("wait for %s blind") % player.wait_for, "insensitive")
             elif player.sit_out_next_turn:
                 if game.isInGame(player.serial):
-                    interface.sitActionsSitOut("yes", "sit out next turn")
+                    interface.sitActionsSitOut("yes", _("sit out next turn"))
                 else:
-                    interface.sitActionsSitOut("yes", "sit out")
+                    interface.sitActionsSitOut("yes", _("sit out"))
             elif player.sit_requested:
                 if game.isInGame(player.serial):
-                    interface.sitActionsSitOut("no", "sit out next turn")
+                    interface.sitActionsSitOut("no", _("sit out next turn"))
                 else:
-                    interface.sitActionsSitOut("no", "sit out")
+                    interface.sitActionsSitOut("no", _("sit out"))
             elif player.auto:
-                interface.sitActionsSitOut("yes", "sit out")
+                interface.sitActionsSitOut("yes", _("sit out"))
             elif player.sit_out:
-                interface.sitActionsSitOut("yes", "sit out")
+                interface.sitActionsSitOut("yes", _("sit out"))
             else:
-                interface.sitActionsSitOut("no", "sit out next turn")
+                interface.sitActionsSitOut("no", _("sit out next turn"))
 
             if game.isTournament():
                 interface.sitActionsAuto(None)
