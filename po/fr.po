@@ -7,16 +7,15 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poker2d\n"
-"Report-Msgid-Bugs-To: https://gna.org/projects/pokersource/\n"
-"POT-Creation-Date: 2006-12-29 17:31+0100\n"
-"PO-Revision-Date: 2006-12-28 14:53+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-01-05 14:17+0100\n"
+"PO-Revision-Date: 2007-01-05 11:33+0100\n"
 "Last-Translator: Jerome Jeannin <griim.work@gmail.com>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: KBabel 1.11.4\n"
 
 #: pokerclient2d/data/interface/interface.glade:100
 msgid "<b>Login</b>"
@@ -36,7 +35,7 @@ msgstr "_Mémorise mot de passe"
 #: pokerclient2d/data/interface/interface.glade:10668
 #: pokerclient2d/data/interface/interface.glade:11313
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: pokerclient2d/data/interface/interface.glade:237
 #: pokerclient2d/data/interface/interface.glade:11118
@@ -95,7 +94,7 @@ msgstr "ID Joueur"
 
 #: pokerclient2d/data/interface/interface.glade:1583
 msgid "Email"
-msgstr ""
+msgstr "Email"
 
 #: pokerclient2d/data/interface/interface.glade:1640
 msgid "Mailing Address"
@@ -114,7 +113,7 @@ msgstr "En jeu:"
 #: pokerclient2d/data/interface/interface.glade:1987
 #: pokerclient2d/data/interface/interface.glade:2355
 msgid "Total:"
-msgstr ""
+msgstr "Total:"
 
 #: pokerclient2d/data/interface/interface.glade:2078
 #: pokerclient2d/data/interface/interface.glade:5426
@@ -130,7 +129,7 @@ msgstr "CUSTOM MONEY"
 
 #: pokerclient2d/data/interface/interface.glade:2524
 msgid "Points:"
-msgstr ""
+msgstr "Points:"
 
 #: pokerclient2d/data/interface/interface.glade:2590
 msgid "frequent player cash"
@@ -297,12 +296,12 @@ msgstr "Tournois"
 
 #: pokerclient2d/data/interface/interface.glade:5275
 msgid "Sit  and go"
-msgstr ""
+msgstr "Sit and go"
 
 #: pokerclient2d/data/interface/interface.glade:5371
 #: pokerclient2d/data/interface/interface.glade:6231
 msgid "ALL"
-msgstr ""
+msgstr "TOUS"
 
 #: pokerclient2d/data/interface/interface.glade:5967
 #: pokerclient2d/data/interface/interface.glade:9974
@@ -312,16 +311,16 @@ msgstr "Holdem"
 #: pokerclient2d/data/interface/interface.glade:6019
 #: pokerclient2d/data/interface/interface.glade:10036
 msgid "Omaha"
-msgstr ""
+msgstr "Omaha"
 
 #: pokerclient2d/data/interface/interface.glade:6071
 #: pokerclient2d/data/interface/interface.glade:10098
 msgid "Omaha H/L"
-msgstr ""
+msgstr "Omaha H/L"
 
 #: pokerclient2d/data/interface/interface.glade:6123
 msgid "Stud 7"
-msgstr ""
+msgstr "Stud 7"
 
 #: pokerclient2d/data/interface/interface.glade:7283
 #: pokerclient2d/data/interface/interface.glade:7302
@@ -459,6 +458,71 @@ msgstr "Le Check est gratuit. Que voulez-vous faire ?"
 msgid "Credits for poker-network"
 msgstr ""
 
+#: pokerclient2d/lobby.c:317
+msgid "My"
+msgstr " "
+
+#: pokerclient2d/lobby.c:352
+msgid "Name"
+msgstr "Nom"
+
+#: pokerclient2d/lobby.c:354
+msgid "Structure"
+msgstr "Structure"
+
+#: pokerclient2d/lobby.c:356
+msgid "Seats"
+msgstr "Places"
+
+#: pokerclient2d/lobby.c:358
+msgid "Avg.pot"
+msgstr "Moy.Pot"
+
+#: pokerclient2d/lobby.c:360
+msgid "Hands/h"
+msgstr "Mains/H"
+
+#: pokerclient2d/lobby.c:362
+msgid "Flop%"
+msgstr "%Flop"
+
+#: pokerclient2d/lobby.c:364
+msgid "Playing"
+msgstr "Joueurs"
+
+#: pokerclient2d/lobby.c:390 pokerclient2d/tournaments.c:296
+#: pokerclient2d/tournaments.c:341 pokerclient2d/tournaments.c:366
+msgid "Players"
+msgstr "Joueurs"
+
+#: pokerclient2d/lobby.c:398
+msgid "Chips"
+msgstr "Jetons"
+
+#: pokerclient2d/lobby.c:614
+msgid "GO TO TABLE"
+msgstr "ALLER A LA TABLE"
+
+#: pokerclient2d/tournaments.c:280 pokerclient2d/tournaments.c:325
+msgid "Title"
+msgstr "Titre"
+
+#: pokerclient2d/tournaments.c:288 pokerclient2d/tournaments.c:333
+msgid "State"
+msgstr "Etat"
+
+#: pokerclient2d/tournaments.c:317
+msgid "Date"
+msgstr "Date"
+
+#: pokerclient2d/tournaments.c:573
+msgid "REGISTER"
+msgstr "S'ENREGISTRER"
+
+#: pokerclient2d/tournaments.c:575
+msgid "UNREGISTER"
+msgstr "ANNULER MON INSCRIPTION"
+
 #: pokerui/pokerinterface.py:146 pokerui/pokerinterface.py:215
 #, python-format
 msgid "Players: %d"
@@ -470,17 +534,19 @@ msgid "Tournaments: %d"
 msgstr "Tournois: %d"
 
 #: pokerui/pokerinterface.py:215
+#, python-format
 msgid "Tables: %d"
 msgstr "Tables: %d"
 
 #: pokerui/pokerrenderer.py:440
+#, python-format
 msgid ""
 "Tourney %(num_tourney)d\n"
-" Your rank is %i(your_rank)d on %i(num_players)d\n"
+" Your rank is %(your_rank)d on %(num_players)d\n"
 "You won %(my_prize)d"
 msgstr ""
 "Tournoi %(num_tourney)d\n"
-" Vous finissez %i(your_rank)d sur %i(num_players)d\n"
+" Vous finissez %(your_rank)d sur %(num_players)d\n"
 "Vous gagnez %(my_prize)d"
 
 #: pokerui/pokerrenderer.py:481
@@ -515,6 +581,24 @@ msgstr "la petite blind (%s) "
 msgid "This seat is busy"
 msgstr "Cette place est occupée"
 
+#: pokerui/pokerrenderer.py:1302
+msgid "wait for big blind"
+msgstr "attendre la grande blinde"
+
+#: pokerui/pokerrenderer.py:1304
+msgid "wait for %s blind"
+msgstr "attendre la blinde (%s)"
+
+#: pokerui/pokerrenderer.py:1307 pokerui/pokerrenderer.py:1312
+#: pokerui/pokerrenderer.py:1320
+msgid "sit out next turn"
+msgstr "sortir à la fin de cette main"
+
+#: pokerui/pokerrenderer.py:1309 pokerui/pokerrenderer.py:1314
+#: pokerui/pokerrenderer.py:1316 pokerui/pokerrenderer.py:1318
+msgid "sit out"
+msgstr ""
+
 #: pokerui/pokerrenderer.py:1344
 msgid ""
 "You can't bring more money\n"
@@ -523,77 +607,77 @@ msgstr ""
 "Vous ne pouvez pas ammener\n"
 "plus d'argent à la table"
 
-#: pokerui/pokerrenderer.py:1353
+#: pokerui/pokerrenderer.py:1354
 msgid "You have no money left"
 msgstr "Vous n'avez plus d'argent"
 
-#: pokerui/pokerrenderer.py:1357
+#: pokerui/pokerrenderer.py:1358
 msgid "How much do you want to rebuy?"
 msgstr "La main est finie, que voulez-vous faire ?"
 
-#: pokerui/pokerrenderer.py:1361
+#: pokerui/pokerrenderer.py:1362
 msgid ""
 "You don't have enough money to play on this table.\n"
 "To get money go in menu 'Lobby' and click 'Cash in'.\n"
-"(If your are in play money you might need to win more\n"
+"(if you are in play money you might need to win more\n"
 "money to sit at this table)"
 msgstr ""
-"Vous n'avez pas assez d'argent pour venir à cette table.\n"
-"Pour obtenir de l'argent, menu 'Lobby' puis 'Cash in'.\n"
+"Vous n'avez pas assez de jetons pour venir à cette table.\n"
+"Pour obtenir des jetons, menu 'Lobby' puis 'Cash in'.\n"
 "(si vous jouez en play money, il vous faut peut-être \n"
 "accumuler plus de jetons via des victoires)"
 
-#: pokerui/pokerrenderer.py:1364
+#: pokerui/pokerrenderer.py:1365
 msgid "Which amount do you want to bring at the table?"
 msgstr "Combien de jetons apporter à la table ?"
 
-#: pokerui/pokerrenderer.py:1369
+#: pokerui/pokerrenderer.py:1370
 msgid "All your bankroll"
 msgstr "Toute ma bankroll"
 
-#: pokerui/pokerrenderer.py:1371
+#: pokerui/pokerrenderer.py:1372
 msgid "Maximum buy in"
 msgstr "Le maximum"
 
-#: pokerui/pokerrenderer.py:1601 pokerui/pokerrenderer.py:1610
+#: pokerui/pokerrenderer.py:1602 pokerui/pokerrenderer.py:1611
 msgid "Screen resolution changed"
 msgstr "Résolution changée"
 
-#: pokerui/pokerrenderer.py:1606
+#: pokerui/pokerrenderer.py:1607
 msgid "Display changed to "
 msgstr "Affichage modifié en "
 
-#: pokerui/pokerrenderer.py:1616
+#: pokerui/pokerrenderer.py:1617
 msgid "Graphics quality changed"
 msgstr "Qualité des graphismes modifiée"
 
-#: pokerui/pokerrenderer.py:1650
+#: pokerui/pokerrenderer.py:1651
 msgid "The game must be restarted for this change to take effect\n"
 msgstr "Le jeu doit être redémarré pour que les modifications prennent effet\n"
 
-#: pokerui/pokerrenderer.py:1651
+#: pokerui/pokerrenderer.py:1652
 msgid "Do you want to restart the game now ?"
 msgstr "Voulez-vous redémarré maintenant ?"
 
-#: pokerui/pokerrenderer.py:1948
+#: pokerui/pokerrenderer.py:1949
 msgid "Your hand history is empty"
 msgstr "L'historique est vide"
 
-#: pokerui/pokerrenderer.py:2160
+#: pokerui/pokerrenderer.py:2161
 msgid "Already logged in"
 msgstr "Vous êtes déja identifié"
 
-#: pokerui/pokerrenderer.py:2192 pokerui/pokerrenderer.py:2302
-#: pokerui/pokerrenderer.py:2314 pokerui/pokerrenderer.py:2408
-#: pokerui/pokerrenderer.py:2429 pokerui/pokerrenderer.py:2442
+#: pokerui/pokerrenderer.py:2193 pokerui/pokerrenderer.py:2303
+#: pokerui/pokerrenderer.py:2315 pokerui/pokerrenderer.py:2409
+#: pokerui/pokerrenderer.py:2430 pokerui/pokerrenderer.py:2443
 msgid "You cannot do that now"
 msgstr "Vous ne pouvez pas faire ca"
 
-#: pokerui/pokerrenderer.py:2309
+#: pokerui/pokerrenderer.py:2310
 msgid "You must be logged in to get a seat"
 msgstr "Vous devez vous identifier avant de vous assoir"
 
-#: pokerui/pokerrenderer.py:2365
+#: pokerui/pokerrenderer.py:2366
 msgid ""
 "Do you really want to fold your hand\n"
 "and leave the table ?"
@@ -601,49 +685,10 @@ msgstr ""
 "Voulez-vous vraiment coucher votre main\n"
 "et quitter la table ?"
 
-#: pokerui/pokerrenderer.py:2368
+#: pokerui/pokerrenderer.py:2369
 msgid "Do you really want to leave the table ?"
 msgstr "Voulez-vous vraiment quitter la table ?"
 
-#: pokerui/pokerrenderer.py:2390
+#: pokerui/pokerrenderer.py:2391
 msgid "You must leave the table to change your outfit"
 msgstr "Vous devez quitter la table avant de modifier votre panoplie"
-
-#~ msgid "My"
-#~ msgstr " "
-
-#~ msgid "Name"
-#~ msgstr "Nom"
-
-#~ msgid "Seats"
-#~ msgstr "Places"
-
-#~ msgid "Avg.pot"
-#~ msgstr "Moy.Pot"
-
-#~ msgid "Hands/h"
-#~ msgstr "Mains/H"
-
-#~ msgid "Playing"
-#~ msgstr "Joueurs"
-
-#~ msgid "Players"
-#~ msgstr "Joueurs"
-
-#~ msgid "Chips"
-#~ msgstr "Jetons"
-
-#~ msgid "GO TO TABLE"
-#~ msgstr "ALLER A LA TABLE"
-
-#~ msgid "Title"
-#~ msgstr "Titre"
-
-#~ msgid "State"
-#~ msgstr "Etat"
-
-#~ msgid "REGISTER"
-#~ msgstr "S'ENREGISTRER"
-
-#~ msgid "UNREGISTER"
-#~ msgstr "ANNULER MON INSCRIPTION"
