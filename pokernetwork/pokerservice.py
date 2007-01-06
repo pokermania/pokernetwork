@@ -735,8 +735,8 @@ class PokerService(service.Service):
                                     message = "Player %d did not participate in hand %d" % ( serial, hand_serial ) )
 
         serial2name = {}
-        for serial in player_list:
-            serial2name[serial] = self.getName(serial)
+        for player_serial in player_list:
+            serial2name[player_serial] = self.getName(player_serial)
         #
         # Filter out the pocket cards that do not belong to player "serial"
         #
