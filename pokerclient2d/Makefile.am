@@ -36,7 +36,7 @@ pkgdatadir=@pkgdatadir@
 
 EXTRA_DIST = \
 	poker2d-test.xml \
-	Makefile.mingw \
+	build_with_mingw.bat \
 	Makefile.cygwin \
 	Makefile.cygwin-sh \
 	cygwin/setup.hint \
