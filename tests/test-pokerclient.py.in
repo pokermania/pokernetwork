@@ -68,15 +68,16 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="2" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="4" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="6" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="6" currency_serial="1" />
+  <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
 
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>.. @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -99,12 +100,16 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <vprogram>yes</vprogram>
   
   <user path="~/.poker2d"/>
-  <path>/etc/poker-engine2.3 /etc/poker-engine2.4 /etc/poker-engine /etc/poker-network2.3 /etc/poker2-network2.4 /etc/poker-network .</path> 
+  <path>.. @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 </settings>
 """
+
+TABLE1 = 100
+TABLE2 = 101
+TABLE3 = 102
 
 class PokerClientTestCase(unittest.TestCase):
 
@@ -208,6 +213,7 @@ class PokerClientTestCase(unittest.TestCase):
     def cashIn(self, client, url, value):
         note = self.service.cashier.currency_client._buildNote(url, value)
         client.sendPacket(PacketPokerCashIn(serial = client.getSerial(), note = note))
+        client._prefix = "[Client %d]" % client.getSerial()
         return client.packetDeferred(True, PACKET_ACK)
 
     def check_cashIn(self, (client, packet)):
@@ -234,18 +240,23 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
-    def sit(self, (client, packet)):
+    def sit(self, (client, packet), game_id = TABLE1, seat = -1, auto_muck = pokergame.AUTO_MUCK_ALWAYS):
         client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
-                                               game_id = 100))
+                                               game_id = game_id))
         client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
-                                          game_id = 100))
+                                          game_id = game_id,
+                                          seat = seat))
         client.sendPacket(PacketPokerAutoBlindAnte(serial = client.getSerial(),
-                                                   game_id = 100))
+                                                   game_id = game_id))
         client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
-                                           game_id = 100,
+                                           game_id = game_id,
                                            amount = 200000))
+        if auto_muck != pokergame.AUTO_MUCK_ALWAYS:
+            client.sendPacket(PacketPokerAutoMuck(serial = client.getSerial(),
+                                                  game_id = game_id,
+                                                  auto_muck = auto_muck))
         client.sendPacket(PacketPokerSit(serial = client.getSerial(),
-                                         game_id = 100))
+                                         game_id = game_id))
         return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
         
     def allIn(self, (client, packet), sit_out = True):
@@ -284,9 +295,12 @@ class PokerClientTestCase(unittest.TestCase):
 
         return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
         
-    def win(self, (client, packet)):
-        print "win " + str(packet)
-        return (client, packet)
+    def win(self, (client, packet), expect = None):
+        print "(A) WIN " + str(packet)
+        if expect:
+            return client.packetDeferred(True, expect)
+        else:
+            return (client, packet)
         
     def test04_playHand(self):
         """ test04_playHand """
@@ -334,9 +348,9 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
         def wrongSeat((client, packet),):
             client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
-                                                   game_id = 100))
+                                                   game_id = TABLE1))
             client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
-                                              game_id = 100,
+                                              game_id = TABLE1,
                                               seat = 42))
             return client.packetDeferred(True, PACKET_POKER_SEAT)
         d.addCallback(wrongSeat)
@@ -355,14 +369,14 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 400000))
         def rebuy((client, packet),):
             client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
-                                                   game_id = 100))
+                                                   game_id = TABLE1))
             client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
-                                              game_id = 100))
+                                              game_id = TABLE1))
             client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
-                                               game_id = 100,
+                                               game_id = TABLE1,
                                                amount = 200000))
             client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
-                                               game_id = 100,
+                                               game_id = TABLE1,
                                                amount = 200000))
             return client.packetDeferred(True, PACKET_POKER_PLAYER_CHIPS)
         d.addCallback(rebuy)
@@ -388,19 +402,18 @@ class PokerClientTestCase(unittest.TestCase):
         print "processingHand"
         self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
         client.sendPacket(PacketPokerProcessingHand(serial = client.getSerial(),
-                                                    game_id = 100))
+                                                    game_id = TABLE1))
         return (client, packet)
 
     def readyToPlay(self, (client, packet),):
         client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
-                                                 game_id = 100))
+                                                 game_id = TABLE1))
         return (client, packet)
 
     def test08_processing_readytoplay(self):
         """ test08_processing_readytoplay """
         d = [None, None]
         for index in (0,1):
-            print "INDEX " + str(index)
             d[index] = self.client_factory[index].established_deferred
             d[index].addCallback(self.login, index)
             d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 600000))
@@ -410,10 +423,10 @@ class PokerClientTestCase(unittest.TestCase):
             def atShowdown((client, packet),):
                 print "atShowdown"
                 client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
-                                                   game_id = 100,
+                                                   game_id = TABLE1,
                                                    amount = 200000))
                 client.sendPacket(PacketPokerSit(serial = client.getSerial(),
-                                                 game_id = 100))
+                                                 game_id = TABLE1))
                 return (client, packet)
             d[index].addCallback(atShowdown)
             if index == 1:
@@ -575,16 +588,16 @@ class PokerClientTestCase(unittest.TestCase):
 
     def sitngo(self, (client, packet)):
         client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
-                                               game_id = 100))
+                                               game_id = TABLE1))
         client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
-                                          game_id = 100))
+                                          game_id = TABLE1))
         client.sendPacket(PacketPokerAutoBlindAnte(serial = client.getSerial(),
-                                                   game_id = 100))
+                                                   game_id = TABLE1))
         client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
-                                           game_id = 100,
+                                           game_id = TABLE1,
                                            amount = 200000))
         client.sendPacket(PacketPokerSit(serial = client.getSerial(),
-                                         game_id = 100))
+                                         game_id = TABLE1))
         return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
         
     def search_sitngo2(self, (client, packet),):
@@ -704,6 +717,70 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.tourneyRank)
             d[index].addCallback(self.quit)
 
+        return defer.DeferredList(d)
+
+    def test18_blindAllIn(self):
+        """ test18_blindAllIn """
+        def raiseAlmostAllIn((client, packet)):
+            self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+            self.assertEqual(client.getSerial(), packet.serial)
+            game = client.getGame(packet.game_id)
+            player = game.getPlayer(packet.serial)
+            print "(A) ALMOST ALLIN RAISE " + str(packet.serial)
+            client.sendPacket(PacketPokerRaise(serial = packet.serial,
+                                               game_id = packet.game_id,
+                                               amount = player.money - 50))
+            return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
+
+        def fold((client, packet), expect = PACKET_POKER_SELF_IN_POSITION):
+            self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+            self.assertEqual(client.getSerial(), packet.serial)
+            game = client.getGame(packet.game_id)
+            player = game.getPlayer(packet.serial)
+            print "(A) FOLD " + str(packet.serial)
+            client.sendPacket(PacketPokerFold(serial = packet.serial,
+                                              game_id = packet.game_id))
+            return client.packetDeferred(True, expect)
+
+        def muck((client, packet),):
+            self.assertEqual(client.getSerial(), packet.muckable_serials[0])
+            game = client.getGame(packet.game_id)
+            player = game.getPlayer(packet.serial)
+            print "(A) MUCK " + str(client.getSerial())
+            client.sendPacket(PacketPokerMuckAccept(serial = client.getSerial(),
+                                                    game_id = packet.game_id))
+            return client.packetDeferred(True, PACKET_POKER_WIN)
+
+        def call((client, packet), expect = PACKET_POKER_SELF_IN_POSITION):
+            self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
+            self.assertEqual(client.getSerial(), packet.serial)
+            game = client.getGame(packet.game_id)
+            player = game.getPlayer(packet.serial)
+            print "(A) ALLIN CALL " + str(packet.serial)
+            client.sendPacket(PacketPokerCall(serial = packet.serial,
+                                              game_id = packet.game_id))
+            return client.packetDeferred(True, expect)
+
+        d = [None, None]
+        for index in (0,1):
+            d[index] = self.client_factory[index].established_deferred
+            d[index].addCallback(self.login, index)
+            d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
+            d[index].addCallback(self.sit, TABLE3, index, pokergame.AUTO_MUCK_NEVER)
+            if index == 0: # serial 4
+                d[index].addCallback(call, PACKET_POKER_MUCK_REQUEST)
+                d[index].addCallback(muck)
+            else:
+                d[index].addCallback(raiseAlmostAllIn)
+                d[index].addCallback(fold, PACKET_POKER_WIN)
+            if index == 1: # serial 5
+                d[index].addCallback(self.win, PACKET_POKER_MUCK_REQUEST)
+                d[index].addCallback(muck)
+            else:
+                def waitWin((client, packet)):
+                    return client.packetDeferred(True, PACKET_POKER_WIN)
+                d[index].addCallback(waitWin)
+            d[index].addCallback(self.quit)
         return defer.DeferredList(d)
 
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
@@ -864,7 +941,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test17"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
