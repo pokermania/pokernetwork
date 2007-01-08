@@ -29,6 +29,7 @@ EXTRA_DIST = \
 	createdatabase \
 	schema.sql \
 	poker.server.xml \
+	poker.test18pokerclient.xml \
 	upgrade-rsync \
 	conf/poker.bot.xml.in \
 	conf/poker.client.xml.in \
