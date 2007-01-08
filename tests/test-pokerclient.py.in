@@ -77,7 +77,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>.. @srcdir@/.. @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -100,7 +100,7 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <vprogram>yes</vprogram>
   
   <user path="~/.poker2d"/>
-  <path>.. @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <path>.. @srcdir@/.. @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
