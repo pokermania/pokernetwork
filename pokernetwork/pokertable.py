@@ -36,6 +36,7 @@ from string import split, join
 import time
 
 from pokerengine.pokergame import PokerGameServer, history2messages
+from pokerengine import pokergame
 from pokerengine.pokercards import PokerCards
 
 from pokernetwork.pokerpackets import *
@@ -58,6 +59,7 @@ class PokerTable:
         self.factory = factory
         settings = self.factory.settings
         self.game = PokerGameServer("poker.%s.xml", factory.dirs)
+        self.game.prefix = "[Server]"
         self.game.verbose = factory.verbose
         self.history_index = 0
         predefined_decks = settings.headerGetList("/server/decks/deck")
@@ -71,6 +73,7 @@ class PokerTable:
         game.setVariant(description["variant"])
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
+        game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
         self.skin = description.get("skin", "default")
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
@@ -705,6 +708,10 @@ class PokerTable:
         if self.isRunning():
             if self.factory.verbose > 3:
                 print "Not autodealing %d because game is running" % self.game.id
+            return
+        if self.game.state == pokergame.GAME_STATE_MUCK:
+            if self.factory.verbose > 3:
+                print "Not autodealing %d because game is in muck state" % self.game.id
             return
         game = self.game
         if game.sitCount() < 2:
