@@ -141,6 +141,25 @@ EXTRA_DIST = \
 	config/python.m4 \
 	config/ccpython.m4 \
 	config/python-depends.m4 \
+	config/longdouble.m4 \
+	config/xsize.m4 \
+	config/longlong.m4 \
+	config/uintmax_t.m4 \
+	config/inttypes_h.m4 \
+	config/lcmessage.m4 \
+	config/inttypes.m4 \
+	config/size_max.m4 \
+	config/glibc21.m4 \
+	config/inttypes-pri.m4 \
+	config/wchar_t.m4 \
+	config/intdiv0.m4 \
+	config/intmax.m4 \
+	config/ulonglong.m4 \
+	config/wint_t.m4 \
+	config/stdint_h.m4 \
+	config/signed.m4 \
+	config/codeset.m4 \
+	config/printf-posix.m4 \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \
