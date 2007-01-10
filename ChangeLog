@@ -1,6 +1,176 @@
-2006-12-28  Johan Euphrosine  <proppy@aminche.com>
+2007-01-10  Loic Dachary  <loic@dachary.org>
 
-	* Release 1.0.33
+        * Release 1.0.34
+
+2007-01-08  Loic Dachary  <loic@dachary.org>
+
+        * Release 1.0.33
+
+	* tests/Makefile.am, tests/poker.test18pokerclient.xml:
+	test dedicated structure
+
+	* tests/test-pokerclient.py.in: create symbolic names for tables
+	add prefix to avoid output confusion in tests result analysis
+	the sit helper controls the table, the seat and the auto_muck
+	helpers that expect packets generaly allow an extra argument of the next expected packet
+	implement test18_blindAllIn
+
+	* pokernetwork/pokertable.py:
+	prefix with [server] to avoid confusion in tests
+	honor forced_dealer_seat in table description, if provided (eleminate a randomness source in tests)
+	fix sr#1418 https://gna.org/support/?1418 related to inability to muck hands in tournaments
+
+2007-01-08  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/Makefile.am: Makefile to batch transition for windows
+
+	* pokerclient2d/build_with_mingw.bat:
+	build_with_mingw output in site-packages
+
+	* pokerclient2d/build_with_mingw.bat: added MINGWROOT envvar
+
+	* pokerclient2d/build_with_mingw.bat: added PYTHONROOT envvar
+
+	* pokerclient2d/build_with_mingw.bat: added GTKROOT envvar
+
+	* pokerclient2d/build_with_mingw.bat: removed envvar dependencies
+
+	* pokerclient2d/Makefile.mingw: removed mingw makefile
+
+	* pokerclient2d/build_with_mingw.bat: build with mingw batch file
+
+	* pokerclient2d/Makefile.mingw: dll name and paths update
+
+2007-01-06  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokerservice.py:
+	don't override argument serial in getHandHistory (sr #1432) : shows random opponent cards instead of self
+
+2007-01-05  griim  <griim@mekensleep.com>
+
+	* po/fr.po: added more translations
+
+	* pokerui/pokerrenderer.py: fixed some missing translations
+
+2007-01-05  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokertable.py: delta must be an int, always
+
+2007-01-05  griim  <griim@mekensleep.com>
+
+	* configure.ac:
+	added test-unittesttournaments.cpp and test-unittestlobby.cpp to AC_CONFIG_FILES
+
+	* tests/test-unittestlobby.cpp, tests/test-unittesttournaments.cpp:
+	renamed to .cpp.in
+
+	* tests/test-unittestlobby.cpp.in, tests/test-unittesttournaments.cpp.in:
+	added @top_srcdir@ for data path
+
+2007-01-04  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/Makefile.mingw, pokerclient2d/Makefile.am:
+	makefile for mingw
+
+2007-01-04  griim  <griim@mekensleep.com>
+
+	* po/POTFILES.in, po/fr.po: added more translatable strings
+
+	* po/POTFILES.skip: not used at the moment
+
+	* pokerclient2d/lobby.c, pokerclient2d/tournaments.c:
+	added I18N support
+
+	* tests/Makefile.am: changed test-unittestmain target
+
+	* tests/io_mockup.c, tests/test-unittestlobby.cpp, tests/test-unittesttournaments.cpp:
+	tests for lobby & tournaments
+
+	* pokerui/pokerinterface.py: added I18N support
+
+	* tests/test-string.py.in: added PokerInterface test case
+
+2007-01-03  griim  <griim@mekensleep.com>
+
+	* pokerui/pokerrenderer.py: added I18N support
+
+	* tests/test-rank.py.in: renamed to test-string.py.in
+
+	* configure.ac, tests/Makefile.am: changed test-rank to test-string
+
+	* tests/test-string.py.in: unittest dealing with string output
+
+2006-01-03  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/interface/bet.png, pokerclient2d/data/interface/call.png, pokerclient2d/data/interface/card_back.png, pokerclient2d/data/interface/check.png, pokerclient2d/data/interface/dealer.png, pokerclient2d/data/interface/exit.png, pokerclient2d/data/interface/fold.png, pokerclient2d/data/interface/get_seat.png, pokerclient2d/data/interface/money.png, pokerclient2d/data/interface/name.png, pokerclient2d/data/interface/player.png, pokerclient2d/data/interface/player_active.png, pokerclient2d/data/interface/pot.png, pokerclient2d/data/interface/raise.png, pokerclient2d/data/interface/raise_slider.png, pokerclient2d/data/interface/raise_slider_dock.png, pokerclient2d/data/interface/rebuy.png, pokerclient2d/data/interface/status.png, pokerclient2d/data/interface/table.png, pokerclient2d/data/interface/table1_active.png, pokerclient2d/data/interface/table1_normal.png, pokerclient2d/data/interface/table2_active.png, pokerclient2d/data/interface/table2_normal.png, pokerclient2d/data/interface/table3_active.png, pokerclient2d/data/interface/table3_normal.png, pokerclient2d/data/interface/table4_active.png, pokerclient2d/data/interface/table4_normal.png, pokerclient2d/data/interface/table5_active.png, pokerclient2d/data/interface/table5_normal.png, pokerclient2d/data/interface/table_background.png, pokerclient2d/data/interface/tables_dock.png, pokerclient2d/data/interface/winner.png:
+	re-added data with -kb
+
+2006-12-31  Johan Euphrosine  <proppy@aminche.com>
+
+	* tests/test-gladegen.py.in: remove obsolete files
+
+2006-12-31  Loic Dachary  <loic@dachary.org>
+
+	* Makefile.am: po/Makevars.template
+
+	* debian/changelog, debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.hoary, debian/control.sarge, debian/control.unstable:
+	poker2d depends on gtk2-engines-pixbuf
+
+	* debian/python-poker2d.install: add locales
+
+	* config/ccpython.m4: uncache
+
+2006-12-30  Loic Dachary  <loic@dachary.org>
+
+	* tests/run.in: run unittestmain in Xvfb
+
+	* pokerclient2d/data/Makefile.am:
+	depends on mockup.svg + remove generated files in clean-local
+
+2006-12-29  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/Makefile.am: fixed gtkrc.mockup
+
+	* pokerclient2d/data/interface/mockup.svg: removed absolute data path
+
+	* pokerclient2d/data/Makefile.am, pokerclient2d/data/interface/gtkrc:
+	added gtkrc override
+
+	* pokerclient2d/data/Makefile.am, pokerclient2d/gamewindow.py:
+	table status
+
+	* pokerclient2d/data/interface/mockup.svg, pokerclient2d/data/interface/status.png:
+	added table_status
+
+2006-12-29  Loic Dachary  <loic@dachary.org>
+
+	* debian/rules: don't autoreconf
+
+2006-12-29  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/gamewindow.py: resize raise range
+
+2006-12-29  Loic Dachary  <loic@dachary.org>
+
+	* tests/run.in: gamewindow & svg2gtk : need display
+
+	* debian/rules: don't autoreconf
+
+2006-12-28  griim  <griim@mekensleep.com>
+
+	* pokerclient2d/data/interface/interface.glade:
+	ajusted "translatable" attributes
+
+2006-12-29  Loic Dachary  <loic@dachary.org>
+
+	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.hoary, debian/control.sarge, debian/control.unstable:
+	intl requires cvs
+
+2006-12-28  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-pokerdisplay2d.py.in: no rcparse mockup
+
+2006-12-28  Johan Euphrosine  <proppy@aminche.com>
 
 	* pokerclient2d/pokerdisplay2d.py, tests/test-pokerdisplay2d.py.in:
 	bind on_sit_seat%d_clicked to on_sit_clicked
