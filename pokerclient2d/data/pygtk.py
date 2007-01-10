@@ -37,5 +37,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "make skin/gtkrc skin/mockup.glade && /usr/bin/python pygtk.py"
+# compile-command: "make interface/gtkrc.mockup interface/mockup.glade && /usr/bin/python pygtk.py"
 # End:

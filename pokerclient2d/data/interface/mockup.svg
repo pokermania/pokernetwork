@@ -544,5 +544,75 @@
        width="150"
        height="75"
        id="table_status" />
+    <image
+       xlink:href="card_back.png"
+       x="24.251839"
+       y="338.12778"
+       width="37"
+       height="52"
+       id="card_seat9" />
+    <image
+       xlink:href="card_back.png"
+       x="24.251842"
+       y="231.98526"
+       width="37"
+       height="52"
+       id="card_seat0" />
+    <image
+       xlink:href="card_back.png"
+       x="211.47543"
+       y="432.47665"
+       width="37"
+       height="52"
+       id="card_seat8" />
+    <image
+       xlink:href="card_back.png"
+       x="345.62778"
+       y="431.00244"
+       width="37"
+       height="52"
+       id="card_seat7" />
+    <image
+       xlink:href="card_back.png"
+       x="479.78009"
+       y="432.47665"
+       width="37"
+       height="52"
+       id="card_seat6" />
+    <image
+       xlink:href="card_back.png"
+       x="678.7973"
+       y="339.60199"
+       width="37"
+       height="52"
+       id="card_seat5" />
+    <image
+       xlink:href="card_back.png"
+       x="681.74573"
+       y="231.98524"
+       width="37"
+       height="52"
+       id="card_seat4" />
+    <image
+       xlink:href="card_back.png"
+       x="490.09949"
+       y="114.04913"
+       width="37"
+       height="52"
+       id="card_seat3" />
+    <image
+       xlink:href="card_back.png"
+       x="355.94717"
+       y="114.04914"
+       width="37"
+       height="52"
+       id="card_seat2" />
+    <image
+       xlink:href="card_back.png"
+       x="217.37225"
+       y="112.57494"
+       width="37"
+       height="52"
+       id="card_seat1" />
   </g>
 </svg>
