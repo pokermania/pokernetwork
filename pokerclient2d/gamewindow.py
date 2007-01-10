@@ -47,7 +47,7 @@ class GameWindowGlade:
             for card_index in xrange(1, 8):
                 image = gtk.Image()
                 image.set_name("card%d_seat%d" % (card_index, seat_index))
-                fixed.put(image, x+(card_index-1)*10, y+20)
+                fixed.put(image, x+(card_index-1)*20, y)
                 self.widgets[image.get_name()] = image
         for board_index in xrange(1, 6):
             board = self.glade.get_widget('board%d' % board_index)

@@ -2,12 +2,12 @@
 
 style "bet_seat_style_font" = "bet_seat0_style"
 {
-  font_name="FreeSans Bold 8"
+  font_name="FreeSerif Bold 7"
 }
 
 style "pot_style_font" = "pot_style"
 {
-  font_name="FreeSans Bold 8"
+  font_name="FreeSerif Bold 7"
 }
 
 widget "*bet_seat*" style "bet_seat_style_font"
