@@ -58,9 +58,15 @@ class SVG2Glade(ContentHandler):
 class SVG2Rc(ContentHandler):
     def __init__(self, string):
         ContentHandler.__init__(self, string)
+        self.root = ""
+        self.group = ""
     def startElement(self, name, attrs):
-        if name == "image":
-            self.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s" style "%s_style"\n' % (attrs['id'], attrs['xlink:href'], attrs['id'], attrs['id']))
+        if name == "svg":
+            self.root = attrs['id']
+        elif name == "g":
+            self.group = attrs['id']
+        elif name == "image":
+            self.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s*%s" style "%s_style"\n' % (attrs['id'], attrs['xlink:href'], self.root, self.group, attrs['id'], attrs['id']))
 
 if __name__ == '__main__':
     import sys

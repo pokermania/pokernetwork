@@ -39,7 +39,7 @@ class SVG2Glade(unittest.TestCase):
         self.assertEquals(glade_string, str(SVG2Glade(svg_string)))
     def test_SVG2Rc(self):
         svg_string = '<svg id="game_window" width="800" height="600"><g id="game_fixed"><image id="test" x="0" y="1" width="2" height="3" xlink:href="test.png"/></g></svg>'
-        rc_string = 'style "test_style" {engine "pixmap" {image {function = BOX file = "test.png"}}} widget "*test" style "test_style"\n'
+        rc_string = 'style "test_style" {engine "pixmap" {image {function = BOX file = "test.png"}}} widget "*game_window*game_fixed*test" style "test_style"\n'
         from svg2gtk import SVG2Rc
         self.assertEquals(rc_string, str(SVG2Rc(svg_string)))
 if __name__ == '__main__':
