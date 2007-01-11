@@ -1,6 +1,35 @@
-2007-01-10  Loic Dachary  <loic@dachary.org>
+2007-01-11  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.34
+
+2007-01-11  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/client.xml, pokerclient2d/data/interface/call.png, pokerclient2d/data/interface/check.png, pokerclient2d/data/interface/fold.png, pokerclient2d/data/interface/gtkrc, pokerclient2d/data/interface/raise.png, pokerclient2d/gamewindow.py, pokerclient2d/pokerdisplay2d.py, tests/test-gamewindow.py.in, tests/test-pokerdisplay2d.py.in:
+	fix font overlap on action button
+	switch action button to toggle button
+	remove text from action button gfx
+
+2007-01-10  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/svg2gtk.py, tests/test-svg2gtk.py.in:
+	fixed style overlap on button quit
+
+	* pokerclient2d/data/interface/gtkrc, pokerclient2d/gamewindow.py:
+	fixed font size
+
+2007-01-10  loic  <loic@dachary.org>
+
+	* debian/changelog, pokernetwork/__init__.py, ChangeLog, NEWS:
+	1.0.34 version bump
+
+2007-01-10  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/interface/mockup.svg, pokerclient2d/data/pygtk.py, pokerclient2d/gamewindow.py:
+	fixed card position
+
+2007-01-10  griim  <griim@mekensleep.com>
+
+	* Makefile.am: fixed missing extra dist files
 
 2007-01-08  Loic Dachary  <loic@dachary.org>
 
