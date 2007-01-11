@@ -528,6 +528,7 @@ class PokerDisplay2D(PokerDisplay):
 
         if not packet.style:
             self.actions[packet.name].hide()
+            self.actions[packet.name].set_active(False)
             if packet.name == "raise":
                 self.actions["raise_range"].hide()
             return

@@ -1,16 +1,43 @@
 # -*- shell-script -*-
+include "gtkrc.mockup"
 
 style "bet_seat_style_font" = "bet_seat0_style"
 {
-  font_name="FreeSerif Bold 7"
+  font_name="FreeSans Bold 7"
 }
 
 style "pot_style_font" = "pot_style"
 {
-  font_name="FreeSerif Bold 7"
+  font_name="FreeSans Bold 7"
 }
 
-widget "*bet_seat*" style "bet_seat_style_font"
-widget "*pot*" style "pot_style_font"
+style "raise_style_font" = "raise_style"
+{
+  font_name="FreeSans Bold 7"
+  fg[NORMAL] = "#ffffff"
+}
 
-include "gtkrc.mockup"
+style "check_style_font" = "check_style"
+{
+  font_name="FreeSans Bold 7"
+  fg[NORMAL] = "#ffffff"
+}
+
+style "fold_style_font" = "fold_style"
+{
+  font_name="FreeSans Bold 7"
+  fg[NORMAL] = "#ffffff"
+}
+
+style "call_style_font" = "call_style"
+{
+  font_name="FreeSans Bold 7"
+  fg[NORMAL] = "#ffffff"
+}
+
+widget "*game_window*game_fixed*bet_seat*" style "bet_seat_style_font"
+widget "*game_window*game_fixed*pot*" style "pot_style_font"
+widget "*game_window*game_fixed*raise*" style "raise_style_font"
+widget "*game_window*game_fixed*check*" style "check_style_font"
+widget "*game_window*game_fixed*fold*" style "fold_style_font"
+widget "*game_window*game_fixed*call*" style "call_style_font"

@@ -31,6 +31,15 @@ sys.path.insert(0, "@top_srcdir@/pokerclient2d")
 
 import unittest
 
+class GameWindowGladeNotFoundTest(unittest.TestCase):
+    def test_notFound(self):
+        from gamewindow import GameWindowGlade
+        try:
+            self.glade = GameWindowGlade("foo.glade")
+        except RuntimeError:
+            self.runtimeErrorCaught = True
+        self.assertEquals(True, self.runtimeErrorCaught)
+
 class GameWindowGladeTest(unittest.TestCase):
     def setUp(self):
         from gamewindow import GameWindowGlade
@@ -85,17 +94,30 @@ class GameWindowGladeTest(unittest.TestCase):
         self.glade.get_widget("raise_decrease_bb").show() # 1x1 button used for accelerators
         self.glade.get_widget("raise_pot").show() # 1x1 button used for accelerators
         self.glade.get_widget("raise_half_pot").show() # 1x1 button used for accelerators
+    def on_call_clicked(self, button):
+        self.call_clicked_called = True
+    def on_raise_clicked(self, button):
+        self.raise_clicked_called = True
+    def on_fold_clicked(self, button):
+        self.fold_clicked_called = True
+    def on_check_clicked(self, button):
+        self.check_clicked_called = True
     def test_interactors(self):
+        self.glade.signal_autoconnect(self)
 	call = self.glade.get_widget("call")
-        call.hide()
+        call.clicked()
+        self.assertEquals(True, self.call_clicked_called)
 	raise_ = self.glade.get_widget("raise")
-        raise_.hide()
+        raise_.clicked()
+        self.assertEquals(True, self.raise_clicked_called)
 	raise_range = self.glade.get_widget("raise_range")
-        raise_range.hide()
-	check = self.glade.get_widget("check")
-        check.hide()
+ 	check = self.glade.get_widget("check")
+        check.clicked()
+        self.assertEquals(True, self.check_clicked_called)
+        self.clicked = False
 	fold = self.glade.get_widget("fold")
-        fold.hide()
+        fold.clicked()
+        self.assertEquals(True, self.fold_clicked_called)
     def test_switch(self):
 	switch = self.glade.get_widget("switch")
         switch.hide()

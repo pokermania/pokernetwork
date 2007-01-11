@@ -234,8 +234,21 @@ class PokerPlayer2DCardTest(unittest.TestCase):
         for i in range(len(PokerWidgetMockup.files)):
             self.assertEquals(cards2files[i], PokerWidgetMockup.files[i])
 
+class ToggleButtonMockup:
+    def hide(self):
+        self.hide_called = True
+    def set_active(self, state):
+        self.is_active = state
+    def get_active(self):
+        return self.is_active
 class PokerDisplay2DMockup(PokerDisplay2D):
-    def __init__(self):
+    factory = PokerFactoryMockup()
+    protocol = PokerProtocolMockup()
+    id2table = [0,]
+    import gtk
+    def __init__(self, action_name = ""):
+        import gtk
+        self.actions = { action_name : ToggleButtonMockup() }
         self.sit_clicked_called = False
     def on_sit_clicked(self, button):
         self.sit_clicked_called = True
@@ -274,6 +287,17 @@ class PokerDisplay2DSignalTest(unittest.TestCase):
         self.display.on_sit_seat9_clicked(None)
         self.assertEquals(True, self.display.sit_clicked_called)
 
+class PokerPacketDisplayNodeMockup:
+    style = None
+    name = "dummy"
+class PokerDisplay2DButtonResetWhenHiddenTest(unittest.TestCase):
+    def setUp(self):
+        self.packet = PokerPacketDisplayNodeMockup()
+        self.display = PokerDisplay2DMockup(self.packet.name)
+    def test_updateAction(self):
+        self.display.updateAction(self.packet)
+        self.assertEquals(True, self.display.actions[self.packet.name].hide_called)
+        self.assertEquals(False, self.display.actions[self.packet.name].get_active())
 if __name__ == '__main__':
     unittest.main()
 

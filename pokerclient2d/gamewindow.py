@@ -115,6 +115,18 @@ class GameWindowGlade:
         map(button2label, names)
         moneys = map(lambda seat: self.glade.get_widget("money_seat%d" % seat), xrange(10))
         map(button2label, moneys)
+        actions_name = ("raise", "check", "fold", "call")
+        actions = map(self.glade.get_widget, actions_name)
+        def button2toggle(button):
+            toggle = gtk.ToggleButton()
+            toggle.set_name(button.get_name())
+            toggle.set_size_request(*button.get_size_request())
+            self.widgets[toggle.get_name()] = toggle
+            x = fixed.child_get_property(button, 'x')
+            y = fixed.child_get_property(button, 'y')
+            fixed.remove(button)
+            fixed.put(toggle, x, y)
+        map(button2toggle, actions)
         self.glade.get_widget("game_fixed").show_all()
             
     def get_widget(self, name):
@@ -126,4 +138,7 @@ class GameWindowGlade:
         return self.glade.relative_file(file)
 
     def signal_autoconnect(self, instance):
+        for name, widget in self.widgets.iteritems():
+            method = getattr(instance, "on_%s_clicked" % name, None)
+            if method: widget.connect("clicked", method)
         return self.glade.signal_autoconnect(instance)
