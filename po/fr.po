@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-01-05 14:17+0100\n"
+"POT-Creation-Date: 2007-01-11 16:55+0100\n"
 "PO-Revision-Date: 2007-01-05 11:33+0100\n"
 "Last-Translator: Jerome Jeannin <griim.work@gmail.com>\n"
 "Language-Team: \n"
@@ -586,18 +586,19 @@ msgid "wait for big blind"
 msgstr "attendre la grande blinde"
 
 #: pokerui/pokerrenderer.py:1304
+#, python-format
 msgid "wait for %s blind"
 msgstr "attendre la blinde (%s)"
 
 #: pokerui/pokerrenderer.py:1307 pokerui/pokerrenderer.py:1312
 #: pokerui/pokerrenderer.py:1320
 msgid "sit out next turn"
-msgstr "sortir à la fin de cette main"
+msgstr "se lever"
 
 #: pokerui/pokerrenderer.py:1309 pokerui/pokerrenderer.py:1314
 #: pokerui/pokerrenderer.py:1316 pokerui/pokerrenderer.py:1318
 msgid "sit out"
-msgstr ""
+msgstr "se lever"
 
 #: pokerui/pokerrenderer.py:1344
 msgid ""
@@ -692,3 +693,11 @@ msgstr "Voulez-vous vraiment quitter la table ?"
 #: pokerui/pokerrenderer.py:2391
 msgid "You must leave the table to change your outfit"
 msgstr "Vous devez quitter la table avant de modifier votre panoplie"
+
+#: po/raw.string:1
+msgid "gtkrc"
+msgstr "gtkrc.fr"
+
+#: po/raw.string:2
+msgid "test_string.raw"
+msgstr ""
