@@ -26,22 +26,17 @@
 #  Johan Euphrosine <johan@mekensleep.com>
 #
 
-from xml.sax import make_parser, saxutils
+from xml.sax import parseString
+from xml.sax.handler import ContentHandler
 
-class ContentHandler(saxutils.DefaultHandler):
+class SVG2Glade(ContentHandler):
     def __init__(self, string):
         self.result = ""
-        parser = make_parser()
-        parser.setContentHandler(self)
-        parser.feed(string)
+        parseString(string, self)
     def append(self, result):
         self.result = self.result + result
     def __str__(self):
         return self.result
-
-class SVG2Glade(ContentHandler):
-    def __init__(self, string):
-        ContentHandler.__init__(self, string)
     def startElement(self, name, attrs):
         if name == "svg":
             self.append('<glade-interface><widget class="GtkWindow" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><child><widget class="GtkFixed" id="%s_fixed">' % (attrs['id'], attrs['width'], attrs['height'], attrs['id']))
@@ -53,9 +48,13 @@ class SVG2Glade(ContentHandler):
 
 class SVG2Rc(ContentHandler):
     def __init__(self, string):
-        ContentHandler.__init__(self, string)
         self.root = ""
-        self.group = ""
+        self.result = ""
+        parseString(string, self)
+    def append(self, result):
+        self.result = self.result + result
+    def __str__(self):
+        return self.result
     def startElement(self, name, attrs):
         if name == "svg":
             self.root = attrs['id']
