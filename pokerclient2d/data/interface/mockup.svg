@@ -505,14 +505,14 @@
     <image
        xlink:href="check.png"
        x="638.31744"
-       y="508.33334"
+       y="507.53967"
        width="44"
        height="30"
        id="check" />
     <image
        xlink:href="call.png"
-       x="686.73016"
-       y="509.12698"
+       x="687.12695"
+       y="507.53967"
        width="44"
        height="30"
        id="call" />
@@ -525,7 +525,7 @@
        id="fold" />
     <image
        xlink:href="raise.png"
-       x="639.90472"
+       x="638.31744"
        y="543.25397"
        width="44"
        height="30"
@@ -544,75 +544,129 @@
        width="150"
        height="75"
        id="table_status" />
-    <image
-       xlink:href="card_back.png"
-       x="24.251839"
-       y="338.12778"
-       width="37"
-       height="52"
-       id="card_seat9" />
-    <image
-       xlink:href="card_back.png"
-       x="24.251842"
-       y="231.98526"
-       width="37"
-       height="52"
-       id="card_seat0" />
-    <image
-       xlink:href="card_back.png"
-       x="211.47543"
-       y="432.47665"
-       width="37"
-       height="52"
-       id="card_seat8" />
-    <image
-       xlink:href="card_back.png"
-       x="345.62778"
-       y="431.00244"
-       width="37"
-       height="52"
-       id="card_seat7" />
-    <image
-       xlink:href="card_back.png"
-       x="479.78009"
-       y="432.47665"
-       width="37"
-       height="52"
-       id="card_seat6" />
-    <image
-       xlink:href="card_back.png"
-       x="678.7973"
-       y="339.60199"
-       width="37"
-       height="52"
-       id="card_seat5" />
-    <image
-       xlink:href="card_back.png"
-       x="681.74573"
-       y="231.98524"
-       width="37"
-       height="52"
-       id="card_seat4" />
-    <image
-       xlink:href="card_back.png"
-       x="490.09949"
-       y="114.04913"
-       width="37"
-       height="52"
-       id="card_seat3" />
-    <image
-       xlink:href="card_back.png"
-       x="355.94717"
-       y="114.04914"
-       width="37"
-       height="52"
-       id="card_seat2" />
-    <image
-       xlink:href="card_back.png"
-       x="217.37225"
-       y="112.57494"
-       width="37"
-       height="52"
-       id="card_seat1" />
+    <g
+       id="card_seat0">
+      <image
+         xlink:href="card_back.png"
+         x="13.829235"
+         y="242.20148"
+         width="37"
+         height="52"
+         id="card1_seat0" />
+      <image
+         xlink:href="card_back.png"
+         x="24.571249"
+         y="242.20148"
+         width="37"
+         height="52"
+         id="card2_seat0" />
+      <image
+         xlink:href="pixmaps/cards/small-Kd.png"
+         x="31.416458"
+         y="231.98524"
+         width="37"
+         height="52"
+         id="card3_seat0" />
+      <image
+         xlink:href="pixmaps/cards/small-Kd.png"
+         x="47.667076"
+         y="231.98524"
+         width="37"
+         height="52"
+         id="card4_seat0" />
+      <image
+         xlink:href="pixmaps/cards/small-Kd.png"
+         x="63.917694"
+         y="231.98524"
+         width="37"
+         height="52"
+         id="card5_seat0" />
+      <image
+         xlink:href="card_back.png"
+         x="90.807121"
+         y="242.20148"
+         width="37"
+         height="52"
+         id="card7_seat0" />
+      <image
+         xlink:href="pixmaps/cards/small-Kd.png"
+         x="80.168304"
+         y="231.98524"
+         width="37"
+         height="52"
+         id="card6_seat0" />
+    </g>
+    <use
+       transform="translate(188.6978,-122.3587)"
+       id="card_seat1"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(326.2211,-122.3587)"
+       id="card_seat2"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(462.2703,-122.3587)"
+       id="card_seat3"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(653.1744,0.948403)"
+       id="card_seat4"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(653.5971,102.2457)"
+       id="card_seat5"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(454.8993,195.6462)"
+       id="card_seat6"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(320.7469,195.6462)"
+       id="card_seat7"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(186.172,195.6462)"
+       id="card_seat8"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
+    <use
+       transform="translate(1.896806,101.2973)"
+       id="card_seat9"
+       x="0"
+       y="0"
+       width="800"
+       height="600"
+       xlink:href="#card_seat0" />
   </g>
 </svg>

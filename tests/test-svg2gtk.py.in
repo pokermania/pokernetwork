@@ -33,13 +33,13 @@ import unittest
 
 class SVG2Glade(unittest.TestCase):
     def test_SVG2Glade(self):
-        svg_string = '<svg id="game_window" width="800" height="600"><g id="game_fixed"><image id="test" x="0" y="1" width="2" height="3" href="test.png"/></g></svg>'
-        glade_string = '<glade-interface><widget class="GtkWindow" id="game_window"><property name="width_request">800</property><property name="height_request">600</property><child><widget class="GtkFixed" id="game_fixed"><child><widget class="GtkButton" id="test"><property name="width_request">2</property><property name="height_request">3</property><property name="label"/><signal name="clicked" handler="on_test_clicked"/></widget><packing><property name="x">0</property><property name="y">1</property></packing></child></widget></child></widget></glade-interface>'
+        svg_string = '<svg id="game_window" width="800" height="600"><g><image id="test" x="0" y="1" width="2" height="3" href="test.png"/></g></svg>'
+        glade_string = '<glade-interface><widget class="GtkWindow" id="game_window"><property name="width_request">800</property><property name="height_request">600</property><child><widget class="GtkFixed" id="game_window_fixed"><child><widget class="GtkButton" id="test"><property name="width_request">2</property><property name="height_request">3</property><property name="label"/><signal name="clicked" handler="on_test_clicked"/></widget><packing><property name="x">0</property><property name="y">1</property></packing></child></widget></child></widget></glade-interface>'
         from svg2gtk import SVG2Glade
         self.assertEquals(glade_string, str(SVG2Glade(svg_string)))
     def test_SVG2Rc(self):
-        svg_string = '<svg id="game_window" width="800" height="600"><g id="game_fixed"><image id="test" x="0" y="1" width="2" height="3" xlink:href="test.png"/></g></svg>'
-        rc_string = 'style "test_style" {engine "pixmap" {image {function = BOX file = "test.png"}}} widget "*game_window*game_fixed*test" style "test_style"\n'
+        svg_string = '<svg id="game_window" width="800" height="600"><g><image id="test" x="0" y="1" width="2" height="3" xlink:href="test.png"/></g></svg>'
+        rc_string = 'style "test_style" {engine "pixmap" {image {function = BOX file = "test.png"}}} widget "*game_window*test" style "test_style"\n'
         from svg2gtk import SVG2Rc
         self.assertEquals(rc_string, str(SVG2Rc(svg_string)))
 if __name__ == '__main__':

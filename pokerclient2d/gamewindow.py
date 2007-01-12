@@ -34,7 +34,7 @@ class GameWindowGlade:
         self.widgets = {}
         self.glade = gtk.glade.XML(glade_file)
         window = self.glade.get_widget('game_window')
-        fixed = self.glade.get_widget('game_fixed')
+        fixed = self.glade.get_widget('game_window_fixed')
         window.remove(fixed)
         event = gtk.EventBox()
         event.set_name("game_window")
@@ -127,7 +127,7 @@ class GameWindowGlade:
             fixed.remove(button)
             fixed.put(toggle, x, y)
         map(button2toggle, actions)
-        self.glade.get_widget("game_fixed").show_all()
+        self.glade.get_widget("game_window_fixed").show_all()
             
     def get_widget(self, name):
         if self.widgets.has_key(name):
@@ -142,3 +142,21 @@ class GameWindowGlade:
             method = getattr(instance, "on_%s_clicked" % name, None)
             if method: widget.connect("clicked", method)
         return self.glade.signal_autoconnect(instance)
+
+if __name__ == '__main__':
+    glade = GameWindowGlade('data/interface/mockup.glade')
+    event_box = glade.get_widget('game_window')
+    window = gtk.Window()
+    window.add(event_box)
+    gtk.rc_parse('data/interface/gtkrc')
+    for seat_index in xrange(0, 10):
+        for card_index in xrange(1, 8):
+            glade.get_widget("card%d_seat%d" % (card_index, seat_index)).set_from_file('data/interface/card_back.png')
+    window.show_all()
+    gtk.main()
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "/usr/bin/python gamewindow.py"
+# End:
+

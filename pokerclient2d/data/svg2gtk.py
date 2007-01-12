@@ -44,16 +44,12 @@ class SVG2Glade(ContentHandler):
         ContentHandler.__init__(self, string)
     def startElement(self, name, attrs):
         if name == "svg":
-            self.append('<glade-interface><widget class="GtkWindow" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property>' % (attrs['id'], attrs['width'], attrs['height']))
-        elif name == "g":
-            self.append('<child><widget class="GtkFixed" id="%s">' % (attrs['id']))
+            self.append('<glade-interface><widget class="GtkWindow" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><child><widget class="GtkFixed" id="%s_fixed">' % (attrs['id'], attrs['width'], attrs['height'], attrs['id']))
         elif name == "image":
             self.append('<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>' % (attrs['id'], attrs['width'], attrs['height'], attrs['id'], attrs['x'], attrs['y']))
     def endElement(self, name):
         if name == "svg":
-            self.append('</widget></glade-interface>')
-        elif name == "g":
-            self.append('</widget></child>')
+            self.append('</widget></child></widget></glade-interface>')
 
 class SVG2Rc(ContentHandler):
     def __init__(self, string):
@@ -63,10 +59,8 @@ class SVG2Rc(ContentHandler):
     def startElement(self, name, attrs):
         if name == "svg":
             self.root = attrs['id']
-        elif name == "g":
-            self.group = attrs['id']
         elif name == "image":
-            self.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s*%s" style "%s_style"\n' % (attrs['id'], attrs['xlink:href'], self.root, self.group, attrs['id'], attrs['id']))
+            self.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n' % (attrs['id'], attrs['xlink:href'], self.root, attrs['id'], attrs['id']))
 
 if __name__ == '__main__':
     import sys
