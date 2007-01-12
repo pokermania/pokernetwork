@@ -28,38 +28,41 @@
 
 from xml.sax import parseString
 from xml.sax.handler import ContentHandler
+import string
 
 class SVG2Glade(ContentHandler):
     def __init__(self, string):
-        self.result = ""
+        self.formats = []
+        self.tuples = []
         parseString(string, self)
-    def append(self, result):
-        self.result = self.result + result
     def __str__(self):
-        return self.result
+        return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
     def startElement(self, name, attrs):
         if name == "svg":
-            self.append('<glade-interface><widget class="GtkWindow" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><child><widget class="GtkFixed" id="%s_fixed">' % (attrs['id'], attrs['width'], attrs['height'], attrs['id']))
+            self.formats.append('<glade-interface><widget class="GtkWindow" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><child><widget class="GtkFixed" id="%s_fixed">')
+            self.tuples.append((attrs['id'], attrs['width'], attrs['height'], attrs['id']))
         elif name == "image":
-            self.append('<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>' % (attrs['id'], attrs['width'], attrs['height'], attrs['id'], attrs['x'], attrs['y']))
+            self.formats.append('<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>')
+            self.tuples.append((attrs['id'], attrs['width'], attrs['height'], attrs['id'], attrs['x'], attrs['y']))
     def endElement(self, name):
         if name == "svg":
-            self.append('</widget></child></widget></glade-interface>')
+            self.formats.append('</widget></child></widget></glade-interface>')
+            self.tuples.append(())
 
 class SVG2Rc(ContentHandler):
     def __init__(self, string):
         self.root = ""
-        self.result = ""
+        self.formats = []
+        self.tuples = []
         parseString(string, self)
-    def append(self, result):
-        self.result = self.result + result
     def __str__(self):
-        return self.result
+        return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
     def startElement(self, name, attrs):
         if name == "svg":
             self.root = attrs['id']
         elif name == "image":
-            self.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n' % (attrs['id'], attrs['xlink:href'], self.root, attrs['id'], attrs['id']))
+            self.formats.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n')
+            self.tuples.append((attrs['id'], attrs['xlink:href'], self.root, attrs['id'], attrs['id']))
 
 if __name__ == '__main__':
     import sys
