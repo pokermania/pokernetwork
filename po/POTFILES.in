@@ -5,3 +5,4 @@ pokerclient2d/lobby.c
 pokerclient2d/tournaments.c
 pokerui/pokerinterface.py
 pokerui/pokerrenderer.py
+po/raw.string
