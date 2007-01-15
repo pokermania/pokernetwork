@@ -52,7 +52,7 @@ msgstr "Blind automatique"
 
 #: pokerclient2d/data/interface/interface.glade:461
 msgid "sit out next hand"
-msgstr "sortir à la prochaine main"
+msgstr "se lever"
 
 #: pokerclient2d/data/interface/interface.glade:627
 msgid "Post blind"
