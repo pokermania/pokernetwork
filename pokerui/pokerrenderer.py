@@ -916,8 +916,7 @@ class PokerRenderer:
     def _handleConnection(self, protocol, packet):
         game = self.factory.packet2game(packet)
 
-        if ( packet.type == PACKET_POKER_BEST_CARDS or
-             packet.type == PACKET_POKER_PLAYER_NO_CARDS or
+        if ( packet.type == PACKET_POKER_PLAYER_NO_CARDS or
              packet.type == PACKET_POKER_CHIPS_PLAYER2BET or
              packet.type == PACKET_POKER_CHIPS_BET2POT or
              packet.type == PACKET_POKER_CHIPS_POT2PLAYER or
@@ -925,6 +924,10 @@ class PokerRenderer:
              packet.type == PACKET_POKER_CHIPS_POT_RESET or
              (packet.type == PACKET_POKER_DEAL_CARDS and self.stream_mode) ):
             self.render(packet)
+
+	elif packet.type = PACKET_POKER_BEST_CARDS:
+	    packet.hand = _(packet.hand)
+	    self.render(packet)
 
         elif packet.type == PACKET_POKER_USER_INFO:
             self.changeState(USER_INFO_DONE)
