@@ -298,6 +298,28 @@ class PokerDisplay2DButtonResetWhenHiddenTest(unittest.TestCase):
         self.display.updateAction(self.packet)
         self.assertEquals(True, self.display.actions[self.packet.name].hide_called)
         self.assertEquals(False, self.display.actions[self.packet.name].get_active())
+
+from pokerclient2d.pokeranimation2d import PokerAnimationTable2D
+
+class PokerConfigMockup:
+    pass
+
+class PokerFixedMockup:
+    def child_get_property(self, child, property):
+        return 0
+class PokerRendererMockup:
+    widget_names = []
+    def get_widget(self, name):
+        PokerRendererMockup.widget_names.append(name)
+        return PokerFixedMockup()
+
+class PokerSchedulerMockup:
+    animation_renderer = PokerRendererMockup()
+
+class PokerAnimation2DTest(unittest.TestCase):
+    def test_gameFixed(self):
+        animation = PokerAnimationTable2D(config = PokerConfigMockup(), settings = PokerConfigMockup(), animation_renderer = PokerRendererMockup(), verbose = 1, scheduler = PokerSchedulerMockup())
+        self.assertEquals("game_window_fixed", PokerRendererMockup.widget_names[0])
 if __name__ == '__main__':
     unittest.main()
 
