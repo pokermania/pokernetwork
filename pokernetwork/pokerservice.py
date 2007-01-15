@@ -435,6 +435,8 @@ class PokerService(service.Service):
         while prizes:
             prize = prizes.pop(0)
             serial = winners.pop(0)
+            if prize <= 0:
+                continue
             sql = "UPDATE user2money SET amount = amount + " + str(prize) + " WHERE user_serial = " + str(serial) + " AND currency_serial = " + str(tourney.currency_serial)
             if self.verbose > 2: print "tourneyFinished: " + sql
             cursor.execute(sql)
