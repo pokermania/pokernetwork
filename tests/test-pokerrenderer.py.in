@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/python2.4
 # -*- mode: python -*-
 #
 # Copyright (C) 2006 Mekensleep
@@ -33,6 +33,7 @@ sys.path.insert(0, "..")
 
 import unittest
 from pokerui.pokerrenderer import PokerRenderer
+from pokernetwork.pokerclientpackets import *
 
 class PokerRendererMockup(PokerRenderer):
     def __init__(self):
@@ -42,6 +43,10 @@ class PokerRendererMockup(PokerRenderer):
 			    'event': "emThumbUp"}]
 	self.verbose = 3
 	self.protocol = PokerProtocolMockup()
+	self._packetRendered = None
+
+    def render(self, packet):
+	self._packetRendered = packet
 
 class PokerProtocolMockup:
     def __init__(self):
@@ -55,11 +60,20 @@ class PokerFactoryMockup:
 	self.chat_config = {'max_chars': 80,
 			    'line_length': 80}
 
+    def packet2game(self, packet):
+	pass
+
+
 class PokerPacketChatMockup:
     def __init__(self, message):
 	self.message = message
 	self.serial = 0
 	self.game_id = 0
+
+class PokerPacketMockup:
+    def __init__(self, type):
+	self.type = type
+        self.hand = "best hand"
 
 class PokerRendererTestCase(unittest.TestCase):
     
@@ -85,6 +99,11 @@ class PokerRendererTestCase(unittest.TestCase):
 	self.assertEquals("emThumbUp", self.renderer.protocol.packets[2].word)
 	self.assertEquals("emThumbUp", self.renderer.protocol.packets[3].word)
 
+    #------------------------------------------------------------------------------------------------------
+    def test_handleConnection(self):
+	bestCard_packet = PokerPacketMockup(PACKET_POKER_BEST_CARDS)
+	self.renderer._handleConnection(PokerProtocolMockup(), bestCard_packet)
+        self.assertEquals("best hand", self.renderer._packetRendered.hand)
 
 class PokerFactoryUpdateInterfaceWindowsMockup:
     def __init__(self):
