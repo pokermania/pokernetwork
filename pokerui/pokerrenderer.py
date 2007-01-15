@@ -925,7 +925,7 @@ class PokerRenderer:
              (packet.type == PACKET_POKER_DEAL_CARDS and self.stream_mode) ):
             self.render(packet)
 
-	elif packet.type = PACKET_POKER_BEST_CARDS:
+	elif packet.type == PACKET_POKER_BEST_CARDS:
 	    packet.hand = _(packet.hand)
 	    self.render(packet)
 
@@ -1044,6 +1044,7 @@ class PokerRenderer:
             if self.verbose: print "login accepted"
 
         elif packet.type == PACKET_MESSAGE:
+            print "PACKET_MESSAGE : " + packet.string
             self.showMessage(packet.string, None)
 
         elif packet.type == PACKET_SERIAL:
