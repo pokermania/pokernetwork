@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -59,7 +60,7 @@ class PokerCashierTestCase(unittest.TestCase):
     def destroyDb(self):
         os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         
-    # -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
     def setUp(self):
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
@@ -72,13 +73,14 @@ class PokerCashierTestCase(unittest.TestCase):
         self.user1_serial = 6060
         self.user2_serial = 7070
         self.user3_serial = 8080
+        self.users_serial = range(9000, 9010)
 
-    # -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
     def tearDown(self):
         self.cashier.close()
 #        self.destroyDb()
 
-    # -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
     def test01_cashIn(self):
         #
         # Cash in <value> more from the fake currency
@@ -128,7 +130,7 @@ class PokerCashierTestCase(unittest.TestCase):
 
         return packet
 
-    # -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
     def test02_cashIn(self):
         self.value = 100
         self.url = 'http://fake'
@@ -149,7 +151,15 @@ class PokerCashierTestCase(unittest.TestCase):
                                     value = note2[3])
         d2 = self.cashier.cashIn(packet2)
 
-        d = defer.DeferredList((d1, d2), fireOnOneErrback = True)
+        note3 = self.cashier.currency_client._buildNote(self.url, self.value)
+        packet3 = PacketPokerCashIn(serial = self.user3_serial,
+                                    url = note3[0],
+                                    bserial = note3[1],
+                                    name = note3[2],
+                                    value = note3[3])
+        d3 = self.cashier.cashIn(packet3)
+
+        d = defer.DeferredList((d1, d2, d3), fireOnOneErrback = True)
         d.addCallback(lambda result: self.check02_cashIn())
         return d
 
@@ -157,7 +167,7 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor = self.db.cursor(DictCursor)
 
         #
-        # Only one currency for both buyIn
+        # Only one currency for all buyIn
         #
         cursor.execute("SELECT url, serial FROM currencies")
         self.assertEquals(1, cursor.rowcount)
@@ -169,8 +179,8 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEquals(1, cursor.rowcount)
         safe_row = cursor.fetchone()
         self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
-        self.assertEquals(5, safe_row['serial'])
-        self.assertEquals(self.value * 2, safe_row['value'])
+        self.assertEquals(7, safe_row['serial'])
+        self.assertEquals(self.value * 3, safe_row['value'])
         #
         # Credited to the user1
         #
@@ -188,6 +198,15 @@ class PokerCashierTestCase(unittest.TestCase):
         user2money_row = cursor.fetchone()
         self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
         self.assertEquals(self.user2_serial, user2money_row['user_serial'])
+        self.assertEquals(self.value, user2money_row['amount'])
+        #
+        # Credited to the user3
+        #
+        cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(self.user3_serial))
+        self.assertEquals(1, cursor.rowcount)
+        user2money_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
+        self.assertEquals(self.user3_serial, user2money_row['user_serial'])
         self.assertEquals(self.value, user2money_row['amount'])
 
         cursor.close()
@@ -232,7 +251,7 @@ class PokerCashierTestCase(unittest.TestCase):
 
         return count
 
-    # -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
     def test03_cashOut(self):
         d = self.test01_cashIn()
 
@@ -281,7 +300,7 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEqual(PacketPokerCashQuery.DOES_NOT_EXIST, result.code)
         return packet
         
-    # -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
     def test04_cashQuery(self):
         d = self.test01_cashIn()
 
@@ -330,27 +349,79 @@ class PokerCashierTestCase(unittest.TestCase):
         d = defer.DeferredList((d1, d2), fireOnOneErrback = True)
         return d
 
-# -----------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------
+    def test04_cashInMany(self):
+        self.value = 100
+        self.url = 'http://fake'
+
+        dlist = []
+        for serial in self.users_serial:
+            note = self.cashier.currency_client._buildNote(self.url, self.value)
+            packet = PacketPokerCashIn(serial = serial,
+                                       url = note[0],
+                                       bserial = note[1],
+                                       name = note[2],
+                                       value = note[3])
+            dlist.append(self.cashier.cashIn(packet))
+
+        d = defer.DeferredList(dlist, fireOnOneErrback = True)
+        d.addCallback(lambda result: self.check04_cashInMany())
+        return d
+
+    def check04_cashInMany(self):
+        cursor = self.db.cursor(DictCursor)
+
+        #
+        # Only one currency for all buyIn
+        #
+        cursor.execute("SELECT url, serial FROM currencies")
+        self.assertEquals(1, cursor.rowcount)
+        currency_row = cursor.fetchone()
+        #
+        # With a single currency note with an amount == <value> * 2
+        #
+        cursor.execute("SELECT currency_serial, name, serial, value FROM safe")
+        self.assertEquals(1, cursor.rowcount)
+        safe_row = cursor.fetchone()
+        self.assertEquals(currency_row['serial'], safe_row['currency_serial'])
+        count = len(self.users_serial)
+        self.assertEquals(count * 2 + 1, safe_row['serial'])
+        self.assertEquals(self.value * count, safe_row['value'])
+        #
+        # Credited to the user N
+        #
+        for serial in self.users_serial:
+            cursor.execute("SELECT currency_serial, user_serial, amount FROM user2money WHERE user_serial = " + str(serial))
+            self.assertEquals(1, cursor.rowcount)
+            user2money_row = cursor.fetchone()
+            self.assertEquals(currency_row['serial'], user2money_row['currency_serial'])
+            self.assertEquals(serial, user2money_row['user_serial'])
+            self.assertEquals(self.value, user2money_row['amount'])
+
+        cursor.close()
+
+
+# --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
     suite.addTest(unittest.makeSuite(PokerCashierTestCase))
     return suite
 
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
 
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03_cashOut_fail"
+    loader.methodPrefix = "test04"
     suite = loader.loadClass(PokerCashierTestCase)
-    return runner.TrialRunner(reporter.TextReporter,
+    return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
 
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
