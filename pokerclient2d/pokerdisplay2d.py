@@ -165,7 +165,7 @@ class PokerTable2D:
 
     def reset(self):
         self.serial2player = {}
-        fixed = self.glade.get_widget("game_fixed")
+        fixed = self.glade.get_widget("game_window_fixed")
         for widget in fixed.get_children():
             if widget.get_name() != "switch":
                 widget.hide()
