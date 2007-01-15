@@ -35,9 +35,24 @@ style "call_style_font" = "call_style"
   fg[NORMAL] = "#ffffff"
 }
 
+style "raise_range_style_font" = "raise_range_style"
+{
+  font_name="FreeSans Bold 7"
+  fg[NORMAL] = "#ffffff"
+  engine "pixmap"
+  {
+     image
+     {
+	 function = SLIDER
+	 file = "raise_slider.png"
+     }
+  }
+}
+
 widget "*game_window*bet_seat*" style "bet_seat_style_font"
 widget "*game_window*pot*" style "pot_style_font"
 widget "*game_window*raise*" style "raise_style_font"
 widget "*game_window*check*" style "check_style_font"
 widget "*game_window*fold*" style "fold_style_font"
 widget "*game_window*call*" style "call_style_font"
+widget "*game_window*raise_range" style "raise_range_style_font"

@@ -81,6 +81,7 @@ class GameWindowGlade:
             y = fixed.child_get_property(button, 'y')
             fixed.remove(button)
             fixed.put(table_status, x, y)
+            return table_status
         button2textview(self.glade.get_widget("table_status"))
 	accelerators = ("raise_increase",
                         "raise_decrease",
@@ -99,10 +100,11 @@ class GameWindowGlade:
             self.widgets[hscale.get_name()] = hscale
             x = fixed.child_get_property(button, 'x')
             y = fixed.child_get_property(button, 'y')
-            hscale.set_size_request(*button.size_request())
             fixed.remove(button)
+            hscale.set_size_request(*button.get_size_request())
             fixed.put(hscale, x, y)
-        button2hscale(self.glade.get_widget("raise_range"))
+            return hscale
+        hscale = button2hscale(self.glade.get_widget("raise_range"))
         names = map(lambda seat: self.glade.get_widget("name_seat%d" % seat), xrange(10))
         def button2label(button):
             label = gtk.Label()
@@ -112,6 +114,7 @@ class GameWindowGlade:
             y = fixed.child_get_property(button, 'y')
             fixed.remove(button)
             fixed.put(label, x, y)
+            return label
         map(button2label, names)
         moneys = map(lambda seat: self.glade.get_widget("money_seat%d" % seat), xrange(10))
         map(button2label, moneys)
@@ -126,6 +129,7 @@ class GameWindowGlade:
             y = fixed.child_get_property(button, 'y')
             fixed.remove(button)
             fixed.put(toggle, x, y)
+            return toggle
         map(button2toggle, actions)
         self.glade.get_widget("game_window_fixed").show_all()
             
