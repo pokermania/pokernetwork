@@ -1,6 +1,92 @@
-2007-01-11  Loic Dachary  <loic@dachary.org>
+2007-01-15  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.34
+
+	* tests/test-pokercashier.py.in:
+	test multiple simultaneous cashin operations
+
+	* pokernetwork/pokerservice.py:
+	don't bother to update the database for freerolls with no prize pool (used for test purposes)
+
+	* pokernetwork/pokerlock.py:
+	cover all error cases and improve verbosity
+
+	* pokerclient2d/poker2d.xml.in, examples/poker.server-monotone.xml, examples/poker.server.xml:
+	version bump
+
+	* examples/poker.bot.xml:
+	connect 2 bots to regular tournament (won't last more than two minutes)
+
+	* database/schema.sql.in:
+	create a short lived regular tournament instead of long lived bugous ones
+
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in, conf/poker.server.xml.in:
+	version bump
+
+2007-01-15  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/interface/gtkrc, pokerclient2d/data/interface/raise_slider_dock.png, pokerclient2d/gamewindow.py:
+	new slider skin
+
+	* pokerclient2d/data/interface/mockup.svg: fixed pot position
+
+2007-01-15  griim  <griim@mekensleep.com>
+
+	* po/fr.po: updated
+
+2007-01-15  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/interface/gtkrc:
+	removed game_window_fixed from path
+
+	* pokerclient2d/pokeranimation2d.py:
+	fixed widget name in pokeranimation
+
+	* tests/test-pokerdisplay2d.py.in: added test for pokeranimation
+
+	* pokerclient2d/data/interface/gtkrc: game_fixed -> game_window_fixed
+
+	* pokerclient2d/gamewindow.py: dont' remove sit_seat
+
+2007-01-15  Loic Dachary  <loic@dachary.org>
+
+	* pokerclient2d/poker2d-test.xml, pokerclient2d/client.xml:
+	version bump
+
+2007-01-15  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/gamewindow.py: card_seat to sit_seat
+
+	* pokerclient2d/pokerdisplay2d.py: game_fixed to game_window_fixed
+
+2007-01-15  griim  <griim@mekensleep.com>
+
+	* pokerui/pokerrenderer.py: (fixed typo)
+
+	* pokerui/pokerrenderer.py: Poker Hand at showdown is now translatable
+
+	* tests/test-pokerrenderer.py.in: added test for _handleConnection
+
+2007-01-13  griim  <griim@mekensleep.com>
+
+	* po/POTFILES.in, po/fr.po, po/raw.string:
+	This file contains text to translate not located into the source code
+
+2007-01-12  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/svg2gtk.py:
+	refactored SVG2Glade and SVG2Rc to use sequence type instead of concatening string on the fly
+
+	* pokerclient2d/data/svg2gtk.py: removed ContentHandler base class
+
+2007-01-12  griim  <griim@mekensleep.com>
+
+	* po/fr.po: fixed "sit out next turn" translation length
+
+2007-01-12  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/interface/mockup.svg, pokerclient2d/data/svg2gtk.py, pokerclient2d/gamewindow.py, tests/test-gamewindow.py.in, tests/test-svg2gtk.py.in:
+	rename game_fixed to game_window_fixed
 
 2007-01-11  Johan Euphrosine  <proppy@aminche.com>
 
