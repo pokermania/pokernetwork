@@ -332,7 +332,7 @@ class PokerAnimationTable2D(PokerAnimationTable):
         PokerAnimationTable.__init__(self, *args, **kwargs)
         self.PokerAnimationPlayerType = PokerAnimationPlayer2D
         renderer = self.scheduler.animation_renderer
-        self.screen = renderer.get_widget("game_fixed")
+        self.screen = renderer.get_widget("game_window_fixed")
         self.widget_pots = []
         for pot in map(lambda x: renderer.get_widget("pot%d" % x), xrange(9)):
             self.widget_pots.append((pot, self.screen.child_get_property(pot, "x"), self.screen.child_get_property(pot, "y")))
