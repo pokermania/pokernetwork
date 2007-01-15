@@ -47,6 +47,7 @@ class PokerLock(threading.Thread):
         self.q = Queue.Queue()
         self.lock = threading.Lock()
         self.db = None
+        self.running = True
         self.connect(parameters)
         threading.Thread.__init__(self, target = self.main)
     
@@ -59,32 +60,51 @@ class PokerLock(threading.Thread):
             self.db.close()
             self.db = None
         
+    def stopping(self):
+        if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") stopping"
+        self.running = False
+
     def main(self):
-        while 1:
-            if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") loop"
-            try:
-                ( name, function, timeout, deferred ) = self.q.get(timeout = PokerLock.queue_timeout)
-            except Queue.Empty:
-                #
-                # When timeout, silently terminate the thread
-                #
-                print "PokerLock::(" + str(thread.get_ident()) + ") timeout"
-                break
+        try:
+            reactor.addSystemEventTrigger('during', 'shutdown', self.stopping)
+            while 1:
+                if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") loop"
+                if not self.running and self.q.empty():
+                    print "PokerLock::(" + str(thread.get_ident()) + ") stopped"
+                    break
 
-            if not name:
-                #
-                # Stop the thread
-                #
-                break
+                try:
+                    ( name, function, timeout, deferred ) = self.q.get(timeout = PokerLock.queue_timeout)
+                except Queue.Empty:
+                    #
+                    # When timeout, silently terminate the thread
+                    #
+                    print "PokerLock::(" + str(thread.get_ident()) + ") timeout"
+                    break
+                except:
+                    raise
 
-            try:
-                function(name, timeout)
-                reactor.callFromThread(deferred.callback, name)
-            except:
-                self.lock.release()
-                reactor.callFromThread(deferred.errback, failure.Failure())
-        self.db.close()
-        self.db = None
+                if not name:
+                    #
+                    # Stop the thread
+                    #
+                    break
+
+                try:
+                    function(name, timeout)
+                    if self.running:
+                        reactor.callFromThread(deferred.callback, name)
+                    else:
+                        self.lock.release()
+                except:
+                    print "PokerLock::(" + str(thread.get_ident()) + ") exception in function"
+                    self.lock.release()
+                    reactor.callFromThread(deferred.errback, failure.Failure())
+            self.db.close()
+            self.db = None
+        except:
+            if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") exception"
+            raise
 
     def connect(self, parameters):
         self.db = MySQLdb.connect(host = parameters["host"],
@@ -107,6 +127,7 @@ class PokerLock(threading.Thread):
                 break
             tick -= 1
             if tick <= 0:
+                if self.verbose > 2: print "PokerLock::__acquire(%s) TIMED OUT" % str(thread.get_ident())
                 raise Exception(PokerLock.TIMED_OUT, name)
             if self.verbose > 2: print "PokerLock::__acquire(%s) sleep 1" % str(thread.get_ident())
             time.sleep(1)
