@@ -1,6 +1,10 @@
-2007-01-15  Loic Dachary  <loic@dachary.org>
+2007-01-16  Cedric Pinson  <cpinson@freesheep.org>
 
         * Release 1.0.34
+
+	* Update gentoo package
+
+2007-01-15  Loic Dachary  <loic@dachary.org>
 
 	* tests/test-pokercashier.py.in:
 	test multiple simultaneous cashin operations
