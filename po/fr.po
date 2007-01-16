@@ -658,7 +658,7 @@ msgstr "Le jeu doit être redémarer pour que les modifications prennent effet\n
 
 #: pokerui/pokerrenderer.py:1656
 msgid "Do you want to restart the game now ?"
-msgstr "Voulez-vous redémarré maintenant ?"
+msgstr "Voulez-vous redémarrer maintenant ?"
 
 #: pokerui/pokerrenderer.py:1953
 msgid "Your hand history is empty"
@@ -804,315 +804,315 @@ msgstr "Paire de 2"
 
 #: po/raw.string:32
 msgid "Pairs of Aces and Kings"
-msgstr "Double paire As / Rois"
+msgstr "Double paire As et Rois"
 
 #: po/raw.string:33
 msgid "Pairs of Aces and Queens"
-msgstr "Double paire As / Reines"
+msgstr "Double paire As et Reines"
 
 #: po/raw.string:34
 msgid "Pairs of Aces and Jacks"
-msgstr "Double paire As / Valets"
+msgstr "Double paire As et Valets"
 
 #: po/raw.string:35
 msgid "Pairs of Aces and Tens"
-msgstr "Double paire As / 10"
+msgstr "Double paire As et 10"
 
 #: po/raw.string:36
 msgid "Pairs of Aces and Nines"
-msgstr "Double paire As / 9"
+msgstr "Double paire As et 9"
 
 #: po/raw.string:37
 msgid "Pairs of Aces and Eights"
-msgstr "Double paire As / 8"
+msgstr "Double paire As et 8"
 
 #: po/raw.string:38
 msgid "Pairs of Aces and Sevens"
-msgstr "Double paire As / 7"
+msgstr "Double paire As et 7"
 
 #: po/raw.string:39
 msgid "Pairs of Aces and Sixes"
-msgstr "Double paire As / 6"
+msgstr "Double paire As et 6"
 
 #: po/raw.string:40
 msgid "Pairs of Aces and Fives"
-msgstr "Double paire As / 5"
+msgstr "Double paire As et 5"
 
 #: po/raw.string:41
 msgid "Pairs of Aces and Fours"
-msgstr "Double paire As / 4"
+msgstr "Double paire As et 4"
 
 #: po/raw.string:42
 msgid "Pairs of Aces and Treys"
-msgstr "Double paire As / 3"
+msgstr "Double paire As et 3"
 
 #: po/raw.string:43
 msgid "Pairs of Aces and Deuces"
-msgstr "Double paire As / 2"
+msgstr "Double paire As et 2"
 
 #: po/raw.string:44
 msgid "Pairs of Kings and Queens"
-msgstr "Double paire Rois / Reines"
+msgstr "Double paire Rois et Reines"
 
 #: po/raw.string:45
 msgid "Pairs of Kings and Jacks"
-msgstr "Double paire Rois / Valets"
+msgstr "Double paire Rois et Valets"
 
 #: po/raw.string:46
 msgid "Pairs of Kings and Tens"
-msgstr "Double paire Rois / 10"
+msgstr "Double paire Rois et 10"
 
 #: po/raw.string:47
 msgid "Pairs of Kings and Nines"
-msgstr "Double paire Rois / 9"
+msgstr "Double paire Rois et 9"
 
 #: po/raw.string:48
 msgid "Pairs of Kings and Eights"
-msgstr "Double paire Rois / 8"
+msgstr "Double paire Rois et 8"
 
 #: po/raw.string:49
 msgid "Pairs of Kings and Sevens"
-msgstr "Double paire Rois / 7"
+msgstr "Double paire Rois et 7"
 
 #: po/raw.string:50
 msgid "Pairs of Kings and Sixes"
-msgstr "Double paire Rois / 6"
+msgstr "Double paire Rois et 6"
 
 #: po/raw.string:51
 msgid "Pairs of Kings and Fives"
-msgstr "Double paire Rois / 5"
+msgstr "Double paire Rois et 5"
 
 #: po/raw.string:52
 msgid "Pairs of Kings and Fours"
-msgstr "Double paire Rois / 4"
+msgstr "Double paire Rois et 4"
 
 #: po/raw.string:53
 msgid "Pairs of Kings and Treys"
-msgstr "Double paire Rois / 3"
+msgstr "Double paire Rois et 3"
 
 #: po/raw.string:54
 msgid "Pairs of Kings and Deuces"
-msgstr "Double paire Rois / 2"
+msgstr "Double paire Rois et 2"
 
 #: po/raw.string:55
 msgid "Pairs of Queens and Jacks"
-msgstr "Double paire Reines / Valets"
+msgstr "Double paire Reines et Valets"
 
 #: po/raw.string:56
 msgid "Pairs of Queens and Tens"
-msgstr "Double paire Reines / 10"
+msgstr "Double paire Reines et 10"
 
 #: po/raw.string:57
 msgid "Pairs of Queens and Nines"
-msgstr "Double paire Reines / 9"
+msgstr "Double paire Reines et 9"
 
 #: po/raw.string:58
 msgid "Pairs of Queens and Eights"
-msgstr "Double paire Reines / 8"
+msgstr "Double paire Reines et 8"
 
 #: po/raw.string:59
 msgid "Pairs of Queens and Sevens"
-msgstr "Double paire Reines / 7"
+msgstr "Double paire Reines et 7"
 
 #: po/raw.string:60
 msgid "Pairs of Queens and Sixes"
-msgstr "Double paire Reines / 6"
+msgstr "Double paire Reines et 6"
 
 #: po/raw.string:61
 msgid "Pairs of Queens and Fives"
-msgstr "Double paire Reines / 5"
+msgstr "Double paire Reines et 5"
 
 #: po/raw.string:62
 msgid "Pairs of Queens and Fours"
-msgstr "Double paire Reines / 4"
+msgstr "Double paire Reines et 4"
 
 #: po/raw.string:63
 msgid "Pairs of Queens and Treys"
-msgstr "Double paire Reines / 3"
+msgstr "Double paire Reines et 3"
 
 #: po/raw.string:64
 msgid "Pairs of Queens and Deuces"
-msgstr "Double paire Reines / 2"
+msgstr "Double paire Reines et 2"
 
 #: po/raw.string:65
 msgid "Pairs of Jacks and Tens"
-msgstr "Double paire Valets / 10"
+msgstr "Double paire Valets et 10"
 
 #: po/raw.string:66
 msgid "Pairs of Jacks and Nines"
-msgstr "Double paire Valets / 9"
+msgstr "Double paire Valets et 9"
 
 #: po/raw.string:67
 msgid "Pairs of Jacks and Eights"
-msgstr "Double paire Valets / 8"
+msgstr "Double paire Valets et 8"
 
 #: po/raw.string:68
 msgid "Pairs of Jacks and Sevens"
-msgstr "Double paire Valets / 7"
+msgstr "Double paire Valets et 7"
 
 #: po/raw.string:69
 msgid "Pairs of Jacks and Sixes"
-msgstr "Double paire Valets / 6"
+msgstr "Double paire Valets et 6"
 
 #: po/raw.string:70
 msgid "Pairs of Jacks and Fives"
-msgstr "Double paire Valets / 5"
+msgstr "Double paire Valets et 5"
 
 #: po/raw.string:71
 msgid "Pairs of Jacks and Fours"
-msgstr "Double paire Valets / 4"
+msgstr "Double paire Valets et 4"
 
 #: po/raw.string:72
 msgid "Pairs of Jacks and Treys"
-msgstr "Double paire Valets / 3"
+msgstr "Double paire Valets et 3"
 
 #: po/raw.string:73
 msgid "Pairs of Jacks and Deuces"
-msgstr "Double paire Valets / 2"
+msgstr "Double paire Valets et 2"
 
 #: po/raw.string:74
 msgid "Pairs of Tens and Nines"
-msgstr "Double paire 10 / 9"
+msgstr "Double paire 10 et 9"
 
 #: po/raw.string:75
 msgid "Pairs of Tens and Eights"
-msgstr "Double paire 10 / 8"
+msgstr "Double paire 10 et 8"
 
 #: po/raw.string:76
 msgid "Pairs of Tens and Sevens"
-msgstr "Double paire 10 / 7"
+msgstr "Double paire 10 et 7"
 
 #: po/raw.string:77
 msgid "Pairs of Tens and Sixes"
-msgstr "Double paire 10 / 6"
+msgstr "Double paire 10 et 6"
 
 #: po/raw.string:78
 msgid "Pairs of Tens and Fives"
-msgstr "Double paire 10 / 5"
+msgstr "Double paire 10 et 5"
 
 #: po/raw.string:79
 msgid "Pairs of Tens and Fours"
-msgstr "Double paire 10 / 4"
+msgstr "Double paire 10 et 4"
 
 #: po/raw.string:80
 msgid "Pairs of Tens and Treys"
-msgstr "Double paire 10 / 3"
+msgstr "Double paire 10 et 3"
 
 #: po/raw.string:81
 msgid "Pairs of Tens and Deuces"
-msgstr "Double paire 10 / 2"
+msgstr "Double paire 10 et 2"
 
 #: po/raw.string:82
 msgid "Pairs of Nines and Eights"
-msgstr "Double paire 9 / 8"
+msgstr "Double paire 9 et 8"
 
 #: po/raw.string:83
 msgid "Pairs of Nines and Sevens"
-msgstr "Double paire 9 / 7"
+msgstr "Double paire 9 et 7"
 
 #: po/raw.string:84
 msgid "Pairs of Nines and Sixes"
-msgstr "Double paire 9 / 6"
+msgstr "Double paire 9 et 6"
 
 #: po/raw.string:85
 msgid "Pairs of Nines and Fives"
-msgstr "Double paire 9 / 5"
+msgstr "Double paire 9 et 5"
 
 #: po/raw.string:86
 msgid "Pairs of Nines and Fours"
-msgstr "Double paire 9 / 4"
+msgstr "Double paire 9 et 4"
 
 #: po/raw.string:87
 msgid "Pairs of Nines and Treys"
-msgstr "Double paire 9 / 3"
+msgstr "Double paire 9 et 3" 
 
 #: po/raw.string:88
 msgid "Pairs of Nines and Deuces"
-msgstr "Double paire 9 / 2"
+msgstr "Double paire 9 et 2"
 
 #: po/raw.string:89
 msgid "Pairs of Eights and Sevens"
-msgstr "Double paire 9 / 7"
+msgstr "Double paire 9 et 7"
 
 #: po/raw.string:90
 msgid "Pairs of Eights and Sixes"
-msgstr "Double paire 9 / 6"
+msgstr "Double paire 9 et 6"
 
 #: po/raw.string:91
 msgid "Pairs of Eights and Fives"
-msgstr "Double paire 9 / 5"
+msgstr "Double paire 9 et 5"
 
 #: po/raw.string:92
 msgid "Pairs of Eights and Fours"
-msgstr "Double paire 9 / 4"
+msgstr "Double paire 9 et 4"
 
 #: po/raw.string:93
 msgid "Pairs of Eights and Treys"
-msgstr "Double paire 9 / 3"
+msgstr "Double paire 9 et 3"
 
 #: po/raw.string:94
 msgid "Pairs of Eights and Deuces"
-msgstr "Double paire 9 / 2"
+msgstr "Double paire 9 et 2"
 
 #: po/raw.string:95
 msgid "Pairs of Sevens and Sixes"
-msgstr "Double paire 7 / 6"
+msgstr "Double paire 7 et 6"
 
 #: po/raw.string:96
 msgid "Pairs of Sevens and Fives"
-msgstr "Double paire 7 / 5"
+msgstr "Double paire 7 et 5"
 
 #: po/raw.string:97
 msgid "Pairs of Sevens and Fours"
-msgstr "Double paire 7 / 4"
+msgstr "Double paire 7 et 4"
 
 #: po/raw.string:98
 msgid "Pairs of Sevens and Treys"
-msgstr "Double paire 7 / 3"
+msgstr "Double paire 7 et 3"
 
 #: po/raw.string:99
 msgid "Pairs of Sevens and Deuces"
-msgstr "Double paire 7 / 2"
+msgstr "Double paire 7 et 2"
 
 #: po/raw.string:100
 msgid "Pairs of Sixes and Fives"
-msgstr "Double paire 6 / 5"
+msgstr "Double paire 6 et 5"
 
 #: po/raw.string:101
 msgid "Pairs of Sixes and Fours"
-msgstr "Double paire 6 / 4"
+msgstr "Double paire 6 et 4"
 
 #: po/raw.string:102
 msgid "Pairs of Sixes and Treys"
-msgstr "Double paire 6 / 3"
+msgstr "Double paire 6 et 3"
 
 #: po/raw.string:103
 msgid "Pairs of Sixes and Deuces"
-msgstr "Double paire 6 / 2"
+msgstr "Double paire 6 et 2"
 
 #: po/raw.string:104
 msgid "Pairs of Fives and Fours"
-msgstr "Double paire 5 / 4"
+msgstr "Double paire 5 et 4"
 
 #: po/raw.string:105
 msgid "Pairs of Fives and Treys"
-msgstr "Double paire 5 / 3"
+msgstr "Double paire 5 et 3"
 
 #: po/raw.string:106
 msgid "Pairs of Fives and Deuces"
-msgstr "Double paire 5 / 2"
+msgstr "Double paire 5 et 2"
 
 #: po/raw.string:107
 msgid "Pairs of Fours and Treys"
-msgstr "Double paire 4 / 3"
+msgstr "Double paire 4 et 3"
 
 #: po/raw.string:108
 msgid "Pairs of Fours and Deuces"
-msgstr "Double paire 4 / 2"
+msgstr "Double paire 4 et 2"
 
 #: po/raw.string:109
 msgid "Pairs of Treys and Deuces"
-msgstr "Double paire 3 / 2"
+msgstr "Double paire 3 et 2"
 
 #: po/raw.string:110
 msgid "Trips Aces"
@@ -1192,15 +1192,15 @@ msgstr "Suite, 9 haut"
 
 #: po/raw.string:129
 msgid "Straight Eight high"
-msgstr "Suite, 8haut"
+msgstr "Suite, 8 haut"
 
 #: po/raw.string:130
 msgid "Straight Seven high"
-msgstr "Suite, 7haut"
+msgstr "Suite, 7 haut"
 
 #: po/raw.string:131
 msgid "Straight Six high"
-msgstr "Suite, 6haut"
+msgstr "Suite, 6 haut"
 
 #: po/raw.string:132
 msgid "Straight Five high"
