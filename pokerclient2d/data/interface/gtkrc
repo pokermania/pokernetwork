@@ -55,6 +55,19 @@ style "chat_history_window_style_font"
   base[NORMAL] = "#000000"
 }
 
+style "sit_seat_style_prelight" = "sit_seat0_style"
+{
+    engine "pixmap"
+    {
+	image
+	{
+	    state = PRELIGHT
+	    function = BOX
+	    file = "player_active.png"
+	}
+    }
+}
+
 widget "*game_window*bet_seat*" style "bet_seat_style_font"
 widget "*game_window*pot*" style "pot_style_font"
 widget "*game_window*raise*" style "raise_style_font"
@@ -63,3 +76,4 @@ widget "*game_window*fold*" style "fold_style_font"
 widget "*game_window*call*" style "call_style_font"
 widget "*game_window*raise_range" style "raise_range_style_font"
 widget "*chat_history*" style "chat_history_window_style_font"
+widget "*game_window*sit_seat*" style "sit_seat_style_prelight"
