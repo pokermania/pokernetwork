@@ -604,16 +604,6 @@ class PokerTable:
 
         return new_history
 
-    def syncChat(self):
-        (subject, messages) = history2messages(self.game, self.game.historyGet()[self.history_index:], serial2name = self.getName)
-        if messages or subject:
-            if self.factory.chat:
-                if messages:
-                    message = "".join(map(lambda line: "Dealer: " + line + "\n", messages))
-                    self.broadcast(PacketPokerChat(game_id = self.game.id,
-                                                   serial = 0,
-                                                   message = message))
-
     def delayedActions(self):
         game = self.game
         for event in game.historyGet()[self.history_index:]:
@@ -796,7 +786,6 @@ class PokerTable:
         self.updateTimers(history_tail)        
         packets = self.history2packets(history_tail, game.id, self.cache);
         self.syncDatabase()
-        self.syncChat()
         self.delayedActions()
         if len(packets) > 0:
             self.broadcast(packets)

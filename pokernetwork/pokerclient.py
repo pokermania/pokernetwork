@@ -35,7 +35,7 @@ import platform
 from twisted.internet import reactor, defer
 
 from pokereval import PokerEval
-from pokerengine.pokergame import PokerGameClient, PokerPlayer
+from pokerengine.pokergame import PokerGameClient, PokerPlayer, history2messages
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 
@@ -699,6 +699,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 new_game.registerCallback(self.gameEvent)
                 new_game.level_skin = packet.skin
                 new_game.currency_serial = packet.currency_serial
+                new_game.history_index = 0
                 self.setCurrentGameId(new_game.id)
                 self.updatePotsChips(new_game, [])
                 self.position_info[new_game.id] = [ 0, 0 ]
@@ -745,6 +746,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 elif game.isRunning():
                     raise UserWarning, "you should not be here (state: %s)" % game.state
                 else:
+                    game.history_index = 0
                     game.setTime(packet.time)
                     game.setHandsCount(packet.hands_count)
                     game.setLevel(packet.level)
@@ -1041,6 +1043,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
             ( serial_in_position, position_is_obsolete ) = self.position_info[game.id]
             if game.isRunning():
+                #
+                # Build position related packets
+                #
                 position_changed = serial_in_position != game.getSerialInPosition()
                 if position_is_obsolete or position_changed:
                     self_was_in_position = self.getSerial() != 0 and serial_in_position == self.getSerial()
@@ -1064,7 +1069,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                         if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
                             forward_packets.append(PacketPokerSelfLostPosition(game_id = game.id,
                                                                                serial = self.getSerial()))
-
             else:
                 if serial_in_position > 0:
                     if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
@@ -1073,10 +1077,31 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     serial_in_position = 0
             position_is_obsolete = False
             self.position_info[game.id] = [ serial_in_position, position_is_obsolete ]
+            #
+            # Build dealer messages
+            # Skip state = end because information is missing and will be received by the next packet (WIN)
+            #
+            if not ( packet.type == PACKET_POKER_STATE and packet.string == "end" ):
+                (subject, messages) = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
+                if messages or subject:
+                    if messages:
+                        message = "".join(map(lambda line: "Dealer: " + line + "\n", messages))
+                        forward_packets.append(PacketPokerChat(game_id = game.id,
+                                                               message = message))
+                game.history_index = len(game.historyGet())
 
         for forward_packet in forward_packets:
             self.schedulePacket(forward_packet)
         self.forward_packets = None
+
+    def serial2name(self, game, serial):
+        player = game.getPlayer(serial)
+        if player:
+            return player.name
+        else:
+            if self.factory.verbose >= 0:
+                self.error("no player found for serial %d in game %d" % ( serial, game.id ))
+            return "<unknown>"
 
     def moveBet2Pot(self, game):
         packets = []
@@ -1401,8 +1426,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def packet2front(self, packet):
         if ( hasattr(packet, "game_id") and
              self.getGame(packet.game_id) ):
-            if ( packet.type == PACKET_POKER_CHAT and
-                 not match("^Dealer:", packet.message) ):
+            if ( packet.type == PACKET_POKER_CHAT ):
                 return True
 
             elif packet.type == PACKET_POKER_MESSAGE:
