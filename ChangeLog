@@ -1,6 +1,28 @@
-2007-01-16  Cedric Pinson  <cpinson@freesheep.org>
+2007-01-18  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.34
+
+	* pokernetwork/pokertable.py, pokernetwork/pokerclient.py:
+	client generates messages and does not depend on server
+
+2007-01-16  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/data/interface/gtkrc: feedback on sit_seat_mouse_hover
+
+	* pokerclient2d/data/interface/gtkrc: chat_background in black
+
+2007-01-16  Cedric Pinson  <cpinson@freesheep.org>
+
+	* ChangeLog, gentoo/dev-games/poker-network/poker-network-1.0.34-r1.ebuild:
+	Update gentoo package
+
+2007-01-16  griim  <griim@mekensleep.com>
+
+	* po/fr.po: fixed some translation
+
+	* Makefile.am: added raw.string to extra dist
+
+2007-01-16  Cedric Pinson  <cpinson@freesheep.org>
 
 	* Update gentoo package
 
