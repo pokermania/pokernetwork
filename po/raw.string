@@ -461,3 +461,72 @@ gettext("Quads Deuces, Trey kicker")
 gettext("Royal flush")
 gettext("Straight flush")
 
+// Outfit manager
+
+gettext("head")
+gettext("hair")
+gettext("beard")
+gettext("torso")
+gettext("legs")
+gettext("dress")
+gettext("feet")
+gettext("accessory1")
+gettext("accessory2")
+gettext("accessory3")
+
+gettext("Base color")
+gettext("Skin color")
+gettext("Eyes color")
+gettext("Hair color")
+gettext("Sunshade color")
+gettext("Jacket color")
+gettext("Shirt color")
+gettext("Shirt detail color #1")
+gettext("Shirt detail color #2")
+gettext("Shirt sleeves color")
+gettext("Shirt base color")
+gettext("Skin color")
+gettext("Glasses color")
+gettext("Mount color")
+gettext("Pants color")
+gettext("Pull color")
+gettext("Pullover color")
+gettext("Shirt color")
+gettext("Shoes color")
+gettext("Nails color")
+gettext("Lips color")
+gettext("Eyes makup color")
+gettext("Skirt color")
+gettext("Clip color")
+gettext("Beltclip color")
+gettext("Pants base color")
+gettext("Pants strips color")
+gettext("Squares color")
+gettext("Fur color")
+gettext("Dress color")
+gettext("Pattern color")
+gettext("Flowers color")
+gettext("Belt color")
+gettext("Cap color")
+gettext("Hat color")
+gettext("Band color")
+gettext("Tie color")
+
+// Help
+
+gettext("Clicking on the door will\nallow you to leave the table\nand return to the Lobby.")
+
+gettext("Clicking on the arrow will\nallow you to sit down.")
+
+gettext("Clicking on this button will\nmake you fold your cards.\nYou may select the fold\nbutton ahead of your turn and\nit will be activated in turn.\nAs long as you are ahead of\nyour turn, you can change\nyour mind and perform any\nother action.\nHowever if it's already\nyour turn to play, you will\nfold as soon as you click\non this button.")
+
+gettext("Clicking on this button will\nmake you check to the\nnext player.\nYou may select the check\nbutton ahead of your turn and\nit will be activated in turn.\nAs long as you are ahead of\nyour turn, you can change\nyour mind and perform any\nother action.\nHowever if it's already\nyour turn to play, you will\ncheck as soon as you click\non this button.")
+
+gettext("Clicking on this button will\nmake you call to the\nnext player.\nYou may select the call\nbutton ahead of your turn and\nit will be activated in turn.\nAs long as you are ahead of\nyour turn, you can change\nyour mind and perform any\nother action.\nHowever if it's already\nyour turn to play, you will\ncall as soon as you click\non this button.")
+
+gettext("Clicking on this button will\nmake you raise to the\nnext player.\nYou may select the raise\nbutton ahead of your turn and\nit will be activated in turn.\nAs long as you are ahead of\nyour turn, you can change\nyour mind and perform any\nother action.\nHowever if it's already\nyour turn to play, you will\nraise as soon as you click\non this button.")
+
+gettext("Clicking on your cards will\nshow you the value of the\ncards you have been dealt.\nClicking once will move\nthe camera in order to give\nyou a better view of your\ncards.\nTo move the camera back\nto a bird's view of the\ntable click anywhere on\nthe table.\nAlternatively, you can\nclick and hold on the cards\nuntil the camera moves in\nthen release the button\nto move out.")
+
+gettext("Clicking on your cards will\nshow you the value of the\ncards you have been dealt.\nClicking once will move\nthe camera in order to give\nyou a better view of your\ncards.\nTo move the camera back\nto a bird's view of the\ntable click anywhere on\nthe table.\nAlternatively, you can\nclick and hold on the cards\nuntil the camera moves in\nthen release the button\nto move out.")
+
