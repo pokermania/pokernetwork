@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-01-13 23:45+0100\n"
+"POT-Creation-Date: 2007-01-18 12:53+0100\n"
 "PO-Revision-Date: 2007-01-13 23:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -48,7 +48,7 @@ msgstr "Créer un compte"
 
 #: pokerclient2d/data/interface/interface.glade:441
 msgid "auto post blinds"
-msgstr "Blind automatique"
+msgstr "blind automatique"
 
 #: pokerclient2d/data/interface/interface.glade:461
 msgid "sit out next hand"
@@ -458,48 +458,48 @@ msgstr "Le Check est gratuit. Que voulez-vous faire ?"
 msgid "Credits for poker-network"
 msgstr ""
 
-#: pokerclient2d/lobby.c:317
+#: pokerclient2d/lobby.c:324
 msgid "My"
 msgstr " "
 
-#: pokerclient2d/lobby.c:352
+#: pokerclient2d/lobby.c:359
 msgid "Name"
 msgstr "Nom"
 
-#: pokerclient2d/lobby.c:354
+#: pokerclient2d/lobby.c:361
 msgid "Structure"
 msgstr "Structure"
 
-#: pokerclient2d/lobby.c:356
+#: pokerclient2d/lobby.c:363
 msgid "Seats"
 msgstr "Places"
 
-#: pokerclient2d/lobby.c:358
+#: pokerclient2d/lobby.c:365
 msgid "Avg.pot"
 msgstr "Moy.Pot"
 
-#: pokerclient2d/lobby.c:360
+#: pokerclient2d/lobby.c:367
 msgid "Hands/h"
 msgstr "Mains/H"
 
-#: pokerclient2d/lobby.c:362
+#: pokerclient2d/lobby.c:369
 msgid "Flop%"
 msgstr "%Flop"
 
-#: pokerclient2d/lobby.c:364
+#: pokerclient2d/lobby.c:371
 msgid "Playing"
 msgstr "Joueurs"
 
-#: pokerclient2d/lobby.c:390 pokerclient2d/tournaments.c:296
+#: pokerclient2d/lobby.c:397 pokerclient2d/tournaments.c:296
 #: pokerclient2d/tournaments.c:341 pokerclient2d/tournaments.c:366
 msgid "Players"
 msgstr "Joueurs"
 
-#: pokerclient2d/lobby.c:398
+#: pokerclient2d/lobby.c:405
 msgid "Chips"
 msgstr "Jetons"
 
-#: pokerclient2d/lobby.c:614
+#: pokerclient2d/lobby.c:621
 msgid "GO TO TABLE"
 msgstr "ALLER A LA TABLE"
 
@@ -1024,7 +1024,7 @@ msgstr "Double paire 9 et 4"
 
 #: po/raw.string:87
 msgid "Pairs of Nines and Treys"
-msgstr "Double paire 9 et 3" 
+msgstr "Double paire 9 et 3"
 
 #: po/raw.string:88
 msgid "Pairs of Nines and Deuces"
@@ -2525,3 +2525,359 @@ msgstr "Quinte flush royale"
 #: po/raw.string:462
 msgid "Straight flush"
 msgstr "Quinte flush"
+
+#: po/raw.string:466
+msgid "head"
+msgstr "Tête"
+
+#: po/raw.string:467
+msgid "hair"
+msgstr "Tête"
+
+#: po/raw.string:468
+msgid "beard"
+msgstr "Barbe"
+
+#: po/raw.string:469
+msgid "torso"
+msgstr "Torse"
+
+#: po/raw.string:470
+msgid "legs"
+msgstr "Jambes"
+
+#: po/raw.string:471
+msgid "dress"
+msgstr "Robe"
+
+#: po/raw.string:472
+msgid "feet"
+msgstr "Pied"
+
+#: po/raw.string:473
+msgid "accessory1"
+msgstr "Accessoire n°1"
+
+#: po/raw.string:474
+msgid "accessory2"
+msgstr "Accessoire n°2"
+
+#: po/raw.string:475
+msgid "accessory3"
+msgstr "Accessoire n°3"
+
+#: po/raw.string:477
+msgid "Base color"
+msgstr "Couleur"
+
+#: po/raw.string:478 po/raw.string:488
+msgid "Skin color"
+msgstr "Couleur peau"
+
+#: po/raw.string:479
+msgid "Eyes color"
+msgstr "Couleur yeux"
+
+#: po/raw.string:480
+msgid "Hair color"
+msgstr "Couleur cheveux"
+
+#: po/raw.string:481
+msgid "Sunshade color"
+msgstr "Couleur visière"
+
+#: po/raw.string:482
+msgid "Jacket color"
+msgstr "Couleur veste"
+
+#: po/raw.string:483 po/raw.string:494
+msgid "Shirt color"
+msgstr "Couleur chemise"
+
+#: po/raw.string:484
+msgid "Shirt detail color #1"
+msgstr "Couleur détail n°1"
+
+#: po/raw.string:485
+msgid "Shirt detail color #2"
+msgstr "Couleur détail n°2"
+
+#: po/raw.string:486
+msgid "Shirt sleeves color"
+msgstr "Couleur manches"
+
+#: po/raw.string:487
+msgid "Shirt base color"
+msgstr "Couleur chemise"
+
+#: po/raw.string:489
+msgid "Glasses color"
+msgstr "Couleur lunettes"
+
+#: po/raw.string:490
+msgid "Mount color"
+msgstr "Couleur montures"
+
+#: po/raw.string:491
+msgid "Pants color"
+msgstr "Couleur pantalon"
+
+#: po/raw.string:492
+msgid "Pull color"
+msgstr "Couleur pull"
+
+#: po/raw.string:493
+msgid "Pullover color"
+msgstr "Couleur pull"
+
+#: po/raw.string:495
+msgid "Shoes color"
+msgstr "Couleur chaussures"
+
+#: po/raw.string:496
+msgid "Nails color"
+msgstr "Couleur ongles"
+
+#: po/raw.string:497
+msgid "Lips color"
+msgstr "Couleur lèvres"
+
+#: po/raw.string:498
+msgid "Eyes makup color"
+msgstr "Couleur maquillage"
+
+#: po/raw.string:499
+msgid "Skirt color"
+msgstr "Couleur jupe"
+
+#: po/raw.string:500
+msgid "Clip color"
+msgstr "Couleur clip"
+
+#: po/raw.string:501
+msgid "Beltclip color"
+msgstr "Couleur clip"
+
+#: po/raw.string:502
+msgid "Pants base color"
+msgstr "Couleur base pantalon"
+
+#: po/raw.string:503
+msgid "Pants strips color"
+msgstr "Couleur bandes"
+
+#: po/raw.string:504
+msgid "Squares color"
+msgstr "Couleurs carrés"
+
+#: po/raw.string:505
+msgid "Fur color"
+msgstr "Couleur fourrure"
+
+#: po/raw.string:506
+msgid "Dress color"
+msgstr "Couleur robe"
+
+#: po/raw.string:507
+msgid "Pattern color"
+msgstr "Couleur motif"
+
+#: po/raw.string:508
+msgid "Flowers color"
+msgstr "Couleur fleurs"
+
+#: po/raw.string:509
+msgid "Belt color"
+msgstr "Couleur ceinture"
+
+#: po/raw.string:510
+msgid "Cap color"
+msgstr "Couleur casquette"
+
+#: po/raw.string:511
+msgid "Hat color"
+msgstr "Couleur chapeau"
+
+#: po/raw.string:512
+msgid "Band color"
+msgstr "Couleur bande"
+
+#: po/raw.string:513
+msgid "Tie color"
+msgstr "Couleur noeud"
+
+#: po/raw.string:517
+msgid ""
+"Clicking on the door will\n"
+"allow you to leave the table\n"
+"and return to the Lobby."
+msgstr ""
+"Cliquer sur la porte\n"
+"vous permet de retourner\n"
+"au lobby."
+
+#: po/raw.string:519
+msgid ""
+"Clicking on the arrow will\n"
+"allow you to sit down."
+msgstr ""
+"Cliquez sur la flèche\n"
+"pour vous assoir."
+
+#: po/raw.string:521
+msgid ""
+"Clicking on this button will\n"
+"make you fold your cards.\n"
+"You may select the fold\n"
+"button ahead of your turn and\n"
+"it will be activated in turn.\n"
+"As long as you are ahead of\n"
+"your turn, you can change\n"
+"your mind and perform any\n"
+"other action.\n"
+"However if it's already\n"
+"your turn to play, you will\n"
+"fold as soon as you click\n"
+"on this button."
+msgstr ""
+"Cliquez sur ce bouton pour\n"
+"coucher votre jeux.\n"
+"Vous pouvez pre-sélectionner\n"
+"cette action avant votre tour\n"
+"et elle sera activée le moment\n"
+"venu. Tant que ce n'est pas\n"
+"votre tour, vous pouvez changer\n"
+"d'avis et faire une autre action\n"
+"Cependant, si c'est à votre tour\n"
+"de jouer, alors vous coucherez\n"
+"votre jeux instantanément en\n"
+"cliquant sur ce boutton"
+
+
+#: po/raw.string:523
+msgid ""
+"Clicking on this button will\n"
+"make you check to the\n"
+"next player.\n"
+"You may select the check\n"
+"button ahead of your turn and\n"
+"it will be activated in turn.\n"
+"As long as you are ahead of\n"
+"your turn, you can change\n"
+"your mind and perform any\n"
+"other action.\n"
+"However if it's already\n"
+"your turn to play, you will\n"
+"check as soon as you click\n"
+"on this button."
+msgstr ""
+"Cliquez sur ce boutton pour\n"
+"passer la parole.\n"
+"Vous pouvez pre-sélectionner\n"
+"cette action avant votre tour\n"
+"et elle sera activée le moment\n"
+"venu. Tant que ce n'est pas\n"
+"votre tour, vous pouvez changer\n"
+"d'avis et faire un autre action\n"
+"Cependant, si c'est à votre tour\n"
+"de jouer, alors vous passerez\n"
+"la main au joueur suivant\n"
+"directement après avoir pressé\n"
+"ce boutton"
+
+#: po/raw.string:525
+msgid ""
+"Clicking on this button will\n"
+"make you call to the\n"
+"next player.\n"
+"You may select the call\n"
+"button ahead of your turn and\n"
+"it will be activated in turn.\n"
+"As long as you are ahead of\n"
+"your turn, you can change\n"
+"your mind and perform any\n"
+"other action.\n"
+"However if it's already\n"
+"your turn to play, you will\n"
+"call as soon as you click\n"
+"on this button."
+msgstr ""
+"Cliquez sur ce bouton\n"
+"pour suivre la relance du joueur\n"
+"précédent.\n"
+"Vous pouvez sélectionner cette\n"
+"action avant votre tour et elle\n"
+"sera activée le moment venu.\n"
+"Tant que ce n'est pas votre tour,\n"
+"vous pouvez changer d'avis\n"
+"et faire une autre action\n"
+"Cependant, si c'est à votre tour\n"
+"de jouer, alors vous suiverez la\n"
+"relance directement après avoir\n"
+"pressé ce bouton"
+
+#: po/raw.string:527
+msgid ""
+"Clicking on this button will\n"
+"make you raise to the\n"
+"next player.\n"
+"You may select the raise\n"
+"button ahead of your turn and\n"
+"it will be activated in turn.\n"
+"As long as you are ahead of\n"
+"your turn, you can change\n"
+"your mind and perform any\n"
+"other action.\n"
+"However if it's already\n"
+"your turn to play, you will\n"
+"raise as soon as you click\n"
+"on this button."
+msgstr ""
+"Cliquez sur ce bouton\n"
+"pour relancer la mise\n"
+"Vous pouvez sélectionner cette\n"
+"action avant votre tour et elle\n"
+"sera activée le moment venu.\n"
+"Tant que ce n'est pas votre tour,\n"
+"vous pouvez changer d'avis\n"
+"et faire une autre action\n"
+"Cependant, si c'est à votre tour\n"
+"de jouer, alors la relance sera\n"
+"prise en compte directement\n"
+"après avoir pressé ce bouton"
+
+#: po/raw.string:529 po/raw.string:531
+msgid ""
+"Clicking on your cards will\n"
+"show you the value of the\n"
+"cards you have been dealt.\n"
+"Clicking once will move\n"
+"the camera in order to give\n"
+"you a better view of your\n"
+"cards.\n"
+"To move the camera back\n"
+"to a bird's view of the\n"
+"table click anywhere on\n"
+"the table.\n"
+"Alternatively, you can\n"
+"click and hold on the cards\n"
+"until the camera moves in\n"
+"then release the button\n"
+"to move out."
+msgstr ""
+"Cliquez sur vos cartes\n"
+"afin de regarder la valeur\n"
+"des cartes qui vous ont été\n"
+"distribuée.\n"
+"Un premier clic change le point\n"
+"de vue de la caméra pour vous\n"
+"permettre de voir les cartes.\n"
+"Pour ramener la caméra dans\n"
+"sa position précédente, il\n"
+"suffit de faire un click\n"
+"n'importe où sur la table.\n"
+"Vous pouvez aussi\n"
+"garder le boutton de la sourie\n"
+"pressé sur les cartes jusqu'a\n"
+"voir leurs valeurs. Relacher pour\n"
+"revenir dans la position initiale."
