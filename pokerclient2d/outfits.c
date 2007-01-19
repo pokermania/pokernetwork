@@ -488,7 +488,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
 
           GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, "slot_label"));
           g_assert(label);
-          gtk_label_set_text(label, title);
+          gtk_label_set_text(label, gettext(title) );
 
           GtkAdjustment* adjustment = slider_slot_user_data.adjustment;
 
@@ -581,7 +581,7 @@ int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_
           sprintf(widget_name, "param%d_label", i);
           GtkLabel* label = GTK_LABEL(glade_xml_get_widget(g_glade_outfit_params_xml, widget_name));
           g_assert(label);
-          gtk_label_set_text(label, title);
+          gtk_label_set_text(label, gettext(title) );
 
           sprintf(widget_name, "param%d_slider", i);
           GtkAdjustment* adjustment = params_user_data[i].adjustment;
