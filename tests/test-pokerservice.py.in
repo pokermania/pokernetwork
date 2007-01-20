@@ -30,6 +30,7 @@ import sys, os
 sys.path.insert(0, "@srcdir@/../..")
 sys.path.insert(0, "..")
 
+from time import time
 from string import split
 import libxml2
 import random
@@ -406,7 +407,11 @@ class PokerServiceTestCase(unittest.TestCase):
         # A regular tournament starts registration now
         #
         cursor = self.db.cursor()
-        cursor.execute("UPDATE tourneys_schedule SET register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND) , start_time = UNIX_TIMESTAMP(NOW() + INTERVAL 7 SECOND ) WHERE name = 'regular1'")
+        cursor.execute("UPDATE tourneys_schedule " + 
+                       " SET register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND), " +
+                       "     start_time = UNIX_TIMESTAMP(NOW() + INTERVAL 7 SECOND ), " + 
+                       "     respawn = 'n' " + 
+                       " WHERE name = 'regular1'")
         self.assertEqual(1, cursor.rowcount)
         cursor.close()
 
@@ -516,15 +521,29 @@ class PokerServiceTestCase(unittest.TestCase):
                 self.assertEquals(prize, self.service.getMoney(self.user2_serial, 2), "bailor user2")
                 self.assertEquals(self.default_money - prize, self.service.getMoney(self.user3_serial, 2), "bailor user3")
             else:
-                self.assertEquals(self.default_money, self.service.getMoney(self.user1_serial, 1), "user1")
-                self.assertEquals(self.default_money + prize, self.service.getMoney(self.user2_serial, 1), "user2")
-                self.assertEquals(self.default_money - prize, self.service.getMoney(self.user3_serial, 1), "user3")
+                self.assertEquals(0, self.service.getMoney(self.user1_serial, 2))
+                self.assertEquals(0, self.service.getMoney(self.user2_serial, 2))
+                self.assertEquals(self.default_money, self.service.getMoney(self.user3_serial, 2))
             
         d.addCallback(checkTourneys)
         reactor.callLater(3, lambda: d.callback(True))
 
         return d
         
+    # ----------------------------------------------------------------
+    def test18_cleanupTourneys_registering(self):
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO tourneys (serial, name, start_time) VALUES (4000, 'regular3', " + str(time() + 120) + ")")
+        cursor.execute("INSERT INTO user2tourney VALUES (1, 4000, 0, -1)")
+        cursor.execute("INSERT INTO user2tourney VALUES (2, 4000, 0, -1)")
+        cursor.execute("INSERT INTO user2tourney VALUES (3, 4000, 0, -1)")
+        cursor.close()
+        self.service.db = self.db
+        self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+        self.service.cleanupTourneys()
+        tourney = self.service.tourneys[4000]
+        self.assertEqual((1, 2, 3), tourney.players)
+
 # ----------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -532,7 +551,7 @@ def GetTestedModule():
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test16"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     return runner.TrialRunner(
