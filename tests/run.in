@@ -97,6 +97,7 @@ case "$1" in
         ;;
 
 *pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py|*unittestmain) 
+        export GLADE_FILE=@top_srcdir@/pokerclient2d/data/interface/interface.glade
         FONTPATH=/usr/share/fonts/X11/misc
         INTERFACE_PORT=19579
         if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
