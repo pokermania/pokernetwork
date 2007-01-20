@@ -164,9 +164,7 @@ class PokerService(service.Service):
         self.chat = self.settings.headerGet("/server/@chat") == "yes"
         for description in self.settings.headerGetProperties("/server/table"):
             self.createTable(0, description)
-        self.tourneys = {}
-        self.schedule2tourneys = {}
-        self.tourneys_schedule = {}
+        self.cleanupTourneys()
         self.updateTourneysSchedule()
         self.messageCheck()
         self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
@@ -367,16 +365,18 @@ class PokerService(service.Service):
         if schedule['respawn'] == 'n':
             cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s" % schedule['serial'])
         cursor.close()
+        self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'])
 
-        schedule['start_time'] = int(schedule['start_time'])
-        schedule['register_time'] = int(schedule['register_time'])
-        tourney = PokerTournament(dirs = self.dirs, **schedule)
+    def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial):
+        tourney_map['start_time'] = int(tourney_map['start_time'])
+        tourney_map['register_time'] = int(tourney_map.get('register_time', 0))
+        tourney = PokerTournament(dirs = self.dirs, **tourney_map)
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
-        tourney.schedule_serial = schedule['serial']
-        tourney.currency_serial = schedule['currency_serial']
-        tourney.bailor_serial = schedule['bailor_serial']
-        tourney.player_timeout = int(schedule['player_timeout'])
+        tourney.schedule_serial = schedule_serial
+        tourney.currency_serial = tourney_map['currency_serial']
+        tourney.bailor_serial = tourney_map['bailor_serial']
+        tourney.player_timeout = int(tourney_map['player_timeout'])
         tourney.callback_new_state = self.tourneyNewState
         tourney.callback_create_game = self.tourneyCreateTable
         tourney.callback_game_filled = self.tourneyGameFilled
@@ -384,10 +384,11 @@ class PokerService(service.Service):
         tourney.callback_move_player = self.tourneyMovePlayer
         tourney.callback_remove_player = self.tourneyRemovePlayer
         tourney.callback_cancel = self.tourneyCancel
-        if not self.schedule2tourneys.has_key(schedule['serial']):
-            self.schedule2tourneys[schedule['serial']] = []
-        self.schedule2tourneys[schedule['serial']].append(tourney)
+        if not self.schedule2tourneys.has_key(schedule_serial):
+            self.schedule2tourneys[schedule_serial] = []
+        self.schedule2tourneys[schedule_serial].append(tourney)
         self.tourneys[tourney.serial] = tourney
+        return tourney
 
     def deleteTourney(self, tourney):
         if self.verbose > 2: print "deleteTourney: %d" % tourney.serial
@@ -854,6 +855,33 @@ class PokerService(service.Service):
         sql = "delete from session"
         cursor.execute(sql)
 
+        cursor.close()
+
+    def cleanupTourneys(self):
+        self.tourneys = {}
+        self.schedule2tourneys = {}
+        self.tourneys_schedule = {}
+
+        cursor = self.db.cursor(DictCursor)
+        sql = "SELECT * FROM tourneys WHERE state = 'registering' AND start_time > (%d + 60)" % time.time()
+        if self.verbose > 2: print "cleanupTourneys: " + sql
+        cursor.execute(sql)
+        for x in xrange(cursor.rowcount):
+            row = cursor.fetchone()
+            if self.verbose >= 0: message = "cleanupTourneys: restoring %s(%s) with players" % ( row['name'], row['serial'],  )
+            tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'])
+            cursor1 = self.db.cursor()
+            sql = "SELECT user_serial FROM user2tourney WHERE tourney_serial = " + str(row['serial'])
+            if self.verbose > 2: print "cleanupTourneys: " + sql
+            cursor1.execute(sql)
+            for y in xrange(cursor1.rowcount):
+                (serial,) = cursor1.fetchone()
+                if self.verbose >= 0: message += " " + str(serial)
+                tourney.register(serial)
+                
+            cursor1.execute(sql)
+            cursor1.close()
+            if self.verbose >= 0: print message
         cursor.close()
 
     def getMoney(self, serial, currency_serial):
