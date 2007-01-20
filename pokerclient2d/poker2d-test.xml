@@ -13,7 +13,7 @@
   <web browser="/usr/bin/firefox">http://localhost/test-poker-web/</web>
   <!-- <web browser="/usr/bin/firefox">http://pok3d-com-01.pok3d.free.tld/</web> -->
   <!-- <web browser="/usr/bin/firefox">http://pok3d-com.pok3d.free.tld/</web> -->
-  <sound>yes</sound>
+  <sound>no</sound>
   <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
   <lobby currency_serial="1" type="holdem" sort="name"/>
   <shadow>yes</shadow>
