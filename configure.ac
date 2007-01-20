@@ -90,6 +90,9 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION
 
     AM_PATH_PYTHON([2.3])
+    AM_CONDITIONAL([PYTHON_2_3], [false])
+    AM_CONDITIONAL([PYTHON_2_4], [false])
+    AM_CONDITIONAL([PYTHON_2_5], [false])
 
 ], [
     if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then

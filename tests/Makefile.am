@@ -44,7 +44,11 @@ EXTRA_DIST = \
 	test-fc.py
 
 if UNITTEST
+if POKER2D
   TEST_CPART = test-unittestmain
+else
+  TEST_CPART = 
+endif
 else
   TEST_CPART = 
 endif
@@ -85,6 +89,7 @@ TESTS = coverage-reset \
 
 
 if UNITTEST
+if POKER2D
 
 noinst_PROGRAMS = test-unittestmain
 
@@ -98,6 +103,7 @@ test_unittestmain_SOURCES = test-unittestmain.cpp \
 test_unittestmain_CPPFLAGS = @UNITTESTCPP_CFLAGS@ @GLADE_CFLAGS@ @PYTHON_CFLAGS@
 test_unittestmain_LDFLAGS = @UNITTESTCPP_LIBS@ @GLADE_LIBS@ @top_builddir@/pokerclient2d/libinterface.la
 
+endif
 endif
 
 .PHONY: coverage-reset coverage-report poker-interface 
