@@ -47,7 +47,8 @@ TEST( Outfit_handleOutfit )
 {
 
   gtk_init(NULL, NULL);
-  gui_set_glade_file("../pokerclient2d/data/interface/interface.glade");
+  char* glade_file = getenv("GLADE_FILE");
+  gui_set_glade_file(glade_file);
 
   GtkLayout* screen = 0;
 
