@@ -57,7 +57,8 @@ TESTS_ENVIRONMENT = ./run
 #
 # Do NOT sort entries because the order matters 
 #
-TESTS = coverage-reset \
+TESTS = ${TESTS_CPART}
+_TESTS = coverage-reset \
 	upgrade \
 	test-clientserver.py \
 	test-currencyclient.py \
