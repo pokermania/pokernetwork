@@ -82,6 +82,7 @@ TESTS = coverage-reset \
 	test-gamewindow.py \
 	testcurrency.php \
 	testpoker.php \
+	testbirthday.php \
 	testicurrency.php \
 	coverage-report \
 	poker-interface \
