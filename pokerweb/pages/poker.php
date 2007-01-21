@@ -33,6 +33,8 @@ if(!class_exists('nusoapclient')) {
   require_once 'nusoap.php';
 }
 
+require_once 'birthday.php';
+
 class poker {
 
   const E_UNKNOWN		=	0;
@@ -112,7 +114,13 @@ class poker {
     $packets = $this->send(array('type' => 'PacketPokerGetPersonalInfo'));
     if($packets) {
       if($packets[0]['type'] == 'PacketPokerPersonalInfo') {
-        return $packets[0];
+        $packet = $packets[0];
+        $birthday = new birthday(strtotime($packet['birthdate']));
+        $packet['birthdate'] = $birthday;
+        $packet['birthday'] = $birthday->day;
+        $packet['birthmonth'] = $birthday->month;
+        $packet['birthyear'] = $birthday->year;
+        return  $packet;
       } else {
         throw new Exception('Expected PacketPokerPersonalInfo but got ' . $packets[0]['type'], self::E_PERSONAL_INFO_ANSWER);
       }
