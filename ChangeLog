@@ -1,6 +1,73 @@
-2007-01-18  Loic Dachary  <loic@dachary.org>
+2007-01-21  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.34
+
+	* tests/testbirthday.php.in, tests/Makefile.am:
+	birthday php class tests
+
+	* pokerweb/pages/tests/test-edit_account.html:
+	add gender and birthday tests
+
+	* pokerweb/pages/tests/test-create_account.html:
+	fix login too long code
+	add gender and birthday tests
+
+	* pokerweb/pages/poker.php:
+	break birthday into three fields in getpersonalinfo for greater convenience
+
+	* pokerweb/pages/edit_account.php, pokerweb/pages/create_account.php:
+	fill gender and birthday
+
+	* pokerweb/pages/birthday.php, pokerweb/Makefile.am:
+	class helper for forms including birthday
+
+	* pokernetwork/pokerservice.py, pokernetwork/pokerpackets.py:
+	gender & birthday added to personal data packets
+
+	* pokernetwork/__init__.py:
+	personal data packet has changed hence the protocol must be upgraded
+
+	* configure.ac: birthday tests
+
+2007-01-20  Loic Dachary  <loic@dachary.org>
+
+	* tests/test-unittestoutfits.cpp:
+	GLADE_FILE environment variable points to glade file so that CPP tests can figure it out
+
+	* tests/Makefile.am: test all
+
+	* tests/Makefile.am: only test c++
+
+	* tests/test-pokerservice.py.in: players is a list, not a tuple
+
+	* tests/run.in:
+	GLADE_FILE environment variable points to glade file so that CPP tests can figure it out
+
+	* tests/conf/poker.client.xml.in: version bump
+
+	* tests/test-pokerservice.py.in: test cleanup tourney
+
+	* pokerclient2d/poker2d-test.xml: no sound by default
+
+	* configure.ac, tests/Makefile.am:
+	fix --disable-poker3d by defining python conditionals
+
+	* pokernetwork/pokerservice.py: s/spanw/spawn/
+
+2007-01-19  griim  <griim@mekensleep.com>
+
+	* po/fr.po: more translation
+
+	* po/raw.string: more string added
+
+	* pokerclient2d/outfits.c:
+	added translation capabilities to element description
+
+	* tests/Makefile.am: added test-unittestoutfits.cpp for build
+
+	* tests/test-unittestoutfits.cpp: test for pokerclient2d/outfits.c
+
+2007-01-18  Loic Dachary  <loic@dachary.org>
 
 	* pokernetwork/pokertable.py, pokernetwork/pokerclient.py:
 	client generates messages and does not depend on server
