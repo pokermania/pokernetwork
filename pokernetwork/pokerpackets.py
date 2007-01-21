@@ -2331,6 +2331,8 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
         self.addr_state = kwargs.get("addr_state", "")
         self.addr_country = kwargs.get("addr_country", "")
         self.phone = kwargs.get("phone", "")
+        self.gender = kwargs.get("gender", "")
+        self.birthdate = kwargs.get("birthdate", "")
         PacketPokerUserInfo.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -2344,6 +2346,8 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
         packet += self.packstring(self.addr_state)
         packet += self.packstring(self.addr_country)
         packet += self.packstring(self.phone)
+        packet += self.packstring(self.gender)
+        packet += self.packstring(self.birthdate)
         return packet
         
     def unpack(self, block):
@@ -2357,6 +2361,8 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
         (block, self.addr_state) = self.unpackstring(block)
         (block, self.addr_country) = self.unpackstring(block)
         (block, self.phone) = self.unpackstring(block)
+        (block, self.gender) = self.unpackstring(block)
+        (block, self.birthdate) = self.unpackstring(block)
         return block
 
     def calcsize(self):
@@ -2369,10 +2375,13 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
                  self.calcsizestring(self.addr_town) +
                  self.calcsizestring(self.addr_state) +
                  self.calcsizestring(self.addr_country) +
-                 self.calcsizestring(self.phone) )
+                 self.calcsizestring(self.phone) +
+                 self.calcsizestring(self.gender) +
+                 self.calcsizestring(self.birthdate)
+                 )
 
     def __str__(self):
-        return PacketPokerUserInfo.__str__(self) + " firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s" % ( self.firstname, self.lastname, self.addr_street, self.addr_street2, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone )
+        return PacketPokerUserInfo.__str__(self) + " firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s, gender = %s, birthdate = %s" % ( self.firstname, self.lastname, self.addr_street, self.addr_street2, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone, self.gender, self.birthdate )
 
 PacketFactory[PACKET_POKER_PERSONAL_INFO] = PacketPokerPersonalInfo
 

@@ -984,18 +984,20 @@ class PokerService(service.Service):
                                          affiliate = user_info.affiliate,
                                          money = user_info.money)
         cursor = self.db.cursor()
-        sql = ( "SELECT firstname,lastname,addr_street,addr_street2,addr_zip,addr_town,addr_state,addr_country,phone FROM users_private WHERE serial = " + str(serial) )
+        sql = ( "SELECT firstname,lastname,addr_street,addr_street2,addr_zip,addr_town,addr_state,addr_country,phone,gender,birthdate FROM users_private WHERE serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             print " *ERROR* getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount )
             return PacketPokerPersonalInfo(serial = serial)
-        (packet.firstname, packet.lastname, packet.addr_street, packet.addr_street2, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone) = cursor.fetchone()
+        (packet.firstname, packet.lastname, packet.addr_street, packet.addr_street2, packet.addr_zip, packet.addr_town, packet.addr_state, packet.addr_country, packet.phone, packet.gender, packet.birthdate) = cursor.fetchone()
         cursor.close()
+        if not packet.gender: packet.gender = ''
+        if not packet.birthdate: packet.birthdate = ''
         return packet
 
     def setPersonalInfo(self, personal_info):
         cursor = self.db.cursor()
-        sql = ( "update users_private set "
+        sql = ( "UPDATE users_private SET "
                 " firstname = '" + personal_info.firstname + "', "
                 " lastname = '" + personal_info.lastname + "', "
                 " addr_street = '" + personal_info.addr_street + "', "
@@ -1004,8 +1006,10 @@ class PokerService(service.Service):
                 " addr_town = '" + personal_info.addr_town + "', "
                 " addr_state = '" + personal_info.addr_state + "', "
                 " addr_country = '" + personal_info.addr_country + "', "
-                " phone = '" + personal_info.phone + "' "
-                " where serial = " + str(personal_info.serial) )
+                " phone = '" + personal_info.phone + "', "
+                " gender = '" + personal_info.gender + "', "
+                " birthdate = '" + personal_info.birthdate + "' "
+                " WHERE serial = " + str(personal_info.serial) )
         if self.verbose > 1:
             print "setPersonalInfo: %s" % sql
         cursor.execute(sql)
