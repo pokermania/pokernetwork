@@ -1,32 +1,35 @@
 <?php
-//
-// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
-// Copyright (C) 2005, 2006 Mekensleep
-//
-// Mekensleep
-// 24 rue vieille du temple
-// 75004 Paris
-//       licensing@mekensleep.com
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// Authors:
-//  Morgan Manach <akshell@free.fr>
-//  Loic Dachary <loic@gnu.org>
-//
-	require_once 'common.php';
+  //
+  // Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+  // Copyright (C) 2005, 2006 Mekensleep
+  //
+  // Mekensleep
+  // 24 rue vieille du temple
+  // 75004 Paris
+  //       licensing@mekensleep.com
+  //
+  // This program is free software; you can redistribute it and/or modify
+  // it under the terms of the GNU General Public License as published by
+  // the Free Software Foundation; either version 2 of the License, or
+  // (at your option) any later version.
+  //
+  // This program is distributed in the hope that it will be useful,
+  // but WITHOUT ANY WARRANTY; without even the implied warranty of
+  // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  // GNU General Public License for more details.
+  //
+  // You should have received a copy of the GNU General Public License
+  // along with this program; if not, write to the Free Software
+  // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+  //
+  // Authors:
+  //  Morgan Manach <akshell@free.fr>
+  //  Loic Dachary <loic@gnu.org>
+  //
+require_once 'common.php';
+require_once 'birthday.php';
+
+$birthday = new birthday();
 
 if(_post_string('submit')) {
   $account = array('name' => _post_string('name'),
@@ -41,7 +44,10 @@ if(_post_string('submit')) {
                    'addr_town' => _post_string('addr_town'),
                    'addr_state' => _post_string('addr_state'),
                    'addr_country' => _post_string('addr_country'),
-                   'phone' => _post_string('phone'));
+                   'phone' => _post_string('phone'),
+                   'gender' => _post_string('gender'),
+                   'birthdate' => $birthday->as_string()
+                   );
 
   try {
     if($account['password'] != $account['password2'])
@@ -63,6 +69,8 @@ if(_post_string('submit')) {
                        'addr_state' => $account['addr_state'],
                        'addr_country' => $account['addr_country'],
                        'phone' => $account['phone'],
+                       'gender' => $account['gender'],
+                       'birthdate' => $account['birthdate'],
                        'affiliate' => 4242
                        ));
 
@@ -120,6 +128,19 @@ if($poker_error) {
 			<tr>
 				<td><b>Last Name:</b></td>
 				<td><input type="text" size="32" maxlength="32" id="lastname" name="lastname" value="<?php print $account['lastname'] ?>" /></td>
+			</tr>
+			<tr>
+				<td><b>Gender:</b></td>
+				<td>
+				<select id="gender" name="gender">
+                                <option value="M" <?php $account['gender'] == 'M' ? 'selected="selected"' : '' ?>>Mr</option>
+                                <option value="F" <?php $account['gender'] == 'F' ? 'selected="selected"' : '' ?>>Miss</option>
+                                </select>
+                                </td>
+			</tr>
+			<tr>
+			  <td><b>Birthday:</b></td>
+                          <td><?php print $birthday->form(); ?></td>
 			</tr>
 			<tr>
 				<td><b>Street:</b></td>

@@ -28,6 +28,9 @@
 //
 
 require_once 'common.php';
+require_once 'birthday.php';
+
+$birthday = new birthday();
 
 if(_post_string('submit')) {
 
@@ -43,7 +46,10 @@ if(_post_string('submit')) {
                    'addr_town' => _post_string('addr_town'),
                    'addr_state' => _post_string('addr_state'),
                    'addr_country' => _post_string('addr_country'),
-                   'phone' => _post_string('phone'));
+                   'phone' => _post_string('phone'),
+                   'gender' => _post_string('gender'),
+                   'birthdate' => $birthday->as_string()
+                   );
 
   try {
 
@@ -71,7 +77,9 @@ if(_post_string('submit')) {
                               'addr_town' => $account['addr_town'],
                               'addr_state' => $account['addr_state'],
                               'addr_country' => $account['addr_country'],
-                              'phone' => $account['phone']
+                              'phone' => $account['phone'],
+                              'gender' => $account['gender'],
+                              'birthdate' => $account['birthdate']
                               );
 
     if ($set_password)
@@ -91,6 +99,7 @@ if(_post_string('submit')) {
 } else {
   try {
     $account = $poker->getPersonalInfo();
+    $birthday = $account['birthdate'];
     $serial = $account['serial'];
   } catch(Exception $e) {
     $poker_error = $e->getMessage();
@@ -138,6 +147,19 @@ if(_post_string('submit')) {
 			<tr>
 				<td><b>Last Name:</b></td>
 				<td><input type="text" size="32" maxlength="32" id="lastname" name="lastname" value="<?php print $account['lastname'] ?>" /></td>
+			</tr>
+			<tr>
+				<td><b>Gender:</b></td>
+				<td>
+				<select id="gender" name="gender">
+                                <option value="M" <?php $account['gender'] == 'M' ? 'selected="selected"' : '' ?>>Mr</option>
+                                <option value="F" <?php $account['gender'] == 'F' ? 'selected="selected"' : '' ?>>Miss</option>
+                                </select>
+                                </td>
+			</tr>
+			<tr>
+			  <td><b>Birthday:</b></td>
+                          <td><?php print $birthday->form(); ?></td>
 			</tr>
 			<tr>
 				<td><b>Street:</b></td>
