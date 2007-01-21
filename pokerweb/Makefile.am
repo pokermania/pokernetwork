@@ -37,6 +37,7 @@ dist_poker_web_database_DATA = \
 
 poker_webdir = ${datadir}/poker-web
 dist_poker_web_DATA = \
+	pages/birthday.php \
 	pages/cash_in.php \
 	pages/cash_out.php \
 	pages/common.php \
