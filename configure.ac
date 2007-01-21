@@ -293,6 +293,7 @@ AC_CONFIG_FILES([
 	tests/test-gamewindow.py
         tests/testcurrency.php
         tests/testpoker.php
+        tests/testbirthday.php
         tests/testicurrency.php	
         tests/upgrade
         tests/test-unittestgui.cpp
