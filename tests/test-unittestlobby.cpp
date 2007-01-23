@@ -36,32 +36,35 @@ extern "C"
 {
   void gui_set_glade_file(char* glade_file);  
   GladeXML* gui_load_widget(char* const);
-  int handle_outfit(GladeXML* g_glade_outfit_sex_xml, GladeXML* g_glade_outfit_ok_xml, GladeXML* g_glade_outfit_slots_male_xml, GladeXML* g_glade_outfit_slots_female_xml, GladeXML* g_glade_outfit_params_xml, GladeXML* g_glade_outfit_random_xml, GtkLayout* screen, int init);
+  int handle_lobby(GladeXML* g_lobby_xml, GladeXML* g_table_info_xml, GladeXML* g_lobby_tabs_xml, GladeXML* g_cashier_button_xml, GladeXML* g_clock_xml ,GtkLayout* screen, int init);
   void set_string(const char* str);
   void flush_io_channel(void);
-  char* g_data_dir = 0;
 }
 
-TEST( Outfit_handleOutfit )
+TEST( Lobby_handleLobby )
 {
 
   gtk_init(NULL, NULL);
-
   char* glade_file = getenv("GLADE_FILE");
   gui_set_glade_file(glade_file);
 
-  GtkLayout* screen = 0;
+  static GladeXML*  g_lobby_xml = 0;
+  static GladeXML*  g_table_info_xml = 0;
+  static GladeXML*  g_lobby_tabs_xml = 0;
+  static GladeXML*  g_cashier_button_xml = 0;
+  static GladeXML*  g_clock_xml = 0;
 
-  static GladeXML* g_glade_outfit_sex_xml = gui_load_widget("outfit_sex_window");
-  static GladeXML* g_glade_outfit_ok_xml = gui_load_widget("outfit_ok_window");
-  static GladeXML* g_glade_outfit_slots_male_xml = gui_load_widget("outfit_slots_male_window");
-  static GladeXML* g_glade_outfit_params_xml = gui_load_widget("outfit_params_window");
-  static GladeXML* g_glade_outfit_random_xml = gui_load_widget("outfit_random_window");
-  static GladeXML* g_glade_outfit_slots_female_xml = gui_load_widget("outfit_slots_female_window");
+  GtkLayout* screen = 0;
+  
+  g_lobby_xml = gui_load_widget("lobby_window");
+  g_table_info_xml = gui_load_widget("table_info_window");
+  g_lobby_tabs_xml = gui_load_widget("lobby_tabs_window");
+  g_cashier_button_xml = gui_load_widget("cashier_button_window");
+  g_clock_xml = gui_load_widget("clock_window");
 
   set_string("test");
   flush_io_channel();
 
-  int return_handle = handle_outfit(g_glade_outfit_sex_xml, g_glade_outfit_ok_xml, g_glade_outfit_slots_male_xml, g_glade_outfit_slots_female_xml, g_glade_outfit_params_xml, g_glade_outfit_random_xml, screen, 1);
-  CHECK(return_handle);
+  handle_lobby(g_lobby_xml, g_table_info_xml, g_lobby_tabs_xml, g_cashier_button_xml, g_clock_xml, screen, 1);
+  CHECK(0 != g_lobby_xml);
 }
