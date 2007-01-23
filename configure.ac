@@ -296,9 +296,6 @@ AC_CONFIG_FILES([
         tests/testbirthday.php
         tests/testicurrency.php	
         tests/upgrade
-        tests/test-unittestgui.cpp
-        tests/test-unittesttournaments.cpp
-        tests/test-unittestlobby.cpp
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
         poker-network.pc
