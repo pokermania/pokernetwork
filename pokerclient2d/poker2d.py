@@ -340,14 +340,13 @@ class PokerClientFactory2D(PokerClientFactory):
     
 def run(datadir, settings_file, config_file):
     user_dir = expanduser("~/.poker2d")
+    if platform.system() == "Windows":
+        user_dir = os.environ["APPDATA"] + "/poker2d"
     if not settings_file: settings_file = user_dir + "/poker2d.xml"
     if not config_file: config_file = "client.xml"
 
     Config.upgrades_repository = datadir + "/upgrades"
     
-    if platform.system() == "Windows":
-        raise UserWarning, "can't infer the location of the settings file on Windows (not yet implemented)"
-
     default_settings_file = datadir + "/poker2d.xml"
     if not exists(settings_file) and exists(default_settings_file):
         if not exists(user_dir):

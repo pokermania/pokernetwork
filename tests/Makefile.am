@@ -80,6 +80,7 @@ TESTS = coverage-reset \
 	test-pokerdisplay2d.py \
 	test-svg2gtk.py \
 	test-gamewindow.py \
+	test-poker2d.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
