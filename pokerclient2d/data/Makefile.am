@@ -30,7 +30,7 @@ EXTRA_DIST = \
 	root2window.pl \
 	svg2gtk.py \
 	pygtk.py \
-	interface/mockup.svg
+	interface/table/mockup.svg
 
 pkgdatadir=@pkgdatadir@
 
@@ -40,97 +40,97 @@ nobase_dist_poker2d_DATA = \
 	sounds/self_in_position.wav \
 	sounds/timeout_warning.wav \
 	interface/pixmaps/poker2D_16.png \
-	interface/pixmaps/cards/small-2c.png \
-	interface/pixmaps/cards/small-2d.png \
-	interface/pixmaps/cards/small-2h.png \
-	interface/pixmaps/cards/small-2s.png \
-	interface/pixmaps/cards/small-3c.png \
-	interface/pixmaps/cards/small-3d.png \
-	interface/pixmaps/cards/small-3h.png \
-	interface/pixmaps/cards/small-3s.png \
-	interface/pixmaps/cards/small-4c.png \
-	interface/pixmaps/cards/small-4d.png \
-	interface/pixmaps/cards/small-4h.png \
-	interface/pixmaps/cards/small-4s.png \
-	interface/pixmaps/cards/small-5c.png \
-	interface/pixmaps/cards/small-5d.png \
-	interface/pixmaps/cards/small-5h.png \
-	interface/pixmaps/cards/small-5s.png \
-	interface/pixmaps/cards/small-6c.png \
-	interface/pixmaps/cards/small-6d.png \
-	interface/pixmaps/cards/small-6h.png \
-	interface/pixmaps/cards/small-6s.png \
-	interface/pixmaps/cards/small-7c.png \
-	interface/pixmaps/cards/small-7d.png \
-	interface/pixmaps/cards/small-7h.png \
-	interface/pixmaps/cards/small-7s.png \
-	interface/pixmaps/cards/small-8c.png \
-	interface/pixmaps/cards/small-8d.png \
-	interface/pixmaps/cards/small-8h.png \
-	interface/pixmaps/cards/small-8s.png \
-	interface/pixmaps/cards/small-9c.png \
-	interface/pixmaps/cards/small-9d.png \
-	interface/pixmaps/cards/small-9h.png \
-	interface/pixmaps/cards/small-9s.png \
-	interface/pixmaps/cards/small-Ac.png \
-	interface/pixmaps/cards/small-Ad.png \
-	interface/pixmaps/cards/small-Ah.png \
-	interface/pixmaps/cards/small-As.png \
-	interface/pixmaps/cards/small-Jc.png \
-	interface/pixmaps/cards/small-Jd.png \
-	interface/pixmaps/cards/small-Jh.png \
-	interface/pixmaps/cards/small-Js.png \
-	interface/pixmaps/cards/small-Kc.png \
-	interface/pixmaps/cards/small-Kd.png \
-	interface/pixmaps/cards/small-Kh.png \
-	interface/pixmaps/cards/small-Ks.png \
-	interface/pixmaps/cards/small-Qc.png \
-	interface/pixmaps/cards/small-Qd.png \
-	interface/pixmaps/cards/small-Qh.png \
-	interface/pixmaps/cards/small-Qs.png \
-	interface/pixmaps/cards/small-Tc.png \
-	interface/pixmaps/cards/small-Td.png \
-	interface/pixmaps/cards/small-Th.png \
-	interface/pixmaps/cards/small-Ts.png \
-	interface/pixmaps/cards/small-back.png \
+	interface/table/cards/small-2c.png \
+	interface/table/cards/small-2d.png \
+	interface/table/cards/small-2h.png \
+	interface/table/cards/small-2s.png \
+	interface/table/cards/small-3c.png \
+	interface/table/cards/small-3d.png \
+	interface/table/cards/small-3h.png \
+	interface/table/cards/small-3s.png \
+	interface/table/cards/small-4c.png \
+	interface/table/cards/small-4d.png \
+	interface/table/cards/small-4h.png \
+	interface/table/cards/small-4s.png \
+	interface/table/cards/small-5c.png \
+	interface/table/cards/small-5d.png \
+	interface/table/cards/small-5h.png \
+	interface/table/cards/small-5s.png \
+	interface/table/cards/small-6c.png \
+	interface/table/cards/small-6d.png \
+	interface/table/cards/small-6h.png \
+	interface/table/cards/small-6s.png \
+	interface/table/cards/small-7c.png \
+	interface/table/cards/small-7d.png \
+	interface/table/cards/small-7h.png \
+	interface/table/cards/small-7s.png \
+	interface/table/cards/small-8c.png \
+	interface/table/cards/small-8d.png \
+	interface/table/cards/small-8h.png \
+	interface/table/cards/small-8s.png \
+	interface/table/cards/small-9c.png \
+	interface/table/cards/small-9d.png \
+	interface/table/cards/small-9h.png \
+	interface/table/cards/small-9s.png \
+	interface/table/cards/small-Ac.png \
+	interface/table/cards/small-Ad.png \
+	interface/table/cards/small-Ah.png \
+	interface/table/cards/small-As.png \
+	interface/table/cards/small-Jc.png \
+	interface/table/cards/small-Jd.png \
+	interface/table/cards/small-Jh.png \
+	interface/table/cards/small-Js.png \
+	interface/table/cards/small-Kc.png \
+	interface/table/cards/small-Kd.png \
+	interface/table/cards/small-Kh.png \
+	interface/table/cards/small-Ks.png \
+	interface/table/cards/small-Qc.png \
+	interface/table/cards/small-Qd.png \
+	interface/table/cards/small-Qh.png \
+	interface/table/cards/small-Qs.png \
+	interface/table/cards/small-Tc.png \
+	interface/table/cards/small-Td.png \
+	interface/table/cards/small-Th.png \
+	interface/table/cards/small-Ts.png \
+	interface/table/cards/small-back.png \
 	interface/interface2d.glade \
 	interface/interface.glade \
 	interface/interface.gladep \
-	interface/mockup.glade \
-	interface/gtkrc \
-	interface/gtkrc.mockup \
-	interface/status.png \
-	interface/winner.png \
-	interface/name.png \
-	interface/money.png \
-	interface/bet.png \
-	interface/call.png \
-	interface/card_back.png \
-	interface/check.png \
-	interface/dealer.png \
-	interface/exit.png \
-	interface/fold.png \
-	interface/get_seat.png \
-	interface/player_active.png \
-	interface/player.png \
-	interface/pot.png \
-	interface/raise.png \
-	interface/raise_slider_dock.png \
-	interface/raise_slider.png \
-	interface/rebuy.png \
-	interface/table1_active.png \
-	interface/table1_normal.png \
-	interface/table2_active.png \
-	interface/table2_normal.png \
-	interface/table3_active.png \
-	interface/table3_normal.png \
-	interface/table4_active.png \
-	interface/table4_normal.png \
-	interface/table5_active.png \
-	interface/table5_normal.png \
-	interface/table_background.png \
-	interface/table.png \
-	interface/tables_dock.png \
+	interface/table/mockup.glade \
+	interface/table/gtkrc \
+	interface/table/gtkrc.mockup \
+	interface/table/status.png \
+	interface/table/winner.png \
+	interface/table/name.png \
+	interface/table/money.png \
+	interface/table/bet.png \
+	interface/table/call.png \
+	interface/table/card_back.png \
+	interface/table/check.png \
+	interface/table/dealer.png \
+	interface/table/exit.png \
+	interface/table/fold.png \
+	interface/table/get_seat.png \
+	interface/table/player_active.png \
+	interface/table/player.png \
+	interface/table/pot.png \
+	interface/table/raise.png \
+	interface/table/raise_slider_dock.png \
+	interface/table/raise_slider.png \
+	interface/table/rebuy.png \
+	interface/table/table1_active.png \
+	interface/table/table1_normal.png \
+	interface/table/table2_active.png \
+	interface/table/table2_normal.png \
+	interface/table/table3_active.png \
+	interface/table/table3_normal.png \
+	interface/table/table4_active.png \
+	interface/table/table4_normal.png \
+	interface/table/table5_active.png \
+	interface/table/table5_normal.png \
+	interface/table/table_background.png \
+	interface/table/table.png \
+	interface/table/tables_dock.png \
 	Aero/gtkrc \
 	Aero/tooltip.png \
 	Aero/handle.png \
@@ -270,10 +270,10 @@ all-local: interface/interface2d.glade
 interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
-interface/mockup.glade: interface/mockup.svg
-	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > interface/mockup.glade
-interface/gtkrc.mockup: interface/mockup.svg
-	cat ${srcdir}/interface/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/gtkrc.mockup
+interface/table/mockup.glade: interface/table/mockup.svg
+	cat ${srcdir}/interface/table/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > interface/table/mockup.glade
+interface/table/gtkrc.mockup: interface/table/mockup.svg
+	cat ${srcdir}/interface/table/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/table/gtkrc.mockup
 
 clean-local:
-	rm -f interface/interface2d.glade interface/mockup.glade interface/gtkrc.mockup
+	rm -f interface/interface2d.glade interface/table/mockup.glade interface/table/gtkrc.mockup

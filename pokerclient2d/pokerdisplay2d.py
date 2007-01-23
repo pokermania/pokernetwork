@@ -97,9 +97,9 @@ class PokerPlayer2D:
                 self.cards[card_slot].hide()
             else:
                 if cards_numbers[card_index] == 255:
-                    self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-back.png"))
+                    self.cards[card_slot].set_from_file(glade.relative_file("cards/small-back.png"))
                 else:
-                    self.cards[card_slot].set_from_file(glade.relative_file("pixmaps/cards/small-%s.png" % cards_names[card_index]))
+                    self.cards[card_slot].set_from_file(glade.relative_file("cards/small-%s.png" % cards_names[card_index]))
                 self.cards[card_slot].show()
 
     def hideCards(self):
@@ -249,7 +249,7 @@ class PokerTable2D:
                 if i >= board_length:
                     self.board[i].hide()
                 else:
-                    self.board[i].set_from_file(self.glade.relative_file("pixmaps/cards/small-%s.png" % board[i]))
+                    self.board[i].set_from_file(self.glade.relative_file("cards/small-%s.png" % board[i]))
                     self.board[i].show()
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
@@ -377,10 +377,10 @@ class PokerDisplay2D(PokerDisplay):
     def init(self):
         settings = self.settings
         config = self.config
-        gtkrc = self.datadir + "/interface/gtkrc"
+        gtkrc = self.datadir + "/interface/table/gtkrc"
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
-        glade_file = self.datadir + "/interface/mockup.glade"
+        glade_file = self.datadir + "/interface/table/mockup.glade"
         from gamewindow import GameWindowGlade
         self.glade = GameWindowGlade(glade_file)
         self.actions = {

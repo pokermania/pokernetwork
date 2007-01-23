@@ -29,13 +29,13 @@
 import gtk
 import gtk.glade
 if __name__ == '__main__':
-    gtk.rc_parse("interface/gtkrc")
-    glade = gtk.glade.XML('interface/mockup.glade')
+    gtk.rc_parse("interface/table/gtkrc")
+    glade = gtk.glade.XML('interface/table/mockup.glade')
     window = glade.get_widget('game_window')
     window.show_all()
     gtk.main()
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "make interface/gtkrc.mockup interface/mockup.glade && /usr/bin/python pygtk.py"
+# compile-command: "make interface/table/gtkrc.mockup interface/table/mockup.glade && /usr/bin/python pygtk.py"
 # End:

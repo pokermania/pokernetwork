@@ -148,14 +148,14 @@ class GameWindowGlade:
         return self.glade.signal_autoconnect(instance)
 
 if __name__ == '__main__':
-    glade = GameWindowGlade('data/interface/mockup.glade')
+    glade = GameWindowGlade('data/interface/table/mockup.glade')
     event_box = glade.get_widget('game_window')
     window = gtk.Window()
     window.add(event_box)
-    gtk.rc_parse('data/interface/gtkrc')
+    gtk.rc_parse('data/interface/table/gtkrc')
     for seat_index in xrange(0, 10):
         for card_index in xrange(1, 8):
-            glade.get_widget("card%d_seat%d" % (card_index, seat_index)).set_from_file('data/interface/card_back.png')
+            glade.get_widget("card%d_seat%d" % (card_index, seat_index)).set_from_file('data/interface/table/card_back.png')
     window.show_all()
     gtk.main()
 
