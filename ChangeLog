@@ -1,6 +1,23 @@
-2007-01-23  Loic Dachary  <loic@dachary.org>
+2007-01-23  Johan Euphrosine  <proppy@duredgy>
 
-        * Release 1.0.35
+	* Release 1.0.35
+
+	* pokerclient2d/data/interface/table:
+	moved table data to separate directory
+
+2007-01-23  loic  <loic@duredgy>
+
+	* debian/control, debian/control.breezy, debian/control.dapper, debian/control.edgy, debian/control.etch, debian/control.hoary, debian/control.sarge, debian/control.unstable:
+	requires at least poker-engine 1.0.22
+
+2007-01-23  griim  <griim@mekensleep.com>
+
+	* configure.ac: removed .cpp.in in /tests
+
+	* tests/test-unittestgui.cpp, tests/test-unittestlobby.cpp, tests/test-unittestoutfits.cpp, tests/test-unittesttournaments.cpp:
+	glade file now defined using GLADE_FILE (removed .cpp.in)
+
+2007-01-23  Loic Dachary  <loic@dachary.org>
 
 	* po/fr.po: translate tourney player rank
 

@@ -33,7 +33,7 @@ DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-dbuser=_DBC_DBUSER_ \
 		--with-poker-dbuser-password=_DBC_DBPASS_
 
-#DEB_MAKE_CHECK_TARGET = check
+DEB_MAKE_CHECK_TARGET = check
 
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
