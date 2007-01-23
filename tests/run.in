@@ -72,9 +72,13 @@ case "$1" in
 *upgrade) ./upgrade ;;
 
 *poker-interface) 
-        FONTPATH=/usr/share/fonts/X11/misc
+        FONTPATHS="/usr/share/fonts/X11/misc /usr/share/X11/fonts/misc"
+        fontpath_found=false
+        for fontpath in $FONTPATHS ; do
+            [ -d $fontpath ] && fontpath_found=true
+        done
         INTERFACE_PORT=19579
-        if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
+        if [ "@XVFB@" ] && $fontpath_found ; then
             export DISPLAY=:20
             killall -9 @XVFB@ 2> /dev/null || /bin/true
             sleep 1
@@ -92,7 +96,7 @@ case "$1" in
             sleep 2
             $VALGRIND ../pokerclient2d/poker-interface --port ${INTERFACE_PORT} --datadir=${top_srcdir}/pokerclient2d/data --gtkrc=${top_srcdir}/pokerclient2d/data/Aero/gtkrc --glade=${top_srcdir}/pokerclient2d/data/interface/interface.glade
         else
-            echo "skip $1 because Xvfb is not known or $FONTPATH is not a directory"
+            echo "skip $1 because Xvfb is not known or none of the $FONTPATHS directories exist"
         fi
         ;;
 
