@@ -29,15 +29,8 @@
 AC_PREREQ(2.54)
 AC_INIT(poker-network, [esyscmd(perl -n -e "print if(s/^version_number = \"(.*)\".*/\1/s)" pokernetwork/__init__.py)])
 AC_CONFIG_AUX_DIR(config)
-AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([pokernetwork/protocol.py])
-
-# Checks for programs.
-AC_PROG_MAKE_SET
-AC_GNU_SOURCE
-AC_PROG_CPP
-AC_PROG_LIBTOOL
 
 AM_MAINTAINER_MODE
 
@@ -95,6 +88,12 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     AM_CONDITIONAL([PYTHON_2_5], [false])
 
 ], [
+    # Checks for programs.
+    AC_PROG_MAKE_SET
+    AC_GNU_SOURCE
+    AC_PROG_CPP
+    AC_PROG_LIBTOOL
+
     if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then
       if test "$enable_debug" = "yes" ; then
         CFLAGS="-pipe -g -Wall -W"
