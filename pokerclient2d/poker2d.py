@@ -55,18 +55,13 @@ from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.version import version
 from pokernetwork.proxy import Connector
 
-from twisted.internet.gtk2reactor import Gtk2Reactor
-
-class Poker2DReactor(Gtk2Reactor):
-    
-    def simulate(self):
-        if log.error_occurred:
-            reactor.stop()
-        Gtk2Reactor.simulate(self)
-        
-from twisted.internet.main import installReactor
-reactor = Poker2DReactor()
-installReactor(reactor)
+#
+# Maybe deprecated
+# Check ticket status when syncing with new twisted version
+# http://twistedmatrix.com/trac/ticket/1759
+#
+from twisted.internet import gtk2reactor
+reactor = gtk2reactor.portableInstall()
 
 #
 # Workaround for the twisted-2.0 bug 
