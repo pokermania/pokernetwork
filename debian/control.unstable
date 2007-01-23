@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 5.0.37.2), python-all-dev (>= 2.3.5-11), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, po-debconf, mysql-client, python-mysqldb, python-pyopenssl, python-soappy, python-glade2, python-twisted, python-pygame, python-poker-engine (>= 1.0.21), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php-pear, php5-dev, php5-mysql, graphviz, cvs
+Build-Depends: debhelper (>= 5.0.37.2), python-all-dev (>= 2.3.5-11), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, po-debconf, mysql-client, python-mysqldb, python-pyopenssl, python-soappy, python-glade2, python-twisted, python-pygame, python-poker-engine (>= 1.0.22), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php-pear, php5-dev, php5-mysql, graphviz, cvs
 XS-Python-Version: >=2.3
 Standards-Version: 3.7.2
 
@@ -12,7 +12,7 @@ Architecture: all
 Suggests: mysql-server
 Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.0.21), python-twisted, python-mysqldb, python-soappy, python-pyopenssl, dbconfig-common, mysql-client, apg, rsync
+Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.0.22), python-twisted, python-mysqldb, python-soappy, python-pyopenssl, dbconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
