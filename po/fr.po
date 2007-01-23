@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-01-18 12:53+0100\n"
+"POT-Creation-Date: 2007-01-23 11:52+0100\n"
 "PO-Revision-Date: 2007-01-13 23:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -458,48 +458,48 @@ msgstr "Le Check est gratuit. Que voulez-vous faire ?"
 msgid "Credits for poker-network"
 msgstr ""
 
-#: pokerclient2d/lobby.c:324
+#: pokerclient2d/lobby.c:317
 msgid "My"
 msgstr " "
 
-#: pokerclient2d/lobby.c:359
+#: pokerclient2d/lobby.c:352
 msgid "Name"
 msgstr "Nom"
 
-#: pokerclient2d/lobby.c:361
+#: pokerclient2d/lobby.c:354
 msgid "Structure"
 msgstr "Structure"
 
-#: pokerclient2d/lobby.c:363
+#: pokerclient2d/lobby.c:356
 msgid "Seats"
 msgstr "Places"
 
-#: pokerclient2d/lobby.c:365
+#: pokerclient2d/lobby.c:358
 msgid "Avg.pot"
 msgstr "Moy.Pot"
 
-#: pokerclient2d/lobby.c:367
+#: pokerclient2d/lobby.c:360
 msgid "Hands/h"
 msgstr "Mains/H"
 
-#: pokerclient2d/lobby.c:369
+#: pokerclient2d/lobby.c:362
 msgid "Flop%"
 msgstr "%Flop"
 
-#: pokerclient2d/lobby.c:371
+#: pokerclient2d/lobby.c:364
 msgid "Playing"
 msgstr "Joueurs"
 
-#: pokerclient2d/lobby.c:397 pokerclient2d/tournaments.c:296
+#: pokerclient2d/lobby.c:390 pokerclient2d/tournaments.c:296
 #: pokerclient2d/tournaments.c:341 pokerclient2d/tournaments.c:366
 msgid "Players"
 msgstr "Joueurs"
 
-#: pokerclient2d/lobby.c:405
+#: pokerclient2d/lobby.c:398
 msgid "Chips"
 msgstr "Jetons"
 
-#: pokerclient2d/lobby.c:621
+#: pokerclient2d/lobby.c:614
 msgid "GO TO TABLE"
 msgstr "ALLER A LA TABLE"
 
@@ -543,11 +543,11 @@ msgstr "Tables: %d"
 msgid ""
 "Tourney %(num_tourney)d\n"
 " Your rank is %(your_rank)d on %(num_players)d\n"
-"You won %(my_prize)d"
+"You won %(my_prize)s"
 msgstr ""
 "Tournoi %(num_tourney)d\n"
 " Vous finissez %(your_rank)d sur %(num_players)d\n"
-"Vous gagnez %(my_prize)d"
+"Vous gagnez %(my_prize)s"
 
 #: pokerui/pokerrenderer.py:481
 msgid "Do you really want to quit ?"
@@ -2752,7 +2752,6 @@ msgstr ""
 "de jouer, alors vous coucherez\n"
 "votre jeux instantanément en\n"
 "cliquant sur ce boutton"
-
 
 #: po/raw.string:523
 msgid ""
