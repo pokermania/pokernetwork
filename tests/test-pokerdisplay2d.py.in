@@ -187,7 +187,7 @@ class PokerDisplay2DCardTest(unittest.TestCase):
         self.table = PokerTable2D(PokerTableMockup(), PokerDisplayMockup())
         cards = ("As", "Ac", "Ad")
         PokerEvalMockup.cards = cards
-        cards2files = map(lambda card: "pixmaps/cards/small-%s.png" % card, cards)
+        cards2files = map(lambda card: "cards/small-%s.png" % card, cards)
         self.table.render(PokerPacketBoardCardsMockup())
         self.assertEquals(len(cards2files), len(PokerWidgetMockup.files))
         for i in range(0, len(cards2files)):
@@ -219,7 +219,7 @@ class PokerPlayer2DCardTest(unittest.TestCase):
         self.player = PokerPlayer2D(PokerPlayerMockup(), PokerTableMockup())
     def test_updateCardsBack(self):
         PokerHandMockup.list = (255, 255)
-        back = "pixmaps/cards/small-back.png"
+        back = "cards/small-back.png"
         self.player.updateCards()
         self.assertEquals(2, len(PokerWidgetMockup.files))
         for i in range(len(PokerWidgetMockup.files)):
@@ -228,7 +228,7 @@ class PokerPlayer2DCardTest(unittest.TestCase):
         PokerHandMockup.list = (0, 0)
         cards = ("As", "Ac")
         PokerEvalMockup.cards = cards
-        cards2files = map(lambda card: "pixmaps/cards/small-%s.png" % card, cards)
+        cards2files = map(lambda card: "cards/small-%s.png" % card, cards)
         self.player.updateCards()
         self.assertEquals(2, len(PokerWidgetMockup.files))
         for i in range(len(PokerWidgetMockup.files)):

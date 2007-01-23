@@ -43,7 +43,7 @@ class GameWindowGladeNotFoundTest(unittest.TestCase):
 class GameWindowGladeTest(unittest.TestCase):
     def setUp(self):
         from gamewindow import GameWindowGlade
-        self.glade = GameWindowGlade("@top_srcdir@/pokerclient2d/data/interface/mockup.glade")
+        self.glade = GameWindowGlade("@top_srcdir@/pokerclient2d/data/interface/table/mockup.glade")
     def test_nameSeat(self):
         names = map(lambda seat: self.glade.get_widget("name_seat%d" % seat), xrange(10))
         map(lambda name: name.set_label("proppy"), names)
@@ -123,7 +123,7 @@ class GameWindowGladeTest(unittest.TestCase):
         switch.hide()
     def test_gladeRelativeFile(self):
 	relative_file = self.glade.relative_file("test")
-        self.assertEquals("@top_srcdir@/pokerclient2d/data/interface/test", relative_file)
+        self.assertEquals("@top_srcdir@/pokerclient2d/data/interface/table/test", relative_file)
     def test_gladeSignalAutoconnect(self):
         class SignalHandler:
             signal_handled = False
