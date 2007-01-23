@@ -2,6 +2,22 @@
 
         * Release 1.0.35
 
+	* po/fr.po: translate tourney player rank
+
+	* pokerui/pokerrenderer.py:
+	format amount with PokerChips function otherwise amount is truncated by integer rounding (fixes https://gna.org/support/?1450)
+
+	* tests/test-string.py.in: local tests command
+
+	* pokernetwork/__init__.py, NEWS, ChangeLog: version bump
+
+2007-01-23  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/poker2d.py:
+	use gtk2reactor.portableInstall instead of black magic
+
+	* pokerclient2d/mingw_make_install.bat: mingw compilation update
+
 2007-01-21  Loic Dachary  <loic@dachary.org>
 
         * Release 1.0.34
