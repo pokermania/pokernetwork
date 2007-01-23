@@ -8,3 +8,6 @@ copy pokeranimation2d.py %PYTHONROOT%\Lib\site-packages\pokerclient2d
 copy pokerdisplay2d.py %PYTHONROOT%\Lib\site-packages\pokerclient2d
 copy pokerinterface2d.py %PYTHONROOT%\Lib\site-packages\pokerclient2d
 copy gamewindow.py %PYTHONROOT%\Lib\site-packages\pokerclient2d
+type data\interface\mockup.svg | %PYTHONROOT%\python.exe data\svg2gtk.py --glade > data\interface\mockup.glade
+type data\interface\mockup.svg | %PYTHONROOT%\python.exe data\svg2gtk.py --gtkrc > data\interface\gtk.mockup
+type data\interface\interface.glade | %PERLROOT%\perl.exe data\root2window.pl > data\interface\interface2d.glade
