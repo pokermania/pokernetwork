@@ -380,5 +380,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-quit.py ) ; ( cd ../tests ; make TESTS='test-quit.py' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-string.py ) ; ( cd ../tests ; make TESTS='test-string.py' check )"
 # End:
