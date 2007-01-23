@@ -44,7 +44,6 @@ class PokerInterface2D(PokerInterface):
         datadir = settings.headerGet("/settings/data/@path")
         _pokerinterface.init(callback = self.event,
                             datadir = datadir,
-                            gtkrc = datadir + "/interface/gtkrc",
                             glade = datadir + "/interface/interface2d.glade",
                             verbose = self.verbose,
                             )
