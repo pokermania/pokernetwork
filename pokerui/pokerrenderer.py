@@ -437,7 +437,7 @@ class PokerRenderer:
             self.interactors.setProtocol(protocol)
 
     def showYourRank(self, tourney_serial, rank, players, money):
-        msg = _("Tourney %(num_tourney)d\n Your rank is %(your_rank)d on %(num_players)d\nYou won %(my_prize)d") % {'num_tourney' : tourney_serial, 'your_rank' : rank, 'num_players' :  players, 'my_prize' : money/100 }
+        msg = _("Tourney %(num_tourney)d\n Your rank is %(your_rank)d on %(num_players)d\nYou won %(my_prize)s") % {'num_tourney' : tourney_serial, 'your_rank' : rank, 'num_players' :  players, 'my_prize' : PokerChips.tostring(money) }
         self.showMessage(msg, None)
 
     def showYesNoBox(self, message):
