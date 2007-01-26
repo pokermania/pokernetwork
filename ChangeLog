@@ -1,6 +1,9 @@
-2007-01-23  Johan Euphrosine  <proppy@duredgy>
+2007-01-26  Cedric Pinson  <cpinson@freesheep.org>
 
 	* Release 1.0.35
+	* Update gentoo package
+
+2007-01-23  Johan Euphrosine  <proppy@duredgy>
 
 	* pokerclient2d/data/interface/table:
 	moved table data to separate directory
