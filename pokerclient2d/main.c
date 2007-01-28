@@ -175,6 +175,12 @@ int main(int   argc,
     }
   gtk_init (&argc, &argv);
 
+#ifdef WIN32
+  // if under windows, we need to define the locale directory
+  bindtextdomain("poker2d", "./..");
+#endif
+  
+  bind_textdomain_codeset("poker2d","UTF-8");
   set_verbose(g_want_verbose);
 
   if (!init_interface_io(g_hostname ? g_hostname : "127.0.0.1"))

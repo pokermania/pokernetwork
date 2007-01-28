@@ -202,6 +202,12 @@ init(PyObject* self, PyObject *args, PyObject *keywds)
   in_stream = PyList_New(0);
   out_stream = PyList_New(0);
 
+#ifdef WIN32
+  // if under windows, we need to define the locale directory
+  bindtextdomain("poker2d", "./..");
+#endif
+  bind_textdomain_codeset("poker2d","UTF-8");
+
   set_verbose(verbose);
   if(gtkrc && g_file_test(gtkrc, G_FILE_TEST_EXISTS))
     gtk_rc_parse(gtkrc);
