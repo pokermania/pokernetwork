@@ -24,7 +24,7 @@ OBJS =	\
 
 DEBUG = -g
 CC = gcc
-CFLAGS = $(DEBUG) $(shell pkg-config --cflags libglade-2.0)
+CFLAGS = $(DEBUG) $(shell pkg-config --cflags libglade-2.0) -DWIN32
 LDFLAGS = $(shell pkg-config --libs libglade-2.0)
 
 all:	poker3d-interface
@@ -32,6 +32,9 @@ all:	poker3d-interface
 poker3d-interface: ${OBJS}
 	${CC} -s ${OBJS} -o poker3d-interface ${LDFLAGS}
 
+mo: 
+	msgfmt ../po/fr.po -o ../po/fr.mo    
+    
 install: poker3d-interface
 	mkdir -p ${DESTDIR}${INSTALLPATH}
 	cp poker3d-interface.exe ${DESTDIR}${INSTALLPATH}
