@@ -33,10 +33,23 @@ from time import time, strftime, gmtime
 from pokerengine.pokerchips import PokerChips
 from pokernetwork import dispatch
 
+import platform
+
+import locale
 import gettext
 
-gettext.install("poker2d")
+if platform.system() == "Windows":
 
+    lang = locale.getdefaultlocale()[0][:2]  
+    try:
+        cur_lang = gettext.translation("poker2d", localedir="./../../locale",languages=[lang])
+        cur_lang.install()
+    except IOError:
+        _ = lambda text:text
+
+else:
+    gettext.install("poker2d")
+    
 INTERFACE_READY = "//event/poker3d/pokerinterface/ready"
 INTERFACE_GONE = "//event/poker3d/pokerinterface/gone"
 

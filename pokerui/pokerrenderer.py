@@ -48,9 +48,25 @@ from pokerui import pokerinterface
 from pokerui.pokerinteractor import PokerInteractor, PokerInteractorSet
 from pokerui.pokerchat import PokerChat
 
+import linecache
+import os
+import sys
+
+import platform
+import locale
 import gettext
 
-gettext.install("poker2d")
+if platform.system() == "Windows":
+
+    lang = locale.getdefaultlocale()[0][:2]  
+    try:
+        cur_lang = gettext.translation("poker2d", localedir="./../../locale",languages=[lang])
+        cur_lang.install()
+    except IOError:
+        _ = lambda text:text
+
+else:
+    gettext.install("poker2d")
 
 LOBBY = "lobby"
 SEARCHING_MY = "searching_my"
@@ -90,9 +106,6 @@ SIT_OUT = "sit_out"
 QUIT = "quit"
 QUIT_DONE = "quit_done"
 
-import linecache
-import os
-import sys
 def global_trace(frame, event, arg):
     return local_trace
 def local_trace(frame, event, arg):
