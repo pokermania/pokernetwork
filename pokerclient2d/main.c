@@ -34,7 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
-#include <libintl.h>
 #include <getopt.h>
 #include <unistd.h>
 #include "interface_io.h"
@@ -161,13 +160,21 @@ int main(int   argc,
   if (parse_command_line(argc, argv) != 0)
     return 1;
 
+#ifdef WIN32
+  // if under windows, we need to define the locale directory
+  bindtextdomain("poker2d", "./../locale");
+#endif
+  
+  bind_textdomain_codeset("poker2d","UTF-8");    
+  textdomain("poker2d");
+
   if (g_display)
   {
       char	tmp[64];
       snprintf(tmp, sizeof (tmp), "DISPLAY=%s", g_display);
       putenv(tmp);
   }
-
+  
   if (g_gtk_rc_file)
   {
       char* file_name = strrchr(g_gtk_rc_file, '/')+1;
@@ -175,31 +182,28 @@ int main(int   argc,
       int path_len = strlen(g_gtk_rc_file);
       int name_len = strlen(file_name);
       int newname_len = strlen(gettext(file_name));
-
+      
       char* new_gtk_rc = malloc(sizeof(char)*(path_len-name_len+newname_len));
+      memset(new_gtk_rc, 0, path_len-name_len+newname_len);
       memcpy(new_gtk_rc, g_gtk_rc_file, path_len-name_len);
       strcat(new_gtk_rc, gettext(file_name));
-
+      
       char* tmp[2] = { new_gtk_rc, 0};
       gtk_rc_set_default_files(tmp);
+      
+      g_message("%s\n", new_gtk_rc);
+      g_message(gettext("CANCEL"));
+      
       g_free(g_gtk_rc_file);
       g_free(new_gtk_rc);
   }
-  gtk_init (&argc, &argv);
+  gtk_init (&argc, &argv);  
 
-#ifdef WIN32
-  // if under windows, we need to define the locale directory
-  bindtextdomain("poker2d", "./..");
-#endif
-  
-  bind_textdomain_codeset("poker2d","UTF-8");
   set_verbose(g_want_verbose);
 
   if (!init_interface_io(g_hostname ? g_hostname : "127.0.0.1"))
     return 1;
 
-
-  
   if (g_smiley_path)
     create_smiley_array(g_smiley_path, "smileys.xml");
   else
