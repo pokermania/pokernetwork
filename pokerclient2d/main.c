@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <libintl.h>
 #include <getopt.h>
 #include <unistd.h>
 #include "interface_io.h"
@@ -161,18 +162,29 @@ int main(int   argc,
     return 1;
 
   if (g_display)
-    {
+  {
       char	tmp[64];
       snprintf(tmp, sizeof (tmp), "DISPLAY=%s", g_display);
       putenv(tmp);
-    }
+  }
 
   if (g_gtk_rc_file)
-    {
-      char*	tmp[2] = { g_gtk_rc_file, 0 };
+  {
+      char* file_name = strrchr(g_gtk_rc_file, '/')+1;
+
+      int path_len = strlen(g_gtk_rc_file);
+      int name_len = strlen(file_name);
+      int newname_len = strlen(gettext(file_name));
+
+      char* new_gtk_rc = malloc(sizeof(char)*(path_len-name_len+newname_len));
+      memcpy(new_gtk_rc, g_gtk_rc_file, path_len-name_len);
+      strcat(new_gtk_rc, gettext(file_name));
+
+      char* tmp[2] = { new_gtk_rc, 0};
       gtk_rc_set_default_files(tmp);
       g_free(g_gtk_rc_file);
-    }
+      g_free(new_gtk_rc);
+  }
   gtk_init (&argc, &argv);
 
 #ifdef WIN32
