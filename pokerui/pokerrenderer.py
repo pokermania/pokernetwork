@@ -66,6 +66,7 @@ if platform.system() == "Windows":
         _ = lambda text:text
 
 else:
+    gettext.bind_textdomain_codeset("poker2d","UTF-8")
     gettext.install("poker2d")
 
 LOBBY = "lobby"
