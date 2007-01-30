@@ -31,6 +31,7 @@
 #include "gui.h"
 #include "interface_io.h"
 #include "dispatcher.h"
+#include <libintl.h>
 
 GtkTextBuffer* s_hand_messages;
 
@@ -121,6 +122,9 @@ int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
   static GtkWidget*	next_widget = NULL;
 
   if(init) {
+
+    textdomain("poker2d");
+
     hand_history_window = glade_xml_get_widget(g_glade_xml, "hand_history_window");
     g_assert(hand_history_window);
     if(screen) gtk_layout_put(screen, hand_history_window, 0, 0);
@@ -144,7 +148,7 @@ int handle_hand_history(GladeXML* g_glade_xml, GtkLayout* screen, int init)
       GtkTreeViewColumn* column = gtk_tree_view_column_new();
       gtk_tree_view_append_column(hand_history, column);
       GtkCellRenderer*	cell_renderer = gtk_cell_renderer_text_new();
-      gtk_tree_view_column_set_title(column, "Show hand");
+      gtk_tree_view_column_set_title(column, gettext("Show hand") );
       gtk_tree_view_column_pack_start(column, cell_renderer, TRUE);
       gtk_tree_view_column_add_attribute(column, cell_renderer, "text", 0);
     }
