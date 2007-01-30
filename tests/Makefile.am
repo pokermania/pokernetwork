@@ -100,6 +100,7 @@ test_unittestmain_SOURCES = test-unittestmain.cpp \
                             test-unittestlobby.cpp \
                             test-unittesttournaments.cpp \
                             test-unittestoutfits.cpp \
+                            test-unittesthandhistory.cpp \
                             io_mockup.c
 
 test_unittestmain_CPPFLAGS = @UNITTESTCPP_CFLAGS@ @GLADE_CFLAGS@ @PYTHON_CFLAGS@
