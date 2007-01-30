@@ -729,6 +729,7 @@ class PokerTable:
             if delta < 0: delta = 0
             autodeal_max = float(self.delays.get("autodeal_max", 120))
             if delta > autodeal_max: delta = autodeal_max
+            self.game_delay["delay"] = ( time.time() - self.game_delay["start"] ) + delta
         elif self.transient:
             all_auto = True
             for player in game.playersAll():
