@@ -31,6 +31,7 @@
 from string import join
 import sets
 
+from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
 from pokernetwork.pokerpackets import *
 
@@ -676,7 +677,7 @@ class PokerAvatar:
 
         self.sendPacketVerbose(PacketPokerSeats(game_id = game.id,
                                                 seats = game.seats()))
-        if game.isRunning():
+        if game.isRunning() or game.state == pokergame.GAME_STATE_MUCK:
             #
             # If a game is running, replay it.
             #
