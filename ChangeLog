@@ -1,6 +1,61 @@
-2007-01-26  Cedric Pinson  <cpinson@freesheep.org>
+2007-02-02  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.35
+	
+	* tests/test-fc.py: cosmetic changes
+
+	* pokernetwork/client.py:
+	check for .established_deferred.called in protocolInvalid because in some cases the protocolInvalid method may be called twice
+
+2007-01-30  griim  <griim@mekensleep.com>
+
+	* pokerui/pokerinterface.py, pokerui/pokerrenderer.py:
+	UTF-8 is now defined as the default poker2d translation codeset
+
+2007-01-30  Loic Dachary  <loic@dachary.org>
+
+	* pokernetwork/pokertable.py:
+	adjust table delay according to calculated delta to take in accound time cap
+
+	* pokerclient2d/poker2d-test.xml: additional test server
+
+	* examples/poker.bot.xml, examples/poker.server-monotone.xml, examples/poker.server.xml, conf/poker.bot.xml.in, conf/poker.client.xml.in, conf/poker.server.xml.in:
+	version bump
+
+2007-01-30  griim  <griim@mekensleep.com>
+
+	* po/POTFILES.in, po/fr.po: added more translated string !
+
+	* tests/Makefile.am, tests/test-unittesthandhistory.cpp:
+	added test for hand_history.cpp
+
+2007-01-29  griim  <griim@mekensleep.com>
+
+	* pokerui/pokerinterface.py, pokerui/pokerrenderer.py:
+	changed WIN32 local path to [./../locale)
+
+	* pokerclient2d/main.c: fixed gtkrc to gtkrc.local
+
+	* pokerclient2d/main.c:
+	gtkrc file can now be substitued to a localized one
+
+2007-01-28  griim  <griim@mekensleep.com>
+
+	* pokerclient2d/python.c, pokerclient2d/main.c:
+	added locale path for WIN32
+
+	* pokerclient2d/mingw_make_install.bat, pokerclient2d/Makefile.cygwin-sh, pokerclient2d/Makefile.cygwin:
+	added WIN32 define
+
+2007-01-26  Cedric Pinson  <cpinson@freesheep.org>
+
+	* ChangeLog: gentoo package
+
+	* gentoo/dev-games/poker-network/poker-network-1.0.32-r1.ebuild:
+	remove old pkg
+
+2007-01-26  Cedric Pinson  <cpinson@freesheep.org>
+
 	* Update gentoo package
 
 2007-01-23  Johan Euphrosine  <proppy@duredgy>
