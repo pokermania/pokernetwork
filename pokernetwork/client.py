@@ -90,7 +90,8 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self.factory.established_deferred = defer.Deferred()
 
     def protocolInvalid(self, server, client):
-        self.factory.established_deferred.errback((self, server, client),)
+        if not self.factory.established_deferred.called:
+            self.factory.established_deferred.errback((self, server, client),)
             
     def connectionLost(self, reason):
         if hasattr(self, "_ping_timer") and self._ping_timer and self._ping_timer.active():
