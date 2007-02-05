@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-01-30 10:26+0100\n"
+"POT-Creation-Date: 2007-02-05 17:02+0100\n"
 "PO-Revision-Date: 2007-01-13 23:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -527,22 +527,22 @@ msgstr "ANNULER MON INSCRIPTION"
 msgid "Show hand"
 msgstr "Mains :"
 
-#: pokerui/pokerinterface.py:159 pokerui/pokerinterface.py:228
+#: pokerui/pokerinterface.py:160 pokerui/pokerinterface.py:229
 #, python-format
 msgid "Players: %d"
 msgstr "Joueurs: %d"
 
-#: pokerui/pokerinterface.py:159
+#: pokerui/pokerinterface.py:160
 #, python-format
 msgid "Tournaments: %d"
 msgstr "Tournois: %d"
 
-#: pokerui/pokerinterface.py:228
+#: pokerui/pokerinterface.py:229
 #, python-format
 msgid "Tables: %d"
 msgstr "Tables: %d"
 
-#: pokerui/pokerrenderer.py:453
+#: pokerui/pokerrenderer.py:454
 #, python-format
 msgid ""
 "Tourney %(num_tourney)d\n"
@@ -553,58 +553,58 @@ msgstr ""
 " Vous finissez %(your_rank)d sur %(num_players)d\n"
 "Vous gagnez %(my_prize)s"
 
-#: pokerui/pokerrenderer.py:494
+#: pokerui/pokerrenderer.py:495
 msgid "Do you really want to quit ?"
 msgstr "Voulez-vous vraiment quitter ?"
 
-#: pokerui/pokerrenderer.py:550
+#: pokerui/pokerrenderer.py:551
 #, python-format
 msgid "Pay the ante (%d) ?"
 msgstr "Payer l'ante (%d) ?"
 
-#: pokerui/pokerrenderer.py:581
+#: pokerui/pokerrenderer.py:582
 msgid "Pay the "
 msgstr "Payer "
 
-#: pokerui/pokerrenderer.py:583
+#: pokerui/pokerrenderer.py:584
 #, python-format
 msgid "big blind (%(bblind_)s) + dead (%(dead_)s)"
 msgstr "la grosse blinde (%(bblind_)s) + dead (%(dead_)s)"
 
-#: pokerui/pokerrenderer.py:585
+#: pokerui/pokerrenderer.py:586
 #, python-format
 msgid "big blind (%s)"
 msgstr "la grosse blinde (%s)"
 
-#: pokerui/pokerrenderer.py:587
+#: pokerui/pokerrenderer.py:588
 #, python-format
 msgid "small blind (%s)"
 msgstr "la petite blind (%s) "
 
-#: pokerui/pokerrenderer.py:1182
+#: pokerui/pokerrenderer.py:1183
 msgid "This seat is busy"
 msgstr "Cette place est occupée"
 
-#: pokerui/pokerrenderer.py:1319
+#: pokerui/pokerrenderer.py:1320
 msgid "wait for big blind"
 msgstr "attendre la grande blinde"
 
-#: pokerui/pokerrenderer.py:1321
+#: pokerui/pokerrenderer.py:1322
 #, python-format
 msgid "wait for %s blind"
 msgstr "attendre la blinde (%s)"
 
-#: pokerui/pokerrenderer.py:1324 pokerui/pokerrenderer.py:1329
-#: pokerui/pokerrenderer.py:1337
+#: pokerui/pokerrenderer.py:1325 pokerui/pokerrenderer.py:1330
+#: pokerui/pokerrenderer.py:1338
 msgid "sit out next turn"
 msgstr "se lever"
 
-#: pokerui/pokerrenderer.py:1326 pokerui/pokerrenderer.py:1331
-#: pokerui/pokerrenderer.py:1333 pokerui/pokerrenderer.py:1335
+#: pokerui/pokerrenderer.py:1327 pokerui/pokerrenderer.py:1332
+#: pokerui/pokerrenderer.py:1334 pokerui/pokerrenderer.py:1336
 msgid "sit out"
 msgstr "se lever"
 
-#: pokerui/pokerrenderer.py:1361
+#: pokerui/pokerrenderer.py:1362
 msgid ""
 "You can't bring more money\n"
 "to the table"
@@ -612,15 +612,15 @@ msgstr ""
 "Vous ne pouvez pas ammener\n"
 "plus d'argent à la table"
 
-#: pokerui/pokerrenderer.py:1371
+#: pokerui/pokerrenderer.py:1372
 msgid "You have no money left"
 msgstr "Vous n'avez plus d'argent"
 
-#: pokerui/pokerrenderer.py:1375
+#: pokerui/pokerrenderer.py:1376
 msgid "How much do you want to rebuy?"
 msgstr "La main est finie, que voulez-vous faire ?"
 
-#: pokerui/pokerrenderer.py:1379
+#: pokerui/pokerrenderer.py:1380
 msgid ""
 "You don't have enough money to play on this table.\n"
 "To get money go in menu 'Lobby' and click 'Cash in'.\n"
@@ -632,57 +632,57 @@ msgstr ""
 "(si vous jouez en play money, il vous faut peut-être \n"
 "accumuler plus de jetons via des victoires)"
 
-#: pokerui/pokerrenderer.py:1382
+#: pokerui/pokerrenderer.py:1383
 msgid "Which amount do you want to bring at the table?"
 msgstr "Combien de jetons apporter à la table ?"
 
-#: pokerui/pokerrenderer.py:1387
+#: pokerui/pokerrenderer.py:1388
 msgid "All your bankroll"
 msgstr "Toute ma bankroll"
 
-#: pokerui/pokerrenderer.py:1389
+#: pokerui/pokerrenderer.py:1390
 msgid "Maximum buy in"
 msgstr "Le maximum"
 
-#: pokerui/pokerrenderer.py:1619 pokerui/pokerrenderer.py:1628
+#: pokerui/pokerrenderer.py:1620 pokerui/pokerrenderer.py:1629
 msgid "Screen resolution changed"
 msgstr "Résolution changée"
 
-#: pokerui/pokerrenderer.py:1624
+#: pokerui/pokerrenderer.py:1625
 msgid "Display changed to "
 msgstr "Affichage modifié en "
 
-#: pokerui/pokerrenderer.py:1634
+#: pokerui/pokerrenderer.py:1635
 msgid "Graphics quality changed"
 msgstr "Qualité des graphismes modifiée"
 
-#: pokerui/pokerrenderer.py:1668
+#: pokerui/pokerrenderer.py:1669
 msgid "The game must be restarted for this change to take effect\n"
 msgstr "Le jeu doit être redémarer pour que les modifications prennent effet\n"
 
-#: pokerui/pokerrenderer.py:1669
+#: pokerui/pokerrenderer.py:1670
 msgid "Do you want to restart the game now ?"
 msgstr "Voulez-vous redémarrer maintenant ?"
 
-#: pokerui/pokerrenderer.py:1966
+#: pokerui/pokerrenderer.py:1967
 msgid "Your hand history is empty"
 msgstr "L'historique est vide"
 
-#: pokerui/pokerrenderer.py:2178
+#: pokerui/pokerrenderer.py:2179
 msgid "Already logged in"
 msgstr "Vous êtes déja identifié"
 
-#: pokerui/pokerrenderer.py:2210 pokerui/pokerrenderer.py:2320
-#: pokerui/pokerrenderer.py:2332 pokerui/pokerrenderer.py:2426
-#: pokerui/pokerrenderer.py:2447 pokerui/pokerrenderer.py:2460
+#: pokerui/pokerrenderer.py:2211 pokerui/pokerrenderer.py:2321
+#: pokerui/pokerrenderer.py:2333 pokerui/pokerrenderer.py:2427
+#: pokerui/pokerrenderer.py:2448 pokerui/pokerrenderer.py:2461
 msgid "You cannot do that now"
 msgstr "Vous ne pouvez pas faire ca"
 
-#: pokerui/pokerrenderer.py:2327
+#: pokerui/pokerrenderer.py:2328
 msgid "You must be logged in to get a seat"
 msgstr "Vous devez vous identifier avant de vous assoir"
 
-#: pokerui/pokerrenderer.py:2383
+#: pokerui/pokerrenderer.py:2384
 msgid ""
 "Do you really want to fold your hand\n"
 "and leave the table ?"
@@ -690,2027 +690,199 @@ msgstr ""
 "Voulez-vous vraiment coucher votre main\n"
 "et quitter la table ?"
 
-#: pokerui/pokerrenderer.py:2386
+#: pokerui/pokerrenderer.py:2387
 msgid "Do you really want to leave the table ?"
 msgstr "Voulez-vous vraiment quitter la table ?"
 
-#: pokerui/pokerrenderer.py:2408
+#: pokerui/pokerrenderer.py:2409
 msgid "You must leave the table to change your outfit"
 msgstr "Vous devez quitter la table avant de modifier votre panoplie"
 
-#: po/raw.string:1
+#: po/raw.string:4
 msgid "gtkrc"
 msgstr "gtkrc.fr"
 
-#: po/raw.string:6
-msgid "High card Ace"
-msgstr "As carte haute"
-
-#: po/raw.string:7
-msgid "High card King"
-msgstr "Roi carte haute"
-
 #: po/raw.string:8
-msgid "High card Queen"
-msgstr "Reine carte haute"
-
-#: po/raw.string:9
-msgid "High card Jack"
-msgstr "Valet carte haute"
-
-#: po/raw.string:10
-msgid "High card Ten"
-msgstr "10 carte haute"
-
-#: po/raw.string:11
-msgid "High card Nine"
-msgstr "9 carte haute"
-
-#: po/raw.string:12
-msgid "High card Eight"
-msgstr "8 carte haute"
-
-#: po/raw.string:13
-msgid "High card Seven"
-msgstr "7 carte haute"
-
-#: po/raw.string:14
-msgid "High card Six"
-msgstr "6 carte haute"
-
-#: po/raw.string:15
-msgid "High card Five"
-msgstr "5 carte haute"
-
-#: po/raw.string:16
-msgid "High card Four"
-msgstr "4 carte haute"
-
-#: po/raw.string:17
-msgid "High card Trey"
-msgstr "3 carte haute"
-
-#: po/raw.string:18
-msgid "High card Deuce"
-msgstr "2 carte haute"
-
-#: po/raw.string:19
-msgid "Pair of Aces"
-msgstr "Paire d'as"
-
-#: po/raw.string:20
-msgid "Pair of Kings"
-msgstr "Paire de rois"
-
-#: po/raw.string:21
-msgid "Pair of Queens"
-msgstr "Paire de reines"
-
-#: po/raw.string:22
-msgid "Pair of Jacks"
-msgstr "Paire de valets"
-
-#: po/raw.string:23
-msgid "Pair of Tens"
-msgstr "Paire de 10"
-
-#: po/raw.string:24
-msgid "Pair of Nines"
-msgstr "Paire de 9"
-
-#: po/raw.string:25
-msgid "Pair of Eigths"
-msgstr "Paire de 8"
-
-#: po/raw.string:26
-msgid "Pair of Sevens"
-msgstr "Paire de 7"
-
-#: po/raw.string:27
-msgid "Pair of Sixes"
-msgstr "Paire de 6"
-
-#: po/raw.string:28
-msgid "Pair of Fives"
-msgstr "Paire de 5"
-
-#: po/raw.string:29
-msgid "Pair of Fours"
-msgstr "Paire de 4"
-
-#: po/raw.string:30
-msgid "Pair of Treys"
-msgstr "Paire de 3"
-
-#: po/raw.string:31
-msgid "Pair of Deuces"
-msgstr "Paire de 2"
-
-#: po/raw.string:32
-msgid "Pairs of Aces and Kings"
-msgstr "Double paire As et Rois"
-
-#: po/raw.string:33
-msgid "Pairs of Aces and Queens"
-msgstr "Double paire As et Reines"
-
-#: po/raw.string:34
-msgid "Pairs of Aces and Jacks"
-msgstr "Double paire As et Valets"
-
-#: po/raw.string:35
-msgid "Pairs of Aces and Tens"
-msgstr "Double paire As et 10"
-
-#: po/raw.string:36
-msgid "Pairs of Aces and Nines"
-msgstr "Double paire As et 9"
-
-#: po/raw.string:37
-msgid "Pairs of Aces and Eights"
-msgstr "Double paire As et 8"
-
-#: po/raw.string:38
-msgid "Pairs of Aces and Sevens"
-msgstr "Double paire As et 7"
-
-#: po/raw.string:39
-msgid "Pairs of Aces and Sixes"
-msgstr "Double paire As et 6"
-
-#: po/raw.string:40
-msgid "Pairs of Aces and Fives"
-msgstr "Double paire As et 5"
-
-#: po/raw.string:41
-msgid "Pairs of Aces and Fours"
-msgstr "Double paire As et 4"
-
-#: po/raw.string:42
-msgid "Pairs of Aces and Treys"
-msgstr "Double paire As et 3"
-
-#: po/raw.string:43
-msgid "Pairs of Aces and Deuces"
-msgstr "Double paire As et 2"
-
-#: po/raw.string:44
-msgid "Pairs of Kings and Queens"
-msgstr "Double paire Rois et Reines"
-
-#: po/raw.string:45
-msgid "Pairs of Kings and Jacks"
-msgstr "Double paire Rois et Valets"
-
-#: po/raw.string:46
-msgid "Pairs of Kings and Tens"
-msgstr "Double paire Rois et 10"
-
-#: po/raw.string:47
-msgid "Pairs of Kings and Nines"
-msgstr "Double paire Rois et 9"
-
-#: po/raw.string:48
-msgid "Pairs of Kings and Eights"
-msgstr "Double paire Rois et 8"
-
-#: po/raw.string:49
-msgid "Pairs of Kings and Sevens"
-msgstr "Double paire Rois et 7"
-
-#: po/raw.string:50
-msgid "Pairs of Kings and Sixes"
-msgstr "Double paire Rois et 6"
-
-#: po/raw.string:51
-msgid "Pairs of Kings and Fives"
-msgstr "Double paire Rois et 5"
-
-#: po/raw.string:52
-msgid "Pairs of Kings and Fours"
-msgstr "Double paire Rois et 4"
-
-#: po/raw.string:53
-msgid "Pairs of Kings and Treys"
-msgstr "Double paire Rois et 3"
-
-#: po/raw.string:54
-msgid "Pairs of Kings and Deuces"
-msgstr "Double paire Rois et 2"
-
-#: po/raw.string:55
-msgid "Pairs of Queens and Jacks"
-msgstr "Double paire Reines et Valets"
-
-#: po/raw.string:56
-msgid "Pairs of Queens and Tens"
-msgstr "Double paire Reines et 10"
-
-#: po/raw.string:57
-msgid "Pairs of Queens and Nines"
-msgstr "Double paire Reines et 9"
-
-#: po/raw.string:58
-msgid "Pairs of Queens and Eights"
-msgstr "Double paire Reines et 8"
-
-#: po/raw.string:59
-msgid "Pairs of Queens and Sevens"
-msgstr "Double paire Reines et 7"
-
-#: po/raw.string:60
-msgid "Pairs of Queens and Sixes"
-msgstr "Double paire Reines et 6"
-
-#: po/raw.string:61
-msgid "Pairs of Queens and Fives"
-msgstr "Double paire Reines et 5"
-
-#: po/raw.string:62
-msgid "Pairs of Queens and Fours"
-msgstr "Double paire Reines et 4"
-
-#: po/raw.string:63
-msgid "Pairs of Queens and Treys"
-msgstr "Double paire Reines et 3"
-
-#: po/raw.string:64
-msgid "Pairs of Queens and Deuces"
-msgstr "Double paire Reines et 2"
-
-#: po/raw.string:65
-msgid "Pairs of Jacks and Tens"
-msgstr "Double paire Valets et 10"
-
-#: po/raw.string:66
-msgid "Pairs of Jacks and Nines"
-msgstr "Double paire Valets et 9"
-
-#: po/raw.string:67
-msgid "Pairs of Jacks and Eights"
-msgstr "Double paire Valets et 8"
-
-#: po/raw.string:68
-msgid "Pairs of Jacks and Sevens"
-msgstr "Double paire Valets et 7"
-
-#: po/raw.string:69
-msgid "Pairs of Jacks and Sixes"
-msgstr "Double paire Valets et 6"
-
-#: po/raw.string:70
-msgid "Pairs of Jacks and Fives"
-msgstr "Double paire Valets et 5"
-
-#: po/raw.string:71
-msgid "Pairs of Jacks and Fours"
-msgstr "Double paire Valets et 4"
-
-#: po/raw.string:72
-msgid "Pairs of Jacks and Treys"
-msgstr "Double paire Valets et 3"
-
-#: po/raw.string:73
-msgid "Pairs of Jacks and Deuces"
-msgstr "Double paire Valets et 2"
-
-#: po/raw.string:74
-msgid "Pairs of Tens and Nines"
-msgstr "Double paire 10 et 9"
-
-#: po/raw.string:75
-msgid "Pairs of Tens and Eights"
-msgstr "Double paire 10 et 8"
-
-#: po/raw.string:76
-msgid "Pairs of Tens and Sevens"
-msgstr "Double paire 10 et 7"
-
-#: po/raw.string:77
-msgid "Pairs of Tens and Sixes"
-msgstr "Double paire 10 et 6"
-
-#: po/raw.string:78
-msgid "Pairs of Tens and Fives"
-msgstr "Double paire 10 et 5"
-
-#: po/raw.string:79
-msgid "Pairs of Tens and Fours"
-msgstr "Double paire 10 et 4"
-
-#: po/raw.string:80
-msgid "Pairs of Tens and Treys"
-msgstr "Double paire 10 et 3"
-
-#: po/raw.string:81
-msgid "Pairs of Tens and Deuces"
-msgstr "Double paire 10 et 2"
-
-#: po/raw.string:82
-msgid "Pairs of Nines and Eights"
-msgstr "Double paire 9 et 8"
-
-#: po/raw.string:83
-msgid "Pairs of Nines and Sevens"
-msgstr "Double paire 9 et 7"
-
-#: po/raw.string:84
-msgid "Pairs of Nines and Sixes"
-msgstr "Double paire 9 et 6"
-
-#: po/raw.string:85
-msgid "Pairs of Nines and Fives"
-msgstr "Double paire 9 et 5"
-
-#: po/raw.string:86
-msgid "Pairs of Nines and Fours"
-msgstr "Double paire 9 et 4"
-
-#: po/raw.string:87
-msgid "Pairs of Nines and Treys"
-msgstr "Double paire 9 et 3"
-
-#: po/raw.string:88
-msgid "Pairs of Nines and Deuces"
-msgstr "Double paire 9 et 2"
-
-#: po/raw.string:89
-msgid "Pairs of Eights and Sevens"
-msgstr "Double paire 9 et 7"
-
-#: po/raw.string:90
-msgid "Pairs of Eights and Sixes"
-msgstr "Double paire 9 et 6"
-
-#: po/raw.string:91
-msgid "Pairs of Eights and Fives"
-msgstr "Double paire 9 et 5"
-
-#: po/raw.string:92
-msgid "Pairs of Eights and Fours"
-msgstr "Double paire 9 et 4"
-
-#: po/raw.string:93
-msgid "Pairs of Eights and Treys"
-msgstr "Double paire 9 et 3"
-
-#: po/raw.string:94
-msgid "Pairs of Eights and Deuces"
-msgstr "Double paire 9 et 2"
-
-#: po/raw.string:95
-msgid "Pairs of Sevens and Sixes"
-msgstr "Double paire 7 et 6"
-
-#: po/raw.string:96
-msgid "Pairs of Sevens and Fives"
-msgstr "Double paire 7 et 5"
-
-#: po/raw.string:97
-msgid "Pairs of Sevens and Fours"
-msgstr "Double paire 7 et 4"
-
-#: po/raw.string:98
-msgid "Pairs of Sevens and Treys"
-msgstr "Double paire 7 et 3"
-
-#: po/raw.string:99
-msgid "Pairs of Sevens and Deuces"
-msgstr "Double paire 7 et 2"
-
-#: po/raw.string:100
-msgid "Pairs of Sixes and Fives"
-msgstr "Double paire 6 et 5"
-
-#: po/raw.string:101
-msgid "Pairs of Sixes and Fours"
-msgstr "Double paire 6 et 4"
-
-#: po/raw.string:102
-msgid "Pairs of Sixes and Treys"
-msgstr "Double paire 6 et 3"
-
-#: po/raw.string:103
-msgid "Pairs of Sixes and Deuces"
-msgstr "Double paire 6 et 2"
-
-#: po/raw.string:104
-msgid "Pairs of Fives and Fours"
-msgstr "Double paire 5 et 4"
-
-#: po/raw.string:105
-msgid "Pairs of Fives and Treys"
-msgstr "Double paire 5 et 3"
-
-#: po/raw.string:106
-msgid "Pairs of Fives and Deuces"
-msgstr "Double paire 5 et 2"
-
-#: po/raw.string:107
-msgid "Pairs of Fours and Treys"
-msgstr "Double paire 4 et 3"
-
-#: po/raw.string:108
-msgid "Pairs of Fours and Deuces"
-msgstr "Double paire 4 et 2"
-
-#: po/raw.string:109
-msgid "Pairs of Treys and Deuces"
-msgstr "Double paire 3 et 2"
-
-#: po/raw.string:110
-msgid "Trips Aces"
-msgstr "Brelan d'As"
-
-#: po/raw.string:111
-msgid "Trips Kings"
-msgstr "Brelan de Rois"
-
-#: po/raw.string:112
-msgid "Trips Queens"
-msgstr "Brelan de Reines"
-
-#: po/raw.string:113
-msgid "Trips Jacks"
-msgstr "Brelan de Valets"
-
-#: po/raw.string:114
-msgid "Trips Tens"
-msgstr "Brelan de 10"
-
-#: po/raw.string:115
-msgid "Trips Nines"
-msgstr "Brelan de 9"
-
-#: po/raw.string:116
-msgid "Trips Eigths"
-msgstr "Brelan de 8"
-
-#: po/raw.string:117
-msgid "Trips Sevens"
-msgstr "Brelan de 7"
-
-#: po/raw.string:118
-msgid "Trips Sixes"
-msgstr "Brelan de 6"
-
-#: po/raw.string:119
-msgid "Trips Fives"
-msgstr "Brelan de 5"
-
-#: po/raw.string:120
-msgid "Trips Fours"
-msgstr "Brelan de 4"
-
-#: po/raw.string:121
-msgid "Trips Treys"
-msgstr "Brelan de 3"
-
-#: po/raw.string:122
-msgid "Trips Deuces"
-msgstr "Brelan de 2"
-
-#: po/raw.string:123
-msgid "Straight Ace high"
-msgstr "Suite, As haut"
-
-#: po/raw.string:124
-msgid "Straight King high"
-msgstr "Suite, Roi haut"
-
-#: po/raw.string:125
-msgid "Straight Queen high"
-msgstr "Suite, Reine haute"
-
-#: po/raw.string:126
-msgid "Straight Jack high"
-msgstr "Suite, Valet haut"
-
-#: po/raw.string:127
-msgid "Straight Ten high"
-msgstr "Suite, 10 haut"
-
-#: po/raw.string:128
-msgid "Straight Nine high"
-msgstr "Suite, 9 haut"
-
-#: po/raw.string:129
-msgid "Straight Eight high"
-msgstr "Suite, 8 haut"
-
-#: po/raw.string:130
-msgid "Straight Seven high"
-msgstr "Suite, 7 haut"
-
-#: po/raw.string:131
-msgid "Straight Six high"
-msgstr "Suite, 6 haut"
-
-#: po/raw.string:132
-msgid "Straight Five high"
-msgstr "Suite, 5 haut"
-
-#: po/raw.string:133
-msgid "Straight Four high"
-msgstr "Suite, 4 haut"
-
-#: po/raw.string:134
-msgid "Straight Trey high"
-msgstr "Suite, 3 haut"
-
-#: po/raw.string:135
-msgid "Straight Deuce high"
-msgstr "Suite, 2 haut"
-
-#: po/raw.string:136
-msgid "Flush Ace high"
-msgstr "Couleur, As haut"
-
-#: po/raw.string:137
-msgid "Flush King high"
-msgstr "Couleur, Roi haut"
-
-#: po/raw.string:138
-msgid "Flush Queen high"
-msgstr "Couleur, Reine haute"
-
-#: po/raw.string:139
-msgid "Flush Jack high"
-msgstr "Couleur, Valet haut"
-
-#: po/raw.string:140
-msgid "Flush Ten high"
-msgstr "Couleur, 10 haut"
-
-#: po/raw.string:141
-msgid "Flush Nine high"
-msgstr "Couleur, 9 haut"
-
-#: po/raw.string:142
-msgid "Flush Eight high"
-msgstr "Couleur, 8 haut"
-
-#: po/raw.string:143
-msgid "Flush Seven high"
-msgstr "Couleur, 7 haut"
-
-#: po/raw.string:144
-msgid "Flush Six high"
-msgstr "Couleur, 6 haut"
-
-#: po/raw.string:145
-msgid "Flush Five high"
-msgstr "Couleur, 5 haut"
-
-#: po/raw.string:146
-msgid "Flush Four high"
-msgstr "Couleur, 4 haut"
-
-#: po/raw.string:147
-msgid "Flush Trey high"
-msgstr "Couleur, 3 haut"
-
-#: po/raw.string:148
-msgid "Flush Deuce high"
-msgstr "Couleur, 2 haut"
-
-#: po/raw.string:149
-msgid "Full Ace over King"
-msgstr "Full aux As par les Rois"
-
-#: po/raw.string:150
-msgid "Full Ace over Queen"
-msgstr "Full aux As par les Reines"
-
-#: po/raw.string:151
-msgid "Full Ace over Jack"
-msgstr "Full aux As par les Valets"
-
-#: po/raw.string:152
-msgid "Full Ace over Ten"
-msgstr "Full aux As par les 10"
-
-#: po/raw.string:153
-msgid "Full Ace over Nine"
-msgstr "Full aux As par les 9"
-
-#: po/raw.string:154
-msgid "Full Ace over Eight"
-msgstr "Full aux As par les 8"
-
-#: po/raw.string:155
-msgid "Full Ace over Seven"
-msgstr "Full aux As par les 7"
-
-#: po/raw.string:156
-msgid "Full Ace over Six"
-msgstr "Full aux As par les 6"
-
-#: po/raw.string:157
-msgid "Full Ace over Five"
-msgstr "Full aux As par les 5"
-
-#: po/raw.string:158
-msgid "Full Ace over Four"
-msgstr "Full aux As par les 4"
-
-#: po/raw.string:159
-msgid "Full Ace over Trey"
-msgstr "Full aux As par les 3"
-
-#: po/raw.string:160
-msgid "Full Ace over Deuce"
-msgstr "Full aux As par les 2"
-
-#: po/raw.string:161
-msgid "Full King over Ace"
-msgstr "Full aux Rois par les As"
-
-#: po/raw.string:162
-msgid "Full King over Queen"
-msgstr "Full aux Rois par les Reines"
-
-#: po/raw.string:163
-msgid "Full King over Jack"
-msgstr "Full aux Rois par les Valets"
-
-#: po/raw.string:164
-msgid "Full King over Ten"
-msgstr "Full aux Rois par les 10"
-
-#: po/raw.string:165
-msgid "Full King over Nine"
-msgstr "Full aux Rois par les 9"
-
-#: po/raw.string:166
-msgid "Full King over Eight"
-msgstr "Full aux Rois par les 8"
-
-#: po/raw.string:167
-msgid "Full King over Seven"
-msgstr "Full aux Rois par les 7"
-
-#: po/raw.string:168
-msgid "Full King over Six"
-msgstr "Full aux Rois par les 6"
-
-#: po/raw.string:169
-msgid "Full King over Five"
-msgstr "Full aux Rois par les 5"
-
-#: po/raw.string:170
-msgid "Full King over Four"
-msgstr "Full aux Rois par les 4"
-
-#: po/raw.string:171
-msgid "Full King over Trey"
-msgstr "Full aux Rois par les 3"
-
-#: po/raw.string:172
-msgid "Full King over Deuce"
-msgstr "Full aux Rois par les 2"
-
-#: po/raw.string:173
-msgid "Full Queen over Ace"
-msgstr "Full aux Reines par les As"
-
-#: po/raw.string:174
-msgid "Full Queen over King"
-msgstr "Full aux Reines par les Rois"
-
-#: po/raw.string:175
-msgid "Full Queen over Jack"
-msgstr "Full aux Reines par les Valets"
-
-#: po/raw.string:176
-msgid "Full Queen over Ten"
-msgstr "Full aux Reines par les 10"
-
-#: po/raw.string:177
-msgid "Full Queen over Nine"
-msgstr "Full aux Reines par les 9"
-
-#: po/raw.string:178
-msgid "Full Queen over Eight"
-msgstr "Full aux Reines par les 8"
-
-#: po/raw.string:179
-msgid "Full Queen over Seven"
-msgstr "Full aux Reines par les 7"
-
-#: po/raw.string:180
-msgid "Full Queen over Six"
-msgstr "Full aux Reines par les 6"
-
-#: po/raw.string:181
-msgid "Full Queen over Five"
-msgstr "Full aux Reines par les 5"
-
-#: po/raw.string:182
-msgid "Full Queen over Four"
-msgstr "Full aux Reines par les 4"
-
-#: po/raw.string:183
-msgid "Full Queen over Trey"
-msgstr "Full aux Reines par les 3"
-
-#: po/raw.string:184
-msgid "Full Queen over Deuce"
-msgstr "Full aux Reines par les 2"
-
-#: po/raw.string:185
-msgid "Full Jack over Ace"
-msgstr "Full aux Valets par les As"
-
-#: po/raw.string:186
-msgid "Full Jack over King"
-msgstr "Full aux Valets par les Rois"
-
-#: po/raw.string:187
-msgid "Full Jack over Queen"
-msgstr "Full aux Valets par les Reines"
-
-#: po/raw.string:188
-msgid "Full Jack over Ten"
-msgstr "Full aux Valets par les 10"
-
-#: po/raw.string:189
-msgid "Full Jack over Nine"
-msgstr "Full aux Valets par les 9"
-
-#: po/raw.string:190
-msgid "Full Jack over Eight"
-msgstr "Full aux Valets par les 8"
-
-#: po/raw.string:191
-msgid "Full Jack over Seven"
-msgstr "Full aux Valets par les 7"
-
-#: po/raw.string:192
-msgid "Full Jack over Six"
-msgstr "Full aux Valets par les 6"
-
-#: po/raw.string:193
-msgid "Full Jack over Five"
-msgstr "Full aux Valets par les 5"
-
-#: po/raw.string:194
-msgid "Full Jack over Four"
-msgstr "Full aux Valets par les 4"
-
-#: po/raw.string:195
-msgid "Full Jack over Trey"
-msgstr "Full aux Valets par les 3"
-
-#: po/raw.string:196
-msgid "Full Jack over Deuce"
-msgstr "Full aux Valets par les 2"
-
-#: po/raw.string:197
-msgid "Full Ten over Ace"
-msgstr "Full aux 10 par les As"
-
-#: po/raw.string:198
-msgid "Full Ten over King"
-msgstr "Full aux 10 par les Rois"
-
-#: po/raw.string:199
-msgid "Full Ten over Queen"
-msgstr "Full aux 10 par les Reines"
-
-#: po/raw.string:200
-msgid "Full Ten over Jack"
-msgstr "Full aux 10 par les Valets"
-
-#: po/raw.string:201
-msgid "Full Ten over Nine"
-msgstr "Full aux 10 par les 9"
-
-#: po/raw.string:202
-msgid "Full Ten over Eight"
-msgstr "Full aux 10 par les 8"
-
-#: po/raw.string:203
-msgid "Full Ten over Seven"
-msgstr "Full aux 10 par les 7"
-
-#: po/raw.string:204
-msgid "Full Ten over Six"
-msgstr "Full aux 10 par les 6"
-
-#: po/raw.string:205
-msgid "Full Ten over Five"
-msgstr "Full aux 10 par les 5"
-
-#: po/raw.string:206
-msgid "Full Ten over Four"
-msgstr "Full aux 10 par les 4"
-
-#: po/raw.string:207
-msgid "Full Ten over Trey"
-msgstr "Full aux 10 par les 3"
-
-#: po/raw.string:208
-msgid "Full Ten over Deuce"
-msgstr "Full aux 10 par les 2"
-
-#: po/raw.string:209
-msgid "Full Nine over Ace"
-msgstr "Full aux 9 par les As"
-
-#: po/raw.string:210
-msgid "Full Nine over King"
-msgstr "Full aux 9 par les Rois"
-
-#: po/raw.string:211
-msgid "Full Nine over Queen"
-msgstr "Full aux 9 par les Reines"
-
-#: po/raw.string:212
-msgid "Full Nine over Jack"
-msgstr "Full aux 9 par les Valets"
-
-#: po/raw.string:213
-msgid "Full Nine over Ten"
-msgstr "Full aux 9 par les 10"
-
-#: po/raw.string:214
-msgid "Full Nine over Eight"
-msgstr "Full aux 9 par les 8"
-
-#: po/raw.string:215
-msgid "Full Nine over Seven"
-msgstr "Full aux 9 par les 7"
-
-#: po/raw.string:216
-msgid "Full Nine over Six"
-msgstr "Full aux 9 par les 6"
-
-#: po/raw.string:217
-msgid "Full Nine over Five"
-msgstr "Full aux 9 par les 5"
-
-#: po/raw.string:218
-msgid "Full Nine over Four"
-msgstr "Full aux 9 par les 4"
-
-#: po/raw.string:219
-msgid "Full Nine over Trey"
-msgstr "Full aux 9 par les 3"
-
-#: po/raw.string:220
-msgid "Full Nine over Deuce"
-msgstr "Full aux 9 par les 2"
-
-#: po/raw.string:221
-msgid "Full Eight over Ace"
-msgstr "Full aux 8 par les As"
-
-#: po/raw.string:222
-msgid "Full Eight over King"
-msgstr "Full aux 8 par les Rois"
-
-#: po/raw.string:223
-msgid "Full Eight over Queen"
-msgstr "Full aux 8 par les Reines"
-
-#: po/raw.string:224
-msgid "Full Eight over Jack"
-msgstr "Full aux 8 par les Valets"
-
-#: po/raw.string:225
-msgid "Full Eight over Ten"
-msgstr "Full aux 8 par les 10"
-
-#: po/raw.string:226
-msgid "Full Eight over Nine"
-msgstr "Full aux 8 par les 9"
-
-#: po/raw.string:227
-msgid "Full Eight over Seven"
-msgstr "Full aux 8 par les 7"
-
-#: po/raw.string:228
-msgid "Full Eight over Six"
-msgstr "Full aux 8 par les 6"
-
-#: po/raw.string:229
-msgid "Full Eight over Five"
-msgstr "Full aux 8 par les 5"
-
-#: po/raw.string:230
-msgid "Full Eight over Four"
-msgstr "Full aux 8 par les 4"
-
-#: po/raw.string:231
-msgid "Full Eight over Trey"
-msgstr "Full aux 8 par les 3"
-
-#: po/raw.string:232
-msgid "Full Eight over Deuce"
-msgstr "Full aux 8 par les 2"
-
-#: po/raw.string:233
-msgid "Full Seven over Ace"
-msgstr "Full aux 7 par les As"
-
-#: po/raw.string:234
-msgid "Full Seven over King"
-msgstr "Full aux 7 par les Rois"
-
-#: po/raw.string:235
-msgid "Full Seven over Queen"
-msgstr "Full aux 7 par les Reines"
-
-#: po/raw.string:236
-msgid "Full Seven over Jack"
-msgstr "Full aux 7 par les Valets"
-
-#: po/raw.string:237
-msgid "Full Seven over Ten"
-msgstr "Full aux 7 par les 10"
-
-#: po/raw.string:238
-msgid "Full Seven over Nine"
-msgstr "Full aux 7 par les 9"
-
-#: po/raw.string:239
-msgid "Full Seven over Eight"
-msgstr "Full aux 7 par les 8"
-
-#: po/raw.string:240
-msgid "Full Seven over Six"
-msgstr "Full aux 7 par les 6"
-
-#: po/raw.string:241
-msgid "Full Seven over Five"
-msgstr "Full aux 7 par les 5"
-
-#: po/raw.string:242
-msgid "Full Seven over Four"
-msgstr "Full aux 7 par les 4"
-
-#: po/raw.string:243
-msgid "Full Seven over Trey"
-msgstr "Full aux 7 par les 3"
-
-#: po/raw.string:244
-msgid "Full Seven over Deuce"
-msgstr "Full aux 7 par les 2"
-
-#: po/raw.string:245
-msgid "Full Six over Ace"
-msgstr "Full aux 6 par les As"
-
-#: po/raw.string:246
-msgid "Full Six over King"
-msgstr "Full aux 6 par les Rois"
-
-#: po/raw.string:247
-msgid "Full Six over Queen"
-msgstr "Full aux 6 par les Reines"
-
-#: po/raw.string:248
-msgid "Full Six over Jack"
-msgstr "Full aux 6 par les Valets"
-
-#: po/raw.string:249
-msgid "Full Six over Ten"
-msgstr "Full aux 6 par les 10"
-
-#: po/raw.string:250
-msgid "Full Six over Nine"
-msgstr "Full aux 6 par les 9"
-
-#: po/raw.string:251
-msgid "Full Six over Eight"
-msgstr "Full aux 6 par les 8"
-
-#: po/raw.string:252
-msgid "Full Six over Seven"
-msgstr "Full aux 6 par les 7"
-
-#: po/raw.string:253
-msgid "Full Six over Five"
-msgstr "Full aux 6 par les 5"
-
-#: po/raw.string:254
-msgid "Full Six over Four"
-msgstr "Full aux 6 par les 4"
-
-#: po/raw.string:255
-msgid "Full Six over Trey"
-msgstr "Full aux 6 par les 3"
-
-#: po/raw.string:256
-msgid "Full Six over Deuce"
-msgstr "Full aux 6 par les 2"
-
-#: po/raw.string:257
-msgid "Full Five over Ace"
-msgstr "Full aux 5 par les As"
-
-#: po/raw.string:258
-msgid "Full Five over King"
-msgstr "Full aux 5 par les Rois"
-
-#: po/raw.string:259
-msgid "Full Five over Queen"
-msgstr "Full aux 5 par les Reines"
-
-#: po/raw.string:260
-msgid "Full Five over Jack"
-msgstr "Full aux 5 par les Valets"
-
-#: po/raw.string:261
-msgid "Full Five over Ten"
-msgstr "Full aux 5 par les 10"
-
-#: po/raw.string:262
-msgid "Full Five over Nine"
-msgstr "Full aux 5 par les 9"
-
-#: po/raw.string:263
-msgid "Full Five over Eight"
-msgstr "Full aux 5 par les 8"
-
-#: po/raw.string:264
-msgid "Full Five over Seven"
-msgstr "Full aux 5 par les 7"
-
-#: po/raw.string:265
-msgid "Full Five over Six"
-msgstr "Full aux 5 par les 6"
-
-#: po/raw.string:266
-msgid "Full Five over Four"
-msgstr "Full aux 5 par les 4"
-
-#: po/raw.string:267
-msgid "Full Five over Trey"
-msgstr "Full aux 5 par les 3"
-
-#: po/raw.string:268
-msgid "Full Five over Deuce"
-msgstr "Full aux 5 par les 2"
-
-#: po/raw.string:269
-msgid "Full Four over Ace"
-msgstr "Full aux 4 par les As"
-
-#: po/raw.string:270
-msgid "Full Four over King"
-msgstr "Full aux 4 par les Rois"
-
-#: po/raw.string:271
-msgid "Full Four over Queen"
-msgstr "Full aux 4 par les Reines"
-
-#: po/raw.string:272
-msgid "Full Four over Jack"
-msgstr "Full aux 4 par les Valets"
-
-#: po/raw.string:273
-msgid "Full Four over Ten"
-msgstr "Full aux 4 par les 10"
-
-#: po/raw.string:274
-msgid "Full Four over Nine"
-msgstr "Full aux 4 par les 9"
-
-#: po/raw.string:275
-msgid "Full Four over Eight"
-msgstr "Full aux 4 par les 8"
-
-#: po/raw.string:276
-msgid "Full Four over Seven"
-msgstr "Full aux 4 par les 7"
-
-#: po/raw.string:277
-msgid "Full Four over Six"
-msgstr "Full aux 4 par les 6"
-
-#: po/raw.string:278
-msgid "Full Four over Five"
-msgstr "Full aux 4 par les 5"
-
-#: po/raw.string:279
-msgid "Full Four over Trey"
-msgstr "Full aux 4 par les 3"
-
-#: po/raw.string:280
-msgid "Full Four over Deuce"
-msgstr "Full aux 4 par les 2"
-
-#: po/raw.string:281
-msgid "Full Trey over Ace"
-msgstr "Full aux 3 par les As"
-
-#: po/raw.string:282
-msgid "Full Trey over King"
-msgstr "Full aux 3 par les Rois"
-
-#: po/raw.string:283
-msgid "Full Trey over Queen"
-msgstr "Full aux 3 par les Reines"
-
-#: po/raw.string:284
-msgid "Full Trey over Jack"
-msgstr "Full aux 3 par les Valets"
-
-#: po/raw.string:285
-msgid "Full Trey over Ten"
-msgstr "Full aux 3 par les 10"
-
-#: po/raw.string:286
-msgid "Full Trey over Nine"
-msgstr "Full aux 3 par les 9"
-
-#: po/raw.string:287
-msgid "Full Trey over Eight"
-msgstr "Full aux 3 par les 8"
-
-#: po/raw.string:288
-msgid "Full Trey over Seven"
-msgstr "Full aux 3 par les 7"
-
-#: po/raw.string:289
-msgid "Full Trey over Six"
-msgstr "Full aux 3 par les 6"
-
-#: po/raw.string:290
-msgid "Full Trey over Five"
-msgstr "Full aux 3 par les 5"
-
-#: po/raw.string:291
-msgid "Full Trey over Four"
-msgstr "Full aux 3 par les 4"
-
-#: po/raw.string:292
-msgid "Full Trey over Deuce"
-msgstr "Full aux 3 par les 2"
-
-#: po/raw.string:293
-msgid "Full Deuce over Ace"
-msgstr "Full aux 2 par les As"
-
-#: po/raw.string:294
-msgid "Full Deuce over King"
-msgstr "Full aux 2 par les Rois"
-
-#: po/raw.string:295
-msgid "Full Deuce over Queen"
-msgstr "Full aux 2 par les Reines"
-
-#: po/raw.string:296
-msgid "Full Deuce over Jack"
-msgstr "Full aux 2 par les Valets"
-
-#: po/raw.string:297
-msgid "Full Deuce over Ten"
-msgstr "Full aux 2 par les 10"
-
-#: po/raw.string:298
-msgid "Full Deuce over Nine"
-msgstr "Full aux 2 par les 9"
-
-#: po/raw.string:299
-msgid "Full Deuce over Eight"
-msgstr "Full aux 2 par les 8"
-
-#: po/raw.string:300
-msgid "Full Deuce over Seven"
-msgstr "Full aux 2 par les 7"
-
-#: po/raw.string:301
-msgid "Full Deuce over Six"
-msgstr "Full aux 2 par les 6"
-
-#: po/raw.string:302
-msgid "Full Deuce over Five"
-msgstr "Full aux 2 par les 5"
-
-#: po/raw.string:303
-msgid "Full Deuce over Four"
-msgstr "Full aux 2 par les 4"
-
-#: po/raw.string:304
-msgid "Full Deuce over Trey"
-msgstr "Full aux 2 par les 3"
-
-#: po/raw.string:305
-msgid "Quads Aces, King kicker"
-msgstr "Carré d'As, kicker Roi"
-
-#: po/raw.string:306
-msgid "Quads Aces, Queen kicker"
-msgstr "Carré d'As, kicker Reine"
-
-#: po/raw.string:307
-msgid "Quads Aces, Jack kicker"
-msgstr "Carré d'As, kicker Valet"
-
-#: po/raw.string:308
-msgid "Quads Aces, Ten kicker"
-msgstr "Carré d'As, kicker 10"
-
-#: po/raw.string:309
-msgid "Quads Aces, Nine kicker"
-msgstr "Carré d'As, kicker 9"
-
-#: po/raw.string:310
-msgid "Quads Aces, Eight kicker"
-msgstr "Carré d'As, kicker 8"
-
-#: po/raw.string:311
-msgid "Quads Aces, Seven kicker"
-msgstr "Carré d'As, kicker 7"
-
-#: po/raw.string:312
-msgid "Quads Aces, Six kicker"
-msgstr "Carré d'As, kicker 6"
-
-#: po/raw.string:313
-msgid "Quads Aces, Five kicker"
-msgstr "Carré d'As, kicker 5"
-
-#: po/raw.string:314
-msgid "Quads Aces, Four kicker"
-msgstr "Carré d'As, kicker 4"
-
-#: po/raw.string:315
-msgid "Quads Aces, Trey kicker"
-msgstr "Carré d'As, kicker 3"
-
-#: po/raw.string:316
-msgid "Quads Aces, Deuce kicker"
-msgstr "Carré d'As, kicker 2"
-
-#: po/raw.string:317
-msgid "Quads Kings, Ace kicker"
-msgstr "Carré de Rois, kicker As"
-
-#: po/raw.string:318
-msgid "Quads Kings, Queen kicker"
-msgstr "Carré de Rois, kicker Reine"
-
-#: po/raw.string:319
-msgid "Quads Kings, Jack kicker"
-msgstr "Carré de Rois, kicker Valet"
-
-#: po/raw.string:320
-msgid "Quads Kings, Ten kicker"
-msgstr "Carré de Rois, kicker 10"
-
-#: po/raw.string:321
-msgid "Quads Kings, Nine kicker"
-msgstr "Carré de Rois, kicker 9"
-
-#: po/raw.string:322
-msgid "Quads Kings, Eight kicker"
-msgstr "Carré de Rois, kicker 8"
-
-#: po/raw.string:323
-msgid "Quads Kings, Seven kicker"
-msgstr "Carré de Rois, kicker 7"
-
-#: po/raw.string:324
-msgid "Quads Kings, Six kicker"
-msgstr "Carré de Rois, kicker 6"
-
-#: po/raw.string:325
-msgid "Quads Kings, Five kicker"
-msgstr "Carré de Rois, kicker 5"
-
-#: po/raw.string:326
-msgid "Quads Kings, Four kicker"
-msgstr "Carré de Rois, kicker 4"
-
-#: po/raw.string:327
-msgid "Quads Kings, Trey kicker"
-msgstr "Carré de Rois, kicker 3"
-
-#: po/raw.string:328
-msgid "Quads Kings, Deuce kicker"
-msgstr "Carré de Rois, kicker 2"
-
-#: po/raw.string:329
-msgid "Quads Queens, Ace kicker"
-msgstr "Carré de Reines, kicker As"
-
-#: po/raw.string:330
-msgid "Quads Queens, King kicker"
-msgstr "Carré de Reines, kicker Roi"
-
-#: po/raw.string:331
-msgid "Quads Queens, Jack kicker"
-msgstr "Carré de Reines, kicker Valet"
-
-#: po/raw.string:332
-msgid "Quads Queens, Ten kicker"
-msgstr "Carré de Reines, kicker 10"
-
-#: po/raw.string:333
-msgid "Quads Queens, Nine kicker"
-msgstr "Carré de Reines, kicker 9"
-
-#: po/raw.string:334
-msgid "Quads Queens, Eight kicker"
-msgstr "Carré de Reines, kicker 8"
-
-#: po/raw.string:335
-msgid "Quads Queens, Seven kicker"
-msgstr "Carré de Reines, kicker 7"
-
-#: po/raw.string:336
-msgid "Quads Queens, Six kicker"
-msgstr "Carré de Reines, kicker 6"
-
-#: po/raw.string:337
-msgid "Quads Queens, Five kicker"
-msgstr "Carré de Reines, kicker 5"
-
-#: po/raw.string:338
-msgid "Quads Queens, Four kicker"
-msgstr "Carré de Reines, kicker 4"
-
-#: po/raw.string:339
-msgid "Quads Queens, Trey kicker"
-msgstr "Carré de Reines, kicker 3"
-
-#: po/raw.string:340
-msgid "Quads Queens, Deuce kicker"
-msgstr "Carré de Reines, kicker 2"
-
-#: po/raw.string:341
-msgid "Quads Jacks, Ace kicker"
-msgstr "Carré de Valets, kicker As"
-
-#: po/raw.string:342
-msgid "Quads Jacks, King kicker"
-msgstr "Carré de Valets, kicker Roi"
-
-#: po/raw.string:343
-msgid "Quads Jacks, Queen kicker"
-msgstr "Carré de Valets, kicker Reine"
-
-#: po/raw.string:344
-msgid "Quads Jacks, Ten kicker"
-msgstr "Carré de Valets, kicker 10"
-
-#: po/raw.string:345
-msgid "Quads Jacks, Nine kicker"
-msgstr "Carré de Valets, kicker 9"
-
-#: po/raw.string:346
-msgid "Quads Jacks, Eight kicker"
-msgstr "Carré de Valets, kicker 8"
-
-#: po/raw.string:347
-msgid "Quads Jacks, Seven kicker"
-msgstr "Carré de Valets, kicker 7"
-
-#: po/raw.string:348
-msgid "Quads Jacks, Six kicker"
-msgstr "Carré de Valets, kicker 6"
-
-#: po/raw.string:349
-msgid "Quads Jacks, Five kicker"
-msgstr "Carré de Valets, kicker 5"
-
-#: po/raw.string:350
-msgid "Quads Jacks, Four kicker"
-msgstr "Carré de Valets, kicker 4"
-
-#: po/raw.string:351
-msgid "Quads Jacks, Trey kicker"
-msgstr "Carré de Valets, kicker 3"
-
-#: po/raw.string:352
-msgid "Quads Jacks, Deuce kicker"
-msgstr "Carré de Valets, kicker 2"
-
-#: po/raw.string:353
-msgid "Quads Tens, Ace kicker"
-msgstr "Carré de 10, kicker As"
-
-#: po/raw.string:354
-msgid "Quads Tens, King kicker"
-msgstr "Carré de 10, kicker Roi"
-
-#: po/raw.string:355
-msgid "Quads Tens, Queen kicker"
-msgstr "Carré de 10, kicker Reine"
-
-#: po/raw.string:356
-msgid "Quads Tens, Jack kicker"
-msgstr "Carré de 10, kicker Valet"
-
-#: po/raw.string:357
-msgid "Quads Tens, Nine kicker"
-msgstr "Carré de 10, kicker 9"
-
-#: po/raw.string:358
-msgid "Quads Tens, Eight kicker"
-msgstr "Carré de 10, kicker 8"
-
-#: po/raw.string:359
-msgid "Quads Tens, Seven kicker"
-msgstr "Carré de 10, kicker 7"
-
-#: po/raw.string:360
-msgid "Quads Tens, Six kicker"
-msgstr "Carré de 10, kicker 6"
-
-#: po/raw.string:361
-msgid "Quads Tens, Five kicker"
-msgstr "Carré de 10, kicker 5"
-
-#: po/raw.string:362
-msgid "Quads Tens, Four kicker"
-msgstr "Carré de 10, kicker 4"
-
-#: po/raw.string:363
-msgid "Quads Tens, Trey kicker"
-msgstr "Carré de 10, kicker 3"
-
-#: po/raw.string:364
-msgid "Quads Tens, Deuce kicker"
-msgstr "Carré de 10, kicker 2"
-
-#: po/raw.string:365
-msgid "Quads Nines, Ace kicker"
-msgstr "Carré de 9, kicker As"
-
-#: po/raw.string:366
-msgid "Quads Nines, King kicker"
-msgstr "Carré de 9, kicker Roi"
-
-#: po/raw.string:367
-msgid "Quads Nines, Queen kicker"
-msgstr "Carré de 9, kicker Reine"
-
-#: po/raw.string:368
-msgid "Quads Nines, Jack kicker"
-msgstr "Carré de 9, kicker Valet"
-
-#: po/raw.string:369
-msgid "Quads Nines, Ten kicker"
-msgstr "Carré de 9, kicker 10"
-
-#: po/raw.string:370
-msgid "Quads Nines, Eight kicker"
-msgstr "Carré de 9, kicker 8"
-
-#: po/raw.string:371
-msgid "Quads Nines, Seven kicker"
-msgstr "Carré de 9, kicker 7"
-
-#: po/raw.string:372
-msgid "Quads Nines, Six kicker"
-msgstr "Carré de 9, kicker 6"
-
-#: po/raw.string:373
-msgid "Quads Nines, Five kicker"
-msgstr "Carré de 9, kicker 5"
-
-#: po/raw.string:374
-msgid "Quads Nines, Four kicker"
-msgstr "Carré de 9, kicker 4"
-
-#: po/raw.string:375
-msgid "Quads Nines, Trey kicker"
-msgstr "Carré de 9, kicker 3"
-
-#: po/raw.string:376
-msgid "Quads Nines, Deuce kicker"
-msgstr "Carré de 9, kicker 2"
-
-#: po/raw.string:377
-msgid "Quads Eights, Ace kicker"
-msgstr "Carré de 8, kicker As"
-
-#: po/raw.string:378
-msgid "Quads Eights, King kicker"
-msgstr "Carré de 8, kicker Roi"
-
-#: po/raw.string:379
-msgid "Quads Eights, Queen kicker"
-msgstr "Carré de 8, kicker Reine"
-
-#: po/raw.string:380
-msgid "Quads Eights, Jack kicker"
-msgstr "Carré de 8, kicker Valet"
-
-#: po/raw.string:381
-msgid "Quads Eights, Ten kicker"
-msgstr "Carré de 8, kicker 10"
-
-#: po/raw.string:382
-msgid "Quads Eights, Nine kicker"
-msgstr "Carré de 8, kicker 9"
-
-#: po/raw.string:383
-msgid "Quads Eights, Seven kicker"
-msgstr "Carré de 8, kicker 7"
-
-#: po/raw.string:384
-msgid "Quads Eights, Six kicker"
-msgstr "Carré de 8, kicker 6"
-
-#: po/raw.string:385
-msgid "Quads Eights, Five kicker"
-msgstr "Carré de 8, kicker 5"
-
-#: po/raw.string:386
-msgid "Quads Eights, Four kicker"
-msgstr "Carré de 8, kicker 4"
-
-#: po/raw.string:387
-msgid "Quads Eights, Trey kicker"
-msgstr "Carré de 8, kicker 3"
-
-#: po/raw.string:388
-msgid "Quads Eights, Deuce kicker"
-msgstr "Carré de 8, kicker 2"
-
-#: po/raw.string:389
-msgid "Quads Sevens, Ace kicker"
-msgstr "Carré de 7, kicker As"
-
-#: po/raw.string:390
-msgid "Quads Sevens, King kicker"
-msgstr "Carré de 7, kicker Roi"
-
-#: po/raw.string:391
-msgid "Quads Sevens, Queen kicker"
-msgstr "Carré de 7, kicker Reine"
-
-#: po/raw.string:392
-msgid "Quads Sevens, Jack kicker"
-msgstr "Carré de 7, kicker Valet"
-
-#: po/raw.string:393
-msgid "Quads Sevens, Ten kicker"
-msgstr "Carré de 7, kicker 10"
-
-#: po/raw.string:394
-msgid "Quads Sevens, Nine kicker"
-msgstr "Carré de 7, kicker 9"
-
-#: po/raw.string:395
-msgid "Quads Sevens, Eight kicker"
-msgstr "Carré de 7, kicker 8"
-
-#: po/raw.string:396
-msgid "Quads Sevens, Six kicker"
-msgstr "Carré de 7, kicker 6"
-
-#: po/raw.string:397
-msgid "Quads Sevens, Five kicker"
-msgstr "Carré de 7, kicker 5"
-
-#: po/raw.string:398
-msgid "Quads Sevens, Four kicker"
-msgstr "Carré de 7, kicker 4"
-
-#: po/raw.string:399
-msgid "Quads Sevens, Trey kicker"
-msgstr "Carré de 7, kicker 3"
-
-#: po/raw.string:400
-msgid "Quads Sevens, Deuce kicker"
-msgstr "Carré de 7, kicker 2"
-
-#: po/raw.string:401
-msgid "Quads Sixes, Ace kicker"
-msgstr "Carré de 6, kicker As"
-
-#: po/raw.string:402
-msgid "Quads Sixes, King kicker"
-msgstr "Carré de 6, kicker Roi"
-
-#: po/raw.string:403
-msgid "Quads Sixes, Queen kicker"
-msgstr "Carré de 6, kicker Reine"
-
-#: po/raw.string:404
-msgid "Quads Sixes, Jack kicker"
-msgstr "Carré de 6, kicker Valet"
-
-#: po/raw.string:405
-msgid "Quads Sixes, Ten kicker"
-msgstr "Carré de 6, kicker 10"
-
-#: po/raw.string:406
-msgid "Quads Sixes, Nine kicker"
-msgstr "Carré de 6, kicker 9"
-
-#: po/raw.string:407
-msgid "Quads Sixes, Eight kicker"
-msgstr "Carré de 6, kicker 8"
-
-#: po/raw.string:408
-msgid "Quads Sixes, Seven kicker"
-msgstr "Carré de 6, kicker 7"
-
-#: po/raw.string:409
-msgid "Quads Sixes, Five kicker"
-msgstr "Carré de 6, kicker 5"
-
-#: po/raw.string:410
-msgid "Quads Sixes, Four kicker"
-msgstr "Carré de 6, kicker 4"
-
-#: po/raw.string:411
-msgid "Quads Sixes, Trey kicker"
-msgstr "Carré de 6, kicker 3"
-
-#: po/raw.string:412
-msgid "Quads Sixes, Deuce kicker"
-msgstr "Carré de 6, kicker 2"
-
-#: po/raw.string:413
-msgid "Quads Fives, Ace kicker"
-msgstr "Carré de 5, kicker As"
-
-#: po/raw.string:414
-msgid "Quads Fives, King kicker"
-msgstr "Carré de 5, kicker Roi"
-
-#: po/raw.string:415
-msgid "Quads Fives, Queen kicker"
-msgstr "Carré de 5, kicker Reine"
-
-#: po/raw.string:416
-msgid "Quads Fives, Jack kicker"
-msgstr "Carré de 5, kicker Valet"
-
-#: po/raw.string:417
-msgid "Quads Fives, Ten kicker"
-msgstr "Carré de 5, kicker 10"
-
-#: po/raw.string:418
-msgid "Quads Fives, Nine kicker"
-msgstr "Carré de 5, kicker 9"
-
-#: po/raw.string:419
-msgid "Quads Fives, Eight kicker"
-msgstr "Carré de 5, kicker 8"
-
-#: po/raw.string:420
-msgid "Quads Fives, Seven kicker"
-msgstr "Carré de 5, kicker 7"
-
-#: po/raw.string:421
-msgid "Quads Fives, Six kicker"
-msgstr "Carré de 5, kicker 6"
-
-#: po/raw.string:422
-msgid "Quads Fives, Four kicker"
-msgstr "Carré de 5, kicker 4"
-
-#: po/raw.string:423
-msgid "Quads Fives, Trey kicker"
-msgstr "Carré de 5, kicker 3"
-
-#: po/raw.string:424
-msgid "Quads Fives, Deuce kicker"
-msgstr "Carré de 5, kicker 2"
-
-#: po/raw.string:425
-msgid "Quads Fours, Ace kicker"
-msgstr "Carré de 4, kicker As"
-
-#: po/raw.string:426
-msgid "Quads Fours, King kicker"
-msgstr "Carré de 4, kicker Roi"
-
-#: po/raw.string:427
-msgid "Quads Fours, Queen kicker"
-msgstr "Carré de 4, kicker Reine"
-
-#: po/raw.string:428
-msgid "Quads Fours, Jack kicker"
-msgstr "Carré de 4, kicker Valet"
-
-#: po/raw.string:429
-msgid "Quads Fours, Ten kicker"
-msgstr "Carré de 4, kicker 10"
-
-#: po/raw.string:430
-msgid "Quads Fours, Nine kicker"
-msgstr "Carré de 4, kicker 9"
-
-#: po/raw.string:431
-msgid "Quads Fours, Eight kicker"
-msgstr "Carré de 4, kicker 8"
-
-#: po/raw.string:432
-msgid "Quads Fours, Seven kicker"
-msgstr "Carré de 4, kicker 7"
-
-#: po/raw.string:433
-msgid "Quads Fours, Six kicker"
-msgstr "Carré de 4, kicker 6"
-
-#: po/raw.string:434
-msgid "Quads Fours, Five kicker"
-msgstr "Carré de 4, kicker 5"
-
-#: po/raw.string:435
-msgid "Quads Fours, Trey kicker"
-msgstr "Carré de 4, kicker 3"
-
-#: po/raw.string:436
-msgid "Quads Fours, Deuce kicker"
-msgstr "Carré de 4, kicker 2"
-
-#: po/raw.string:437
-msgid "Quads Treys, Ace kicker"
-msgstr "Carré de 3, kicker As"
-
-#: po/raw.string:438
-msgid "Quads Treys, King kicker"
-msgstr "Carré de 3, kicker Roi"
-
-#: po/raw.string:439
-msgid "Quads Treys, Queen kicker"
-msgstr "Carré de 3, kicker Reine"
-
-#: po/raw.string:440
-msgid "Quads Treys, Jack kicker"
-msgstr "Carré de 3, kicker Valet"
-
-#: po/raw.string:441
-msgid "Quads Treys, Ten kicker"
-msgstr "Carré de 3, kicker 10"
-
-#: po/raw.string:442
-msgid "Quads Treys, Nine kicker"
-msgstr "Carré de 3, kicker 9"
-
-#: po/raw.string:443
-msgid "Quads Treys, Eight kicker"
-msgstr "Carré de 3, kicker 8"
-
-#: po/raw.string:444
-msgid "Quads Treys, Seven kicker"
-msgstr "Carré de 3, kicker 7"
-
-#: po/raw.string:445
-msgid "Quads Treys, Six kicker"
-msgstr "Carré de 3, kicker 6"
-
-#: po/raw.string:446
-msgid "Quads Treys, Five kicker"
-msgstr "Carré de 3, kicker 5"
-
-#: po/raw.string:447
-msgid "Quads Treys, Four kicker"
-msgstr "Carré de 3, kicker 4"
-
-#: po/raw.string:448
-msgid "Quads Treys, Deuce kicker"
-msgstr "Carré de 3, kicker 2"
-
-#: po/raw.string:449
-msgid "Quads Deuces, Ace kicker"
-msgstr "Carré de 2, kicker As"
-
-#: po/raw.string:450
-msgid "Quads Deuces, King kicker"
-msgstr "Carré de 2, kicker Roi"
-
-#: po/raw.string:451
-msgid "Quads Deuces, Queen kicker"
-msgstr "Carré de 2, kicker Reine"
-
-#: po/raw.string:452
-msgid "Quads Deuces, Jack kicker"
-msgstr "Carré de 2, kicker Valet"
-
-#: po/raw.string:453
-msgid "Quads Deuces, Ten kicker"
-msgstr "Carré de 2, kicker 10"
-
-#: po/raw.string:454
-msgid "Quads Deuces, Nine kicker"
-msgstr "Carré de 2, kicker 9"
-
-#: po/raw.string:455
-msgid "Quads Deuces, Eight kicker"
-msgstr "Carré de 2, kicker 8"
-
-#: po/raw.string:456
-msgid "Quads Deuces, Seven kicker"
-msgstr "Carré de 2, kicker 7"
-
-#: po/raw.string:457
-msgid "Quads Deuces, Six kicker"
-msgstr "Carré de 2, kicker 6"
-
-#: po/raw.string:458
-msgid "Quads Deuces, Five kicker"
-msgstr "Carré de 2, kicker 5"
-
-#: po/raw.string:459
-msgid "Quads Deuces, Four kicker"
-msgstr "Carré de 2, kicker 4"
-
-#: po/raw.string:460
-msgid "Quads Deuces, Trey kicker"
-msgstr "Carré de 2, kicker 3"
-
-#: po/raw.string:461
-msgid "Royal flush"
-msgstr "Quinte flush royale"
-
-#: po/raw.string:462
-msgid "Straight flush"
-msgstr "Quinte flush"
-
-#: po/raw.string:466
 msgid "head"
 msgstr "Tête"
 
-#: po/raw.string:467
+#: po/raw.string:9
 msgid "hair"
 msgstr "Tête"
 
-#: po/raw.string:468
+#: po/raw.string:10
 msgid "beard"
 msgstr "Barbe"
 
-#: po/raw.string:469
+#: po/raw.string:11
 msgid "torso"
 msgstr "Torse"
 
-#: po/raw.string:470
+#: po/raw.string:12
 msgid "legs"
 msgstr "Jambes"
 
-#: po/raw.string:471
+#: po/raw.string:13
 msgid "dress"
 msgstr "Robe"
 
-#: po/raw.string:472
+#: po/raw.string:14
 msgid "feet"
 msgstr "Pied"
 
-#: po/raw.string:473
+#: po/raw.string:15
 msgid "accessory1"
 msgstr "Accessoire n°1"
 
-#: po/raw.string:474
+#: po/raw.string:16
 msgid "accessory2"
 msgstr "Accessoire n°2"
 
-#: po/raw.string:475
+#: po/raw.string:17
 msgid "accessory3"
 msgstr "Accessoire n°3"
 
-#: po/raw.string:477
+#: po/raw.string:19
 msgid "Base color"
 msgstr "Couleur"
 
-#: po/raw.string:478 po/raw.string:488
+#: po/raw.string:20 po/raw.string:30
 msgid "Skin color"
 msgstr "Couleur peau"
 
-#: po/raw.string:479
+#: po/raw.string:21
 msgid "Eyes color"
 msgstr "Couleur yeux"
 
-#: po/raw.string:480
+#: po/raw.string:22
 msgid "Hair color"
 msgstr "Couleur cheveux"
 
-#: po/raw.string:481
+#: po/raw.string:23
 msgid "Sunshade color"
 msgstr "Couleur visière"
 
-#: po/raw.string:482
+#: po/raw.string:24
 msgid "Jacket color"
 msgstr "Couleur veste"
 
-#: po/raw.string:483 po/raw.string:494
+#: po/raw.string:25 po/raw.string:36
 msgid "Shirt color"
 msgstr "Couleur chemise"
 
-#: po/raw.string:484
+#: po/raw.string:26
 msgid "Shirt detail color #1"
 msgstr "Couleur détail n°1"
 
-#: po/raw.string:485
+#: po/raw.string:27
 msgid "Shirt detail color #2"
 msgstr "Couleur détail n°2"
 
-#: po/raw.string:486
+#: po/raw.string:28
 msgid "Shirt sleeves color"
 msgstr "Couleur manches"
 
-#: po/raw.string:487
+#: po/raw.string:29
 msgid "Shirt base color"
 msgstr "Couleur chemise"
 
-#: po/raw.string:489
+#: po/raw.string:31
 msgid "Glasses color"
 msgstr "Couleur lunettes"
 
-#: po/raw.string:490
+#: po/raw.string:32
 msgid "Mount color"
 msgstr "Couleur montures"
 
-#: po/raw.string:491
+#: po/raw.string:33
 msgid "Pants color"
 msgstr "Couleur pantalon"
 
-#: po/raw.string:492
+#: po/raw.string:34
 msgid "Pull color"
 msgstr "Couleur pull"
 
-#: po/raw.string:493
+#: po/raw.string:35
 msgid "Pullover color"
 msgstr "Couleur pull"
 
-#: po/raw.string:495
+#: po/raw.string:37
 msgid "Shoes color"
 msgstr "Couleur chaussures"
 
-#: po/raw.string:496
+#: po/raw.string:38
 msgid "Nails color"
 msgstr "Couleur ongles"
 
-#: po/raw.string:497
+#: po/raw.string:39
 msgid "Lips color"
 msgstr "Couleur lèvres"
 
-#: po/raw.string:498
+#: po/raw.string:40
 msgid "Eyes makup color"
 msgstr "Couleur maquillage"
 
-#: po/raw.string:499
+#: po/raw.string:41
 msgid "Skirt color"
 msgstr "Couleur jupe"
 
-#: po/raw.string:500
+#: po/raw.string:42
 msgid "Clip color"
 msgstr "Couleur clip"
 
-#: po/raw.string:501
+#: po/raw.string:43
 msgid "Beltclip color"
 msgstr "Couleur clip"
 
-#: po/raw.string:502
+#: po/raw.string:44
 msgid "Pants base color"
 msgstr "Couleur base pantalon"
 
-#: po/raw.string:503
+#: po/raw.string:45
 msgid "Pants strips color"
 msgstr "Couleur bandes"
 
-#: po/raw.string:504
+#: po/raw.string:46
 msgid "Squares color"
 msgstr "Couleurs carrés"
 
-#: po/raw.string:505
+#: po/raw.string:47
 msgid "Fur color"
 msgstr "Couleur fourrure"
 
-#: po/raw.string:506
+#: po/raw.string:48
 msgid "Dress color"
 msgstr "Couleur robe"
 
-#: po/raw.string:507
+#: po/raw.string:49
 msgid "Pattern color"
 msgstr "Couleur motif"
 
-#: po/raw.string:508
+#: po/raw.string:50
 msgid "Flowers color"
 msgstr "Couleur fleurs"
 
-#: po/raw.string:509
+#: po/raw.string:51
 msgid "Belt color"
 msgstr "Couleur ceinture"
 
-#: po/raw.string:510
+#: po/raw.string:52
 msgid "Cap color"
 msgstr "Couleur casquette"
 
-#: po/raw.string:511
+#: po/raw.string:53
 msgid "Hat color"
 msgstr "Couleur chapeau"
 
-#: po/raw.string:512
+#: po/raw.string:54
 msgid "Band color"
 msgstr "Couleur bande"
 
-#: po/raw.string:513
+#: po/raw.string:55
 msgid "Tie color"
 msgstr "Couleur noeud"
 
-#: po/raw.string:517
+#: po/raw.string:59
 msgid ""
 "Clicking on the door will\n"
 "allow you to leave the table\n"
@@ -2720,7 +892,7 @@ msgstr ""
 "vous permet de retourner\n"
 "au lobby."
 
-#: po/raw.string:519
+#: po/raw.string:61
 msgid ""
 "Clicking on the arrow will\n"
 "allow you to sit down."
@@ -2728,7 +900,7 @@ msgstr ""
 "Cliquez sur la flèche\n"
 "pour vous assoir."
 
-#: po/raw.string:521
+#: po/raw.string:63
 msgid ""
 "Clicking on this button will\n"
 "make you fold your cards.\n"
@@ -2757,7 +929,7 @@ msgstr ""
 "votre jeux instantanément en\n"
 "cliquant sur ce boutton"
 
-#: po/raw.string:523
+#: po/raw.string:65
 msgid ""
 "Clicking on this button will\n"
 "make you check to the\n"
@@ -2788,7 +960,7 @@ msgstr ""
 "directement après avoir pressé\n"
 "ce boutton"
 
-#: po/raw.string:525
+#: po/raw.string:67
 msgid ""
 "Clicking on this button will\n"
 "make you call to the\n"
@@ -2819,7 +991,7 @@ msgstr ""
 "relance directement après avoir\n"
 "pressé ce bouton"
 
-#: po/raw.string:527
+#: po/raw.string:69
 msgid ""
 "Clicking on this button will\n"
 "make you raise to the\n"
@@ -2849,7 +1021,7 @@ msgstr ""
 "prise en compte directement\n"
 "après avoir pressé ce bouton"
 
-#: po/raw.string:529 po/raw.string:531
+#: po/raw.string:71 po/raw.string:73
 msgid ""
 "Clicking on your cards will\n"
 "show you the value of the\n"
@@ -2884,3 +1056,4 @@ msgstr ""
 "pressé sur les cartes jusqu'a\n"
 "voir leurs valeurs. Relacher pour\n"
 "revenir dans la position initiale."
+
