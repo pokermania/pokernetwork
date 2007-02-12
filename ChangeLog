@@ -1,9 +1,14 @@
+2007-02-12  Loic Dachary  <loic@dachary.org>
+
+	* Release 1.0.36
+
 2007-02-02  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.35
 	
 	* pokernetwork/pokeravatar.py:
 	also replay if in muck state https://gna.org/bugs/index.php?8229
+	https://gna.org/bugs/index.php?7807 https://gna.org/bugs/?7811
 
 2007-02-02  Loic Dachary  <loic@dachary.org>
 
