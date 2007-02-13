@@ -270,9 +270,9 @@ all-local: interface/interface2d.glade
 interface/interface2d.glade: interface/interface.glade
 	mkdir -p interface
 	@PERL@ ${srcdir}/root2window.pl < ${srcdir}/interface/interface.glade > interface/interface2d.glade
-interface/table/mockup.glade: interface/table/mockup.svg
+interface/table/mockup.glade: interface/table/mockup.svg svg2gtk.py
 	cat ${srcdir}/interface/table/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --glade > interface/table/mockup.glade
-interface/table/gtkrc.mockup: interface/table/mockup.svg
+interface/table/gtkrc.mockup: interface/table/mockup.svg svg2gtk.py
 	cat ${srcdir}/interface/table/mockup.svg | @PYTHON@ ${srcdir}/svg2gtk.py --gtkrc > interface/table/gtkrc.mockup
 
 clean-local:

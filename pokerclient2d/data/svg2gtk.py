@@ -31,6 +31,7 @@ from xml.sax.handler import ContentHandler
 from xml.dom import minidom
 from xml.xpath import Evaluate
 import string
+import re
 
 class SVGParse(ContentHandler):
     def __init__(self, string): 
@@ -56,6 +57,7 @@ class SVGParse(ContentHandler):
             (groupPrefix, groupSuffix) = attrs['id'].split('_')
             (nodePrefix, nodeSuffix) = nodeAttrs['id'].split('_')
             nodeAttrs['id'] = nodeAttrs['id'].replace(nodeSuffix, groupSuffix)
+            (nodeAttrs['x'], nodeAttrs['y']) = map(lambda x, tx: str(float(x) + float(tx)), (nodeAttrs['x'], nodeAttrs['y']), re.match('translate\((-?\d+\.?\d*),(-?\d+\.?\d*)\)', attrs['transform']).groups())
             self.startElementImage(nodeAttrs)
 
 class SVG2Glade(SVGParse):
