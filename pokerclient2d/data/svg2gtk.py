@@ -77,12 +77,26 @@ class SVG2Rc(ContentHandler):
     def __str__(self):
         return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
     def startElement(self, name, attrs):
+        format = 'style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n'
         if name == "svg":
             self.root = attrs['id']
         elif name == "image":
-            self.formats.append('style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n')
-            self.tuples.append((attrs['id'], attrs['xlink:href'], self.root, attrs['id'], attrs['id']))
-
+            self.formats.append(format)
+            self.tuples.append((attrs['id'], attrs['xlink:href'], self.root, attrs['id'], attrs['id']))           
+        elif name == "use":
+            groupId = attrs['id']
+            href = attrs['xlink:href']
+            nodePath = href[1:]
+            nodes = Evaluate('//g[@id="'+nodePath+'"]/image', self.doc)
+            for node in nodes:
+                nodeId = node.attributes['id'].value
+                (groupPrefix, groupSuffix) = groupId.split('_')
+                (nodePrefix, nodeSuffix) = nodeId.split('_')
+                nodeId = nodeId.replace(nodeSuffix, groupSuffix)
+                self.formats.append(format)
+                self.tuples.append((nodeId, node.attributes['xlink:href'].value, self.root, nodeId, nodeId))           
+ 
+ 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) == 2:
