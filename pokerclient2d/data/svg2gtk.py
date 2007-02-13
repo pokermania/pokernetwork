@@ -28,12 +28,16 @@
 
 from xml.sax import parseString
 from xml.sax.handler import ContentHandler
+from xml.dom import minidom
+from xml.xpath import Evaluate
+
 import string
 
 class SVG2Glade(ContentHandler):
     def __init__(self, string):
         self.formats = []
         self.tuples = []
+        self.doc = minidom.parseString(string)
         parseString(string, self)
     def __str__(self):
         return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
@@ -54,6 +58,7 @@ class SVG2Rc(ContentHandler):
         self.root = ""
         self.formats = []
         self.tuples = []
+        self.doc = minidom.parseString(string)
         parseString(string, self)
     def __str__(self):
         return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
