@@ -42,12 +42,26 @@ class SVG2Glade(ContentHandler):
     def __str__(self):
         return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
     def startElement(self, name, attrs):
+        format = '<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>'
         if name == "svg":
             self.formats.append('<glade-interface><widget class="GtkWindow" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><child><widget class="GtkFixed" id="%s_fixed">')
             self.tuples.append((attrs['id'], attrs['width'], attrs['height'], attrs['id']))
         elif name == "image":
-            self.formats.append('<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>')
+            self.formats.append(format)
             self.tuples.append((attrs['id'], attrs['width'], attrs['height'], attrs['id'], attrs['x'], attrs['y']))
+        elif name == "use":
+            groupId = attrs['id']
+            href = attrs['xlink:href']
+            nodePath = href[1:]
+            nodes = Evaluate('//g[@id="'+nodePath+'"]/image', self.doc)
+            for node in nodes:
+                nodeId = node.attributes['id'].value
+                (groupPrefix, groupSuffix) = groupId.split('_')
+                (nodePrefix, nodeSuffix) = nodeId.split('_')
+                nodeId = nodeId.replace(nodeSuffix, groupSuffix)
+                self.formats.append(format)
+                self.tuples.append((nodeId, node.attributes['width'].value, node.attributes['height'].value, nodeId, node.attributes['x'].value, node.attributes['y'].value))
+                
     def endElement(self, name):
         if name == "svg":
             self.formats.append('</widget></child></widget></glade-interface>')
