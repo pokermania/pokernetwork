@@ -30,7 +30,6 @@ from xml.sax import parseString
 from xml.sax.handler import ContentHandler
 from xml.dom import minidom
 from xml.xpath import Evaluate
-
 import string
 
 class SVGParse(ContentHandler):
@@ -49,6 +48,15 @@ class SVGParse(ContentHandler):
             self.startElementImage(attrs)
         elif name == "use":
             self.startElementUse(attrs)
+    def startElementUse(self, attrs):
+        nodes = Evaluate('//g[@id="'+attrs['xlink:href'][1:]+'"]/image', self.doc)
+        for node in nodes:
+            nodeAttrs = {}
+            for key, attribute in node.attributes._attrs.iteritems(): nodeAttrs[key] = attribute.value
+            (groupPrefix, groupSuffix) = attrs['id'].split('_')
+            (nodePrefix, nodeSuffix) = nodeAttrs['id'].split('_')
+            nodeAttrs['id'] = nodeAttrs['id'].replace(nodeSuffix, groupSuffix)
+            self.startElementImage(nodeAttrs)
 
 class SVG2Glade(SVGParse):
     def startElementSvg(self, attrs):
@@ -58,18 +66,6 @@ class SVG2Glade(SVGParse):
         format = '<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>'
         self.formats.append(format)
         self.tuples.append((attrs['id'], attrs['width'], attrs['height'], attrs['id'], attrs['x'], attrs['y']))
-    def startElementUse(self, attrs):
-        format = '<child><widget class="GtkButton" id="%s"><property name="width_request">%s</property><property name="height_request">%s</property><property name="label"/><signal name="clicked" handler="on_%s_clicked"/></widget><packing><property name="x">%s</property><property name="y">%s</property></packing></child>'
-        nodePath = attrs['xlink:href'][1:]
-        nodes = Evaluate('//g[@id="'+nodePath+'"]/image', self.doc)
-        for node in nodes:
-            nodeId = node.attributes['id'].value
-            groupId = attrs['id']
-            (groupPrefix, groupSuffix) = groupId.split('_')
-            (nodePrefix, nodeSuffix) = nodeId.split('_')
-            nodeId = nodeId.replace(nodeSuffix, groupSuffix)
-            self.formats.append(format)
-            self.tuples.append((nodeId, node.attributes['width'].value, node.attributes['height'].value, nodeId, node.attributes['x'].value, node.attributes['y'].value))
     def endElement(self, name):
         if name == "svg":
             self.formats.append('</widget></child></widget></glade-interface>')
@@ -82,18 +78,6 @@ class SVG2Rc(SVGParse):
         format = 'style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n'
         self.formats.append(format)
         self.tuples.append((attrs['id'], attrs['xlink:href'], self.root, attrs['id'], attrs['id']))           
-    def startElementUse(self, attrs):
-        format = 'style "%s_style" {engine "pixmap" {image {function = BOX file = "%s"}}} widget "*%s*%s" style "%s_style"\n'
-        nodePath = attrs['xlink:href'][1:]
-        nodes = Evaluate('//g[@id="'+nodePath+'"]/image', self.doc)
-        for node in nodes:
-            nodeId = node.attributes['id'].value
-            groupId = attrs['id']
-            (groupPrefix, groupSuffix) = groupId.split('_')
-            (nodePrefix, nodeSuffix) = nodeId.split('_')
-            nodeId = nodeId.replace(nodeSuffix, groupSuffix)
-            self.formats.append(format)
-            self.tuples.append((nodeId, node.attributes['xlink:href'].value, self.root, nodeId, nodeId))           
 
 if __name__ == '__main__':
     import sys
