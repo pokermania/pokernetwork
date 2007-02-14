@@ -41,14 +41,16 @@ class GameWindowGlade:
         self.widgets[event.get_name()] = event
         event.add(fixed)
         for seat_index in xrange(0, 10):
-            card_seat = self.glade.get_widget('sit_seat%d' % seat_index)
-            (x, y) = (fixed.child_get_property(card_seat, 'x'), fixed.child_get_property(card_seat, 'y'))
-            #fixed.remove(card_seat)
             for card_index in xrange(1, 8):
-                image = gtk.Image()
-                image.set_name("card%d_seat%d" % (card_index, seat_index))
-                fixed.put(image, x+(card_index-1)*20, y)
-                self.widgets[image.get_name()] = image
+                def button2image(button):
+                    image = gtk.Image()
+                    image.set_name(button.get_name())
+                    self.widgets[image.get_name()] = image
+                    x = fixed.child_get_property(button, 'x')
+                    y = fixed.child_get_property(button, 'y')
+                    fixed.remove(button)
+                    fixed.put(image, x, y)
+                button2image(self.get_widget("card%d_seat%d" % (card_index, seat_index)))
         for board_index in xrange(1, 6):
             board = self.glade.get_widget('board%d' % board_index)
             (x, y) = (fixed.child_get_property(board, 'x'), fixed.child_get_property(board, 'y'))           
