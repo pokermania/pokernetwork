@@ -28,8 +28,9 @@
 
 import unittest
 import sys
-sys.path.insert(0, "@top_srcdir@")
-from pokerclient2d import poker2d
+sys.path.insert(0, "@top_srcdir@/pokerclient2d")
+sys.path.insert(0, "@top_srcdir@/pokerclient2d/.libs")
+import poker2d
 import platform
 
 class MainMockup:    
