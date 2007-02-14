@@ -115,6 +115,7 @@ case "$1" in
                 echo "there is a problem to start Xvfb (ignored)"
             fi
             if expr "$1" : "*.py" > /dev/null ; then
+                sleep 2
                 @PYTHON@ -u ${srcdir}/coverage.py -x "$1"
             else
                 ./$1
