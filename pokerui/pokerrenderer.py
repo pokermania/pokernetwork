@@ -1396,11 +1396,13 @@ class PokerRenderer:
         return True
 
     def showBuyIn(self):
-        self.factory.interface.buyInShow()
+        interface = self.factory.interface
+        if interface: interface.buyInShow()
         self.render(PacketPokerInterfaceCommand(window = "buy_in_window", command = "show"))
 
     def hideBuyIn(self):
-        self.factory.interface.buyInHide()
+        interface = self.factory.interface
+        if interface: interface.buyInHide()
         self.render(PacketPokerInterfaceCommand(window = "buy_in_window", command = "hide"))
 
     def buyIn(self, game, value, *args):
@@ -1454,7 +1456,7 @@ class PokerRenderer:
 
     def render(self, packet):
         display = self.factory.display
-        display.render(packet)
+        if display: display.render(packet)
         
     def scheduleAction(self, packet):
         game = self.factory.packet2game(packet)
@@ -2334,7 +2336,8 @@ class PokerRenderer:
             self.hideBuyIn()
             self.sitActionsHide()
             self.state = IDLE
-            self.changeState(LOBBY)
+            if self.factory.display and self.factory.interface:
+                self.changeState(LOBBY)
             
         elif state == LEAVING_CANCEL:
             self.state = IDLE
