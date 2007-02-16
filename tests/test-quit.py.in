@@ -230,6 +230,7 @@ class PokerFactoryMockup:
         self.interface = PokerInterfaceMockup()
         self.call_quit = False
         self.call_getGame = False
+        self.display = True
         self.settings = PokerSettingMockup()
 
     def quit(self):
