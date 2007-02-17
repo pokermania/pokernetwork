@@ -145,7 +145,7 @@ class PokerTable:
 
     def beginTurn(self):
         self.cancelDealTimeout()
-        if not self.isRunning():
+        if self.game.isEndOrNull():
             self.historyReset()
             hand_serial = self.factory.getHandSerial()
             game = self.game
