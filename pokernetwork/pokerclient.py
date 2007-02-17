@@ -743,7 +743,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 if packet.hand_serial == 0:
                     self.error("game start was refused")
                     forward_packets.remove(packet)
-                elif game.isRunning():
+                elif not game.isEndOrNull():
                     raise UserWarning, "you should not be here (state: %s)" % game.state
                 else:
                     game.history_index = 0
