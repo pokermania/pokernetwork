@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-02-05 17:02+0100\n"
+"POT-Creation-Date: 2007-02-14 18:36+0100\n"
 "PO-Revision-Date: 2007-01-13 23:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -581,30 +581,30 @@ msgstr "la grosse blinde (%s)"
 msgid "small blind (%s)"
 msgstr "la petite blind (%s) "
 
-#: pokerui/pokerrenderer.py:1183
+#: pokerui/pokerrenderer.py:1180
 msgid "This seat is busy"
 msgstr "Cette place est occupée"
 
-#: pokerui/pokerrenderer.py:1320
+#: pokerui/pokerrenderer.py:1317
 msgid "wait for big blind"
 msgstr "attendre la grande blinde"
 
-#: pokerui/pokerrenderer.py:1322
+#: pokerui/pokerrenderer.py:1319
 #, python-format
 msgid "wait for %s blind"
 msgstr "attendre la blinde (%s)"
 
-#: pokerui/pokerrenderer.py:1325 pokerui/pokerrenderer.py:1330
-#: pokerui/pokerrenderer.py:1338
+#: pokerui/pokerrenderer.py:1322 pokerui/pokerrenderer.py:1327
+#: pokerui/pokerrenderer.py:1335
 msgid "sit out next turn"
 msgstr "se lever"
 
-#: pokerui/pokerrenderer.py:1327 pokerui/pokerrenderer.py:1332
-#: pokerui/pokerrenderer.py:1334 pokerui/pokerrenderer.py:1336
+#: pokerui/pokerrenderer.py:1324 pokerui/pokerrenderer.py:1329
+#: pokerui/pokerrenderer.py:1331 pokerui/pokerrenderer.py:1333
 msgid "sit out"
 msgstr "se lever"
 
-#: pokerui/pokerrenderer.py:1362
+#: pokerui/pokerrenderer.py:1359
 msgid ""
 "You can't bring more money\n"
 "to the table"
@@ -612,15 +612,15 @@ msgstr ""
 "Vous ne pouvez pas ammener\n"
 "plus d'argent à la table"
 
-#: pokerui/pokerrenderer.py:1372
+#: pokerui/pokerrenderer.py:1369
 msgid "You have no money left"
 msgstr "Vous n'avez plus d'argent"
 
-#: pokerui/pokerrenderer.py:1376
+#: pokerui/pokerrenderer.py:1373
 msgid "How much do you want to rebuy?"
 msgstr "La main est finie, que voulez-vous faire ?"
 
-#: pokerui/pokerrenderer.py:1380
+#: pokerui/pokerrenderer.py:1377
 msgid ""
 "You don't have enough money to play on this table.\n"
 "To get money go in menu 'Lobby' and click 'Cash in'.\n"
@@ -632,53 +632,53 @@ msgstr ""
 "(si vous jouez en play money, il vous faut peut-être \n"
 "accumuler plus de jetons via des victoires)"
 
-#: pokerui/pokerrenderer.py:1383
+#: pokerui/pokerrenderer.py:1380
 msgid "Which amount do you want to bring at the table?"
 msgstr "Combien de jetons apporter à la table ?"
 
-#: pokerui/pokerrenderer.py:1388
+#: pokerui/pokerrenderer.py:1385
 msgid "All your bankroll"
 msgstr "Toute ma bankroll"
 
-#: pokerui/pokerrenderer.py:1390
+#: pokerui/pokerrenderer.py:1387
 msgid "Maximum buy in"
 msgstr "Le maximum"
 
-#: pokerui/pokerrenderer.py:1620 pokerui/pokerrenderer.py:1629
+#: pokerui/pokerrenderer.py:1619 pokerui/pokerrenderer.py:1628
 msgid "Screen resolution changed"
 msgstr "Résolution changée"
 
-#: pokerui/pokerrenderer.py:1625
+#: pokerui/pokerrenderer.py:1624
 msgid "Display changed to "
 msgstr "Affichage modifié en "
 
-#: pokerui/pokerrenderer.py:1635
+#: pokerui/pokerrenderer.py:1634
 msgid "Graphics quality changed"
 msgstr "Qualité des graphismes modifiée"
 
-#: pokerui/pokerrenderer.py:1669
+#: pokerui/pokerrenderer.py:1668
 msgid "The game must be restarted for this change to take effect\n"
 msgstr "Le jeu doit être redémarer pour que les modifications prennent effet\n"
 
-#: pokerui/pokerrenderer.py:1670
+#: pokerui/pokerrenderer.py:1669
 msgid "Do you want to restart the game now ?"
 msgstr "Voulez-vous redémarrer maintenant ?"
 
-#: pokerui/pokerrenderer.py:1967
+#: pokerui/pokerrenderer.py:1966
 msgid "Your hand history is empty"
 msgstr "L'historique est vide"
 
-#: pokerui/pokerrenderer.py:2179
+#: pokerui/pokerrenderer.py:2178
 msgid "Already logged in"
 msgstr "Vous êtes déja identifié"
 
-#: pokerui/pokerrenderer.py:2211 pokerui/pokerrenderer.py:2321
-#: pokerui/pokerrenderer.py:2333 pokerui/pokerrenderer.py:2427
+#: pokerui/pokerrenderer.py:2210 pokerui/pokerrenderer.py:2320
+#: pokerui/pokerrenderer.py:2332 pokerui/pokerrenderer.py:2427
 #: pokerui/pokerrenderer.py:2448 pokerui/pokerrenderer.py:2461
 msgid "You cannot do that now"
 msgstr "Vous ne pouvez pas faire ca"
 
-#: pokerui/pokerrenderer.py:2328
+#: pokerui/pokerrenderer.py:2327
 msgid "You must be logged in to get a seat"
 msgstr "Vous devez vous identifier avant de vous assoir"
 
@@ -1056,4 +1056,3 @@ msgstr ""
 "pressé sur les cartes jusqu'a\n"
 "voir leurs valeurs. Relacher pour\n"
 "revenir dans la position initiale."
-
