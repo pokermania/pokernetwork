@@ -213,7 +213,7 @@ class PokerService(service.Service):
 
         playing = 0
         for table in self.tables:
-            if table.game.isRunning():
+            if not table.game.isEndOrNull():
                 playing += 1
         if self.verbose and playing > 0:
             print "Shutting down, waiting for %d games to finish" % playing
