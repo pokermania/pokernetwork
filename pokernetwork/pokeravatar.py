@@ -368,7 +368,7 @@ class PokerAvatar:
                     print "attempt to set processing hand for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() )
 
             elif packet.type == PACKET_POKER_START:
-                if game.isRunning():
+                if game.isEndOrNull():
                     print "player %d tried to start a new game while in game " % self.getSerial()
                     self.sendPacketVerbose(PacketPokerStart(game_id = game.id))
                 elif self.service.shutting_down:
@@ -677,7 +677,7 @@ class PokerAvatar:
 
         self.sendPacketVerbose(PacketPokerSeats(game_id = game.id,
                                                 seats = game.seats()))
-        if game.isRunning() or game.state == pokergame.GAME_STATE_MUCK:
+        if not game.isEndOrNull():
             #
             # If a game is running, replay it.
             #
