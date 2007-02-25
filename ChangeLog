@@ -1,6 +1,11 @@
-2007-02-17  Loic Dachary  <loic@dachary.org>
+2007-02-25  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.36
+
+	* tests/test-pokertable.py.in, pokernetwork/pokertable.py: Double
+	buy-in creates undefined condition : safeguard.
+
+2007-02-17  Loic Dachary  <loic@dachary.org>
 
 	* pokerui/pokerrenderer.py: check display (for quit bug)
 	
