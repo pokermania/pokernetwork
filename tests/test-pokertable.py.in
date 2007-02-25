@@ -209,6 +209,13 @@ class PokerTableTestCase(unittest.TestCase):
         self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
         return self.clients[2].waitFor(PACKET_POKER_START)
 
+    # -------------------------------------------------------------------
+    def test06_duplicate_buyin(self):
+        """ Buy in requested twice for a given player """
+        self.createPlayer(1)
+        client = self.clients[1]
+        self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+
 # -------------------------------------------------------------------
 
 def Run():
