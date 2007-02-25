@@ -1196,6 +1196,11 @@ class PokerTable:
             client.error("player %d can't bring money to a transient table" % client.getSerial())
             return False
 
+        player = game.getPlayer(client.getSerial())
+        if player and player.isBuyInPayed():
+            client.error("player %d already payed the buy-in" % client.getSerial())
+            return False
+
         amount = self.factory.buyInPlayer(client.getSerial(), game.id, self.currency_serial, max(amount, game.buyIn()))
         return client.setMoney(self, amount)
         
