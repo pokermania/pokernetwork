@@ -30,7 +30,7 @@ COOKIES=$0.cookies
 rm -f ${COOKIES}
 #DUMP_HEADERS='--dump-header /dev/tty'
 touch run-pokerserver.launching
-DONT_RUN_BOTS=1 sh -x run-pokerserver &
+DONT_RUN_BOTS=1 bash -x run-pokerserver &
 pokerserver_pid=$!
 trap "kill $pokerserver_pid ; rm -f $0.{cookies,out}" EXIT INT QUIT
 lockfile run-pokerserver.launching
