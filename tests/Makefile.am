@@ -78,6 +78,7 @@ TESTS = coverage-reset \
 	test-pokerinterface.py \
 	test-string.py \
 	test-pokerdisplay2d.py \
+	test-pygame.py \
 	test-svg2gtk.py \
 	test-gamewindow.py \
 	test-poker2d.py \

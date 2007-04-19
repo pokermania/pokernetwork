@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -25,7 +26,7 @@
 # Authors:
 #  Johan Euphrosine <johan@mekensleep.com>
 #  Jerome Jeannin   <jerome@mekensleep.com>
-
+#
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
@@ -250,6 +251,7 @@ class PokerDisplay2DMockup(PokerDisplay2D):
         import gtk
         self.actions = { action_name : ToggleButtonMockup() }
         self.sit_clicked_called = False
+        self.sound = False
     def on_sit_clicked(self, button):
         self.sit_clicked_called = True
         
@@ -325,5 +327,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerdisplay2d.py ) ; ( cd ../tests ; make TESTS='test-pokerdisplay2d.py' check )"
+# compile-command: "( cd .. ; ./config.status tests/run tests/test-pokerdisplay2d.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokerclient2d/pokerdisplay2d.py' TESTS='coverage-reset test-pokerdisplay2d.py coverage-report' check )"
 # End:
