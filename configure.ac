@@ -288,6 +288,7 @@ AC_CONFIG_FILES([
 	tests/test-quit.py
 	tests/test-pokerinterface.py
 	tests/test-pokerdisplay2d.py
+	tests/test-pygame.py
 	tests/test-svg2gtk.py
 	tests/test-gamewindow.py
 	tests/test-poker2d.py
