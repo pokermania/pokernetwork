@@ -24,9 +24,14 @@
 #  Loic Dachary <loic@gnu.org>
 #
 from os.path import exists
+from traceback import print_exc
 
-import pygame
-
+try:
+    import pygame
+except:
+    print_exc()
+    print "pygame python module is missing, sound is disabled"
+    
 from twisted.internet import reactor
 
 from pokernetwork.pokerclientpackets import *
@@ -321,20 +326,30 @@ class PokerDisplay2D(PokerDisplay):
 
     def __init__(self, *args, **kwargs):
         PokerDisplay.__init__(self, *args, **kwargs)
-        pygame.mixer.init()
+        if ( self.settings.headerGet("/settings/sound") == "yes" or
+             self.settings.headerGet("/settings/sound") == "on" ):
+            try:
+                pygame.mixer.init()
+                self.sound = True
+            except:
+                if self.settings.headerGetInt("/settings/@verbose") > 0:
+                    print_exc()
+                self.sound = False
+        else:
+            self.sound = False
         self.settings.notifyUpdates(self.settingsUpdated)
         self.settingsUpdated(self.settings)
         self.id2table = {}
 
     def __del__(self):
-        pygame.mixer.quit()
+        if self.sound:
+            pygame.mixer.quit()
 
     def settingsUpdated(self, settings):
         self.verbose = settings.headerGetInt("/settings/@verbose")
         self.datadir = settings.headerGet("/settings/data/@path")
         self.event2sound = None
-        if ( settings.headerGet("/settings/sound") == "yes" or
-             settings.headerGet("/settings/sound") == "on" ):
+        if self.sound:
             sounddir = settings.headerGet("/settings/data/@sounds")
             #
             # Load event to sound map
