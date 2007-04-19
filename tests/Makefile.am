@@ -40,6 +40,8 @@ EXTRA_DIST = \
 	test-poker-interface.py \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
+	test-pokerdisplay2d \
+	test-pygame \
 	vncpasswd \
 	test-fc.py
 
