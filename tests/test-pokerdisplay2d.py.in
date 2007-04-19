@@ -29,9 +29,11 @@
 #
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "@top_srcdir@/tests/test-pokerdisplay2d")
 sys.path.insert(0, "..")
 import unittest
 
+import pygame
 from pokernetwork.pokernetworkconfig import Config
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D, PokerPlayer2D, PokerTable2D
 from pokernetwork.pokerclientpackets import PACKET_POKER_POSITION, PACKET_POKER_PLAYER_ARRIVE, PACKET_POKER_BOARD_CARDS
@@ -167,7 +169,7 @@ class PokerDisplay2DTest(unittest.TestCase):
 	my_settings.load("./conf/poker2d.xml")
 	my_config = Config([''])
 	my_config.load("@top_srcdir@/tests/conf/client.xml")
-	self.display2d = PokerDisplay2D(settings = my_settings, config = my_config, factory = None);
+	self.display2d = PokerDisplay2D(settings = my_settings, config = my_config, factory = None)
 
     def tearDown(self):
 	pass
@@ -322,6 +324,30 @@ class PokerAnimation2DTest(unittest.TestCase):
     def test_gameFixed(self):
         animation = PokerAnimationTable2D(config = PokerConfigMockup(), settings = PokerConfigMockup(), animation_renderer = PokerRendererMockup(), verbose = 1, scheduler = PokerSchedulerMockup())
         self.assertEquals("game_window_fixed", PokerRendererMockup.widget_names[0])
+
+class PygameTest(unittest.TestCase):
+    def setUp(self):
+	self.settings = Config([''])
+	self.settings.load("./conf/poker2d.xml")
+        self.settings.headerSet('/settings/@verbose', os.environ.get('VERBOSE_T', '2'))
+        self.settings.headerSet('/settings/sound', 'on')
+	self.config = Config([''])
+	self.config.load("@top_srcdir@/tests/conf/client.xml")
+        
+    def tearDown(self):
+        pass
+
+    def test_initFail(self):
+        pygame.mixer.init_fail = True
+	display2d = PokerDisplay2D(settings = self.settings, config = self.config, factory = None)
+        self.assertEqual(False, display2d.sound)
+        pygame.mixer.init_fail = False
+
+    def test_soundOff(self):
+        self.settings.headerSet('/settings/sound', 'off')
+	display2d = PokerDisplay2D(settings = self.settings, config = self.config, factory = None)
+        self.assertEqual(False, display2d.sound)
+    
 if __name__ == '__main__':
     unittest.main()
 
