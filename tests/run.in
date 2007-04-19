@@ -100,7 +100,7 @@ case "$1" in
         fi
         ;;
 
-*pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py|*unittestmain) 
+*pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py|*poker2d.py|*unittestmain) 
         export GLADE_FILE=@top_srcdir@/pokerclient2d/data/interface/interface.glade
         FONTPATH=/usr/share/fonts/X11/misc
         INTERFACE_PORT=19579
