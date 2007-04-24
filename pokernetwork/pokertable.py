@@ -29,6 +29,7 @@
 #
 
 from twisted.internet import reactor
+from twisted.python.runtime import seconds
 
 from re import match
 from types import *
@@ -150,7 +151,7 @@ class PokerTable:
             hand_serial = self.factory.getHandSerial()
             game = self.game
             print "Dealing hand %s/%d" % ( game.name, hand_serial )
-            game.setTime(time.time())
+            game.setTime(seconds())
             game.beginTurn(hand_serial)
             for player in game.playersAll():
                 player.getUserData()['ready'] = True
@@ -610,7 +611,7 @@ class PokerTable:
             type = event[0]
             if type == "game":
                 self.game_delay = {
-                    "start": time.time(),
+                    "start": seconds(),
                     "delay": float(self.delays["autodeal"])
                     }
             elif ( type == "round" or
@@ -619,7 +620,7 @@ class PokerTable:
                    type == "finish" ):
                 self.game_delay["delay"] += float(self.delays[type])
                 if self.factory.verbose > 2:
-                    print "delayedActions: game estimated duration is now " + str(self.game_delay["delay"]) + " and is running since %.02f " % (time.time() - self.game_delay["start"] ) + " seconds"
+                    print "delayedActions: game estimated duration is now " + str(self.game_delay["delay"]) + " and is running since %.02f " % (seconds() - self.game_delay["start"] ) + " seconds"
 
             elif type == "leave":
                 (type, quitters) = event
@@ -725,11 +726,11 @@ class PokerTable:
 
         delay = self.game_delay["delay"]
         if not self.allReadyToPlay() and delay > 0:
-            delta = ( self.game_delay["start"] + delay ) - time.time()
+            delta = ( self.game_delay["start"] + delay ) - seconds()
             if delta < 0: delta = 0
             autodeal_max = float(self.delays.get("autodeal_max", 120))
             if delta > autodeal_max: delta = autodeal_max
-            self.game_delay["delay"] = ( time.time() - self.game_delay["start"] ) + delta
+            self.game_delay["delay"] = ( seconds() - self.game_delay["start"] ) + delta
         elif self.transient:
             all_auto = True
             for player in game.playersAll():
@@ -739,7 +740,7 @@ class PokerTable:
                     break
             if all_auto:
                 delta = int(self.delays.get("autodeal_tournament_min", 15))
-                if time.time() - self.game_delay["start"] > delta:
+                if seconds() - self.game_delay["start"] > delta:
                     delta = 0
         else:
             delta = 0
