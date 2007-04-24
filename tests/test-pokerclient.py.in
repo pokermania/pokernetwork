@@ -820,10 +820,10 @@ class PokerClientTestCase(unittest.TestCase):
 
             class Player:
                 def __init__(self):
-                    self.data = {'delay': 0}
+                    self.user_data = {'delay': 0}
 
                 def getUserData(self):
-                    return self.data
+                    return self.user_data
 
             class Game:
                 def __init__(self):
@@ -835,9 +835,50 @@ class PokerClientTestCase(unittest.TestCase):
             global _seconds_value
             game = Game()
             client.setPlayerDelay(game, 42, 100)
-            self.assertEqual(_seconds_value + 100, game.player.data['delay'])
+            self.assertEqual(_seconds_value + 100, game.player.user_data['delay'])
         d.addCallback(setPlayerDelay)
         return d
+
+    def test20_resendPlayerTimeoutWarning(self):
+        d = self.client_factory[0].established_deferred
+        def resendPlayerTimeoutWarning(client):
+
+            class Player:
+                def __init__(self):
+                    self.user_data = {'timeout': None }
+
+                def getUserData(self):
+                    return self.user_data
+
+            class Game:
+                def __init__(self):
+                    self.player = Player()
+                    self.id = 1010
+
+                def getPlayer(self, serial):
+                    return self.player
+
+                def isRunning(self):
+                    return True
+
+                def getSerialInPosition(self):
+                    return 0
+
+            game = Game()
+            client.setPlayerTimeout(game, PacketPokerTimeoutWarning(game_id = game.id,
+                                                                    serial = client.getSerial(),
+                                                                    timeout = 50))
+
+            global _seconds_value
+            self.assertEqual(int(_seconds_value), game.player.user_data['timeout'][0])
+            _seconds_value += 1
+            ( packet, ) = client.resendPlayerTimeoutWarning(game)
+            self.assertEqual(int(_seconds_value), packet.when)
+            self.assertEqual(50 - 1 - 1, packet.timeout) # - 1 for rounding
+            self.assertEqual(PACKET_POKER_TIMEOUT_WARNING, packet.type)
+        d.addCallback(resendPlayerTimeoutWarning)
+        return d
+        
 
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -917,7 +958,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test19"
+    loader.methodPrefix = "test20"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
