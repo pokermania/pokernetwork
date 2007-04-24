@@ -43,17 +43,9 @@ from twisted.python import failure, runtime
 
 from pokerengine import pokertournament
 
-from pokernetwork import dispatch
-twisted.internet.base.DelayedCall.debug = True
-
-from pokerui import pokerinterface
-from pokernetwork import pokerservice
-from pokernetwork import pokernetworkconfig
-from pokernetwork import pokerclient
-from pokernetwork import currencyclient
-currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerclientpackets import *
-
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
 #
 # Tweak poker-engine & twisted to use a fake clock so that
 # the tests are immune to the performances of the machine
@@ -77,6 +69,17 @@ base.seconds = _seconds_tick
 reactor.timeout = lambda: 0
 runtime.seconds = _seconds_tick
 pokertournament.tournament_seconds = _seconds_tick
+
+from pokernetwork import dispatch
+twisted.internet.base.DelayedCall.debug = True
+
+from pokerui import pokerinterface
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+from pokernetwork import pokerclient
+from pokernetwork import currencyclient
+currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+from pokernetwork.pokerclientpackets import *
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
@@ -811,6 +814,31 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
 
+    def test19_setPlayerDelay(self):
+        d = self.client_factory[0].established_deferred
+        def setPlayerDelay(client):
+
+            class Player:
+                def __init__(self):
+                    self.data = {'delay': 0}
+
+                def getUserData(self):
+                    return self.data
+
+            class Game:
+                def __init__(self):
+                    self.player = Player()
+
+                def getPlayer(self, serial):
+                    return self.player
+
+            global _seconds_value
+            game = Game()
+            client.setPlayerDelay(game, 42, 100)
+            self.assertEqual(_seconds_value + 100, game.player.data['delay'])
+        d.addCallback(setPlayerDelay)
+        return d
+
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
         pokerclient.PokerClientFactory.__init__(self, *args, **kwargs)
@@ -889,7 +917,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test14"
+    loader.methodPrefix = "test19"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
