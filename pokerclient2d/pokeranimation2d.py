@@ -24,6 +24,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 import gtk
+from twisted.python.runtime import seconds
 
 from pprint import pprint
 from pokerui.pokeranimation import *
@@ -67,9 +68,9 @@ class Animation:
         self.duration = duration
         self.running = True
         self.timer_end = reactor.callLater(self.duration, self.end, *args, **kwargs)
-        self.start_time = time()
-        self.current_time = time()
-        self.end_time = time() + duration
+        self.start_time = seconds()
+        self.current_time = seconds()
+        self.end_time = seconds() + duration
         self.start(*args, **kwargs)
         if self.verbose > 2:
             self.message("_start %d" % duration)
@@ -79,12 +80,12 @@ class Animation:
         pass
     
     def _run(self, *args, **kwargs):
-        delta = time() - self.current_time
+        delta = seconds() - self.current_time
         self.current_time += delta
         self.fraction_from_start = ( self.current_time - self.start_time ) / self.duration
         self.fraction_to_end = 1.0 - self.fraction_from_start
         self.run(delta, *args, **kwargs)
-        now = time()
+        now = seconds()
         next_time = min(self.end_time, now + self.step)
         if next_time > self.end_time:
             next_time = self.end_time
