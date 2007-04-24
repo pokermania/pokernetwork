@@ -31,7 +31,6 @@
 from os.path import exists
 from types import *
 from string import split, join
-import time
 import os
 import operator
 import re
@@ -52,6 +51,8 @@ except:
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
+from twisted.python.runtime import seconds
+
 try:
     # twisted-2.0
     from zope.interface import Interface, implements
@@ -247,7 +248,7 @@ class PokerService(service.Service):
     def sessionStart(self, serial, ip):
         if self.verbose > 2: print "PokerService::sessionStart(%d, %s): " % ( serial, ip )
         cursor = self.db.cursor()
-        sql = "insert into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, time.time(), ip )
+        sql = "insert into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, seconds(), ip )
         cursor.execute(sql)
         if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
         cursor.close()
@@ -256,7 +257,7 @@ class PokerService(service.Service):
     def sessionEnd(self, serial):
         if self.verbose > 2: print "PokerService::sessionEnd(%d): " % ( serial )
         cursor = self.db.cursor()
-        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session where user_serial = %d" % ( time.time(), serial )
+        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session where user_serial = %d" % ( seconds(), serial )
         cursor.execute(sql)
         if cursor.rowcount != 1: print " *ERROR* a) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql )
         sql = "delete from session where user_serial = %d" % serial
@@ -279,7 +280,7 @@ class PokerService(service.Service):
         sql = ( " SELECT * FROM tourneys_schedule WHERE " + 
                 "          active = 'y' AND " + 
                 "          ( respawn = 'y' OR " + 
-                "            register_time < UNIX_TIMESTAMP(NOW()) )" )
+                "            register_time < " + str(int(seconds())) + " )" )
         cursor.execute(sql)
         result = cursor.fetchall()
         self.tourneys_schedule = dict(zip(map(lambda schedule: schedule['serial'], result), result))
@@ -301,7 +302,7 @@ class PokerService(service.Service):
         #
         # One time tournaments
         # 
-        now = time.time()
+        now = seconds()
         one_time = []
         for serial in self.tourneys_schedule.keys():
             schedule = self.tourneys_schedule[serial]
@@ -850,7 +851,7 @@ class PokerService(service.Service):
             sql = "delete from users where name like '" + temporary_users + "%'"
             cursor.execute(sql)
 
-        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session" % time.time()
+        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session" % seconds()
         cursor.execute(sql)
         sql = "delete from session"
         cursor.execute(sql)
@@ -863,7 +864,7 @@ class PokerService(service.Service):
         self.tourneys_schedule = {}
 
         cursor = self.db.cursor(DictCursor)
-        sql = "SELECT * FROM tourneys WHERE state = 'registering' AND start_time > (%d + 60)" % time.time()
+        sql = "SELECT * FROM tourneys WHERE state = 'registering' AND start_time > (%d + 60)" % seconds()
         if self.verbose > 2: print "cleanupTourneys: " + sql
         cursor.execute(sql)
         for x in xrange(cursor.rowcount):
@@ -1061,7 +1062,7 @@ class PokerService(service.Service):
             #
             # User does not exists, create it
             #
-            sql = "INSERT INTO users (created, name, password, email, affiliate) values (%d, '%s', '%s', '%s', '%d')" % (time.time(), packet.name, packet.password, packet.email, packet.affiliate)
+            sql = "INSERT INTO users (created, name, password, email, affiliate) values (%d, '%s', '%s', '%s', '%d')" % (seconds(), packet.name, packet.password, packet.email, packet.affiliate)
             cursor.execute(sql)
             if cursor.rowcount != 1:
                 print " *ERROR* setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )
@@ -1506,7 +1507,7 @@ class PokerService(service.Service):
     def messageCheck(self):
         cursor = self.db.cursor()
         cursor.execute("SELECT serial,message FROM messages WHERE " + 
-                       "       sent = 'n' AND send_date < CURRENT_TIMESTAMP()")
+                       "       sent = 'n' AND send_date < FROM_UNIXTIME(" + str(int(seconds())) + ")")
         rows = cursor.fetchall()
         for (serial, message) in rows:
             self.broadcast(PacketMessage(string = message))
@@ -1559,7 +1560,7 @@ class PokerAuth:
             print "creating user %s" % name,
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO users (created, name, password) values (%d, '%s', '%s')" %
-                       (time.time(), name, password))
+                       (seconds(), name, password))
         #
         # Accomodate for MySQLdb versions < 1.1
         #
