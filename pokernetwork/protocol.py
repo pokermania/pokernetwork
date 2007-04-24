@@ -25,9 +25,8 @@
 #  Loic Dachary <loic@gnu.org>
 #
 # 
-from time import time
-
 from twisted.internet import reactor, protocol
+from twisted.python.runtime import seconds
 
 from pokernetwork.packets import Packet, PacketFactory, PacketNames
 from pokernetwork import protocol_number
@@ -140,7 +139,7 @@ class UGAMEProtocol(protocol.Protocol):
     
     def hold(self, delay, id = None):
         if delay > 0:
-            delay = time() + delay
+            delay = seconds() + delay
         if id == None:
             for (id, queue) in self._queues.iteritems():
                 queue.delay = delay
@@ -164,7 +163,7 @@ class UGAMEProtocol(protocol.Protocol):
     
     def _processQueues(self):
         if not self._blocked:
-            now = time()
+            now = seconds()
             to_delete = []
             #
             # Shallow copy the queues list so that 
@@ -224,7 +223,7 @@ class UGAMEProtocol(protocol.Protocol):
     def pushPacket(self, packet):
         id = self._packet2id(packet)
         if id != None:
-            packet.time__ = time()
+            packet.time__ = seconds()
             front = self._packet2front(packet)
             if front and self._queues.has_key(id):
                 packet.nodelay__ = True
