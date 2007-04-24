@@ -27,12 +27,12 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 
-import time
 from string import split, lower
 from re import match
 import platform
 
 from twisted.internet import reactor, defer
+from twisted.python.runtime import seconds
 
 from pokereval import PokerEval
 from pokerengine.pokergame import PokerGameClient, PokerPlayer, history2messages
@@ -618,7 +618,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if player == None:
             print "WARNING setPlayerDelay for a non-existing player %d" % serial
         else:
-            player.getUserData()['delay'] = time.time() + value
+            player.getUserData()['delay'] = seconds() + value
 
     def getPlayerDelay(self, game, serial):
         if not game: return 0
@@ -631,7 +631,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def canHandlePacket(self, packet):
         if not self.factory.isAlwaysHandled(packet) and hasattr(packet, "game_id") and hasattr(packet, "serial"):
             delay = self.getPlayerDelay(self.factory.packet2game(packet), packet.serial)
-            if delay <= time.time():
+            if delay <= seconds():
                 return ( True, 0 )
             else:
                 return ( False, delay )
@@ -643,7 +643,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             player = game.getPlayer(self.getSerial())
             if player.user_data['timeout']:
                 ( when, timeout ) = player.user_data['timeout']
-                now = time.time()
+                now = seconds()
                 timeout = timeout - ( now - when )
                 if timeout > 0:
                     return ( PacketPokerTimeoutWarning(game_id = game.id,
@@ -655,7 +655,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def setPlayerTimeout(self, game, packet):
         packet.timeout -= int(self.getLag())
         if packet.timeout > 0:
-            packet.when = int(time.time())
+            packet.when = int(seconds())
             player = game.getPlayer(packet.serial)
             player.getUserData()['timeout'] = ( packet.when, packet.timeout )
             return True
@@ -1464,7 +1464,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def publishDelay(self, delay):
         if self.factory.verbose > 2: self.message("publishDelay: %f delay" % delay)
-        publish_time = time.time() + delay
+        publish_time = seconds() + delay
         if publish_time > self.publish_time:
             self.publish_time = publish_time
             
@@ -1492,7 +1492,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             # If time has not come, make sure we are called at a later time
             # to reconsider the situation
             #
-            wait_for = self.publish_time - time.time()
+            wait_for = self.publish_time - seconds()
             if wait_for > 0:
                 if self.factory.verbose > 2:
                     self.message("publishPackets: %f before next packet is sent" % wait_for)
