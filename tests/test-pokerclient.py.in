@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -34,10 +35,13 @@ import libxml2
 
 #from pokerclient2d.poker2d import PokerClientFactory2D
 import socket
+import time
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
-from twisted.internet import reactor, defer, error
-from twisted.python import failure
+from twisted.internet import reactor, defer, error, base
+from twisted.python import failure, runtime
+
+from pokerengine import pokertournament
 
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
@@ -50,6 +54,30 @@ from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerclientpackets import *
 
+#
+# Tweak poker-engine & twisted to use a fake clock so that
+# the tests are immune to the performances of the machine
+# running the test, even when testing timeouts or other delays.
+#
+_seconds_value = time.time()
+_seconds_original = _seconds_value
+_seconds_verbose = int(os.environ.get('VERBOSE_T', '3'))
+def _seconds_tick():
+    global _seconds_value
+    if _seconds_verbose > 3:
+        print "tick: %.01f" % ( _seconds_value - _seconds_original )
+    _seconds_value += 0.1
+    return _seconds_value
+
+base.seconds = _seconds_tick
+#
+# select timeout must return immediately, it makes no sense
+# to wait while testing.
+#
+reactor.timeout = lambda: 0
+runtime.seconds = _seconds_tick
+pokertournament.tournament_seconds = _seconds_tick
+
 class ConstantDeckShuffler:
     def shuffle(self, what):
         what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
@@ -61,15 +89,14 @@ class ConstantPlayerShuffler:
     def shuffle(self, what):
         what.sort()
 
-from pokerengine import pokertournament
 pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="2" />
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="6" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="6" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
 
   <listen tcp="19480" />
@@ -142,7 +169,7 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
         return d
-                      
+
     # ------------------------------------------------------
     def setUp(self):
         self.destroyDb()
@@ -169,7 +196,7 @@ class PokerClientTestCase(unittest.TestCase):
 #                    print "still pending:" + str(p)
                     p.cancel()
         return arg
-        
+
     def tearDown(self):
         d = self.service.stopService()
         d.addCallback(lambda x: self.p.stopListening())
@@ -340,7 +367,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.printUserInfo)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-
+    
     def test06_cannotGetSeat(self):
         """ test06_cannotGetSeat """
         d = self.client_factory[0].established_deferred
@@ -453,7 +480,7 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(checkBugousClient)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-
+    
     def test09_serverShutdown(self):
         """ test04_serverShutdown : the clients are still seated """
         d = [None, None]
@@ -464,7 +491,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.sit)
             d[index].addCallback(self.allIn)
         return defer.DeferredList(d)
-
+    
     def test10_playerImage(self):
         """ test10_login """
         d = self.client_factory[0].established_deferred
@@ -581,7 +608,7 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         def waitForMessage(client):
             db = self.service.db.db
-            db.query("INSERT INTO messages (send_date, message) VALUES (CURRENT_TIMESTAMP + INTERVAL 2 SECOND, 'the message')")
+            db.query("INSERT INTO messages (send_date, message) VALUES (" + str(_seconds_value + 2) + ", 'the message')")
             return client.packetDeferred(True, PACKET_MESSAGE)
         d.addCallback(waitForMessage)
         return d
@@ -675,10 +702,10 @@ class PokerClientTestCase(unittest.TestCase):
 
     # -----------------------------------------------
     def test17_playTourney_timeout_sit(self):
-        """ Play regular tourney, one player timesout out and sits back immediately afterwards. """
+        """ Play regular tourney, one player timeouts out and sits back immediately afterwards. """
         self.service.settings.headerSet("/server/delays/@showdown", '20')
         for tourney  in self.service.tourneys.values():
-            tourney.player_timeout = 10
+            tourney.player_timeout = 100
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -718,6 +745,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
+    test17_playTourney_timeout_sit.timeout = 50000
 
     def test18_blindAllIn(self):
         """ test18_blindAllIn """
@@ -941,7 +969,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test14"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
