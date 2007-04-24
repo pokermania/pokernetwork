@@ -2,6 +2,25 @@
 
 	* Release 1.0.37
 
+	* tests/run.in: Verbose tracing samples.
+	
+	* tests/test-pokerclient.py.in: Implement test for poker client
+	  methods setPlayerTimeout and resendPlayerTimeoutWarning.  Tweak
+	  the clock before including pokerclient.  Implement test for
+	  pokerclient method setPlayerDelay.  Remove obsolete test to
+	  avoid bloating. Control the twisted and poker-engine clock.
+	  Reset the second counter before each test to ease the debugging
+	  of time based tests. Implement a test for the pokerclient method
+	  publishDelay.
+	
+	* pokernetwork/pokerservice.py: Replace SQL instruction related
+	  to timestamp with the value from the seconds runtime.seconds
+	  twisted function. This allows test cases to use a fake clock.
+
+	* pokernetwork/{pokerclient,pokerservice,pokertable,protocol}.py:
+	  replace time() with runtime.seconds so that tests can substitute
+	  with a fake clock.
+
 	* test-pygame/{__init__,pygame}.py: 
 	  Test case for fail import of pygame module.
 
