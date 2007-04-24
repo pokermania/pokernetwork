@@ -348,7 +348,8 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.win)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-
+    test04_playHand.timeout = 200
+    
     def getUserInfo(self, (client, packet)):
         print "getUserInfo " + str(packet)
         game = client.getGame(packet.game_id)
@@ -820,7 +821,8 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(waitWin)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-
+    test18_blindAllIn.timeout = 200
+    
     def test19_setPlayerDelay(self):
         d = self.client_factory[0].established_deferred
         def setPlayerDelay(client):
