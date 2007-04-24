@@ -1,7 +1,20 @@
-2007-03-13  Loic Dachary  <loic@dachary.org>
+2007-04-24  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.37
 
+	* test-pygame/{__init__,pygame}.py: 
+	  Test case for fail import of pygame module.
+
+	* conf/poker.bot.xml.in conf/poker.client.xml.in
+	conf/poker.server.xml.in examples/poker.bot.xml
+	examples/poker.server-monotone.xml examples/poker.server.xml
+	pokerclient2d/poker2d.xml.in tests/conf/poker.client.xml.in
+	pokernetwork/__init__.py debian/changelog NEWS: Version bump
+
+2007-04-05  Loic Dachary  <loic@dachary.org>
+
+	* examples/test-pokerweb: Fix bashism	
+	
 2007-02-25  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.36
