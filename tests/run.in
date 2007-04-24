@@ -132,7 +132,11 @@ case "$1" in
         @PHP@ @PHPUNIT@ --report phpunit/$file $(basename $file .php)
         ;;
 
+
 *.py)   @PYTHON@ -u ${srcdir}/coverage.py -x "$1" ;;
+# Extremely verbose execution traces
+#*.py)   @PYTHON@ -u -m trace --trace "$1" ;;
+#*.py)   @PYTHON@ -u "$1" ;;
 
 *) 
         echo unknown test $1
