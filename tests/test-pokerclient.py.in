@@ -52,7 +52,10 @@ from pokerengine import pokertournament
 # running the test, even when testing timeouts or other delays.
 #
 _seconds_value = time.time()
-_seconds_original = _seconds_value
+def _seconds_reset():
+    global _seconds_original
+    _seconds_original = _seconds_value
+_seconds_reset()
 _seconds_verbose = int(os.environ.get('VERBOSE_T', '3'))
 def _seconds_tick():
     global _seconds_value
@@ -175,6 +178,7 @@ class PokerClientTestCase(unittest.TestCase):
 
     # ------------------------------------------------------
     def setUp(self):
+        _seconds_reset()        
         self.destroyDb()
         self.setUpServer()
         self.client_factory = [None, None]
@@ -483,6 +487,7 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(checkBugousClient)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
+    test08_processing_readytoplay.timeout = 200
     
     def test09_serverShutdown(self):
         """ test04_serverShutdown : the clients are still seated """
@@ -494,6 +499,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.sit)
             d[index].addCallback(self.allIn)
         return defer.DeferredList(d)
+    test09_serverShutdown.timeout = 200
     
     def test10_playerImage(self):
         """ test10_login """
@@ -702,7 +708,8 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
-
+    test16_playTourney_sitout_sit.timeout = 300
+    
     # -----------------------------------------------
     def test17_playTourney_timeout_sit(self):
         """ Play regular tourney, one player timeouts out and sits back immediately afterwards. """
@@ -879,6 +886,14 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(resendPlayerTimeoutWarning)
         return d
         
+    def test21_publishDelay(self):
+        d = self.client_factory[0].established_deferred
+        def publishDelay(client):
+            client.publishDelay(10)
+            self.assertEqual(_seconds_value + 10, client.publish_time)
+        d.addCallback(publishDelay)
+        return d
+
 
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -958,11 +973,10 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test20"
+#    loader.methodPrefix = "test19"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
-#    suite.addTest(loader.loadClass(PokerClientFactoryTestCase2))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
