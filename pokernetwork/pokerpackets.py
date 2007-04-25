@@ -2434,7 +2434,7 @@ PacketNames[PACKET_POKER_TOURNEY] = "POKER_TOURNEY"
 class PacketPokerTourney(Packet):
     
     type = PACKET_POKER_TOURNEY
-    format = "!IHIBHHI"
+    format = "!IHIBHHIHHH"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
@@ -2449,10 +2449,13 @@ class PacketPokerTourney(Packet):
         self.players_quota = kwargs.get("players_quota", 0)
         self.registered = kwargs.get("registered", 0)
         self.currency_serial = kwargs.get("currency_serial", 0)
+        self.breaks_first = kwargs.get("breaks_first", 0)
+        self.breaks_interval = kwargs.get("breaks_interval", 0)
+        self.breaks_duration = kwargs.get("breaks_duration", 0)
 
     def pack(self):
         block = Packet.pack(self)
-        block += pack(PacketPokerTourney.format, self.serial, self.buy_in, self.start_time, (self.sit_n_go == 'y' and 1 or 0), self.players_quota, self.registered, self.currency_serial)
+        block += pack(PacketPokerTourney.format, self.serial, self.buy_in, self.start_time, (self.sit_n_go == 'y' and 1 or 0), self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration)
         block += self.packstring(self.description_short)
         block += self.packstring(self.variant)
         block += self.packstring(self.state)
@@ -2461,7 +2464,7 @@ class PacketPokerTourney(Packet):
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (self.serial, self.buy_in, self.start_time, self.sit_n_go, self.players_quota, self.registered, self.currency_serial) = unpack(PacketPokerTourney.format, block[:PacketPokerTourney.format_size])
+        (self.serial, self.buy_in, self.start_time, self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration) = unpack(PacketPokerTourney.format, block[:PacketPokerTourney.format_size])
         self.sit_n_go = self.sit_n_go and 'y' or 'n'
         block = block[PacketPokerTourney.format_size:]
         (block, self.description_short) = self.unpackstring(block)
@@ -2474,7 +2477,7 @@ class PacketPokerTourney(Packet):
         return Packet.calcsize(self) + PacketPokerTourney.format_size + self.calcsizestring(self.description_short) + self.calcsizestring(self.variant) + self.calcsizestring(self.state) + self.calcsizestring(self.name)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tserial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d " % ( self.serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial )
+        return Packet.__str__(self) + "\n\tserial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d, breaks_first = %d, breaks_interval = %d, breaks_duration = %d " % ( self.serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration )
     
 PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
 
