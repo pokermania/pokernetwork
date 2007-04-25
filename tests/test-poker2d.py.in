@@ -32,7 +32,7 @@ import sys
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 sys.path.insert(0, "@top_srcdir@/pokerclient2d")
-sys.path.insert(0, "@top_srcdir@/pokerclient2d/.libs")
+sys.path.insert(0, "../pokerclient2d/.libs")
 import poker2d
 import platform
 
