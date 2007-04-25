@@ -331,9 +331,9 @@ class PokerService(service.Service):
     def spawnTourney(self, schedule):
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
-                       " (schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay, start_time)"
+                       " (schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time)"
                        " VALUES "
-                       " (%s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,              %s,          %s,     %s,           %s )",
+                       " (%s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,           %s,              %s,              %s,          %s,     %s,           %s )",
                        ( schedule['serial'],
                          schedule['name'],
                          schedule['description_short'],
@@ -350,7 +350,9 @@ class PokerService(service.Service):
                          schedule['buy_in'],
                          schedule['rake'],
                          schedule['sit_n_go'],
+                         schedule['breaks_first'],
                          schedule['breaks_interval'],
+                         schedule['breaks_duration'],
                          schedule['rebuy_delay'],
                          schedule['add_on'],
                          schedule['add_on_delay'],
