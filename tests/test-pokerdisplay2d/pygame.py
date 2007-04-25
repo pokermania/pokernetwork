@@ -23,6 +23,9 @@ class MixerMockup:
         if self.init_fail:
             raise UserWarning, "pygame.MixerMockup init failed"
 
+    def Sound(self, file):
+        return None
+    
     def quit(self):
         pass
 
