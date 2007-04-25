@@ -654,7 +654,7 @@ class PokerClientTestCase(unittest.TestCase):
         return client.packetDeferred(True, PACKET_POKER_TOURNEY_RANK)
 
     # -----------------------------------------------
-    def test15_playTourney(self):
+    def test15_0_playTourney(self):
         """ Play regular tourney, all players go allin immediately. Simplest case, no tricks. """
         d = [None, None]
         for index in (0,1):
@@ -669,6 +669,28 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
+
+    def check_breaks(self, (client, packet),):
+        self.assertEqual(PACKET_POKER_TOURNEY_LIST, packet.type)
+        self.assertEqual(1, len(packet.packets))
+        tourney = packet.packets[0]
+        self.failUnless(hasattr(tourney, 'breaks_first'))
+        self.assertEqual(7200, tourney.breaks_first)
+        self.failUnless(hasattr(tourney, 'breaks_interval'))
+        self.assertEqual(3600, tourney.breaks_interval)
+        self.failUnless(hasattr(tourney, 'breaks_duration'))
+        self.assertEqual(300, tourney.breaks_duration)
+        return (client,)
+
+    # -----------------------------------------------
+    def test15_1_check_breaks(self, ):
+        """ """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.search_sitngo2)
+        d.addCallback(self.check_breaks)
+        d.addCallback(self.quit)
+        return d
 
     # -----------------------------------------------
     def test16_playTourney_sitout_sit(self):
@@ -975,7 +997,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test19"
+    loader.methodPrefix = "test15_1"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
