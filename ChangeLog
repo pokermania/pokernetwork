@@ -1,6 +1,131 @@
-2007-04-24  Loic Dachary  <loic@dachary.org>
+2007-04-27  Loic Dachary  <loic@dachary.org>
 
 	* Release 1.0.37
+
+	* tests/Makefile.am: Add testclock.py and __init__.py to the
+	  distribution.
+	* tests/__init__.py: Needed to load the controled clock module.
+	* tests/testclock.py: Controled clock for testing purposes.
+	* tests/test-pokertable.py.in: new test07_break_message that covers
+	  the PokerTable code related to
+	  sending a message while in the BREAK_WAIT state
+	* tests/test-pokerservice.py.in: Use the test clock control.
+	  
+	  Create a base test class (PokerServiceTestCaseBase) that setup
+	  the
+	  environment for pokerservices test cases.
+	  
+	  Change the timeout values for some tests to adapt to the
+	  controled clock.
+	  
+	  The test06_updatePlayerRake is transformed into a standalone test
+	  UpdatePlayerRakeTestCase.
+	  
+	  new TimerTestCase that tests pokerservice.cancelTimers method
+	  new BreakTestCase that tests all pokerservice tournament breaks
+	  related methods
+	* tests/test-pokerclient.py.in: Move the clock control code to
+	  testclock.py file.
+	  
+	  Adjust the timeout of some tests. This is needed because the
+	  artificial clocks goes faster than the real clock. Controling the
+	  clock is not an exact science because 1) threads are used for
+	  pokerlock and when the threads wake up they change the number of
+	  loops
+	  of the twisted reactor, 2) the number of loop depends on the
+	  precise
+	  twisted implementation and would therefore not be exactly the
+	  same
+	  with twisted 1.3 or twisted 2.4. However, once the number of
+	  iteration
+	  has been bounded for the existing twisted implementations, there
+	  is
+	  very little chance that it will greatly change.
+	* pokerui/pokerrenderer.py: Show PACKET_POKER_GAME_MESSAGE in the
+	  same way as PACKET_POKER_MESSAGE.
+	* pokernetwork/pokertable.py: Create a dedicated function for the
+	  broadcasting of messages to clients. Messages
+	  are of two flavors (controled by the message type argument) and
+	  are only sent to
+	  connected clients, chosen after the list of serials given in
+	  arguments, if any.
+	  
+	  Use the new message broadcast function in autodealCheck.
+	  
+	  Modify the autodeal function to handle the case of tournament
+	  breaks in a special
+	  way. If autodeal is attempted while the tournament is not running
+	  and that the tournament
+	  is waiting for some tables to finish their hand, notify all the
+	  players.
+	* pokernetwork/pokerservice.py: PokerService constructor accepts a
+	  string instead of a Config object. The
+	  string is converted into a Config object. For testing purposes.
+	  
+	  cancelTimers functions that removes all timers with a name
+	  containing the
+	  string argument, for use by tournament break timers when shutting
+	  down the
+	  server.
+	  
+	  tourneyNewState method handles tournament break specific states
+	  by calling
+	  dedicated methods for each case.
+	  
+	  new tourneyBreakCheck method is a timer method called while the
+	  tournament is on break
+	  to inform the user and exit from the tournament break state.
+	  
+	  new tourneyDeal method that is called when a tournament switches
+	  to
+	  running state because in rare cases it may not receive any event
+	  that
+	  triggers the PokerTable autodeal function (such a case shows
+	  while
+	  running the tests under a controlled clock)
+	  
+	  new tourneyBreakWait method that broadcast informative messages
+	  to the players involved
+	  in the tournament, depending on their involvement in a hand.
+	  
+	  new tourneyBreakResume method that broadcasts a messages to all
+	  players when the tournament
+	  exits from the break state to go back to the running state.
+	* pokernetwork/pokerpackets.py: New packet PacketPokerGameMessage
+	  that is not outbound. It is used to notify the
+	  client about events such as tournament breaks that are not just
+	  informative but
+	  connected to the game logic.
+	* pokernetwork/pokerlock.py: PokerLock.acquire_sleep controls the
+	  looping frequency of the thread
+	  loop in case the resource is busy.
+	* conf/poker.server.xml.in: breaks_check default value
+
+2007-04-25  Loic Dachary <loic@dachary.org>
+
+	* database/1.0.36-1.0.37.sql: Repeat field name for CHANGE COLUMNS
+	* database/1.0.36-1.0.37.sql: Add tournament breaks fields and
+	  modify default value.
+	* tests/test-pokerclient.py.in: Test that tournament break fields
+	  are transmitted to the client.
+	* pokernetwork/pokerservice.py: Copy tournament breaks fields
+	  (first, interval, duration) into tourney structure.
+	* pokernetwork/pokerpackets.py: Tournament breaks fields (first,
+	  interval, duration) in tourney packet.
+	* pokernetwork/__init__.py: New protocol because added tournament
+	  break fields.
+	* debian/python-poker-network.links: Upgrade sql file.
+	* database/schema.sql.in: Add tournament breaks fields and new
+	  default values.
+	* Makefile.am: Add database upgrade.
+	* tests/test-poker2d.py.in: Look for libraries in build dir, not in
+	  src dir.
+	* tests/test-poker2d.py.in: Search for modules in the source dirs
+	  first.
+	* tests/test-pokerdisplay2d/pygame.py: Mockup Sound method for
+	  pygame mixer.
+
+2007-04-24  Loic Dachary  <loic@dachary.org>
 
 	* tests/run.in: Verbose tracing samples.
 	
