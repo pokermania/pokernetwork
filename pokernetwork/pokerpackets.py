@@ -3157,6 +3157,18 @@ class PacketPokerHandReplay(PacketPokerId):
 
 PacketFactory[PACKET_POKER_HAND_REPLAY] = PacketPokerHandReplay
 
+########################################
+
+PACKET_POKER_GAME_MESSAGE = 141 # %SEQ%
+PacketNames[PACKET_POKER_GAME_MESSAGE] = "POKER_GAME_MESSAGE"
+
+class PacketPokerGameMessage(PacketPokerMessage):
+    """ """
+
+    type = PACKET_POKER_GAME_MESSAGE
+
+PacketFactory[PACKET_POKER_GAME_MESSAGE] = PacketPokerGameMessage
+
 # Interpreted by emacs
 # Local Variables:
 # compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 50 if(!defined($s)); s/\\d+\\s+#/$s #/; $s++; }' pokerpackets.py"
