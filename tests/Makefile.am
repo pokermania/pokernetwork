@@ -43,6 +43,8 @@ EXTRA_DIST = \
 	test-pokerdisplay2d \
 	test-pygame \
 	vncpasswd \
+	testclock.py \
+	__init__.py \
 	test-fc.py
 
 if UNITTEST
