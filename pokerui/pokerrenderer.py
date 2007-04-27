@@ -1077,7 +1077,7 @@ class PokerRenderer:
                                                           serial = self.protocol.getSerial()))
             self.render(packet)
 
-        elif packet.type == PACKET_POKER_MESSAGE:
+        elif packet.type in ( PACKET_POKER_MESSAGE, PACKET_POKER_GAME_MESSAGE ):
             self.showMessage(packet.string, None)
 
         elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
