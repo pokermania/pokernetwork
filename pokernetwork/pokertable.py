@@ -37,7 +37,7 @@ from string import split, join
 import time
 
 from pokerengine.pokergame import PokerGameServer, history2messages
-from pokerengine import pokergame
+from pokerengine import pokergame, pokertournament
 from pokerengine.pokercards import PokerCards
 
 from pokernetwork.pokerpackets import *
@@ -673,19 +673,29 @@ class PokerTable:
         #
         serials = []
         for player in game.playersAll():
-            if ( player.getUserData()['ready'] == True and
-                 self.serial2client.has_key(player.serial) ):
+            if player.getUserData()['ready'] == True:
                 serials.append(player.serial)
         if serials:
-            packet = PacketPokerMessage(game_id = self.game.id,
-                                        string = "Waiting for players.\nNext hand will be dealt shortly.\n(maximum %d seconds)" % int(delta))
-            for serial in serials:
-                client = self.serial2client[serial]
-                client.sendPacket(packet)
+            self.broadcastMessage(PacketPokerMessage, "Waiting for players.\nNext hand will be dealt shortly.\n(maximum %d seconds)" % int(delta), serials)
         if self.factory.verbose > 2:
             print "AutodealCheck(2) for %d scheduled in %f seconds" % ( self.game.id, delta )
         self.timer_info["dealTimeout"] = reactor.callLater(autodeal_check, self.autoDealCheck, autodeal_check, delta - autodeal_check)
 
+    def broadcastMessage(self, message_type, message, serials = None):
+        if serials == None:
+            serials =  self.game.serialsAll()
+        connected_serials = []
+        for serial in serials:
+            if self.serial2client.has_key(serial):
+                connected_serials.append(serial)
+        if connected_serials:
+            packet = message_type(game_id = self.game.id, string = message)
+            for serial in connected_serials:
+                client = self.serial2client[serial]
+                client.sendPacket(packet)
+            return True
+        return False
+    
     def scheduleAutoDeal(self):
         self.cancelDealTimeout()
         if self.factory.shutting_down:
@@ -709,7 +719,15 @@ class PokerTable:
             if self.factory.verbose > 2:
                 print "Not autodealing %d because less than 2 players willing to play" % self.game.id
             return
-        if not game.isTournament():
+        if game.isTournament():
+            if self.tourney:
+                if self.tourney.state != pokertournament.TOURNAMENT_STATE_RUNNING:
+                    if self.factory.verbose > 2:
+                        print "Not autodealing %d because in tournament state %s" % ( self.game.id, self.tourney.state )
+                    if self.tourney.state == pokertournament.TOURNAMENT_STATE_BREAK_WAIT:
+                        self.broadcastMessage(PacketPokerGameMessage, "Tournament will break when the other tables finish their hand")
+                    return
+        else:
             #
             # Do not auto deal a table where there are only temporary
             # users (i.e. bots)
