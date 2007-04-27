@@ -41,6 +41,7 @@ class PokerLock(threading.Thread):
 
     acquire_timeout = 60
     queue_timeout = 2 * 60
+    acquire_sleep = 1
     
     def __init__(self, parameters):
         self.verbose = 0
@@ -125,12 +126,12 @@ class PokerLock(threading.Thread):
         while 1:
             if self.lock.acquire(0):
                 break
-            tick -= 1
+            tick -= PokerLock.acquire_sleep
             if tick <= 0:
                 if self.verbose > 2: print "PokerLock::__acquire(%s) TIMED OUT" % str(thread.get_ident())
                 raise Exception(PokerLock.TIMED_OUT, name)
-            if self.verbose > 2: print "PokerLock::__acquire(%s) sleep 1" % str(thread.get_ident())
-            time.sleep(1)
+            if self.verbose > 2: print "PokerLock::__acquire(%s) sleep %f" % ( str(thread.get_ident()), PokerLock.acquire_sleep )
+            time.sleep(PokerLock.acquire_sleep)
         self.db.query("SELECT GET_LOCK('%s', %d)" % ( name, timeout))
         result = self.db.store_result()
         if result.fetch_row()[0][0] != 1:
