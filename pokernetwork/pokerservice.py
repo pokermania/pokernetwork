@@ -34,6 +34,7 @@ from string import split, join
 import os
 import operator
 import re
+import libxml2
 from traceback import print_exc
 
 from MySQLdb.cursors import DictCursor
@@ -86,6 +87,7 @@ from pokernetwork.pokertable import PokerTable
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
+from pokernetwork import pokernetworkconfig
 
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
@@ -137,6 +139,11 @@ class PokerService(service.Service):
     implements(IPokerService)
 
     def __init__(self, settings):
+        if type(settings) is StringType:
+            settings_object = pokernetworkconfig.Config([])
+            settings_object.doc = libxml2.parseMemory(settings, len(settings))
+            settings_object.header = settings_object.doc.xpathNewContext()
+            settings = settings_object
         self.settings = settings
         self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.delays = settings.headerGetProperties("/server/delays")[0]
@@ -197,11 +204,17 @@ class PokerService(service.Service):
               timer.cancel()
            del self.timer[key]
 
+    def cancelTimers(self, what):
+        for key in self.timer.keys():
+            if what in key:
+                self.cancelTimer(key)
+
     def shutdown(self):
         self.shutting_down = True
         self.cancelTimer('checkTourney')
         self.cancelTimer('updateTourney')
         self.cancelTimer('messages')
+        self.cancelTimers('tourney_breaks')
         self.shutdown_deferred = defer.Deferred()
         reactor.callLater(0.01, self.shutdownCheck)
         return self.shutdown_deferred
@@ -321,7 +334,7 @@ class PokerService(service.Service):
         #
         # Forget about old tournaments 
         #
-        for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED), self.tourneys.values()):
+        for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED ), self.tourneys.values()):
             if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
                 self.deleteTourney(tourney)
 
@@ -400,16 +413,60 @@ class PokerService(service.Service):
             del self.schedule2tourneys[tourney.schedule_serial]
         del self.tourneys[tourney.serial]
 
-    def tourneyNewState(self, tourney):
+    def tourneyNewState(self, tourney, old_state, new_state):
         cursor = self.db.cursor()
-        updates = [ "state = '" + tourney.state + "'" ]
-        if tourney.state == TOURNAMENT_STATE_RUNNING:
+        updates = [ "state = '" + new_state + "'" ]
+        if old_state != TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             updates.append("start_time = %d" % tourney.start_time)
         sql = "update tourneys set " + ", ".join(updates) + " where serial = " + str(tourney.serial)
-        if self.verbose > 4: print "tourneyNewState: " + sql
+        if self.verbose > 2: print "tourneyNewState: " + sql
         cursor.execute(sql)
         if cursor.rowcount != 1: print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
         cursor.close()
+        if new_state == TOURNAMENT_STATE_BREAK:
+            self.tourneyBreakCheck(tourney)
+        elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
+            self.tourneyBreakResume(tourney)
+        elif new_state == TOURNAMENT_STATE_RUNNING:
+            self.tourneyDeal(tourney)
+        elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
+            self.tourneyBreakWait(tourney)
+
+    def tourneyBreakCheck(self, tourney):
+        key = 'tourney_breaks_%d' % id(tourney)
+        self.cancelTimer(key)
+        tourney.updateBreak()
+        if tourney.state == TOURNAMENT_STATE_BREAK:
+            remaining = tourney.remainingBreakSeconds()
+            if remaining < 60:
+                remaining = "less than a minute"
+            elif remaining < 120:
+                remaining = "one minute"
+            else:
+                remaining = "%d minutes" % int(remaining / 60)
+            for game_id in map(lambda game: game.id, tourney.games):
+                table = self.getTable(game_id)
+                table.broadcastMessage(PacketPokerGameMessage, "Tournament is now on break for " + remaining)
+        
+            self.timer[key] = reactor.callLater(self.delays.get('breaks_check', 30), self.tourneyBreakCheck, tourney)
+
+    def tourneyDeal(self, tourney):
+        for game_id in map(lambda game: game.id, tourney.games):
+            table = self.getTable(game_id)
+            table.scheduleAutoDeal()
+
+    def tourneyBreakWait(self, tourney):
+        for game_id in map(lambda game: game.id, tourney.games):
+            table = self.getTable(game_id)
+            if table.game.isRunning():
+                table.broadcastMessage(PacketPokerGameMessage, "Tournament break at the end of the hand")
+            else:
+                table.broadcastMessage(PacketPokerGameMessage, "Tournament break will start when the other tables finish their hand")
+
+    def tourneyBreakResume(self, tourney):
+        for game_id in map(lambda game: game.id, tourney.games):
+            table = self.getTable(game_id)
+            table.broadcastMessage(PacketPokerGameMessage, "Tournament resumes")
 
     def tourneyEndTurn(self, tourney, game_id):
         if not tourney.endTurn(game_id):
@@ -1305,6 +1362,7 @@ class PokerService(service.Service):
             print " *ERROR* modified %d rows (expected 1): %s " % ( cursor.rowcount, sql )
             status = False
         cursor.close()
+        return status
 
     def updatePlayerMoney(self, serial, table_id, amount):
         if amount == 0:
