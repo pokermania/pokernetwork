@@ -42,37 +42,11 @@ from twisted.internet import reactor, defer, error, base
 from twisted.python import failure, runtime
 
 from pokerengine import pokertournament
-
 #
 # Must be done before importing pokerclient or pokerclient
 # will have to be patched too.
 #
-# Tweak poker-engine & twisted to use a fake clock so that
-# the tests are immune to the performances of the machine
-# running the test, even when testing timeouts or other delays.
-#
-_seconds_value = time.time()
-def _seconds_reset():
-    global _seconds_original
-    _seconds_original = _seconds_value
-_seconds_reset()
-_seconds_verbose = int(os.environ.get('VERBOSE_T', '3'))
-def _seconds_tick():
-    global _seconds_value
-    if _seconds_verbose > 3:
-        print "tick: %.01f" % ( _seconds_value - _seconds_original )
-    _seconds_value += 0.1
-    return _seconds_value
-
-base.seconds = _seconds_tick
-#
-# select timeout must return immediately, it makes no sense
-# to wait while testing.
-#
-reactor.timeout = lambda: 0
-runtime.seconds = _seconds_tick
-pokertournament.tournament_seconds = _seconds_tick
-
+from tests import testclock
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
@@ -178,7 +152,7 @@ class PokerClientTestCase(unittest.TestCase):
 
     # ------------------------------------------------------
     def setUp(self):
-        _seconds_reset()        
+        testclock._seconds_reset()        
         self.destroyDb()
         self.setUpServer()
         self.client_factory = [None, None]
@@ -375,6 +349,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.printUserInfo)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
+    test05_userInfo.timeout = 200
     
     def test06_cannotGetSeat(self):
         """ test06_cannotGetSeat """
@@ -618,7 +593,7 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         def waitForMessage(client):
             db = self.service.db.db
-            db.query("INSERT INTO messages (send_date, message) VALUES (" + str(_seconds_value + 2) + ", 'the message')")
+            db.query("INSERT INTO messages (send_date, message) VALUES (" + str(testclock._seconds_value + 2) + ", 'the message')")
             return client.packetDeferred(True, PACKET_MESSAGE)
         d.addCallback(waitForMessage)
         return d
@@ -669,6 +644,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
+    test15_0_playTourney.timeout = 200
 
     def check_breaks(self, (client, packet),):
         self.assertEqual(PACKET_POKER_TOURNEY_LIST, packet.type)
@@ -863,10 +839,9 @@ class PokerClientTestCase(unittest.TestCase):
                 def getPlayer(self, serial):
                     return self.player
 
-            global _seconds_value
             game = Game()
             client.setPlayerDelay(game, 42, 100)
-            self.assertEqual(_seconds_value + 100, game.player.user_data['delay'])
+            self.assertEqual(testclock._seconds_value + 100, game.player.user_data['delay'])
         d.addCallback(setPlayerDelay)
         return d
 
@@ -900,11 +875,10 @@ class PokerClientTestCase(unittest.TestCase):
                                                                     serial = client.getSerial(),
                                                                     timeout = 50))
 
-            global _seconds_value
-            self.assertEqual(int(_seconds_value), game.player.user_data['timeout'][0])
-            _seconds_value += 1
+            self.assertEqual(int(testclock._seconds_value), game.player.user_data['timeout'][0])
+            testclock._seconds_value += 1
             ( packet, ) = client.resendPlayerTimeoutWarning(game)
-            self.assertEqual(int(_seconds_value), packet.when)
+            self.assertEqual(int(testclock._seconds_value), packet.when)
             self.assertEqual(50 - 1 - 1, packet.timeout) # - 1 for rounding
             self.assertEqual(PACKET_POKER_TIMEOUT_WARNING, packet.type)
         d.addCallback(resendPlayerTimeoutWarning)
@@ -914,7 +888,7 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         def publishDelay(client):
             client.publishDelay(10)
-            self.assertEqual(_seconds_value + 10, client.publish_time)
+            self.assertEqual(testclock._seconds_value + 10, client.publish_time)
         d.addCallback(publishDelay)
         return d
 
@@ -997,7 +971,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test15_1"
+#    loader.methodPrefix = "test19"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
