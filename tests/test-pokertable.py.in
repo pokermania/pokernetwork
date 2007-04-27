@@ -32,6 +32,7 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
+from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
@@ -109,7 +110,7 @@ class MockClient:
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
 
     def sendPacket(self, packet):
-        print "sendPacket: " + str(packet)
+        print "MockClient::sendPacket: " + str(packet)
         self.packets.append(packet)
         if self.deferred:
             if self.raise_if_packet and packet.type == self.raise_if_packet:
@@ -216,11 +217,27 @@ class PokerTableTestCase(unittest.TestCase):
         client = self.clients[1]
         self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
 
+    # -------------------------------------------------------------------
+    def test07_break_message(self):
+        """ Tournament break issue a message to all players """
+        class Tournament:
+            def __init__(self):
+                self.state = pokertournament.TOURNAMENT_STATE_BREAK_WAIT
+                
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.transient = True
+        self.table.tourney = Tournament()
+        self.table.game.isTournament = lambda: True
+        self.table.scheduleAutoDeal()
+        self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
+        self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
+
 # -------------------------------------------------------------------
 
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     return runner.TrialRunner(reporter.VerboseTextReporter,
