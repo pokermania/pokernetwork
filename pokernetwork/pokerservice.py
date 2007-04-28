@@ -427,6 +427,7 @@ class PokerService(service.Service):
             self.tourneyBreakCheck(tourney)
         elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             self.tourneyBreakResume(tourney)
+            self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_RUNNING:
             self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
