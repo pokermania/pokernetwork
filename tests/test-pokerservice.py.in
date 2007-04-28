@@ -602,7 +602,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyBreakWait = notok
 
         self.service.tourneyBreakResume = ok
+        self.service.tourneyDeal = ok
         self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.service.tourneyDeal = notok
         self.service.tourneyBreakResume = notok
         
     def test_tourneyDeal(self):
