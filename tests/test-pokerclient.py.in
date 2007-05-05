@@ -879,7 +879,7 @@ class PokerClientTestCase(unittest.TestCase):
             testclock._seconds_value += 1
             ( packet, ) = client.resendPlayerTimeoutWarning(game)
             self.assertEqual(int(testclock._seconds_value), packet.when)
-            self.assertEqual(50 - 1 - 1, packet.timeout) # - 1 for rounding
+            self.assertApproximates(50 - 1 - 1, packet.timeout, 1) # approximates because of rounding
             self.assertEqual(PACKET_POKER_TIMEOUT_WARNING, packet.type)
         d.addCallback(resendPlayerTimeoutWarning)
         return d
