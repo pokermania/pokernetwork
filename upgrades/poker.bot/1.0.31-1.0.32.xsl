@@ -8,7 +8,7 @@
 	     encoding="ISO-8859-1"
  />
 
- <xsl:template match="/bot/@ping"><xsl:attribute name="ping">10</xsl:attribute></xsl:template>
+ <xsl:template match="/settings/@ping"><xsl:attribute name="ping">10</xsl:attribute></xsl:template>
 
  <!-- copy the rest verbatim -->
  <xsl:template match="@*|node()">
