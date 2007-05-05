@@ -35,7 +35,7 @@ _seconds_reset()
 _seconds_verbose = int(os.environ.get('VERBOSE_T', '3'))
 def _seconds_tick():
     global _seconds_value
-    if _seconds_verbose > 2:
+    if _seconds_verbose > 3:
         print "tick: %.01f" % ( _seconds_value - _seconds_original )
     _seconds_value += 0.1
     return _seconds_value
