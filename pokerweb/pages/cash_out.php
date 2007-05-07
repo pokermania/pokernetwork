@@ -82,10 +82,10 @@ if($poker_error) {
 		<table>
 			<tr>
 				<td></td>
-				<td>Cash-Out</td>
+				<td><? echo _('Cash-Out') ?></td>
 			</tr>
 			<tr>
-				<td><b>Amount:</b></td>
+				<td><b><? echo _('Amount') ?>:</b></td>
 				<td>
           <input type="text" name="amount" value="<?php echo $amount; ?>" />
         </td>
@@ -93,7 +93,7 @@ if($poker_error) {
 			<tr>
 				<td></td>
 				<td>
-					<input type="submit" name='submit' value="Ok" />
+					<input type="submit" name='submit' value="<? echo _('Ok') ?>" />
 				</td>
 			</tr>
 		</table>

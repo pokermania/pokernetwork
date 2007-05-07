@@ -87,7 +87,7 @@ class poker {
     if($packets) {
       switch ($packets[0]['type']) {
       case 'PacketAuthRefused':
-        throw new Exception('Authentication failed, ' . $packets[0]['message'], self::E_LOGIN_FAILED);
+        throw new Exception(_('Authentication failed').", " . _($packets[0]['message']), self::E_LOGIN_FAILED);
         break;
       case 'PacketAuthOk':
         if($packets[1]['type'] == 'PacketSerial') {

@@ -47,17 +47,17 @@ if($user_info) {
   echo '<!-- HOME IS LOGGED IN -->';
   if(is_array($user_info['money'])) {
     foreach ( $user_info['money'] as $currency => $state ) {
-      print "bankroll ".substr($state[0], 0, -2).".".substr($state[0], -2).", in game ".$state[1].", point ".$state[2]." (currency ".$currency.")<p>";
+      print _('bankroll')." ".substr($state[0], 0, -2).".".substr($state[0], -2).", "._('in game')." ".$state[1].", "._('point')." ".$state[2]." ("._('currency')." ".$currency.")<p>";
     }
   }
-  echo '<a href="logout.php" id="logout">logout</a><br>';
-  echo '<a href="edit_account.php" id="edit_account">Edit Account</a><br>';
-  echo '<a href="cash_in.php" id="cash_in">Cash-In</a><br>';
-  echo '<a href="cash_out.php" id="cash_out">Cash-Out</a><br>';
+  echo '<a href="logout.php" id="logout">'._('Log out').'</a><br>';
+  echo '<a href="edit_account.php" id="edit_account">'._('Edit Account').'</a><br>';
+  echo '<a href="cash_in.php" id="cash_in">'._('Cash-In').'</a><br>';
+  echo '<a href="cash_out.php" id="cash_out">'._('Cash-Out').'</a><br>';
 } else {
   echo '<!-- HOME NOT LOGGED IN -->';
-  echo '<a href="login.php" id="login">login</a><br>';
-  echo '<a href="create_account.php" id="create_account">Create Account</a><br>';
+  echo '<a href="login.php" id="login">'._("Log in").'</a><br>';
+  echo '<a href="create_account.php" id="create_account">'._('Create Account').'</a><br>';
 }
 
 hci_footer();

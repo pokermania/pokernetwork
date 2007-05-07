@@ -99,71 +99,71 @@ if($poker_error) {
 		<table>
 			<tr>
 				<td></td>
-				<td>Create Account</td>
+				<td><? echo _('Create Account') ?></td>
 			</tr>
 			<tr>
-				<td><b>Login<sup>*</sup>:</b></td>
+				<td><b><? echo _('Login') ?><sup>*</sup>:</b></td>
 				<td><input type="text" size="20" maxlength="32" id="name" name="name" value="<?php print $account['name'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Password<sup>*</sup>:</b></td>
+				<td><b><? echo _('Password') ?><sup>*</sup>:</b></td>
 				<td><input type="password" size="20" maxlength="32" id="password" name="password" /></td>
 			</tr>
 			<tr>
-				<td><b>Password confirmation<sup>*</sup>:</b></td>
+				<td><b><? echo _('Password confirmation') ?><sup>*</sup>:</b></td>
 				<td><input type="password" size="20" maxlength="32" id="password2" name="password2" /></td>
 			</tr>
 			<tr>
-				<td><b>Email<sup>*</sup>:</b></td>
+				<td><b><? echo _('Email') ?><sup>*</sup>:</b></td>
 				<td><input type="text" size="32" maxlength="128" id="email" name="email" value="<?php print $account['email'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Phone:</b></td>
+				<td><b><? echo _('Phone') ?>:</b></td>
 				<td><input type="text" size="40" maxlength="64" id="phone" name="phone" value="<?php print $account['phone'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>First Name:</b></td>
+				<td><b><? echo _('First Name') ?>:</b></td>
 				<td><input type="text" size="32" maxlength="32" id="firstname" name="firstname" value="<?php print $account['firstname'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Last Name:</b></td>
+				<td><b><? echo _('Last Name') ?>:</b></td>
 				<td><input type="text" size="32" maxlength="32" id="lastname" name="lastname" value="<?php print $account['lastname'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Gender:</b></td>
+				<td><b><? echo _('Gender') ?>:</b></td>
 				<td>
 				<select id="gender" name="gender">
-                                <option value="M" <?php $account['gender'] == 'M' ? 'selected="selected"' : '' ?>>Mr</option>
-                                <option value="F" <?php $account['gender'] == 'F' ? 'selected="selected"' : '' ?>>Miss</option>
+                                <option value="M" <?php $account['gender'] == 'M' ? 'selected="selected"' : '' ?>><? echo _('Mr') ?></option>
+                                <option value="F" <?php $account['gender'] == 'F' ? 'selected="selected"' : '' ?>><? echo _('Miss') ?></option>
                                 </select>
                                 </td>
 			</tr>
 			<tr>
-			  <td><b>Birthday:</b></td>
+			  <td><b><? echo _('Birthday') ?>:</b></td>
                           <td><?php print $birthday->form(); ?></td>
 			</tr>
 			<tr>
-				<td><b>Street:</b></td>
+				<td><b><? echo _('Street') ?>:</b></td>
 				<td><textarea id="addr_street" name="addr_street" cols="30" rows="3"><?php print $account['addr_street'] ?></textarea></td>
 			</tr>
 			<tr>
-				<td><b>Street 2:</b></td>
+				<td><b><? echo _('Street') ?> 2:</b></td>
 				<td><textarea id="addr_street2" name="addr_street2" cols="30" rows="3"><?php print $account['addr_street2'] ?></textarea></td>
 			</tr>
 			<tr>
-				<td><b>Zip code:</b></td>
+				<td><b><? echo _('Zip code') ?>:</b></td>
 				<td><input type="text" size="20" maxlength="64" id="addr_zip" name="addr_zip" value="<?php print $account['addr_zip'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Town:</b></td>
+				<td><b><? echo _('Town') ?>:</b></td>
 				<td><input type="text" size="50" maxlength="64" id="addr_town" name="addr_town" value="<?php print $account['addr_town'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>State:</b></td>
+				<td><b><? echo _('State') ?>:</b></td>
 				<td><input type="text" size="50" maxlength="128" id="addr_state" name="addr_state" value="<?php print $account['addr_state'] ?>" /></td>
 			</tr>
 			<tr>
-				<td><b>Country:</b></td>
+				<td><b><? echo _('Country') ?>:</b></td>
 				<td>
 					<select id="addr_country" name="addr_country">
 <?php
@@ -181,7 +181,7 @@ if($poker_error) {
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type="submit" name='submit' value="Ok" /></td>
+				<td><input type="submit" name='submit' value="<? echo _('Ok') ?>" /></td>
 			</tr>
 		</table>
 	</form>
