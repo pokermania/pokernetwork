@@ -1,6 +1,11 @@
-2007-05-05  Loic Dachary <loic@dachary.org>
+2007-05-07  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.0.37
+
+	* pokerweb/pages/: Internationalization of poker-web strings
+	* debian/control: Add gettext to poker-web dependencies
+
+2007-05-05  Loic Dachary <loic@dachary.org>
 
 	* upgrades/poker.bot/1.0.31-1.0.32.xsl: Replace /bot with /settings
 
