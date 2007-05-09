@@ -1,6 +1,13 @@
-2007-05-07  Johan Euphrosine  <proppy@aminche.com>
+2007-05-09  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.37
+
+	* pokernetwork/pokerdatabase.py: add a second CREATE USER statement
+	  to pokerdatabase.py for Host='localhost'.
+	  closes https://gna.org/support/?1457
+	* debian/po/nl.po: Deutsh translation.
+
+2007-05-07  Johan Euphrosine  <proppy@aminche.com>
 
 	* pokerweb/pages/: Internationalization of poker-web strings
 	* debian/control: Add gettext to poker-web dependencies
@@ -4119,5 +4126,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-04-27/p'"
+compile-command: "svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-07/p'"
 End:
