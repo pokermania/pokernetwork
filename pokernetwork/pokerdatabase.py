@@ -1,6 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -82,6 +83,9 @@ class PokerDatabase:
                 #
                 try:
                     sql = "CREATE USER '" + self.parameters['user'] + "'@'%' IDENTIFIED BY '" + self.parameters['password'] + "'"
+                    if self.verbose > 2: print sql
+                    db.query(sql)
+                    sql = "CREATE USER '" + self.parameters['user'] + "'@'localhost' IDENTIFIED BY '" + self.parameters['password'] + "'"
                     if self.verbose > 2: print sql
                     db.query(sql)
                     db.query("FLUSH PRIVILEGES")
