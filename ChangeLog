@@ -1,11 +1,21 @@
-2007-05-09  Loic Dachary <loic@dachary.org>
+2007-05-13  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.37
+
+	* debian/changelog: Add portugese translation.
+	* config/ccpython.m4: python2.5 support in dependencies is not
+	  mature yet
+
+2007-05-12  Loic Dachary <loic@dachary.org>
+
+	* debian/po/pt.po: Add portugese translation.
+
+2007-05-09  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerdatabase.py: add a second CREATE USER statement
 	  to pokerdatabase.py for Host='localhost'.
 	  closes https://gna.org/support/?1457
-	* debian/po/nl.po: Deutsh translation.
+	* debian/po/nl.po: Dutch translation.
 
 2007-05-07  Johan Euphrosine  <proppy@aminche.com>
 
