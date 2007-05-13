@@ -2,6 +2,10 @@ poker-network (1.0.37-1) unstable; urgency=low
 
   * upstream sync
 
+  * dutch translation (closes: #423054)
+  
+  * portugese translation (closes: #423527)
+  
  -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 13 Mar 2007 17:12:52 +0100
 
 poker-network (1.0.36-1) unstable; urgency=low
