@@ -925,6 +925,27 @@ class PacketPokerTableJoin(PacketPokerId):
 Semantics: player "serial" wants to become an observer
 of the game "game_id".
 
+The packets sent to the client when successfully joining the
+table are as follows:
+
+PACKET_POKER_TABLE
+PACKET_POKER_BATCH_MODE
+for each player in the game:
+  PACKET_POKER_PLAYER_ARRIVE
+  if the player is playing:
+     PACKET_POKER_PLAYER_CHIPS
+  if the player is sit:
+     PACKET_POKER_SIT
+  PACKET_POKER_SEATS
+  if the game is running:
+     the exact packet sequence that lead to the current
+     state of the game. Varies according to the game.
+PACKET_POKER_STREAM_MODE
+
+If the player cannot join the table for any reason, the packet
+PacketPokerTable with serial 0 will be sent. It won't be filled with
+any meaningfull information.
+
 Direction: server <= client
 
 serial: integer uniquely identifying a player.
@@ -967,6 +988,9 @@ Semantics: the full description of a poker game. When sent
 to the server, act as a request to create the corresponding
 game. When sent by the server, describes an existing poker
 game.
+
+The answer sent to the client will be the same as the answer
+sent when receiving a PacketPokerTableJoin packet.
 
 Direction: server <=> client
 
