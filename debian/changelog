@@ -1,9 +1,22 @@
 poker-network (1.1.0-1) unstable; urgency=low
 
   * upstream sync
+  
+  * Apply NMU patch (closes: 425253)
 
  -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 16 May 2007 14:06:27 +0200
 
+poker-network (1.0.37-1.1) unstable; urgency=high
+
+  * Non-maintainer upload during BSP.
+  * Fix unconditional use of debconf in postrm (Closes: #417012).
+  * Add python-gtk2-dev as build-dependency (Closes: #424439).
+  * Updated Czech debconf translation (Closes: #408656).
+  * Add German debconf translation (Closes: #414583).
+  * Move poker-web to web - optional to match overrides.
+
+ -- Luk Claes <luk@debian.org>  Sun, 20 May 2007 12:18:18 +0200
+ 
 poker-network (1.0.37-1) unstable; urgency=low
 
   * upstream sync
