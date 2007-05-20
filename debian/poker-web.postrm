@@ -22,7 +22,9 @@ if [ "$1" = "purge" ]; then
 
 fi
 
-. /usr/share/debconf/confmodule
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
 . /usr/share/dbconfig-common/dpkg/postrm.mysql 
 dbc_dbname=currency_one
 dbc_go poker-web-currency-one $@
