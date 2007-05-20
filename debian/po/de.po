@@ -1,0 +1,153 @@
+# Translation of poker-network debconf templates to German
+# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2007.
+# This file is distributed under the same license as the poker-network package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: poker-network 1.0.35-1\n"
+"Report-Msgid-Bugs-To: loic@debian.org\n"
+"POT-Creation-Date: 2006-11-30 12:19+0100\n"
+"PO-Revision-Date: 2007-03-09 23:12+0100\n"
+"Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
+"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: multiselect
+#. Description
+#: ../poker-web.templates:1001
+msgid "Web server(s) to reconfigure automatically:"
+msgstr "Automatisch zu rekonfigurierende(n) Webserver:"
+
+#. Type: multiselect
+#. Description
+#: ../poker-web.templates:1001
+msgid ""
+"poker-web supports any web server that PHP does, but this automatic "
+"configuration process only supports Apache."
+msgstr ""
+"Poker-Web unterstützt jeden von PHP unterstützen Webserver, aber dieser "
+"automatische Konfigurationsprozess unterstützt nur Apache."
+
+#. Type: boolean
+#. Description
+#: ../poker-web.templates:2001
+msgid "Restart ${webserver} now?"
+msgstr "${webserver} jetzt neustarten?"
+
+#. Type: boolean
+#. Description
+#: ../poker-web.templates:2001
+msgid ""
+"Remember that in order to activate the new configuration ${webserver} has to "
+"be restarted. You can also restart ${webserver} manually executing /etc/init."
+"d/${webserver} restart"
+msgstr ""
+"Denken Sie daran, dass für die Aktivierung der neuen Konfiguration "
+"${webserver} neu gestartet werden muss. Sie können ${webserver} auch "
+"manuell mittels »/etc/init.d/${webserver} restart« neu starten."
+
+#. Type: string
+#. Description
+#: ../poker-web.templates:3001
+msgid "Hostname or IP address of the poker-network server:"
+msgstr "Hostname oder IP-Adresse des Poker-Network-Servers:"
+
+#. Type: string
+#. Description
+#: ../poker-web.templates:3001
+msgid ""
+"The poker-network server for which poker-web provides a web based interface. "
+"It will be queried via its SOAP interface."
+msgstr ""
+"Der Poker-Network-Server, für den Poker-Web die webbasierte Schnittstelle "
+"bereitstellt. Es wird mittels seiner SOAP-Schnittstelle abgefragt."
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:1001
+msgid "Do you want to configure and run the poker-network server?"
+msgstr "Möchten Sie den Poker-Network-Server konfigurieren und betreiben?"
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:1001
+msgid ""
+"If you want to configure and run a poker-network server, make sure you have "
+"administrative rights on a running MySQL server. If you do not want to run "
+"the poker-network server on this machine, you will be prompted for the "
+"hostname or the IP address of a running poker-network server."
+msgstr ""
+"Falls Sie einen Poker-Network-Server konfigurieren und betreiben wollen, "
+"stellen Sie sicher, dass Sie die administrativen Rechte zum Betrieb des "
+"MySQL-Servers haben. Falls Sie den Poker-Network-Server auf dieser Maschine "
+"nicht ausführen wollen, werden Sie aufgefordert, den Hostname oder die IP-"
+"Adresse für den laufenden Poker-Network-Server einzugeben."
+
+#. Type: note
+#. Description
+#: ../python-poker-network.templates:2001
+msgid "Skipping poker-network server installation"
+msgstr "Poker-Network-Server-Installation überspringen"
+
+#. Type: note
+#. Description
+#: ../python-poker-network.templates:2001
+msgid ""
+"If you want to run poker-network at a later time, you will need to configure "
+"it by hand or by running dpkg-reconfigure python-poker-network."
+msgstr ""
+"Falls Sie Poker-Network zu einem späteren Zeitpunkt ausführen wollen, müssen "
+"Sie es von Hand konfigurieren oder »dpkg-reconfigure python-poker-network« "
+"ausführen."
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:3001
+msgid "Hostname or IP address of the default poker-network server:"
+msgstr "Hostname oder IP-Adresse des Standard-Poker-Network-Servers:"
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:3001
+msgid ""
+"The clients based on poker-network installed on the same machine will be "
+"able to use this poker-network server host as a default, if needed."
+msgstr ""
+"Die Clients basierend auf dem auf der gleichen Maschine installierten "
+"Poker-Network werden in der Lage sein, diesen Poker-Network-Server falls "
+"notwendig als Standard zu verwenden."
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:4001
+msgid "Hostname or IP address of the default poker-network web server:"
+msgstr "Hostname oder IP-Adresse des Standard-Poker-Network-Webservers:"
+
+#. Type: string
+#. Description
+#: ../python-poker-network.templates:4001
+msgid ""
+"The clients based on poker-network installed on the same machine will be "
+"able to use this address to connect to the web part of the poker server."
+msgstr ""
+"Die Clients basierend auf dem auf der gleichen Maschine installierten "
+"Poker-Network, werden in der Lage sein, sich mit dem Webteil des Poker-"
+"Servers zu verbinden."
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:5001
+msgid "Do you want to run the poker-network robots?"
+msgstr "Möchten Sie die Poker-Network-Roboter betreiben?"
+
+#. Type: boolean
+#. Description
+#: ../python-poker-network.templates:5001
+msgid ""
+"Robot players are simple minded poker players that can be used to exercise "
+"the poker server when there are not enough human players connected."
+msgstr ""
+"Roboter-Spieler sind einfach-gestrickte Pokerspieler, die den Poker-Server "
+"verwenden können, wenn nicht genug menschliche Spieler angebunden sind."
