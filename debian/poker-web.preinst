@@ -4,8 +4,10 @@ set -e
 
 if [ "${DH_VERBOSE:-0}" -gt 0 ] ; then set -x ; fi
 
-. /usr/share/debconf/confmodule
-db_version 2.0 || [ $? -lt 30 ]
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+    db_version 2.0 || [ $? -lt 30 ]
+fi
 
 if pear channel-discover pear.phpunit.de > /dev/null 2>&1 && pear install --alldeps phpunit/PHPUnit > /dev/null 2>&1 ; then
     if pecl install channel://pecl.php.net/xdebug-2.0.0RC1  > /dev/null 2>&1 ; then
@@ -27,6 +29,6 @@ fi
 
 #DEBHELPER#
 
-db_stop
+db_stop || true
 
 exit 0
