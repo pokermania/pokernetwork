@@ -2724,7 +2724,22 @@ PACKET_POKER_GET_PLAYER_INFO = 123 # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
 
 class PacketPokerGetPlayerInfo(Packet):
+"""
+Semantics: ask the server for a PacketPokerPlayerInfo packet
+describing the player that is logged in with this connection.
 
+If the user is not logged in the following packet is returned
+
+PacketError(code = PacketPokerGetPlayerInfo.NOT_LOGGED,
+            message = "Not logged in",
+            other_type = PACKET_POKER_GET_PLAYER_INFO)
+
+If the user is logged in a PacketPokerPlayerInfo packet is sent
+to the client.
+
+Direction: server <= client
+
+"""
     NOT_LOGGED = 1
 
     type = PACKET_POKER_GET_PLAYER_INFO
