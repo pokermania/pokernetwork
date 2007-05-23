@@ -1454,7 +1454,15 @@ PACKET_POKER_CHAT = 86 # %SEQ%
 PacketNames[PACKET_POKER_CHAT] = "POKER_CHAT"
 
 class PacketPokerChat(PacketPokerId):
+    """\
+Semantics: a text "message" sent to all players seated
+at the poker table "game_id".
 
+Direction: server  <=> client
+
+message: a text message string (2^16 long max)
+game_id: integer uniquely identifying a game.
+"""
    type = PACKET_POKER_CHAT
 
    message = 0
