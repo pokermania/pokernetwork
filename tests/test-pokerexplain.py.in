@@ -328,6 +328,27 @@ class PokerExplainTestCase(unittest.TestCase):
         packet = packets[1]
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
 
+    def test15_updateBetLimit(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        self.explain.handleSerial(PacketSerial(serial = player.serial))
+
+        game.player_list = [ player.serial ]
+        game.state = pokergame.GAME_STATE_PRE_FLOP
+        game.current_round = 0
+        game.bet_info = { 0: {'fixed': 1} }
+        
+        packets = self.explain.updateBetLimit(game)
+        self.assertEqual(1, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_BET_LIMIT, packet.type)
+
+        self.explain.chips_values = []
+        self.assertEqual([], self.explain.updateBetLimit(game))
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
