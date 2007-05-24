@@ -2607,9 +2607,9 @@ class PacketPokerTourneyRequestPlayersList(PacketPokerId):
     """\
 Semantics: client request the player list of the tourney "game_id".
 
-Direction: client => server
+Direction: server <= client
 
-game_id: integer uniquely identifying a game.
+game_id: integer uniquely identifying a tournament.
 """
 
     type = PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST
@@ -2622,7 +2622,37 @@ PACKET_POKER_TOURNEY_REGISTER = 116 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_REGISTER] = "POKER_TOURNEY_REGISTER"
 
 class PacketPokerTourneyRegister(PacketPokerId):
+    """\
+Semantics: register player "serial" to tournament "game_id".
 
+Direction: server <= client
+
+If the player is registered successfully, the server will send
+back the packet to the client.
+
+If an error occurs during the tournament registration, the server
+will send back 
+
+  PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER)
+
+with the "code" field name set as follows:
+
+DOES_NOT_EXIST : the "game_id" field does not match any existing
+                 tournaments.
+ALREADY_REGISTERED : the "serial" player is already listed as
+                 a registered player in the "game_id" tournament.
+REGISTRATION_REFUSED : the "serial" player registration was refused
+                 because the "game_id" tournament is no longer in
+                 the registration phase or because the players
+                 quota was exceeded.
+NOT_ENOUGH_MONEY : the "serial" player does not have enough money
+                 to pay the "game_id" tournament.
+SERVER_ERROR : the server failed to register the player because the
+               database is inconsistent.
+  
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a tournament.
+"""
     DOES_NOT_EXIST = 1
     ALREADY_REGISTERED = 2
     REGISTRATION_REFUSED = 3
