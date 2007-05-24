@@ -1,0 +1,302 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+import sys
+sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+
+from tests import testclock
+
+from pokerengine import pokergame
+from pokernetwork.pokerexplain import PokerGames
+
+class MockupPokerGameClient:
+
+    def __init__(self, template, dirs):
+        self.id = 0
+        self.name = "noname"
+    
+class PokerGamesTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.games = PokerGames()
+        self.games.game_client = MockupPokerGameClient
+
+    def test_all(self):
+        self.failIf(self.games.getGame(1))
+        game = self.games.getOrCreateGame(1)
+        self.assertEquals([1], self.games.getGameIds())
+        self.assertEquals([game], self.games.getAll())
+        self.assertEquals("noname", game.name)
+        self.assertEquals(game, self.games.getGame(1))
+        self.assertEquals(game, self.games.getGameByNameNoCase('NoName'))
+        self.failIf(self.games.getGameByNameNoCase('unknown'))
+        class Packet:
+            pass
+        p = Packet()
+        self.assertEquals(False, self.games.packet2game(p))
+        p.game_id = 1
+        self.assertEquals(game, self.games.packet2game(p))
+        self.failUnless(self.games.gameExists(1))
+        self.games.deleteGame(1)
+        self.failIf(self.games.getGame(1))
+
+from pokernetwork.pokerexplain import PokerExplain
+from pokernetwork.pokerclientpackets import *
+
+class PokerExplainTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.explain = PokerExplain()
+        self.explain.verbose = 10
+        verbose = int(os.environ.get('VERBOSE_T', 3))
+        self.explain.old_message = self.explain.message
+        def message(string):
+            if verbose > 0:
+                self.explain.old_message(string)
+        self.explain.message = message
+
+    def test01_utilities(self):
+        self.explain.error("test")
+        self.explain.setPrefix("foo")
+        self.assertEqual("foo", self.explain._prefix)
+
+    def test02_normalizeChips(self):
+        class PokerGame:
+            unit = 10
+        game = PokerGame()
+        self.assertEqual([1, 5, 10, 3], self.explain.normalizeChips(game, 35))
+        game.unit = 237
+        self.assertEqual([1,5], self.explain.normalizeChips(game, 5))
+
+    def test03_updatePlayerChips(self):
+        class PokerGame:
+            id = 3
+        game = PokerGame()
+
+        class Player:
+            bet = 13
+            money = 17
+            serial = 1
+        player = Player()
+        packet = self.explain.updatePlayerChips(game, player)
+        self.assertEqual(player.money, packet.money)
+        self.assertEqual(player.bet, packet.bet)
+
+    def test04_updatePotsChips(self):
+        class PokerGame:
+            id = 1
+            unit = 1
+        game = PokerGame()
+        packets = self.explain.updatePotsChips(game, [])
+        self.assertEqual(PACKET_POKER_CHIPS_POT_RESET, packets[0].type)
+        packets = self.explain.updatePotsChips(game, {'pots': [[10, 20], [20, 40]]})
+        self.assertEqual(2, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_POT_CHIPS, packet.type)
+        self.assertEqual([1, 6, 2, 2], packet.bet)
+
+    def test05_chipsPlayer2Bet(self):
+        class PokerGame:
+            id = 1
+            unit = 1
+        class PokerPlayer:
+            serial = 10
+            bet = 30
+            money = 50
+        packets = self.explain.chipsPlayer2Bet(PokerGame(), PokerPlayer(), 10)
+        self.assertEqual(2, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_PLAYER2BET, packet.type)
+        self.assertEqual([1, 6, 2, 2], packet.chips)
+
+    def test06_chipsBet2Pot(self):
+        class PokerGame:
+            id = 1
+            unit = 1
+
+            def isSecondRound(self):
+                return True
+            
+        class PokerPlayer:
+            serial = 10
+            bet = 30
+            money = 50
+            dead = 3
+
+        pot_index = 0
+        packets = self.explain.chipsBet2Pot(PokerGame(), PokerPlayer(), 13, pot_index)
+        self.assertEqual(2, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packet.type)
+        self.assertEqual([1, 6, 2, 2], packet.chips)
+        self.assertEqual(pot_index, packet.pot)
+        packet = packets[1]
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+
+    def test07_chipsPot2Player(self):
+        class PokerGame:
+            id = 1
+            unit = 1
+
+        class PokerPlayer:
+            serial = 1
+
+        reason = "reason"
+        pot_index = 1
+        packet = self.explain.chipsPot2Player(PokerGame(), PokerPlayer(), 10, pot_index, reason)
+        self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
+        self.assertEqual([1, 6, 2, 2], packet.chips)
+        self.assertEqual(reason, packet.reason)
+        self.assertEqual(pot_index, packet.pot)
+
+    def test08_gameEvent_failure(self):
+        self.failIf(self.explain.gameEvent(1, "end_round"))
+        self.explain.forward_packets = [ 'fake' ]
+        self.failIf(self.explain.gameEvent(1, "end_round"))
+
+    def test08_gameEvent_end_round(self):
+        self.explain.forward_packets = [ 'fake' ]
+        class PokerGame:
+            id = 3
+        class PokerGames:
+            def getGame(self, id):
+                return PokerGame()
+        self.explain.games = PokerGames()
+        self.assertEqual(True, self.explain.gameEvent(1, "end_round"))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        packet = self.explain.forward_packets[1]
+        self.assertEqual(PACKET_POKER_END_ROUND, packet.type)
+        
+        self.explain.forward_packets = [ 'fake' ]
+        self.assertEqual(True, self.explain.gameEvent(1, "end_round_last"))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        packet = self.explain.forward_packets[1]
+        self.assertEqual(PACKET_POKER_END_ROUND_LAST, packet.type)
+        
+    def test08_gameEvent_money2bet(self):
+        self.explain.forward_packets = [ 'fake' ]
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+
+        event = ( "raise", player_serial, 20 )
+        game.historyAdd(*event)
+        self.assertEqual(True, self.explain.gameEvent(game_id, "money2bet", player_serial, 20))
+        self.assertEqual(4, len(self.explain.forward_packets))
+        packet = self.explain.forward_packets[1]
+        self.assertEqual(PACKET_POKER_HIGHEST_BET_INCREASE, packet.type)
+        packet = self.explain.forward_packets[2]
+        self.assertEqual(PACKET_POKER_CHIPS_PLAYER2BET, packet.type)
+        packet = self.explain.forward_packets[3]
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+
+    def test08_gameEvent_bet2pot(self):
+        self.explain.forward_packets = [ 'fake' ]
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+
+        game.current_round = -1
+        self.assertEqual(True, self.explain.gameEvent(game_id, "bet2pot", player_serial, 20))
+        self.assertEqual(3, len(self.explain.forward_packets))
+        packet = self.explain.forward_packets[1]
+        self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packet.type)
+        packet = self.explain.forward_packets[2]
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+
+        
+    def test08_gameEvent_round_cap_decrease(self):
+        self.explain.forward_packets = [ 'fake' ]
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        def updateBetLimit(game):
+            return ('updateBetLimit called',)
+        self.explain.updateBetLimit = updateBetLimit
+        self.assertEqual(True, self.explain.gameEvent(1, "round_cap_decrease"))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual('updateBetLimit called', self.explain.forward_packets[1])
+        
+
+    def test09_handleSerial(self):
+        serial = 1
+        self.explain.handleSerial(PacketSerial(serial = serial))
+        self.assertEqual(serial, self.explain.serial)
+
+    def test10_setPlayerTimeout(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        player.setUserData({ 'timeout': None })
+
+        packet = PacketPokerTimeoutWarning(serial = player_serial,
+                                           timeout = 0)
+        self.assertEqual(False, self.explain.setPlayerTimeout(game, packet))
+        packet.timeout = 2
+        self.assertEqual(True, self.explain.setPlayerTimeout(game, packet))
+        self.assertEqual((int(testclock._seconds_value), 2), player.user_data['timeout'])
+        return (game, player)
+
+    def test11_resendPlayerTimeoutWarning(self):
+        (game, player) = self.test10_setPlayerTimeout()
+        self.assertEqual((), self.explain.resendPlayerTimeoutWarning(game))
+        self.explain.handleSerial(PacketSerial(serial = player.serial))
+        game.state = pokergame.GAME_STATE_PRE_FLOP
+        game.player_list = [ player.serial ]
+        game.position = 0
+        (packet,) = self.explain.resendPlayerTimeoutWarning(game)
+        self.assertEqual(PACKET_POKER_TIMEOUT_WARNING, packet.type)
+        self.assertEqual(player.serial, packet.serial)
+
+    def test12_unsetPlayerTimeout(self):
+        (game, player) = self.test10_setPlayerTimeout()
+        self.explain.unsetPlayerTimeout(game, player.serial)
+        self.assertEqual(None, player.user_data['timeout'])
+        
+        
+# ----------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test14"
+    suite = loader.suiteFactory()
+#    suite.addTest(loader.loadClass(PokerGamesTestCase))
+    suite.addTest(loader.loadClass(PokerExplainTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+        tracebackFormat='default',
+        ).run(suite)
+
+# ----------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerexplain.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerexplain.py' TESTS='coverage-reset test-pokerexplain.py coverage-report' check )"
+# End:
+
