@@ -2278,7 +2278,7 @@ class PacketPokerTableRequestPlayersList(PacketPokerId):
     """\
 Semantics: client request the player list of the game "game_id".
 
-Direction: client => server
+Direction: server <= client
 
 game_id: integer uniquely identifying a game.
 """
