@@ -1454,7 +1454,7 @@ PACKET_POKER_CHAT = 86 # %SEQ%
 PacketNames[PACKET_POKER_CHAT] = "POKER_CHAT"
 
 class PacketPokerChat(PacketPokerId):
-    """\
+   """\
 Semantics: a text "message" sent to all players seated
 at the poker table "game_id".
 
@@ -1463,6 +1463,7 @@ Direction: server  <=> client
 message: a text message string (2^16 long max)
 game_id: integer uniquely identifying a game.
 """
+
    type = PACKET_POKER_CHAT
 
    message = 0
@@ -2448,11 +2449,24 @@ PacketNames[PACKET_POKER_TOURNEY_SELECT] = "POKER_TOURNEY_SELECT"
 class PacketPokerTourneySelect(PacketString):
     """\
 Semantics: request the list of tourneys matching the "string" constraint.
-The answer is a possibly empty PACKET_POKER_TOURNEY_LIST packet.
+The answer is a PACKET_POKER_TOURNEY_LIST packet. If no tournament matches
+the constraint, the list will be empty.
 
 Direction: server <=  client
 
-string: a valid SQL WHERE expression. 
+string: 1) empty string selects all tournaments
+        2) a string that contains no tabulation selects
+           the tournament with the same name
+        3) a string with a tabulation selects all tournaments
+           of a given type (sit&go or regular) that can be played
+           using a given currency. The string before the tabulation
+           is the name of the currency, the string after the tabulation
+           distinguishes between sit&go and regular.
+           
+        Examples: 1<tabulation>sit_n_go selects all sit&go tournaments
+                  using currency 1.
+                  2<tabulation>regular selects all regular tournaments
+                  using currency 2
 """
     
     type = PACKET_POKER_TOURNEY_SELECT
@@ -2732,7 +2746,7 @@ PACKET_POKER_GET_PLAYER_INFO = 123 # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
 
 class PacketPokerGetPlayerInfo(Packet):
-"""
+    """
 Semantics: ask the server for a PacketPokerPlayerInfo packet
 describing the player that is logged in with this connection.
 
@@ -2746,8 +2760,8 @@ If the user is logged in a PacketPokerPlayerInfo packet is sent
 to the client.
 
 Direction: server <= client
-
 """
+
     NOT_LOGGED = 1
 
     type = PACKET_POKER_GET_PLAYER_INFO
