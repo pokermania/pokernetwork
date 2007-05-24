@@ -274,8 +274,60 @@ class PokerExplainTestCase(unittest.TestCase):
         (game, player) = self.test10_setPlayerTimeout()
         self.explain.unsetPlayerTimeout(game, player.serial)
         self.assertEqual(None, player.user_data['timeout'])
+
+    def test13_serial2name(self):
+        class PokerGame:
+            id = 1
+            def getPlayer(self, serial):
+                return False
+        self.assertEqual("<unknown>", self.explain.serial2name(PokerGame(), 1))
+
+        class PokerPlayer:
+            name = "myname"
+            
+        class PokerGame:
+            id = 1
+            def getPlayer(self, serial):
+                return PokerPlayer()
+        self.assertEqual("myname", self.explain.serial2name(PokerGame(), 1))
+
+    def test14_moveBet2Pot(self):
+
+        player_serial = 1
         
-        
+        class PokerPlayer:
+            serial = player_serial
+            bet = 30
+            money = 50
+            dead = 3
+
+        game_id = 1
+        amount = 23
+        class PokerGame:
+            id = game_id
+            unit = 1
+            pots = {'pots': [[10, 20], [20, 40]]}
+
+            def getPots(self):
+                return self.pots
+
+            def getPlayer(self, serial):
+                return PokerPlayer()
+            
+            def getLatestPotContributions(self):
+                return {0: {player_serial: amount}}
+
+            def isSecondRound(self):
+                return False
+
+        packets = self.explain.moveBet2Pot(PokerGame())
+        self.assertEqual(4, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packet.type)
+        self.assertEqual([1, 6, 2, 6, 5, 1], packet.chips)
+        packet = packets[1]
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
