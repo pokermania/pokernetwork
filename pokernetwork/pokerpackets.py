@@ -2669,6 +2669,33 @@ PACKET_POKER_TOURNEY_UNREGISTER = 117 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_UNREGISTER] = "POKER_TOURNEY_UNREGISTER"
 
 class PacketPokerTourneyUnregister(PacketPokerId):
+    """\
+Semantics: unregister player "serial" from tournament "game_id".
+
+Direction: server <= client
+
+If the player is successfully unregistered, the server will send
+back the packet to the client.
+
+If an error occurs during the tournament registration, the server
+will send back 
+
+  PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER)
+
+with the "code" field name set as follows:
+
+DOES_NOT_EXIST : the "game_id" field does not match any existing
+                 tournaments.
+NOT_REGISTERED : the "serial" player is not listed as
+                 a registered player in the "game_id" tournament.
+TOO_LATE : the "serial" player cannot unregister from the tournament
+           because it already started.
+SERVER_ERROR : the server failed to unregister the player because the
+               database is inconsistent.
+  
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a tournament.
+"""
 
     DOES_NOT_EXIST = 1
     NOT_REGISTERED = 2
