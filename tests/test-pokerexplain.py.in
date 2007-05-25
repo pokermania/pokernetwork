@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 import sys
-sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 from twisted.trial import unittest, runner, reporter
@@ -66,6 +66,7 @@ class PokerExplainTestCase(unittest.TestCase):
 
     def setUp(self):
         self.explain = PokerExplain()
+        self.explain.games.dirs = [ '@srcdir@/../poker-engine' ]
         self.explain.verbose = 10
         verbose = int(os.environ.get('VERBOSE_T', 3))
         self.explain.old_message = self.explain.message
@@ -525,6 +526,25 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_STREAM_MODE, packets[2].type)
         self.assertEqual(PACKET_POKER_TABLE_QUIT, packets[3].type)
         self.assertEqual(PACKET_POKER_CURRENT_GAMES, packets[4].type)
+
+    def test20_explain_poker_table(self):
+        packets = self.explain.explain(PacketPokerTable(id = 0))
+        self.assertEqual(1, len(packets))
+        self.assertEqual(PACKET_POKER_TABLE, packets[0].type)
+
+        packets = self.explain.explain(PacketPokerTable(id = 1,
+                                                        betting_structure = '0-0-limit',
+                                                        variant = 'holdem'))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_TABLE, packets[0].type)
+        self.assertEqual(PACKET_POKER_CURRENT_GAMES, packets[1].type)
+
+    def test21_explain_serial(self):
+        self.explain.explain(PacketSerial(serial = 42))
+        self.assertEqual(42, self.explain.serial)
+
+    def test22_explain_error(self):
+        self.failIf(self.explain.explain(PacketError()))
         
 # ----------------------------------------------------------------
 def Run():
