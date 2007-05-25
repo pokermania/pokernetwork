@@ -65,7 +65,7 @@ from pokernetwork.packets import *
 
 ########################################
 
-PACKET_POKER_SEATS = 50 # %SEQ%
+PACKET_POKER_SEATS = 50 # 0x32 # %SEQ%
 PacketNames[PACKET_POKER_SEATS] = "POKER_SEATS"
 
 class PacketPokerSeats(Packet):
@@ -124,7 +124,7 @@ PacketFactory[PACKET_POKER_SEATS] = PacketPokerSeats
 
 ########################################
 
-PACKET_POKER_ID = 51 # %SEQ%
+PACKET_POKER_ID = 51 # 0x33 # %SEQ%
 PacketNames[PACKET_POKER_ID] = "POKER_ID"
 
 class PacketPokerId(PacketSerial):
@@ -158,7 +158,7 @@ PacketFactory[PACKET_POKER_ID] = PacketPokerId
 
 ########################################
 
-PACKET_POKER_MESSAGE = 52 # %SEQ%
+PACKET_POKER_MESSAGE = 52 # 0x34 # %SEQ%
 PacketNames[PACKET_POKER_MESSAGE] = "POKER_MESSAGE"
 
 class PacketPokerMessage(PacketPokerId):
@@ -191,7 +191,7 @@ PacketFactory[PACKET_POKER_MESSAGE] = PacketPokerMessage
 
 ########################################
 
-PACKET_POKER_ERROR = 53 # %SEQ%
+PACKET_POKER_ERROR = 53 # 0x35 # %SEQ%
 PacketNames[PACKET_POKER_ERROR] = "ERROR"
 
 class PacketPokerError(PacketPokerId):
@@ -234,7 +234,7 @@ PacketFactory[PACKET_POKER_ERROR] = PacketPokerError
 
 ########################################
 
-PACKET_POKER_POSITION = 54 # %SEQ%
+PACKET_POKER_POSITION = 54 # 0x36 # %SEQ%
 PacketNames[PACKET_POKER_POSITION] = "POKER_POSITION"
 
 class PacketPokerPosition(Packet):
@@ -286,7 +286,7 @@ PacketFactory[PACKET_POKER_POSITION] = PacketPokerPosition
 
 ########################################
 
-PACKET_POKER_INT = 55 # %SEQ%
+PACKET_POKER_INT = 55 # 0x37 # %SEQ%
 PacketNames[PACKET_POKER_INT] = "POKER_INT"
 
 class PacketPokerInt(PacketPokerId):
@@ -320,7 +320,7 @@ PacketFactory[PACKET_POKER_INT] = PacketPokerInt
 
 ########################################
 
-PACKET_POKER_BET = 56 # %SEQ%
+PACKET_POKER_BET = 56 # 0x38 # %SEQ%
 PacketNames[PACKET_POKER_BET] = "POKER_BET"
 
 class PacketPokerBet(PacketPokerInt):
@@ -332,7 +332,7 @@ PacketFactory[PACKET_POKER_BET] = PacketPokerBet
 
 ########################################
 
-PACKET_POKER_FOLD = 57 # %SEQ%
+PACKET_POKER_FOLD = 57 # 0x39 # %SEQ%
 PacketNames[PACKET_POKER_FOLD] = "POKER_FOLD"
 
 class PacketPokerFold(PacketPokerId):
@@ -351,7 +351,7 @@ PacketFactory[PACKET_POKER_FOLD] = PacketPokerFold
 
 ########################################
 
-PACKET_POKER_STATE = 58 # %SEQ%
+PACKET_POKER_STATE = 58 # 0x3a # %SEQ%
 PacketNames[PACKET_POKER_STATE] = "POKER_STATE"
 
 class PacketPokerState(PacketPokerId):
@@ -408,7 +408,7 @@ PacketFactory[PACKET_POKER_STATE] = PacketPokerState
 
 ########################################
 
-PACKET_POKER_WIN = 59 # %SEQ%
+PACKET_POKER_WIN = 59 # 0x3b # %SEQ%
 PacketNames[PACKET_POKER_WIN] = "POKER_WIN"
 
 class PacketPokerWin(PacketPokerId):
@@ -490,7 +490,7 @@ PacketFactory[PACKET_POKER_WIN] = PacketPokerWin
 
 ########################################
 
-PACKET_POKER_CARDS = 60 # %SEQ%
+PACKET_POKER_CARDS = 60 # 0x3c # %SEQ%
 PacketNames[PACKET_POKER_CARDS] = "POKER_CARDS"
 
 class PacketPokerCards(PacketPokerId):
@@ -526,7 +526,7 @@ PacketFactory[PACKET_POKER_CARDS] = PacketPokerCards
 
 ########################################
 
-PACKET_POKER_PLAYER_CARDS = 61 # %SEQ%
+PACKET_POKER_PLAYER_CARDS = 61 # 0x3d # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_CARDS] = "POKER_PLAYER_CARDS"
 
 class PacketPokerPlayerCards(PacketPokerCards):
@@ -566,7 +566,7 @@ PacketFactory[PACKET_POKER_PLAYER_CARDS] = PacketPokerPlayerCards
 
 ########################################
 
-PACKET_POKER_BOARD_CARDS = 62 # %SEQ%
+PACKET_POKER_BOARD_CARDS = 62 # 0x3e # %SEQ%
 PacketNames[PACKET_POKER_BOARD_CARDS] = "POKER_BOARD_CARDS"
 
 class PacketPokerBoardCards(PacketPokerCards):
@@ -605,7 +605,7 @@ PacketFactory[PACKET_POKER_BOARD_CARDS] = PacketPokerBoardCards
 
 ########################################
 
-PACKET_POKER_CHIPS = 63 # %SEQ%
+PACKET_POKER_CHIPS = 63 # 0x3f # %SEQ%
 PacketNames[PACKET_POKER_CHIPS] = "POKER_CHIPS"
 
 class PacketPokerChips(PacketPokerId):
@@ -639,7 +639,7 @@ PacketFactory[PACKET_POKER_CHIPS] = PacketPokerChips
 
 ########################################
 
-PACKET_POKER_PLAYER_CHIPS = 64 # %SEQ%
+PACKET_POKER_PLAYER_CHIPS = 64 # 0x40 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_CHIPS] = "POKER_PLAYER_CHIPS"
 
 class PacketPokerPlayerChips(PacketPokerChips):
@@ -686,7 +686,7 @@ PacketFactory[PACKET_POKER_PLAYER_CHIPS] = PacketPokerPlayerChips
 
 ########################################
 
-PACKET_POKER_CHECK = 65 # %SEQ%
+PACKET_POKER_CHECK = 65 # 0x41 # %SEQ%
 PacketNames[PACKET_POKER_CHECK] = "POKER_CHECK"
 
 class PacketPokerCheck(PacketPokerId):
@@ -706,7 +706,7 @@ PacketFactory[PACKET_POKER_CHECK] = PacketPokerCheck
 
 ########################################
 
-PACKET_POKER_START = 66 # %SEQ%
+PACKET_POKER_START = 66 # 0x42 # %SEQ%
 PacketNames[PACKET_POKER_START] = "POKER_START"
 
 class PacketPokerStart(PacketPokerId):
@@ -773,7 +773,7 @@ PacketFactory[PACKET_POKER_START] = PacketPokerStart
 
 ########################################
 
-PACKET_POKER_IN_GAME = 67 # %SEQ%
+PACKET_POKER_IN_GAME = 67 # 0x43 # %SEQ%
 PacketNames[PACKET_POKER_IN_GAME] = "POKER_IN_GAME"
 
 class PacketPokerInGame(PacketPokerId):
@@ -823,7 +823,7 @@ PacketFactory[PACKET_POKER_IN_GAME] = PacketPokerInGame
 
 ########################################
 
-PACKET_POKER_CALL = 68 # %SEQ%
+PACKET_POKER_CALL = 68 # 0x44 # %SEQ%
 PacketNames[PACKET_POKER_CALL] = "POKER_CALL"
 
 class PacketPokerCall(PacketPokerId):
@@ -842,7 +842,7 @@ PacketFactory[PACKET_POKER_CALL] = PacketPokerCall
 
 ########################################
 
-PACKET_POKER_RAISE = 69 # %SEQ%
+PACKET_POKER_RAISE = 69 # 0x45 # %SEQ%
 PacketNames[PACKET_POKER_RAISE] = "POKER_RAISE"
 
 class PacketPokerRaise(PacketPokerBet):
@@ -868,7 +868,7 @@ PacketFactory[PACKET_POKER_RAISE] = PacketPokerRaise
 
 ########################################
 
-PACKET_POKER_DEALER = 70 # %SEQ%
+PACKET_POKER_DEALER = 70 # 0x46 # %SEQ%
 PacketNames[PACKET_POKER_DEALER] = "POKER_DEALER"
 
 class PacketPokerDealer(Packet):
@@ -917,7 +917,7 @@ PacketFactory[PACKET_POKER_DEALER] = PacketPokerDealer
 
 ########################################
 
-PACKET_POKER_TABLE_JOIN = 71 # %SEQ%
+PACKET_POKER_TABLE_JOIN = 71 # 0x47 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_JOIN] = "POKER_TABLE_JOIN"
 
 class PacketPokerTableJoin(PacketPokerId):
@@ -958,7 +958,7 @@ PacketFactory[PACKET_POKER_TABLE_JOIN] = PacketPokerTableJoin
 
 ########################################
 
-PACKET_POKER_TABLE_SELECT = 72 # %SEQ%
+PACKET_POKER_TABLE_SELECT = 72 # 0x48 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_SELECT] = "POKER_TABLE_SELECT"
 
 class PacketPokerTableSelect(PacketString):
@@ -979,7 +979,7 @@ string: currency<tabulation>variant
 PacketFactory[PACKET_POKER_TABLE_SELECT] = PacketPokerTableSelect
 
 ########################################
-PACKET_POKER_TABLE = 73 # %SEQ%
+PACKET_POKER_TABLE = 73 # 0x49 # %SEQ%
 PacketNames[PACKET_POKER_TABLE] = "POKER_TABLE"
 
 class PacketPokerTable(Packet):
@@ -1067,7 +1067,7 @@ PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 
 ########################################
 
-PACKET_POKER_TABLE_LIST = 74 # %SEQ%
+PACKET_POKER_TABLE_LIST = 74 # 0x4a # %SEQ%
 PacketNames[PACKET_POKER_TABLE_LIST] = "POKER_TABLE_LIST"
 
 class PacketPokerTableList(PacketList):
@@ -1108,7 +1108,7 @@ PacketFactory[PACKET_POKER_TABLE_LIST] = PacketPokerTableList
 
 ########################################
 
-PACKET_POKER_SIT = 75 # %SEQ%
+PACKET_POKER_SIT = 75 # 0x4b # %SEQ%
 PacketNames[PACKET_POKER_SIT] = "POKER_SIT"
 
 class PacketPokerSit(PacketPokerId):
@@ -1133,7 +1133,7 @@ PacketFactory[PACKET_POKER_SIT] = PacketPokerSit
 
 ########################################
 
-PACKET_POKER_TABLE_DESTROY = 76 # %SEQ%
+PACKET_POKER_TABLE_DESTROY = 76 # 0x4c # %SEQ%
 PacketNames[PACKET_POKER_TABLE_DESTROY] = "POKER_TABLE_DESTROY"
 
 class PacketPokerTableDestroy(PacketPokerId):
@@ -1145,7 +1145,7 @@ PacketFactory[PACKET_POKER_TABLE_DESTROY] = PacketPokerTableDestroy
 
 ########################################
 
-PACKET_POKER_TIMEOUT_WARNING = 77 # %SEQ%
+PACKET_POKER_TIMEOUT_WARNING = 77 # 0x4d # %SEQ%
 PacketNames[PACKET_POKER_TIMEOUT_WARNING] = "POKER_TIMEOUT_WARNING"
 
 class PacketPokerTimeoutWarning(PacketPokerId):
@@ -1187,7 +1187,7 @@ PacketFactory[PACKET_POKER_TIMEOUT_WARNING] = PacketPokerTimeoutWarning
 
 ########################################
 
-PACKET_POKER_TIMEOUT_NOTICE = 78 # %SEQ%
+PACKET_POKER_TIMEOUT_NOTICE = 78 # 0x4e # %SEQ%
 PacketNames[PACKET_POKER_TIMEOUT_NOTICE] = "POKER_TIMEOUT_NOTICE"
 
 class PacketPokerTimeoutNotice(PacketPokerId):
@@ -1207,7 +1207,7 @@ PacketFactory[PACKET_POKER_TIMEOUT_NOTICE] = PacketPokerTimeoutNotice
 
 ########################################
 
-PACKET_POKER_SEAT = 79 # %SEQ%
+PACKET_POKER_SEAT = 79 # 0x4f # %SEQ%
 PacketNames[PACKET_POKER_SEAT] = "POKER_SEAT"
 
 class PacketPokerSeat(PacketPokerId):
@@ -1259,7 +1259,7 @@ PacketFactory[PACKET_POKER_SEAT] = PacketPokerSeat
 
 ########################################
 
-PACKET_POKER_TABLE_MOVE = 80 # %SEQ%
+PACKET_POKER_TABLE_MOVE = 80 # 0x50 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_MOVE] = "POKER_TABLE_MOVE"
 
 class PacketPokerTableMove(PacketPokerSeat):
@@ -1307,7 +1307,7 @@ PacketFactory[PACKET_POKER_TABLE_MOVE] = PacketPokerTableMove
 
 ########################################
 
-PACKET_POKER_PLAYER_LEAVE = 81 # %SEQ%
+PACKET_POKER_PLAYER_LEAVE = 81 # 0x51 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_LEAVE] = "POKER_PLAYER_LEAVE"
 
 class PacketPokerPlayerLeave(PacketPokerSeat):
@@ -1335,7 +1335,7 @@ PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
 
 ########################################
 
-PACKET_POKER_SIT_OUT = 82 # %SEQ%
+PACKET_POKER_SIT_OUT = 82 # 0x52 # %SEQ%
 PacketNames[PACKET_POKER_SIT_OUT] = "POKER_SIT_OUT"
 
 class PacketPokerSitOut(PacketPokerId):
@@ -1365,7 +1365,7 @@ PacketFactory[PACKET_POKER_SIT_OUT] = PacketPokerSitOut
 
 ########################################
 
-PACKET_POKER_TABLE_QUIT = 83 # %SEQ%
+PACKET_POKER_TABLE_QUIT = 83 # 0x53 # %SEQ%
 PacketNames[PACKET_POKER_TABLE_QUIT] = "POKER_TABLE_QUIT"
 
 class PacketPokerTableQuit(PacketPokerId):
@@ -1388,7 +1388,7 @@ PacketFactory[PACKET_POKER_TABLE_QUIT] = PacketPokerTableQuit
 
 ########################################
 
-PACKET_POKER_BUY_IN = 84 # %SEQ%
+PACKET_POKER_BUY_IN = 84 # 0x54 # %SEQ%
 PacketNames[PACKET_POKER_BUY_IN] = "POKER_BUY_IN"
 
 class PacketPokerBuyIn(PacketPokerId):
@@ -1439,7 +1439,7 @@ PacketFactory[PACKET_POKER_BUY_IN] = PacketPokerBuyIn
 
 ########################################
 
-PACKET_POKER_REBUY = 85 # %SEQ%
+PACKET_POKER_REBUY = 85 # 0x55 # %SEQ%
 PacketNames[PACKET_POKER_REBUY] = "POKER_REBUY"
 
 class PacketPokerRebuy(PacketPokerBuyIn):
@@ -1450,7 +1450,7 @@ PacketFactory[PACKET_POKER_REBUY] = PacketPokerRebuy
 
 ########################################
 
-PACKET_POKER_CHAT = 86 # %SEQ%
+PACKET_POKER_CHAT = 86 # 0x56 # %SEQ%
 PacketNames[PACKET_POKER_CHAT] = "POKER_CHAT"
 
 class PacketPokerChat(PacketPokerId):
@@ -1491,7 +1491,7 @@ PacketFactory[PACKET_POKER_CHAT] = PacketPokerChat
 
 ########################################
 
-PACKET_POKER_PLAYER_INFO = 87 # %SEQ%
+PACKET_POKER_PLAYER_INFO = 87 # 0x57 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_INFO] = "POKER_PLAYER_INFO"
 
 class PacketPokerPlayerInfo(PacketPokerId):
@@ -1539,7 +1539,7 @@ PacketFactory[PACKET_POKER_PLAYER_INFO] = PacketPokerPlayerInfo
 
 ########################################
 
-PACKET_POKER_PLAYER_ARRIVE = 88 # %SEQ%
+PACKET_POKER_PLAYER_ARRIVE = 88 # 0x58 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_ARRIVE] = "POKER_PLAYER_ARRIVE"
 
 class PacketPokerPlayerArrive(PacketPokerPlayerInfo):
@@ -1625,7 +1625,7 @@ PacketFactory[PACKET_POKER_PLAYER_ARRIVE] = PacketPokerPlayerArrive
 
 ########################################
 
-PACKET_POKER_HAND_SELECT = 89 # %SEQ%
+PACKET_POKER_HAND_SELECT = 89 # 0x59 # %SEQ%
 PacketNames[PACKET_POKER_HAND_SELECT] = "POKER_HAND_SELECT"
 
 class PacketPokerHandSelect(PacketString):
@@ -1678,7 +1678,7 @@ PacketFactory[PACKET_POKER_HAND_SELECT] = PacketPokerHandSelect
 
 ########################################
 
-PACKET_POKER_HAND_LIST = 90 # %SEQ%
+PACKET_POKER_HAND_LIST = 90 # 0x5a # %SEQ%
 PacketNames[PACKET_POKER_HAND_LIST] = "POKER_HAND_LIST"
 
 class PacketPokerHandList(PacketPokerHandSelect):
@@ -1724,7 +1724,7 @@ PacketFactory[PACKET_POKER_HAND_LIST] = PacketPokerHandList
 
 ########################################
 
-PACKET_POKER_HAND_SELECT_ALL = 91 # %SEQ%
+PACKET_POKER_HAND_SELECT_ALL = 91 # 0x5b # %SEQ%
 PacketNames[PACKET_POKER_HAND_SELECT_ALL] = "POKER_HAND_SELECT_ALL"
 
 class PacketPokerHandSelectAll(PacketString):
@@ -1752,7 +1752,7 @@ PacketFactory[PACKET_POKER_HAND_SELECT_ALL] = PacketPokerHandSelectAll
 
 ########################################
 
-PACKET_POKER_USER_INFO = 92 # %SEQ%
+PACKET_POKER_USER_INFO = 92 # 0x5c # %SEQ%
 PacketNames[PACKET_POKER_USER_INFO] = "POKER_USER_INFO"
 
 class PacketPokerUserInfo(PacketSerial):
@@ -1830,7 +1830,7 @@ PacketFactory[PACKET_POKER_USER_INFO] = PacketPokerUserInfo
 
 ########################################
 
-PACKET_POKER_GET_USER_INFO = 93 # %SEQ%
+PACKET_POKER_GET_USER_INFO = 93 # 0x5d # %SEQ%
 PacketNames[PACKET_POKER_GET_USER_INFO] = "POKER_GET_USER_INFO"
 
 class PacketPokerGetUserInfo(PacketSerial):
@@ -1852,7 +1852,7 @@ PacketFactory[PACKET_POKER_GET_USER_INFO] = PacketPokerGetUserInfo
 
 ########################################
 
-PACKET_POKER_ANTE = 94 # %SEQ%
+PACKET_POKER_ANTE = 94 # 0x5e # %SEQ%
 PacketNames[PACKET_POKER_ANTE] = "POKER_ANTE"
 
 class PacketPokerAnte(PacketPokerInt):
@@ -1881,7 +1881,7 @@ PacketFactory[PACKET_POKER_ANTE] = PacketPokerAnte
 
 ########################################
 
-PACKET_POKER_BLIND = 95 # %SEQ%
+PACKET_POKER_BLIND = 95 # 0x5f # %SEQ%
 PacketNames[PACKET_POKER_BLIND] = "POKER_BLIND"
 
 class PacketPokerBlind(PacketPokerInt):
@@ -1938,7 +1938,7 @@ PacketFactory[PACKET_POKER_BLIND] = PacketPokerBlind
 
 ########################################
 
-PACKET_POKER_WAIT_BIG_BLIND = 96 # %SEQ%
+PACKET_POKER_WAIT_BIG_BLIND = 96 # 0x60 # %SEQ%
 PacketNames[PACKET_POKER_WAIT_BIG_BLIND] = "POKER_WAIT_BIG_BLIND"
 
 class PacketPokerWaitBigBlind(PacketPokerId):
@@ -1966,7 +1966,7 @@ PacketFactory[PACKET_POKER_WAIT_BIG_BLIND] = PacketPokerWaitBigBlind
 
 ########################################
 
-PACKET_POKER_AUTO_BLIND_ANTE = 97 # %SEQ%
+PACKET_POKER_AUTO_BLIND_ANTE = 97 # 0x61 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_BLIND_ANTE] = "POKER_AUTO_BLIND_ANTE"
 
 class PacketPokerAutoBlindAnte(PacketPokerId):
@@ -1989,7 +1989,7 @@ PacketFactory[PACKET_POKER_AUTO_BLIND_ANTE] = PacketPokerAutoBlindAnte
 
 ########################################
 
-PACKET_POKER_NOAUTO_BLIND_ANTE = 98 # %SEQ%
+PACKET_POKER_NOAUTO_BLIND_ANTE = 98 # 0x62 # %SEQ%
 PacketNames[PACKET_POKER_NOAUTO_BLIND_ANTE] = "POKER_NOAUTO_BLIND_ANTE"
 
 class PacketPokerNoautoBlindAnte(PacketPokerId):
@@ -2012,7 +2012,7 @@ PacketFactory[PACKET_POKER_NOAUTO_BLIND_ANTE] = PacketPokerNoautoBlindAnte
 
 ########################################
 
-PACKET_POKER_CANCELED = 99 # %SEQ%
+PACKET_POKER_CANCELED = 99 # 0x63 # %SEQ%
 PacketNames[PACKET_POKER_CANCELED] = "POKER_CANCELED"
 
 class PacketPokerCanceled(PacketPokerInt):
@@ -2036,7 +2036,7 @@ PacketFactory[PACKET_POKER_CANCELED] = PacketPokerCanceled
 
 ########################################
 
-PACKET_POKER_BLIND_REQUEST = 100 # %SEQ%
+PACKET_POKER_BLIND_REQUEST = 100 # 0x64 # %SEQ%
 PacketNames[PACKET_POKER_BLIND_REQUEST] = "POKER_BLIND_REQUEST"
 
 class PacketPokerBlindRequest(PacketPokerBlind):
@@ -2086,7 +2086,7 @@ PacketFactory[PACKET_POKER_BLIND_REQUEST] = PacketPokerBlindRequest
 
 ########################################
 
-PACKET_POKER_ANTE_REQUEST = 101 # %SEQ%
+PACKET_POKER_ANTE_REQUEST = 101 # 0x65 # %SEQ%
 PacketNames[PACKET_POKER_ANTE_REQUEST] = "POKER_ANTE_REQUEST"
 
 class PacketPokerAnteRequest(PacketPokerAnte):
@@ -2111,7 +2111,7 @@ PacketFactory[PACKET_POKER_ANTE_REQUEST] = PacketPokerAnteRequest
 
 ########################################
 
-PACKET_POKER_AUTO_FOLD = 102 # %SEQ%
+PACKET_POKER_AUTO_FOLD = 102 # 0x66 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_FOLD] = "POKER_AUTO_FOLD"
 
 class PacketPokerAutoFold(PacketPokerId):
@@ -2136,7 +2136,7 @@ PacketFactory[PACKET_POKER_AUTO_FOLD] = PacketPokerAutoFold
 
 ########################################
 
-PACKET_POKER_WAIT_FOR = 103 # %SEQ%
+PACKET_POKER_WAIT_FOR = 103 # 0x67 # %SEQ%
 PacketNames[PACKET_POKER_WAIT_FOR] = "POKER_WAIT_FOR"
 
 class PacketPokerWaitFor(PacketPokerId):
@@ -2186,7 +2186,7 @@ PacketFactory[PACKET_POKER_WAIT_FOR] = PacketPokerWaitFor
 
 ########################################
 
-PACKET_POKER_STREAM_MODE = 104 # %SEQ%
+PACKET_POKER_STREAM_MODE = 104 # 0x68 # %SEQ%
 PacketNames[PACKET_POKER_STREAM_MODE] = "POKER_STREAM_MODE"
 
 class PacketPokerStreamMode(PacketPokerId):
@@ -2211,7 +2211,7 @@ PacketFactory[PACKET_POKER_STREAM_MODE] = PacketPokerStreamMode
 
 ########################################
 
-PACKET_POKER_BATCH_MODE = 105 # %SEQ%
+PACKET_POKER_BATCH_MODE = 105 # 0x69 # %SEQ%
 PacketNames[PACKET_POKER_BATCH_MODE] = "POKER_BATCH_MODE"
 
 class PacketPokerBatchMode(PacketPokerId):
@@ -2244,7 +2244,7 @@ PacketFactory[PACKET_POKER_BATCH_MODE] = PacketPokerBatchMode
 
 ########################################
 
-PACKET_POKER_LOOK_CARDS = 106 # %SEQ%
+PACKET_POKER_LOOK_CARDS = 106 # 0x6a # %SEQ%
 PacketNames[PACKET_POKER_LOOK_CARDS] = "POKER_LOOK_CARDS"
 
 class PacketPokerLookCards(PacketPokerId):
@@ -2271,7 +2271,7 @@ PacketFactory[PACKET_POKER_LOOK_CARDS] = PacketPokerLookCards
 
 ########################################
 
-PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST = 107 # %SEQ%
+PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST = 107 # 0x6b # %SEQ%
 PacketNames[PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST] = "POKER_TABLE_REQUEST_PLAYERS_LIST"
 
 class PacketPokerTableRequestPlayersList(PacketPokerId):
@@ -2289,7 +2289,7 @@ PacketFactory[PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST] = PacketPokerTableRequest
 
 ########################################
 
-PACKET_POKER_PLAYERS_LIST = 108 # %SEQ%
+PACKET_POKER_PLAYERS_LIST = 108 # 0x6c # %SEQ%
 PacketNames[PACKET_POKER_PLAYERS_LIST] = "POKER_PLAYERS_LIST"
 
 class PacketPokerPlayersList(PacketPokerId):
@@ -2343,7 +2343,7 @@ PacketFactory[PACKET_POKER_PLAYERS_LIST] = PacketPokerPlayersList
 
 ########################################
 
-PACKET_POKER_PERSONAL_INFO = 109 # %SEQ%
+PACKET_POKER_PERSONAL_INFO = 109 # 0x6d # %SEQ%
 PacketNames[PACKET_POKER_PERSONAL_INFO] = "POKER_PERSONAL_INFO"
 
 class PacketPokerPersonalInfo(PacketPokerUserInfo):
@@ -2420,7 +2420,7 @@ PacketFactory[PACKET_POKER_PERSONAL_INFO] = PacketPokerPersonalInfo
 
 ########################################
 
-PACKET_POKER_GET_PERSONAL_INFO = 110 # %SEQ%
+PACKET_POKER_GET_PERSONAL_INFO = 110 # 0x6e # %SEQ%
 PacketNames[PACKET_POKER_GET_PERSONAL_INFO] = "POKER_GET_PERSONAL_INFO"
 
 class PacketPokerGetPersonalInfo(PacketSerial):
@@ -2443,7 +2443,7 @@ serial: integer uniquely identifying a player.
 PacketFactory[PACKET_POKER_GET_PERSONAL_INFO] = PacketPokerGetPersonalInfo
 
 ########################################
-PACKET_POKER_TOURNEY_SELECT = 111 # %SEQ%
+PACKET_POKER_TOURNEY_SELECT = 111 # 0x6f # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_SELECT] = "POKER_TOURNEY_SELECT"
 
 class PacketPokerTourneySelect(PacketString):
@@ -2474,7 +2474,7 @@ string: 1) empty string selects all tournaments
 PacketFactory[PACKET_POKER_TOURNEY_SELECT] = PacketPokerTourneySelect
 
 ########################################
-PACKET_POKER_TOURNEY = 112 # %SEQ%
+PACKET_POKER_TOURNEY = 112 # 0x70 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY] = "POKER_TOURNEY"
 
 class PacketPokerTourney(Packet):
@@ -2529,7 +2529,7 @@ PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
 
 ########################################
 
-PACKET_POKER_TOURNEY_INFO = 113 # %SEQ%
+PACKET_POKER_TOURNEY_INFO = 113 # 0x71 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_INFO] = "POKER_TOURNEY_INFO"
 
 class PacketPokerTourneyInfo(PacketPokerTourney):
@@ -2559,7 +2559,7 @@ PacketFactory[PACKET_POKER_TOURNEY_INFO] = PacketPokerTourneyInfo
 
 ########################################
 
-PACKET_POKER_TOURNEY_LIST = 114 # %SEQ%
+PACKET_POKER_TOURNEY_LIST = 114 # 0x72 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_LIST] = "POKER_TOURNEY_LIST"
 
 class PacketPokerTourneyList(PacketList):
@@ -2600,7 +2600,7 @@ PacketFactory[PACKET_POKER_TOURNEY_LIST] = PacketPokerTourneyList
 
 ########################################
 
-PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST = 115 # %SEQ%
+PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST = 115 # 0x73 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST] = "POKER_TOURNEY_REQUEST_PLAYERS_LIST"
 
 class PacketPokerTourneyRequestPlayersList(PacketPokerId):
@@ -2618,7 +2618,7 @@ PacketFactory[PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST] = PacketPokerTourneyReq
 
 ########################################
 
-PACKET_POKER_TOURNEY_REGISTER = 116 # %SEQ%
+PACKET_POKER_TOURNEY_REGISTER = 116 # 0x74 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_REGISTER] = "POKER_TOURNEY_REGISTER"
 
 class PacketPokerTourneyRegister(PacketPokerId):
@@ -2665,7 +2665,7 @@ PacketFactory[PACKET_POKER_TOURNEY_REGISTER] = PacketPokerTourneyRegister
 
 ########################################
 
-PACKET_POKER_TOURNEY_UNREGISTER = 117 # %SEQ%
+PACKET_POKER_TOURNEY_UNREGISTER = 117 # 0x75 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_UNREGISTER] = "POKER_TOURNEY_UNREGISTER"
 
 class PacketPokerTourneyUnregister(PacketPokerId):
@@ -2708,7 +2708,7 @@ PacketFactory[PACKET_POKER_TOURNEY_UNREGISTER] = PacketPokerTourneyUnregister
 
 ########################################
 
-PACKET_POKER_TOURNEY_PLAYERS_LIST = 118 # %SEQ%
+PACKET_POKER_TOURNEY_PLAYERS_LIST = 118 # 0x76 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_PLAYERS_LIST] = "POKER_TOURNEY_PLAYERS_LIST"
 
 class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
@@ -2719,7 +2719,7 @@ PacketFactory[PACKET_POKER_TOURNEY_PLAYERS_LIST] = PacketPokerTourneyPlayersList
 
 ########################################
 
-PACKET_POKER_HAND_HISTORY = 119 # %SEQ%
+PACKET_POKER_HAND_HISTORY = 119 # 0x77 # %SEQ%
 PacketNames[PACKET_POKER_HAND_HISTORY] = "POKER_HAND_HISTORY"
 
 class PacketPokerHandHistory(PacketPokerId):
@@ -2752,7 +2752,7 @@ PacketFactory[PACKET_POKER_HAND_HISTORY] = PacketPokerHandHistory
 
 ######################################## 
 
-PACKET_POKER_SET_ACCOUNT = 120 # %SEQ%
+PACKET_POKER_SET_ACCOUNT = 120 # 0x78 # %SEQ%
 PacketNames[PACKET_POKER_SET_ACCOUNT] = "POKER_SET_ACCOUNT"
 
 class PacketPokerSetAccount(PacketPokerPersonalInfo):
@@ -2775,7 +2775,7 @@ PacketFactory[PACKET_POKER_SET_ACCOUNT] = PacketPokerSetAccount
 
 ######################################## 
 
-PACKET_POKER_CREATE_ACCOUNT = 121 # %SEQ%
+PACKET_POKER_CREATE_ACCOUNT = 121 # 0x79 # %SEQ%
 PacketNames[PACKET_POKER_CREATE_ACCOUNT] = "POKER_CREATE_ACCOUNT"
 
 class PacketPokerCreateAccount(PacketPokerSetAccount):
@@ -2786,7 +2786,7 @@ PacketFactory[PACKET_POKER_CREATE_ACCOUNT] = PacketPokerCreateAccount
 
 ########################################
 
-PACKET_POKER_PLAYER_SELF = 122 # %SEQ%
+PACKET_POKER_PLAYER_SELF = 122 # 0x7a # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_SELF] = "POKER_PLAYER_SELF"
 
 class PacketPokerPlayerSelf(PacketPokerId):
@@ -2799,7 +2799,7 @@ PacketFactory[PACKET_POKER_PLAYER_SELF] = PacketPokerPlayerSelf
 
 ########################################
 
-PACKET_POKER_GET_PLAYER_INFO = 123 # %SEQ%
+PACKET_POKER_GET_PLAYER_INFO = 123 # 0x7b # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
 
 class PacketPokerGetPlayerInfo(Packet):
@@ -2827,7 +2827,7 @@ PacketFactory[PACKET_POKER_GET_PLAYER_INFO] = PacketPokerGetPlayerInfo
 
 ########################################
 
-PACKET_POKER_ROLES = 124 # %SEQ%
+PACKET_POKER_ROLES = 124 # 0x7c # %SEQ%
 PacketNames[PACKET_POKER_ROLES] = "POKER_ROLES"
 
 class PacketPokerRoles(PacketSerial):
@@ -2863,7 +2863,7 @@ PacketFactory[PACKET_POKER_ROLES] = PacketPokerRoles
 
 ########################################
 
-PACKET_POKER_SET_ROLE = 125 # %SEQ%
+PACKET_POKER_SET_ROLE = 125 # 0x7d # %SEQ%
 PacketNames[PACKET_POKER_SET_ROLE] = "POKER_SET_ROLE"
 
 class PacketPokerSetRole(PacketPokerRoles):
@@ -2877,7 +2877,7 @@ PacketFactory[PACKET_POKER_SET_ROLE] = PacketPokerSetRole
 
 ########################################
 
-PACKET_POKER_READY_TO_PLAY = 126 # %SEQ%
+PACKET_POKER_READY_TO_PLAY = 126 # 0x7e # %SEQ%
 PacketNames[PACKET_POKER_READY_TO_PLAY] = "POKER_READY_TO_PLAY"
 
 class PacketPokerReadyToPlay(PacketPokerId):
@@ -2897,7 +2897,7 @@ PacketFactory[PACKET_POKER_READY_TO_PLAY] = PacketPokerReadyToPlay
 
 ########################################
 
-PACKET_POKER_PROCESSING_HAND = 127 # %SEQ%
+PACKET_POKER_PROCESSING_HAND = 127 # 0x7f # %SEQ%
 PacketNames[PACKET_POKER_PROCESSING_HAND] = "POKER_PROCESSING_HAND"
 
 class PacketPokerProcessingHand(PacketPokerId):
@@ -2920,7 +2920,7 @@ PacketFactory[PACKET_POKER_PROCESSING_HAND] = PacketPokerProcessingHand
 
 ########################################
 
-PACKET_POKER_MUCK_REQUEST = 128 # %SEQ%
+PACKET_POKER_MUCK_REQUEST = 128 # 0x80 # %SEQ%
 PacketNames[PACKET_POKER_MUCK_REQUEST] = "POKER_MUCK_REQUEST"
 
 class PacketPokerMuckRequest(PacketPokerId):
@@ -2960,7 +2960,7 @@ PacketFactory[PACKET_POKER_MUCK_REQUEST] = PacketPokerMuckRequest
 
 ########################################
 
-PACKET_POKER_AUTO_MUCK = 129 # %SEQ%
+PACKET_POKER_AUTO_MUCK = 129 # 0x81 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_MUCK] = "POKER_AUTO_MUCK"
 
 class PacketPokerAutoMuck(PacketPokerId):
@@ -2991,7 +2991,7 @@ PacketFactory[PACKET_POKER_AUTO_MUCK] = PacketPokerAutoMuck
 
 ########################################
 
-PACKET_POKER_MUCK_ACCEPT = 130 # %SEQ%
+PACKET_POKER_MUCK_ACCEPT = 130 # 0x82 # %SEQ%
 PacketNames[PACKET_POKER_MUCK_ACCEPT] = "POKER_MUCK_ACCEPT"
 
 class PacketPokerMuckAccept(PacketPokerId):
@@ -3001,7 +3001,7 @@ PacketFactory[PACKET_POKER_MUCK_ACCEPT] = PacketPokerMuckAccept
 
 ########################################
 
-PACKET_POKER_MUCK_DENY = 131 # %SEQ%
+PACKET_POKER_MUCK_DENY = 131 # 0x83 # %SEQ%
 PacketNames[PACKET_POKER_MUCK_DENY] = "POKER_MUCK_DENY"
 
 class PacketPokerMuckDeny(PacketPokerId):
@@ -3050,7 +3050,7 @@ class PacketPokerMoneyTransfert(PacketSerial):
 
 ########################################
 
-PACKET_POKER_CASH_IN = 132 # %SEQ%
+PACKET_POKER_CASH_IN = 132 # 0x84 # %SEQ%
 PacketNames[PACKET_POKER_CASH_IN] = "POKER_CASH_IN"
 
 class PacketPokerCashIn(PacketPokerMoneyTransfert):
@@ -3066,7 +3066,7 @@ PacketFactory[PACKET_POKER_CASH_IN] = PacketPokerCashIn
 
 ########################################
 
-PACKET_POKER_CASH_OUT = 133 # %SEQ%
+PACKET_POKER_CASH_OUT = 133 # 0x85 # %SEQ%
 PacketNames[PACKET_POKER_CASH_OUT] = "POKER_CASH_OUT"
 
 class PacketPokerCashOut(PacketPokerMoneyTransfert):
@@ -3080,7 +3080,7 @@ PacketFactory[PACKET_POKER_CASH_OUT] = PacketPokerCashOut
 
 ########################################
 
-PACKET_POKER_CASH_OUT_COMMIT = 134 # %SEQ%
+PACKET_POKER_CASH_OUT_COMMIT = 134 # 0x86 # %SEQ%
 PacketNames[PACKET_POKER_CASH_OUT_COMMIT] = "POKER_CASH_OUT_COMMIT"
 
 class PacketPokerCashOutCommit(Packet):
@@ -3110,7 +3110,7 @@ PacketFactory[PACKET_POKER_CASH_OUT_COMMIT] = PacketPokerCashOutCommit
 
 ########################################
 
-PACKET_POKER_CASH_QUERY = 135 # %SEQ%
+PACKET_POKER_CASH_QUERY = 135 # 0x87 # %SEQ%
 PacketNames[PACKET_POKER_CASH_QUERY] = "POKER_CASH_QUERY"
 
 class PacketPokerCashQuery(Packet):
@@ -3140,7 +3140,7 @@ PacketFactory[PACKET_POKER_CASH_QUERY] = PacketPokerCashQuery
 
 ########################################
 
-PACKET_POKER_RAKE = 136 # %SEQ%
+PACKET_POKER_RAKE = 136 # 0x88 # %SEQ%
 PacketNames[PACKET_POKER_RAKE] = "POKER_RAKE"
 
 class PacketPokerRake(PacketInt):
@@ -3173,7 +3173,7 @@ PacketFactory[PACKET_POKER_RAKE] = PacketPokerRake
 
 ########################################
 
-PACKET_POKER_TOURNEY_RANK = 137 # %SEQ%
+PACKET_POKER_TOURNEY_RANK = 137 # 0x89 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_RANK] = "PACKET_POKER_TOURNEY_RANK"
 
 class PacketPokerTourneyRank(PacketPokerId):
@@ -3221,7 +3221,7 @@ PacketFactory[PACKET_POKER_TOURNEY_RANK] = PacketPokerTourneyRank
 
 ########################################
 
-PACKET_POKER_PLAYER_IMAGE = 138 # %SEQ%
+PACKET_POKER_PLAYER_IMAGE = 138 # 0x8a # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_IMAGE] = "POKER_PLAYER_IMAGE"
 
 class PacketPokerPlayerImage(PacketSerial):
@@ -3254,7 +3254,7 @@ PacketFactory[PACKET_POKER_PLAYER_IMAGE] = PacketPokerPlayerImage
 
 ########################################
 
-PACKET_POKER_GET_PLAYER_IMAGE = 139 # %SEQ%
+PACKET_POKER_GET_PLAYER_IMAGE = 139 # 0x8b # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_IMAGE] = "POKER_GET_PLAYER_IMAGE"
 
 class PacketPokerGetPlayerImage(PacketSerial):
@@ -3265,7 +3265,7 @@ PacketFactory[PACKET_POKER_GET_PLAYER_IMAGE] = PacketPokerGetPlayerImage
 
 ########################################
 
-PACKET_POKER_HAND_REPLAY = 140 # %SEQ%
+PACKET_POKER_HAND_REPLAY = 140 # 0x8c # %SEQ%
 PacketNames[PACKET_POKER_HAND_REPLAY] = "POKER_HAND_REPLAY"
 
 class PacketPokerHandReplay(PacketPokerId):
@@ -3277,7 +3277,7 @@ PacketFactory[PACKET_POKER_HAND_REPLAY] = PacketPokerHandReplay
 
 ########################################
 
-PACKET_POKER_GAME_MESSAGE = 141 # %SEQ%
+PACKET_POKER_GAME_MESSAGE = 141 # 0x8d # %SEQ%
 PacketNames[PACKET_POKER_GAME_MESSAGE] = "POKER_GAME_MESSAGE"
 
 class PacketPokerGameMessage(PacketPokerMessage):
@@ -3289,5 +3289,5 @@ PacketFactory[PACKET_POKER_GAME_MESSAGE] = PacketPokerGameMessage
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 50 if(!defined($s)); s/\\d+\\s+#/$s #/; $s++; }' pokerpackets.py"
+# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 49 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[ \\w#]+#/$s # $h #/; }' pokerpackets.py"
 # End:
