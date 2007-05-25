@@ -507,6 +507,24 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_BEST_CARDS, packet.type)
         self.assertEqual(hand, packet.bestcards)
         self.assertEqual("low", packet.side)
+
+    def test19_packetsTableQuit(self):
+        class PokerPlayer:
+            serial = 1
+            seat = 1
+        class PokerGame:
+            id = 1
+            def playersAll(self):
+                return [PokerPlayer()]
+        game = PokerGame()
+        self.explain.games.games = {1: game}
+        packets = self.explain.packetsTableQuit(game)
+        self.assertEqual(5, len(packets))
+        self.assertEqual(PACKET_POKER_BATCH_MODE, packets[0].type)
+        self.assertEqual(PACKET_POKER_PLAYER_LEAVE, packets[1].type)
+        self.assertEqual(PACKET_POKER_STREAM_MODE, packets[2].type)
+        self.assertEqual(PACKET_POKER_TABLE_QUIT, packets[3].type)
+        self.assertEqual(PACKET_POKER_CURRENT_GAMES, packets[4].type)
         
 # ----------------------------------------------------------------
 def Run():
