@@ -464,6 +464,49 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
         self.assertEqual("win", packet.reason)
         self.assertEqual([1, 6, 2, 2], packet.chips)
+
+    def test18_packetsShowdown(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        self.failIf(self.explain.packetsShowdown(game))
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        game.showdown_stack = [{'serial2delta': {player_serial: 1}}]
+        game.state = pokergame.GAME_STATE_END
+        game.winners = [player_serial]
+
+        card = 1
+        player.hand.add(card, True) # add a visible card
+
+        game.variant = "7stud"
+        hand_value_string = "HandValue"
+        hand_value = 1010
+        hand = [1, 2, 3, 4, 5]
+        game.serial2best = {player_serial:
+                            {'hi': (hand_value_string, [hand_value] + hand),
+                             'low': (hand_value_string, [hand_value] + hand)},
+                            }
+        game.side2winners = {
+            'hi': [player_serial],
+            'low': [player_serial],
+            }
+        game.win_orders = [ "hi", "low" ]
+        packets = self.explain.packetsShowdown(game)
+        self.assertEqual(4, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_PLAYER_NO_CARDS, packet.type)
+        packet = packets[1]
+        self.assertEqual(PACKET_POKER_PLAYER_CARDS, packet.type)
+        self.assertEqual([card], packet.cards)
+        packet = packets[2]
+        self.assertEqual(PACKET_POKER_BEST_CARDS, packet.type)
+        self.assertEqual(hand, packet.bestcards)
+        self.assertEqual("hi", packet.side)
+        packet = packets[3]
+        self.assertEqual(PACKET_POKER_BEST_CARDS, packet.type)
+        self.assertEqual(hand, packet.bestcards)
+        self.assertEqual("low", packet.side)
         
 # ----------------------------------------------------------------
 def Run():
