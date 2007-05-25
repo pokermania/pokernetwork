@@ -533,7 +533,7 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_TABLE, packets[0].type)
 
         packets = self.explain.explain(PacketPokerTable(id = 1,
-                                                        betting_structure = '0-0-limit',
+                                                        betting_structure = '1-2-no-limit',
                                                         variant = 'holdem'))
         self.assertEqual(2, len(packets))
         self.assertEqual(PACKET_POKER_TABLE, packets[0].type)
@@ -545,7 +545,35 @@ class PokerExplainTestCase(unittest.TestCase):
 
     def test22_explain_error(self):
         self.failIf(self.explain.explain(PacketError()))
+
+    def test23_explain_table_destroy(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        self.explain.explain(PacketPokerTableDestroy(game_id = game_id))
+
+    def test24_explain_start(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+
+        poker_start = PacketPokerStart(game_id = game_id, hand_serial = 0)
         
+        packets = self.explain.explain(poker_start)
+        self.assertEqual([], packets)
+
+        poker_start.hand_serial = 1
+        game.state = "plop"
+        self.failUnlessRaises(UserWarning, self.explain.explain, poker_start)
+
+        game.state = pokergame.GAME_STATE_NULL
+
+        call = []
+        game.beginTurn = lambda serial: call.append('beginTurn')
+        game.player_list = [ player_serial ]
+        packets = self.explain.explain(poker_start)
+        self.assertEqual(['beginTurn'], call)
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
