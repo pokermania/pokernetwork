@@ -635,7 +635,23 @@ class PokerExplainTestCase(unittest.TestCase):
                                                              serial = player_serial))
         self.assertEqual(PACKET_POKER_PLAYER_SELF, packets[0].type)
         self.assertEqual(PACKET_NONE, packets[1].type)
-        
+
+    def test29_explain_position(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        game.current_round = -1
+        game.state = pokergame.GAME_STATE_PRE_FLOP
+        player_serial = 3
+        game.player_list = [ player_serial ]
+        packets = self.explain.explain(PacketPokerPosition(game_id = game_id,
+                                                           position = 0))
+        self.assertEqual(PACKET_POKER_POSITION, packets[0].type)
+        self.assertEqual(player_serial, packets[0].serial)
+
+    def test30_explain_seats(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        self.assertEqual([], self.explain.explain(PacketPokerSeats(game_id = game_id)))
 
 # ----------------------------------------------------------------
 def Run():
