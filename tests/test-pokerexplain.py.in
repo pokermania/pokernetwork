@@ -596,7 +596,23 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_CANCELED, packets[0].type)
         self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packets[1].type)
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[2].type)
-        
+
+    def test26_explain_player_arrive(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        packets = self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
+                                                               serial = player_serial,
+                                                               seat = 2,
+                                                               name = 'name',
+                                                               url = 'url',
+                                                               outfit = 'outfit',
+                                                               auto_blind_ante = 1,
+                                                               wait_for = 0))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_PLAYER_ARRIVE, packets[0].type)
+        self.assertEqual(PACKET_POKER_SEATS, packets[1].type)
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
