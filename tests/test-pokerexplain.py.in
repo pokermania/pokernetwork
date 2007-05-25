@@ -67,15 +67,21 @@ class PokerExplainTestCase(unittest.TestCase):
     def setUp(self):
         self.explain = PokerExplain()
         self.explain.games.dirs = [ '@srcdir@/../poker-engine' ]
-        self.explain.verbose = 10
+        self.explain.setVerbose(10)
         verbose = int(os.environ.get('VERBOSE_T', 3))
         self.explain.old_message = self.explain.message
-        def message(string):
+        def message01(string):
             if verbose > 0:
                 self.explain.old_message(string)
-        self.explain.message = message
+        self.explain.message = message01
+        pokergame.PokerGame.old_message = pokergame.PokerGame.message
+        def message02(self, string):
+            if verbose > 0:
+                pokergame.PokerGame.old_message(string)
+        pokergame.PokerGame.message = message02
 
     def test01_utilities(self):
+        self.explain.setVerbose(10)
         self.explain.error("test")
         self.explain.setPrefix("foo")
         self.assertEqual("foo", self.explain._prefix)
@@ -574,6 +580,23 @@ class PokerExplainTestCase(unittest.TestCase):
         packets = self.explain.explain(poker_start)
         self.assertEqual(['beginTurn'], call)
 
+    def test25_explain_canceled(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        player.bet = 10
+
+        amount = 1
+        packets = self.explain.explain(PacketPokerCanceled(game_id = game_id,
+                                                           serial = player_serial,
+                                                           amount = amount))
+        self.assertEqual(5, len(packets))
+        self.assertEqual(PACKET_POKER_CANCELED, packets[0].type)
+        self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packets[1].type)
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[2].type)
+        
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
