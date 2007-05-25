@@ -349,6 +349,122 @@ class PokerExplainTestCase(unittest.TestCase):
         self.explain.chips_values = []
         self.assertEqual([], self.explain.updateBetLimit(game))
 
+    def test16_currentGames(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        packet = self.explain.currentGames(game_id)
+        self.assertEqual(PACKET_POKER_CURRENT_GAMES, packet.type)
+
+    def test17_packetPot2Player(self):
+        class PokerPlayer:
+            serial = 1
+            bet = 10
+            money = 20
+
+        chips_left = 2
+        
+        class PokerGame:
+            id = 1
+            unit = 1
+            serial2player = {1: PokerPlayer()}
+
+            def getPlayer(self, serial):
+                return self.serial2player[1]
+
+        #
+        # chips_left
+        #
+        class PokerGameChipsLeft(PokerGame):
+            showdown_stack = [
+                {'type': None,
+                 'side_pots': {'pots': []}},
+                {'type': 'left_over',
+                 'chips_left': chips_left,
+                 'serial': 1 },
+                ]
+
+
+        packets = self.explain.packetsPot2Player(PokerGameChipsLeft())
+        self.assertEqual(3, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
+        self.assertEqual('left_over', packet.reason)
+        self.assertEqual([1, chips_left], packet.chips)
+
+        #
+        # uncalled
+        #
+        uncalled = 2
+        class PokerGameUncalled(PokerGame):
+            showdown_stack = [
+                {'type': None,
+                 'side_pots': {'pots': []}},
+                {'type': 'uncalled',
+                 'uncalled': uncalled,
+                 'serial': 1 },
+                ]
+
+        packets = self.explain.packetsPot2Player(PokerGameUncalled())
+        self.assertEqual(3, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
+        self.assertEqual('uncalled', packet.reason)
+        self.assertEqual([1, chips_left], packet.chips)
+
+        #
+        # resolve single winner, single frame
+        #
+        class PokerGameResolve(PokerGame):
+            showdown_stack = [
+                {'type': None,
+                 'side_pots': {'pots': [[10, 10], [10, 20]]},
+                 'pot': 20,
+                 },
+                {'type': 'resolve',
+                 'pot': 20,
+                 'serial': 1,
+                 'serial2share': {1: 20},
+                 },
+                ]
+
+        packets = self.explain.packetsPot2Player(PokerGameResolve())
+        self.assertEqual(4, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_POT_MERGE, packet.type)
+        self.assertEqual([0], packet.sources)
+        self.assertEqual(1, packet.destination)
+        packet = packets[1]
+        self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
+        self.assertEqual("win", packet.reason)
+        
+        #
+        # resolve 
+        #
+        class PokerGameResolve(PokerGame):
+            showdown_stack = [
+                {'type': None,
+                 'side_pots': {'pots': [[10, 10], [10, 20]]},
+                 'pot': 20,
+                 },
+                {'type': 'resolve',
+                 'pot': 10,
+                 'serial': 1,
+                 'serial2share': {1: 10},
+                 },
+                {'type': 'resolve',
+                 'pot': 10,
+                 'serial': 1,
+                 'serial2share': {1: 10},
+                 },
+                ]
+
+        packets = self.explain.packetsPot2Player(PokerGameResolve())
+        self.assertEqual(4, len(packets))
+        packet = packets[0]
+        self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
+        self.assertEqual("win", packet.reason)
+        self.assertEqual([1, 6, 2, 2], packet.chips)
+        
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
