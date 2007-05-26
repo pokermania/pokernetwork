@@ -829,7 +829,6 @@ class PokerExplainTestCase(unittest.TestCase):
         self.failUnless(game.addPlayer(player_serial, 1))
         player = game.getPlayer(player_serial)
         game.player_list = [player_serial]
-        self.explain.moveBet2Player = lambda game: ['moveBet2Player']
         self.explain.moveBet2Pot = lambda game: ['moveBet2Player']
         game_actions = []
         game.initRound = lambda: game_actions.append('initRound')
@@ -852,6 +851,37 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_BEGIN_ROUND, packets[4].type)
         self.assertEqual(PACKET_POKER_POSITION, packets[5].type)
         self.assertEqual(player_serial, packets[5].serial)
+        
+    def test33_explain_state_end(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        game.player_list = [player_serial]
+        self.explain.moveBet2Player = lambda game: ['moveBet2Player']
+        game_actions = []
+        game.isSingleUncalledBet = lambda side_pots: game_actions.append('isSingleUncalledBet') or True
+        
+        packets = self.explain.explain(PacketPokerState(game_id = game_id,
+                                                        string = pokergame.GAME_STATE_END))
+        self.assertEqual(2, len(packets))
+        self.assertEqual('moveBet2Player', packets[1])
+
+        game_actions = []
+        game.isFirstRound = lambda: True
+        game.isBlindAnteRound = lambda: True
+        game.blindAnteRoundEnd = lambda: game_actions.append('blindAnteRoundEnd')
+        game.isRunning = lambda: False
+        game.initRound = lambda: game_actions.append('initRound')
+        game.state = pokergame.GAME_STATE_FLOP
+        game.endState = lambda: game_actions.append('endState')
+        packets = self.explain.explain(PacketPokerState(game_id = game_id,
+                                                        string = pokergame.GAME_STATE_END))
+        self.assertEqual(1, len(packets))
+        self.assertEqual(PACKET_POKER_STATE, packets[0].type)
+        self.assertEqual(['blindAnteRoundEnd', 'endState', 'initRound'], game_actions)
+        
         
 # ----------------------------------------------------------------
 def Run():
