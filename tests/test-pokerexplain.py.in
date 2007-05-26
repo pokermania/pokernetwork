@@ -979,7 +979,38 @@ class PokerExplainTestCase(unittest.TestCase):
                                                         amount = amount))
         self.assertEqual(1, len(packets))
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
-        
+
+    def test38_explain_player_chips(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        bet = 12
+        money = 23
+        #
+        # set the money/bet
+        #
+        packets = self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                              serial = player_serial,
+                                                              money = money - 1,
+                                                              bet = bet - 1))
+        self.assertEqual(1, len(packets))
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
+        self.assertEqual(money - 1, player.money)
+        self.assertEqual(bet - 1, player.bet)
+        self.failUnless(player.isBuyInPayed())
+        #
+        # override the money/bet
+        #
+        packets = self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                              serial = player_serial,
+                                                              money = money,
+                                                              bet = bet))
+        self.assertEqual(1, len(packets))
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
+        self.assertEqual(money, player.money)
+        self.assertEqual(bet, player.bet)
         
 # ----------------------------------------------------------------
 def Run():
