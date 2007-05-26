@@ -758,7 +758,70 @@ class PokerExplainTestCase(unittest.TestCase):
             )
         self.assertEqual(PACKET_POKER_RAKE, packets[0].type)
         self.assertEqual(rake_amount, game.raked_amount)
-        
+
+    def test31_explain_game_action(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        #
+        # fold
+        #
+        fold = []
+        game.fold = lambda serial: fold.append('fold')
+        game.isSitOut = lambda serial: fold.append('isSitOut') or True
+        packets = self.explain.explain(PacketPokerFold(game_id = game_id))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(['fold', 'isSitOut'], fold)
+        #
+        # call
+        #
+        call = []
+        game.call = lambda serial: call.append('call')
+        packets = self.explain.explain(PacketPokerCall(game_id = game_id))
+        self.assertEqual(['call'], call)
+        #
+        # check
+        #
+        check = []
+        game.check = lambda serial: check.append('check')
+        packets = self.explain.explain(PacketPokerCheck(game_id = game_id))
+        self.assertEqual(['check'], check)
+        #
+        # raise
+        #
+        _raise = []
+        game.callNraise = lambda serial, amount: _raise.append(amount)
+        raise_amount = 303
+        packets = self.explain.explain(PacketPokerRaise(game_id = game_id,
+                                                        amount = raise_amount))
+        self.assertEqual([raise_amount], _raise)
+        #
+        # blind
+        #
+        blind = []
+        game.blind = lambda serial, amount, dead: blind.append(amount)
+        blind_amount = 404
+        packets = self.explain.explain(PacketPokerBlind(game_id = game_id,
+                                                        amount = blind_amount))
+        self.assertEqual([blind_amount], blind)
+        #
+        # ante
+        #
+        ante = []
+        game.ante = lambda serial, amount: ante.append(amount)
+        ante_amount = 505
+        packets = self.explain.explain(PacketPokerAnte(game_id = game_id,
+                                                        amount = ante_amount))
+        self.assertEqual([ante_amount], ante)
+        #
+        # blind_request
+        #
+        blind_request = []
+        game.setPlayerBlind = lambda serial, state: blind_request.append(state)
+        blind_state = "small"
+        packets = self.explain.explain(PacketPokerBlindRequest(game_id = game_id,
+                                                               state = blind_state))
+        self.assertEqual([blind_state], blind_request)
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
