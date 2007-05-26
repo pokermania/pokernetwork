@@ -81,6 +81,9 @@ class PokerExplainTestCase(unittest.TestCase):
         pokergame.PokerGame.message = message02
 
     def test01_utilities(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        self.explain.old_message("")
         self.explain.setVerbose(10)
         self.explain.error("test")
         self.explain.setPrefix("foo")
@@ -1050,14 +1053,58 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_SHOWDOWN, packets[3].type)
         self.assertEqual('packetsPot2Player', packets[4])
         self.assertEqual(PACKET_POKER_POSITION, packets[5].type)
-        
+
+    def test40_explain_position(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 1
+        self.explain.serial = player_serial
+        self.explain.unsetPlayerTimeout = lambda game, serial: True
+        game.isRunning = lambda: True
+        #
+        # game running, position is obsolete and self is in position
+        #
+        game.position_info = [player_serial, True]
+        game.getSerialInPosition = lambda: player_serial
+        packets = self.explain.explain(PacketPokerId(game_id = game_id))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packets[1].type)
+        self.assertEqual(player_serial, packets[1].serial)
+        #
+        # game running, position is not osbolete and self lost its position to another player
+        #
+        game.position_info = [player_serial, False]
+        other_player_serial = 75
+        game.getSerialInPosition = lambda: other_player_serial
+        packets = self.explain.explain(PacketPokerId(game_id = game_id))
+        self.assertEqual(3, len(packets))
+        self.assertEqual(PACKET_POKER_POSITION, packets[1].type)
+        self.assertEqual(other_player_serial, packets[1].serial)
+        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, packets[2].type)
+        self.assertEqual(other_player_serial, packets[2].serial)
+        #
+        # game running, position is not obsolete and self lost its position 
+        #
+        game.position_info = [player_serial, False]
+        game.getSerialInPosition = lambda: 0
+        packets = self.explain.explain(PacketPokerId(game_id = game_id))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, packets[1].type)
+        #
+        # game not running, self in position
+        #
+        game.position_info = [player_serial, False]
+        game.isRunning = lambda: False
+        packets = self.explain.explain(PacketPokerId(game_id = game_id))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, packets[1].type)
         
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test14"
+#    loader.methodPrefix = "test40"
     suite = loader.suiteFactory()
-#    suite.addTest(loader.loadClass(PokerGamesTestCase))
+    suite.addTest(loader.loadClass(PokerGamesTestCase))
     suite.addTest(loader.loadClass(PokerExplainTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
