@@ -964,6 +964,21 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(1, len(packets))
         self.assertEqual(PACKET_POKER_TIMEOUT_NOTICE, packets[0].type)
         self.assertEqual(None, player.getUserData()['timeout'])
+
+    def test37_explain_rebuy(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        rebuy = []
+        game.rebuy = lambda serial, amount: rebuy.append(amount) or True
+        amount = 11
+        packets = self.explain.explain(PacketPokerRebuy(game_id = game_id,
+                                                        serial = player_serial,
+                                                        amount = amount))
+        self.assertEqual(1, len(packets))
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
         
         
 # ----------------------------------------------------------------
