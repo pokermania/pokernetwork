@@ -1011,6 +1011,46 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
         self.assertEqual(money, player.money)
         self.assertEqual(bet, player.bet)
+
+    def test39_explain_win(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        game.isGameEndInformationValid = lambda: True
+        self.explain.packetsPot2Player = lambda game: ['packetsPot2Player' ]
+        #
+        # winners are known
+        #
+        game.winners = [1]
+        packets = self.explain.explain(PacketPokerWin(game_id = game_id,
+                                                      serials = [1]))
+        self.assertEqual(5, len(packets))
+        self.assertEqual(PACKET_POKER_WIN, packets[0].type)
+        self.assertEqual(PACKET_POKER_PLAYER_WIN, packets[1].type)
+        self.assertEqual(PACKET_POKER_SHOWDOWN, packets[2].type)
+        self.assertEqual('packetsPot2Player', packets[3])
+        self.assertEqual(PACKET_POKER_POSITION, packets[4].type)
+        #
+        # winners in packet and computed from the game are inconsistant
+        #
+        game.winners = []
+        game.distributeMoney = lambda: game.winners.append(1)
+        self.failUnlessRaises(UserWarning, self.explain.explain, PacketPokerWin(game_id = game_id, serials = [3]))
+        
+        #
+        # winners are not known
+        #
+        game.winners = []
+        game.endTurn = lambda: True
+        self.explain.packetsShowdown = lambda game: ['packetsShowdown']
+        packets = self.explain.explain(PacketPokerWin(game_id = game_id, serials = [1]))
+        self.assertEqual(6, len(packets))
+        self.assertEqual(PACKET_POKER_WIN, packets[0].type)
+        self.assertEqual(PACKET_POKER_PLAYER_WIN, packets[1].type)
+        self.assertEqual('packetsShowdown', packets[2])
+        self.assertEqual(PACKET_POKER_SHOWDOWN, packets[3].type)
+        self.assertEqual('packetsPot2Player', packets[4])
+        self.assertEqual(PACKET_POKER_POSITION, packets[5].type)
+        
         
 # ----------------------------------------------------------------
 def Run():
