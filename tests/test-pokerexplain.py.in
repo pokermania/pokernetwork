@@ -822,6 +822,37 @@ class PokerExplainTestCase(unittest.TestCase):
                                                                state = blind_state))
         self.assertEqual([blind_state], blind_request)
 
+    def test32_explain_state_flop(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        game.player_list = [player_serial]
+        self.explain.moveBet2Player = lambda game: ['moveBet2Player']
+        self.explain.moveBet2Pot = lambda game: ['moveBet2Player']
+        game_actions = []
+        game.initRound = lambda: game_actions.append('initRound')
+        game.isRunning = lambda: game_actions.append('isRunning') or True
+        game.cardsDealt = lambda: game_actions.append('cardsDealt') or True
+        game.serialsNotFold = lambda: game_actions.append('serialsNotFold') or [player_serial]
+        down_cards_count = 1
+        game.downCardsDealtThisRoundCount = lambda: game_actions.append('downCardsDealtThisRoundCount') or down_cards_count
+        cards_count = 2
+        game.cardsDealtThisRoundCount = lambda: game_actions.append('cardsDealtThisRoundCount') or cards_count
+        packets = self.explain.explain(PacketPokerState(game_id = game_id,
+                                                        string = pokergame.GAME_STATE_FLOP))
+        self.assertEqual(6, len(packets))
+        self.assertEqual(PACKET_POKER_STATE, packets[0].type)
+        self.assertEqual('moveBet2Player', packets[1])
+        self.assertEqual(PACKET_POKER_DEAL_CARDS, packets[2].type)
+        self.assertEqual(down_cards_count, packets[2].numberOfCards)
+        self.assertEqual(PACKET_POKER_PLAYER_CARDS, packets[3].type)
+        self.assertEqual([], packets[3].cards)
+        self.assertEqual(PACKET_POKER_BEGIN_ROUND, packets[4].type)
+        self.assertEqual(PACKET_POKER_POSITION, packets[5].type)
+        self.assertEqual(player_serial, packets[5].serial)
+        
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
