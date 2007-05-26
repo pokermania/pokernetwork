@@ -881,6 +881,43 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(1, len(packets))
         self.assertEqual(PACKET_POKER_STATE, packets[0].type)
         self.assertEqual(['blindAnteRoundEnd', 'endState', 'initRound'], game_actions)
+
+    def test34_explain_in_game(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        player.buy_in_payed = True
+        player.money = 10000
+        #
+        # player in game and wait for
+        #
+        player.wait_for = True
+        packets = self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                         players = [player_serial]))
+        self.assertEqual(3, len(packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, packets[0].type)
+        self.assertEqual(PACKET_POKER_SIT, packets[1].type)
+        self.assertEqual(PACKET_POKER_WAIT_FOR, packets[2].type)
+
+        #
+        # player not in game and wait for
+        #
+        packets = self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                         players = []))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, packets[0].type)
+        self.assertEqual(PACKET_POKER_WAIT_FOR, packets[1].type)
+        #
+        # player not in game and not wait for
+        #
+        player.wait_for = False
+        packets = self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                         players = []))
+        self.assertEqual(2, len(packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, packets[0].type)
+        self.assertEqual(PACKET_POKER_SIT_OUT, packets[1].type)
         
         
 # ----------------------------------------------------------------
