@@ -75,9 +75,9 @@ class PokerExplainTestCase(unittest.TestCase):
                 self.explain.old_message(string)
         self.explain.message = message01
         pokergame.PokerGame.old_message = pokergame.PokerGame.message
-        def message02(self, string):
+        def message02(object, string):
             if verbose > 0:
-                pokergame.PokerGame.old_message(string)
+                print str(object) + string
         pokergame.PokerGame.message = message02
 
     def test01_utilities(self):
@@ -648,11 +648,117 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_POSITION, packets[0].type)
         self.assertEqual(player_serial, packets[0].serial)
 
-    def test30_explain_seats(self):
+    def test30_explain_setters(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        player = game.getPlayer(player_serial)
+        #
+        # PacketPokerSeats
+        #
         self.assertEqual([], self.explain.explain(PacketPokerSeats(game_id = game_id)))
-
+        #
+        # PacketPokerPlayerCards
+        #
+        packets = self.explain.explain(
+            PacketPokerPlayerCards(game_id = game_id,
+                                   serial = player_serial,
+                                   cards = [ 1 ])
+            )
+        self.assertEqual(PACKET_POKER_PLAYER_CARDS, packets[0].type)
+        #
+        # PacketPokerBoardCards
+        #
+        packets = self.explain.explain(
+            PacketPokerBoardCards(game_id = game_id,
+                                  cards = [ 1 ])
+            )
+        self.assertEqual(PACKET_POKER_BOARD_CARDS, packets[0].type)
+        #
+        # PacketPokerDealer
+        #
+        packets = self.explain.explain(
+            PacketPokerDealer(game_id = game_id,
+                              dealer = 1)
+            )
+        self.assertEqual(PACKET_POKER_DEALER, packets[0].type)
+        #
+        # PacketPokerSitOut
+        #
+        player.sit_out = False
+        self.failUnless(player.isSit())
+        packets = self.explain.explain(
+            PacketPokerSitOut(game_id = game_id,
+                              serial = player_serial)
+            )
+        self.assertEqual(PACKET_POKER_SIT_OUT, packets[0].type)
+        self.failUnless(player.isSitOut())
+        #
+        # PacketPokerSit
+        #
+        player.buy_in_payed = True
+        player.money = 10000
+        player.sit_out = True
+        self.failIf(player.isSit())
+        packets = self.explain.explain(
+            PacketPokerSit(game_id = game_id,
+                           serial = player_serial)
+            )
+        self.assertEqual(PACKET_POKER_SIT, packets[0].type)
+        self.failUnless(player.isSit())
+        #
+        # PacketPokerAutoFold
+        #
+        self.failIf(player.isAuto())
+        packets = self.explain.explain(
+            PacketPokerAutoFold(game_id = game_id,
+                               serial = player_serial)
+            )
+        self.assertEqual(PACKET_POKER_AUTO_FOLD, packets[0].type)
+        self.failUnless(player.isAuto())
+        #
+        # PacketPokerAutoBlindAnte
+        #
+        self.failIf(player.isAutoBlindAnte())
+        packets = self.explain.explain(
+            PacketPokerAutoBlindAnte(game_id = game_id,
+                                     serial = player_serial)
+            )
+        self.assertEqual(PACKET_POKER_AUTO_BLIND_ANTE, packets[0].type)
+        self.failUnless(player.isAutoBlindAnte())
+        #
+        # PacketPokerNoautoBlindAnte
+        #
+        player.auto_blind_ante = True
+        self.failUnless(player.isAutoBlindAnte())
+        packets = self.explain.explain(
+            PacketPokerNoautoBlindAnte(game_id = game_id,
+                                       serial = player_serial)
+            )
+        self.assertEqual(PACKET_POKER_NOAUTO_BLIND_ANTE, packets[0].type)
+        self.failIf(player.isAutoBlindAnte())
+        #
+        # PacketPokerMuckRequest
+        #
+        packets = self.explain.explain(
+            PacketPokerMuckRequest(game_id = game_id,
+                                   muckable_serials = [player_serial])
+            )
+        self.assertEqual(PACKET_POKER_MUCK_REQUEST, packets[0].type)
+        self.assertEqual([player_serial], game.muckable_serials)
+        #
+        # PacketPokerRake
+        #
+        game.getRakeContributions = lambda: 0
+        rake_amount = 101
+        packets = self.explain.explain(
+            PacketPokerRake(game_id = game_id,
+                            value = rake_amount)
+            )
+        self.assertEqual(PACKET_POKER_RAKE, packets[0].type)
+        self.assertEqual(rake_amount, game.raked_amount)
+        
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
