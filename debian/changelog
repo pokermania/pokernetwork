@@ -4,7 +4,7 @@ poker-network (1.1.0-1) unstable; urgency=low
   
   * Apply NMU patch (closes: 425253)
 
- -- Loic Dachary (OuoU) <loic@debian.org>  Wed, 16 May 2007 14:06:27 +0200
+ -- Loic Dachary (OuoU) <loic@debian.org>  Sun, 27 May 2007 14:41:33 +0200
 
 poker-network (1.0.37-1.1) unstable; urgency=high
 
