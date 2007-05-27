@@ -35,6 +35,7 @@ class PokerGames:
         self.games = {}
         self.dirs = kwargs.get("dirs", [])
         self.verbose = kwargs.get("verbose", 0)
+        self.prefix = kwargs.get("prefix", "")
     
     def getGame(self, game_id):
         if not hasattr(self, "games") or not self.games.has_key(game_id):
@@ -52,6 +53,7 @@ class PokerGames:
     def getOrCreateGame(self, game_id):
         if not self.games.has_key(game_id):
             game = PokerNetworkGameClient("poker.%s.xml", self.dirs)
+            game.prefix = self.prefix
             game.verbose = self.verbose
             game.id = game_id
             self.games[game_id] = game
@@ -99,6 +101,7 @@ class PokerExplain:
         
     def setPrefix(self, prefix):
         self._prefix = prefix
+        self.games.prefix = prefix
 
     def setVerbose(self, verbose):
         self.verbose = verbose
