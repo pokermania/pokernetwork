@@ -37,7 +37,7 @@ EXTRA_DIST = \
 	conf/poker.server.xml.in \
 	conf/poker2d.xml.in \
 	conf/client.xml \
-	poker-engine/poker.0-0-limit.xml \
+	poker-engine/poker.1-2-no-limit.xml \
 	poker-engine/poker.holdem.xml \
 	coverage.py \
 	test-poker-interface.py \
