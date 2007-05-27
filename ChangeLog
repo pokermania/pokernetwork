@@ -1,6 +1,105 @@
-2007-05-16  Loic Dachary  <loic@pokerdev.pokersource.info>
+2007-05-27  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* tests/test-pokergameclient.py.in: pokergameclient.py tests
+	* tests/run.in: list all files that have 100% code coverage
+	* tests/poker.server.xml: Forget python2.3 compatiblity
+	* tests/poker-engine, tests/poker-engine/poker.1-2-no-limit.xml,
+	  tests/poker-engine/poker.holdem.xml: pokerexplain tesst support
+	  poker-engine configuration files
+	* tests/Makefile.am: add pokerexplain and pokergameclient files and
+	  copies of poker-engine configuration files so that it does not
+	  depend on the installed poker-engine exact location
+	* pokernetwork/pokerpackets.py: POKER_EXPLAIN packet allows the
+	  client to control the verbosity level
+	* pokernetwork/pokerexplain.py: Prefix must be forwarded by the
+	  games container.
+	* pokernetwork/pokerclient.py: Delegate packets expansion to
+	  pokerexplain
+	* pokernetwork/pokerbot.py: use the new setPrefix method of the
+	  base class instead of setting _prefix directly
+	* tests/run.in: list files that are expected to have 100% code
+	  coverage and fail if they dont
+	* configure.ac: add pokerexplain and pokergameclient test files
+	* Makefile.am: add pokerexplain and pokergameclient files
+	* pokernetwork/pokergameclient.py: PokerNetworkGameClient
+	  derivation of the poker game client class for poker-network that
+	  was previously embedded in pokerclient.py
+	* pokernetwork/pokerexplain.py: extracted from pokerclient.py :
+	  translate poker server packets into packets suitable for a
+	  display that knows nothing about the poker rules
+
+2007-05-26  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerexplain.py.in: test40_explain_position
+	* tests/test-pokerexplain.py.in: test39_explain_win
+	* tests/test-pokerexplain.py.in: test38_explain_player_chips
+	* tests/test-pokerexplain.py.in: test37_explain_rebuy
+	* tests/test-pokerexplain.py.in: test36_explain_timeout
+	* tests/test-pokerexplain.py.in: test34_explain_in_game
+	* tests/test-pokerexplain.py.in: test33_explain_state_end
+	* tests/test-pokerexplain.py.in: test32_explain_state_flop
+	* tests/test-pokerexplain.py.in: test31_explain_game_action
+	* tests/test-pokerexplain.py.in: test30_explain_setters
+
+2007-05-25  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerexplain.py.in: test30_explain_seats
+	* tests/test-pokerexplain.py.in: test28_explain_player_self
+	* tests/test-pokerexplain.py.in: test27_explain_player_leave
+	* tests/test-pokerexplain.py.in: test26_explain_player_arrive
+	* tests/test-pokerexplain.py.in: control messages verbosity
+	* tests/test-pokerexplain.py.in: test24_explain_start
+	* pokernetwork/pokerclientpackets.py, pokernetwork/pokerpackets.py:
+	  Add hex version of the packet number to help debugging.
+	* tests/test-pokerexplain.py.in: test20_explain_poker_table
+	  test21_explain_serial
+	  test22_explain_error
+	* tests/test-pokerexplain.py.in: test19_packetsTableQuit
+	* tests/test-pokerexplain.py.in: test18_packetsShowdown
+	* tests/test-pokerexplain.py.in: test17_packetPot2Player
+
+2007-05-24  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerexplain.py.in: test15_updateBetLimit
+	* tests/test-pokerexplain.py.in: test14_moveBet2Pot
+	* tests/test-pokerexplain.py.in: 27% of pokerexplain.py coverage
+	* pokernetwork/pokerpackets.py: Direction consistency
+	* pokernetwork/pokerpackets.py: PacketPokerTourneyUnregister
+	  documentation
+	* pokernetwork/pokerpackets.py: PacketPokerTourneyRegister
+	  documentation
+	* pokernetwork/pokerpackets.py: PacketPokerTourneySelect
+	  documentation.
+
+2007-05-23  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: Document PacketPokerChat packet.
+	* pokernetwork/pokerpackets.py: PacketPokerGetPlayerInfo
+	  documentation
+
+2007-05-20  Loic Dachary <loic@dachary.org>
+
+	* debian/python-poker-network.postrm: Test debconf before using it.
+	* debian/poker-web.preinst: Test debconf before using it. Don't
+	  bark when db_stop fails.
+	* debian/poker-web.postrm: Test debconf before using it.
+	* debian/po/cs.po: Updated czeck translation.
+	* debian/control: Depends on python-gtk2-dev.
+	* debian/changelog: Accept NMU from Luk Claes <luk@debian.org>.
+	* debian/po/de.po: German translation
+
+2007-05-18  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: PacketPokerTableJoin and
+	  PacketPokerTable packet description updates.
+
+2007-05-16  Loic Dachary <loic@dachary.org>
+
+	* ChangeLog, NEWS, debian/changelog: Increase minor number and
+	  leave micro number for maintainance.
+	* ChangeLog, NEWS, debian/changelog: Version bump.
 
 2007-05-13  Loic Dachary <loic@dachary.org>
 
@@ -4140,5 +4239,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-07/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-13/p'"
 End:
