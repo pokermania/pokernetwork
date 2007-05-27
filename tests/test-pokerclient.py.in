@@ -187,7 +187,8 @@ class PokerClientTestCase(unittest.TestCase):
 
     def quit(self, args):
         client = args[0]
-        print "quit " + str(client.getSerial())
+        if self.service.verbose > 0:
+            print "test-pokerclient: quit client " + str(client.getSerial())
         client.sendPacket(PacketQuit())
         if hasattr(client, "transport"):
             client.transport.loseConnection()
@@ -221,7 +222,7 @@ class PokerClientTestCase(unittest.TestCase):
     def cashIn(self, client, url, value):
         note = self.service.cashier.currency_client._buildNote(url, value)
         client.sendPacket(PacketPokerCashIn(serial = client.getSerial(), note = note))
-        client._prefix = "[Client %d]" % client.getSerial()
+        client.setPrefix("[Client %d]" % client.getSerial())
         return client.packetDeferred(True, PACKET_ACK)
 
     def check_cashIn(self, (client, packet)):
@@ -971,7 +972,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test19"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
