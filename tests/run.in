@@ -60,7 +60,13 @@ DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/poker{network,ui,client2d}/*.py)
 : ${COVERAGE_FILES:=$DEFAULT_COVERAGE_FILES}
 
 COVERAGE_100_PERCENT="
+../pokerclient2d/__init__
+../pokernetwork/__init__
 ../pokernetwork/pokerexplain
+../pokernetwork/pokergameclient
+../pokernetwork/pokernetworkconfig
+../pokernetwork/version
+../pokerui/__init__
 "
 
 case "$1" in 
@@ -73,9 +79,11 @@ case "$1" in
         @PYTHON@ ${srcdir}/coverage.py -a -d annotated ${COVERAGE_FILES}
         echo "$output"
         for file in ${COVERAGE_100_PERCENT} ; do
-            if ! echo "$output" | grep "$file.*100%" > /dev/null ; then
-                echo "FAIL: tests do not cover 100% of the $file code"
-                exit 1
+            if ! echo "$output" | grep "^$file" > /dev/null ; then
+                if ! echo "$output" | grep "^$file.*100%" > /dev/null ; then
+                    echo "FAIL: tests do not cover 100% of the $file code"
+                    exit 1
+                fi
             fi
         done
         ;;
