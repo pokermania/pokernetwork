@@ -59,14 +59,25 @@ export TZ=Europe/Paris
 DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/poker{network,ui,client2d}/*.py) 
 : ${COVERAGE_FILES:=$DEFAULT_COVERAGE_FILES}
 
+COVERAGE_100_PERCENT="
+../pokernetwork/pokerexplain
+"
+
 case "$1" in 
 
 *coverage-reset) @PYTHON@ ${srcdir}/coverage.py -e ;;
 
 *coverage-report) 
-        @PYTHON@ ${srcdir}/coverage.py -m -r ${COVERAGE_FILES}
+        output=$( @PYTHON@ ${srcdir}/coverage.py -m -r ${COVERAGE_FILES} )
         rm -fr annotated ; mkdir annotated
         @PYTHON@ ${srcdir}/coverage.py -a -d annotated ${COVERAGE_FILES}
+        echo "$output"
+        for file in ${COVERAGE_100_PERCENT} ; do
+            if ! echo "$output" | grep "$file.*100%" > /dev/null ; then
+                echo "FAIL: tests do not cover 100% of the $file code"
+                exit 1
+            fi
+        done
         ;;
 
 *upgrade) ./upgrade ;;
