@@ -3287,6 +3287,34 @@ class PacketPokerGameMessage(PacketPokerMessage):
 
 PacketFactory[PACKET_POKER_GAME_MESSAGE] = PacketPokerGameMessage
 
+########################################
+
+PACKET_POKER_EXPLAIN = 142 # 0x8e # %SEQ%
+PacketNames[PACKET_POKER_EXPLAIN] = "POKER_GAME_EXPLAIN"
+
+class PacketPokerExplain(PacketInt):
+    """\
+Semantics: control the level of verbosity of the server
+according to the "value" bit field as follows:
+
+value == NONE
+  The server assumes the client knows the poker rules, presumably
+  by using poker-engine.
+  
+value == ALL 
+  The server assumes the client does not know poker and will
+  explain every game event in great detail.
+
+Direction: server <= client
+"""
+
+    NONE = 0x0000
+    ALL  = 0xFFFF
+    
+    type = PACKET_POKER_EXPLAIN
+
+PacketFactory[PACKET_POKER_EXPLAIN] = PacketPokerExplain
+
 # Interpreted by emacs
 # Local Variables:
 # compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 49 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[ \\w#]+#/$s # $h #/; }' pokerpackets.py"
