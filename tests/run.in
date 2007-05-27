@@ -79,8 +79,8 @@ case "$1" in
         @PYTHON@ ${srcdir}/coverage.py -a -d annotated ${COVERAGE_FILES}
         echo "$output"
         for file in ${COVERAGE_100_PERCENT} ; do
-            if ! echo "$output" | grep "^$file" > /dev/null ; then
-                if ! echo "$output" | grep "^$file.*100%" > /dev/null ; then
+            if ! echo "$output" | grep "$file" > /dev/null ; then
+                if ! echo "$output" | grep "$file.*100%" > /dev/null ; then
                     echo "FAIL: tests do not cover 100% of the $file code"
                     exit 1
                 fi
