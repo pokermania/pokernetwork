@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -36,6 +37,8 @@ EXTRA_DIST = \
 	conf/poker.server.xml.in \
 	conf/poker2d.xml.in \
 	conf/client.xml \
+	poker-engine/poker.0-0-limit.xml \
+	poker-engine/poker.holdem.xml \
 	coverage.py \
 	test-poker-interface.py \
 	poker-interface-sid.supp \
@@ -71,6 +74,8 @@ TESTS = coverage-reset \
 	test-pokertable.py \
 	test-pokerchildren.py \
 	test-pokerclient.py \
+	test-pokerexplain.py \
+	test-pokergameclient.py \
 	test-pokerlock.py \
 	test-pokercashier.py \
 	test-xmlrpc.py \
