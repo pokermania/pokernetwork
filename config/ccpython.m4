@@ -127,10 +127,7 @@ _ONE_CC_PYTHON([=2.4], [2_4])
 if test -f "$PYTHON" ; then found_one=$PYTHON ; fi
 unset PYTHON
 _ONE_CC_PYTHON([=2.5], [2_5])
-#
-# python2.5 support in dependencies is not mature yet
-#
-#if test -f "$PYTHON" ; then found_one=$PYTHON ; fi
+if test -f "$PYTHON" ; then found_one=$PYTHON ; fi
 PYTHON=$found_one
 if ! test "$found_one" ; then
    AC_MSG_ERROR([No python development environments found])
