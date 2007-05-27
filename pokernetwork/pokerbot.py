@@ -347,7 +347,7 @@ class PokerBotProtocol(PokerClientProtocol):
 
     def protocolEstablished(self):
         PokerClientProtocol.protocolEstablished(self)
-        self._prefix = self.user.name + " "
+        self.setPrefix(self.user.name + " ")
         if self.factory.disconnect_delay:
             delay = randint(*self.factory.disconnect_delay)
             print self.user.name + ": will disconnect in %d seconds (for kicks)" % delay
