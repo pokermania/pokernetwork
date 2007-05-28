@@ -288,8 +288,10 @@ PACKET_AUTH_OK = 8
 PacketNames[PACKET_AUTH_OK] = "AUTH_OK"
 
 class PacketAuthOk(Packet):
-    """
-    Authentication successfull
+    """\
+Semantics: authentication request succeeded.
+
+Direction: server => client
     """
 
     type = PACKET_AUTH_OK
@@ -302,7 +304,7 @@ PACKET_AUTH_REFUSED = 9
 PacketNames[PACKET_AUTH_REFUSED] = "AUTH_REFUSED"
 
 class PacketAuthRefused(PacketError):
-    """
+    """\
 Semantics: authentication request was refused by the server.
 
 Direction: server => client
