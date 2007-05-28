@@ -303,7 +303,14 @@ PacketNames[PACKET_AUTH_REFUSED] = "AUTH_REFUSED"
 
 class PacketAuthRefused(PacketError):
     """
-    Authentication failed
+Semantics: authentication request was refused by the server.
+
+Direction: server => client
+
+message: human readable reason for the authentication failure
+code: machine readable code matching the human readable message
+other_type: the type of the packet that triggered the authentication
+            error.
     """
 
     type = PACKET_AUTH_REFUSED
