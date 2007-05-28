@@ -259,7 +259,7 @@ serial: the unique number associated to the user.
     
     def __init__(self, *args, **kwargs):
         self.serial = kwargs.get("serial", 0)
-        self.cookie = kwargs.get("cookie", "")
+        self.cookie = kwargs.get("cookie", "") # not present in client/server dialog
 
     def pack(self):
         return Packet.pack(self) + pack(PacketSerial.format, self.serial)
