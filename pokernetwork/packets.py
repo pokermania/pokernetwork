@@ -240,9 +240,16 @@ PACKET_SERIAL = 6
 PacketNames[PACKET_SERIAL] = "SERIAL"
 
 class PacketSerial(Packet):
-    """
-    Serial Number and optional session cookie for other
-    communication protocols.
+    """\
+Semantics: the serial number of the authenticated user
+           associated to the client after a PacketLogin
+           was sent. This packet is sent to the client
+           after the PacketAuthOk acknowledging the success
+           of the authentication.
+
+Direction: server => client
+
+serial: the unique number associated to the user.
     """
 
     type = PACKET_SERIAL
@@ -276,7 +283,9 @@ PACKET_QUIT = 7
 PacketNames[PACKET_QUIT] = "QUIT"
 
 class PacketQuit(Packet):
-    "Client tells the server it will leave"
+    """
+    Client tells the server it will leave
+    """
 
     type = PACKET_QUIT
 
