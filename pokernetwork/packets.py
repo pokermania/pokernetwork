@@ -316,10 +316,21 @@ PACKET_LOGIN = 10
 PacketNames[PACKET_LOGIN] = "LOGIN"
 
 class PacketLogin(Packet):
-    """
+    """\
+Semantics: authentify user "name" with "password".
 
-    Packet containing a single name + a password
-    
+Direction: server <= client
+
+If the user/password combination is valid, the
+PacketAuthOk packet will be sent back to the client,
+immediately followed by the PacketSerial packet that
+holds the serial number of the user.
+
+If the user/password combination is invalid, the
+PacketAuthRefused packet will be sent back to the client.
+
+name: valid user name as a string
+password: matching password string
     """
 
     type = PACKET_LOGIN
