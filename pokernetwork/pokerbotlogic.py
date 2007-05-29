@@ -18,6 +18,20 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
+import sys
+sys.path.insert(0, "..")
+
+from os import popen
+from string import rstrip
+from random import randint
+
+from twisted.internet import reactor
+
+from pokerengine.pokertournament import *
+
+from pokernetwork.user import checkName
+from pokernetwork.pokerpackets import *
+from pokernetwork.pokerclientpackets import *
 
 LEVEL2ITERATIONS = {
     0: 10,
@@ -39,42 +53,51 @@ STATE_BATCH = 3
 # open it for reading. chmod go-rw /dev/random will do this
 # trick if not running the bots as root.
 #
-class StringGenerator:
 
-    def __init__(self, name_prefix):
-        self.name_prefix = name_prefix
-        self.pool = []
-
-    def getName(self):
-        return self.name_prefix + self.getString()
-
-    def getPassword(self):
-        return self.getString()
-
-    def getString(self):
-        while len(self.pool) == 0:
-            input = popen("/usr/bin/apg -m 5 -x 10 -M ncl -q -n 500")
-            self.pool = filter(lambda string: checkName(string)[0], map(lambda string: string[:-1], input.readlines()))
-            input.close()
-        return self.pool.pop()
-
-class NoteGenerator:
+class Pool:
 
     def __init__(self, command):
         self.command = command
-        print "NoteGenerator " + self.command
         self.pool = []
+        self.max_tries = 5
 
-    def getNote(self):
-        while len(self.pool) == 0:
-            input = popen(self.command)
-            self.pool = map(lambda string: rstrip(string).split('\t'), input.readlines())
-            input.close()
-            print "NoteGenerator " + str(self.pool)
+    lines2pool = None
+    
+    def getLine(self):
+        tries = 0
+        while len(self.pool) == 0 and tries < self.max_tries:
+            fd = popen(self.command)
+            self.pool = self.lines2pool(fd.readlines())
+            fd.close()
+            tries += 1
+        if tries >= self.max_tries:
+            raise UserWarning, "pokerbotlogic:Pool too many failures running " + self.command
         return self.pool.pop()
+    
+class StringGenerator(Pool):
 
+    def __init__(self, name_prefix):
+        self.name_prefix = name_prefix
+        Pool.__init__(self, "/usr/bin/apg -m 5 -x 10 -M ncl -q -n 500")
+
+    def getName(self):
+        return self.name_prefix + self.getLine()
+
+    def lines2pool(self, lines):
+        return filter(lambda string: checkName(string)[0], map(lambda string: string[:-1], lines))
+    getPassword = Pool.getLine
+
+class NoteGenerator(Pool):
+
+    def lines2pool(self, lines):
+        return map(lambda string: rstrip(string).split('\t'), lines)
+
+    getNote = Pool.getLine
+    
 class PokerBot:
 
+    note_generator = NoteGenerator("exit 1")
+    
     def __init__(self, factory):
         self.factory = factory
         self.state = STATE_RUNNING
@@ -104,7 +127,7 @@ class PokerBot:
             
         elif packet.type == PACKET_SERIAL:
             protocol.sendPacket(PacketPokerCashIn(serial = packet.serial,
-                                                  note = PokerBotFactory.note_generator.getNote()))
+                                                  note = PokerBot.note_generator.getNote()))
             
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.state = STATE_RUNNING
@@ -121,7 +144,7 @@ class PokerBot:
                         found = True
                         protocol.sendPacket(PacketPokerTableJoin(game_id = table.id,
                                                                  serial = protocol.getSerial()))
-                        if self.factory.watch == False:
+                        if not self.factory.watch:
                             protocol.sendPacket(PacketPokerSeat(game_id = table.id,
                                                                 serial = protocol.getSerial()))
                             protocol.sendPacket(PacketPokerBuyIn(game_id = table.id,
@@ -213,7 +236,7 @@ class PokerBot:
                 #
                 # Rebuy if necessary
                 #
-                if not self.factory.join_info['tournament'] and self.factory.watch == False:
+                if not self.factory.join_info['tournament'] and not self.factory.watch:
                     game = self.factory.packet2game(packet)
                     serial = protocol.getSerial()
                     if ( game and game.isBroke(serial) ):
