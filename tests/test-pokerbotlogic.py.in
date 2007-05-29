@@ -1,0 +1,62 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+import sys
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+
+from pokernetwork.pokerbotlogic import StringGenerator, NoteGenerator, PokerBot
+
+class StringGeneratorTestCase(unittest.TestCase):
+
+    def test_all(self):
+        generator = StringGenerator("PREFIX")
+        generator.command = "echo USERONE ; echo USERTWO"
+        self.assertEqual("PREFIXUSERTWO", generator.getName())
+        self.assertEqual(1, len(generator.pool))
+        self.assertEqual("USERONE", generator.getPassword())
+        self.assertEqual(0, len(generator.pool))
+        generator.command = ""
+        self.failUnlessRaises(UserWarning, generator.getName)
+        
+# ----------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test40"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(StringGeneratorTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+        tracebackFormat='default',
+        ).run(suite)
+
+# ----------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerbotlogic.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerbotlogic.py' TESTS='coverage-reset test-pokerbotlogic.py coverage-report' check )"
+# End:
+
