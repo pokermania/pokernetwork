@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -26,8 +27,8 @@
 #  Johan Euphrosine <johan@mekensleep.com>
 #
 from pprint import pprint
-from twisted.internet import reactor
-from twisted.internet import defer
+from twisted.internet import reactor, defer
+from twisted.python.runtime import seconds
 
 from pokernetwork.pokerclientpackets import *
 from random import choice, uniform, randint
@@ -105,7 +106,7 @@ class PokerAnimationPlayer:
         self.timers = {}
 
     def endRound(self):
-        self.last_end_round=time()
+        self.last_end_round = seconds()
 
     def playerArrive(self):
         #print "player arrive run stand animation"
