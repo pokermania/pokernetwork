@@ -23,7 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // Authors:
-//  Morgan Manach <akshell@free.fr>
+//  Morgan Manach <akshell@free.fr> (2006)
 //  Loic Dachary <loic@gnu.org>
 //
 
@@ -62,7 +62,7 @@ if($poker_error) {
 		<table>
 			<tr>
 				<td></td>
-				<td><? echo _('Log in') ?></td>
+				<td><? echo _('Login') ?></td>
 			</tr>
 			<tr>
 				<td><b><? echo _('Login') ?>:</b></td>
