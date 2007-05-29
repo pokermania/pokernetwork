@@ -37,12 +37,22 @@ class StringGeneratorTestCase(unittest.TestCase):
         generator.command = ""
         self.failUnlessRaises(UserWarning, generator.getName)
         
+class NoteGeneratorTestCase(unittest.TestCase):
+
+    def test_all(self):
+        generator = NoteGenerator("echo -e 'one\ttwo' ; echo -e 'three\tfour'")
+        self.assertEqual(['three', 'four'], generator.getNote())
+        self.assertEqual(['one', 'two'], generator.getNote())
+        generator.command = ""
+        self.failUnlessRaises(UserWarning, generator.getNote)
+        
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test40"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(StringGeneratorTestCase))
+    suite.addTest(loader.loadClass(NoteGeneratorTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
         tracebackFormat='default',
