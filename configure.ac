@@ -273,6 +273,7 @@ AC_CONFIG_FILES([
         tests/test-pokercashier.py
         tests/test-pokerclient.py
         tests/test-servercrash.py
+        tests/test-pokerbotlogic.py
         tests/test-pokerdatabase.py
         tests/test-pokerexplain.py
         tests/test-pokergameclient.py
