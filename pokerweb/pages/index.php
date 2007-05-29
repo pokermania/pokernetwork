@@ -23,8 +23,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // Authors:
-//  Morgan Manach <akshell@free.fr>
 //  Loic Dachary <loic@gnu.org>
+//  Morgan Manach <akshell@free.fr> (2006)
 //
 require_once 'common.php';
 
