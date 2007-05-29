@@ -99,7 +99,7 @@ game_id: integer uniquely identifying a game.
     format_size = calcsize(format)
     format_element = "!I"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         if kwargs.has_key("seats"):
             self.seats = kwargs["seats"]
         if kwargs.has_key("game_id"):
@@ -262,7 +262,7 @@ game_id: integer uniquely identifying a game.
     format = "!IB"
     format_size = calcsize(format)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.game_id = kwargs.get("game_id", 0)
         self.position = kwargs.get("position", -1)
         self.serial = kwargs.get("serial", 0) # accepted by constructor but otherwise ignored
@@ -892,7 +892,7 @@ game_id: integer uniquely identifying a game.
     format = "!IBB"
     format_size = calcsize(format)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.game_id = kwargs.get("game_id", 0)
         self.dealer = kwargs.get("dealer", -1)
         self.previous_dealer = kwargs.get("previous_dealer", -1)
@@ -1021,7 +1021,7 @@ skin: name of the level model to use
     format = "!IBIHBBHBHHI"
     format_size = calcsize(format)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.name = kwargs.get("name", "noname")
         self.variant = kwargs.get("variant", "holdem")
         self.betting_structure = kwargs.get("betting_structure", "2-4-limit")
@@ -2483,7 +2483,7 @@ class PacketPokerTourney(Packet):
     format = "!IHIBHHIHHH"
     format_size = calcsize(format)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.name = kwargs.get("name", "noname")
         self.description_short = kwargs.get("description_short", "nodescription_short")
         self.variant = kwargs.get("variant", "holdem")
@@ -3089,7 +3089,7 @@ class PacketPokerCashOutCommit(Packet):
 
     INVALID_TRANSACTION = 1
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.transaction_id = kwargs.get("transaction_id", "")
 
     def pack(self):
@@ -3119,7 +3119,7 @@ class PacketPokerCashQuery(Packet):
 
     DOES_NOT_EXIST = 1
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.application_data = kwargs.get("application_data", "")
 
     def pack(self):

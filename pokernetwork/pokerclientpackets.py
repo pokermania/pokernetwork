@@ -94,7 +94,7 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_POT_CHIPS
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.game_id = kwargs.get("game_id", 0)
         self.index = kwargs.get("index", 0)
         self.bet = kwargs.get("bet", [])
@@ -465,7 +465,7 @@ class PacketPokerDisplayNode(Packet):
     
     type = PACKET_POKER_DISPLAY_NODE
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.game_id = kwargs.get("game_id", "")
         self.name = kwargs.get("name", "")
         self.state = kwargs.get("state", "")
@@ -534,7 +534,7 @@ class PacketPokerChatHistory(Packet):
 
     type = PACKET_POKER_CHAT_HISTORY
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.show = kwargs.get("show", "no")
 
 PacketFactory[PACKET_POKER_CHAT_HISTORY] = PacketPokerChatHistory
@@ -835,7 +835,7 @@ class PacketPokerCurrentGames(Packet):
     format_size = calcsize(format)
     format_element = "!I"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.game_ids = kwargs.get("game_ids", [])
         self.count = kwargs.get("count", 0)
 
@@ -903,7 +903,7 @@ class PacketPokerRendererState(Packet):
 
     type = PACKET_POKER_RENDERER_STATE
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.state =  kwargs.get("state", "idle")
 
 PacketFactory[PACKET_POKER_RENDERER_STATE] = PacketPokerRendererState
@@ -947,7 +947,7 @@ PacketNames[PACKET_POKER_CLIENT_PLAYER_CHIPS] = "POKER_CLIENT_PLAYER_CHIPS"
 class PacketPokerClientPlayerChips(Packet):
     type = PACKET_POKER_CLIENT_PLAYER_CHIPS
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.game_id = kwargs.get("game_id", 0)
         self.serial = kwargs.get("serial", 0)
         self.bet = kwargs.get("bet", [])
@@ -966,7 +966,7 @@ PacketNames[PACKET_POKER_INTERFACE_COMMAND] = "PACKET_POKER_INTERFACE_COMMAND"
 class PacketPokerInterfaceCommand(Packet):
     type = PACKET_POKER_INTERFACE_COMMAND
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.window = kwargs.get("window", None)
         self.command = kwargs.get("command", None)
 

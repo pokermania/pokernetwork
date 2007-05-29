@@ -115,7 +115,7 @@ class PacketString(Packet):
 
     type = PACKET_STRING
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.string = kwargs.get("string", "")
 
     def pack(self):
@@ -151,7 +151,7 @@ class PacketInt(Packet):
     format = "!I"
     format_size = calcsize(format)
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         if kwargs.has_key("value"):
             self.value = kwargs["value"]
 
@@ -188,7 +188,7 @@ class PacketError(Packet, Exception):
     format = "!IB"
     format_size = calcsize(format)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.message = kwargs.get("message", "no message")
         self.code = kwargs.get("code", 0)
         self.other_type = kwargs.get("other_type", PACKET_ERROR)
@@ -258,7 +258,7 @@ serial: the unique number associated to the user.
     format = "!I"
     format_size = calcsize(format)
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.serial = kwargs.get("serial", 0)
         self.cookie = kwargs.get("cookie", "") # not present in client/server dialog
 
@@ -354,7 +354,7 @@ password: matching password string
 
     type = PACKET_LOGIN
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.name = kwargs.get("name", "unknown")
         self.password = kwargs.get("password", "unknown")
 
@@ -406,7 +406,7 @@ class PacketList(Packet):
     format = "!B"
     format_size = calcsize(format)
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.packets = kwargs.get("packets", [])
 
     def pack(self):
