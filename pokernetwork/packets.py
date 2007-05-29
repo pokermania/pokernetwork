@@ -192,6 +192,7 @@ class PacketError(Packet, Exception):
         self.message = kwargs.get("message", "no message")
         self.code = kwargs.get("code", 0)
         self.other_type = kwargs.get("other_type", PACKET_ERROR)
+        Exception.__init__(self)
 
     def pack(self):
         return Packet.pack(self) + self.packstring(self.message) + pack(PacketError.format, self.code, self.other_type)
