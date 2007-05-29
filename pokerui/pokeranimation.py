@@ -22,9 +22,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # Authors:
-#  Cedric Pinson <cpinson@freesheep.org>
 #  Loic Dachary <loic@gnu.org>
 #  Johan Euphrosine <johan@mekensleep.com>
+#  Cedric Pinson <cpinson@freesheep.org> (2003-2006)
 #
 from pprint import pprint
 from twisted.internet import reactor, defer
