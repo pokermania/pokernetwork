@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -26,6 +27,7 @@
 #
 set -e
 
+WWW=/home/www
 COOKIES=$0.cookies
 rm -f ${COOKIES}
 #DUMP_HEADERS='--dump-header /dev/tty'
@@ -36,13 +38,16 @@ trap "kill $pokerserver_pid ; rm -f $0.{cookies,out}" EXIT INT QUIT
 lockfile run-pokerserver.launching
 rm -f run-pokerserver.launching
 
-if [ "$(chase /var/www/test-poker-web)" != "$(chase ../pokerweb/pages)" ] ; then
-    rm -f /var/www/test-poker-web
-    ln -s $(chase ../pokerweb/pages) /var/www/test-poker-web
+if [ "$(chase ${WWW}/test-poker-web)" != "$(chase ../pokerweb/pages)" ] ; then
+    rm -f ${WWW}/test-poker-web
+    ln -s $(chase ../pokerweb/pages) ${WWW}/test-poker-web
 fi
 
 rm -f ../pokerweb/pages/constants.php
-sed -e 's/@POKER_SERVER_HOST@:19382/localhost:19482/' < ../pokerweb/pages/constants.php.ref.in > ../pokerweb/pages/constants.php
+sed -e 's/@POKER_SERVER_HOST@:19382/localhost:19482/' \
+    -e "s|one_private.*|one_private', 'http://localhost/test-poker-web/currency_one.php');|" \
+    -e "s|one_public.*|one_public', 'http://localhost/test-poker-web/currency_one.php');|" \
+    < ../pokerweb/pages/constants.php.ref.in > ../pokerweb/pages/constants.php
 perl -pi -e "s/currency_db_user'] = '.*/currency_db_user'] = 'root';/" ../pokerweb/pages/currency_one.php
 perl -pi -e "s/currency_db_password'] = '.*/currency_db_password'] = '';/" ../pokerweb/pages/currency_one.php
 
