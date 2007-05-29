@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
-<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.0.37">
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker.sequence.xsd" poker_network_version="1.1.0">
 
   <money_one name="PLAY MONEY" unit="" cent="" serial="1"/>
   <money_two name="CUSTOM MONEY" unit="C" cent="cts" serial="2"/>
