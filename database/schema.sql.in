@@ -195,31 +195,63 @@ DROP TABLE IF EXISTS tourneys_schedule;
 CREATE TABLE tourneys_schedule (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(32),
+  -- Description that will be shown in tournament lists
   description_short VARCHAR(64),
+  -- Description that will be shown on a detailed page about
+  -- the tournament.
   description_long TEXT,
+  -- The maximum number of players allowed to register in the tournament
   players_quota INT DEFAULT 10,
+  -- The minimum number of players to start the tournament. If the 
+  -- number of registered players in the tournament is less than this
+  -- limit, the tournament is canceled.
   players_min INT DEFAULT 2,
+  -- Poker variant (holdem, omaha, omaha8, 7stud)
   variant VARCHAR(32),
+  -- Betting structure (.01-.02-no-limit, .01-.02-pot-limit, .02-.04-limit, .02-.04-no-limit, .02-.04-pot-limit, .02..04-limit, .05-.10-limit, .05-.10-no-limit, .05-.10-pot-limit, .05..10-limit, .10-.25-limit, .10-.25-no-limit, .10-.25-pot-limit, .25-.50-limit, .25-.50-no-limit, .25-.50-pot-limit, .25..50-limit, .50-1-limit, .50-1-no-limit, .50-1-pot-limit, .50.1-limit, 0-0-limit, 1-2-limit, 1-2-no-limit, 1-2-pot-limit, 10-15-limit, 10-15-pot-limit, 10-20-limit, 10-20-no-limit, 10-20-pot-limit, 100-200-limit, 100-200-no-limit, 100-200-pot-limit, 15-30-limit, 150-300-limit, 2-4-limit, 2-4-no-limit, 2-4-pot-limit, 200-400-limit, 3-6-limit, 3-6-no-limit, 3-6-pot-limit, 30-60-limit, 30-60-no-limit, 30-60-pot-limit, 4-8-limit, 5-10-limit, 5-10-no-limit, 5-10-pot-limit, 50-100-limit, 50-100-no-limit, 50-100-pot-limit)
   betting_structure VARCHAR(32),
+  -- Number of seats, in the range 2 and 10 included.
   seats_per_game INT DEFAULT 10,
+  -- Maximum number of seconds before a player times out when in position.
   player_timeout INT DEFAULT 60,
+  -- Serial of the currency required to pay the buyin.
   currency_serial INT,
+  -- Minimum prize pool in cents.
   prize_min INT DEFAULT 0,
+  -- Serial number of the player (serial field of the users table) 
+  -- who guarantees the minimum prize set in the prize_min field
+  -- if the total buyin payed by the players is not enough.
   bailor_serial INT DEFAULT 0,
+  -- Tournament buyin in cent.
   buy_in INT DEFAULT 0,
+  -- Tournament rake in cent.
   rake INT DEFAULT 0,
+  -- y for sit&go tournament, n for regular tournament
   sit_n_go CHAR DEFAULT 'y',
+  -- Number of seconds for the first breaks.
   breaks_first INT DEFAULT 7200,
+  -- Number of seconds between breaks after the first break.
   breaks_interval INT DEFAULT 3600,
+  -- Number of seconds of each break.
   breaks_duration INT DEFAULT 300,
+  -- Unused.
   rebuy_delay INT DEFAULT 0,
+  -- Unused.
   add_on INT DEFAULT 0,
+  -- Unused.
   add_on_delay INT DEFAULT 60,
+  -- Unix timestamp of the tournament start.
   start_time INT DEFAULT 0,
 
+  -- Unix timestamp of the registration start.
   register_time INT DEFAULT 0,
+  -- n : the tournament is ignored by the server, y : the tournament
+  -- is considered by the server.
   active CHAR DEFAULT 'y',
+  -- y : the tournament restarts when complete, n : the tournament does
+  -- not restart when complete.
   respawn CHAR DEFAULT 'n',
+  -- Unused.
   respawn_interval INT DEFAULT 0,
 
   PRIMARY KEY (serial),
