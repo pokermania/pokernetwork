@@ -1,6 +1,45 @@
-2007-05-27  Loic Dachary <loic@dachary.org>
+2007-05-29  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* tests/Makefile.am: add test-pokerbotlogic.py
+	* pokerui/pokeranimation.py: Copyright dates.
+	* pokerui/pokeranimation.py: Use seconds from twisted instead of
+	  time.
+	* pokernetwork/pokerbotlogic.py: Pool base class for note generator
+	  and string generator that does not loop on error.
+	* pokernetwork/pokerbot.py: Move logic to
+	  pokernetwork/pokerbotlogic.py
+	* pokernetwork/pokerbot.in: Update copyright info.
+	* pokerclient2d/poker2d-test.xml: bump to version 1.1.0
+	* pokerclient2d/client.xml: bump to version 1.1.0
+	* configure.ac: add test-pokerbotlogic.py
+	* Makefile.am: Add pokerbotlogic.py
+	* examples/test-pokerweb: Force currency url to localhost
+	* pokernetwork/packets.py, pokernetwork/pokerclientpackets.py,
+	  pokernetwork/pokerpackets.py: Remove *args in __init__ calls when
+	  redundant.
+	* pokernetwork/packets.py: PacketError should call
+	  Exception.__init__
+	* tests/test-pokerbotlogic.py.in: NoteGeneratorTestCase
+	* tests/test-pokerbotlogic.py.in: StringGeneratorTestCase
+	* tests/run.in: only test 100% test coverage if file is said to be
+	  taken in account
+	* pokernetwork/pokerbotlogic.py: Separate the bot logic from the
+	  bot service part
+	* pokerweb/pages/index.php: Contribution dates.
+	* pokerweb/pages/login.php: Login instead of Log in because it
+	  breaks regression tests
+
+2007-05-28  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/packets.py: comment about cookie not being used
+	* pokernetwork/packets.py: PacketSerial documentation
+	* pokernetwork/packets.py: PacketAuthOk documentation
+	* pokernetwork/packets.py: PacketAuthRefused documentation
+	* pokernetwork/packets.py: PacketLogin documentation
+
+2007-05-27  Loic Dachary <loic@dachary.org>
 
 	* tests/test-pokergameclient.py.in: pokergameclient.py tests
 	* tests/run.in: list all files that have 100% code coverage
@@ -4239,5 +4278,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-13/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-27/p'"
 End:
