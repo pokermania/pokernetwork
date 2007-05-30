@@ -1782,6 +1782,8 @@ class PokerXML(resource.Resource):
         maps = []
         for packet in packets:
             attributes = packet.__dict__.copy()
+            if 'message' in dir(packet):
+                attributes['message'] = getattr(packet, 'message')
             #
             # It is forbiden to set a map key to a numeric (native
             # numeric or string made of digits). Taint the map entries
