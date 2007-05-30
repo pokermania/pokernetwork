@@ -57,6 +57,7 @@ dist_poker_web_DATA = \
 	pages/logout.php \
 	pages/nusoap.php \
 	pages/poker.php \
+	pages/webservice.php \
 	pages/prototype.js
 
 all-local:

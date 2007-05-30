@@ -299,6 +299,7 @@ AC_CONFIG_FILES([
         tests/testpoker.php
         tests/testbirthday.php
         tests/testicurrency.php	
+	tests/testwebservice.php
         tests/upgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([

@@ -96,6 +96,7 @@ TESTS = coverage-reset \
 	testpoker.php \
 	testbirthday.php \
 	testicurrency.php \
+	testwebservice.php \
 	coverage-report \
 	poker-interface \
         ${TEST_CPART}        
