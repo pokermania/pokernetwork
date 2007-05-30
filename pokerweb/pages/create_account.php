@@ -171,7 +171,8 @@ if($poker_error) {
 	$countries = file('country.txt');
 	foreach ($countries as $country) {
 		list ($code, $name) = explode (';', $country);
-		$name = str_replace("\r\n", '', $name);
+		$name = str_replace("\r", '', $name);
+		$name = str_replace("\n", '', $name);
 		echo '<option value="'.$name.'"'.($name == $account['addr_country']?
 			' selected="selected"':'').'>'.$name.'</option>'."\r\n";
 	}
