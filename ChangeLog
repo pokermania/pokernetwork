@@ -1,6 +1,13 @@
-2007-05-29  Loic Dachary <loic@dachary.org>
-
+2007-05-30  Johan Euphrosine  <proppy@aminche.com>
+	
 	* Release 1.1.0
+
+	* tests/test-pokerservice.py.in (PokerXMLTestCase.test_packets2maps): 
+	added PokerXml.packets2maps testcase
+	* pokernetwork/pokerservice.py (PokerXML.packets2maps): 
+	fixed message field serialization
+
+2007-05-29  Loic Dachary <loic@dachary.org>
 
 	* tests/Makefile.am: add test-pokerbotlogic.py
 	* pokerui/pokeranimation.py: Copyright dates.
