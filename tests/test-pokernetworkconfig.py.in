@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -36,15 +37,15 @@ from pokernetwork import pokernetworkconfig
 
 class PokerNetworkConfigTestCase(unittest.TestCase):
     
-    # -----------------------------------------------------------------------------------------------------
+    #--------------------------------------------------------------
     def setUp(self):
         self.Config = pokernetworkconfig.Config(['.', '@srcdir@/conf'])
     
-    # -----------------------------------------------------------------------------------------------------    
+    #--------------------------------------------------------------    
     def tearDown(self):
         del self.Config
         
-    # -----------------------------------------------------------------------------------------------------    
+    #--------------------------------------------------------------    
     def test_loadFromString(self):
 
         self.Config.loadFromString("""<?xml version="1.0" encoding="ISO-8859-1"?>
@@ -54,12 +55,15 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
             
         self.assertNotEqual(self.Config.header, None)
 
-    # -----------------------------------------------------------------------------------------------------    
+    #--------------------------------------------------------------    
     def test_load(self):
-        pokernetworkconfig.Config.upgrades_repository = '.'
-        self.Config.load("poker.client.xml.in")
+        self.assertEqual(True, self.Config.load("poker.client.xml.in"))
+        pokernetworkconfig.Config.upgrades_repository = '@srcdir@'
+        self.assertEqual(True, self.Config.load("poker.client.xml.in"))
+        self.Config.checkVersion = lambda field, version, repository: False
+        self.assertEqual(False, self.Config.load("poker.client.xml.in"))
         
-    # -----------------------------------------------------------------------------------------------------    
+    #--------------------------------------------------------------    
     def test_notify(self):
         def f(config):
             pass
@@ -72,20 +76,25 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
         self.Config.notifyUpdates(f)
         self.Config.headerSet("/sequence/@name", "othervalue")
         
-# -----------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(PokerNetworkConfigTestCase))
     return suite
     
-# -----------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------
 def GetTestedModule():
     return pokernetworkconfig
   
-# -----------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------
 def Run(verbose = 2):
     unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
-# -----------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------
 if __name__ == '__main__':
     Run()
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokernetworkconfig.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokernetworkconfig.py' TESTS='coverage-reset test-pokernetworkconfig.py coverage-report' check )"
+# End:
