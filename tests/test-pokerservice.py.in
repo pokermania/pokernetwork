@@ -50,6 +50,7 @@ from pokernetwork import currencyclient
 from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
+from pokernetwork.packets import PacketError
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
@@ -741,6 +742,19 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
         self.assertEqual(15, row['points'])
         cursor.close()
 
+class PokerServiceMockup:
+    verbose = 0
+class PokerXMLTestCase(unittest.TestCase):
+    def test_packets2maps(self):
+        pokerxml = pokerservice.PokerXML(PokerServiceMockup()) 
+        message = "serialize me"
+        packet = PacketError(message = message)
+        self.assertEqual(message, packet.message)
+        maps = pokerxml.packets2maps((packet, ))
+        self.assertEqual(1, len(maps))
+        self.assertEqual(True, maps[0].has_key('message'))
+        self.assertEqual(message, maps[0]['message'])
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
@@ -750,6 +764,7 @@ def Run():
     suite.addTest(loader.loadClass(TimerTestCase))
     suite.addTest(loader.loadClass(BreakTestCase))
     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
+    suite.addTest(loader.loadClass(PokerXMLTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
