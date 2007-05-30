@@ -40,7 +40,7 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     #--------------------------------------------------------------
     def setUp(self):
         self.Config = pokernetworkconfig.Config(['.'])
-        shutil.copy('@srcdir@/conf/poker.client.xml.in', 'poker.client.xml.in')
+        shutil.copyfile('@srcdir@/conf/poker.client.xml.in', 'poker.client.xml.in')
     
     #--------------------------------------------------------------    
     def tearDown(self):
