@@ -27,7 +27,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 
-import sys, os
+import sys, os, shutil
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
@@ -39,11 +39,13 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     
     #--------------------------------------------------------------
     def setUp(self):
-        self.Config = pokernetworkconfig.Config(['.', '@srcdir@/conf'])
+        self.Config = pokernetworkconfig.Config(['.'])
+        shutil.copy('@srcdir@/conf/poker.client.xml.in', 'poker.client.xml.in')
     
     #--------------------------------------------------------------    
     def tearDown(self):
         del self.Config
+        os.remove('poker.client.xml.in')
         
     #--------------------------------------------------------------    
     def test_loadFromString(self):
