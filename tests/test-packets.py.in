@@ -24,7 +24,7 @@ sys.path.insert(0, "..")
 
 import unittest
 
-from pokernetwork.packets import *
+from pokernetwork import packets
 
 class PacketsTestCase(unittest.TestCase):
 
@@ -45,35 +45,36 @@ class PacketsTestCase(unittest.TestCase):
             return None
 
     def test_unpack(self):
-        class TestPacket(Packet):
+        class TestPacket(packets.Packet):
             type = 77
 
-        class TestPacketList(PacketList):
+        class TestPacketList(packets.PacketList):
             def __init__(self):
-                PacketList.__init__(self, packets = [TestPacket()])
+                packets.PacketList.__init__(self, packets = [TestPacket()])
 
         self.assertEqual(None, self.packetCheck(type = TestPacketList))
 
-        class TestPacketList(PacketList):
+        class TestPacketList(packets.PacketList):
             def __init__(self):
-                PacketList.__init__(self, packets = [Packet()])
+                packets.PacketList.__init__(self, packets = [packets.Packet()])
 
             def unpack(self, block):
-                PacketList.unpack(self, block[:-3])
+                packets.PacketList.unpack(self, block[:-3])
 
         self.assertEqual(None, self.packetCheck(type = TestPacketList))
         
     #--------------------------------------------------------------    
     def test_all(self):
-        for type in PacketFactory.values():
-            self.packetCheck(type = type)
+        for type in packets._TYPES:
+            if packets.PacketFactory.has_key(type):
+                self.packetCheck(type = packets.PacketFactory[type])
 
-        class TestPacketList(PacketList):
+        class TestPacketList(packets.PacketList):
             def __init__(self):
-                PacketList.__init__(self, packets = [Packet()])
+                packets.PacketList.__init__(self, packets = [packets.Packet()])
         self.packetCheck(type = TestPacketList)
 
-        class TestPacketFieldList(Packet):
+        class TestPacketFieldList(packets.Packet):
             serials = []
 
             format_element = "!I"
@@ -82,20 +83,20 @@ class PacketsTestCase(unittest.TestCase):
                 self.serials = kwargs.get("serials", [])
 
             def pack(self):
-                block = Packet.pack(self)
+                block = packets.Packet.pack(self)
                 block += self.packlist(self.serials, TestPacketFieldList.format_element)
                 return block
 
             def unpack(self, block):
-                block = Packet.unpack(self, block)
+                block = packets.Packet.unpack(self, block)
                 (block, self.serials) = self.unpacklist(block, TestPacketFieldList.format_element)
                 return block
 
             def calcsize(self):
-                return Packet.calcsize(self) + self.calcsizelist(self.serials, TestPacketFieldList.format_element)
+                return packets.Packet.calcsize(self) + self.calcsizelist(self.serials, TestPacketFieldList.format_element)
 
             def __str__(self):
-                return Packet.__str__(self) + " serials = %s" % self.serials
+                return packets.Packet.__str__(self) + " serials = %s" % self.serials
 
         self.packetCheck(type = TestPacketFieldList, serials = [1L])
 
