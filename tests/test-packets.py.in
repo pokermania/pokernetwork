@@ -1,0 +1,119 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+import unittest
+
+from pokernetwork.packets import *
+
+class PacketsTestCase(unittest.TestCase):
+
+    def packetCheck(self, **kwargs):
+        packet_type = kwargs['type']
+        del kwargs['type']
+        packet = packet_type(**kwargs)
+        size = packet.calcsize()
+        packed = packet.pack()
+        self.assertEqual(size, len(packed))
+        other_packet = packet_type()
+        if other_packet.unpack(packed) != None:
+            self.assertEqual(repr(packet), repr(other_packet))
+            self.assertEqual(packet, other_packet)
+            self.assertEqual(packed, other_packet.pack())
+            return packet
+        else:
+            return None
+
+    def test_unpack(self):
+        class TestPacket(Packet):
+            type = 77
+
+        class TestPacketList(PacketList):
+            def __init__(self):
+                PacketList.__init__(self, packets = [TestPacket()])
+
+        self.assertEqual(None, self.packetCheck(type = TestPacketList))
+
+        class TestPacketList(PacketList):
+            def __init__(self):
+                PacketList.__init__(self, packets = [Packet()])
+
+            def unpack(self, block):
+                PacketList.unpack(self, block[:-3])
+
+        self.assertEqual(None, self.packetCheck(type = TestPacketList))
+        
+    #--------------------------------------------------------------    
+    def test_all(self):
+        for type in PacketFactory.values():
+            self.packetCheck(type = type)
+
+        class TestPacketList(PacketList):
+            def __init__(self):
+                PacketList.__init__(self, packets = [Packet()])
+        self.packetCheck(type = TestPacketList)
+
+        class TestPacketFieldList(Packet):
+            serials = []
+
+            format_element = "!I"
+
+            def __init__(self, *args, **kwargs):
+                self.serials = kwargs.get("serials", [])
+
+            def pack(self):
+                block = Packet.pack(self)
+                block += self.packlist(self.serials, TestPacketFieldList.format_element)
+                return block
+
+            def unpack(self, block):
+                block = Packet.unpack(self, block)
+                (block, self.serials) = self.unpacklist(block, TestPacketFieldList.format_element)
+                return block
+
+            def calcsize(self):
+                return Packet.calcsize(self) + self.calcsizelist(self.serials, TestPacketFieldList.format_element)
+
+            def __str__(self):
+                return Packet.__str__(self) + " serials = %s" % self.serials
+
+        self.packetCheck(type = TestPacketFieldList, serials = [1L])
+
+#--------------------------------------------------------------
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(PacketsTestCase))
+    return suite
+    
+#--------------------------------------------------------------
+def Run(verbose = 2):
+    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
+#--------------------------------------------------------------
+if __name__ == '__main__':
+    Run()
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-packets.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/packets.py' TESTS='coverage-reset test-packets.py coverage-report' check )"
+# End:
