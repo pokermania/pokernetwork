@@ -1796,7 +1796,7 @@ class PokerXML(resource.Resource):
 				new_subkey = str(subkey)
 				if new_subkey.isdigit():
 					new_subkey = "X" + new_subkey
-				print "replace key " + new_subkey
+				if self.verbose > 2: print "replace key " + new_subkey
 				value[new_subkey] = subvalue
             attributes['type'] = packet.__class__.__name__
             maps.append(attributes)
