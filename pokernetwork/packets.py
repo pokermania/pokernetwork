@@ -147,13 +147,11 @@ class PacketInt(Packet):
     """
 
     type = PACKET_INT
-    value = 0
     format = "!I"
     format_size = calcsize(format)
     
     def __init__(self, **kwargs):
-        if kwargs.has_key("value"):
-            self.value = kwargs["value"]
+        self.value = kwargs.get("value", 0)
 
     def pack(self):
         return Packet.pack(self) + pack(PacketInt.format, self.value)
@@ -499,5 +497,7 @@ class PacketMessage(PacketString):
     type = PACKET_MESSAGE
 
 PacketFactory[PACKET_MESSAGE] = PacketMessage
+
+_TYPES = range(0,49)
 
 ### !!!!!! NO SERIAL >= 50 !!!!!! ####

@@ -17,6 +17,12 @@
 #
 from pokernetwork.pokerpackets import *
 
+def chips2amount(chips):
+    amount = 0
+    for i in xrange(len(chips) / 2):
+        amount += chips[i*2] * chips[i*2 + 1]
+    return amount
+
 ########################################
 
 PACKET_POKER_BEST_CARDS = 170 # 0xaa # %SEQ%
@@ -117,16 +123,13 @@ class PacketPokerClientAction(PacketPokerId):
     """
 
     type = PACKET_POKER_CLIENT_ACTION
-    display = 0
-    action = ""
+
     format = "!B"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("display"):
-            self.display = kwargs["display"]
-        if kwargs.has_key("action"):
-            self.action = kwargs["action"]
+        self.display = kwargs.get("display",0)
+        self.action = kwargs.get("action","")
         PacketPokerId.__init__(self, *args, **kwargs)
         
     def pack(self):
@@ -176,28 +179,17 @@ game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_BET_LIMIT
-    min = 0
-    max = 0
-    step = 0
-    call = 0
-    allin = 0
-    pot = 0
+
     format = "!IIIIII"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("min"):
-            self.min = kwargs["min"]
-        if kwargs.has_key("max"):
-            self.max = kwargs["max"]
-        if kwargs.has_key("step"):
-            self.step = kwargs["step"]
-        if kwargs.has_key("call"):
-            self.call = kwargs["call"]
-        if kwargs.has_key("allin"):
-            self.allin = kwargs["allin"]
-        if kwargs.has_key("pot"):
-            self.pot = kwargs["pot"]
+        self.min = kwargs.get("min",0)
+        self.max = kwargs.get("max",0)
+        self.step = kwargs.get("step",0)
+        self.call = kwargs.get("call",0)
+        self.allin = kwargs.get("allin",0)
+        self.pot = kwargs.get("pot",0)
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -269,7 +261,7 @@ game_id: integer uniquely identifying a game.
 
     def __init__(self, *args, **kwargs):
         PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs["chips"]
+        self.chips = kwargs.get("chips", [])
         
     def __str__(self):
         return PacketPokerId.__str__(self) + " chips = %s" % ( self.chips )
@@ -305,8 +297,8 @@ game_id: integer uniquely identifying a game.
 
     def __init__(self, *args, **kwargs):
         PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs["chips"]
-        self.pot = kwargs["pot"]
+        self.chips = kwargs.get("chips", [])
+        self.pot = kwargs.get("pot", -1)
         
     def __str__(self):
         return PacketPokerId.__str__(self) + " chips = %s, pot = %d" % ( self.chips, self.pot )
@@ -383,8 +375,8 @@ game_id: integer uniquely identifying a game.
 
     def __init__(self, *args, **kwargs):
         PacketPokerId.__init__(self, *args, **kwargs)
-        self.sources = kwargs["sources"]
-        self.destination = kwargs["destination"]
+        self.sources = kwargs.get("sources", [])
+        self.destination = kwargs.get("destination", 0)
         
     def __str__(self):
         return PacketPokerId.__str__(self) + " sources = %s, destination = %d" % ( self.sources, self.destination )
@@ -513,10 +505,8 @@ game_id: integer uniquely identifying a game.
     serials = []
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("numberOfCards"):
-            self.numberOfCards = kwargs["numberOfCards"] or 2
-        if kwargs.has_key("serials"):
-            self.serials = kwargs["serials"] or []
+        self.numberOfCards = kwargs.get("numberOfCards", 2)
+        self.serials = kwargs.get("serials", [])
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -658,8 +648,7 @@ action: string that contain "start" or "stop".
     type = PACKET_POKER_ANIMATION_PLAYER_NOISE
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("action"):
-            self.action = kwargs["action"]
+        self.action = kwargs.get("action", 'start')
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -687,8 +676,7 @@ animation: string used to select an animation fold.
     type = PACKET_POKER_ANIMATION_PLAYER_FOLD
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("animation"):
-            self.animation = kwargs["animation"]
+        self.animation = kwargs.get("animation","UNKNOWN")
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -709,9 +697,7 @@ class PacketPokerAnimationPlayerBet(PacketPokerId):
     def __init__(self, *args, **kwargs):
         self.animation = kwargs.get("animation", "")
         self.chips = kwargs.get("chips", [])
-        self.amount = 0
-        for i in xrange(len(self.chips) / 2):
-            self.amount += self.chips[i*2] * self.chips[i*2 + 1]
+        self.amount = chips2amount(self.chips)
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -733,9 +719,7 @@ class PacketPokerAnimationPlayerChips(PacketPokerId):
         self.animation = kwargs.get("animation", "")
         self.chips = kwargs.get("chips", [])
         self.state = kwargs.get("state", "")
-        self.amount = 0
-        for i in xrange(len(self.chips) / 2):
-            self.amount += self.chips[i*2] * self.chips[i*2 + 1]
+        self.amount = chips2amount(self.chips)
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def __str__(self):
@@ -754,8 +738,7 @@ class PacketPokerAnimationDealerChange(PacketPokerId):
     type = PACKET_POKER_ANIMATION_DEALER_CHANGE
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
+        self.state = kwargs.get("state","UNKNOWN")
         
         PacketPokerId.__init__(self, *args, **kwargs)
 
@@ -775,8 +758,7 @@ class PacketPokerAnimationDealerButton(PacketPokerId):
     type = PACKET_POKER_ANIMATION_DEALER_BUTTON
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
+        self.state = kwargs.get("state","UNKNOWN")
         
         PacketPokerId.__init__(self, *args, **kwargs)
 
@@ -992,8 +974,7 @@ game_id: integer uniquely identifying a game.
 """
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
+        self.state = kwargs.get("state","UNKNOWN")
         self.when = kwargs.get("when", "now")
         PacketPokerId.__init__(self, *args, **kwargs)
 
@@ -1011,8 +992,7 @@ PacketNames[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = "POKER_PLAYER_ME_IN_FIRST_
 
 class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
+        self.state = kwargs.get("state","UNKNOWN")
         PacketPokerId.__init__(self, *args, **kwargs)
 
     type = PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON
@@ -1021,6 +1001,8 @@ class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
         return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
 
 PacketFactory[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = PacketPokerPlayerMeInFirstPerson
+
+_TYPES = range(170,254)
 
 # Interpreted by emacs
 # Local Variables:

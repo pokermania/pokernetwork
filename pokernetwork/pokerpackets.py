@@ -89,6 +89,7 @@
 #     PACKET_POKER_CHECK
 #     
 
+import sys
 from time import strftime, gmtime
 
 """\
@@ -120,7 +121,8 @@ The terms table/game are used interchangeably depending on the context.
 
 The documentation is kept terse and emphasizes the non-intuitive
 behaviour associated to each packet.
-"""
+""" #pragma: no cover
+
 from struct import pack, unpack, calcsize
 from types import IntType, LongType
 from pokernetwork.packets import *
@@ -154,18 +156,14 @@ game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_SEATS
-    game_id = 0
-    seats = []
 
     format = "!I"
     format_size = calcsize(format)
     format_element = "!I"
 
     def __init__(self, **kwargs):
-        if kwargs.has_key("seats"):
-            self.seats = kwargs["seats"]
-        if kwargs.has_key("game_id"):
-            self.game_id = kwargs["game_id"]
+        self.seats = kwargs.get("seats",[])
+        self.game_id = kwargs.get("game_id",0)
 
     def pack(self):
         return Packet.pack(self) + self.packlist(self.seats, PacketPokerSeats.format_element) + pack(PacketPokerSeats.format, self.game_id)
@@ -444,11 +442,9 @@ string: state of the game.
 """
 
     type = PACKET_POKER_STATE
-    string = ""
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("string"):
-            self.string = kwargs["string"]
+        self.string = kwargs.get("string","")
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -523,13 +519,10 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_WIN
 
-    serials = []
-
     format_element = "!I"
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("serials"):
-            self.serials = kwargs["serials"]
+        self.serials = kwargs.get("serials",[])
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -559,13 +552,10 @@ class PacketPokerCards(PacketPokerId):
     """base class for player / board / best cards"""
     type = PACKET_POKER_CARDS
 
-    cards = []
-
     format_element = "!B"
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("cards"):
-            self.cards = kwargs["cards"]
+        self.cards = kwargs.get("cards",[])
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -799,22 +789,15 @@ game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_START
-    hands_count = 0
-    time = 0
-    hand_serial = 0
-    level = 0
+
     format = "!IIIB"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("hands_count"):
-            self.hands_count = kwargs["hands_count"]
-        if kwargs.has_key("time"):
-            self.time = kwargs["time"]
-        if kwargs.has_key("hand_serial"):
-            self.hand_serial = kwargs["hand_serial"]
-        if kwargs.has_key("level"):
-            self.level = kwargs["level"]
+        self.hands_count = kwargs.get("hands_count",0)
+        self.time = kwargs.get("time",0)
+        self.hand_serial = kwargs.get("hand_serial",0)
+        self.level = kwargs.get("level",0)
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -858,13 +841,11 @@ game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_IN_GAME
-    players = []
 
     format_element = "!I"
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("players"):
-            self.players = kwargs["players"]
+        self.players = kwargs.get("players",[])
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -1230,7 +1211,7 @@ game_id: integer uniquely identifying a game.
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        self.timeout = kwargs.get("timeout", -1)
+        self.timeout = kwargs.get("timeout", sys.maxint)
         self.when = kwargs.get("when", -1)
         PacketPokerId.__init__(self, *args, **kwargs)
 
@@ -1351,7 +1332,7 @@ to_game_id: integer uniquely identifying a game.
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        self.to_game_id = kwargs.get("to_game_id", -1)
+        self.to_game_id = kwargs.get("to_game_id", sys.maxint)
         PacketPokerSeat.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -1477,13 +1458,11 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_BUY_IN
 
-    amount = 0
     format = "!I"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("amount"):
-            self.amount = kwargs["amount"]
+        self.amount = kwargs.get("amount",0)
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -1531,11 +1510,8 @@ game_id: integer uniquely identifying a game.
 
    type = PACKET_POKER_CHAT
 
-   message = 0
-
    def __init__(self, *args, **kwargs):
-       if kwargs.has_key("message"):
-           self.message = kwargs["message"]
+       self.message = kwargs.get("message", "")
        PacketPokerId.__init__(self, *args, **kwargs)
 
    def pack(self):
@@ -1765,7 +1741,7 @@ hands: list of integers uniquely identifying a hand to the server.
 
     def __init__(self, *args, **kwargs):
         self.hands = kwargs.get("hands", [])
-        self.total = kwargs.get("total", -1)
+        self.total = kwargs.get("total", sys.maxint)
         PacketPokerHandSelect.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -2227,11 +2203,9 @@ game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_WAIT_FOR
-    reason = ""
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("reason"):
-            self.reason = kwargs["reason"]
+        self.reason = kwargs.get("reason","")
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -2324,14 +2298,11 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    state = "on"
+    type = PACKET_POKER_LOOK_CARDS
 
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("state"):
-            self.state = kwargs["state"]
+        self.state = kwargs.get("state","on")
         PacketPokerId.__init__(self, *args, **kwargs)
-
-    type = PACKET_POKER_LOOK_CARDS
 
 PacketFactory[PACKET_POKER_LOOK_CARDS] = PacketPokerLookCards
 
@@ -2363,7 +2334,6 @@ class PacketPokerPlayersList(PacketPokerId):
 
     """
 
-    players = []
     format = "!H"
     format_size = calcsize(format)
     format_item = "!IB"
@@ -2904,11 +2874,8 @@ class PacketPokerRoles(PacketSerial):
 
     type = PACKET_POKER_ROLES
 
-    roles = ""
-
     def __init__(self, *args, **kwargs):
-        if kwargs.has_key("roles"):
-            self.roles = kwargs["roles"]
+        self.roles = kwargs.get("roles","")
         PacketSerial.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -3265,7 +3232,7 @@ money: the money won
     def __init__(self, *args, **kwargs):
         self.players = kwargs.get("players", 0)
         self.money = kwargs.get("money", 0)
-        self.rank = kwargs.get("rank", -1)
+        self.rank = kwargs.get("rank", sys.maxint)
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
@@ -3380,6 +3347,8 @@ Direction: server <= client
     type = PACKET_POKER_EXPLAIN
 
 PacketFactory[PACKET_POKER_EXPLAIN] = PacketPokerExplain
+
+_TYPES = range(50,149)
 
 # Interpreted by emacs
 # Local Variables:
