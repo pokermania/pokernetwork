@@ -23,9 +23,71 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Cedric Pinson <cpinson@freesheep.org>
+#  Cedric Pinson <cpinson@freesheep.org> (2004-2006)
 #  Henry Precheur <henry@precheur.org> (2004)
 #
+#     Theory of operations.
+#
+#     When the client send packets, the reply packets sent by the
+#     server are listed in the packet documentation.
+#     
+#     How to sit at a cash game table ?
+#     
+#     PACKET_POKER_TABLE_JOIN
+#     PACKET_POKER_SEAT
+#     PACKET_POKER_BUY_IN
+#     PACKET_POKER_AUTO_BLIND_ANTE
+#     PACKET_POKER_SIT
+#
+#     How to leave a cash game table ?
+#
+#     PACKET_POKER_TABLE_QUIT
+#
+#     What to expect when watching a table ? 
+#     
+#     PACKET_POKER_PLAYER_ARRIVE
+#     PACKET_POKER_PLAYER_CHIPS
+#     PACKET_POKER_PLAYER_SIT
+#     PACKET_POKER_PLAYER_SIT_OUT
+#     PACKET_POKER_CHAT
+#     PACKET_POKER_PLAYER_LEAVE
+#
+#     What to expect at all times ?
+#
+#     PACKET_POKER_MESSAGE
+#
+#     What to expect while a hand is being played ?
+#
+#     PACKET_POKER_IN_GAME
+#     PACKET_POKER_DEALER
+#     PACKET_POKER_START
+#     PACKET_POKER_CANCELED
+#     PACKET_POKER_STATE
+#     PACKET_POKER_POSITION
+#     PACKET_POKER_BLIND
+#     PACKET_POKER_ANTE
+#     PACKET_POKER_CALL
+#     PACKET_POKER_RAISE
+#     PACKET_POKER_FOLD
+#     PACKET_POKER_CHECK
+#     PACKET_POKER_RAKE
+#     PACKET_POKER_WIN
+#
+#     What to expect while participating in a hand ?
+#
+#     PACKET_POKER_BLIND_REQUEST
+#     PACKET_POKER_ANTE_REQUEST
+#     PACKET_POKER_MUCK_REQUEST
+#     PACKET_POKER_SELF_IN_POSITION
+#     PACKET_POKER_SELF_LOST_POSITION
+#
+#     What to send after receiving PACKET_POKER_SELF_IN_POSITION ?
+#
+#     PACKET_POKER_CALL
+#     PACKET_POKER_RAISE
+#     PACKET_POKER_FOLD
+#     PACKET_POKER_CHECK
+#     
 
 from time import strftime, gmtime
 
@@ -41,7 +103,7 @@ a program willing to talk directly to the server, in wich case it is safe
 to assume that all packet marked as being "inferred" will not actually be received by the server. In order to keep the
 complexity of writing the client to a reasonable level, the server
 provides exhaustive information about the game before the beginning of
-every turn. 
+every turn.
 
 The "Direction:" field for each packet shows wether it travels from
 the client to the server (server <= client), from the server to the
@@ -107,7 +169,7 @@ game_id: integer uniquely identifying a game.
 
     def pack(self):
         return Packet.pack(self) + self.packlist(self.seats, PacketPokerSeats.format_element) + pack(PacketPokerSeats.format, self.game_id)
-        
+
     def unpack(self, block):
         block = Packet.unpack(self, block)
         (block, self.seats) = self.unpacklist(block, PacketPokerSeats.format_element)
@@ -142,7 +204,7 @@ class PacketPokerId(PacketSerial):
 
     def pack(self):
         return PacketSerial.pack(self) + pack(PacketPokerId.format, self.game_id)
-        
+
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
         (self.game_id,) = unpack(PacketPokerId.format, block[:PacketPokerId.format_size])
@@ -172,7 +234,7 @@ class PacketPokerMessage(PacketPokerId):
     def __init__(self, *args, **kwargs):
         self.string = kwargs.get("string", "")
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + self.packstring(self.string)
 
@@ -180,7 +242,7 @@ class PacketPokerMessage(PacketPokerId):
         block = PacketPokerId.unpack(self, block)
         (block, self.string) = self.unpackstring(block)
         return block
-    
+
     def calcsize(self):
         return PacketPokerId.calcsize(self) + self.calcsizestring(self.string)
 
@@ -198,7 +260,7 @@ class PacketPokerError(PacketPokerId):
     """
 
     Packet describing an error
-    
+
     """
 
     type = PACKET_POKER_ERROR
@@ -269,7 +331,7 @@ game_id: integer uniquely identifying a game.
 
     def pack(self):
         return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, self.position)
-        
+
     def unpack(self, block):
         block = Packet.unpack(self, block)
         (self.game_id, self.position) = unpack(PacketPokerPosition.format, block[:PacketPokerPosition.format_size])
@@ -296,12 +358,12 @@ class PacketPokerInt(PacketPokerId):
 
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.amount = kwargs.get("amount", 0)
         if not ( type(self.amount) == IntType or type(self.amount) == LongType ): raise UserWarning, "not an int" + str(self.amount)
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + pack(PacketPokerInt.format, self.amount)
 
@@ -388,7 +450,7 @@ string: state of the game.
         if kwargs.has_key("string"):
             self.string = kwargs["string"]
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + self.packstring(self.string)
 
@@ -396,7 +458,7 @@ string: state of the game.
         block = PacketPokerId.unpack(self, block)
         (block, self.string) = self.unpackstring(block)
         return block
-    
+
     def calcsize(self):
         return PacketPokerId.calcsize(self) + self.calcsizestring(self.string)
 
@@ -474,7 +536,7 @@ game_id: integer uniquely identifying a game.
         block = PacketPokerId.pack(self)
         block += self.packlist(self.serials, PacketPokerWin.format_element)
         return block
-    
+
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
         (block, self.serials) = self.unpacklist(block, PacketPokerWin.format_element)
@@ -505,12 +567,12 @@ class PacketPokerCards(PacketPokerId):
         if kwargs.has_key("cards"):
             self.cards = kwargs["cards"]
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         block = PacketPokerId.pack(self)
         block += self.packlist(self.cards, PacketPokerCards.format_element)
         return block
-    
+
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
         (block, self.cards) = self.unpacklist(block, PacketPokerCards.format_element)
@@ -521,7 +583,7 @@ class PacketPokerCards(PacketPokerId):
 
     def __str__(self):
         return PacketPokerId.__str__(self) + " cards = %s" % self.cards
-    
+
 PacketFactory[PACKET_POKER_CARDS] = PacketPokerCards
 
 ########################################
@@ -555,7 +617,7 @@ cards: list of integers describing cards.
        Qh/10  Qd/23  Qc/36  Qs/49
        Kh/11  Kd/24  Kc/37  Ks/50
        Ah/12  Ad/25  Ac/38  As/51
-       
+
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
@@ -571,7 +633,7 @@ PacketNames[PACKET_POKER_BOARD_CARDS] = "POKER_BOARD_CARDS"
 
 class PacketPokerBoardCards(PacketPokerCards):
     """\
-Semantics: the ordered list of community "cards" 
+Semantics: the ordered list of community "cards"
 for game "game_id".
 
 Direction: server  => client
@@ -595,7 +657,7 @@ cards: list of integers describing cards.
        Qh/10  Qd/23  Qc/36  Qs/49
        Kh/11  Kd/24  Kc/37  Ks/50
        Ah/12  Ad/25  Ac/38  As/51
-       
+
 game_id: integer uniquely identifying a game.
 """
 
@@ -615,12 +677,12 @@ class PacketPokerChips(PacketPokerId):
 
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.bet = kwargs.get("bet", 0)
         if not ( type(self.bet) == IntType or type(self.bet) == LongType ): raise UserWarning, "not an int" + str(self.bet)
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + pack(PacketPokerChips.format, self.bet)
 
@@ -653,7 +715,7 @@ Context: this packet is infered each time the bet or the chip
 stack of a player is modified.
 
 bet: the number of chips wagered by the player for the current betting round.
-money: the number of chips available to the player for this game. 
+money: the number of chips available to the player for this game.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
@@ -662,12 +724,12 @@ game_id: integer uniquely identifying a game.
 
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.money = kwargs.get("money", 0)
         if not ( type(self.money) == IntType or type(self.money) == LongType ): raise UserWarning, "not an int" + str(self.money)
         PacketPokerChips.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerChips.pack(self) + pack(PacketPokerPlayerChips.format, self.money)
 
@@ -807,7 +869,7 @@ game_id: integer uniquely identifying a game.
 
     def pack(self):
         return PacketPokerId.pack(self) + self.packlist(self.players, PacketPokerInGame.format_element)
-        
+
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
         (block, self.players) = self.unpacklist(block, PacketPokerInGame.format_element)
@@ -835,7 +897,7 @@ Direction: server <=> client
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_CALL
 
 PacketFactory[PACKET_POKER_CALL] = PacketPokerCall
@@ -861,7 +923,7 @@ amount: the number of chips for the raise. A value of all 0 means the lowest pos
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_RAISE
 
 PacketFactory[PACKET_POKER_RAISE] = PacketPokerRaise
@@ -886,7 +948,7 @@ dealer: the seat number on wich the dealer button is located [0-9].
 previous_dealer: the seat number on wich the previous dealer button is located [0-9].
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_DEALER
 
     format = "!IBB"
@@ -899,7 +961,7 @@ game_id: integer uniquely identifying a game.
 
     def pack(self):
         return Packet.pack(self) + pack(PacketPokerDealer.format, self.game_id, self.dealer, self.previous_dealer)
-        
+
     def unpack(self, block):
         block = Packet.unpack(self, block)
         (self.game_id, self.dealer, self.previous_dealer) = unpack(PacketPokerDealer.format, block[:PacketPokerDealer.format_size])
@@ -973,7 +1035,7 @@ string: currency<tabulation>variant
         The specials value "my" restricts the search to the tables
         in which the player id attached to the connection is playing.
 """
-    
+
     type = PACKET_POKER_TABLE_SELECT
 
 PacketFactory[PACKET_POKER_TABLE_SELECT] = PacketPokerTableSelect
@@ -1006,7 +1068,7 @@ seats: maximum number of seats in this game.
 average_pot: the average amount put in the pot in the past few minutes.
 percent_flop: the average percentage of players after the flop in the past
               few minutes.
-players: the number of players who joined the table and are seated         
+players: the number of players who joined the table and are seated
 observers: the number of players who joined (as in PACKET_POKER_TABLE_JOIN)
            the table but are not seated.
 waiting: the number of players in the waiting list.
@@ -1016,7 +1078,7 @@ muck_timeout: the number of seconds after which a player is forced to muck.
 currency: int currency id
 skin: name of the level model to use
 """
-    
+
     type = PACKET_POKER_TABLE
     format = "!IBIHBBHBHHI"
     format_size = calcsize(format)
@@ -1062,7 +1124,7 @@ skin: name of the level model to use
 
     def __str__(self):
         return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin )
-    
+
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 
 ########################################
@@ -1079,7 +1141,7 @@ Direction: server  => client
 
 packets: a list of PACKET_POKER_TABLE packets.
 """
-    
+
     type = PACKET_POKER_TABLE_LIST
 
     format = "!II"
@@ -1121,12 +1183,15 @@ Direction: server <=> client
 Context: this packet must occur after getting a seat for the
 game (i.e. a PACKET_POKER_SEAT is honored by the server). A
 number of PACKET_POKER_SIT packets are inferred from the
- PACKET_POKER_IN_GAME packet.
+ PACKET_POKER_IN_GAME packet. The server will broadcast to
+all players and observers the PACKET_POKER_SIT in case of
+success. The server will not send anything back if an error
+occurs.
 
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_SIT
 
 PacketFactory[PACKET_POKER_SIT] = PacketPokerSit
@@ -1138,7 +1203,7 @@ PacketNames[PACKET_POKER_TABLE_DESTROY] = "POKER_TABLE_DESTROY"
 
 class PacketPokerTableDestroy(PacketPokerId):
     """destroy"""
-    
+
     type = PACKET_POKER_TABLE_DESTROY
 
 PacketFactory[PACKET_POKER_TABLE_DESTROY] = PacketPokerTableDestroy
@@ -1163,12 +1228,12 @@ game_id: integer uniquely identifying a game.
 
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.timeout = kwargs.get("timeout", -1)
         self.when = kwargs.get("when", -1)
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + pack(PacketPokerTimeoutWarning.format, self.timeout)
 
@@ -1200,7 +1265,7 @@ Direction: server  => client
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_TIMEOUT_NOTICE
 
 PacketFactory[PACKET_POKER_TIMEOUT_NOTICE] = PacketPokerTimeoutNotice
@@ -1214,10 +1279,10 @@ class PacketPokerSeat(PacketPokerId):
     """\
 Semantics: the player "serial" is seated on the seat "seat"
 in the game "game_id". When a client asks for seat 255,
-it instructs the server to chose the first seat available. 
+it instructs the server to chose the first seat available.
 If the server refuses a request, it answers to the
 requestor with a PACKET_POKER_SEAT packet with a seat field
-set to 255. 
+set to 255.
 
 Direction: server <=> client
 
@@ -1235,11 +1300,11 @@ game_id: integer uniquely identifying a game.
 
     format = "!B"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.seat = kwargs.get("seat", -1)
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + pack(PacketPokerSeat.format, self.seat)
 
@@ -1284,11 +1349,11 @@ to_game_id: integer uniquely identifying a game.
 
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.to_game_id = kwargs.get("to_game_id", -1)
         PacketPokerSeat.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerSeat.pack(self) + pack(PacketPokerTableMove.format, self.to_game_id)
 
@@ -1328,7 +1393,7 @@ seat: the seat left in the range [0,9]
 """
 
     TOURNEY = 1
-    
+
     type = PACKET_POKER_PLAYER_LEAVE
 
 PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
@@ -1358,7 +1423,7 @@ the player comes in position and to sit out when the game ends
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_SIT_OUT
 
 PacketFactory[PACKET_POKER_SIT_OUT] = PacketPokerSitOut
@@ -1403,7 +1468,7 @@ Direction: server <=  client.
 Context: this packet must occur after a successfull PACKET_POKER_SEAT
 and before a PACKET_POKER_SIT for the same player. The minimum/maximum
 buy in are determined by the betting structure of the game, as
-specified in the PACKET_POKER_TABLE packet. 
+specified in the PACKET_POKER_TABLE packet.
 
 amount: integer specifying the amount to bring to the game.
 serial: integer uniquely identifying a player.
@@ -1415,12 +1480,12 @@ game_id: integer uniquely identifying a game.
     amount = 0
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         if kwargs.has_key("amount"):
             self.amount = kwargs["amount"]
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + pack(PacketPokerBuyIn.format, self.amount)
 
@@ -1467,7 +1532,7 @@ game_id: integer uniquely identifying a game.
    type = PACKET_POKER_CHAT
 
    message = 0
-   
+
    def __init__(self, *args, **kwargs):
        if kwargs.has_key("message"):
            self.message = kwargs["message"]
@@ -1475,15 +1540,15 @@ game_id: integer uniquely identifying a game.
 
    def pack(self):
        return PacketPokerId.pack(self) + self.packstring(self.message)
- 
+
    def unpack(self, block):
        block = PacketPokerId.unpack(self, block)
        (block, self.message) = self.unpackstring(block)
        return block
- 
+
    def calcsize(self):
        return PacketPokerId.calcsize(self) + self.calcsizestring(self.message)
- 
+
    def __str__(self):
        return PacketPokerId.__str__(self) + " message = %s" % self.message
 
@@ -1501,7 +1566,7 @@ sent to the server, sets the information and broadcast them
 to other players. When sent from the server, notify the client
 of a change in the player descriptive informations.
 
-Direction: server <=> client 
+Direction: server <=> client
 
 name: login name of the player.
 url: outfit url to load from
@@ -1510,7 +1575,7 @@ serial: integer uniquely identifying a player.
 """
 
    NOT_LOGGED = 1
-    
+
    type = PACKET_POKER_PLAYER_INFO
 
    def __init__(self, *args, **kwargs):
@@ -1521,17 +1586,17 @@ serial: integer uniquely identifying a player.
 
    def pack(self):
        return PacketPokerId.pack(self) + self.packstring(self.name) + self.packstring(self.outfit) + self.packstring(self.url)
- 
+
    def unpack(self, block):
        block = PacketPokerId.unpack(self, block)
        (block, self.name) = self.unpackstring(block)
        (block, self.outfit) = self.unpackstring(block)
        (block, self.url) = self.unpackstring(block)
        return block
- 
+
    def calcsize(self):
        return PacketPokerId.calcsize(self) + self.calcsizestring(self.name) + self.calcsizestring(self.outfit) + self.calcsizestring(self.url)
- 
+
    def __str__(self):
        return PacketPokerId.__str__(self) + " name = %s, url = %s, outfit = %s " % ( self.name , self.url, self.outfit )
 
@@ -1591,7 +1656,7 @@ game_id: integer uniquely identifying a game.
         else:
             seat = self.seat
         return PacketPokerPlayerInfo.pack(self) + self.packstring(blind) + pack(PacketPokerPlayerArrive.format, remove_next_turn, sit_out, sit_out_next_turn, auto, auto_blind_ante, wait_for, buy_in_payed, seat)
-        
+
     def unpack(self, block):
         block = PacketPokerPlayerInfo.unpack(self, block)
         (block, blind) = self.unpackstring(block)
@@ -1649,7 +1714,7 @@ start: index of the first matching hand
 count: number of matching hands to return starting from start
 serial: integer uniquely identifying a player.
 """
-    
+
     type = PACKET_POKER_HAND_SELECT
 
     format = "!IB"
@@ -1737,7 +1802,7 @@ for this query to succeed.
 Direction: server <=  client
 
 Context: the answer of the server to this query is a
- PACKET_POKER_HAND_LIST packet. 
+ PACKET_POKER_HAND_LIST packet.
 
 string: a valid SQL WHERE expression on the hands table. The
 available fields are "name" for the symbolic name of the hand,
@@ -1745,7 +1810,7 @@ available fields are "name" for the symbolic name of the hand,
 for the unique identifier of the hand also known as the hand_serial
 in the PACKET_POKER_START packet.
 """
-    
+
     type = PACKET_POKER_HAND_SELECT_ALL
 
 PacketFactory[PACKET_POKER_HAND_SELECT_ALL] = PacketPokerHandSelectAll
@@ -1773,10 +1838,10 @@ serial: integer uniquely identifying a player.
     # self.money index constants
     cashier = 0
     in_game = 1
-    
+
     type = PACKET_POKER_USER_INFO
     rating = 1500
-    
+
     format = "!IIH"
     format_size = calcsize(format)
     format_item = "!IIII"
@@ -1790,7 +1855,7 @@ serial: integer uniquely identifying a player.
         self.affiliate = int(kwargs.get("affiliate", 0))
         #
         # currency 5, bankroll 200, in_game 3, points 20
-        # {5: (200, 3, 20), ...} 
+        # {5: (200, 3, 20), ...}
         #
         self.money = kwargs.get("money", {})
         PacketSerial.__init__(self, *args, **kwargs)
@@ -1800,7 +1865,7 @@ serial: integer uniquely identifying a player.
         for (currency, (bankroll, in_game, points)) in self.money.iteritems():
             block += pack(PacketPokerUserInfo.format_item, currency, bankroll, in_game, points)
         return block
-        
+
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
         (self.rating, self.affiliate, length) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
@@ -1819,7 +1884,7 @@ serial: integer uniquely identifying a player.
         size = PacketSerial.calcsize(self) + PacketPokerUserInfo.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.password) + self.calcsizestring(self.email)
         size += len(self.money) * PacketPokerUserInfo.format_item_size
         return size
-    
+
     def __str__(self):
         string = PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, rating = %d, affiliate = %d, " % ( self.name, self.password, self.email, self.rating, self.affiliate )
         for (currency, (bankroll, in_game, points)) in self.money.iteritems():
@@ -1841,11 +1906,11 @@ for player "serial".
 Direction: server <=  client
 
 Context: a user must first login (PACKET_LOGIN) successfully
-before sending this packet. 
+before sending this packet.
 
 serial: integer uniquely identifying a player.
 """
-    
+
     type = PACKET_POKER_GET_USER_INFO
 
 PacketFactory[PACKET_POKER_GET_USER_INFO] = PacketPokerGetUserInfo
@@ -1874,7 +1939,7 @@ amount: amount paid for the ante.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_ANTE
 
 PacketFactory[PACKET_POKER_ANTE] = PacketPokerAnte
@@ -1915,11 +1980,11 @@ game_id: integer uniquely identifying a game.
     dead = 0
     format = "!I"
     format_size = calcsize(format)
-    
+
     def __init__(self, *args, **kwargs):
         self.dead = kwargs.get("dead", 0)
         PacketPokerInt.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerInt.pack(self) + pack(PacketPokerBlind.format, self.dead)
 
@@ -1959,7 +2024,7 @@ not important to the client.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_WAIT_BIG_BLIND
 
 PacketFactory[PACKET_POKER_WAIT_BIG_BLIND] = PacketPokerWaitBigBlind
@@ -1977,12 +2042,13 @@ post the blinds or/and antes for game "game_id".
 Direction: server <=  client
 
 Context: by default the server will not automatically post
-the blinds or/and antes.
+the blinds or/and antes. The server will not send any packet
+back.
 
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_AUTO_BLIND_ANTE
 
 PacketFactory[PACKET_POKER_AUTO_BLIND_ANTE] = PacketPokerAutoBlindAnte
@@ -2005,7 +2071,7 @@ Context: by default the server behaves in this way.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_NOAUTO_BLIND_ANTE
 
 PacketFactory[PACKET_POKER_NOAUTO_BLIND_ANTE] = PacketPokerNoautoBlindAnte
@@ -2029,7 +2095,7 @@ amount: the amount to return to the player.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
+
     type = PACKET_POKER_CANCELED
 
 PacketFactory[PACKET_POKER_CANCELED] = PacketPokerCanceled
@@ -2081,7 +2147,7 @@ game_id: integer uniquely identifying a game.
 
     def __str__(self):
         return PacketPokerBlind.__str__(self) + " state = %s" % self.state
-    
+
 PacketFactory[PACKET_POKER_BLIND_REQUEST] = PacketPokerBlindRequest
 
 ########################################
@@ -2167,7 +2233,7 @@ game_id: integer uniquely identifying a game.
         if kwargs.has_key("reason"):
             self.reason = kwargs["reason"]
         PacketPokerId.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerId.pack(self) + self.packstring(self.reason)
 
@@ -2175,7 +2241,7 @@ game_id: integer uniquely identifying a game.
         block = PacketPokerId.unpack(self, block)
         (block, self.reason) = self.unpackstring(block)
         return block
-    
+
     def calcsize(self):
         return PacketPokerId.calcsize(self) + self.calcsizestring(self.reason)
 
@@ -2302,7 +2368,7 @@ class PacketPokerPlayersList(PacketPokerId):
     format_size = calcsize(format)
     format_item = "!IB"
     format_item_size = calcsize(format_item)
-    
+
     type = PACKET_POKER_PLAYERS_LIST
 
     def __init__(self, *args, **kwargs):
@@ -2326,7 +2392,7 @@ class PacketPokerPlayersList(PacketPokerId):
             block = block[PacketPokerPlayersList.format_item_size:]
             self.players.append((name, chips, flag))
         return block
-        
+
     def calcsize(self):
         size = PacketPokerId.calcsize(self) + PacketPokerPlayersList.format_size
         for (name, chips, flag) in self.players:
@@ -2351,7 +2417,7 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
 """
 
     NOT_LOGGED = 1
-    
+
     type = PACKET_POKER_PERSONAL_INFO
 
     def __init__(self, *args, **kwargs):
@@ -2382,7 +2448,7 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
         packet += self.packstring(self.gender)
         packet += self.packstring(self.birthdate)
         return packet
-        
+
     def unpack(self, block):
         block = PacketPokerUserInfo.unpack(self, block)
         (block, self.firstname) = self.unpackstring(block)
@@ -2431,13 +2497,13 @@ for player "serial".
 Direction: server <=  client
 
 Context: a personal must first login (PACKET_LOGIN) successfully
-before sending this packet. 
+before sending this packet.
 
 serial: integer uniquely identifying a player.
 """
-    
+
     NOT_LOGGED = 1
-    
+
     type = PACKET_POKER_GET_PERSONAL_INFO
 
 PacketFactory[PACKET_POKER_GET_PERSONAL_INFO] = PacketPokerGetPersonalInfo
@@ -2462,13 +2528,13 @@ string: 1) empty string selects all tournaments
            using a given currency. The string before the tabulation
            is the name of the currency, the string after the tabulation
            distinguishes between sit&go and regular.
-           
+
         Examples: 1<tabulation>sit_n_go selects all sit&go tournaments
                   using currency 1.
                   2<tabulation>regular selects all regular tournaments
                   using currency 2
 """
-    
+
     type = PACKET_POKER_TOURNEY_SELECT
 
 PacketFactory[PACKET_POKER_TOURNEY_SELECT] = PacketPokerTourneySelect
@@ -2478,7 +2544,7 @@ PACKET_POKER_TOURNEY = 112 # 0x70 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY] = "POKER_TOURNEY"
 
 class PacketPokerTourney(Packet):
-    
+
     type = PACKET_POKER_TOURNEY
     format = "!IHIBHHIHHH"
     format_size = calcsize(format)
@@ -2524,7 +2590,7 @@ class PacketPokerTourney(Packet):
 
     def __str__(self):
         return Packet.__str__(self) + "\n\tserial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d, breaks_first = %d, breaks_interval = %d, breaks_duration = %d " % ( self.serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration )
-    
+
 PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
 
 ########################################
@@ -2540,7 +2606,7 @@ class PacketPokerTourneyInfo(PacketPokerTourney):
     def __init__(self, *args, **kwargs):
         self.description_long = kwargs.get("description_long", "no long description")
         PacketPokerTourney.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketPokerTourney.pack(self) + self.packstring(self.description_long)
 
@@ -2548,7 +2614,7 @@ class PacketPokerTourneyInfo(PacketPokerTourney):
         block = PacketPokerTourney.unpack(self, block)
         (block, self.description_long) = self.unpackstring(block)
         return block
-    
+
     def calcsize(self):
         return PacketPokerTourney.calcsize(self) + self.calcsizestring(self.description_long)
 
@@ -2571,7 +2637,7 @@ Direction: server  => client
 
 packets: a list of PACKET_POKER_TOURNEY packets.
 """
-    
+
     type = PACKET_POKER_TOURNEY_LIST
 
     format = "!II"
@@ -2631,7 +2697,7 @@ If the player is registered successfully, the server will send
 back the packet to the client.
 
 If an error occurs during the tournament registration, the server
-will send back 
+will send back
 
   PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER)
 
@@ -2649,7 +2715,7 @@ NOT_ENOUGH_MONEY : the "serial" player does not have enough money
                  to pay the "game_id" tournament.
 SERVER_ERROR : the server failed to register the player because the
                database is inconsistent.
-  
+
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a tournament.
 """
@@ -2658,7 +2724,7 @@ game_id: integer uniquely identifying a tournament.
     REGISTRATION_REFUSED = 3
     NOT_ENOUGH_MONEY = 4
     SERVER_ERROR = 5
-    
+
     type = PACKET_POKER_TOURNEY_REGISTER
 
 PacketFactory[PACKET_POKER_TOURNEY_REGISTER] = PacketPokerTourneyRegister
@@ -2678,7 +2744,7 @@ If the player is successfully unregistered, the server will send
 back the packet to the client.
 
 If an error occurs during the tournament registration, the server
-will send back 
+will send back
 
   PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER)
 
@@ -2692,7 +2758,7 @@ TOO_LATE : the "serial" player cannot unregister from the tournament
            because it already started.
 SERVER_ERROR : the server failed to unregister the player because the
                database is inconsistent.
-  
+
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a tournament.
 """
@@ -2727,7 +2793,7 @@ class PacketPokerHandHistory(PacketPokerId):
 
     NOT_FOUND = 1
     FORBIDDEN = 2
-    
+
     def __init__(self, *args, **kwargs):
         self.history = kwargs.get("history", "")
         self.serial2name = kwargs.get("serial2name", "")
@@ -2750,7 +2816,7 @@ class PacketPokerHandHistory(PacketPokerId):
 
 PacketFactory[PACKET_POKER_HAND_HISTORY] = PacketPokerHandHistory
 
-######################################## 
+########################################
 
 PACKET_POKER_SET_ACCOUNT = 120 # 0x78 # %SEQ%
 PacketNames[PACKET_POKER_SET_ACCOUNT] = "POKER_SET_ACCOUNT"
@@ -2768,12 +2834,12 @@ class PacketPokerSetAccount(PacketPokerPersonalInfo):
     NAME_ALREADY_EXISTS = 9
     EMAIL_ALREADY_EXISTS = 10
     SERVER_ERROR = 11
-    
+
     type = PACKET_POKER_SET_ACCOUNT
 
 PacketFactory[PACKET_POKER_SET_ACCOUNT] = PacketPokerSetAccount
 
-######################################## 
+########################################
 
 PACKET_POKER_CREATE_ACCOUNT = 121 # 0x79 # %SEQ%
 PacketNames[PACKET_POKER_CREATE_ACCOUNT] = "POKER_CREATE_ACCOUNT"
@@ -2844,7 +2910,7 @@ class PacketPokerRoles(PacketSerial):
         if kwargs.has_key("roles"):
             self.roles = kwargs["roles"]
         PacketSerial.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketSerial.pack(self) + self.packstring(self.roles)
 
@@ -2852,7 +2918,7 @@ class PacketPokerRoles(PacketSerial):
         block = PacketSerial.unpack(self, block)
         (block, self.roles) = self.unpackstring(block)
         return block
-    
+
     def calcsize(self):
         return PacketSerial.calcsize(self) + self.calcsizestring(self.roles)
 
@@ -2870,7 +2936,7 @@ class PacketPokerSetRole(PacketPokerRoles):
 
     UNKNOWN_ROLE = 1
     NOT_AVAILABLE = 2
-    
+
     type = PACKET_POKER_SET_ROLE
 
 PacketFactory[PACKET_POKER_SET_ROLE] = PacketPokerSetRole
@@ -2913,7 +2979,7 @@ game_id: integer uniquely identifying a game.
 """
 
     BUGOUS = 0
-    
+
     type = PACKET_POKER_PROCESSING_HAND
 
 PacketFactory[PACKET_POKER_PROCESSING_HAND] = PacketPokerProcessingHand
@@ -2944,7 +3010,7 @@ muckable_serials: list of muckable candidates
         block = PacketPokerId.pack(self)
         block += self.packlist(self.muckable_serials, PacketPokerMuckRequest.format_element)
         return block
-    
+
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
         (block, self.muckable_serials) = self.unpacklist(block, PacketPokerMuckRequest.format_element)
@@ -2975,7 +3041,7 @@ class PacketPokerAutoMuck(PacketPokerId):
 
     def pack(self):
         return PacketPokerId.pack(self) + pack(PacketPokerAutoMuck.format, self.auto_muck)
-        
+
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
         (self.auto_muck,) = unpack(PacketPokerAutoMuck.format, block[:PacketPokerAutoMuck.format_size])
@@ -3061,7 +3127,7 @@ class PacketPokerCashIn(PacketPokerMoneyTransfert):
     SAFE			= 3
     UNKNOWN			= 4
     RETRY			= 5
-    
+
 PacketFactory[PACKET_POKER_CASH_IN] = PacketPokerCashIn
 
 ########################################
@@ -3157,7 +3223,7 @@ class PacketPokerRake(PacketInt):
 
     def pack(self):
         return PacketInt.pack(self) + pack(PacketPokerRake.format, self.game_id)
-        
+
     def unpack(self, block):
         block = PacketInt.unpack(self, block)
         (self.game_id,) = unpack(PacketPokerRake.format, block[:PacketPokerRake.format_size])
@@ -3190,7 +3256,7 @@ players: the number of players in this tourney
 
 money: the money won
 """
-    
+
     type = PACKET_POKER_TOURNEY_RANK
 
     format = "!III"
@@ -3233,7 +3299,7 @@ class PacketPokerPlayerImage(PacketSerial):
         self.image = kwargs.get("image", '')
         self.image_type = kwargs.get("image_type", 'image/png')
         PacketSerial.__init__(self, *args, **kwargs)
-        
+
     def pack(self):
         return PacketSerial.pack(self) + self.packstring(self.image) + self.packstring(self.image_type)
 
@@ -3242,7 +3308,7 @@ class PacketPokerPlayerImage(PacketSerial):
         (block, self.image) = self.unpackstring(block)
         (block, self.image_type) = self.unpackstring(block)
         return block
-    
+
     def calcsize(self):
         return PacketSerial.calcsize(self) + self.calcsizestring(self.image) + self.calcsizestring(self.image_type)
 
@@ -3300,8 +3366,8 @@ according to the "value" bit field as follows:
 value == NONE
   The server assumes the client knows the poker rules, presumably
   by using poker-engine.
-  
-value == ALL 
+
+value == ALL
   The server assumes the client does not know poker and will
   explain every game event in great detail.
 
@@ -3310,7 +3376,7 @@ Direction: server <= client
 
     NONE = 0x0000
     ALL  = 0xFFFF
-    
+
     type = PACKET_POKER_EXPLAIN
 
 PacketFactory[PACKET_POKER_EXPLAIN] = PacketPokerExplain
