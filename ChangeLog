@@ -1,7 +1,35 @@
-2007-05-30  Johan Euphrosine  <proppy@aminche.com>
-	
+2007-05-31  Loic Dachary <loic@dachary.org>
+
 	* Release 1.1.0
 
+	* tests/test-packets.py.in: Import packets instead of import *.
+	* pokernetwork/pokerservice.py: Print wrapped around verbose.
+	* pokernetwork/packets.py, pokernetwork/pokerclientpackets.py,
+	  pokernetwork/pokerpackets.py: Use kwargs.get instead of if.
+	  Define _TYPES to hold the packet types range.
+	  Use maxint instead of -1 where appropriate.
+	* configure.ac, tests/Makefile.am, tests/run.in: Add packet files
+	  coverage tests.
+	* tests/test-pokerclientpackets.py.in: pokerclientpackets tests
+	  complete
+	* tests/test-pokerpackets.py.in: generative tests of
+	  pokerpackets.py.in
+	* tests/test-packets.py.in: 100% coverage of packets.py
+	* pokernetwork/pokerpackets.py: Loosely describe the workflow as
+	  ordered set of packets involved in a given situation.
+
+2007-05-30  Loic Dachary <loic@dachary.org>
+
+	* tests/conf/poker.client.xml.in: bump to 1.1.0
+	* tests/test-pokernetworkconfig.py.in: Use copyfile instead of copy
+	  to NOT copy the permissions.
+	* tests/test-pokernetworkconfig.py.in: Use local copy for
+	  read-write access.
+	* tests/test-pokernetworkconfig.py.in: 100% coverage on
+	  pokernetworkonfig.
+
+2007-05-30  Johan Euphrosine  <proppy@aminche.com>
+	
 	* tests/test-pokerservice.py.in (PokerXMLTestCase.test_packets2maps): 
 	added PokerXml.packets2maps testcase
 	* pokernetwork/pokerservice.py (PokerXML.packets2maps): 
@@ -4288,5 +4316,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-27/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-05-29/p'"
 End:
