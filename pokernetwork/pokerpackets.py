@@ -31,6 +31,10 @@
 #     When the client send packets, the reply packets sent by the
 #     server are listed in the packet documentation.
 #     
+#     How to cash in ?
+#
+#     POKER_CASH_IN
+#     
 #     How to sit at a cash game table ?
 #     
 #     PACKET_POKER_TABLE_JOIN
@@ -3087,6 +3091,22 @@ PACKET_POKER_CASH_IN = 132 # 0x84 # %SEQ%
 PacketNames[PACKET_POKER_CASH_IN] = "POKER_CASH_IN"
 
 class PacketPokerCashIn(PacketPokerMoneyTransfert):
+"""\
+Semantics: add "value" cents of currency "url" to the
+"serial" player account using the "name"/"bserial" note.
+
+Context: If the CASH_IN is successfull, PacketAck is returned.
+Otherwise PacketError is returned with the "message" field set
+to a human readable error explanation.
+
+value: integer value of the note in cent
+currency: url string of the currency server
+bserial: integer value of the serial of the note
+name: string cryptographic name of the note
+note: tuple of (url, bserial, name, value) that overrides the parameters
+      of the same name
+serial: integer uniquely identifying a player.
+"""
     type = PACKET_POKER_CASH_IN
 
     DUPLICATE_CURRENCIES	= 1
