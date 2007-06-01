@@ -3099,6 +3099,8 @@ Context: If the CASH_IN is successfull, PacketAck is returned.
 Otherwise PacketError is returned with the "message" field set
 to a human readable error explanation.
 
+Direction: server <= client
+
 value: integer value of the note in cent
 currency: url string of the currency server
 bserial: integer value of the serial of the note
