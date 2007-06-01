@@ -3097,7 +3097,9 @@ Semantics: add "value" cents of currency "url" to the
 
 Context: If the CASH_IN is successfull, PacketAck is returned.
 Otherwise PacketError is returned with the "message" field set
-to a human readable error explanation.
+to a human readable error explanation. The poker server must
+be able to check the validity of the note provided
+by accessing the currency server at "url".
 
 Direction: server <= client
 
