@@ -662,7 +662,7 @@ class PacketPokerRendererState(Packet):
         ('state', 'idle', 's'),
         )
     
-Packet.infoDeclare(globals(), PacketPokerRendererState, PacketPokerId, "PACKET_POKER_RENDERER_STATE", 202) # 0xca # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerRendererState, Packet, "PACKET_POKER_RENDERER_STATE", 202) # 0xca # %SEQ%
 
 ########################################
 
@@ -688,7 +688,7 @@ Packet.infoHybrid(globals(), PacketPokerShowdown, PacketPokerId, "PACKET_POKER_S
 
 class PacketPokerClientPlayerChips(Packet):
 
-    info = (
+    info = Packet.info + (
         ('game_id', 0, 'I'),
         ('serial', 0, 'I'),
         ('bet', [], 'c'),
@@ -701,7 +701,7 @@ Packet.infoDeclare(globals(), PacketPokerClientPlayerChips, Packet, "PACKET_POKE
 
 class PacketPokerInterfaceCommand(Packet):
 
-    info = (
+    info = Packet.info + (
         ('window', None, 'no net'),
         ('command', None, 'no net'),
         )
