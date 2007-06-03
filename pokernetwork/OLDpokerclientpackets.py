@@ -463,7 +463,7 @@ class PacketPokerDisplayNode(Packet):
     type = PACKET_POKER_DISPLAY_NODE
 
     def __init__(self, **kwargs):
-        self.game_id = kwargs.get("game_id", "")
+        self.game_id = kwargs.get("game_id", 0)
         self.name = kwargs.get("name", "")
         self.state = kwargs.get("state", "")
         self.style = kwargs.get("style", "")
