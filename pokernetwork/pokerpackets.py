@@ -3346,9 +3346,6 @@ PacketFactory[PACKET_POKER_GAME_MESSAGE] = PacketPokerGameMessage
 
 ########################################
 
-PACKET_POKER_EXPLAIN = 142 # 0x8e # %SEQ%
-PacketNames[PACKET_POKER_EXPLAIN] = "POKER_GAME_EXPLAIN"
-
 class PacketPokerExplain(PacketInt):
     """\
 Semantics: control the level of verbosity of the server
@@ -3368,9 +3365,9 @@ Direction: server <= client
     NONE = 0x0000
     ALL  = 0xFFFF
 
-    type = PACKET_POKER_EXPLAIN
+    pass
 
-PacketFactory[PACKET_POKER_EXPLAIN] = PacketPokerExplain
+Packet.infoHybrid(globals(), PacketPokerExplain, PacketInt, "PACKET_POKER_EXPLAIN", 142) # 0x8e # %SEQ%
 
 _TYPES = range(50,149)
 
