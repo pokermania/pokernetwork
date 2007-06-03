@@ -209,7 +209,7 @@ class PacketPokerId(PacketSerial):
 
     def unpack(self, block):
         block = PacketSerial.unpack(self, block)
-        (self.game_id,) = unpack(PacketPokerId.format, block[:PacketPokerId.format_size])
+        self.game_id = int(unpack(PacketPokerId.format, block[:PacketPokerId.format_size])[0])
         return block[PacketPokerId.format_size:]
 
     def calcsize(self):
@@ -3091,7 +3091,7 @@ PACKET_POKER_CASH_IN = 132 # 0x84 # %SEQ%
 PacketNames[PACKET_POKER_CASH_IN] = "POKER_CASH_IN"
 
 class PacketPokerCashIn(PacketPokerMoneyTransfert):
-"""\
+    """\
 Semantics: add "value" cents of currency "url" to the
 "serial" player account using the "name"/"bserial" note.
 
