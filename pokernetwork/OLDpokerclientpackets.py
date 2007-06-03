@@ -735,7 +735,7 @@ PacketFactory[PACKET_POKER_ANIMATION_PLAYER_CHIPS] = PacketPokerAnimationPlayerC
 ########################################
 
 PACKET_POKER_ANIMATION_DEALER_CHANGE = 195 # 0xc3 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_DEALER_CHANGE] = "POKER_PLAYER_ANIMATION_DEALER_CHANGE"
+PacketNames[PACKET_POKER_ANIMATION_DEALER_CHANGE] = "POKER_ANIMATION_DEALER_CHANGE"
 
 class PacketPokerAnimationDealerChange(PacketPokerId):
     """\
