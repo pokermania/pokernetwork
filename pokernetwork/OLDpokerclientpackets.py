@@ -948,7 +948,7 @@ PacketFactory[PACKET_POKER_CLIENT_PLAYER_CHIPS] = PacketPokerClientPlayerChips
 ########################################
 
 PACKET_POKER_INTERFACE_COMMAND = 206 # 0xce # %SEQ%
-PacketNames[PACKET_POKER_INTERFACE_COMMAND] = "PACKET_POKER_INTERFACE_COMMAND"
+PacketNames[PACKET_POKER_INTERFACE_COMMAND] = "POKER_INTERFACE_COMMAND"
 
 class PacketPokerInterfaceCommand(Packet):
     type = PACKET_POKER_INTERFACE_COMMAND
