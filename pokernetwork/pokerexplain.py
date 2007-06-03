@@ -31,7 +31,7 @@ DEFAULT_PLAYER_USER_DATA = { 'timeout': None }
 
 class PokerGames:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.games = {}
         self.dirs = kwargs.get("dirs", [])
         self.verbose = kwargs.get("verbose", 0)
@@ -86,12 +86,10 @@ class PokerExplain:
         self.no_display_packets = False
         self.pending_auth_request = False
         self.forward_packets = []
-        self.publish_packets = []
-        self.input_packets = []
         self.chips_values = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 2500, 5000, 10000, 25000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000]
-        self.verbose = kwargs.get('verbose', 0)
         self._prefix = ""
-        self.games = PokerGames()
+        self.games = PokerGames(**kwargs)
+        self.setVerbose(kwargs.get('verbose', 0))
 
     def error(self, string):
         self.message("ERROR " + string)
