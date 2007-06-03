@@ -34,6 +34,7 @@ import sets
 from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
 from pokernetwork.pokerpackets import *
+from pokernetwork.pokerexplain import PokerExplain
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
@@ -46,6 +47,7 @@ class PokerAvatar:
         self.tables = {}
         self.user = User()
         self._packets_queue = []
+        self.setExplain(0)
         self.has_session = False
         self.bugous_processing_hand = False
         self.noqueuePackets()
@@ -53,6 +55,18 @@ class PokerAvatar:
     def __str__(self):
         print "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
 
+    def setExplain(self, what):
+        if self.tables:
+            self.error("setExplain must be called when not connected to any table")
+            return False
+        
+        if what:
+            self.explain = PokerExplain(dirs = self.service.dirs,
+                                        verbose = self.service.verbose)
+        else:
+            self.explain = None
+        return True
+            
     def setProtocol(self, protocol):
         self.protocol = protocol
 
@@ -168,7 +182,11 @@ class PokerAvatar:
         if self._queue_packets:
             self._packets_queue.append(packet)
         else:
-            self.protocol.sendPacket(packet)
+            if self.explain:
+                for explain_packet in self.explain.explain(packet):
+                    self.protocol.sendPacket(explain_packet)
+            else:
+                self.protocol.sendPacket(packet)
 
     queueDeferred = sendPacket
     
@@ -190,7 +208,14 @@ class PokerAvatar:
         return self.resetPacketsQueue()
         
     def handlePacketLogic(self, packet):
-        if self.service.verbose > 2 and packet.type != PACKET_PING: print "PokerAvatar::handleConnection(%d): " % self.getSerial() + str(packet)
+        if self.service.verbose > 2 and packet.type != PACKET_PING: print "PokerAvatar::handlePacketLogic(%d): " % self.getSerial() + str(packet)
+        
+        if packet.type == PACKET_POKER_EXPLAIN:
+            if self.setExplain(packet.value):
+                self.sendPacketVerbose(PacketAck())
+            else:
+                self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_EXPLAIN))
+            return
         
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
