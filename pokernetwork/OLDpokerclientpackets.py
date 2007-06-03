@@ -965,7 +965,7 @@ PacketFactory[PACKET_POKER_INTERFACE_COMMAND] = PacketPokerInterfaceCommand
 
 ########################################
 PACKET_POKER_PLAYER_ME_LOOK_CARDS = 207 # 0xcf # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = "PACKET_POKER_PLAYER_ME_LOOK_CARDS"
+PacketNames[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = "POKER_PLAYER_ME_LOOK_CARDS"
 
 class PacketPokerPlayerMeLookCards(PacketPokerId):
     """\
