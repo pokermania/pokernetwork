@@ -692,7 +692,7 @@ PacketFactory[PACKET_POKER_ANIMATION_PLAYER_FOLD] = PacketPokerAnimationPlayerFo
 ########################################
 
 PACKET_POKER_ANIMATION_PLAYER_BET = 193 # 0xc1 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_BET] = "POKER_PLAYER_ANIMATION_BET"
+PacketNames[PACKET_POKER_ANIMATION_PLAYER_BET] = "POKER_ANIMATION_PLAYER_BET"
 
 class PacketPokerAnimationPlayerBet(PacketPokerId):
     """\
