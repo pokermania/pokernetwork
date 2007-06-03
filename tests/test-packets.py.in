@@ -114,7 +114,7 @@ class PacketsTestCase(unittest.TestCase):
                                           ('e', -1, 'b'),
                                           ('f', None, 'no net'),
                                           )
-            fields = ( "\0", # type
+            fields = ( "\x0a", # type
                        "\0\0", # length
                        "\x02", # b
                        "\0\0\0\x01", # a
@@ -127,7 +127,7 @@ class PacketsTestCase(unittest.TestCase):
         d = {}
         d['PacketFactory'] = {}
         d['PacketNames'] = {}
-        packets.Packet.infoDeclare(d, TestPacket, packets.Packet, 'NAME', 101)
+        packets.Packet.infoDeclare(d, TestPacket, packets.Packet, 'NAME', 10)
         return TestPacket
 
     def test_infoPack(self):
