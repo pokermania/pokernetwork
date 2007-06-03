@@ -180,6 +180,7 @@ EXTRA_DIST = \
         pokernetwork/pokerserver.8.in \
         pokernetwork/pokerbot.in \
         pokernetwork/pokerbot.8.in \
+	pokernetwork/OLDpokerclientpackets.py \
         database/schema.sql.in \
         database/pokerdatabaseupgrade.8.in \
         conf/poker.bot.xml.in \
