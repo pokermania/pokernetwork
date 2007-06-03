@@ -15,6 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+from struct import pack, unpack
+from pokernetwork.packets import Packet
 from pokernetwork.pokerpackets import *
 
 def chips2amount(chips):
@@ -23,10 +25,23 @@ def chips2amount(chips):
         amount += chips[i*2] * chips[i*2 + 1]
     return amount
 
-########################################
+class PokerClientPackets:
+    @staticmethod
+    def unpackchips(block):
+        amount = int(unpack('!I', block[:4])[0])
+        if amount > 0:
+            chips = (1, amount)
+        else:
+            chips = []
+        return ( block[4:], chips )
+    
+Packet.format_info['c'] = {
+    'pack': lambda data: pack('!I', chips2amount(data)),
+    'unpack': PokerClientPackets.unpackchips,
+    'calcsize': lambda data: 4,
+    }
 
-PACKET_POKER_BEST_CARDS = 170 # 0xaa # %SEQ%
-PacketNames[PACKET_POKER_BEST_CARDS] = "POKER_BEST_CARDS"
+########################################
 
 class PacketPokerBestCards(PacketPokerCards):
     """\
@@ -64,25 +79,16 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BEST_CARDS
+    info = ( ("side", "", 's'),
+             ("hand", "", 's'),
+             ("bestcards", [], 'Bl'),
+             ("board", [], 'Bl'),
+             ("besthand", 0, 'B'),
+             )
 
-    def __init__(self, *args, **kwargs):
-        self.side = kwargs.get("side", "")
-        self.hand = kwargs.get("hand", "")
-        self.bestcards = kwargs.get("bestcards", [])
-        self.board = kwargs.get("board", [])
-        self.besthand = kwargs.get("besthand", 0)
-        PacketPokerCards.__init__(self, *args, **kwargs)
-        
-    def __str__(self):
-        return PacketPokerCards.__str__(self) + " side = %s, hand = %s, bestcards = %s, board = %s , besthand %s" % ( self.side, self.hand, str(self.bestcards), str(self.board), str(self.besthand) )
-
-PacketFactory[PACKET_POKER_BEST_CARDS] = PacketPokerBestCards
+Packet.infoHybrid(globals(), PacketPokerBestCards, PacketPokerCards, 'PACKET_POKER_BEST_CARDS', 170) # 0xaa # %SEQ%
 
 ########################################
-
-PACKET_POKER_POT_CHIPS = 171 # 0xab # %SEQ%
-PacketNames[PACKET_POKER_POT_CHIPS] = "POKER_POT_CHIPS"
 
 class PacketPokerPotChips(Packet):
     """\
@@ -90,7 +96,7 @@ Semantics: the "bet" put in the "index" pot of the "game_id" game.
 
 Direction: client <=> client
 
-Context: this packet is sent at least each time the pot "index" is
+context: this packet is sent at least each time the pot index is
 updated.
 
 bet: list of pairs ( chip_value, chip_count ).
@@ -98,22 +104,14 @@ index: integer uniquely identifying a side pot in the range [0,10[
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_POT_CHIPS
+    info = Packet.info + ( ("game_id", 0, 'I'),
+                           ("index", 0, 'B'),
+                           ("bet", [], 'c'),
+                           )
 
-    def __init__(self, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        self.index = kwargs.get("index", 0)
-        self.bet = kwargs.get("bet", [])
-
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, pot = %s, index = %d" % ( self.game_id, self.bet, self.index )
-
-PacketFactory[PACKET_POKER_POT_CHIPS] = PacketPokerPotChips
+Packet.infoDeclare(globals(), PacketPokerPotChips, Packet, 'PACKET_POKER_POT_CHIPS', 171) # 0xab # %SEQ%
 
 ########################################
-
-PACKET_POKER_CLIENT_ACTION = 172 # 0xac # %SEQ%
-PacketNames[PACKET_POKER_CLIENT_ACTION] = "POKER_CLIENT_ACTION"
 
 class PacketPokerClientAction(PacketPokerId):
     """
@@ -122,38 +120,13 @@ class PacketPokerClientAction(PacketPokerId):
     
     """
 
-    type = PACKET_POKER_CLIENT_ACTION
+    info = ( ("display", 0, 'B'),
+             ("action", "", 's'),
+             )
 
-    format = "!B"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.display = kwargs.get("display",0)
-        self.action = kwargs.get("action","")
-        PacketPokerId.__init__(self, *args, **kwargs)
-        
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerClientAction.format, self.display) + self.packstring(self.action)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.display,) = unpack(PacketPokerClientAction.format, block[:PacketPokerClientAction.format_size])
-        block = block[PacketPokerClientAction.format_size:]
-        (block, self.action) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerClientAction.format_size + self.calcsizestring(self.action)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " display = %d, action = %s" % ( self.display, self.action )
-
-PacketFactory[PACKET_POKER_CLIENT_ACTION] = PacketPokerClientAction
+Packet.infoHybrid(globals(), PacketPokerClientAction, PacketPokerId, 'PACKET_POKER_CLIENT_ACTION', 172) # 0xac # %SEQ%
 
 ########################################
-
-PACKET_POKER_BET_LIMIT = 173 # 0xad # %SEQ%
-PacketNames[PACKET_POKER_BET_LIMIT] = "POKER_BET_LIMIT"
 
 class PacketPokerBetLimit(PacketPokerId):
     """\
@@ -178,51 +151,24 @@ pot: the amount in the pot.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BET_LIMIT
+    info = ( ("min", 0, 'I'),
+             ("max", 0, 'I'),
+             ("step", 0, 'I'),
+             ("call", 0, 'I'),
+             ("allin", 0, 'I'),
+             ("pot", 0, 'I'),
+             )
 
-    format = "!IIIIII"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.min = kwargs.get("min",0)
-        self.max = kwargs.get("max",0)
-        self.step = kwargs.get("step",0)
-        self.call = kwargs.get("call",0)
-        self.allin = kwargs.get("allin",0)
-        self.pot = kwargs.get("pot",0)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerBetLimit.format, self.min, self.max, self.step, self.call, self.allin, self.pot)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.min, self.max, self.step, self.call, self.allin, self.pot) = unpack(PacketPokerBetLimit.format, block[:PacketPokerBetLimit.format_size])
-        return block[PacketPokerBetLimit.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerBetLimit.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " min = %d, max = %d, step = %s, call = %s, allin = %s, pot = %s" % (self.min, self.max, self.step, self.call, self.allin, self.pot)
-
-PacketFactory[PACKET_POKER_BET_LIMIT] = PacketPokerBetLimit
+Packet.infoHybrid(globals(), PacketPokerBetLimit, PacketPokerId, 'PACKET_POKER_BET_LIMIT', 173) # 0xad # %SEQ%
 
 ########################################
-
-PACKET_POKER_SIT_REQUEST = 174 # 0xae # %SEQ%
-PacketNames[PACKET_POKER_SIT_REQUEST] = "POKER_SIT_REQUEST"
 
 class PacketPokerSitRequest(PacketPokerSit):
+    pass #pragma: no cover
 
-    type = PACKET_POKER_SIT_REQUEST
-
-PacketFactory[PACKET_POKER_SIT_REQUEST] = PacketPokerSitRequest
+Packet.infoHybrid(globals(), PacketPokerSitRequest, PacketPokerId, "PACKET_POKER_SIT_REQUEST", 174) # 0xae # %SEQ%
 
 ########################################
-
-PACKET_POKER_PLAYER_NO_CARDS = 175 # 0xaf # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_NO_CARDS] = "POKER_PLAYER_NO_CARDS"
 
 class PacketPokerPlayerNoCards(PacketPokerId):
     """\
@@ -235,15 +181,11 @@ Context: inferred at showdown.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    
-    type = PACKET_POKER_PLAYER_NO_CARDS
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_PLAYER_NO_CARDS] = PacketPokerPlayerNoCards
+Packet.infoHybrid(globals(), PacketPokerPlayerNoCards, PacketPokerId, "PACKET_POKER_PLAYER_NO_CARDS", 175) # 0xaf # %SEQ%
 
 ######################################## 
-
-PACKET_POKER_CHIPS_PLAYER2BET = 176 # 0xb0 # %SEQ%
-PacketNames[PACKET_POKER_CHIPS_PLAYER2BET] = "POKER_CHIPS_PLAYER2BET"
 
 class PacketPokerChipsPlayer2Bet(PacketPokerId):
     """\
@@ -252,26 +194,18 @@ to the bet chip stack.
 
 Direction: client <=> client
 
-chips: 
+chips: list of pairs ( chip_value, chip_count ).
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_CHIPS_PLAYER2BET
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs.get("chips", [])
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s" % ( self.chips )
-
-PacketFactory[PACKET_POKER_CHIPS_PLAYER2BET] = PacketPokerChipsPlayer2Bet
+    info = (
+        ('chips', [], 'c' ),
+        )
+    
+Packet.infoHybrid(globals(), PacketPokerChipsPlayer2Bet, PacketPokerId, 'PACKET_POKER_CHIPS_PLAYER2BET', 176) # 0xb0 # %SEQ%
 
 ######################################## 
-
-PACKET_POKER_CHIPS_BET2POT = 177 # 0xb1 # %SEQ%
-PacketNames[PACKET_POKER_CHIPS_BET2POT] = "POKER_CHIPS_BET2POT"
 
 class PacketPokerChipsBet2Pot(PacketPokerId):
     """\
@@ -292,23 +226,14 @@ chips: list of integers counting the number of chips to move.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-
-    type = PACKET_POKER_CHIPS_BET2POT
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs.get("chips", [])
-        self.pot = kwargs.get("pot", -1)
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s, pot = %d" % ( self.chips, self.pot )
+    info = (
+        ('chips', [], 'c' ),
+        ('pot', -1, 'b' ),
+        )
     
-PacketFactory[PACKET_POKER_CHIPS_BET2POT] = PacketPokerChipsBet2Pot
+Packet.infoHybrid(globals(), PacketPokerChipsBet2Pot, PacketPokerId, 'PACKET_POKER_CHIPS_BET2POT', 177) # 0xb1 # %SEQ%
 
 ######################################## Display packet
-
-PACKET_POKER_CHIPS_POT2PLAYER = 178 # 0xb2 # %SEQ%
-PacketNames[PACKET_POKER_CHIPS_POT2PLAYER] = "POKER_CHIPS_POT2PLAYER"
 
 class PacketPokerChipsPot2Player(PacketPokerId):
     """\
@@ -337,23 +262,15 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_CHIPS_POT2PLAYER
+    info = (
+        ('chips', [], 'c' ),
+        ('pot', -1, 'b' ),
+        ('reason', '', 's' ),
+        )
 
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.chips = kwargs.get("chips", [])
-        self.pot = kwargs.get("pot", -1)
-        self.reason = kwargs.get("reason", "")
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " chips = %s, pot = %d, reason = %s" % ( self.chips, self.pot, self.reason )
-    
-PacketFactory[PACKET_POKER_CHIPS_POT2PLAYER] = PacketPokerChipsPot2Player
+Packet.infoHybrid(globals(), PacketPokerChipsPot2Player, PacketPokerId, 'PACKET_POKER_CHIPS_POT2PLAYER', 178) # 0xb2 # %SEQ%
 
 ######################################## Display packet
-
-PACKET_POKER_CHIPS_POT_MERGE = 179 # 0xb3 # %SEQ%
-PacketNames[PACKET_POKER_CHIPS_POT_MERGE] = "POKER_CHIPS_POT_MERGE"
 
 class PacketPokerChipsPotMerge(PacketPokerId):
     """\
@@ -371,22 +288,14 @@ sources: list of pot indexes in the range [0,9].
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_CHIPS_POT_MERGE
+    info = (
+        ('sources', [], 'Bl' ),
+        ('destination', 0, 'B' ),
+        )
 
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.sources = kwargs.get("sources", [])
-        self.destination = kwargs.get("destination", 0)
-        
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " sources = %s, destination = %d" % ( self.sources, self.destination )
-
-PacketFactory[PACKET_POKER_CHIPS_POT_MERGE] = PacketPokerChipsPotMerge
+Packet.infoHybrid(globals(), PacketPokerChipsPotMerge, PacketPokerId, 'PACKET_POKER_CHIPS_POT_MERGE', 179) # 0xb3 # %SEQ%
 
 ######################################## Display packet
-
-PACKET_POKER_CHIPS_POT_RESET = 180 # 0xb4 # %SEQ%
-PacketNames[PACKET_POKER_CHIPS_POT_RESET] = "POKER_CHIPS_POT_RESET"
 
 class PacketPokerChipsPotReset(PacketPokerId):
     """\
@@ -401,27 +310,19 @@ because a PACKET_POKER_WIN or PACKET_POKER_CANCELED is received).
 
 game_id: integer uniquely identifying a game.
 """
-    
-    type = PACKET_POKER_CHIPS_POT_RESET
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_CHIPS_POT_RESET] = PacketPokerChipsPotReset
+Packet.infoHybrid(globals(), PacketPokerChipsPotReset, PacketPokerId, "PACKET_POKER_CHIPS_POT_RESET", 180) # 0xb4 # %SEQ%
 
 ######################################## Display packet
-
-PACKET_POKER_CHIPS_BET2PLAYER = 181 # 0xb5 # %SEQ%
-PacketNames[PACKET_POKER_CHIPS_BET2PLAYER] = "POKER_CHIPS_BET2PLAYER"
 
 class PacketPokerChipsBet2player(PacketPokerChipsPlayer2Bet):
     """chips move from bet to player"""
+    pass #pragma: no cover
 
-    type = PACKET_POKER_CHIPS_BET2PLAYER
-
-PacketFactory[PACKET_POKER_CHIPS_BET2PLAYER] = PacketPokerChipsBet2player
+Packet.infoHybrid(globals(), PacketPokerChipsBet2player, PacketPokerId, "PACKET_POKER_CHIPS_BET2PLAYER", 181) # 0xb5 # %SEQ%
 
 ######################################## Display packet
-
-PACKET_POKER_END_ROUND = 182 # 0xb6 # %SEQ%
-PacketNames[PACKET_POKER_END_ROUND] = "POKER_END_ROUND"
 
 class PacketPokerEndRound(PacketPokerId):
     """\
@@ -442,37 +343,26 @@ It is not inferred at the end of the last betting round.
 
 game_id: integer uniquely identifying a game.
 """
-    
-    type = PACKET_POKER_END_ROUND
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_END_ROUND] = PacketPokerEndRound
+Packet.infoHybrid(globals(), PacketPokerEndRound, PacketPokerId, "PACKET_POKER_END_ROUND", 182) # 0xb6 # %SEQ%
 
 ########################################
 
-PACKET_POKER_DISPLAY_NODE = 183 # 0xb7 # %SEQ%
-PacketNames[PACKET_POKER_DISPLAY_NODE] = "POKER_DISPLAY_NODE"
-
 class PacketPokerDisplayNode(Packet):
     """request POKER_DISPLAY_NODE packet"""
+
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        ('name', '', 's'),
+        ('state', '', 's'),
+        ('style', '', 's'),
+        ('selection', None, 'no net'),
+        )
     
-    type = PACKET_POKER_DISPLAY_NODE
-
-    def __init__(self, **kwargs):
-        self.game_id = kwargs.get("game_id", "")
-        self.name = kwargs.get("name", "")
-        self.state = kwargs.get("state", "")
-        self.style = kwargs.get("style", "")
-        self.selection = kwargs.get("selection", None)
-
-    def __str__(self):
-        return Packet.__str__(self) + "game_id = %s, name = %s, state = %s, style = %s, selection = %s " % ( str(self.game_id), self.name, self.state, self.style, self.selection )
-
-PacketFactory[PACKET_POKER_DISPLAY_NODE] = PacketPokerDisplayNode
+Packet.infoDeclare(globals(), PacketPokerDisplayNode, Packet, 'PACKET_POKER_DISPLAY_NODE', 183) # 0xb7 # %SEQ%
 
 ######################################## Display packet
-
-PACKET_POKER_DEAL_CARDS = 184 # 0xb8 # %SEQ%
-PacketNames[PACKET_POKER_DEAL_CARDS] = "POKER_DEAL_CARDS"
 
 class PacketPokerDealCards(PacketPokerId):
     """\
@@ -499,60 +389,37 @@ numberOfCards: number of cards to be dealt.
 serials: integers uniquely identifying players.
 game_id: integer uniquely identifying a game.
 """
+    info = (
+        ('numberOfCards', 2, 'B'),
+        ('serials', [], 'Il'),
+        )
 
-    type = PACKET_POKER_DEAL_CARDS
-    numberOfCards = 0
-    serials = []
-
-    def __init__(self, *args, **kwargs):
-        self.numberOfCards = kwargs.get("numberOfCards", 2)
-        self.serials = kwargs.get("serials", [])
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " number of cards = %d, serials = %s" % ( self.numberOfCards, self.serials )
-
-PacketFactory[PACKET_POKER_DEAL_CARDS] = PacketPokerDealCards
+Packet.infoHybrid(globals(), PacketPokerDealCards, PacketPokerId, 'PACKET_POKER_DEAL_CARDS', 184) # 0xb8 # %SEQ%
 
 ########################################
-
-PACKET_POKER_CHAT_HISTORY = 185 # 0xb9 # %SEQ%
-PacketNames[PACKET_POKER_CHAT_HISTORY] = "POKER_CHAT_HISTORY"
 
 class PacketPokerChatHistory(Packet):
     """chat history show"""
 
-    type = PACKET_POKER_CHAT_HISTORY
+    info = Packet.info + (
+        ('show', 'no', 's'),
+        )
 
-    def __init__(self, **kwargs):
-        self.show = kwargs.get("show", "no")
-
-PacketFactory[PACKET_POKER_CHAT_HISTORY] = PacketPokerChatHistory
-
-
+Packet.infoDeclare(globals(), PacketPokerChatHistory, Packet, "PACKET_POKER_CHAT_HISTORY", 185) # 0xb9 # %SEQ%
+    
 ########################################
-
-PACKET_POKER_DISPLAY_CARD = 186 # 0xba # %SEQ%
-PacketNames[PACKET_POKER_DISPLAY_CARD] = "POKER_DISPLAY_CARD"
 
 class PacketPokerDisplayCard(PacketPokerId):
     """Hide a player card"""
 
-    type = PACKET_POKER_DISPLAY_CARD
-    index = []
-    display = 0
+    info = (
+        ('index', [], 'Bl'),
+        ('display', 0, 'B'),
+        )
 
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.index = kwargs.get("index", [] )
-        self.display = kwargs.get("display", 0 )
-
-PacketFactory[PACKET_POKER_DISPLAY_CARD] = PacketPokerDisplayCard
+Packet.infoHybrid(globals(), PacketPokerDisplayCard, PacketPokerId, "PACKET_POKER_DISPLAY_CARD", 186) # 0xba # %SEQ%
 
 ########################################
-
-PACKET_POKER_SELF_IN_POSITION = 187 # 0xbb # %SEQ%
-PacketNames[PACKET_POKER_SELF_IN_POSITION] = "POKER_SELF_IN_POSITION"
 
 class PacketPokerSelfInPosition(PacketPokerPosition):
     """\
@@ -560,15 +427,11 @@ Semantics: the player authenticated for this connection
 is in position. Otherwise identical to PACKET_POKER_POSITION.
 
 """
+    pass #pragma: no cover
 
-    type = PACKET_POKER_SELF_IN_POSITION
-
-PacketFactory[PACKET_POKER_SELF_IN_POSITION] = PacketPokerSelfInPosition
+Packet.infoHybrid(globals(), PacketPokerSelfInPosition, PacketPokerPosition, "PACKET_POKER_SELF_IN_POSITION", 187) # 0xbb # %SEQ%
 
 ########################################
-
-PACKET_POKER_SELF_LOST_POSITION = 188 # 0xbc # %SEQ%
-PacketNames[PACKET_POKER_SELF_LOST_POSITION] = "POKER_SELF_LOST_POSITION"
 
 class PacketPokerSelfLostPosition(PacketPokerPosition):
     """\
@@ -576,15 +439,11 @@ Semantics: the player authenticated for this connection
 is in position. Otherwise identical to PACKET_POKER_POSITION.
 
 """
+    pass #pragma: no cover
 
-    type = PACKET_POKER_SELF_LOST_POSITION
-
-PacketFactory[PACKET_POKER_SELF_LOST_POSITION] = PacketPokerSelfLostPosition
+Packet.infoHybrid(globals(), PacketPokerSelfLostPosition, PacketPokerPosition, "PACKET_POKER_SELF_LOST_POSITION", 188) # 0xbc # %SEQ%
 
 ########################################
-
-PACKET_POKER_HIGHEST_BET_INCREASE = 189 # 0xbd # %SEQ%
-PacketNames[PACKET_POKER_HIGHEST_BET_INCREASE] = "POKER_HIGHEST_BET_INCREASE"
 
 class PacketPokerHighestBetIncrease(PacketPokerId):
     """\
@@ -603,15 +462,11 @@ is inferred for each raise.
 
 game_id: integer uniquely identifying a game.
 """
-    
-    type = PACKET_POKER_HIGHEST_BET_INCREASE
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_HIGHEST_BET_INCREASE] = PacketPokerHighestBetIncrease
+Packet.infoHybrid(globals(), PacketPokerHighestBetIncrease, PacketPokerId, "PACKET_POKER_HIGHEST_BET_INCREASE", 189) # 0xbd # %SEQ%
 
 ########################################
-
-PACKET_POKER_PLAYER_WIN = 190 # 0xbe # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_WIN] = "POKER_PLAYER_WIN"
 
 class PacketPokerPlayerWin(PacketPokerId):
     """\
@@ -625,13 +480,11 @@ PlayerWin is generated.
 
 serial: integer uniquely identifying a player.
 """
-    type = PACKET_POKER_PLAYER_WIN
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_PLAYER_WIN] = PacketPokerPlayerWin
+Packet.infoHybrid(globals(), PacketPokerPlayerWin, PacketPokerId, "PACKET_POKER_PLAYER_WIN", 190) # 0xbe # %SEQ%
 
 ########################################
-PACKET_POKER_ANIMATION_PLAYER_NOISE = 191 # 0xbf # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_NOISE] = "POKER_ANIMATION_PLAYER_NOISE"
 
 class PacketPokerAnimationPlayerNoise(PacketPokerId):
     """\
@@ -645,21 +498,14 @@ player's noise animation.
 serial: integer uniquely identifying a player.
 action: string that contain "start" or "stop".
 """
-    type = PACKET_POKER_ANIMATION_PLAYER_NOISE
 
-    def __init__(self, *args, **kwargs):
-        self.action = kwargs.get("action", 'start')
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return Packet.__str__(self) + " serial = %d, action = %s" % ( self.serial, self.action )
+    info = (
+        ('action', 'start', 's'),
+        )
     
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_NOISE] = PacketPokerAnimationPlayerNoise
+Packet.infoHybrid(globals(), PacketPokerAnimationPlayerNoise, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_NOISE", 191) # 0xbf # %SEQ%
 
 ########################################
-
-PACKET_POKER_ANIMATION_PLAYER_FOLD = 192 # 0xc0 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_FOLD] = "POKER_ANIMATION_PLAYER_FOLD"
 
 class PacketPokerAnimationPlayerFold(PacketPokerId):
     """\
@@ -673,104 +519,74 @@ player's noise animation.
 serial: integer uniquely identifying a player.
 animation: string used to select an animation fold.
 """
-    type = PACKET_POKER_ANIMATION_PLAYER_FOLD
 
-    def __init__(self, *args, **kwargs):
-        self.animation = kwargs.get("animation","UNKNOWN")
-        PacketPokerId.__init__(self, *args, **kwargs)
+    info = (
+        ('animation', 'UNKNOWN', 's'),
+        )
 
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, animation fold = %s" % ( self.serial, self.animation )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_FOLD] = PacketPokerAnimationPlayerFold
+Packet.infoHybrid(globals(), PacketPokerAnimationPlayerFold, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_FOLD", 192) # 0xc0 # %SEQ%
 
 ########################################
-
-PACKET_POKER_ANIMATION_PLAYER_BET = 193 # 0xc1 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_BET] = "POKER_PLAYER_ANIMATION_BET"
 
 class PacketPokerAnimationPlayerBet(PacketPokerId):
     """\
 """
-    type = PACKET_POKER_ANIMATION_PLAYER_BET
 
-    def __init__(self, *args, **kwargs):
-        self.animation = kwargs.get("animation", "")
-        self.chips = kwargs.get("chips", [])
+    info = (
+        ('animation', '', 's'),
+        ('chips', [], 'c'),
+        ('amount', 0, 'I'),
+        )
+
+    def infoInit(self, **kwargs):
+        Packet.infoInit(self, **kwargs)
         self.amount = chips2amount(self.chips)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, chips %s , animation %s" % ( self.serial ,self.animation, self.chips )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_BET] = PacketPokerAnimationPlayerBet
+        
+Packet.infoHybrid(globals(), PacketPokerAnimationPlayerBet, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_BET", 193) # 0xc1 # %SEQ%
 
 ########################################
-
-PACKET_POKER_ANIMATION_PLAYER_CHIPS = 194 # 0xc2 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_PLAYER_CHIPS] = "POKER_PLAYER_ANIMATION_CHIPS"
 
 class PacketPokerAnimationPlayerChips(PacketPokerId):
     """\
 """
-    type = PACKET_POKER_ANIMATION_PLAYER_CHIPS
+    info = (
+        ('animation', '', 's'),
+        ('chips', [], 'c'),
+        ('state', '', 's'),
+        ('amount', 0, 'I'),
+        )
 
-    def __init__(self, *args, **kwargs):
-        self.animation = kwargs.get("animation", "")
-        self.chips = kwargs.get("chips", [])
-        self.state = kwargs.get("state", "")
+    def infoInit(self, **kwargs):
+        Packet.infoInit(self, **kwargs)
         self.amount = chips2amount(self.chips)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, chips %s , animation %s" % ( self.serial ,self.animation, self.chips )
-    
-PacketFactory[PACKET_POKER_ANIMATION_PLAYER_CHIPS] = PacketPokerAnimationPlayerChips
+        
+Packet.infoHybrid(globals(), PacketPokerAnimationPlayerChips, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_CHIPS", 194) # 0xc2 # %SEQ%
 
 ########################################
-
-PACKET_POKER_ANIMATION_DEALER_CHANGE = 195 # 0xc3 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_DEALER_CHANGE] = "POKER_PLAYER_DEALER_CHANGE"
 
 class PacketPokerAnimationDealerChange(PacketPokerId):
     """\
 """
-    type = PACKET_POKER_ANIMATION_DEALER_CHANGE
 
-    def __init__(self, *args, **kwargs):
-        self.state = kwargs.get("state","UNKNOWN")
-        
-        PacketPokerId.__init__(self, *args, **kwargs)
+    info = (
+        ('state', 'UNKNOWN', 's'),
+        )
 
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
-    
-PacketFactory[PACKET_POKER_ANIMATION_DEALER_CHANGE] = PacketPokerAnimationDealerChange
+Packet.infoHybrid(globals(), PacketPokerAnimationDealerChange, PacketPokerId, "PACKET_POKER_ANIMATION_DEALER_CHANGE", 195) # 0xc3 # %SEQ%
 
 ########################################
-
-PACKET_POKER_ANIMATION_DEALER_BUTTON = 196 # 0xc4 # %SEQ%
-PacketNames[PACKET_POKER_ANIMATION_DEALER_BUTTON] = "POKER_PLAYER_DEALER_BUTTON"
 
 class PacketPokerAnimationDealerButton(PacketPokerId):
     """\
 """
-    type = PACKET_POKER_ANIMATION_DEALER_BUTTON
 
-    def __init__(self, *args, **kwargs):
-        self.state = kwargs.get("state","UNKNOWN")
-        
-        PacketPokerId.__init__(self, *args, **kwargs)
+    info = (
+        ('state', 'UNKNOWN', 's'),
+        )
 
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serial = %d, state %s" % ( self.serial , self.state )
-    
-PacketFactory[PACKET_POKER_ANIMATION_DEALER_BUTTON] = PacketPokerAnimationDealerButton
+Packet.infoHybrid(globals(), PacketPokerAnimationDealerButton, PacketPokerId, "PACKET_POKER_ANIMATION_DEALER_BUTTON", 196) # 0xc4 # %SEQ%
 
 ########################################
-
-PACKET_POKER_BEGIN_ROUND = 197 # 0xc5 # %SEQ%
-PacketNames[PACKET_POKER_BEGIN_ROUND] = "POKER_BEGIN_ROUND"
 
 class PacketPokerBeginRound(PacketPokerId):
     """\
@@ -799,168 +615,100 @@ BEGIN    river
 
 game_id: integer uniquely identifying a game.
 """
-    
-    type = PACKET_POKER_BEGIN_ROUND
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_BEGIN_ROUND] = PacketPokerBeginRound
+Packet.infoHybrid(globals(), PacketPokerBeginRound, PacketPokerId, "PACKET_POKER_BEGIN_ROUND", 197) # 0xc5 # %SEQ%
 
 ########################################
-
-PACKET_POKER_CURRENT_GAMES = 198 # 0xc6 # %SEQ%
-PacketNames[PACKET_POKER_CURRENT_GAMES] = "POKER_CURRENT_GAMES"
 
 class PacketPokerCurrentGames(Packet):
 
-    type = PACKET_POKER_CURRENT_GAMES
+    info = Packet.info + (
+        ('game_ids', [], 'Il'),
+        ('count', 0, 'B'),
+        )
 
-    format = "!B"
-    format_size = calcsize(format)
-    format_element = "!I"
-
-    def __init__(self, **kwargs):
-        self.game_ids = kwargs.get("game_ids", [])
-        self.count = kwargs.get("count", 0)
-
-    def pack(self):
-        return Packet.pack(self) + self.packlist(self.game_ids, PacketPokerCurrentGames.format_element) + pack(PacketPokerCurrentGames.format, self.count)
-        
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.game_ids) = self.unpacklist(block, PacketPokerCurrentGames.format_element)
-        (self.count,) = unpack(PacketPokerCurrentGames.format, block[:PacketPokerCurrentGames.format_size])
-        return block[PacketPokerCurrentGames.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizelist(self.game_ids, PacketPokerCurrentGames.format_element) + PacketPokerCurrentGames.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " count = %d, game_ids = %s" % ( self.count, self.game_ids )
-
-PacketFactory[PACKET_POKER_CURRENT_GAMES] = PacketPokerCurrentGames
+Packet.infoDeclare(globals(), PacketPokerCurrentGames, Packet, "PACKET_POKER_CURRENT_GAMES", 198) # 0xc6 # %SEQ%
 
 ######################################## Display packet
 
-PACKET_POKER_END_ROUND_LAST = 199 # 0xc7 # %SEQ%
-PacketNames[PACKET_POKER_END_ROUND_LAST] = "POKER_END_ROUND_LAST"
-
 class PacketPokerEndRoundLast(PacketPokerId):
-    
-    type = PACKET_POKER_END_ROUND_LAST
+    pass #pragma: no cover
 
-PacketFactory[PACKET_POKER_END_ROUND_LAST] = PacketPokerEndRoundLast
+Packet.infoHybrid(globals(), PacketPokerEndRoundLast, PacketPokerId, "PACKET_POKER_END_ROUND_LAST", 199) # 0xc7 # %SEQ%
 
 ######################################## Stop or Start animation
 
-PACKET_POKER_PYTHON_ANIMATION = 200 # 0xc8 # %SEQ%
-PacketNames[PACKET_POKER_PYTHON_ANIMATION] = "POKER_PYTHON_ANIMATION"
-
 class PacketPokerPythonAnimation(PacketPokerId):
+
+    info = (
+        ('animation', 'none', 's'),
+        )
     
-    type = PACKET_POKER_PYTHON_ANIMATION
-
-    def __init__(self, *args, **kwargs):
-        self.animation =  kwargs.get("animation", "none")
-        
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-PacketFactory[PACKET_POKER_PYTHON_ANIMATION] = PacketPokerPythonAnimation
+Packet.infoHybrid(globals(), PacketPokerPythonAnimation, PacketPokerId, "PACKET_POKER_PYTHON_ANIMATION", 200) # 0xc8 # %SEQ%
 
 ########################################
-
-PACKET_POKER_SIT_OUT_NEXT_TURN = 201 # 0xc9 # %SEQ%
-PacketNames[PACKET_POKER_SIT_OUT_NEXT_TURN] = "POKER_SIT_OUT_NEXT_TURN"
 
 class PacketPokerSitOutNextTurn(PacketPokerSitOut):
+    pass #pragma: no cover
 
-    type = PACKET_POKER_SIT_OUT_NEXT_TURN
-
-PacketFactory[PACKET_POKER_SIT_OUT_NEXT_TURN] = PacketPokerSitOutNextTurn
+Packet.infoHybrid(globals(), PacketPokerSitOutNextTurn, PacketPokerId, "PACKET_POKER_SIT_OUT_NEXT_TURN", 201) # 0xc9 # %SEQ%
 
 ########################################
-
-PACKET_POKER_RENDERER_STATE = 202 # 0xca # %SEQ%
-PacketNames[PACKET_POKER_RENDERER_STATE] = "POKER_RENDERER_STATE"
 
 class PacketPokerRendererState(Packet):
 
-    type = PACKET_POKER_RENDERER_STATE
-
-    def __init__(self, **kwargs):
-        self.state =  kwargs.get("state", "idle")
-
-PacketFactory[PACKET_POKER_RENDERER_STATE] = PacketPokerRendererState
+    info = Packet.info + (
+        ('state', 'idle', 's'),
+        )
+    
+Packet.infoDeclare(globals(), PacketPokerRendererState, PacketPokerId, "PACKET_POKER_RENDERER_STATE", 202) # 0xca # %SEQ%
 
 ########################################
-
-PACKET_POKER_CHAT_WORD = 203 # 0xcb # %SEQ%
-PacketNames[PACKET_POKER_CHAT_WORD] = "POKER_CHAT_WORD"
 
 class PacketPokerChatWord(PacketPokerId):
-    type = PACKET_POKER_CHAT_WORD
 
-    def __init__(self, *args, **kwargs):
-        self.word = kwargs.get("word", "no word")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-PacketFactory[PACKET_POKER_CHAT_WORD] = PacketPokerChatWord
+    info = (
+        ('word', 'no word', 's'),
+        )
+    
+Packet.infoHybrid(globals(), PacketPokerChatWord, PacketPokerId, "PACKET_POKER_CHAT_WORD", 203) # 0xcb # %SEQ%
 
 ########################################
-
-PACKET_POKER_SHOWDOWN = 204 # 0xcc # %SEQ%
-PacketNames[PACKET_POKER_SHOWDOWN] = "POKER_SHOWDOWN"
 
 class PacketPokerShowdown(PacketPokerId):
-    type = PACKET_POKER_SHOWDOWN
 
-    def __init__(self, *args, **kwargs):
-        self.showdown_stack = kwargs.get("showdown_stack", {})
-        PacketPokerId.__init__(self, *args, **kwargs)
+    info = (
+        ('showdown_stack', {}, 'no net'),
+        )
 
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " showdown_stack = %s" % self.showdown_stack
-
-PacketFactory[PACKET_POKER_SHOWDOWN] = PacketPokerShowdown
+Packet.infoHybrid(globals(), PacketPokerShowdown, PacketPokerId, "PACKET_POKER_SHOWDOWN", 204) # 0xcc # %SEQ%
 
 ########################################
-
-PACKET_POKER_CLIENT_PLAYER_CHIPS = 205 # 0xcd # %SEQ%
-PacketNames[PACKET_POKER_CLIENT_PLAYER_CHIPS] = "POKER_CLIENT_PLAYER_CHIPS"
 
 class PacketPokerClientPlayerChips(Packet):
-    type = PACKET_POKER_CLIENT_PLAYER_CHIPS
 
-    def __init__(self, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        self.serial = kwargs.get("serial", 0)
-        self.bet = kwargs.get("bet", [])
-        self.money = kwargs.get("money", [])
+    info = (
+        ('game_id', 0, 'I'),
+        ('serial', 0, 'I'),
+        ('bet', [], 'c'),
+        ('money', [], 'c'),
+        )
 
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, serial = %d, bet = %s, money = %s" % ( self.game_id, self.serial, self.bet, self.money )
-
-PacketFactory[PACKET_POKER_CLIENT_PLAYER_CHIPS] = PacketPokerClientPlayerChips
+Packet.infoDeclare(globals(), PacketPokerClientPlayerChips, Packet, "PACKET_POKER_CLIENT_PLAYER_CHIPS", 205) # 0xcd # %SEQ%
 
 ########################################
-
-PACKET_POKER_INTERFACE_COMMAND = 206 # 0xce # %SEQ%
-PacketNames[PACKET_POKER_INTERFACE_COMMAND] = "PACKET_POKER_INTERFACE_COMMAND"
 
 class PacketPokerInterfaceCommand(Packet):
-    type = PACKET_POKER_INTERFACE_COMMAND
 
-    def __init__(self, **kwargs):
-        self.window = kwargs.get("window", None)
-        self.command = kwargs.get("command", None)
+    info = (
+        ('window', None, 'no net'),
+        ('command', None, 'no net'),
+        )
 
-    def __str__(self):
-        return Packet.__str__(self) + " window = %s, command = %s" % ( self.window, self.command )
-
-PacketFactory[PACKET_POKER_INTERFACE_COMMAND] = PacketPokerInterfaceCommand
-
+Packet.infoDeclare(globals(), PacketPokerInterfaceCommand, Packet, "PACKET_POKER_INTERFACE_COMMAND", 206) # 0xce # %SEQ%
 
 ########################################
-PACKET_POKER_PLAYER_ME_LOOK_CARDS = 207 # 0xcf # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = "PACKET_POKER_PLAYER_ME_LOOK_CARDS"
 
 class PacketPokerPlayerMeLookCards(PacketPokerId):
     """\
@@ -972,39 +720,26 @@ Direction: client <=> client
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
+    info = (
+        ('state', 'UNKNOWN', 's'),
+        ('when', 'now', 's'),
+        )
 
-    def __init__(self, *args, **kwargs):
-        self.state = kwargs.get("state","UNKNOWN")
-        self.when = kwargs.get("when", "now")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    type = PACKET_POKER_PLAYER_ME_LOOK_CARDS
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
-
-PacketFactory[PACKET_POKER_PLAYER_ME_LOOK_CARDS] = PacketPokerPlayerMeLookCards
+Packet.infoHybrid(globals(), PacketPokerPlayerMeLookCards, PacketPokerId, "PACKET_POKER_PLAYER_ME_LOOK_CARDS", 207) # 0xcf # %SEQ%
 
 ########################################
 
-PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON = 208 # 0xd0 # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = "POKER_PLAYER_ME_IN_FIRST_PERSON"
-
 class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
-    def __init__(self, *args, **kwargs):
-        self.state = kwargs.get("state","UNKNOWN")
-        PacketPokerId.__init__(self, *args, **kwargs)
 
-    type = PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON
+    info = (
+        ('state', 'UNKNOWN', 's'),
+        )
 
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " state = %s" % ( self.state )
-
-PacketFactory[PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON] = PacketPokerPlayerMeInFirstPerson
+Packet.infoHybrid(globals(), PacketPokerPlayerMeInFirstPerson, PacketPokerId, "PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON", 208) # 0xd0 # %SEQ%
 
 _TYPES = range(170,254)
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 169 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[ \\w#]+#/$s # $h #/; }' pokerclientpackets.py"
+# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 169 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[) \\w#]+#/$s # $h #/; }' pokerclientpackets.py"
 # End:
