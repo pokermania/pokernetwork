@@ -41,7 +41,6 @@ class Packet:
      Packet base class
     
     """
-
     type = PACKET_NONE
     length = -1
     format = "!BH"
@@ -49,23 +48,72 @@ class Packet:
 
     format_list_length = "!B"
 
+    def infoInit(self, **kwargs):
+        info = self.info
+        for (field, default, format) in self.info:
+            if field == 'type':
+                self.type = self.type # type is now in __dict__, for serialization 
+            if not self.__dict__.has_key(field):
+                self.__dict__[field] = kwargs.get(field, default)
+        return None
+            
     def pack(self):
         return pack(Packet.format, self.type, self.calcsize())
 
+    def infoPack(self):
+        blocks = []
+        info = self.info
+        self.length = self.infoCalcsize()
+        for (field, default, format) in self.info:
+            if format != 'no net':
+                packer = self.format_info[format]['pack']
+                blocks.append(packer(self.__dict__[field]))
+        return "".join(blocks)
+            
     def unpack(self, block):
         (self.type,self.length) = unpack(Packet.format, block[:Packet.format_size])
         return block[Packet.format_size:]
 
+    def infoUnpack(self, block):
+        blocks = []
+        info = self.info
+        for (field, default, format) in self.info:
+            if format != 'no net':
+                unpacker = self.format_info[format]['unpack']
+                ( block, self.__dict__[field] ) = unpacker(block)
+        return block
+
+    @staticmethod
+    def infoUnpackerb(block):
+        value = unpack('B', block[0])[0]
+        if value == 255: value = -1
+        return ( block[1:], value )
+    
+    @staticmethod
+    def infoPackerb(data):
+        if data == -1: data = 255
+        return pack('B', data)
+    
     def calcsize(self):
         return Packet.format_size
 
-    def packlist(self, l, format):
+    def infoCalcsize(self):
+        size = 0
+        for (field, default, format) in self.info:
+            if format != 'no net':
+                calcsize = self.format_info[format]['calcsize']
+                size += calcsize(self.__dict__[field])
+        return size
+
+    @staticmethod
+    def packlist(l, format):
         block = pack(Packet.format_list_length, len(l))
         for value in l:
             block += pack(format, value)
         return block
 
-    def unpacklist(self, block, format):
+    @staticmethod
+    def unpacklist(block, format):
         (length,) = unpack(Packet.format_list_length, block[:calcsize(Packet.format_list_length)])
         format_size = calcsize(format)
         block = block[calcsize(Packet.format_list_length):]
@@ -75,29 +123,156 @@ class Packet:
             block = block[format_size:]
         return (block, l)
 
-    def calcsizelist(self, l, format):
+    @staticmethod
+    def calcsizelist(l, format):
         return calcsize(Packet.format_list_length) + len(l) * calcsize(format)
 
-    def packstring(self, string):
+    @staticmethod
+    def packstring(string):
         return pack("!H", len(string)) + string
 
-    def unpackstring(self, block):
+    @staticmethod
+    def unpackstring(block):
         offset = calcsize("!H")
         (length,) = unpack("!H", block[:offset])
         string = block[offset:offset + length]
         return (block[offset + length:], string)
 
-    def calcsizestring(self, string):
+    @staticmethod
+    def calcsizestring(string):
         return calcsize("!H") + len(string)
 
     def __str__(self):
         return "type = %s(%d)" % ( PacketNames[self.type], self.type )
+
+    def infoStr(self):
+        strings = []
+        for (field, default, format) in self.info:
+            strings.append(field + " = " + str(self.__dict__[field]))
+        return " ".join(strings)
 
     def __repr__(self):
         return self.__str__()
 
     def __eq__(self, other):
         return isinstance(other, Packet) and self.type == other.type
+
+
+    @staticmethod
+    def infoHybrid(dictionary, type, base_type, name, index):
+        dictionary['PacketNames'][index] = name
+        dictionary['PacketFactory'][index] = type
+        dictionary[name] = index
+        type.type = index
+        if base_type == Packet:
+            type.__init__ = Packet.infoInit
+        else:
+            type.__init__ = lambda self, **kwargs: base_type.__init__(self, **kwargs) or self.infoInit(**kwargs)
+        type.pack = lambda self: base_type.pack(self) + self.infoPack()
+        type.unpack = lambda self, block: self.infoUnpack(base_type.unpack(self, block))
+        type.calcsize = lambda self: base_type.calcsize(self) + self.infoCalcsize()
+        type.__str__ = lambda self: base_type.__str__(self) + " " + self.infoStr()
+
+    @staticmethod
+    def infoDeclare(dictionary, type, base_type, name, index):
+        dictionary['PacketNames'][index] = name
+        dictionary['PacketFactory'][index] = type
+        dictionary[name] = index
+        type.type = index
+        type.__init__ = Packet.infoInit
+        type.pack = Packet.infoPack
+        type.unpack = Packet.infoUnpack
+        type.calcsize = Packet.infoCalcsize
+        type.__str__ = Packet.infoStr
+
+Packet.info = (
+    ('type', PACKET_NONE, 'B'),
+    ('length', -1, 'H'),
+    )
+    
+Packet.format_info = {
+    #
+    # Not transfered over the network.
+    #
+    'no net': None,
+    #
+    # Unsigned integer, int, 4 bytes, network order (big endian).
+    # Example: 1 <=> \x00\x00\x00\x01
+    #
+    'I': {'pack': lambda data: pack('!I', data),
+          'unpack': lambda block: ( block[4:], int(unpack('!I', block[:4])[0]) ),
+          'calcsize': lambda data: 4,
+          },
+    #
+    # Unsigned integer, char, 1 byte
+    # Example: 1 <=> \x01
+    #
+    'B': {'pack': lambda data: pack('B', data),
+          'unpack': lambda block: ( block[1:], unpack('B', block[0])[0] ),
+          'calcsize': lambda data: 1,
+          },
+    #
+    # Integer range [-1,254], char, 1 byte
+    # -1 is 255
+    # Example: 1 <=> \x01, -1 <=> \xff, 254 <=> \xfe
+    #
+    'b': {'pack': Packet.infoPackerb,
+          'unpack': Packet.infoUnpackerb,
+          'calcsize': lambda data: 1,
+          },
+    #
+    # Unsigned integer, short, 2 bytes, network order (big endian).
+    # Example: 1 <=> \x00\x01
+    #
+    'H': {'pack': lambda data: pack('!H', data),
+          'unpack': lambda block: ( block[2:], unpack('!H', block[:2])[0] ),
+          'calcsize': lambda data: 2,
+          },
+    #
+    # Character string, length as a 2 bytes integer, network order (big endian)
+    #   followed by the content of the string.
+    # Example: "abc" <=> \x00\x03abc
+    #          "a" <=> \x00\x01a
+    #          "" <=> \x00\x00
+    #
+    's': {'pack': Packet.packstring,
+          'unpack': Packet.unpackstring,
+          'calcsize': Packet.calcsizestring,
+          },
+    #
+    # List of integer, length of the list as a 1 byte unsigned integer in the range [0-255]
+    # Each integer is a 1 byte unsigned value in the range [0-255]
+    # Example: [] <=> \x00
+    #          [5] <=> \x01\x05
+    #          [5, 255] <=> \x02\x05\xff
+    #
+    'Bl': {'pack': lambda data: Packet.packlist(data, 'B'),
+           'unpack': lambda block: Packet.unpacklist(block, 'B'),
+           'calcsize': lambda data: Packet.calcsizelist(data, 'B'),
+           },
+    #
+    # List of integer, length of the list as a 1 byte unsigned integer in the range [0-255]
+    # Each integer is a 2 bytes unsigned value in network order (big endian)
+    # Example: [] <=> \x00
+    #          [5] <=> \x01\x00\x05
+    #          [5, 255] <=> \x02\x00\x05\x00\xff
+    #
+    'Hl': {'pack': lambda data: Packet.packlist(data, 'H'),
+           'unpack': lambda block: Packet.unpacklist(block, 'H'),
+           'calcsize': lambda data: Packet.calcsizelist(data, 'H'),
+           },
+    #
+    # List of integer, length of the list as a 1 byte unsigned integer in the range [0-255]
+    # Each integer is a 4 bytes unsigned value in network order (big endian)
+    # Example: [] <=> \x00
+    #          [5] <=> \x01\x00\x00\x00\x05
+    #          [5, 255] <=> \x02\x00\x00\x00\x05\x00\x00\x00\xff
+    #
+    'Il': {'pack': lambda data: Packet.packlist(data, 'I'),
+           'unpack': lambda block: Packet.unpacklist(block, 'I'),
+           'calcsize': lambda data: Packet.calcsizelist(data, 'I'),
+           },
+    }
 
 PacketFactory[PACKET_NONE] = Packet
 
@@ -265,7 +440,7 @@ serial: the unique number associated to the user.
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (self.serial,) = unpack(PacketSerial.format, block[:PacketSerial.format_size])
+        self.serial = int(unpack(PacketSerial.format, block[:PacketSerial.format_size])[0])
         return block[PacketSerial.format_size:]
 
     def calcsize(self):
