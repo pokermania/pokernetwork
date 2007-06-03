@@ -1,0 +1,242 @@
+#!@PYTHON@
+#
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+import libxml2
+
+import socket
+import time
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error, base
+from twisted.python import failure, runtime
+
+from pokerengine import pokertournament
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
+from tests import testclock
+from pokernetwork import dispatch
+twisted.internet.base.DelayedCall.debug = True
+
+from pokerui import pokerinterface
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+from pokernetwork import pokerclient
+from pokernetwork import currencyclient
+currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+from pokernetwork.pokerclientpackets import *
+
+class ConstantDeckShuffler:
+    def shuffle(self, what):
+        what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
+
+from pokerengine import pokergame
+pokergame.shuffler = ConstantDeckShuffler()
+
+class ConstantPlayerShuffler:
+    def shuffle(self, what):
+        what.sort()
+
+pokertournament.shuffler = ConstantPlayerShuffler()
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings display2d="yes" display3d="no" ping="15000" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
+   <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
+  <screen fullscreen="no" width="1024" height="768"/>
+  <name>user1</name>
+  <passwd>password1</passwd>
+  <remember>yes</remember>
+  <muck>yes</muck>
+  <auto_post>no</auto_post>
+  <chat max_chars="40" line_length="20"/>
+  <web browser="/usr/bin/firefox">http://localhost/poker-web/</web>
+  <sound>yes</sound>
+  <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
+  <lobby currency_serial="1" type="holdem" sort="name"/>
+  <shadow>yes</shadow>
+  <vprogram>yes</vprogram>
+  
+  <user path="~/.poker2d"/>
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
+  <data path="data" sounds="data/sounds"/>
+  <handlist start="0" count="10"/>
+</settings>
+"""
+
+TABLE1 = 100
+TABLE2 = 101
+TABLE3 = 102
+
+class PokerAvatarTestCase(unittest.TestCase):
+
+    def destroyDb(self, arg = None):
+        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUpServer(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        #
+        # Setup server
+        #
+        self.service = pokerservice.PokerService(settings)
+        self.service.verbose = 3
+        self.service.startService()
+        factory = pokerservice.IPokerFactory(self.service)
+        self.p = reactor.listenTCP(0, factory,
+                                   interface="127.0.0.1")
+        self.port = self.p.getHost().port
+
+    def setUpClient(self, index):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
+        settings.header = settings.doc.xpathNewContext()
+        self.client_factory[index] = pokerclient.PokerClientFactory(settings = settings)
+        def setUpProtocol(client):
+            client._poll_frequency = 0.1
+            return client
+        d = self.client_factory[index].established_deferred
+        d.addCallback(setUpProtocol)
+        return d
+
+    # ------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()        
+        self.destroyDb()
+        self.setUpServer()
+        self.client_factory = [None, None]
+        def connectClient1(client): 
+            reactor.connectTCP('127.0.0.1', self.port, self.client_factory[1])
+            return client
+
+        d = self.setUpClient(0)
+        d.addCallback(connectClient1)
+        self.setUpClient(1)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
+
+    def cleanSessions(self, arg):
+        #
+        # twisted Session code has leftovers : disable the hanging delayed call warnings
+        # of trial by nuking all what's left.
+        #
+        pending = reactor.getDelayedCalls()
+        if pending:
+            for p in pending:
+                if p.active():
+#                    print "still pending:" + str(p)
+                    p.cancel()
+        return arg
+
+    def tearDown(self):
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.p.stopListening())
+#        d.addCallback(self.destroyDb)
+        d.addCallback(self.cleanSessions)
+        return d
+
+    def quit(self, args):
+        client = args[0]
+        if self.service.verbose > 0:
+            print "test-pokerclient: quit client " + str(client.getSerial())
+        client.sendPacket(PacketQuit())
+        if hasattr(client, "transport"):
+            client.transport.loseConnection()
+            return client.connection_lost_deferred
+        else:
+            raise UserWarning, "quit does not have transport %d" % client.getSerial()
+        
+    def ping(self, client):
+        client.sendPacket(PacketPing())
+        return (client,)
+
+    def test01_ping(self):
+        """ test01_ping """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.ping)
+        d.addCallback(self.quit)
+        return d
+
+    def sendExplain(self, client):
+        client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
+        return client.packetDeferred(True, PACKET_ACK)
+
+    def explain(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        self.assertNotEqual(None, avatar.explain)
+        serial = 200
+        packet_serial = PacketSerial(serial = serial)
+        self.assertEqual([packet_serial], avatar.explain.explain(packet_serial))
+        self.assertEqual(serial, avatar.explain.getSerial())
+        return (client,)
+
+    def test02_explain(self):
+        """ test02_explain """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.explain)
+        d.addCallback(self.quit)
+        return d
+
+# ------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test08"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerAvatarTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# ------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokeravatar.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py ../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py ../pokernetwork/pokerclient.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokeravatar.py coverage-report' check )"
+# End:
