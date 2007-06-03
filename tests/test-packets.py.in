@@ -23,6 +23,7 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
+from struct import pack, unpack, calcsize
 
 from pokernetwork import packets
 
@@ -100,6 +101,91 @@ class PacketsTestCase(unittest.TestCase):
 
         self.packetCheck(type = TestPacketFieldList, serials = [1L])
 
+    def defineTestPacket(self):
+        d = {}
+        d['PacketFactory'] = {}
+        d['PacketNames'] = {}
+        
+        class TestPacket(packets.Packet):
+            info = packets.Packet.info + (('b' , 10, 'B'),
+                                          ('a', 20, 'I'),
+                                          ('c', 'ABC', 's'),
+                                          ('d', [1,2,3], 'Bl'),
+                                          ('e', -1, 'b'),
+                                          ('f', None, 'no net'),
+                                          )
+            fields = ( "\0", # type
+                       "\0\0", # length
+                       "\x02", # b
+                       "\0\0\0\x01", # a
+                       "\0\x03ABC", # c
+                       "\x03\x01\x02\x03", # d
+                       "\xff", # e
+                       )
+            binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
+
+        d = {}
+        d['PacketFactory'] = {}
+        d['PacketNames'] = {}
+        packets.Packet.infoDeclare(d, TestPacket, packets.Packet, 'NAME', 101)
+        return TestPacket
+
+    def test_infoPack(self):
+        type = self.defineTestPacket()
+        packet = type()
+        packet.a = 1
+        packet.b = 2
+        self.assertEqual(type.binary, packet.infoPack())
+
+    def test_infoUnpack(self):
+        type = self.defineTestPacket()
+        packet = type()
+        packet.infoUnpack(type.binary)
+        self.assertEqual(1, packet.a)
+        self.assertEqual(2, packet.b)
+
+    def test_infoCalcsize(self):
+        type = self.defineTestPacket()
+        packet = type()
+        self.assertEqual(len(type.binary), packet.infoCalcsize())
+
+    def test_infoHybrid(self):
+        d = {}
+        d['PacketFactory'] = {}
+        d['PacketNames'] = {}
+        class TestPacketBase(packets.Packet):
+            def __init__(self, **kwargs):
+                pass
+            
+        class TestPacketClass(TestPacketBase):
+            pass
+        
+        index = 11
+        packets.Packet.infoHybrid(d, TestPacketClass, TestPacketBase, 'NAME', index)
+        self.assertEqual(TestPacketClass, d['PacketFactory'][index])
+        self.assertEqual('NAME', d['PacketNames'][index])
+        test_packet = TestPacketClass()
+        packet = packets.Packet()
+        self.assertEqual(packet.calcsize() * 2, test_packet.calcsize())
+        packets.Packet.infoHybrid(d, TestPacketBase, packets.Packet, 'BASENAME', index + 1)
+        self.assertEqual('BASENAME', d['PacketNames'][index + 1])        
+
+    def test_infoDeclare(self):
+        d = {}
+        d['PacketFactory'] = {}
+        d['PacketNames'] = {}
+        class TestPacketClass(packets.Packet):
+            pass
+        index = 11
+        packets.Packet.infoDeclare(d, TestPacketClass, packets.Packet, 'NAME', index)
+        self.assertEqual(TestPacketClass, d['PacketFactory'][index])
+        self.assertEqual('NAME', d['PacketNames'][index])
+        self.assertEqual(TestPacketClass.type, index)
+        test_packet = TestPacketClass()
+        packet = packets.Packet()
+        self.assertEqual(packet.calcsize(), test_packet.calcsize())
+        self.assertEqual("type = 11 length = -1", str(test_packet))
+
 #--------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
@@ -108,11 +194,14 @@ def GetTestSuite():
     
 #--------------------------------------------------------------
 def Run(verbose = 2):
-    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 #--------------------------------------------------------------
 if __name__ == '__main__':
-    Run()
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 # Interpreted by emacs
 # Local Variables:
