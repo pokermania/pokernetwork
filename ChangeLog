@@ -1,6 +1,58 @@
-2007-05-31  Loic Dachary <loic@dachary.org>
+2007-06-03  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* tests/test-pokeravatar.py.in: pokeravatar tests with the
+	  introduction of a test for the explain method
+	* tests/run.in: print running start
+	* tests/test-packets.py.in: Set type to 10 and test in binary.
+	* tests/test-pokerpackets.py.in: Executable fails if test fail.
+	* tests/test-pokerclientpackets.py.in: Test backward compatibility.
+	  Test the 'c' Packet.info type specific to client packets.
+	* tests/test-packets.py.in: Test the info* methods of Packets.
+	* pokernetwork/pokerpackets.py: Avoid long / int flip flop when
+	  unpacking.
+	* pokernetwork/pokerclientpackets.py: All packets are generated
+	  based on the info class field content (see packet.py for more
+	  information).
+	* pokernetwork/packets.py: Add packet class generation facilities.
+	  infoHybrid and infoDeclare patch a class declaration.
+	  unbound methods of Packet are made static.
+	  set of info* methods to support Packet functionalites (pack,
+	  unpack etc.) based on the content of the info field.
+	  Documentation and samples for the info class field.
+	* Makefile.am: OLDpacketpokerclient is shipped to allow tests
+	  ensuring backward compatibility
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_PLAYER_ME_LOOK_CARDS
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_INTERFACE_COMMAND
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_PLAYER_ANIMATION_DEALER_BUTTON
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_PLAYER_ANIMATION_DEALER_BUTTON
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_PLAYER_ANIMATION_DEALER_CHANGE
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_PLAYER_ANIMATION_DEALER_CHANGE
+	* pokernetwork/OLDpokerclientpackets.py: PACKET_POKER_DISPLAY_NODE
+	  must set default game_id to 0
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_ANIMATION_PLAYER_CHIPS
+	* pokernetwork/OLDpokerclientpackets.py: harmless inconsistency fix
+	  on POKER_ANIMATION_PLAYER_BET
+	* pokernetwork/OLDpokerclientpackets.py: Keep the former
+	  pokerclientpacket implementation for backward compatibility
+	  tests.
+
+2007-06-01  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: Update context for
+	  PacketPokerCashIn
+	* pokernetwork/pokerpackets.py: CASH_IN direction
+	* pokernetwork/pokerpackets.py: PacketPokerCashIn documentation
+
+2007-05-31  Loic Dachary <loic@dachary.org>
 
 	* tests/test-packets.py.in: Import packets instead of import *.
 	* pokernetwork/pokerservice.py: Print wrapped around verbose.
