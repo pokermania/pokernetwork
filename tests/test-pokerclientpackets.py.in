@@ -23,11 +23,26 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
+from struct import pack, unpack, calcsize
 
+from pokernetwork import packets
 from pokernetwork import pokerclientpackets
+from pokernetwork import OLDpokerclientpackets
 
 class PokerClientPacketsTestCase(unittest.TestCase):
 
+    @staticmethod
+    def copydict(packet):
+        packet_dict = packet.__dict__.copy()
+        if packet_dict.has_key('length'): del packet_dict['length']
+        if packet_dict.has_key('type'): del packet_dict['type']
+        return packet_dict
+
+    def comparedict(self, packet, other_packet):
+        packet_dict = self.copydict(packet)
+        other_packet_dict = self.copydict(other_packet)
+        self.assertEqual(packet_dict, other_packet_dict)
+        
     def packetCheck(self, **kwargs):
         packet_type = kwargs['type']
         del kwargs['type']
@@ -39,14 +54,12 @@ class PokerClientPacketsTestCase(unittest.TestCase):
         self.assertNotEqual(None, other_packet.unpack(packed))
         self.assertEqual(repr(packet), repr(other_packet))
         self.assertEqual(packet, other_packet)
-        del other_packet.type
-        del other_packet.length
-        self.assertEqual(packet.__dict__, other_packet.__dict__)
+        self.comparedict(packet, other_packet)
         self.assertEqual(packed, other_packet.pack())
         return packet
 
     #--------------------------------------------------------------    
-    def test_all(self):
+    def test_packets(self):
         verbose = int(os.environ.get('VERBOSE_T', '3'))
         for type in pokerclientpackets._TYPES:
             if pokerclientpackets.PacketFactory.has_key(type):
@@ -55,8 +68,76 @@ class PokerClientPacketsTestCase(unittest.TestCase):
                 self.packetCheck(type = pokerclientpackets.PacketFactory[type])
 
     #--------------------------------------------------------------    
+    def test_backward(self):
+        verbose = int(os.environ.get('VERBOSE_T', '3'))
+        for type_index in pokerclientpackets._TYPES:
+            self.assertEqual(pokerclientpackets.PacketFactory.has_key(type_index), OLDpokerclientpackets.PacketFactory.has_key(type_index))
+            if pokerclientpackets.PacketFactory.has_key(type_index):
+                if verbose > 0:
+                    print pokerclientpackets.PacketNames[type_index]
+                self.assertEqual("PACKET_" + OLDpokerclientpackets.PacketNames[type_index], pokerclientpackets.PacketNames[type_index])
+                self.packetCheck(type = OLDpokerclientpackets.PacketFactory[type_index])
+
+                OLDtype = OLDpokerclientpackets.PacketFactory[type_index]
+                type = pokerclientpackets.PacketFactory[type_index]
+                #
+                # Check that default fields are identical and set to the same values
+                #
+                OLDpacket = OLDtype()
+                packet = type()
+                if verbose > 2:
+                    print "%s: %s == %s" % ( pokerclientpackets.PacketNames[type_index], str(self.copydict(OLDpacket)), str(self.copydict(packet)) )
+                self.comparedict(packet, OLDpacket)
+                #
+                # Check that the serialization of packets with pack/unpack functions
+                # did not change.
+                #
+                if OLDtype.__dict__.has_key('pack'):
+                    if verbose > 0:
+                        print pokerclientpackets.PacketNames[type_index] + " test pack"
+                    self.assertEqual(OLDpacket.pack(), packet.pack())
+                else:
+                    if verbose > 0:
+                        print pokerclientpackets.PacketNames[type_index] + " no pack function"
+
+    #--------------------------------------------------------------    
     def test_chips2amount(self):
         self.assertEqual(10, pokerclientpackets.chips2amount([1, 2, 4, 2]))
+
+    def defineTestPacket(self):
+        d = {}
+        d['PacketFactory'] = {}
+        d['PacketNames'] = {}
+        
+        class TestPacket(packets.Packet):
+            info = packets.Packet.info + (('f1' , [1, 10], 'c'),
+                                          )
+            fields = ( "\x0a", # type
+                       "\0\0", # length
+                       "\0\0\0\x0a", # f1
+                       )
+            binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
+
+        d = {}
+        d['PacketFactory'] = {}
+        d['PacketNames'] = {}
+        packets.Packet.infoDeclare(d, TestPacket, packets.Packet, 'NAME', 10)
+        return TestPacket
+
+    def test_infoPack(self):
+        type = self.defineTestPacket()
+        packet = type()
+        self.assertEqual(type.binary, packet.infoPack())
+
+    def test_infoUnpack(self):
+        type = self.defineTestPacket()
+        packet = type()
+        packet.infoUnpack(type.binary)
+
+    def test_infoCalcsize(self):
+        type = self.defineTestPacket()
+        packet = type()
+        self.assertEqual(len(type.binary), packet.infoCalcsize())
 
 #--------------------------------------------------------------
 def GetTestSuite():
@@ -66,11 +147,14 @@ def GetTestSuite():
     
 #--------------------------------------------------------------
 def Run(verbose = 2):
-    unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 #--------------------------------------------------------------
 if __name__ == '__main__':
-    Run()
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 # Interpreted by emacs
 # Local Variables:
