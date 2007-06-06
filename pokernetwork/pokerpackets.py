@@ -60,6 +60,14 @@
 #
 #     PACKET_POKER_MESSAGE
 #
+#     How do I get the list of tournaments ?
+#
+#     PACKET_POKER_TOURNEY_SELECT
+#
+#     How do I get the list of players registered in a tournament ?
+#
+#     PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST
+#
 #     What to expect while a hand is being played ?
 #
 #     PACKET_POKER_IN_GAME
@@ -2335,7 +2343,12 @@ PacketNames[PACKET_POKER_PLAYERS_LIST] = "POKER_PLAYERS_LIST"
 
 class PacketPokerPlayersList(PacketPokerId):
     """
+Semantics: List of players participating in "game_id". 
 
+Direction: server => client
+
+game_id: integer uniquely identifying a game.
+players: list of player serials participating in "game_id"
     """
 
     format = "!H"
@@ -2648,6 +2661,11 @@ class PacketPokerTourneyRequestPlayersList(PacketPokerId):
 Semantics: client request the player list of the tourney "game_id".
 
 Direction: server <= client
+
+Context: If the tournament "game_id" is among the list of known tournamens,
+a PacketPokerTourneyPlayersList is returned by the server. Otherwise,
+a PacketError is returned with the code set to
+PacketPokerTourneyRegister.DOES_NOT_EXIST.
 
 game_id: integer uniquely identifying a tournament.
 """
