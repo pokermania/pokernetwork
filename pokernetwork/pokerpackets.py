@@ -3101,6 +3101,27 @@ to a human readable error explanation. The poker server must
 be able to check the validity of the note provided
 by accessing the currency server at "url".
 
+The url, bserial, name, value fields content are filled from
+the result of a request to a currency web service. For instance:
+
+http://localhost/poker-web/currency_one.php?command=get_note&value=100&autocommit=yes
+
+will return the following content
+
+http://localhost/poker-web/currency_one.php     22      cfae906e9d7d6f6321b04d659059f4d6f8b86a34      100
+
+that can be used to build a packet by setting:
+
+url = http://localhost/poker-web/currency_one.php
+bserial = 22
+name = cfae906e9d7d6f6321b04d659059f4d6f8b86a34
+value = 100
+
+When the poker server honors the PacketPokerCashIn packet, it will
+contact the currency server to change the note. It means the note sent
+will become invalid and be replaced by a new one, known only to the
+poker server.
+
 Direction: server <= client
 
 value: integer value of the note in cent
