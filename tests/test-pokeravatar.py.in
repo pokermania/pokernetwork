@@ -217,6 +217,28 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def login(self, (client, packet), index):
+        client.sendPacket(PacketLogin(name = 'user%d' % index, password = 'password1'))
+        return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
+
+    def login_again(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        self.assertNotEqual(None, avatar.explain)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketLogin(name = 'user0', password = 'password1'))
+        answer = avatar._packets_queue[0]
+        self.assertEqual(PACKET_ERROR, answer.type)
+        return (client, packet)
+
+    def test03_login_again(self):
+        """ test03_login """
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.login_again)
+        d.addCallback(self.quit)
+        return d
+
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
