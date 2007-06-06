@@ -225,7 +225,12 @@ class PokerAvatar:
             return
         
         if packet.type == PACKET_LOGIN:
-            self.auth(packet)
+            if self.isLogged():
+                self.sendPacketVerbose(PacketError(other_type = PACKET_LOGIN,
+                                                   code = PacketLogin.LOGGED,
+                                                   message = "already logged in"))
+            else:
+                self.auth(packet)
             return
 
         if packet.type == PACKET_POKER_GET_PLAYER_INFO:
