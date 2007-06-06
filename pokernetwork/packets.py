@@ -520,11 +520,15 @@ holds the serial number of the user.
 
 If the user/password combination is invalid, the
 PacketAuthRefused packet will be sent back to the client.
+If the user is already logged in, a PacketError is sent
+with code set to PacketLogin.LOGGED.
 
 name: valid user name as a string
 password: matching password string
     """
 
+    LOGGED = 1
+    
     type = PACKET_LOGIN
 
     def __init__(self, **kwargs):
