@@ -1,6 +1,14 @@
-2007-06-03  Loic Dachary <loic@dachary.org>
+2007-06-06  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* tests/test-pokeravatar.py.in: Test multiple LOGIN packets
+	  safeguard.
+	* pokernetwork/pokeravatar.py: Guard against multiple LOGIN
+	  packets.
+	* pokernetwork/pokerpackets.py: CashIn logic documentation
+
+2007-06-03  Loic Dachary <loic@dachary.org>
 
 	* tests/run.in: Tag before actually running the tests.
 	* pokernetwork/pokerpackets.py: Convert PokerExplain to infoHybrid.
@@ -4377,5 +4385,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-01/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-03/p'"
 End:
