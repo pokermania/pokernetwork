@@ -31,9 +31,21 @@
 #     When the client send packets, the reply packets sent by the
 #     server are listed in the packet documentation.
 #     
+#     How to tell the server that the client is alive every 10 seconds ?
+#        If and only if the client does not send any packet during
+#        more than 10 sec, you must send a PACKET_PING
+#
+#     PACKET_PING
+#
 #     How to cash in ?
 #
 #     POKER_CASH_IN
+#
+#     What should the client expect when moved to another
+#       table during a tournament ?
+#
+#     PACKET_POKER_TABLE_MOVE (or PACKET_POKER_PLAYER_LEAVE if explain mode)
+#     (and PACKET_POKER_SEATS if explain mode)
 #     
 #     How to sit at a cash game table ?
 #     
