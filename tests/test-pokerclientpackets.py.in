@@ -25,6 +25,9 @@ sys.path.insert(0, "..")
 import unittest
 from struct import pack, unpack, calcsize
 
+from pokerengine.pokercards import PokerCards
+from pokerengine.pokerchips import PokerChips
+
 from pokernetwork import packets
 from pokernetwork import pokerclientpackets
 from pokernetwork import OLDpokerclientpackets
@@ -111,10 +114,12 @@ class PokerClientPacketsTestCase(unittest.TestCase):
         
         class TestPacket(packets.Packet):
             info = packets.Packet.info + (('f1' , [1, 10], 'c'),
+                                          ('f2' , [PokerChips([1],[3]), PokerCards([255,255]), ["a", 1]], 'j'),
                                           )
             fields = ( "\x0a", # type
                        "\0\0", # length
                        "\0\0\0\x0a", # f1
+                       '\x00-[["Chips", 3], ["Cards", 255, 255], ["a", 1]]', # f2
                        )
             binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
 
@@ -129,10 +134,21 @@ class PokerClientPacketsTestCase(unittest.TestCase):
         packet = type()
         self.assertEqual(type.binary, packet.infoPack())
 
+    def test_infoPackFail(self):
+        type = self.defineTestPacket()
+        class Foo:
+            pass
+        type.info = packets.Packet.info + (('f1' , Foo(), 'j'),)
+        packet = type()
+        self.failUnlessRaises(TypeError, packet.infoPack)
+
     def test_infoUnpack(self):
         type = self.defineTestPacket()
         packet = type()
         packet.infoUnpack(type.binary)
+        self.failUnless(isinstance(packet.f2[0], PokerChips))
+        self.failUnless(isinstance(packet.f2[1], PokerCards))
+        self.assertEqual(type.binary, packet.infoPack())
 
     def test_infoCalcsize(self):
         type = self.defineTestPacket()
