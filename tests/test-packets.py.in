@@ -23,6 +23,7 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
+import simplejson
 from struct import pack, unpack, calcsize
 
 from pokernetwork import packets
@@ -125,7 +126,6 @@ class PacketsTestCase(unittest.TestCase):
                        '\x00\x1b[{"a": [1, 2]}, null, true]', # g
                        )
             binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
-
         d = {}
         d['PacketFactory'] = {}
         d['PacketNames'] = {}
@@ -143,6 +143,20 @@ class PacketsTestCase(unittest.TestCase):
         type = self.defineTestPacket()
         packet = type()
         packet.infoUnpack(type.binary)
+        self.assertEqual(1, packet.a)
+        self.assertEqual(2, packet.b)
+
+    def test_infoUnpackJSON(self):
+        type = self.defineTestPacket()
+        packet = type()
+        class TestJSON(simplejson.JSONEncoder):
+            @staticmethod
+            def decode_objects(something):
+                return something
+        old_JSON = packets.Packet.JSON
+        packets.Packet.JSON = TestJSON()
+        packet.infoUnpack(type.binary)
+        packets.Packet.JSON = old_JSON
         self.assertEqual(1, packet.a)
         self.assertEqual(2, packet.b)
 
