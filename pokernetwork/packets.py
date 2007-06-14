@@ -41,8 +41,8 @@ class Packet:
      Packet base class
     
     """
-    JSONhook = None
-    JSONEncoder = simplejson.JSONEncoder()
+    JSON = simplejson.JSONEncoder()
+    
     type = PACKET_NONE
     length = -1
     format = "!BH"
@@ -146,12 +146,16 @@ class Packet:
 
     @staticmethod
     def packjson(object):
-        return Packet.packstring(Packet.JSONEncoder.encode(object))
+        return Packet.packstring(Packet.JSON.encode(object))
 
     @staticmethod
     def unpackjson(block):
         ( block, string ) = Packet.unpackstring(block)
-        return ( block, simplejson.loads(string, object_hook = Packet.JSONhook) )
+        object = simplejson.loads(string)
+        if hasattr(Packet.JSON, 'decode_objects'):
+            return ( block, Packet.JSON.decode_objects(object) )
+        else:
+            return ( block, object )
 
     @staticmethod
     def calcsizejson(object):
