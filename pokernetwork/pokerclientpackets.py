@@ -15,7 +15,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+# Which packets describe where the chips go ?
+#
+# PACKET_POKER_CHIPS_PLAYER2BET
+# PACKET_POKER_CHIPS_BET2POT
+# PACKET_POKER_CHIPS_POT2PLAYER
+# PACKET_POKER_CHIPS_BET2PLAYER
+# PACKET_POKER_CHIPS_POT_MERGE
+#
 from struct import pack, unpack
+import simplejson
+import types
+
+from pokerengine.pokercards import PokerCards
+from pokerengine.pokerchips import PokerChips
+
 from pokernetwork.packets import Packet
 from pokernetwork.pokerpackets import *
 
@@ -24,6 +38,32 @@ def chips2amount(chips):
     for i in xrange(len(chips) / 2):
         amount += chips[i*2] * chips[i*2 + 1]
     return amount
+
+class PokerClientPacketJSON(simplejson.JSONEncoder):
+    def default(self, object):
+        if isinstance(object, PokerCards):
+            return ['Cards'] + [255] * len(object.cards)
+        elif isinstance(object, PokerChips):
+            return ['Chips', object.toint()]
+        else:
+            return simplejson.JSONEncoder.default(self, object)
+
+    @staticmethod
+    def decode_objects(something):
+        if type(something) is types.ListType:
+            if something[0] in ('Cards', 'Chips'):
+                if something[0] == 'Cards':
+                    return PokerCards(something[1:])
+                elif something[0] == 'Chips':
+                    return PokerChips([1],[something[1]])
+            else:
+                return map(PokerClientPacketJSON.decode_objects, something)
+        elif type(something) is types.DictType:
+            return dict(map(lambda (k, v): [k, PokerClientPacketJSON.decode_objects(v)], something.iteritems()))
+        else:
+            return something
+    
+Packet.JSON = PokerClientPacketJSON()
 
 class PokerClientPackets:
     @staticmethod
@@ -679,7 +719,7 @@ Packet.infoHybrid(globals(), PacketPokerChatWord, PacketPokerId, "PACKET_POKER_C
 class PacketPokerShowdown(PacketPokerId):
 
     info = (
-        ('showdown_stack', {}, 'no net'),
+        ('showdown_stack', {}, 'j'),
         )
 
 Packet.infoHybrid(globals(), PacketPokerShowdown, PacketPokerId, "PACKET_POKER_SHOWDOWN", 204) # 0xcc # %SEQ%
