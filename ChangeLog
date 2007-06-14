@@ -1,7 +1,38 @@
-2007-06-06  Loic Dachary <loic@dachary.org>
+2007-06-14  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
 
+	* tests/test-pokerclientpackets.py.in: test JSON encoding of
+	  PokerCards and PokerChips
+	* tests/test-packets.py.in: test overriding JSON decoding method
+	* configure.ac, tests/testicurrency.php.in: testicurrency.php.in is
+	  a useless duplicate : remove
+	* tests/Makefile.am: Remove useless testicurrency
+	* pokernetwork/pokerservice.py: Update copyright.
+	* pokernetwork/pokerpackets.py: Add ping and table_move use cases.
+	* pokernetwork/pokerclientpackets.py: Add json support to showdown
+	  packet.
+	* debian/control, debian/control.breezy, debian/control.dapper,
+	  debian/control.edgy, debian/control.etch, debian/control.feisty,
+	  debian/control.gutsy, debian/control.hoary, debian/control.lenny,
+	  debian/control.sarge, debian/control.unstable: Add dependency to
+	  python-simplejson.
+	  Add support for gutsy and lenny.
+	* pokernetwork/packets.py: JSON serialization uses a single class
+	* pokernetwork/packets.py: Support for serializing complex python
+	  structures using the simplejson library.
+	* tests/test-packets.py.in: Avoid random factor in json test by not
+	  using multiple hash entries that may be serialized in a different
+	  order depending on the exact hash function used by the python
+	  interpreter.
+	* tests/test-packets.py.in: test json packing
+
+2007-06-06  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: PacketPokerPlayersList and
+	  PacketPokerTourneyRequestPlayersList documentation
+	* pokernetwork/packets.py: Add the LOGGED class attribute to
+	  PACKET_LOGIN
 	* tests/test-pokeravatar.py.in: Test multiple LOGIN packets
 	  safeguard.
 	* pokernetwork/pokeravatar.py: Guard against multiple LOGIN
