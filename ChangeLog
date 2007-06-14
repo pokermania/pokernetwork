@@ -2,6 +2,11 @@
 
 	* Release 1.1.0
 
+	* config/ccpython.m4: All interpreters in PYTHON variable.
+	* configure.ac: Backtrack to another python interpreter if some
+	  dependencies fail for a given python interpreter. This comes
+	  handy for python2.5 that currently has a broken gtk + openssl
+	  package in Debian unstable.
 	* tests/test-pokerclientpackets.py.in: test JSON encoding of
 	  PokerCards and PokerChips
 	* tests/test-packets.py.in: test overriding JSON decoding method
@@ -4416,5 +4421,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-03/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-06/p'"
 End:
