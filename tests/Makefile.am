@@ -99,7 +99,6 @@ TESTS = coverage-reset \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
-	testicurrency.php \
 	testwebservice.php \
 	coverage-report \
 	poker-interface \
