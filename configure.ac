@@ -165,14 +165,27 @@ AC_ARG_ENABLE(upgrades,
 AC_SUBST(UPGRADES_ENABLE, $enable_upgrades)
 AC_SUBST(UPGRADES_SOURCE, $enableval)
 
-for module in ${PYTHON_DEPENDENCIES} ; do
+for PYTHON in $PYTHONS ; do 
+  echo "Check dependencies for $PYTHON"
+  found=true
+  for module in ${PYTHON_DEPENDENCIES} ; do
     AC_MSG_CHECKING([wether python module $module is available])
     if $PYTHON -c "$python_script" $module ; then
        AC_MSG_RESULT([... yes])
     else
-       AC_MSG_ERROR([failed])
+       AC_MSG_RESULT([failed])
+       found=false
     fi
+  done
+  if $found ; then
+    break
+  else
+    echo "Fail to check all dependencies for $PYTHON"
+  fi
 done
+if ! $found ; then
+  AC_MSG_ERROR([None of the python found on the system are able to satisfy the dependencies (check the above error messages for more information)])
+fi
 
 AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
 
