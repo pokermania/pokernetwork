@@ -119,15 +119,16 @@ AM_CONDITIONAL([PYTHON_]$2, [test "$have_python" != "no"])
 AC_DEFUN([ALL_CC_PYTHON],
 [ 
 m4_define([_AM_PYTHON_INTERPRETER_LIST], [python2.5 python2.4 python2.3])
+PYTHONS=''
 found_one=''
 _ONE_CC_PYTHON([=2.3], [2_3])
-if test -f "$PYTHON" ; then found_one=$PYTHON ; fi
+if test -f "$PYTHON" ; then found_one=$PYTHON ; PYTHONS="$PYTHON $PYTHONS" ; fi
 unset PYTHON
 _ONE_CC_PYTHON([=2.4], [2_4])
-if test -f "$PYTHON" ; then found_one=$PYTHON ; fi
+if test -f "$PYTHON" ; then found_one=$PYTHON ; PYTHONS="$PYTHON $PYTHONS" ; fi
 unset PYTHON
 _ONE_CC_PYTHON([=2.5], [2_5])
-if test -f "$PYTHON" ; then found_one=$PYTHON ; fi
+if test -f "$PYTHON" ; then found_one=$PYTHON ; PYTHONS="$PYTHON $PYTHONS" ; fi
 PYTHON=$found_one
 if ! test "$found_one" ; then
    AC_MSG_ERROR([No python development environments found])
