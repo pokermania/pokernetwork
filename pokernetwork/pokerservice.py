@@ -26,7 +26,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #  Henry Precheur <henry@precheur.org> (2004)
-#  Cedric Pinson <cpinson@freesheep.org>
+#  Cedric Pinson <cpinson@freesheep.org> (2004-2006)
 
 from os.path import exists
 from types import *
