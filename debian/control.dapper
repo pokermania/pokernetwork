@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 4.0.0), python-dev, automake1.9, cdbs, pkg-config, debconf, po-debconf, mysql-client, python2.4-mysqldb, python2.4-pyopenssl, python-soappy, python2.4-glade2, python2.4-twisted, python2.4-pygame, python-poker-engine (>= 1.0.22), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php-pear, php5-cgi, php5-mysql, cvs
+Build-Depends: debhelper (>= 4.0.0), python-dev, automake1.9, cdbs, pkg-config, debconf, po-debconf, mysql-client, python2.4-mysqldb, python2.4-pyopenssl, python2.4-simplejson, python-soappy, python2.4-glade2, python2.4-twisted, python2.4-pygame, python-poker-engine (>= 1.0.22), libglade2-dev, libtool, perl, valgrind [amd64 i386 powerpc], xvfb, php-pear, php5-cgi, php5-mysql, cvs
 XS-Python-Version: >=2.4
 Standards-Version: 3.6.1.1
 
@@ -12,7 +12,7 @@ Architecture: all
 Suggests: mysql-server
 Conflicts: python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.0.22), python2.4-twisted, python2.4-mysqldb, python-soappy, python2.4-pyopenssl, dbconfig-common, mysql-client, apg, rsync
+Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.0.22), python2.4-twisted, python2.4-mysqldb, python-soappy, python2.4-pyopenssl, python2.4-simplejson, dbconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
