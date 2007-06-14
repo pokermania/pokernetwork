@@ -26,7 +26,7 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 from struct import pack, unpack, calcsize
-
+import simplejson
 from string import join
 
 PacketFactory = {}
@@ -41,6 +41,8 @@ class Packet:
      Packet base class
     
     """
+    JSONhook = None
+    JSONEncoder = simplejson.JSONEncoder()
     type = PACKET_NONE
     length = -1
     format = "!BH"
@@ -142,6 +144,19 @@ class Packet:
     def calcsizestring(string):
         return calcsize("!H") + len(string)
 
+    @staticmethod
+    def packjson(object):
+        return Packet.packstring(Packet.JSONEncoder.encode(object))
+
+    @staticmethod
+    def unpackjson(block):
+        ( block, string ) = Packet.unpackstring(block)
+        return ( block, simplejson.loads(string, object_hook = Packet.JSONhook) )
+
+    @staticmethod
+    def calcsizejson(object):
+        return len(Packet.packjson(object))
+
     def __str__(self):
         return "type = %s(%d)" % ( PacketNames[self.type], self.type )
 
@@ -238,6 +253,15 @@ Packet.format_info = {
     's': {'pack': Packet.packstring,
           'unpack': Packet.unpackstring,
           'calcsize': Packet.calcsizestring,
+          },
+    #
+    # JSon.org encoded string, length as a 2 bytes integer, network order (big endian)
+    #   followed by the content of the string.
+    # Example: "{'a':1}" <=> \x00\x07{'a':1}
+    #
+    'j': {'pack': Packet.packjson,
+          'unpack': Packet.unpackjson,
+          'calcsize': Packet.calcsizejson,
           },
     #
     # List of integer, length of the list as a 1 byte unsigned integer in the range [0-255]
