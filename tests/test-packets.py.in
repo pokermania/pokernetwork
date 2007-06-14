@@ -113,6 +113,7 @@ class PacketsTestCase(unittest.TestCase):
                                           ('d', [1,2,3], 'Bl'),
                                           ('e', -1, 'b'),
                                           ('f', None, 'no net'),
+                                          ('g', {'a': [1,2],'b': None,'c': True}, 'j'),
                                           )
             fields = ( "\x0a", # type
                        "\0\0", # length
@@ -121,6 +122,7 @@ class PacketsTestCase(unittest.TestCase):
                        "\0\x03ABC", # c
                        "\x03\x01\x02\x03", # d
                        "\xff", # e
+                       '\x00#{"a": [1, 2], "c": true, "b": null}', # g
                        )
             binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
 
