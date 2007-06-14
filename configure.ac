@@ -302,7 +302,6 @@ AC_CONFIG_FILES([
         tests/testcurrency.php
         tests/testpoker.php
         tests/testbirthday.php
-        tests/testicurrency.php	
 	tests/testwebservice.php
         tests/upgrade
 ], [chmod +x $ac_file])
