@@ -75,7 +75,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
