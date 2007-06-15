@@ -28,6 +28,7 @@
 #
 
 from MySQLdb.constants import ER
+from string import lower
 
 from twisted.internet import reactor
 
@@ -75,14 +76,11 @@ class PokerCashier:
         if self.verbose > 2: self.message(sql % self.db.db.literal(url))
         cursor.execute(sql, url)
         if cursor.rowcount == 0:
-            sql = "SELECT COUNT(*) FROM currencies"
-            cursor.execute(sql)
-            (count,) = cursor.fetchone()
-            if count >= 2:
-                cursor.close()
+            user_create = lower(self.parameters.get('user_create', 'no'))
+            if user_create not in ('yes', 'on'):
                 raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                   code = PacketPokerCashIn.REFUSED,
-                                  message = "Invalid currency " + url + " (already 2 currencies) ")
+                                  message = "Invalid currency " + url + " and user_create = " + user_create + " in settings.")
             sql = "INSERT INTO currencies (url) VALUES (%s)"
             if self.verbose > 2: self.message(sql % self.db.db.literal(url))
             try:
