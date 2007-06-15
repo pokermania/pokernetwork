@@ -51,7 +51,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3">
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
 </server>
 """
 
@@ -308,49 +308,8 @@ class PokerCashierTestCase(unittest.TestCase):
         d.addCallback(self.cashQuery)
         return d
 
-    def test05_cashIn(self):
-        #
-        # Break if third currency
-        #
-        self.value = 100
-
-        note1 = self.cashier.currency_client._buildNote('http://fake1', self.value)
-        packet1 = PacketPokerCashIn(serial = self.user1_serial,
-                                    url = note1[0],
-                                    bserial = note1[1],
-                                    name = note1[2],
-                                    value = note1[3])
-        d1 = self.cashier.cashIn(packet1)
-
-        note2 = self.cashier.currency_client._buildNote('http://fake2', self.value)
-        packet2 = PacketPokerCashIn(serial = self.user2_serial,
-                                    url = note2[0],
-                                    bserial = note2[1],
-                                    name = note2[2],
-                                    value = note2[3])
-        d2 = self.cashier.cashIn(packet2)
-
-        note3 = self.cashier.currency_client._buildNote('http://fake3', self.value)
-        packet3 = PacketPokerCashIn(serial = self.user3_serial,
-                                    url = note3[0],
-                                    bserial = note3[1],
-                                    name = note3[2],
-                                    value = note3[3])
-
-        try:
-            self.cashier.cashIn(packet3)
-            problem = True
-        except Exception, e:
-            problem = False
-            self.assertEqual(PacketPokerCashIn.REFUSED, e.code)
-        if problem:
-            self.fail("third currency did not raise exception")
-
-        d = defer.DeferredList((d1, d2), fireOnOneErrback = True)
-        return d
-
     # --------------------------------------------------------
-    def test04_cashInMany(self):
+    def test06_cashInMany(self):
         self.value = 100
         self.url = 'http://fake'
 
@@ -400,6 +359,9 @@ class PokerCashierTestCase(unittest.TestCase):
 
         cursor.close()
 
+    def test07_getCurrencySerial(self):
+        self.cashier.parameters['user_create'] = 'no';
+        self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
 
 # --------------------------------------------------------
 def GetTestSuite():
@@ -414,7 +376,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test07"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
