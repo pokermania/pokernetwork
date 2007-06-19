@@ -31,6 +31,8 @@
 from string import join
 import sets
 
+from twisted.internet import defer
+
 from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
 from pokernetwork.pokerpackets import *
@@ -60,7 +62,9 @@ class PokerAvatar:
             self.error("setExplain must be called when not connected to any table")
             return False
         
+	print "setExplain 0"
         if what:
+	    print "setExplain 1"
             self.explain = PokerExplain(dirs = self.service.dirs,
                                         verbose = self.service.verbose)
         else:
@@ -179,13 +183,14 @@ class PokerAvatar:
         return queue
     
     def sendPacket(self, packet):
+	if self.explain and not isinstance(packet, defer.Deferred):
+	    packets = self.explain.explain(packet)
+	else:
+	    packets = [ packet ]
         if self._queue_packets:
-            self._packets_queue.append(packet)
+            self._packets_queue.extend(packets)
         else:
-            if self.explain:
-                for explain_packet in self.explain.explain(packet):
-                    self.protocol.sendPacket(explain_packet)
-            else:
+	    for packet in packets:
                 self.protocol.sendPacket(packet)
 
     queueDeferred = sendPacket
