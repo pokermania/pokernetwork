@@ -183,7 +183,7 @@ class PokerAvatar:
         return queue
     
     def sendPacket(self, packet):
-	if self.explain and not isinstance(packet, defer.Deferred):
+	if self.explain and packet.type != PACKET_ERROR and not isinstance(packet, defer.Deferred):
 	    packets = self.explain.explain(packet)
 	else:
 	    packets = [ packet ]
