@@ -1,6 +1,33 @@
-2007-06-14  Loic Dachary <loic@dachary.org>
+2007-06-19  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* pokernetwork/pokerclientpackets.py, pokernetwork/pokerpackets.py:
+	  Hybrid packets that only change the type of the packet must set
+	  info to ()
+	* pokernetwork/pokerpackets.py: Add documentation about the packets
+	  returned by PacketPokerExplain.
+
+2007-06-18  Loic Dachary <loic@dachary.org>
+
+	* debian/control.sarge: no python version number in the
+	  python-simplejson backport
+	* debian/control.dapper: no python version number in the
+	  python-simplejson backport
+	* debian/control.dapper: no python version number in the
+	  python-simplejson backport
+
+2007-06-15  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerservice.py.in: Auto create currencies in tests.
+	* tests/test-pokerclient.py.in, tests/test-xmlrpc.py.in: Auto
+	  create currencies in tests.
+	* pokernetwork/pokercashier.py: currency creation is no longer
+	  capped to 2 : it depends on the user_create attribute of the
+	  cashier element of the settings file
+	* tests/test-pokercashier.py.in: test currency creation failure
+
+2007-06-14  Loic Dachary <loic@dachary.org>
 
 	* config/ccpython.m4: All interpreters in PYTHON variable.
 	* configure.ac: Backtrack to another python interpreter if some
@@ -4421,5 +4448,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-06/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-15/p'"
 End:
