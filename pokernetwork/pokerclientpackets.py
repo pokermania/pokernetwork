@@ -358,9 +358,9 @@ Packet.infoHybrid(globals(), PacketPokerChipsPotReset, PacketPokerId, "PACKET_PO
 
 class PacketPokerChipsBet2player(PacketPokerChipsPlayer2Bet):
     """chips move from bet to player"""
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerChipsBet2player, PacketPokerId, "PACKET_POKER_CHIPS_BET2PLAYER", 181) # 0xb5 # %SEQ%
+Packet.infoHybrid(globals(), PacketPokerChipsBet2player, PacketPokerChipsPlayer2Bet, "PACKET_POKER_CHIPS_BET2PLAYER", 181) # 0xb5 # %SEQ%
 
 ######################################## Display packet
 
