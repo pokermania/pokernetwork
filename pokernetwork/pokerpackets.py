@@ -3402,6 +3402,10 @@ class PacketPokerExplain(PacketInt):
 Semantics: control the level of verbosity of the server
 according to the "value" bit field as follows:
 
+Context: If the server accepts the request, a PacketAck is
+returned. Otherwise a PacketError is returned with
+other_type set to PACKET_POKER_EXPLAIN.
+
 value == NONE
   The server assumes the client knows the poker rules, presumably
   by using poker-engine.
