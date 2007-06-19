@@ -3420,7 +3420,7 @@ Direction: server <= client
     NONE = 0x0000
     ALL  = 0xFFFF
 
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerExplain, PacketInt, "PACKET_POKER_EXPLAIN", 142) # 0x8e # %SEQ%
 

@@ -204,7 +204,7 @@ Packet.infoHybrid(globals(), PacketPokerBetLimit, PacketPokerId, 'PACKET_POKER_B
 ########################################
 
 class PacketPokerSitRequest(PacketPokerSit):
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerSitRequest, PacketPokerId, "PACKET_POKER_SIT_REQUEST", 174) # 0xae # %SEQ%
 
@@ -221,7 +221,7 @@ Context: inferred at showdown.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerPlayerNoCards, PacketPokerId, "PACKET_POKER_PLAYER_NO_CARDS", 175) # 0xaf # %SEQ%
 
@@ -350,7 +350,7 @@ because a PACKET_POKER_WIN or PACKET_POKER_CANCELED is received).
 
 game_id: integer uniquely identifying a game.
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerChipsPotReset, PacketPokerId, "PACKET_POKER_CHIPS_POT_RESET", 180) # 0xb4 # %SEQ%
 
@@ -358,7 +358,7 @@ Packet.infoHybrid(globals(), PacketPokerChipsPotReset, PacketPokerId, "PACKET_PO
 
 class PacketPokerChipsBet2player(PacketPokerChipsPlayer2Bet):
     """chips move from bet to player"""
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerChipsBet2player, PacketPokerId, "PACKET_POKER_CHIPS_BET2PLAYER", 181) # 0xb5 # %SEQ%
 
@@ -383,7 +383,7 @@ It is not inferred at the end of the last betting round.
 
 game_id: integer uniquely identifying a game.
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerEndRound, PacketPokerId, "PACKET_POKER_END_ROUND", 182) # 0xb6 # %SEQ%
 
@@ -467,7 +467,7 @@ Semantics: the player authenticated for this connection
 is in position. Otherwise identical to PACKET_POKER_POSITION.
 
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerSelfInPosition, PacketPokerPosition, "PACKET_POKER_SELF_IN_POSITION", 187) # 0xbb # %SEQ%
 
@@ -479,7 +479,7 @@ Semantics: the player authenticated for this connection
 is in position. Otherwise identical to PACKET_POKER_POSITION.
 
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerSelfLostPosition, PacketPokerPosition, "PACKET_POKER_SELF_LOST_POSITION", 188) # 0xbc # %SEQ%
 
@@ -502,7 +502,7 @@ is inferred for each raise.
 
 game_id: integer uniquely identifying a game.
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerHighestBetIncrease, PacketPokerId, "PACKET_POKER_HIGHEST_BET_INCREASE", 189) # 0xbd # %SEQ%
 
@@ -520,7 +520,7 @@ PlayerWin is generated.
 
 serial: integer uniquely identifying a player.
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerPlayerWin, PacketPokerId, "PACKET_POKER_PLAYER_WIN", 190) # 0xbe # %SEQ%
 
@@ -655,7 +655,7 @@ BEGIN    river
 
 game_id: integer uniquely identifying a game.
 """
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerBeginRound, PacketPokerId, "PACKET_POKER_BEGIN_ROUND", 197) # 0xc5 # %SEQ%
 
@@ -673,7 +673,7 @@ Packet.infoDeclare(globals(), PacketPokerCurrentGames, Packet, "PACKET_POKER_CUR
 ######################################## Display packet
 
 class PacketPokerEndRoundLast(PacketPokerId):
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerEndRoundLast, PacketPokerId, "PACKET_POKER_END_ROUND_LAST", 199) # 0xc7 # %SEQ%
 
@@ -690,7 +690,7 @@ Packet.infoHybrid(globals(), PacketPokerPythonAnimation, PacketPokerId, "PACKET_
 ########################################
 
 class PacketPokerSitOutNextTurn(PacketPokerSitOut):
-    pass #pragma: no cover
+    info = ()
 
 Packet.infoHybrid(globals(), PacketPokerSitOutNextTurn, PacketPokerId, "PACKET_POKER_SIT_OUT_NEXT_TURN", 201) # 0xc9 # %SEQ%
 
