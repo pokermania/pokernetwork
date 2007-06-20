@@ -29,7 +29,6 @@
 ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
 
 require_once 'PHPUnit/Framework/TestCase.php';
-require_once 'PHPUnit/Extensions/ExceptionTestCase.php';
 
 require_once 'currency.php';
 
@@ -45,16 +44,21 @@ function test_dl($what) {
   return false;
 }
 
-class testcurrency extends PHPUnit_Extensions_ExceptionTestCase
+class testcurrency extends PHPUnit_Framework_TestCase
 {
     private $currency;
   
     protected function setUp()
     {
+      error_reporting(E_ALL);
+
       $GLOBALS['currency_extension_loaded'] = 'extension_loaded';
       $GLOBALS['currency_dl'] = 'dl';
       $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
-      mysql_query("DROP DATABASE IF EXISTS " . $GLOBALS['currency_db_base'], $c);
+      if(!$c) 
+        print "unable to connect to mysql";
+      if(!mysql_query("DROP DATABASE IF EXISTS " . $GLOBALS['currency_db_base'], $c)) 
+        print "mysql error " . mysql_error($c);
       mysql_close($c);
       $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
     }
@@ -223,10 +227,15 @@ class testcurrency extends PHPUnit_Extensions_ExceptionTestCase
 
     public function test09_mysql_extension()
     {
-      $this->setExpectedException('Exception');
       $GLOBALS['currency_extension_loaded'] = 'test_extension_loaded';
       $GLOBALS['currency_dl'] = 'test_dl';
-      $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+      $caught = FALSE;
+      try {
+        $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+      } catch(Exception $e) {
+        $caught = TRUE;
+      }
+      $this->assertTrue($caught);
     }
 
     public function test09_randname()
@@ -243,6 +252,75 @@ class testcurrency extends PHPUnit_Extensions_ExceptionTestCase
       }
       error_reporting($level);
       $this->assertFalse($this->currency->random_fd, "Expected exception when random_fd is TRUE");
+    }
+
+    public function test10_fixedname()
+    {
+      $this->assertEquals($this->currency->fixedname, $this->currency->get_fixedname());
+    }
+
+    public function test11_set_url()
+    {
+      $this->currency->set_url('URL');
+      $this->assertEquals("URL", $this->currency->url);
+    }
+
+    public function test12_db_check_selected()
+    {
+      $this->currency->db_base = "NOT NOT";
+      $caught = FALSE;
+      try {
+        $this->currency->db_check_selected();
+      } catch(Exception $e) {
+        $this->assertContains("selected(1)", $e->getMessage());
+        $caught = TRUE;
+      }
+      $this->assertTrue($caught);
+    }
+
+    public function test13_db_check_selected()
+    {
+      $this->currency->db_prefix = "YARG' YARG";
+      $caught = FALSE;
+      try {
+        $this->currency->db_check_selected();
+      } catch(Exception $e) {
+        $this->assertContains("selected(3)", $e->getMessage());
+        $caught = TRUE;
+      }
+      $this->assertTrue($caught);
+    }
+
+    public function test14_db_check_selected()
+    {
+      $this->currency->db_prefix = "ZOG ZOG";
+      $caught = FALSE;
+      try {
+        $this->currency->db_check_selected();
+      } catch(Exception $e) {
+        $this->assertContains("selected(4)", $e->getMessage());
+        $caught = TRUE;
+      }
+      $this->assertTrue($caught);
+    }
+
+    public function test15_db_check_selected()
+    {
+      $this->currency->db_check_connection();
+      $this->currency->__destruct();
+      $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+      if(!$c)
+        print "mysql connection failed (test15)";
+      if(!mysql_query("CREATE DATABASE " . $this->currency->db_base, $c)) 
+        print "ERROR create database";
+      if(!mysql_select_db($this->currency->db_base, $c))
+        print "ERROR select_db " . mysql_error($c) . " " . $this->currency->db_base;
+      if(!mysql_query("CREATE TABLE " . $this->currency->db_prefix . "_50 (rowid INT );", $c)) {
+        print "ERROR " . mysql_error($c) . " " . $this->currency->db_base;
+      }
+      mysql_close($c);
+      $this->currency->db_check_selected();
+      $this->assertEquals('currency_50', $this->currency->value2table[50]);
     }
 }
 
