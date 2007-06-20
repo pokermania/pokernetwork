@@ -138,7 +138,9 @@ class currency {
 
   function __destruct() {
     if($this->db_connection != FALSE) mysql_close($this->connection);
+    $this->db_connection = FALSE;
     if($this->random_fd) fclose($this->random_fd);
+    $this->random_fd = FALSE;
   }
 
   function transaction_wrap() {
@@ -627,7 +629,7 @@ class currency {
 //
 // Implement currency interaction if called from a standalone php script.
 //
-function currency_main($use_headers = True, $return_output = False) {
+function currency_main($use_headers = True, $return_output = FALSE) {
   ob_start();
   try {
     $page = array();
@@ -689,7 +691,7 @@ function currency_main($use_headers = True, $return_output = False) {
     $status = true;
   } catch(Exception $error) {
     print $error->getMessage();
-    $status = false;
+    $status = FALSE;
   }
 
   if($use_headers) {
