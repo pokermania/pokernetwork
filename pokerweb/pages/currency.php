@@ -185,20 +185,6 @@ class currency {
 
   function set_get_name($get_name) { $this->get_name = array(&$this, $get_name); }
 
-  function set_db_persist($persist) { $this->db_check_connection(); $this->db_persist = $persist; }
-
-  function set_db_prefix($prefix) { $this->db_check_connection(); $this->db_prefix = $prefix; }
-
-  function set_db_host($host) { $this->db_check_connection(); $this->db_host = $host; }
-
-  function set_db_port($port) { $this->db_check_connection(); $this->db_port = $port; }
-
-  function set_db_base($base) { $this->db_check_connection(); $this->db_base = $base; }
-
-  function set_db_user($user) { $this->db_check_connection(); $this->db_user = $user; }
-
-  function set_db_password($password) { $this->db_check_connection(); $this->db_password = $password; }
-
   function db_check_connection() {
     if($this->db_connection == FALSE) {
       $this->connection = call_user_func(($this->db_persist ? 'mysql_pconnect' : 'mysql_connect'),
@@ -211,16 +197,14 @@ class currency {
   function db_check_selected() {
     if($this->db_selected == FALSE) {
       $this->db_check_connection();
-      if(!mysql_query("CREATE DATABASE IF NOT EXISTS " . $this->db_base, $this->connection)) {
+      if(!mysql_query("CREATE DATABASE IF NOT EXISTS " . $this->db_base, $this->connection))
         throw new Exception("db_check_selected(1):" . mysql_error($this->connection));
-      }
-      if(!mysql_select_db($this->db_base, $this->connection)) {
-        throw new Exception("db_check_selected(2):" . mysql_error($this->connection));
-      }
+      if(!mysql_select_db($this->db_base, $this->connection)) throw new Exception("db_check_selected(2):" . mysql_error($this->connection)); // no coverage possible
 
-      $sql = "SHOW TABLES LIKE '" . $this->db_prefix . "_[0-9]%'";
+      $sql = "SHOW TABLES LIKE '" . $this->db_prefix . "_%'";
       $result = mysql_query($sql);
-      if(!$result) throw new Exception("db_check_selected(3):" . $sql . mysql_error($this->connection));
+      if(!$result)
+        throw new Exception("db_check_selected(3):" . $sql . mysql_error($this->connection));
       $count = mysql_num_rows($result);
       $this->value2table = array();
       $prefix = $this->db_prefix . "_";
@@ -228,9 +212,7 @@ class currency {
       if($count != FALSE && $count > 0) {
         while ($row = mysql_fetch_row($result)) {
           $table = $row[0];
-          if(strlen($table) <= $prefix_length) { // impossible because of the LIKE clause above 
-            throw new Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED);
-          }
+          if(strlen($table) <= $prefix_length) throw new Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED); // impossible because of the LIKE clause above 
           $value = substr($table, $prefix_length);
           $this->value2table[$value] = $table;
         }
