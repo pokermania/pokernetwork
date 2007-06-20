@@ -80,6 +80,9 @@ function rbccomp($a, $b) {
   return bccomp($b, $a);
 }
 
+$GLOBALS['currency_extension_loaded'] = 'extension_loaded';
+$GLOBALS['currency_dl'] = 'dl';
+
 class currency {
 
   const E_UNKNOWN		=	0;
@@ -103,9 +106,9 @@ class currency {
   var $fixedname = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
   function __construct($base = FALSE, $user = FALSE, $password = FALSE) {
-    if(!extension_loaded('mysql')) {
+    if(!$GLOBALS['currency_extension_loaded']('mysql')) {
       $prefix = (PHP_SHLIB_SUFFIX === 'dll') ? 'php_' : '';
-      if(!dl($prefix . 'mysql.' . PHP_SHLIB_SUFFIX)) {
+      if(!$GLOBALS['currency_dl']($prefix . 'mysql.' . PHP_SHLIB_SUFFIX)) {
         throw new Exception("unable to find or load mysql extension");
       }
     }
@@ -135,7 +138,7 @@ class currency {
 
   function __destruct() {
     if($this->db_connection != FALSE) mysql_close($this->connection);
-    fclose($this->random_fd);
+    if($this->random_fd) fclose($this->random_fd);
   }
 
   function transaction_wrap() {
