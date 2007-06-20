@@ -322,6 +322,31 @@ class testcurrency extends PHPUnit_Framework_TestCase
       $this->currency->db_check_selected();
       $this->assertEquals('currency_50', $this->currency->value2table[50]);
     }
+
+    public function test16_db_check_selected()
+    {
+      $this->currency->db_check_connection();
+      $this->currency->__destruct();
+      $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+      if(!$c)
+        print "mysql connection failed (test16)";
+      if(!mysql_query("CREATE DATABASE " . $this->currency->db_base, $c)) 
+        print "ERROR create database";
+      if(!mysql_select_db($this->currency->db_base, $c))
+        print "ERROR select_db " . mysql_error($c) . " " . $this->currency->db_base;
+      if(!mysql_query("CREATE TABLE " . $this->currency->db_prefix . "_123 (rowid INT );", $c)) {
+        print "ERROR " . mysql_error($c) . " " . $this->currency->db_base;
+      }
+      mysql_close($c);
+      $caught = FALSE;
+      try {
+        $this->currency->db_check_selected();
+      } catch(Exception $e) {
+        $this->assertContains('123', $e->getMessage());
+        $caught = TRUE;
+      }
+      $this->assertTrue($caught);
+    }
 }
 
 //
