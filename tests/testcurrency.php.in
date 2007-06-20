@@ -1,4 +1,6 @@
 <?php // -*- php -*-
+//
+// Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2006 Mekensleep
 //
 // Mekensleep
@@ -27,6 +29,7 @@
 ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
 
 require_once 'PHPUnit/Framework/TestCase.php';
+require_once 'PHPUnit/Extensions/ExceptionTestCase.php';
 
 require_once 'currency.php';
 
@@ -34,18 +37,33 @@ $GLOBALS['currency_db_base'] = 'currencytest';
 $GLOBALS['currency_db_user'] = 'root';
 $GLOBALS['currency_db_password'] = '';
 
-class testcurrency extends PHPUnit_Framework_TestCase
+function test_extension_loaded($what) {
+  return false;
+}
+
+function test_dl($what) {
+  return false;
+}
+
+class testcurrency extends PHPUnit_Extensions_ExceptionTestCase
 {
     private $currency;
   
     protected function setUp()
     {
+      $GLOBALS['currency_extension_loaded'] = 'extension_loaded';
+      $GLOBALS['currency_dl'] = 'dl';
       $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
       mysql_query("DROP DATABASE IF EXISTS " . $GLOBALS['currency_db_base'], $c);
       mysql_close($c);
       $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
     }
     
+    protected function tearDown()
+    {
+      $this->currency->__destruct();
+    }
+
     public function test01_get_note()
     {
       $note = $this->currency->get_note('100');
@@ -203,6 +221,13 @@ class testcurrency extends PHPUnit_Framework_TestCase
       return $note;
     }
 
+    public function test09_mysql_extension()
+    {
+      $this->setExpectedException('Exception');
+      $GLOBALS['currency_extension_loaded'] = 'test_extension_loaded';
+      $GLOBALS['currency_dl'] = 'test_dl';
+      $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
+    }
 }
 
 //
