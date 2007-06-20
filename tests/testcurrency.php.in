@@ -228,6 +228,22 @@ class testcurrency extends PHPUnit_Extensions_ExceptionTestCase
       $GLOBALS['currency_dl'] = 'test_dl';
       $this->currency = new currency($GLOBALS['currency_db_base'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
     }
+
+    public function test09_randname()
+    {
+      $this->assertEquals(currency::key_size_ascii, strlen($this->currency->get_randname()));
+      $this->currency->__destruct();
+      $this->assertEquals(currency::key_size_ascii, strlen($this->currency->get_randname()));
+      $this->currency->random_fd = TRUE;
+      $level = error_reporting(0);
+      try {
+        $this->currency->get_randname();
+      } catch(Exception $e) {
+        $this->currency->random_fd = FALSE;
+      }
+      error_reporting($level);
+      $this->assertFalse($this->currency->random_fd, "Expected exception when random_fd is TRUE");
+    }
 }
 
 //
