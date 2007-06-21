@@ -52,6 +52,8 @@ class testcurrency extends PHPUnit_Framework_TestCase
     {
       error_reporting(E_ALL);
 
+      $this->id = 0;
+
       $GLOBALS['currency_extension_loaded'] = 'extension_loaded';
       $GLOBALS['currency_dl'] = 'dl';
       $c = mysql_connect($GLOBALS['currency_db_host'], $GLOBALS['currency_db_user'], $GLOBALS['currency_db_password']);
@@ -70,34 +72,34 @@ class testcurrency extends PHPUnit_Framework_TestCase
 
     public function test01_get_note()
     {
-      $note = $this->currency->get_note('100');
+      $note = $this->currency->get_note('100', $this->id);
       $this->assertEquals('http://fake/', $note[0]);
       $this->assertEquals(1, $note[1]);
       $this->assertEquals(40, strlen($note[2]));
       $this->assertEquals('100', $note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($note[2]));
-      $this->assertEquals($note, $this->currency->_check_note($note));
+      $this->assertEquals($note, $this->currency->_check_note($note, $this->id));
       return $note;
     }
 
     public function test02_change_note()
     {
       $note = $this->test01_get_note();
-      $other_note = $this->currency->change_note($note[1], $note[2], $note[3]);
+      $other_note = $this->currency->change_note($note[1], $note[2], $note[3], $this->id);
       $this->assertEquals('http://fake/', $note[0]);
       $this->assertEquals(2, $other_note[1]);
       $this->assertEquals(40, strlen($other_note[2]));
       $this->assertNotEquals($note[2], $other_note[2]);
       $this->assertEquals('100', $other_note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
-      $this->assertEquals($other_note, $this->currency->_check_note($other_note));
+      $this->assertEquals($other_note, $this->currency->_check_note($other_note, $this->id));
       return $other_note;
     }
 
     public function test03_merge_note()
     {
       $note = $this->test01_get_note();
-      $notes = $this->currency->merge_notes_columns(array($note[1]), array($note[2]), array($note[3]));
+      $notes = $this->currency->merge_notes_columns(array($note[1]), array($note[2]), array($note[3]), $this->id);
       $other_note = $notes[0];
       $this->assertEquals('http://fake/', $note[0]);
       $this->assertEquals(2, $other_note[1]);
@@ -105,17 +107,17 @@ class testcurrency extends PHPUnit_Framework_TestCase
       $this->assertNotEquals($note[2], $other_note[2]);
       $this->assertEquals('100', $other_note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
-      $this->assertEquals($other_note, $this->currency->_check_note($other_note));
+      $this->assertEquals($other_note, $this->currency->_check_note($other_note, $this->id));
     }
 
     public function test03_merge_two_notes()
     {
-      $note1 = $this->currency->get_note('100');
+      $note1 = $this->currency->get_note('100', $this->id);
       $this->assertEquals(TRUE, $this->currency->commit($note1[2]));
-      $note2 = $this->currency->get_note('100');
+      $note2 = $this->currency->get_note('100', $this->id);
       $this->assertEquals(TRUE, $this->currency->commit($note2[2]));
       $this->assertNotEquals($note1[2], $note2[2]);
-      $notes = $this->currency->merge_notes_columns(array($note1[1], $note2[1]), array($note1[2], $note2[2]), array($note1[3], $note2[3]));
+      $notes = $this->currency->merge_notes_columns(array($note1[1], $note2[1]), array($note1[2], $note2[2]), array($note1[3], $note2[3]), $this->id);
       $this->assertEquals(1, count($notes));
       $other_note = $notes[0];
       $this->assertEquals('http://fake/', $note1[0]);
@@ -124,13 +126,13 @@ class testcurrency extends PHPUnit_Framework_TestCase
       $this->assertNotEquals($note1[2], $other_note[2]);
       $this->assertEquals('200', $other_note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
-      $this->assertEquals($other_note, $this->currency->_check_note($other_note));
+      $this->assertEquals($other_note, $this->currency->_check_note($other_note, $this->id));
     }
 
     public function test03_merge_change_note()
     {
       $note = $this->test02_change_note();
-      $notes = $this->currency->merge_notes_columns(array($note[1]), array($note[2]), array($note[3]));
+      $notes = $this->currency->merge_notes_columns(array($note[1]), array($note[2]), array($note[3]), $this->id);
       $other_note = $notes[0];
       $this->assertEquals('http://fake/', $note[0]);
       $this->assertEquals(3, $other_note[1]);
@@ -138,7 +140,7 @@ class testcurrency extends PHPUnit_Framework_TestCase
       $this->assertNotEquals($note[2], $other_note[2]);
       $this->assertEquals('100', $other_note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
-      $this->assertEquals($other_note, $this->currency->_check_note($other_note));
+      $this->assertEquals($other_note, $this->currency->_check_note($other_note, $this->id));
     }
 
     //
@@ -146,12 +148,12 @@ class testcurrency extends PHPUnit_Framework_TestCase
     //
     public function test03_merge_note_5000()
     {
-      $note1 = $this->currency->get_note('2000');
+      $note1 = $this->currency->get_note('2000', $this->id);
       $this->assertEquals(TRUE, $this->currency->commit($note1[2]));
-      $note2 = $this->currency->get_note('3000');
+      $note2 = $this->currency->get_note('3000', $this->id);
       $this->assertEquals(TRUE, $this->currency->commit($note2[2]));
 
-      $notes = $this->currency->merge_notes(array($note1, $note2));
+      $notes = $this->currency->merge_notes(array($note1, $note2), $this->id);
       $other_note = $notes[0];
       $this->assertEquals('http://fake/', $other_note[0]);
       $this->assertEquals(1, $other_note[1], "serial");
@@ -160,13 +162,13 @@ class testcurrency extends PHPUnit_Framework_TestCase
       $this->assertNotEquals($note2[2], $other_note[2]);
       $this->assertEquals('5000', $other_note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($other_note[2]));
-      $this->assertEquals($other_note, $this->currency->_check_note($other_note));
+      $this->assertEquals($other_note, $this->currency->_check_note($other_note, $this->id));
     }
 
     public function test04_break_note()
     {
       $note = $this->test01_get_note();
-      $notes = $this->currency->break_note($note[1], $note[2], $note[3], array('27', '13', '1'));
+      $notes = $this->currency->break_note($note[1], $note[2], $note[3], $this->id, array('27', '13', '1'));
       $this->assertEquals(10, count($notes));
       $this->assertEquals('http://fake/', $notes[0][0]);
       $this->assertEquals('27', $notes[2][3]);
@@ -177,7 +179,7 @@ class testcurrency extends PHPUnit_Framework_TestCase
     public function test04_break_note_incomplete()
     {
       $note = $this->test01_get_note();
-      $notes = $this->currency->break_note($note[1], $note[2], $note[3], array('27'));
+      $notes = $this->currency->break_note($note[1], $note[2], $note[3], $this->id, array('27'));
       $this->assertEquals(4, count($notes));
       $this->assertEquals('http://fake/', $notes[0][0]);
       $this->assertEquals('27', $notes[2][3]);
@@ -187,13 +189,13 @@ class testcurrency extends PHPUnit_Framework_TestCase
     public function test05_put_note()
     {
       $note = $this->test01_get_note();
-      $this->currency->put_note($note[1], $note[2], $note[3]);
+      $this->currency->put_note($note[1], $note[2], $note[3], $this->id);
     }
 
     public function test06_fail_check_note()
     {
       try {
-        $this->currency->check_note(1, 'bugous " name', '10');
+        $this->currency->check_note(1, 'bugous " name', '10', $this->id);
       } catch(Exception $error) {
         $this->assertEquals(currency::E_INVALID_NOTE, $error->getCode());
         return;
@@ -203,9 +205,9 @@ class testcurrency extends PHPUnit_Framework_TestCase
 
     public function test07_fail_check_note()
     {
-      $note = $this->currency->get_note('100');
+      $note = $this->currency->get_note('100', $this->id);
       try {
-        $other_note = $this->currency->check_note($note[1], $note[2], $note[3]);
+        $other_note = $this->currency->check_note($note[1], $note[2], $note[3], $this->id);
       } catch(Exception $error) {
         $this->assertEquals(currency::E_CHECK_NOTE_FAILED, $error->getCode());
         return;
@@ -215,13 +217,13 @@ class testcurrency extends PHPUnit_Framework_TestCase
 
     public function test08_get_big_note()
     {
-      $note = $this->currency->get_note('10000000000000');
+      $note = $this->currency->get_note('10000000000000', $this->id);
       $this->assertEquals('http://fake/', $note[0]);
       $this->assertEquals(1, $note[1]);
       $this->assertEquals(40, strlen($note[2]));
       $this->assertEquals('10000000000000', $note[3]);
       $this->assertEquals(TRUE, $this->currency->commit($note[2]));
-      $this->assertEquals($note, $this->currency->_check_note($note));
+      $this->assertEquals($note, $this->currency->_check_note($note, $this->id));
       return $note;
     }
 
@@ -346,6 +348,17 @@ class testcurrency extends PHPUnit_Framework_TestCase
         $caught = TRUE;
       }
       $this->assertTrue($caught);
+    }
+
+    public function test17_currency_id()
+    {
+      $GLOBALS['currency_id'] = TRUE;
+      $note = $this->currency->get_note('10000000000000', 1);
+      $this->assertEquals('http://fake/', $note[0]);
+      $this->assertEquals('10000000000000', $note[3]);
+      $note = $this->currency->get_note('100', 2);
+      $this->assertEquals('http://fake/', $note[0]);
+      $this->assertEquals('100', $note[3]);
     }
 }
 
