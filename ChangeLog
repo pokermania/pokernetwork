@@ -1,6 +1,31 @@
-2007-06-19  Loic Dachary <loic@dachary.org>
+2007-06-21  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* pokerweb/pages/currency.php: Mutliple currencies support within
+	  the same database.
+	* tests/testcurrency.php.in: mutliple currencies tests
+
+2007-06-20  Loic Dachary <loic@dachary.org>
+
+	* tests/testcurrency.php.in: test16_db_check_selected
+	* pokerweb/pages/currency.php: remove the non working _[0-9]% like
+	  pattern
+	  remove useless setters
+	  re-arrange no-coverable code
+	* tests/testcurrency.php.in: function test1?_db_check_selected and
+	  don't use exception extension because hand made code is more
+	  convenient.
+	* pokerweb/pages/currency.php: Reset file descriptors after the
+	  destructor is called so that it does not harm to call it more
+	  than once.
+	* tests/testcurrency.php.in: test09_randname
+	* tests/testcurrency.php.in: Introduce exceptions to currency tests
+	  and define test09_mysql_extension.
+	* pokerweb/pages/currency.php: Tests for autoload of mysql
+	  extension.
+
+2007-06-19  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerclientpackets.py, pokernetwork/pokerpackets.py:
 	  Hybrid packets that only change the type of the packet must set
