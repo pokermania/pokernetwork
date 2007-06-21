@@ -45,6 +45,7 @@ if(!isset($GLOBALS['currency_db_user'])) $GLOBALS['currency_db_user'] = "currenc
 if(!isset($GLOBALS['currency_db_password'])) $GLOBALS['currency_db_password'] = "currency";
 
 if(!isset($GLOBALS['currency_random'])) $GLOBALS['currency_random'] = "/dev/urandom";
+if(!isset($GLOBALS['currency_id'])) $GLOBALS['currency_id'] = FALSE;
 
 if(!isset($GLOBALS['currency_url'])) {
   if(isset($_SERVER['SERVER_NAME'])) {
@@ -230,10 +231,11 @@ class currency {
         "   value BIGINT NOT NULL, " . 
         "   randname CHAR(40) NOT NULL UNIQUE, " .
         "   valid CHAR DEFAULT 'n' NOT NULL, " .
-        "   PRIMARY KEY (rowid, value, randname) " .
+        ($GLOBALS['currency_id'] ? "id INT NOT NULL, " : "") .
+        ($GLOBALS['currency_id'] ? "PRIMARY KEY (rowid, id, value, randname)  " : "PRIMARY KEY (rowid, value, randname)  " ) . 
         " ) ENGINE=InnoDB CHARSET=ascii;";
       if(!mysql_query($sql)) {
-        throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
+        throw new Exception("db_check_selected(4): $sql: " . mysql_error($this->connection));
       }
 
       $sql = "CREATE TABLE IF NOT EXISTS " . $this->db_prefix . "_transactions ( " .
@@ -245,9 +247,7 @@ class currency {
         "   valid CHAR NOT NULL, " .
         "   INDEX ( transaction_id ) " .
         " ) ENGINE=InnoDB CHARSET=ascii;";
-      if(!mysql_query($sql)) {
-        throw new Exception("db_check_selected(4):" . mysql_error($this->connection));
-      }
+      if(!mysql_query($sql)) throw new Exception("db_check_selected(5):" . mysql_error($this->connection));
 
       $this->db_selected = TRUE;
     }
@@ -276,10 +276,11 @@ class currency {
         "   updated TIMESTAMP, " . 
         "   randname CHAR(40) NOT NULL UNIQUE, " .
         "   valid CHAR DEFAULT 'n' NOT NULL, " .
-        "   PRIMARY KEY (rowid, randname)  " . 
+        ($GLOBALS['currency_id'] ? "id INT NOT NULL, " : "") .
+        ($GLOBALS['currency_id'] ? "PRIMARY KEY (rowid, id, randname)  " : "PRIMARY KEY (rowid, randname)  " ) . 
         " ) ENGINE=InnoDB CHARSET=ascii;";
       if(!mysql_query($sql)) {
-        throw new Exception("db_check_or_create_table_value(1):" . mysql_error($this->connection));
+        throw new Exception("db_check_or_create_table_value(1): $sql: " . mysql_error($this->connection));
       }
       $this->value2table[$value] = TRUE;
     } elseif($value <= 0) {
@@ -313,17 +314,17 @@ class currency {
     return $result;
   }
 
-  function get_note($value) {
-    return $this->transaction_wrap('_get_note_transaction', $value);
+  function get_note($value, $id) {
+    return $this->transaction_wrap('_get_note_transaction', $value, $id);
   }
 
-  function _get_note_transaction($value) {
-    $note = $this->_get_note($value, 'n');
+  function _get_note_transaction($value, $id) {
+    $note = $this->_get_note($value, 'n', $id);
     $this->_transaction_add($note[2], 'n', $note);
     return $note;
   }
 
-  function _get_note($value, $valid) {
+  function _get_note($value, $valid, $id) {
     $done = FALSE;
     $this->db_check_or_create_table_value($value);
     $table = $this->value2table($value);
@@ -332,10 +333,18 @@ class currency {
     $randname = FALSE;
     while(!$done && $retry < 5) {
       $randname = call_user_func($this->get_name, $this);
-      if($is_private_table) {
-        $sql = "INSERT INTO ${table} (randname, valid) VALUES ('$randname', '$valid')";
+      if($GLOBALS['currency_id']) {
+        if($is_private_table) {
+          $sql = "INSERT INTO ${table} (randname, valid, id) VALUES ('$randname', '$valid', $id)";
+        } else {
+          $sql = "INSERT INTO ${table} (value, randname, valid, id) VALUES ($value, '$randname', '$valid', $id)";
+        }
       } else {
-        $sql = "INSERT INTO ${table} (value, randname, valid) VALUES ($value, '$randname', '$valid')";
+        if($is_private_table) {
+          $sql = "INSERT INTO ${table} (randname, valid) VALUES ('$randname', '$valid')";
+        } else {
+          $sql = "INSERT INTO ${table} (value, randname, valid) VALUES ($value, '$randname', '$valid')";
+        }
       }
       $status = $this->db_query($sql);
       if($status) {
@@ -403,7 +412,7 @@ class currency {
 
   function _commit($transaction_id, $sqls, $transactions_count) {
     //
-    // Run the SQL statements, verifying that each of them affect
+    // Run the SQL statements, verifying that each of them alter
     // the expected number of rows.
     //
     foreach ( $sqls as $sql ) {
@@ -448,27 +457,27 @@ class currency {
     }
   }
 
-  function check_note($serial, $name, $value) {
-    return $this->_check_note(array($this->url, $serial, $name, $value));
+  function check_note($serial, $name, $value, $id) {
+    return $this->_check_note(array($this->url, $serial, $name, $value), $id);
   }
 
-  function _check_note($note) {
+  function _check_note($note, $id) {
     list( $url, $serial, $name, $value ) = $note;
 
     $serial = intval($serial);
     $this->db_check_table_value($value);
     $table = $this->value2table($value);
-    $result = $this->db_query("SELECT rowid FROM ${table} WHERE rowid = $serial AND randname = '$name' AND valid = 'y'");
+    $result = $this->db_query("SELECT rowid FROM ${table} WHERE rowid = $serial AND randname = '$name' AND valid = 'y'" . ($GLOBALS['currency_id'] ? " AND id = $id" : ""));
     if(mysql_affected_rows($this->connection) != 1) {
       throw new Exception("failed to check note $serial $name" . mysql_error($this->connection), self::E_CHECK_NOTE_FAILED);
     }
     return $note;
   }
 
-  function change_note($serial, $name, $value) {
+  function change_note($serial, $name, $value, $id) {
     $serial = intval($serial);
-    $this->check_note($serial, $name, $value);
-    $note = $this->_get_note_transaction($value);
+    $this->check_note($serial, $name, $value, $id);
+    $note = $this->_get_note_transaction($value, $id);
     $this->_transaction_add($note[2], 'y', array($this->url, $serial, $name, $value));
     return $note;
   }
@@ -483,11 +492,11 @@ class currency {
     }
   }
 
-  function break_note($serial, $name, $value, $values = FALSE) {
-    return $this->transaction_wrap('_break_note', $serial, $name, $value, $values);
+  function break_note($serial, $name, $value, $id, $values = FALSE) {
+    return $this->transaction_wrap('_break_note', $serial, $name, $value, $id, $values);
   }
 
-  function _break_note($serial, $name, $value, $values) {
+  function _break_note($serial, $name, $value, $id, $values) {
     $serial = intval($serial);
     if($values == FALSE) {
       $values = $this->values;
@@ -501,16 +510,16 @@ class currency {
       $count = intval(bcdiv($value, $note_value)); 
       $value = bcmod($value, $note_value);
       for($i = 0; $i < $count; $i++)
-        array_push($notes, $this->_get_note($note_value, 'n'));
+        array_push($notes, $this->_get_note($note_value, 'n', $id));
       if(!(bccomp($value, 0) > 0)) break;
     }
 
     if(bccomp($value, 0) > 0) {
-      array_push($notes, $this->get_note($value));
+      array_push($notes, $this->get_note($value, $id));
     }
 
     $transaction_id = $notes[0][2];
-    $this->_check_note($to_delete);
+    $this->_check_note($to_delete, $id);
     $this->_transaction_add($transaction_id, 'y', $to_delete);
     foreach ( $notes as $note )
       $this->_transaction_add($transaction_id, 'n', $note);
@@ -521,7 +530,7 @@ class currency {
     return $notes;
   }
 
-  function merge_notes_columns($serials, $names, $values, $known_values = FALSE) {
+  function merge_notes_columns($serials, $names, $values, $id, $known_values = FALSE) {
     if(count($serials) != count($names) || count($names) != count($values)) {
       throw new Exception("serials, names and values must have the same size count(serials) = " . count($serials) . " count(names) = " . count($names) . " count(values) = " . count($values));
     }
@@ -529,16 +538,15 @@ class currency {
     // For the sake of genericity, merging a single note 
     // is equivalent to changing the note.
     //
-    if(count($serials) == 1) {
-      return array($this->change_note($serials[0], $names[0], $values[0]));
-    }
+    if(count($serials) == 1)
+      return array($this->change_note($serials[0], $names[0], $values[0], $id));
     $notes = array();
     for($i = 0; $i < count($serials); $i++)
       array_push($notes, array($this->url, intval($serials[$i]), $names[$i], $values[$i]));
-    return $this->merge_notes($notes, $known_values);
+    return $this->merge_notes($notes, $id, $known_values);
   }
 
-  function merge_notes($notes, $values = FALSE) {
+  function merge_notes($notes, $id, $values = FALSE) {
     if($values == FALSE) {
       $values = $this->values;
     } else {
@@ -562,10 +570,10 @@ class currency {
       throw new Exception("merge notes would not merge anything");
     }
 
-    return $this->transaction_wrap('_merge_notes', $value2count, $notes, $values);
+    return $this->transaction_wrap('_merge_notes', $value2count, $notes, $id, $values);
   }
 
-  function _merge_notes($value2count, $notes, $values) {
+  function _merge_notes($value2count, $notes, $id, $values) {
     $new_notes = array();
     $to_delete = array();
     if($values) {
@@ -581,7 +589,7 @@ class currency {
             unset($value2count[$value]);
           }
         } else {
-          $this->_check_note($note);
+          $this->_check_note($note, $id);
           array_push($to_delete, $note);
         }
       }
@@ -592,7 +600,7 @@ class currency {
     //
     foreach ( $value2count as $value => $count ) {
       for($i = 0; $i < $count; $i++)
-        array_push($new_notes, $this->_get_note(strval($value), 'n'));
+        array_push($new_notes, $this->_get_note(strval($value), 'n', $id));
     }
 
     $transaction_id = $new_notes[0][2];
@@ -623,6 +631,12 @@ function currency_main($use_headers = True, $return_output = FALSE) {
       $command = $_GET['command'];
     }
 
+    if(!isset($_GET['id'])) {
+      $id = 0;
+    } else {
+      $id = $_GET['id'];
+    }
+
     if($command == 'get_note') {
       if(isset($_GET['count'])) $count = $_GET['count'];
       else $count = 1;
@@ -630,9 +644,9 @@ function currency_main($use_headers = True, $return_output = FALSE) {
       if(isset($_GET['autocommit'])) $autocommit = $_GET['autocommit'];
       for($i = 0; $i < $count; $i++) {
         if($autocommit == 'yes') {
-          $note = $currency->_get_note($_GET['value'], 'y');
+          $note = $currency->_get_note($_GET['value'], 'y', $id);
         } else {
-          $note = $currency->get_note($_GET['value']);
+          $note = $currency->get_note($_GET['value'], $id);
         }
         array_push($page, join("\t", $note));
       }
@@ -642,7 +656,7 @@ function currency_main($use_headers = True, $return_output = FALSE) {
       } else {
         $_GET['values'] = FALSE;
       }
-      $notes = $currency->merge_notes_columns($_GET['serial'], $_GET['name'], $_GET['value'], $_GET['values']);
+      $notes = $currency->merge_notes_columns($_GET['serial'], $_GET['name'], $_GET['value'], $id, $_GET['values']);
       foreach ($notes as $note)
         array_push($page, join("\t", $note));
     } elseif($command == 'break_note') {
@@ -651,14 +665,14 @@ function currency_main($use_headers = True, $return_output = FALSE) {
       } else {
         $_GET['values'] = FALSE;
       }
-      $notes = $currency->break_note($_GET['serial'], $_GET['name'], $_GET['value'], $_GET['values']);
+      $notes = $currency->break_note($_GET['serial'], $_GET['name'], $_GET['value'], $id, $_GET['values']);
       foreach ($notes as $note)
         array_push($page, join("\t", $note));
     } elseif($command == 'change_note') {
-      $note = $currency->change_note($_GET['serial'], $_GET['name'], $_GET['value']);
+      $note = $currency->change_note($_GET['serial'], $_GET['name'], $_GET['value'], $id);
       array_push($page, join("\t", $note));
     } elseif($command == 'check_note') {
-      $note = $currency->check_note($_GET['serial'], $_GET['name'], $_GET['value']);
+      $note = $currency->check_note($_GET['serial'], $_GET['name'], $_GET['value'], $id);
       array_push($page, join("\t", $note));
     } elseif($command == 'commit') {
       array_push($page, $currency->commit($_GET['transaction_id']));
