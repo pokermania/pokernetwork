@@ -213,6 +213,8 @@ class currency {
       if($count != FALSE && $count > 0) {
         while ($row = mysql_fetch_row($result)) {
           $table = $row[0];
+          if($table == $prefix . "transactions")
+            continue;
           if(strlen($table) <= $prefix_length) throw new Exception("mysql table $table is shorter or equal than the expected prefix $prefix",  self::E_DATABASE_CORRUPTED); // impossible because of the LIKE clause above 
           $value = substr($table, $prefix_length);
           $this->value2table[$value] = $table;
