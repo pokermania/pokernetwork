@@ -26,38 +26,27 @@ import unittest
 import simplejson
 from struct import pack, unpack, calcsize
 
+import testpackets
+
 from pokernetwork import packets
 
-class PacketsTestCase(unittest.TestCase):
-
-    def packetCheck(self, **kwargs):
-        packet_type = kwargs['type']
-        del kwargs['type']
-        packet = packet_type(**kwargs)
-        size = packet.calcsize()
-        packed = packet.pack()
-        self.assertEqual(size, len(packed))
-        other_packet = packet_type()
-        if other_packet.unpack(packed) != None:
-            self.assertEqual(repr(packet), repr(other_packet))
-            self.assertEqual(packet, other_packet)
-            self.assertEqual(packed, other_packet.pack())
-            return packet
-        else:
-            return None
+class PacketsTestCase(testpackets.PacketsTestBase):
 
     def test_unpack(self):
         class TestPacket(packets.Packet):
-            type = 77
+            def __init__(self):
+                self.type = 77
 
         class TestPacketList(packets.PacketList):
             def __init__(self):
+                self.type = 254
                 packets.PacketList.__init__(self, packets = [TestPacket()])
 
         self.assertEqual(None, self.packetCheck(type = TestPacketList))
 
         class TestPacketList(packets.PacketList):
             def __init__(self):
+                self.type = 253
                 packets.PacketList.__init__(self, packets = [packets.Packet()])
 
             def unpack(self, block):
@@ -67,16 +56,24 @@ class PacketsTestCase(unittest.TestCase):
         
     #--------------------------------------------------------------    
     def test_all(self):
-        for type in packets._TYPES:
-            if packets.PacketFactory.has_key(type):
-                self.packetCheck(type = packets.PacketFactory[type])
+        for type_index in packets._TYPES:
+            if packets.PacketFactory.has_key(type_index):
+                if self.verbose > 0:
+                    print packets.PacketNames[type_index]
+                self.packetCheck(type = packets.PacketFactory[type_index])
 
         class TestPacketList(packets.PacketList):
             def __init__(self):
                 packets.PacketList.__init__(self, packets = [packets.Packet()])
         self.packetCheck(type = TestPacketList)
 
+        packets.PacketNames[253] = 'TestPacketFieldList'
+        
         class TestPacketFieldList(packets.Packet):
+            type = 253
+
+            info = packets.Packet.info + ( ('serials', [1L], 'Il'), )
+            
             serials = []
 
             format_element = "!I"
@@ -115,6 +112,12 @@ class PacketsTestCase(unittest.TestCase):
                                           ('e', -1, 'b'),
                                           ('f', None, 'no net'),
                                           ('g', [{'a': [1,2]}, None, True], 'j'),
+                                          ('h', [packets.PacketPing(), packets.PacketPing()], 'pl'),
+                                          ('i', True, 'bool'),
+                                          ('i1', False, 'bool'),
+                                          ('j', 'n', 'cbool'),
+                                          ('j1', 'y', 'cbool'),
+                                          ('k', None, 'Bnone'),
                                           )
             fields = ( "\x0a", # type
                        "\0\0", # length
@@ -124,6 +127,12 @@ class PacketsTestCase(unittest.TestCase):
                        "\x03\x01\x02\x03", # d
                        "\xff", # e
                        '\x00\x1b[{"a": [1, 2]}, null, true]', # g
+                       "\x02\x05\x00\x03\x05\x00\x03", # h
+                       "\x01", # i
+                       "\x00", # i1
+                       "\x00", # j
+                       "\x01", # j1
+                       "\xff", # k
                        )
             binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
         d = {}
@@ -165,27 +174,6 @@ class PacketsTestCase(unittest.TestCase):
         packet = type()
         self.assertEqual(len(type.binary), packet.infoCalcsize())
 
-    def test_infoHybrid(self):
-        d = {}
-        d['PacketFactory'] = {}
-        d['PacketNames'] = {}
-        class TestPacketBase(packets.Packet):
-            def __init__(self, **kwargs):
-                pass
-            
-        class TestPacketClass(TestPacketBase):
-            pass
-        
-        index = 11
-        packets.Packet.infoHybrid(d, TestPacketClass, TestPacketBase, 'NAME', index)
-        self.assertEqual(TestPacketClass, d['PacketFactory'][index])
-        self.assertEqual('NAME', d['PacketNames'][index])
-        test_packet = TestPacketClass()
-        packet = packets.Packet()
-        self.assertEqual(packet.calcsize() * 2, test_packet.calcsize())
-        packets.Packet.infoHybrid(d, TestPacketBase, packets.Packet, 'BASENAME', index + 1)
-        self.assertEqual('BASENAME', d['PacketNames'][index + 1])        
-
     def test_infoDeclare(self):
         d = {}
         d['PacketFactory'] = {}
@@ -200,7 +188,17 @@ class PacketsTestCase(unittest.TestCase):
         test_packet = TestPacketClass()
         packet = packets.Packet()
         self.assertEqual(packet.calcsize(), test_packet.calcsize())
-        self.assertEqual("type = 11 length = -1", str(test_packet))
+        self.assertEqual("type = 11 length = 3", str(test_packet))
+
+    def test_unpackpackets_errors(self):
+        #
+        # Unknown packet type
+        #
+        self.assertEqual(None, packets.Packet.unpackpackets('\x01\xff\x00\x03'));
+        #
+        # Pretend there are 2 packets although only one is present
+        #
+        self.assertEqual(None, packets.Packet.unpackpackets('\x02\x00\x00\x03'));
 
 #--------------------------------------------------------------
 def GetTestSuite():
