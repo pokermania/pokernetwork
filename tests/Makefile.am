@@ -41,6 +41,7 @@ EXTRA_DIST = \
 	poker-engine/poker.holdem.xml \
 	coverage.py \
 	test-poker-interface.py \
+	testpackets.py \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
 	test-pokerdisplay2d \
