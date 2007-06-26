@@ -494,8 +494,8 @@ class PokerExplainTestCase(unittest.TestCase):
         hand_value = 1010
         hand = [1, 2, 3, 4, 5]
         game.serial2best = {player_serial:
-                            {'hi': (hand_value_string, [hand_value] + hand),
-                             'low': (hand_value_string, [hand_value] + hand)},
+                            {'hi': (hand_value, [hand_value_string] + hand),
+                             'low': (hand_value, [hand_value_string] + hand)},
                             }
         game.side2winners = {
             'hi': [player_serial],
@@ -1102,7 +1102,7 @@ class PokerExplainTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test40"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerGamesTestCase))
     suite.addTest(loader.loadClass(PokerExplainTestCase))
