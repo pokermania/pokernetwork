@@ -1,6 +1,56 @@
-2007-06-21  Loic Dachary <loic@dachary.org>
+2007-06-26  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* tests/testpackets.py: base tests common to all test-*packet*.in
+	* tests/test-pokerclientpackets.py.in: testpackets base class for
+	  packets and pokerpackets
+	* tests/Makefile.am: testpackets base class for packets and
+	  pokerpackets
+	* pokernetwork/pokerclientpackets.py: All packets are not
+	  infoDeclare because infoHybrid is obsolete.
+	* debian/poker-web.preinst: install xdebug rc4
+	* configure.ac: test-actionscript.py sample decode code generator
+	  based on the packet info field
+	* conf/poker.server.xml.in: default user_create is no
+	* pokernetwork/packets.py: In packets, always set the length field.
+	  Define the new types Bnone (255 == None), cbool ('y', 'n'), pl
+	  (packet list).
+	  Obsolete the Hybrid declaration function.
+	  Pack the integers in network order for Il.
+	  Set the info field for all packets.
+	* tests/test-packets.py.in: Be more verbose by default to improve
+	  error report readability.
+	  The type field must be a field of the packet in the mockup
+	  packets.
+	  Define the info field for all test packets because the rule is
+	  now to have an info field for all defined packets.
+	  Test values for the new types, pl, bool, cbool and Bnone.
+	  Kill infoHybrid test because the method is now obsolete.
+	  Test unpackpackets error conditions.
+	* tests/test-pokerpackets.py.in: Use the testpackets class as a
+	  base common to test-packets.py.in
+	  Test the infoPack / infoUnpack functions for functions dedicated
+	  to poluting some specific packets (player, money).
+	* pokernetwork/pokerpackets.py: Define the info attribute for each
+	  packet.
+	  Add format_info players for PacketPokerPlayersList
+	  Add format_info money for PacketPokerUserInfo
+	  replace infoHybrid with infoDeclare
+	  Change the money list length in PacketPokerUserInfo to be
+	  immediately before the money list instead of in the middle of the
+	  packet
+
+2007-06-23  Loic Dachary <loic@dachary.org>
+
+	* tests/test-actionscript.py.in: ActionScript code generator.
+
+2007-06-22  Loic Dachary <loic@dachary.org>
+
+	* pokerweb/pages/currency.php: Skip the transactions table when
+	  building the value2table map.
+
+2007-06-21  Loic Dachary <loic@dachary.org>
 
 	* pokerweb/pages/currency.php: Mutliple currencies support within
 	  the same database.
@@ -4473,5 +4523,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-15/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-20/p'"
 End:
