@@ -294,6 +294,7 @@ AC_CONFIG_FILES([
         tests/test-pokerlock.py
         tests/test-pokernetworkconfig.py
         tests/test-packets.py
+        tests/test-actionscript.py
         tests/test-pokerpackets.py
         tests/test-pokerclientpackets.py
         tests/test-pokerservice.py
