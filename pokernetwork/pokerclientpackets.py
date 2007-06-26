@@ -119,14 +119,14 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    info = ( ("side", "", 's'),
-             ("hand", "", 's'),
-             ("bestcards", [], 'Bl'),
-             ("board", [], 'Bl'),
-             ("besthand", 0, 'B'),
-             )
+    info = PacketPokerCards.info + ( ("side", "", 's'),
+                                     ("hand", "", 's'),
+                                     ("bestcards", [], 'Bl'),
+                                     ("board", [], 'Bl'),
+                                     ("besthand", 0, 'B'),
+                                     )
 
-Packet.infoHybrid(globals(), PacketPokerBestCards, PacketPokerCards, 'PACKET_POKER_BEST_CARDS', 170) # 0xaa # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerBestCards, PacketPokerCards, 'PACKET_POKER_BEST_CARDS', 170) # 0xaa # %SEQ%
 
 ########################################
 
@@ -160,11 +160,11 @@ class PacketPokerClientAction(PacketPokerId):
     
     """
 
-    info = ( ("display", 0, 'B'),
-             ("action", "", 's'),
-             )
+    info = PacketPokerId.info + ( ("display", 0, 'B'),
+                                  ("action", "", 's'),
+                                  )
 
-Packet.infoHybrid(globals(), PacketPokerClientAction, PacketPokerId, 'PACKET_POKER_CLIENT_ACTION', 172) # 0xac # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerClientAction, PacketPokerId, 'PACKET_POKER_CLIENT_ACTION', 172) # 0xac # %SEQ%
 
 ########################################
 
@@ -191,22 +191,22 @@ pot: the amount in the pot.
 game_id: integer uniquely identifying a game.
 """
 
-    info = ( ("min", 0, 'I'),
-             ("max", 0, 'I'),
-             ("step", 0, 'I'),
-             ("call", 0, 'I'),
-             ("allin", 0, 'I'),
-             ("pot", 0, 'I'),
-             )
+    info = PacketPokerId.info + ( ("min", 0, 'I'),
+                                  ("max", 0, 'I'),
+                                  ("step", 0, 'I'),
+                                  ("call", 0, 'I'),
+                                  ("allin", 0, 'I'),
+                                  ("pot", 0, 'I'),
+                                  )
 
-Packet.infoHybrid(globals(), PacketPokerBetLimit, PacketPokerId, 'PACKET_POKER_BET_LIMIT', 173) # 0xad # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerBetLimit, PacketPokerId, 'PACKET_POKER_BET_LIMIT', 173) # 0xad # %SEQ%
 
 ########################################
 
 class PacketPokerSitRequest(PacketPokerSit):
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerSitRequest, PacketPokerId, "PACKET_POKER_SIT_REQUEST", 174) # 0xae # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerSitRequest, PacketPokerId, "PACKET_POKER_SIT_REQUEST", 174) # 0xae # %SEQ%
 
 ########################################
 
@@ -221,9 +221,9 @@ Context: inferred at showdown.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerPlayerNoCards, PacketPokerId, "PACKET_POKER_PLAYER_NO_CARDS", 175) # 0xaf # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerPlayerNoCards, PacketPokerId, "PACKET_POKER_PLAYER_NO_CARDS", 175) # 0xaf # %SEQ%
 
 ######################################## 
 
@@ -239,11 +239,11 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('chips', [], 'c' ),
         )
     
-Packet.infoHybrid(globals(), PacketPokerChipsPlayer2Bet, PacketPokerId, 'PACKET_POKER_CHIPS_PLAYER2BET', 176) # 0xb0 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChipsPlayer2Bet, PacketPokerId, 'PACKET_POKER_CHIPS_PLAYER2BET', 176) # 0xb0 # %SEQ%
 
 ######################################## 
 
@@ -266,12 +266,12 @@ chips: list of integers counting the number of chips to move.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    info = (
+    info = PacketPokerId.info + (
         ('chips', [], 'c' ),
         ('pot', -1, 'b' ),
         )
     
-Packet.infoHybrid(globals(), PacketPokerChipsBet2Pot, PacketPokerId, 'PACKET_POKER_CHIPS_BET2POT', 177) # 0xb1 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChipsBet2Pot, PacketPokerId, 'PACKET_POKER_CHIPS_BET2POT', 177) # 0xb1 # %SEQ%
 
 ######################################## Display packet
 
@@ -302,13 +302,13 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('chips', [], 'c' ),
         ('pot', -1, 'b' ),
         ('reason', '', 's' ),
         )
 
-Packet.infoHybrid(globals(), PacketPokerChipsPot2Player, PacketPokerId, 'PACKET_POKER_CHIPS_POT2PLAYER', 178) # 0xb2 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChipsPot2Player, PacketPokerId, 'PACKET_POKER_CHIPS_POT2PLAYER', 178) # 0xb2 # %SEQ%
 
 ######################################## Display packet
 
@@ -328,12 +328,12 @@ sources: list of pot indexes in the range [0,9].
 game_id: integer uniquely identifying a game.
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('sources', [], 'Bl' ),
         ('destination', 0, 'B' ),
         )
 
-Packet.infoHybrid(globals(), PacketPokerChipsPotMerge, PacketPokerId, 'PACKET_POKER_CHIPS_POT_MERGE', 179) # 0xb3 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChipsPotMerge, PacketPokerId, 'PACKET_POKER_CHIPS_POT_MERGE', 179) # 0xb3 # %SEQ%
 
 ######################################## Display packet
 
@@ -350,9 +350,9 @@ because a PACKET_POKER_WIN or PACKET_POKER_CANCELED is received).
 
 game_id: integer uniquely identifying a game.
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerChipsPotReset, PacketPokerId, "PACKET_POKER_CHIPS_POT_RESET", 180) # 0xb4 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChipsPotReset, PacketPokerId, "PACKET_POKER_CHIPS_POT_RESET", 180) # 0xb4 # %SEQ%
 
 ######################################## Display packet
 
@@ -360,7 +360,7 @@ class PacketPokerChipsBet2player(PacketPokerChipsPlayer2Bet):
     """chips move from bet to player"""
     pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerChipsBet2player, PacketPokerChipsPlayer2Bet, "PACKET_POKER_CHIPS_BET2PLAYER", 181) # 0xb5 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChipsBet2player, PacketPokerChipsPlayer2Bet, "PACKET_POKER_CHIPS_BET2PLAYER", 181) # 0xb5 # %SEQ%
 
 ######################################## Display packet
 
@@ -383,9 +383,9 @@ It is not inferred at the end of the last betting round.
 
 game_id: integer uniquely identifying a game.
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerEndRound, PacketPokerId, "PACKET_POKER_END_ROUND", 182) # 0xb6 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerEndRound, PacketPokerId, "PACKET_POKER_END_ROUND", 182) # 0xb6 # %SEQ%
 
 ########################################
 
@@ -429,12 +429,12 @@ numberOfCards: number of cards to be dealt.
 serials: integers uniquely identifying players.
 game_id: integer uniquely identifying a game.
 """
-    info = (
+    info = PacketPokerId.info + (
         ('numberOfCards', 2, 'B'),
         ('serials', [], 'Il'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerDealCards, PacketPokerId, 'PACKET_POKER_DEAL_CARDS', 184) # 0xb8 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerDealCards, PacketPokerId, 'PACKET_POKER_DEAL_CARDS', 184) # 0xb8 # %SEQ%
 
 ########################################
 
@@ -452,12 +452,12 @@ Packet.infoDeclare(globals(), PacketPokerChatHistory, Packet, "PACKET_POKER_CHAT
 class PacketPokerDisplayCard(PacketPokerId):
     """Hide a player card"""
 
-    info = (
+    info = PacketPokerId.info + (
         ('index', [], 'Bl'),
         ('display', 0, 'B'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerDisplayCard, PacketPokerId, "PACKET_POKER_DISPLAY_CARD", 186) # 0xba # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerDisplayCard, PacketPokerId, "PACKET_POKER_DISPLAY_CARD", 186) # 0xba # %SEQ%
 
 ########################################
 
@@ -467,9 +467,9 @@ Semantics: the player authenticated for this connection
 is in position. Otherwise identical to PACKET_POKER_POSITION.
 
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerSelfInPosition, PacketPokerPosition, "PACKET_POKER_SELF_IN_POSITION", 187) # 0xbb # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerSelfInPosition, PacketPokerPosition, "PACKET_POKER_SELF_IN_POSITION", 187) # 0xbb # %SEQ%
 
 ########################################
 
@@ -479,9 +479,9 @@ Semantics: the player authenticated for this connection
 is in position. Otherwise identical to PACKET_POKER_POSITION.
 
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerSelfLostPosition, PacketPokerPosition, "PACKET_POKER_SELF_LOST_POSITION", 188) # 0xbc # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerSelfLostPosition, PacketPokerPosition, "PACKET_POKER_SELF_LOST_POSITION", 188) # 0xbc # %SEQ%
 
 ########################################
 
@@ -502,9 +502,9 @@ is inferred for each raise.
 
 game_id: integer uniquely identifying a game.
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerHighestBetIncrease, PacketPokerId, "PACKET_POKER_HIGHEST_BET_INCREASE", 189) # 0xbd # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerHighestBetIncrease, PacketPokerId, "PACKET_POKER_HIGHEST_BET_INCREASE", 189) # 0xbd # %SEQ%
 
 ########################################
 
@@ -520,9 +520,9 @@ PlayerWin is generated.
 
 serial: integer uniquely identifying a player.
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerPlayerWin, PacketPokerId, "PACKET_POKER_PLAYER_WIN", 190) # 0xbe # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerPlayerWin, PacketPokerId, "PACKET_POKER_PLAYER_WIN", 190) # 0xbe # %SEQ%
 
 ########################################
 
@@ -539,11 +539,11 @@ serial: integer uniquely identifying a player.
 action: string that contain "start" or "stop".
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('action', 'start', 's'),
         )
     
-Packet.infoHybrid(globals(), PacketPokerAnimationPlayerNoise, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_NOISE", 191) # 0xbf # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerAnimationPlayerNoise, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_NOISE", 191) # 0xbf # %SEQ%
 
 ########################################
 
@@ -560,11 +560,11 @@ serial: integer uniquely identifying a player.
 animation: string used to select an animation fold.
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('animation', 'UNKNOWN', 's'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerAnimationPlayerFold, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_FOLD", 192) # 0xc0 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerAnimationPlayerFold, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_FOLD", 192) # 0xc0 # %SEQ%
 
 ########################################
 
@@ -572,7 +572,7 @@ class PacketPokerAnimationPlayerBet(PacketPokerId):
     """\
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('animation', '', 's'),
         ('chips', [], 'c'),
         ('amount', 0, 'I'),
@@ -582,14 +582,14 @@ class PacketPokerAnimationPlayerBet(PacketPokerId):
         Packet.infoInit(self, **kwargs)
         self.amount = chips2amount(self.chips)
         
-Packet.infoHybrid(globals(), PacketPokerAnimationPlayerBet, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_BET", 193) # 0xc1 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerAnimationPlayerBet, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_BET", 193) # 0xc1 # %SEQ%
 
 ########################################
 
 class PacketPokerAnimationPlayerChips(PacketPokerId):
     """\
 """
-    info = (
+    info = PacketPokerId.info + (
         ('animation', '', 's'),
         ('chips', [], 'c'),
         ('state', '', 's'),
@@ -600,7 +600,7 @@ class PacketPokerAnimationPlayerChips(PacketPokerId):
         Packet.infoInit(self, **kwargs)
         self.amount = chips2amount(self.chips)
         
-Packet.infoHybrid(globals(), PacketPokerAnimationPlayerChips, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_CHIPS", 194) # 0xc2 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerAnimationPlayerChips, PacketPokerId, "PACKET_POKER_ANIMATION_PLAYER_CHIPS", 194) # 0xc2 # %SEQ%
 
 ########################################
 
@@ -608,11 +608,11 @@ class PacketPokerAnimationDealerChange(PacketPokerId):
     """\
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('state', 'UNKNOWN', 's'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerAnimationDealerChange, PacketPokerId, "PACKET_POKER_ANIMATION_DEALER_CHANGE", 195) # 0xc3 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerAnimationDealerChange, PacketPokerId, "PACKET_POKER_ANIMATION_DEALER_CHANGE", 195) # 0xc3 # %SEQ%
 
 ########################################
 
@@ -620,11 +620,11 @@ class PacketPokerAnimationDealerButton(PacketPokerId):
     """\
 """
 
-    info = (
+    info = PacketPokerId.info + (
         ('state', 'UNKNOWN', 's'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerAnimationDealerButton, PacketPokerId, "PACKET_POKER_ANIMATION_DEALER_BUTTON", 196) # 0xc4 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerAnimationDealerButton, PacketPokerId, "PACKET_POKER_ANIMATION_DEALER_BUTTON", 196) # 0xc4 # %SEQ%
 
 ########################################
 
@@ -655,9 +655,9 @@ BEGIN    river
 
 game_id: integer uniquely identifying a game.
 """
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerBeginRound, PacketPokerId, "PACKET_POKER_BEGIN_ROUND", 197) # 0xc5 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerBeginRound, PacketPokerId, "PACKET_POKER_BEGIN_ROUND", 197) # 0xc5 # %SEQ%
 
 ########################################
 
@@ -673,26 +673,26 @@ Packet.infoDeclare(globals(), PacketPokerCurrentGames, Packet, "PACKET_POKER_CUR
 ######################################## Display packet
 
 class PacketPokerEndRoundLast(PacketPokerId):
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerEndRoundLast, PacketPokerId, "PACKET_POKER_END_ROUND_LAST", 199) # 0xc7 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerEndRoundLast, PacketPokerId, "PACKET_POKER_END_ROUND_LAST", 199) # 0xc7 # %SEQ%
 
 ######################################## Stop or Start animation
 
 class PacketPokerPythonAnimation(PacketPokerId):
 
-    info = (
+    info = PacketPokerId.info + (
         ('animation', 'none', 's'),
         )
     
-Packet.infoHybrid(globals(), PacketPokerPythonAnimation, PacketPokerId, "PACKET_POKER_PYTHON_ANIMATION", 200) # 0xc8 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerPythonAnimation, PacketPokerId, "PACKET_POKER_PYTHON_ANIMATION", 200) # 0xc8 # %SEQ%
 
 ########################################
 
 class PacketPokerSitOutNextTurn(PacketPokerSitOut):
-    info = ()
+    pass #pragma: no cover
 
-Packet.infoHybrid(globals(), PacketPokerSitOutNextTurn, PacketPokerId, "PACKET_POKER_SIT_OUT_NEXT_TURN", 201) # 0xc9 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerSitOutNextTurn, PacketPokerId, "PACKET_POKER_SIT_OUT_NEXT_TURN", 201) # 0xc9 # %SEQ%
 
 ########################################
 
@@ -708,21 +708,21 @@ Packet.infoDeclare(globals(), PacketPokerRendererState, Packet, "PACKET_POKER_RE
 
 class PacketPokerChatWord(PacketPokerId):
 
-    info = (
+    info = PacketPokerId.info + (
         ('word', 'no word', 's'),
         )
     
-Packet.infoHybrid(globals(), PacketPokerChatWord, PacketPokerId, "PACKET_POKER_CHAT_WORD", 203) # 0xcb # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerChatWord, PacketPokerId, "PACKET_POKER_CHAT_WORD", 203) # 0xcb # %SEQ%
 
 ########################################
 
 class PacketPokerShowdown(PacketPokerId):
 
-    info = (
+    info = PacketPokerId.info + (
         ('showdown_stack', {}, 'j'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerShowdown, PacketPokerId, "PACKET_POKER_SHOWDOWN", 204) # 0xcc # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerShowdown, PacketPokerId, "PACKET_POKER_SHOWDOWN", 204) # 0xcc # %SEQ%
 
 ########################################
 
@@ -760,22 +760,22 @@ Direction: client <=> client
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
-    info = (
+    info = PacketPokerId.info + (
         ('state', 'UNKNOWN', 's'),
         ('when', 'now', 's'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerPlayerMeLookCards, PacketPokerId, "PACKET_POKER_PLAYER_ME_LOOK_CARDS", 207) # 0xcf # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerPlayerMeLookCards, PacketPokerId, "PACKET_POKER_PLAYER_ME_LOOK_CARDS", 207) # 0xcf # %SEQ%
 
 ########################################
 
 class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
 
-    info = (
+    info = PacketPokerId.info + (
         ('state', 'UNKNOWN', 's'),
         )
 
-Packet.infoHybrid(globals(), PacketPokerPlayerMeInFirstPerson, PacketPokerId, "PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON", 208) # 0xd0 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerPlayerMeInFirstPerson, PacketPokerId, "PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON", 208) # 0xd0 # %SEQ%
 
 _TYPES = range(170,254)
 
