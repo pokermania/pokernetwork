@@ -9,8 +9,8 @@ if [ -f /usr/share/debconf/confmodule ]; then
     db_version 2.0 || [ $? -lt 30 ]
 fi
 
-if pear channel-discover pear.phpunit.de > /dev/null 2>&1 && pear install --alldeps phpunit/PHPUnit > /dev/null 2>&1 ; then
-    if pecl install channel://pecl.php.net/xdebug-2.0.0RC1  > /dev/null 2>&1 ; then
+if pear channel-discover pear.phpunit.de > /dev/null 2>&1 && pear install --alldeps phpunit/PHPUnit-beta > /dev/null 2>&1 ; then
+    if pecl install channel://pecl.php.net/xdebug-2.0.0RC4  > /dev/null 2>&1 ; then
         if ! php --modules | grep xdebug ; then
             ext_dir=$(pecl config-get ext_dir)
             echo "zend_extension=${ext_dir}/xdebug.so" >> /etc/php5/cli/php.ini
