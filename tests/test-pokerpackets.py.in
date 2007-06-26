@@ -25,36 +25,35 @@ sys.path.insert(0, "..")
 import unittest
 
 from pokernetwork import pokerpackets
+import testpackets
 
-class PokerPacketsTestCase(unittest.TestCase):
+class PokerPacketsTestCase(testpackets.PacketsTestBase):
 
-    def packetCheck(self, **kwargs):
-        packet_type = kwargs['type']
-        del kwargs['type']
-        packet = packet_type(**kwargs)
-        size = packet.calcsize()
-        packed = packet.pack()
-        self.assertEqual(size, len(packed))
-        other_packet = packet_type()
-        self.assertNotEqual(None, other_packet.unpack(packed))
-        self.assertEqual(repr(packet), repr(other_packet))
-        self.assertEqual(packet, other_packet)
-        self.assertEqual(packed, other_packet.pack())
-        return packet
-
+    @staticmethod
+    def polute(packet):
+        if packet.type == pokerpackets.PACKET_POKER_USER_INFO:
+            packet.money = {5: (1,2,3), 10: (10,11,12)}
+        else:
+            testpackets.PacketsTestBase.polute(packet)
+        
     def packUnpack(self, packet, field):
         packed = packet.pack()
         other_packet = pokerpackets.PacketFactory[packet.type]()
         other_packet.unpack(packed)
         self.assertEqual(packed, other_packet.pack())
         self.assertEqual(packet.__dict__[field], other_packet.__dict__[field])
+        info_packet = pokerpackets.PacketFactory[packet.type]()
+        info_packet.infoUnpack(packed);
+        self.assertEqual(packed, info_packet.infoPack())
         
     #--------------------------------------------------------------    
     def test_all(self):
-        for type in pokerpackets._TYPES:
-            if pokerpackets.PacketFactory.has_key(type):
-                self.packetCheck(type = pokerpackets.PacketFactory[type])
-
+        verbose = int(os.environ.get('VERBOSE_T', '3'))
+        for type_index in pokerpackets._TYPES:
+            if pokerpackets.PacketFactory.has_key(type_index):
+                if verbose > 0:
+                    print pokerpackets.PacketNames[type_index]
+                self.packetCheck(type = pokerpackets.PacketFactory[type_index])
 
     #--------------------------------------------------------------    
     def test_PacketPokerPlayerArrive(self):
