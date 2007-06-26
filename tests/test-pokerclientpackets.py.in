@@ -25,6 +25,8 @@ sys.path.insert(0, "..")
 import unittest
 from struct import pack, unpack, calcsize
 
+import testpackets
+
 from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
 
@@ -32,7 +34,7 @@ from pokernetwork import packets
 from pokernetwork import pokerclientpackets
 from pokernetwork import OLDpokerclientpackets
 
-class PokerClientPacketsTestCase(unittest.TestCase):
+class PokerClientPacketsTestCase(testpackets.PacketsTestBase):
 
     @staticmethod
     def copydict(packet):
@@ -45,8 +47,8 @@ class PokerClientPacketsTestCase(unittest.TestCase):
         packet_dict = self.copydict(packet)
         other_packet_dict = self.copydict(other_packet)
         self.assertEqual(packet_dict, other_packet_dict)
-        
-    def packetCheck(self, **kwargs):
+
+    def OLDpacketCheck(self, **kwargs):
         packet_type = kwargs['type']
         del kwargs['type']
         packet = packet_type(**kwargs)
@@ -60,7 +62,7 @@ class PokerClientPacketsTestCase(unittest.TestCase):
         self.comparedict(packet, other_packet)
         self.assertEqual(packed, other_packet.pack())
         return packet
-
+        
     #--------------------------------------------------------------    
     def test_packets(self):
         verbose = int(os.environ.get('VERBOSE_T', '3'))
@@ -72,14 +74,13 @@ class PokerClientPacketsTestCase(unittest.TestCase):
 
     #--------------------------------------------------------------    
     def test_backward(self):
-        verbose = int(os.environ.get('VERBOSE_T', '3'))
         for type_index in pokerclientpackets._TYPES:
             self.assertEqual(pokerclientpackets.PacketFactory.has_key(type_index), OLDpokerclientpackets.PacketFactory.has_key(type_index))
             if pokerclientpackets.PacketFactory.has_key(type_index):
-                if verbose > 0:
+                if self.verbose > 0:
                     print pokerclientpackets.PacketNames[type_index]
                 self.assertEqual("PACKET_" + OLDpokerclientpackets.PacketNames[type_index], pokerclientpackets.PacketNames[type_index])
-                self.packetCheck(type = OLDpokerclientpackets.PacketFactory[type_index])
+                self.OLDpacketCheck(type = OLDpokerclientpackets.PacketFactory[type_index])
 
                 OLDtype = OLDpokerclientpackets.PacketFactory[type_index]
                 type = pokerclientpackets.PacketFactory[type_index]
@@ -88,7 +89,7 @@ class PokerClientPacketsTestCase(unittest.TestCase):
                 #
                 OLDpacket = OLDtype()
                 packet = type()
-                if verbose > 2:
+                if self.verbose > 2:
                     print "%s: %s == %s" % ( pokerclientpackets.PacketNames[type_index], str(self.copydict(OLDpacket)), str(self.copydict(packet)) )
                 self.comparedict(packet, OLDpacket)
                 #
@@ -96,11 +97,11 @@ class PokerClientPacketsTestCase(unittest.TestCase):
                 # did not change.
                 #
                 if OLDtype.__dict__.has_key('pack'):
-                    if verbose > 0:
+                    if self.verbose > 0:
                         print pokerclientpackets.PacketNames[type_index] + " test pack"
                     self.assertEqual(OLDpacket.pack(), packet.pack())
                 else:
-                    if verbose > 0:
+                    if self.verbose > 0:
                         print pokerclientpackets.PacketNames[type_index] + " no pack function"
 
     #--------------------------------------------------------------    
@@ -139,8 +140,7 @@ class PokerClientPacketsTestCase(unittest.TestCase):
         class Foo:
             pass
         type.info = packets.Packet.info + (('f1' , Foo(), 'j'),)
-        packet = type()
-        self.failUnlessRaises(TypeError, packet.infoPack)
+        self.failUnlessRaises(TypeError, type)
 
     def test_infoUnpack(self):
         type = self.defineTestPacket()
