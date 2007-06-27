@@ -1,6 +1,16 @@
-2007-06-26  Loic Dachary <loic@dachary.org>
+2007-06-27  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* pokernetwork/currencyclient.py: Allow for a ? in the URL,
+	  transparently.
+	* tests/test-currencyclient.py.in: Check with ? in the url or not.
+	* pokernetwork/pokerdatabase.py: use port parameter when available,
+	  otherwise fallback to 3306
+	* conf/poker.server.xml.in: port number added to database parameter
+	  element.
+
+2007-06-26  Loic Dachary <loic@dachary.org>
 
 	* tests/testpackets.py: base tests common to all test-*packet*.in
 	* tests/test-pokerclientpackets.py.in: testpackets base class for
@@ -4523,5 +4533,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-20/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-26/p'"
 End:
