@@ -35,7 +35,13 @@ class RealCurrencyClient:
         self.getPage = client.getPage
 
     def request(self, *args, **kwargs):
-        args = [ kwargs.get('url') + "?command=" + kwargs.get('command', 'get_note') ]
+        base = kwargs['url']
+        if "?" in base:
+            base += '&'
+        else:
+            base += '?'
+            
+        args = [ base + "command=" + kwargs.get('command', 'get_note') ]
         for key in ('name', 'serial', 'value', 'transaction_id'):
             if kwargs.has_key(key): 
                 arg = kwargs[key]
