@@ -86,10 +86,14 @@ EOF
     # -----------------------------------------------------------------------------    
     def getNote(self, url, value):
         d = self.client.getNote(url, value)
+        if "?" in url:
+            check_url = url[:url.index("?")]
+        else:
+            check_url = url
         def validate(result):
             if isinstance(result, failure.Failure): raise result
             note = result[0]
-            self.assertEqual(url, note[0])
+            self.assertEqual(check_url, note[0])
             self.assertEqual(40, len(note[2]))
             self.assertEqual(value, note[3])
             return result
@@ -276,6 +280,16 @@ EOF
             return d
 
         d.addCallback(breakNote)
+        return d
+
+    # -----------------------------------------------------------------------------    
+    def test09_getNote_with_id(self):
+        d = self.getNote('http://fake/?id=1', 100)
+        def validate(result):
+            note = result[0]
+            self.assertEqual(1, note[1])
+            return result
+        d.addCallback(validate)
         return d
 
 # -----------------------------------------------------------------------------
