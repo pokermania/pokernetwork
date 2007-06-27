@@ -48,6 +48,7 @@ class PokerDatabase:
         self.mysql_command = settings.headerGet("/server/database/@command")
         try:
             self.db = MySQLdb.connect(host = self.parameters["host"],
+                                      port = self.parameters.get("port", '3306'),
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
                                       db = self.parameters["name"])
@@ -56,6 +57,7 @@ class PokerDatabase:
             if self.parameters.has_key('root_user'):
                 if self.verbose: print "connecting as root user '" + self.parameters["root_user"] + "'"
                 db = MySQLdb.connect(host = self.parameters["host"],
+                                     port = self.parameters.get("port", '3306'),
                                      user = self.parameters["root_user"],
                                      passwd = self.parameters["root_password"])
                 if self.verbose: print "MySQL server version is " + db.get_server_info()
@@ -103,6 +105,7 @@ class PokerDatabase:
             else:
                 if self.verbose: print "root_user is not defined in the self.parameters, cannot create schema database"
             self.db = MySQLdb.connect(host = self.parameters["host"],
+                                      port = self.parameters.get("port", '3306'),
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
                                       db = self.parameters["name"])
