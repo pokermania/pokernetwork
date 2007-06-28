@@ -79,6 +79,7 @@ class PokerBotFactory(PokerClientFactory):
         settings = kwargs["settings"]
         self.level = settings.headerGetInt("/settings/@level")
         self.reconnect = settings.headerGet("/settings/@reconnect") == "yes"
+        self.rebuy = settings.headerGet("/settings/@rebuy") == "yes"
         self.watch = settings.headerGet("/settings/@watch") == "yes"
         self.wait = settings.headerGetInt("/settings/@wait")
         self.disconnect_delay = settings.headerGet("/settings/@disconnect_delay")
@@ -88,6 +89,7 @@ class PokerBotFactory(PokerClientFactory):
         if self.reconnect_delay:
             self.reconnect_delay = tuple(map(lambda x: int(x), split(self.reconnect_delay, ",")))
         self.currency = settings.headerGetInt("/settings/currency")
+        self.currency_id = settings.headerGet("/settings/currency/@id")
         self.verbose = settings.headerGetInt("/settings/@verbose")
         self.bot = None
         self.went_broke = False
