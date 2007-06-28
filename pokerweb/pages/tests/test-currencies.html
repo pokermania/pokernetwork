@@ -1,0 +1,149 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>test-cash</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">test-cash</td></tr>
+</thead><tbody>
+<tr>
+	<td>deleteCookie</td>
+	<td>TWISTED_SESSION</td>
+	<td>/</td>
+</tr>
+<tr>
+	<td>deleteCookie</td>
+	<td>serial</td>
+	<td>/</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>../../create_account.php</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>name</td>
+	<td>user114</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>password</td>
+	<td>pass114</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>password2</td>
+	<td>pass114</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>email</td>
+	<td>user114@foo.com</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyLocation</td>
+	<td>*/index.php*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>cash_in</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>amount</td>
+	<td>1000</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyLocation</td>
+	<td>*/index.php*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>bankroll 1000</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>currency X1</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>cash_in</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>amount</td>
+	<td>1222</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>currency</td>
+	<td>222</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyLocation</td>
+	<td>*/index.php*</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>bankroll 1222</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>currency X2</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>cash_out</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>amount</td>
+	<td>22</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>currency</td>
+	<td>222</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>submit</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>bankroll 1200</td>
+	<td></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>
