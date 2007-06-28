@@ -6,6 +6,7 @@
   <servers>localhost:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
+<!--  <currency id="2">/usr/bin/wget wget --quiet -O - 'http://localhost/poker-web/currency_one.php?id=2&command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency> -->
   <currency>/usr/bin/wget wget --quiet -O - 'http://localhost/poker-web/currency_one.php?command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
   <path>/etc/poker-engine</path> 
 
