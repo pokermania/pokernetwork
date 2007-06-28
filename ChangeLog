@@ -1,6 +1,20 @@
-2007-06-27  Loic Dachary <loic@dachary.org>
+2007-06-28  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.0
+
+	* pokerweb/pages/tests/test-currencies.html: Test multiple
+	  currencies.
+	* pokerweb/pages/tests/TestSuite.html: Test multiple currencies.
+	* pokerweb/pages/poker.php: Build the URL from the currency id if
+	  present.
+	* pokerweb/pages/cash_in.php, pokerweb/pages/cash_out.php: Enter
+	  currency for cash in and cash out.
+	* examples/poker.server.xml: Default is to allow currency creation
+	  by the user, for backward compatibility.
+	* conf/poker.server.xml.in: Default is to allow currency creation
+	  by the user, for backward compatibility.
+
+2007-06-27  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/currencyclient.py: Allow for a ? in the URL,
 	  transparently.
