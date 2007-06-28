@@ -47,7 +47,14 @@ if(_post_string('submit')) {
     $currency_one_public = ereg("^http", _cst_currency_one_public) ? _cst_currency_one_public : (dirname(_me()) . "/" . _cst_currency_one_public);
     $currency_one_private = ereg("^http", _cst_currency_one_private) ? _cst_currency_one_private : (dirname(_me()) . "/" . _cst_currency_one_private);
 
-    $handle = fopen($currency_one_public . "?command=get_note&autocommit=yes&value=" . $amount, "r");
+    if(isset($_POST['currency']) && $_POST['currency'] != '')
+      $currency =  $_POST['currency'];
+
+    $url = $currency_one_public . "?command=get_note&autocommit=yes&value=" . $amount;
+    if(isset($currency))
+      $url .= "&id=" . $currency;
+
+    $handle = fopen($url, "r");
     if(!$handle)
       throw new Exception($currency_one_public . " request failed, check the server logs");
 
@@ -64,12 +71,12 @@ if(_post_string('submit')) {
 
     $note[0] = $currency_one_private;
 
-     if(count($note) != 4 || !is_numeric($note[1]) || !is_numeric($note[3]) || (intval($note[3]) != intval($amount))) {
+    if(count($note) != 4 || !is_numeric($note[1]) || !is_numeric($note[3]) || (intval($note[3]) != intval($amount))) {
       error_log(print_r($lines, true));
       throw new Exception("currency server returned an invalid answer");
     }
 
-    $poker->cashIn($note);
+    $poker->cashIn($note, $currency);
 
     header('Location: index.php?comment=Cash%20in%20was%20successful');
     die();
@@ -96,6 +103,12 @@ if($poker_error) {
 				<td><b><? echo _('Amount') ?>:</b></td>
 				<td>
           <input type="text" name="amount" value="<?php echo $amount; ?>" />
+        </td>
+			</tr>
+			<tr>
+				<td><b><? echo _('Currency') ?>:</b></td>
+				<td>
+          <input type="text" name="currency" value="<?php echo $currency; ?>" />
         </td>
 			</tr>
 			<tr>

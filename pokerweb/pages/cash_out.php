@@ -47,10 +47,17 @@ if(_post_string('submit')) {
     $currency_one_public = ereg("^http", _cst_currency_one_public) ? _cst_currency_one_public : (dirname(_me()) . "/" . _cst_currency_one_public);
                                                                                                  $currency_one_private = ereg("^http", _cst_currency_one_private) ? _cst_currency_one_private : (dirname(_me()) . "/" . _cst_currency_one_private);
 
-    $packet = $poker->cashOut($currency_one_private, $amount);
+    if(isset($_POST['currency']) && $_POST['currency'] != '')
+      $currency =  $_POST['currency'];
+
+    $packet = $poker->cashOut($currency_one_private, $amount, $currency);
     $poker->cashOutCommit($packet['name']);
 
-    $handle = fopen($currency_one_public . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'], "r");
+    $url = $currency_one_public . "?command=put_note&serial=" . $packet['bserial'] . "&name=" . $packet['name'] . "&value=" . $packet['value'];
+    if(isset($currency))
+      $url .= "&id=" . $currency;
+    
+    $handle = fopen($url, "r");
     if(!$handle)
       throw new Exception($currency_one_public . " request failed, check the server logs");
     $lines = array();
@@ -88,6 +95,12 @@ if($poker_error) {
 				<td><b><? echo _('Amount') ?>:</b></td>
 				<td>
           <input type="text" name="amount" value="<?php echo $amount; ?>" />
+        </td>
+			</tr>
+			<tr>
+				<td><b><? echo _('Currency') ?>:</b></td>
+				<td>
+          <input type="text" name="currency" value="<?php echo $currency; ?>" />
         </td>
 			</tr>
 			<tr>
