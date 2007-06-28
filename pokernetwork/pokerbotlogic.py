@@ -108,7 +108,7 @@ class PokerBot:
             if join_info['tournament']:
                 protocol.sendPacket(PacketPokerTourneySelect(string = join_info["name"]))
             else:
-                protocol.sendPacket(PacketPokerTableSelect(string = "1"))
+                protocol.sendPacket(PacketPokerTableSelect(string = self.factory.currency_id))
             self.state = STATE_SEARCHING
             self.factory.can_disconnect = True
             
@@ -126,8 +126,11 @@ class PokerBot:
             self.state = STATE_BATCH
             
         elif packet.type == PACKET_SERIAL:
+	    note = PokerBot.note_generator.getNote()
+            if self.factory.currency_id:
+                note[0] += "?id=" + self.factory.currency_id
             protocol.sendPacket(PacketPokerCashIn(serial = packet.serial,
-                                                  note = PokerBot.note_generator.getNote()))
+                                                  note = note))
             
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.state = STATE_RUNNING
@@ -232,7 +235,7 @@ class PokerBot:
                     self.lookForGame(protocol)
 
         elif packet.type == PACKET_POKER_WIN:
-            if self.state == STATE_RUNNING:
+            if self.factory.rebuy and self.state == STATE_RUNNING:
                 #
                 # Rebuy if necessary
                 #
