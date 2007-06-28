@@ -2,6 +2,16 @@
 
 	* Release 1.1.0
 
+	* pokernetwork/pokerbot.py: Extract rebuy & currency parameter from
+	  settings file.
+	* pokernetwork/pokerbotlogic.py: Use id from configuration file
+	  when asking for a note to the currency server.
+	* conf/poker.bot.xml.in: Default is to use id 1.
+	* conf/poker.bot.xml: Remove wrongly added file.
+	* conf/poker.bot.xml.in: Default rebuy=yes and sample setting with
+	  id.
+	* conf/poker.bot.xml: Sample id setting.
+	* conf/poker.bot.xml: default is to rebuy
 	* pokerweb/pages/tests/test-currencies.html: Test multiple
 	  currencies.
 	* pokerweb/pages/tests/TestSuite.html: Test multiple currencies.
