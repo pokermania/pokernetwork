@@ -6,8 +6,7 @@
   <servers>@POKER_SERVER_HOST@:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-<!--  <currency id="2">@WGET@ wget --quiet -O - 'http://@POKER_WWW_HOST@/poker-web/currency_one.php?id=2&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency> -->
-  <currency>@WGET@ wget --quiet -O - 'http://@POKER_WWW_HOST@/poker-web/currency_one.php?command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
+  <currency id="1">@WGET@ wget --quiet -O - 'http://@POKER_WWW_HOST@/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
   <path>@POKER_ENGINE_PKGSYSCONFDIR@</path> 
 
   <table name="One" count="4"/>
