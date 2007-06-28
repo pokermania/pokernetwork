@@ -53,7 +53,7 @@
 
   <listen tcp="19480" tcp_ssl="19481" http="19482" http_ssl="19483"/>
 
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30"/>
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork" root_user="root" root_password="" schema="../database/schema.sql" command="mysql"/>
   <path>/etc/poker-engine2.3 /etc/poker-engine ../conf</path> 
   <users temporary="BOT"/>
