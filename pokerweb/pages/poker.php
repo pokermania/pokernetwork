@@ -127,9 +127,13 @@ class poker {
     }
   }
 
-  function cashIn($note) {
+  function cashIn($note, $id) {
+    if(isset($id) && $id != '')
+      $url = $note[0] . "?id=" . $id;
+    else
+      $url = $note[0];
     $packets = $this->send(array('type' => 'PacketPokerCashIn',
-                                 'url' => $note[0],
+                                 'url' => $url,
                                  'bserial' => intval($note[1]),
                                  'name' => $note[2],
                                  'value' => intval($note[3])));
@@ -139,7 +143,9 @@ class poker {
       throw new Exception('Expected PacketAck but got ' . $packets[0]['type'], self::E_CASH_IN_INFO_ANSWER);
   }
 
-  function cashOut($url, $value) {
+  function cashOut($url, $value, $id) {
+    if(isset($id) && $id != '')
+      $url .= "?id=" . $id;
     $packets = $this->send(array('type' => 'PacketPokerCashOut',
                                  'url' => $url,
                                  'value' => $value));
