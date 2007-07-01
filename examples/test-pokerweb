@@ -50,6 +50,9 @@ sed -e 's/@POKER_SERVER_HOST@:19382/localhost:19482/' \
     < ../pokerweb/pages/constants.php.ref.in > ../pokerweb/pages/constants.php
 perl -pi -e "s/currency_db_user'] = '.*/currency_db_user'] = 'root';/" ../pokerweb/pages/currency_one.php
 perl -pi -e "s/currency_db_password'] = '.*/currency_db_password'] = '';/" ../pokerweb/pages/currency_one.php
+if ! grep currency_id ../pokerweb/pages/currency_one.php ; then
+    echo "$GLOBALS['currency_id'] = TRUE;" >> ../pokerweb/pages/currency_one.php
+fi
 
 echo "Now run http://localhost/test-poker-web/selenium-core-0.8.1/core/TestRunner.html?test=../../tests/TestSuite.html"
 wait
