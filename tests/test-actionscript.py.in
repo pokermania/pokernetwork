@@ -58,17 +58,14 @@ class ActionScriptGenerator:
         elif pack_type in ('B', 'bool', 'cbool', 'Bnone'):
             code.append('this.' + variable + " = bytes.readUnsignedByte();")
         elif pack_type == 'b':
-            code = []
             code.append('this.' + variable + " = bytes.readUnsignedByte();")
             code.append('if(this.' + variable + " == 255) this." + variable + " = -1")
         elif pack_type == 's':
-            code = []
             code.append('{')
             code.append('\tvar size:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = bytes.readUTFBytes(size);')
             code.append('}')
         elif pack_type in ('Il', 'Hl', 'Bl'):
-            code = []
             code.append('{')
             code.append('\tvar size:int = bytes.readUnsignedByte();')
             code.append('\tfor(var i:int = 0; i < size; i++)')
@@ -82,7 +79,6 @@ class ActionScriptGenerator:
             code.append('\t}')
             code.append('}')
         elif pack_type in ('players',):
-            code = []
             code.append('{')
             code.append('\tvar nplayers:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = new Array();')
@@ -97,7 +93,6 @@ class ActionScriptGenerator:
             code.append('\t}')
             code.append('}')
         elif pack_type in ('money',):
-            code = []
             code.append('{')
             code.append('\tvar ncurrencies:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = new Dictionary();')
@@ -112,7 +107,6 @@ class ActionScriptGenerator:
             code.append('\t}')
             code.append('}')
         elif pack_type in ('pl',):
-            code = []
             code.append('{')
             code.append('\tvar npackets:int = bytes.readUnsignedByte();')
             code.append('\tthis.' + variable + ' = new Array();')
@@ -131,6 +125,84 @@ class ActionScriptGenerator:
             code.append("// implement " + variable + " of type " + pack_type)
         return code
             
+    @staticmethod
+    def field2as_pack(field):
+        (variable, default, pack_type) = field
+        code = []
+        if pack_type in ('I', 'c'):
+            code.append('bytes.writeUnsignedInt(this.' + variable + ');')
+        elif pack_type == 'H':
+            code.append('bytes.writeUnsignedShort(this.' + variable + ');')
+        elif pack_type in ('B', 'bool', 'cbool', 'Bnone'):
+            code.append('bytes.writeUnsignedByte(this.' + variable + ');')
+        elif pack_type == 'b':
+            code.append('if(this.' + variable + ' == -1)')
+            code.append('\tbytes.writeUnsignedByte(255);')
+            code.append('else')
+            code.append('\tbytes.writeUnsignedByte(this.' + variable + ');')
+        elif pack_type == 's':
+            code.append('bytes.writeUnsignedShort(this.' + variable + '.length);')
+            code.append('bytes.writeUTFBytes(this.' + variable + ', this.' + variable + '.length)')
+        elif pack_type in ('Il', 'Hl', 'Bl'):
+            code.append('bytes.writeUnsignedByte(this.' + variable + '.length);')
+            code.append('for(var i:int = 0; i < this.' + variable + '.length; i++)')
+            code.append('{')
+            if pack_type == 'Il':
+                code.append('\tbytes.writeUnsignedInt(this.' + variable + ');')
+            elif pack_type == 'Hl':
+                code.append('\tbytes.writeUnsignedShort(this.' + variable + ');')
+            elif pack_type == 'Bl':
+                code.append('\tbytes.writeUnsignedByte(this.' + variable + ');')
+            code.append('}')
+        elif pack_type in ('players',):
+            code.append('bytes.writeUnsignedShort(this.' + variable + '.length);')
+            code.append('for(var i:int = 0; i < this.' + variable + '.length; i++)')
+            code.append('{')
+            code.append('\t\tvar player:Array = this.' + variable + '[i];')
+            code.append('\tbytes.writeUnsignedByte(player[0].length);')
+            code.append('\tbytes.writeUTFBytes(player[0])')
+            code.append('\tbytes.writeUnsignedInt(player[1]);')
+            code.append('\tbytes.writeUnsignedByte(player[2]);')
+            code.append('}')
+        elif pack_type in ('money',):
+            code.append('// money not implemented')
+        elif pack_type in ('pl',):
+            code.append('// pl not implemented')
+        else:
+            code.append("// implement " + variable + " of type " + pack_type)
+        return code
+            
+    @staticmethod
+    def field2as_calcsize(field):
+        (variable, default, pack_type) = field
+        code = []
+        if pack_type in ('I', 'c'):
+            code.append('size += 4; // ' + variable)
+        elif pack_type == 'H':
+            code.append('size += 2; // ' + variable)
+        elif pack_type in ('B', 'bool', 'cbool', 'Bnone', 'b'):
+            code.append('size += 1; // ' + variable)
+        elif pack_type == 's':
+            code.append('size += 2 + this.' + variable + '.length;')
+        elif pack_type in ('Il', 'Hl', 'Bl'):
+            code = []
+            code.append('size += 1; // length of ' + variable)
+            if pack_type == 'Il':
+                code.append('size += 4 * this.' + variable + '.length;')
+            elif pack_type == 'Hl':
+                code.append('size += 2 * this.' + variable + '.length;')
+            elif pack_type == 'Bl':
+                code.append('size += 1 * this.' + variable + '.length;')
+        elif pack_type in ('players',):
+            code.append('// players not implemented')
+        elif pack_type in ('money',):
+            code.append('// money not implemented')
+        elif pack_type in ('pl',):
+            code.append('// pl not implemented')
+        else:
+            code.append("// implement " + variable + " of type " + pack_type)
+        return code
+            
     def generate(self):
         if self.type.type in ( pokerclientpackets.PACKET_NONE,
                                pokerclientpackets.PACKET_BOOTSTRAP ):
@@ -144,14 +216,37 @@ class ActionScriptGenerator:
                 continue
             print "\tpublic var " + variable + ":" + self.pack_type2as_type(pack_type) + ";"
         print 
-        print "\tpublic override function unpack():void"
+        print "\tpublic override function unpack(bytes:ByteArray):ByteArray"
         print "\t{"
-        print "\t\tsuper.unpack();"
+        print "\t\tbytes = super.unpack(bytes);"
         for field in info:
             if field[2] == 'no net':
                 continue
             for line in self.field2as_unpack(field):
                 print "\t\t" + line
+        print "\t\treturn bytes;"
+        print "\t}"
+        print 
+        print "\tpublic override function pack():ByteArray"
+        print "\t{"
+        print "\t\tvar bytes:ByteArray = super.pack();"
+        for field in info:
+            if field[2] == 'no net':
+                continue
+            for line in self.field2as_pack(field):
+                print "\t\t" + line
+        print "\t\treturn bytes;"
+        print "\t}"
+        print 
+        print "\tpublic override function calcsize():int"
+        print "\t{"
+        print "\t\tvar size:int = super.calcsize();"
+        for field in info:
+            if field[2] == 'no net':
+                continue
+            for line in self.field2as_calcsize(field):
+                print "\t\t" + line
+        print "\t\treturn size;"
         print "\t}"
 
         print "}"
@@ -173,16 +268,29 @@ class ActionScriptGeneratorTestCase(unittest.TestCase):
         print """
 public class Packet
 {
-        public static var types:Array = Array();
+        public static var types:Array = new Array();
 
         public var type:int;
         public var length:int;
-	public var bytes:ByteArray;
 
-        public function unpack():void
+	public function unpack(bytes:ByteArray):ByteArray
         {
     		this.type = bytes.readUnsignedByte();
     		this.length = bytes.readUnsignedShort();
+                return bytes;
+        }
+
+	public function pack():ByteArray
+        {
+    		var bytes:ByteArray = new ByteArray();
+                bytes.writeUnsignedByte(this.type);
+                bytes.writeUnsignedShort(this.calcsize());
+                return bytes;
+        }
+
+	public function calcsize():int
+        {
+                return 3;
         }
 }
 """
