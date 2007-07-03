@@ -52,77 +52,77 @@ class ActionScriptGenerator:
         (variable, default, pack_type) = field
         code = []
         if pack_type in ('I', 'c'):
-            code.append('this.' + variable + " = bytes.readInt();")
+            code.append('this.' + variable + " = bytes.readUnsignedInt();")
         elif pack_type == 'H':
-            code.append('this.' + variable + " = bytes.readShort();")
+            code.append('this.' + variable + " = bytes.readUnsignedShort();")
         elif pack_type in ('B', 'bool', 'cbool', 'Bnone'):
-            code.append('this.' + variable + " = bytes.readByte();")
+            code.append('this.' + variable + " = bytes.readUnsignedByte();")
         elif pack_type == 'b':
             code = []
-            code.append('this.' + variable + " = bytes.readByte();")
+            code.append('this.' + variable + " = bytes.readUnsignedByte();")
             code.append('if(this.' + variable + " == 255) this." + variable + " = -1")
         elif pack_type == 's':
             code = []
             code.append('{')
-            code.append('\tvar size:int = bytes.readShort();')
+            code.append('\tvar size:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = bytes.readUTFBytes(size);')
             code.append('}')
         elif pack_type in ('Il', 'Hl', 'Bl'):
             code = []
             code.append('{')
-            code.append('\tvar size:int = bytes.readByte();')
+            code.append('\tvar size:int = bytes.readUnsignedByte();')
             code.append('\tfor(var i:int = 0; i < size; i++)')
             code.append('\t{')
             if pack_type == 'Il':
-                code.append('\t\tthis.' + variable + ".push(bytes.readInt());")
+                code.append('\t\tthis.' + variable + ".push(bytes.readUnsignedInt());")
             elif pack_type == 'Hl':
-                code.append('\t\tthis.' + variable + ".push(bytes.readShort());")
+                code.append('\t\tthis.' + variable + ".push(bytes.readUnsignedShort());")
             elif pack_type == 'Bl':
-                code.append('\t\tthis.' + variable + ".push(bytes.readByte());")
+                code.append('\t\tthis.' + variable + ".push(bytes.readUnsignedByte());")
             code.append('\t}')
             code.append('}')
         elif pack_type in ('players',):
             code = []
             code.append('{')
-            code.append('\tvar nplayers:int = bytes.readShort();')
+            code.append('\tvar nplayers:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = new Array();')
             code.append('\tfor(var i:int = 0; i < nplayers; i++)')
             code.append('\t{')
-            code.append('\t\tvar size:int = bytes.readByte();')
+            code.append('\t\tvar size:int = bytes.readUnsignedByte();')
             code.append('\t\tvar player:Array = new Array();')
             code.append('\t\tplayer.push(bytes.readUTFBytes(size));')
-            code.append('\t\tplayer.push(bytes.readInt());')
-            code.append('\t\tplayer.push(bytes.readByte());')
+            code.append('\t\tplayer.push(bytes.readUnsignedInt());')
+            code.append('\t\tplayer.push(bytes.readUnsignedByte());')
             code.append('\t\tthis.' + variable + ".push(player);")
             code.append('\t}')
             code.append('}')
         elif pack_type in ('money',):
             code = []
             code.append('{')
-            code.append('\tvar ncurrencies:int = bytes.readShort();')
+            code.append('\tvar ncurrencies:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = new Dictionary();')
             code.append('\tfor(var i:int = 0; i < ncurrencies; i++)')
             code.append('\t{')
             code.append('\t\tvar currency:Array = new Array();')
-            code.append('\t\tvar id:int = bytes.readInt();')
-            code.append('\t\tcurrency.push(bytes.readInt()); // bankroll')
-            code.append('\t\tcurrency.push(bytes.readInt()); // ingame')
-            code.append('\t\tcurrency.push(bytes.readInt()); // points')
+            code.append('\t\tvar id:int = bytes.readUnsignedInt();')
+            code.append('\t\tcurrency.push(bytes.readUnsignedInt()); // bankroll')
+            code.append('\t\tcurrency.push(bytes.readUnsignedInt()); // ingame')
+            code.append('\t\tcurrency.push(bytes.readUnsignedInt()); // points')
             code.append('\t\tthis.' + variable + "[id] = currency;")
             code.append('\t}')
             code.append('}')
         elif pack_type in ('pl',):
             code = []
             code.append('{')
-            code.append('\tvar npackets:int = bytes.readByte();')
+            code.append('\tvar npackets:int = bytes.readUnsignedByte();')
             code.append('\tthis.' + variable + ' = new Array();')
             code.append('\tfor(var i:int = 0; i < npackets; i++)')
             code.append('\t{')
-            code.append('\t\tvar type:int = bytes.readByte();')
-            code.append('\t\tvar length:int = bytes.readShort();')
+            code.append('\t\tvar type:int = bytes.readUnsignedByte();')
+            code.append('\t\tvar length:int = bytes.readUnsignedShort();')
             code.append('\t\tvar packet:Packet = new Packet.types[type]();')
             code.append('\t\tbytes.position -= 3; // rewind to the beginning of packet')
-            code.append('\t\tpacket.bytes = new ByteArray(bytes.readBytes(length));')
+            code.append('\t\tpacket.bytes = new ByteArray(bytes.readUnsignedBytes(length));')
             code.append('\t\tpacket.unpack();')
             code.append('\t\tthis.' + variable + ".push(packet);")
             code.append('\t}')
@@ -181,8 +181,8 @@ public class Packet
 
         public function unpack():void
         {
-    		this.type = bytes.readByte();
-    		this.length = bytes.readShort();
+    		this.type = bytes.readUnsignedByte();
+    		this.length = bytes.readUnsignedShort();
         }
 }
 """
