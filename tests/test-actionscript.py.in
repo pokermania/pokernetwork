@@ -36,10 +36,8 @@ class ActionScriptGenerator:
     def pack_type2as_type(pack_type):
         if pack_type in ('I', 'B', 'b', 'H', 'c', 'bool', 'cbool', 'Bnone'):
             return 'int'
-        elif pack_type == 's':
+        elif pack_type in ('s', 'j'):
             return 'String'
-        elif pack_type == 'j':
-            return 'JSON'
         elif pack_type in ('Bl', 'Hl', 'Il', 'pl', 'players'):
             return 'Array'
         elif pack_type in ('money'):
@@ -60,7 +58,7 @@ class ActionScriptGenerator:
         elif pack_type == 'b':
             code.append('this.' + variable + " = bytes.readUnsignedByte();")
             code.append('if(this.' + variable + " == 255) this." + variable + " = -1")
-        elif pack_type == 's':
+        elif pack_type in ('s', 'j'):
             code.append('{')
             code.append('\tvar size:int = bytes.readUnsignedShort();')
             code.append('\tthis.' + variable + ' = bytes.readUTFBytes(size);')
@@ -140,7 +138,7 @@ class ActionScriptGenerator:
             code.append('\tbytes.writeUnsignedByte(255);')
             code.append('else')
             code.append('\tbytes.writeUnsignedByte(this.' + variable + ');')
-        elif pack_type == 's':
+        elif pack_type in ('s', 'j'):
             code.append('bytes.writeUnsignedShort(this.' + variable + '.length);')
             code.append('bytes.writeUTFBytes(this.' + variable + ', this.' + variable + '.length)')
         elif pack_type in ('Il', 'Hl', 'Bl'):
@@ -182,7 +180,7 @@ class ActionScriptGenerator:
             code.append('size += 2; // ' + variable)
         elif pack_type in ('B', 'bool', 'cbool', 'Bnone', 'b'):
             code.append('size += 1; // ' + variable)
-        elif pack_type == 's':
+        elif pack_type in ('s', 'j'):
             code.append('size += 2 + this.' + variable + '.length;')
         elif pack_type in ('Il', 'Hl', 'Bl'):
             code = []
