@@ -1,11 +1,10 @@
 2007-05-30  Johan Euphrosine  <proppy@aminche.com>
 
+	* Release 1.1.0
 	* pokerweb/pages/tilt.html: Added tilt.html page dedicated to client
 	  crash
 	
 2007-06-28  Loic Dachary <loic@dachary.org>
-
-	* Release 1.1.0
 
 	* pokernetwork/pokerbot.py: Extract rebuy & currency parameter from
 	  settings file.
