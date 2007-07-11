@@ -1,6 +1,11 @@
-2007-05-30  Johan Euphrosine  <proppy@aminche.com>
+2007-07-11  Loic Dachary <loic@dachary.org>
+
+	* Release 1.1.1
+
+2007-06-30  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.1.0
+
 	* pokerweb/pages/tilt.html: Added tilt.html page dedicated to client
 	  crash
 	
