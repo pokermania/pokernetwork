@@ -395,7 +395,7 @@ class PacketPokerDisplayNode(Packet):
     info = Packet.info + (
         ('game_id', 0, 'I'),
         ('name', '', 's'),
-        ('state', '', 's'),
+        ('state', 0, 'I'),
         ('style', '', 's'),
         ('selection', None, 'no net'),
         )
