@@ -36,7 +36,6 @@ if test "$PYTHON" ; then
         [am_cv_python]$2[_includedir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_config_var('INCLUDEPY')" 2>/dev/null ||
          echo "$PYTHON_PREFIX/include/python$PYTHON_VERSION"`])
       AC_SUBST([python]$2[includedir], [$am_cv_python]$2[_includedir])
-      AC_SUBST([python]$2[includedir], [$am_cv_python]$2[_includedir])
     
     AC_CACHE_CHECK([for $am_display_PYTHON C libraries directory],
         [am_cv_python]$2[_clibdir],
@@ -47,15 +46,8 @@ if test "$PYTHON" ; then
     AC_CACHE_CHECK([for $am_display_PYTHON link flags],
         [am_cv_python]$2[_linkflags],
         [
-    case $build_os in
-      cygwin* | mingw*)
-            am_cv_python]$2[_linkflags='-lpython2.4' ;;
-      *)
             am_cv_python]$2[_linkflags=`$PYTHON -c "from distutils import sysconfig; print '-L' + sysconfig.get_config_var('LIBPL')" 2>/dev/null || echo "-L$PYTHON_PREFIX/lib/python$PYTHON_VERSION/config"`
             am_cv_python]$2[_linkflags="$am_cv_python]$2[_linkflags -lpython$PYTHON_VERSION"
-            ;;
-    esac
-            
      ])
       AC_SUBST([python]$2[linkflags], [$am_cv_python]$2[_linkflags])
     
