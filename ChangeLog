@@ -1,6 +1,14 @@
+2007-07-24  Loic Dachary  <loic@dachary.org>
+
+	* Release 1.2.0
+
+	* config/ccpython.m4: cygwin hack is no longer necessary: it does
+	  not work anyways ("bar tomas" <bartomas@gmail.com> did the testing)
+
 2007-07-11  Loic Dachary <loic@dachary.org>
 
 	* Release 1.1.1
+
 	* pokernetwork/__init__.py: version bump
 	* pokernetwork/pokerclientpackets.py: state in display node is an
 	  int
