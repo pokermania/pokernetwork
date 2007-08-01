@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- -*- mode: nxml; encoding: iso-8859-1 -*- -->
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="0" display2d="yes" display3d="no" upgrades="@UPGRADES_ENABLE@" delays="true" ping="10" tcptimeout="2000" poker_network_version="1.1.1">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="settings.xsd" verbose="0" display2d="yes" display3d="no" upgrades="@UPGRADES_ENABLE@" delays="true" ping="10" tcptimeout="2000" poker_network_version="1.2.0">
   <delays blind_ante_position="0.5" position="2" begin_round="1" end_round="1" end_round_last="1" showdown="5" lag="15"/>
   <screen fullscreen="no" width="1024" height="768"/>
   <name>YOURNAME</name>
