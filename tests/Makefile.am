@@ -131,3 +131,5 @@ export top_srcdir
 
 clean-local:
 	rm -fr .coverage annotated _trial_temp phpunit
+	rm -f test-pokerdisplay2d/*.pyc
+	rm -f test-pygame/*.pyc
