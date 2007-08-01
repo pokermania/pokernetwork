@@ -1,6 +1,12 @@
-2007-07-24  Loic Dachary  <loic@dachary.org>
+2007-08-01  Loic Dachary <loic@dachary.org>
 
 	* Release 1.2.0
+
+	* tests/test-poker2d.py.in: test avoid double init
+	* pokerclient2d/poker2d.py: avoid double init display
+	* tests/Makefile.am: remove pyc files
+
+2007-07-24  Loic Dachary  <loic@dachary.org>
 
 	* config/ccpython.m4: cygwin hack is no longer necessary: it does
 	  not work anyways ("bar tomas" <bartomas@gmail.com> did the testing)
