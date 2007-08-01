@@ -33,6 +33,7 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 sys.path.insert(0, "@top_srcdir@/pokerclient2d")
 sys.path.insert(0, "../pokerclient2d/.libs")
+
 import poker2d
 import platform
 
@@ -43,6 +44,34 @@ class MainMockup:
     def configOk(self):
         pass
 
+from pokerui.pokerinterface import PokerInterface
+def updateMenuMockup(instance, settings):
+    pass
+PokerInterface.updateMenu = updateMenuMockup
+class PokerClientFactory2DMockup(poker2d.PokerClientFactory2D):
+    initDisplayCount = 0
+    def __init__(self):
+        class SettingsMockup:
+            path = ""
+            def headerGetInt(self, path):
+                return 0
+            def headerGet(self, path):
+                if path == '/settings/data/@path':
+                    return '@top_srcdir@/pokerclient2d/data'
+                elif path == '/settings/@verbose':
+                    return "0"
+                elif path == '/sequence/chips':
+                    return "0 1 2 3"
+                return ""
+            def headerGetProperties(self, path):
+                return {0:{'position':0, 'serial':0,'currency_serial':0},'currency_serial':0}
+            def notifyUpdates(self, updated):
+                pass
+        poker2d.PokerClientFactory2D.__init__(self, self, settings = SettingsMockup(), config = SettingsMockup())
+    def initDisplay(self):
+        self.initDisplayCount += 1
+
+
 class Poker2DTestCase(unittest.TestCase):
     def testConfigFileOnWindows(self):
         poker2d.Main = MainMockup
@@ -52,6 +81,9 @@ class Poker2DTestCase(unittest.TestCase):
         poker2d.run("", None, None)
         self.assertEqual(MainMockup.instance.settings, "conf/poker2d/poker2d.xml")
         platform.system = system
+    def testPokerClientFactory2D(self):
+        client = PokerClientFactory2DMockup()
+        self.assertEqual(1, client.initDisplayCount)
 
 if __name__ == '__main__':
     unittest.main()
