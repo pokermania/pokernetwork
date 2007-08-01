@@ -189,7 +189,6 @@ class PokerClientFactory2D(PokerClientFactory):
     def __init__(self, *args, **kwargs):
         PokerClientFactory.__init__(self, *args, **kwargs)
 
-        self.initDisplay()
         if self.settings.headerGet("/settings/@batch") != "yes":
             self.skin = PokerSkin2D(settings = self.settings)
             self.renderer = PokerRenderer(self)
