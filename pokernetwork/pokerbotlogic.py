@@ -269,8 +269,8 @@ class PokerBot:
 
     def eval(self, game, serial):
         if self.factory.level == 0:
-            actions = ("check", "call", "raise", "fold")
-            return actions[randint(0, 3)]
+            actions = ("check", "call", "raise")
+            return (actions[randint(0, 2)], -1)
 
         ev = game.handEV(serial, LEVEL2ITERATIONS[self.factory.level])
         
