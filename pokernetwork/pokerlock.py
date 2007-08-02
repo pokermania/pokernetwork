@@ -27,6 +27,7 @@
 
 from twisted.internet import reactor, defer
 from twisted.python import failure
+from traceback import format_exc
 import threading
 import thread
 import MySQLdb
@@ -41,7 +42,7 @@ class PokerLock(threading.Thread):
 
     acquire_timeout = 60
     queue_timeout = 2 * 60
-    acquire_sleep = 1
+    acquire_sleep = 0.1
     
     def __init__(self, parameters):
         self.verbose = 0
@@ -51,7 +52,10 @@ class PokerLock(threading.Thread):
         self.running = True
         self.connect(parameters)
         threading.Thread.__init__(self, target = self.main)
-    
+
+    def message(self, string):
+        print "PokerLock::(" + str(thread.get_ident()) + ") "  + string
+        
     def close(self):
         if self.isAlive():
             self.q.put((None, None, None, None))
@@ -62,16 +66,16 @@ class PokerLock(threading.Thread):
             self.db = None
         
     def stopping(self):
-        if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") stopping"
+        if self.verbose > 2: self.message("stopping")
         self.running = False
 
     def main(self):
         try:
             reactor.addSystemEventTrigger('during', 'shutdown', self.stopping)
             while 1:
-                if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") loop"
+                if self.verbose > 2: self.message("loop")
                 if not self.running and self.q.empty():
-                    print "PokerLock::(" + str(thread.get_ident()) + ") stopped"
+                    self.message("stopped")
                     break
 
                 try:
@@ -80,7 +84,7 @@ class PokerLock(threading.Thread):
                     #
                     # When timeout, silently terminate the thread
                     #
-                    print "PokerLock::(" + str(thread.get_ident()) + ") timeout"
+                    self.message("timeout")
                     break
                 except:
                     raise
@@ -89,6 +93,7 @@ class PokerLock(threading.Thread):
                     #
                     # Stop the thread
                     #
+                    if self.verbose > 2: self.message("stop ")
                     break
 
                 try:
@@ -96,15 +101,21 @@ class PokerLock(threading.Thread):
                     if self.running:
                         reactor.callFromThread(deferred.callback, name)
                     else:
+                        if self.verbose > 2: self.message("release because not running")
                         self.lock.release()
                 except:
-                    print "PokerLock::(" + str(thread.get_ident()) + ") exception in function"
-                    self.lock.release()
+                    if self.verbose >= 0:
+                        self.message("exception in function " + format_exc())
+                    if self.verbose > 2: self.message("release because exception")
+                    try:
+                        self.lock.release()
+                    except:
+                        if self.verbose > 2: self.message(format_exc())
                     reactor.callFromThread(deferred.errback, failure.Failure())
             self.db.close()
             self.db = None
         except:
-            if self.verbose > 2: print "PokerLock::(" + str(thread.get_ident()) + ") exception"
+            if self.verbose > 2: self.message("exception " + format_exc())
             raise
 
     def connect(self, parameters):
@@ -113,7 +124,7 @@ class PokerLock(threading.Thread):
                                   passwd = parameters["password"])
 
     def acquire(self, name, timeout = acquire_timeout):
-        if self.verbose > 2: print "PokerLock::acquire"
+        if self.verbose > 2: self.message("acquire")
         if not self.isAlive():
             raise Exception(PokerLock.DEAD, "this PokerLock instance is dead, create a new one")
         d = defer.Deferred()
@@ -121,25 +132,26 @@ class PokerLock(threading.Thread):
         return d
         
     def __acquire(self, name, timeout):
-        if self.verbose > 2: print "PokerLock::__acquire(%s) %s %d" % ( str(thread.get_ident()), name, timeout )
+        if self.verbose > 2: self.message("__acquire %s %d" % ( name, timeout ))
         tick = timeout
         while 1:
             if self.lock.acquire(0):
+                if self.verbose > 2: self.message("acquired")
                 break
             tick -= PokerLock.acquire_sleep
             if tick <= 0:
-                if self.verbose > 2: print "PokerLock::__acquire(%s) TIMED OUT" % str(thread.get_ident())
+                if self.verbose > 2: self.message("__acquire TIMED OUT")
                 raise Exception(PokerLock.TIMED_OUT, name)
-            if self.verbose > 2: print "PokerLock::__acquire(%s) sleep %f" % ( str(thread.get_ident()), PokerLock.acquire_sleep )
+            if self.verbose > 2: self.message("__acquire sleep %f" % PokerLock.acquire_sleep)
             time.sleep(PokerLock.acquire_sleep)
         self.db.query("SELECT GET_LOCK('%s', %d)" % ( name, timeout))
         result = self.db.store_result()
         if result.fetch_row()[0][0] != 1:
             raise Exception(PokerLock.TIMED_OUT, name)
-        if self.verbose > 2: print "PokerLock::__acquire(%s) got MySQL lock" % str(thread.get_ident())
+        if self.verbose > 2: self.message("__acquire got MySQL lock")
 
     def release(self, name):
-        if self.verbose > 2: print "PokerLock::release"
+        if self.verbose > 2: self.message("release " + name)
         self.db.query("SELECT RELEASE_LOCK('%s')" % name)
         result = self.db.store_result()
         if result.fetch_row()[0][0] != 1:
