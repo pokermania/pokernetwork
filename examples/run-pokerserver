@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -33,6 +34,7 @@ LOCK=$0.lock
 LAUNCHING=$0.launching
 
 SERVER_CONFIG=${1:-poker.server.xml}
+BOT_CONFIG=${2:-poker.bot.xml}
 SCHEMA=../database/schema.sql
 : ${PYTHON:=python}
 
@@ -48,10 +50,16 @@ function run() {
         rm -f ${LAUNCHING}
         wait $server_pid
     else
-        sleep 3 # wait for server to bootstrap
+        # wait for server to bootstrap
+        overhead=$(wc -l < $SERVER_CONFIG)
+        if [ $overhead -gt 300 ] ; then
+            sleep $(expr $overhead / 100)
+        else
+            sleep 3
+        fi
         while : 
         do
-            ${PYTHON} -u ../pokernetwork/pokerbot.py poker.bot.xml > pokerbot.log 2>&1 &
+            ${PYTHON} -u ../pokernetwork/pokerbot.py $BOT_CONFIG > pokerbot.log 2>&1 &
             bot_pid=$!
             trap "rm -f ${LOCK} ; kill $server_pid $bot_pid 2> /dev/null ; egrep '"'Traceback\|CRITICAL\|ERROR'"' poker{bot,server}.log" SIGINT SIGQUIT EXIT
             rm -f ${LAUNCHING}
