@@ -44,18 +44,22 @@ from pokernetwork import pokerlock
 
 class PokerLockTestCase(unittest.TestCase):
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------
     def setUp(self):
+        pokerlock.PokerLock.acquire_sleep = 1
+        verbose = int(os.environ.get('VERBOSE_T', '-1'))
+        if verbose < 0:
+            pokerlock.PokerLock.message = lambda self, string: True
         self.parameters = {'host': 'localhost', 'user': 'root', 'password': ''}
         pokerlock.PokerLock.queue_timeout = 30
         self.locker = pokerlock.PokerLock(self.parameters)
-        self.locker.verbose = 3
+        if verbose >= 0: self.locker.verbose = verbose;
         self.locker.start()
         self.locker2 = pokerlock.PokerLock(self.parameters)
-        self.locker2.verbose = 3
+        if verbose >= 0: self.locker2.verbose = verbose;
         self.locker2.start()
     
-    # -----------------------------------------------------------------------------------------------------    
+    # ----------------------------------------------------------------    
     def tearDown(self):
         self.locker2.close()
         self.locker.close()
@@ -126,20 +130,31 @@ class PokerLockTestCase(unittest.TestCase):
         d.addBoth(validate)
         return d
         
-# -----------------------------------------------------------------------------------------------------
+    def test05_many(self):
+        dl = []
+        def show(x):
+            self.locker.release('lock01')
+        pokerlock.PokerLock.acquire_sleep = 0.01
+        for i in xrange(1,500):
+            d = self.locker.acquire('lock01', 3)
+            d.addBoth(show)
+            dl.append(d)
+        return defer.DeferredList(dl)
+
+# ----------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerLockTestCase)
     suite.addTest(unittest.makeSuite(PokerLockTestCase))
     return suite
     
-# -----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------
 def GetTestedModule():
     return currencyclient
   
-# -----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test05"
     suite = loader.loadClass(PokerLockTestCase)
     return runner.TrialRunner(
                               reporter.VerboseTextReporter,
@@ -148,7 +163,7 @@ def Run():
                               tracebackFormat='default',
                               ).run(suite)
     
-# -----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
