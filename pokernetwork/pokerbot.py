@@ -35,9 +35,16 @@ from random import randint
 from traceback import print_exc
 
 from twisted.application import internet, service, app
+from twisted.internet import pollreactor
+if not sys.modules.has_key('twisted.internet.reactor'):
+    print "installing poll reactor"
+    pollreactor.install()
+else:
+    print "poll reactor already installed"
+from twisted.internet import reactor
 from twisted.python import components
 from twisted.persisted import sob
-from twisted.internet import reactor, error
+from twisted.internet import error
 
 from pokerengine.pokertournament import *
 
