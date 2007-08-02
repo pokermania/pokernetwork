@@ -45,7 +45,6 @@ except:
         HAS_OPENSSL=False
         
 
-from twisted.web import resource,server
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
 if not sys.modules.has_key('twisted.internet.reactor'):
@@ -54,6 +53,7 @@ if not sys.modules.has_key('twisted.internet.reactor'):
 else:
     print "poll reactor already installed"
 from twisted.internet import reactor
+from twisted.web import resource,server
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerService, IPokerFactory, SSLContextFactory
