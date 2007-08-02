@@ -128,7 +128,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
                        "\x03\x01\x02\x03", # d
                        "\xff", # e
                        '\x00\x1b[{"a": [1, 2]}, null, true]', # g
-                       "\x02\x05\x00\x03\x05\x00\x03", # h
+                       "\x00\x02\x05\x00\x03\x05\x00\x03", # h
                        "\x01", # i
                        "\x00", # i1
                        "\x00", # j
@@ -195,11 +195,11 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         #
         # Unknown packet type
         #
-        self.assertEqual(None, packets.Packet.unpackpackets('\x01\xff\x00\x03'));
+        self.assertEqual(None, packets.Packet.unpackpackets('\x00\x01\xff\x00\x03'));
         #
         # Pretend there are 2 packets although only one is present
         #
-        self.assertEqual(None, packets.Packet.unpackpackets('\x02\x00\x00\x03'));
+        self.assertEqual(None, packets.Packet.unpackpackets('\x00\x02\x00\x00\x03'));
 
 #--------------------------------------------------------------
 def GetTestSuite():
