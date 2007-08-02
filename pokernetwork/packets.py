@@ -201,15 +201,15 @@ class Packet:
 
     @staticmethod
     def packpackets(packets):
-        block = pack('B', len(packets))
+        block = pack('!H', len(packets))
         for packet in packets:
             block += packet.pack()
         return block
 
     @staticmethod
     def unpackpackets(block):
-        (length,) = unpack('B', block[0])
-        block = block[1:]
+        (length,) = unpack('!H', block[0:2])
+        block = block[2:]
         t = Packet()
         count = 0
         packets = []
@@ -229,7 +229,7 @@ class Packet:
 
     @staticmethod
     def calcsizepackets(packets):
-        return 1 + sum([ packet.calcsize() for packet in packets ])
+        return 2 + sum([ packet.calcsize() for packet in packets ])
     
     def __str__(self):
         return "type = %s(%d)" % ( PacketNames[self.type], self.type )
@@ -383,11 +383,11 @@ Packet.format_info = {
            },
 
     #
-    # List of packets, length of the list as a 1 byte unsigned integer in the range [0-255]
+    # List of packets, length of the list as a short unsigned integer in the range [0-65535]
     # Each packet is a derived from Packet
-    # Example: [] <=> \x00
-    #          [PacketPing()] <=> \x01\x05\x00\x03
-    #          [PacketPing(), PacketPing()] <=> \x02\x05\x00\x03\x05\x00\x03
+    # Example: [] <=> \x00\x00
+    #          [PacketPing()] <=> \x00\x01\x05\x00\x03
+    #          [PacketPing(), PacketPing()] <=> \x00\x02\x05\x00\x03\x05\x00\x03
     #
     'pl': {'pack': Packet.packpackets,
            'unpack': Packet.unpackpackets,
@@ -720,7 +720,7 @@ class PacketList(Packet):
     info = Packet.info + ( ('packets', [], 'pl'), )
     
     packets = []
-    format = "!B"
+    format = "!H"
     format_size = calcsize(format)
 
     def __init__(self, **kwargs):
