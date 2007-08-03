@@ -522,7 +522,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return packet
         
     def handleUserInfo(self, packet):
-        print "handleUserInfo: " + str(packet)
+        if self.factory.verbose > 2: print "handleUserInfo: " + str(packet)
         self.user_info = packet
 
     def handlePersonalInfo(self, packet):
