@@ -62,9 +62,7 @@ class PokerAvatar:
             self.error("setExplain must be called when not connected to any table")
             return False
         
-	print "setExplain 0"
         if what:
-	    print "setExplain 1"
             self.explain = PokerExplain(dirs = self.service.dirs,
                                         verbose = self.service.verbose)
         else:
