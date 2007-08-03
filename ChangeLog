@@ -1,7 +1,74 @@
-2007-08-01  Loic Dachary <loic@dachary.org>
+2007-08-03  Loic Dachary <loic@dachary.org>
 
 	* Release 1.2.0
 
+	* tests/test-pokerservice.py.in: Test auto_create_account is set to
+	  no and failure to login.
+	* pokernetwork/pokerservice.py: For test purposes only, implement
+	  an auto cash in feature when the account is created as a side
+	  effect of login attempt with a non existent password.
+	  If auto_create_account is set to no, disable auto creation of
+	  accounts when the user tries to login.
+	* pokernetwork/pokerlock.py: Thread queue size is display when
+	  looping.
+	* pokernetwork/pokerclient.py: Message is controled by verbosity.
+	* pokernetwork/pokercashier.py: Display the cashier SQL orders.
+	* pokernetwork/pokerbotlogic.py: The bot will only login after
+	  serial/10 seconds. This is to avoid a connection flood when
+	  thousands of bots are launched against a single server.
+	  The bot will only cash in if the cash_in option is set. The poker
+	  server may be launched in auto cashin mode for test purposes in
+	  which case there is no need for the cash in phase.
+	* pokernetwork/pokerbot.py: Each bot is given a serial number
+	  ranging from 1 to the total number of bots.
+	  Parse the cash_in option that will be used by the bot logic.
+	* pokernetwork/pokeravatar.py: Remove spurious messages.
+
+2007-08-02  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/__init__.py: Protocol changed because of packetlist.
+	* tests/test-pokerlock.py.in: Be silent by default by replacing the
+	  message functions so that coverage of the code is not compromised
+	  by a change of verbosity level.
+	  Stress test that acquires 500 locks, once every 1/100 sec.
+	* tests/test-packets.py.in: Adapt the packetlist tests to take in
+	  account the change from B to !H.
+	* pokernetwork/pokerserver.py: Change the import order so that the
+	  poll reactor is used when possible.
+	* pokernetwork/pokerlock.py: All messages go thru the message
+	  function.
+	  The sleep time is reduced to 1/10 seconds to speed up cashin when
+	  a large number of players try to cashin at the same time.
+	  Additional messages when the thread is stopped.
+	  Print the stack trace when an exception occurs while evaluating
+	  the callbacks.
+	* pokernetwork/pokerbotlogic.py: Fix the action selection logic
+	  when the bots are asked to take random actions. Fold is not an
+	  option and a fake -1 evaluation result is returned.
+	* pokernetwork/pokerbot.py: The poker bot uses the poll reactor to
+	  deal with more than 1024 open file descriptors.
+	* pokernetwork/packets.py: The packet list can hold more than 255
+	  packets.
+	* examples/run-pokerserver: The second argument may be the name of
+	  the poker bot configuration file.
+	  Sleep a number of seconds proportional to the size of the server
+	  configuration file to give it a chance to fully initialize before
+	  launching the bogs.
+
+2007-08-01  Loic Dachary <loic@dachary.org>
+
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, examples/poker.bot.xml,
+	  examples/poker.server-monotone.xml, examples/poker.server.xml,
+	  pokerclient2d/poker2d.xml.in, tests/conf/poker.client.xml.in:
+	  version bump
+	* debian/changelog: bump version
+	* pokernetwork/__init__.py: bump version
+	* NEWS: bump version
+	* ChangeLog: *** empty log message ***
+	* tests/test-poker2d.py.in: test avoid double init
+	* pokerclient2d/poker2d.py: avoid double init display
+	* tests/Makefile.am: remove pyc files
 	* tests/test-poker2d.py.in: test avoid double init
 	* pokerclient2d/poker2d.py: avoid double init display
 	* tests/Makefile.am: remove pyc files
@@ -4584,5 +4651,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-06-30/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-07-30/p'"
 End:
