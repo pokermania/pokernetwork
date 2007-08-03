@@ -65,7 +65,6 @@
 	* debian/changelog: bump version
 	* pokernetwork/__init__.py: bump version
 	* NEWS: bump version
-	* ChangeLog: *** empty log message ***
 	* tests/test-poker2d.py.in: test avoid double init
 	* pokerclient2d/poker2d.py: avoid double init display
 	* tests/Makefile.am: remove pyc files
