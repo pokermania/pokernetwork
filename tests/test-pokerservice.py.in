@@ -125,6 +125,14 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(user.User.REGULAR, privilege)
 
     # ----------------------------------------------------------------
+    def test01_auth_fail(self):
+        self.service.startService()
+        self.service.poker_auth.auto_create_account = False
+        ( status, message ) = self.service.auth("user1", "password1", "role1")
+        self.assertEquals("Invalid login or password", message)
+        self.assertEquals(False, status)
+
+    # ----------------------------------------------------------------
     def createUsers(self):
         cursor = self.db.cursor()
         for user_number in (1, 2, 3):
