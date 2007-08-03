@@ -111,26 +111,30 @@ class PokerBot:
                 protocol.sendPacket(PacketPokerTableSelect(string = self.factory.currency_id))
             self.state = STATE_SEARCHING
             self.factory.can_disconnect = True
-            
+
+    def bootstrap(self, protocol):
+        user = protocol.user
+        protocol.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
+        protocol.sendPacket(PacketLogin(name = user.name,
+                                        password = user.password))
+        protocol.sendPacket(PacketPokerTableSelect(string = "my"))
+        self.state = STATE_RECONNECTING
+        
     def _handleConnection(self, protocol, packet):
 
         if packet.type == PACKET_BOOTSTRAP:
-            user = protocol.user
-            protocol.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
-            protocol.sendPacket(PacketLogin(name = user.name,
-                                            password = user.password))
-            protocol.sendPacket(PacketPokerTableSelect(string = "my"))
-            self.state = STATE_RECONNECTING
+            reactor.callLater(self.factory.serial * 0.1, lambda: self.bootstrap(protocol))
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
             self.state = STATE_BATCH
             
         elif packet.type == PACKET_SERIAL:
-	    note = PokerBot.note_generator.getNote()
-            if self.factory.currency_id:
-                note[0] += "?id=" + self.factory.currency_id
-            protocol.sendPacket(PacketPokerCashIn(serial = packet.serial,
-                                                  note = note))
+            if self.factory.cash_in:
+                note = PokerBot.note_generator.getNote()
+                if self.factory.currency_id:
+                    note[0] += "?id=" + self.factory.currency_id
+                protocol.sendPacket(PacketPokerCashIn(serial = packet.serial,
+                                                      note = note))
             
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.state = STATE_RUNNING
