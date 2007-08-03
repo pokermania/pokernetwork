@@ -108,7 +108,7 @@ class PokerBot:
             if join_info['tournament']:
                 protocol.sendPacket(PacketPokerTourneySelect(string = join_info["name"]))
             else:
-                protocol.sendPacket(PacketPokerTableSelect(string = self.factory.currency_id))
+                protocol.sendPacket(PacketPokerTableSelect(string = join_info["name"]))
             self.state = STATE_SEARCHING
             self.factory.can_disconnect = True
 
