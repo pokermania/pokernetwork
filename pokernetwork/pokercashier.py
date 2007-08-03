@@ -140,6 +140,7 @@ class PokerCashier:
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
+                if self.verbose > 2: self.message("cashInUpdateSafe: %d: %s" % ( cursor.rowcount, sql ))
             cursor.execute("COMMIT")
             cursor.close()
         except:
