@@ -83,11 +83,13 @@ class PokerBotFactory(PokerClientFactory):
         PokerClientFactory.__init__(self, *args, **kwargs)
         self.protocol = PokerBotProtocol
         self.join_info = kwargs["join_info"]
+        self.serial = kwargs["serial"]
         settings = kwargs["settings"]
         self.level = settings.headerGetInt("/settings/@level")
         self.reconnect = settings.headerGet("/settings/@reconnect") == "yes"
         self.rebuy = settings.headerGet("/settings/@rebuy") == "yes"
         self.watch = settings.headerGet("/settings/@watch") == "yes"
+        self.cash_in = settings.headerGet("/settings/@cash_in") != "no"
         self.wait = settings.headerGetInt("/settings/@wait")
         self.disconnect_delay = settings.headerGet("/settings/@disconnect_delay")
         if self.disconnect_delay:
@@ -224,11 +226,14 @@ def makeApplication(argv):
     services = service.IServiceCollection(bots)
     services.setSettings(settings)
 
+    bots_count = 0
     for table in settings.headerGetProperties("/settings/table"):
         for i in range(0, int(table["count"])):
+            bots_count += 1
             table['tournament'] = False
             factory = PokerBotFactory(settings = settings,
-                                      join_info = table)
+                                      join_info = table,
+                                      serial = bots_count)
             bot = Bot(host, port, factory)
             factory.bot = bot
             bot.setServiceParent(services)
