@@ -173,6 +173,17 @@ EXTRA_DIST = \
 	examples/xmlrpc-soap.py \
 	examples/run-pokerserver \
 	examples/test-pokerweb \
+	examples/stress/poker.bot100.xml \
+	examples/stress/poker.bot200.xml \
+	examples/stress/poker.bot300.xml \
+	examples/stress/poker.bot400.xml \
+	examples/stress/poker.bot500.xml \
+	examples/stress/poker.bot600.xml \
+	examples/stress/poker.bot700.xml \
+	examples/stress/poker.bot800.xml \
+	examples/stress/poker.bot900.xml \
+	examples/stress/poker.bot.xml \
+	examples/stress/poker.server.xml \
 	tests/upgrade.in \
 	database/pokerdatabaseupgrade.in \
         poker-network.pc.in \
