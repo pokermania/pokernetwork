@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 munindir = ${datadir}/munin/plugins
-munin_SCRIPTS = \
+dist_munin_SCRIPTS = \
 	poker_traffic_ \
 	poker_players_ \
 	poker_hands_
