@@ -17,7 +17,9 @@
 #
 munindir = ${datadir}/munin/plugins
 munin_SCRIPTS = \
-	poker_traffic_
+	poker_traffic_ \
+	poker_players_ \
+	poker_hands_
 
 TESTS = \
 	test_poker_traffic_ \
