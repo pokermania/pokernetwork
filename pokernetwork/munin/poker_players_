@@ -39,8 +39,9 @@ fi
 if [ "$1" = "config" ]; then
    echo "graph_title poker players"
    echo "graph_vlabel poker players per ${graph_period}"
+   echo "graph_category poker"
    echo "players.label players"
-   echo "players.type COUNTER"
+   echo "players.type ABSOLUTE"
    exit 0
 fi
 
