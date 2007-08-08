@@ -45,6 +45,9 @@ class Queue:
 class UGAMEProtocol(protocol.Protocol):
     """UGAMEProtocol"""
 
+    _stats_read = 0
+    _stats_write = 0
+    
     def __init__(self):
         self._packet = []
         self._packet_len = 0
@@ -263,6 +266,7 @@ class UGAMEProtocol(protocol.Protocol):
             self._packet_len = len(buf)
         
     def dataReceived(self, data):
+        UGAMEProtocol._stats_read += len(data)
         self._packet.append(data)
         self._packet_len += len(data)
 
@@ -270,3 +274,7 @@ class UGAMEProtocol(protocol.Protocol):
             self.handleData()
         else:
             self._handleVersion()
+
+    def dataWrite(self, data):
+        UGAMEProtocol._stats_write += len(data)
+        self.transport.write(data)
