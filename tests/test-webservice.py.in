@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -30,6 +31,8 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
+import simplejson
+import urllib
 import libxml2
 
 from twisted.trial import unittest, runner, reporter
@@ -37,6 +40,10 @@ import twisted.internet.base
 from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
 
 from pokernetwork import pokerservice, pokernetworkconfig, user
 from pokernetwork import currencyclient
@@ -60,7 +67,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-from twisted.web import xmlrpc, server, http, resource
+from twisted.web import xmlrpc, server, client, http, resource
 
 #
 # Override QueryProtocol from xmlrpc because it lacks
@@ -94,7 +101,7 @@ class QueryProtocol(http.HTTPClient):
         self.factory.parseResponse(contents)
 
 
-class XMLRPCPokerServiceTestCase(unittest.TestCase):
+class PokerServiceTestCase(unittest.TestCase):
 
     def destroyDb(self, arg = None):
         os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -106,7 +113,7 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.service = pokerservice.PokerService(settings)
-        self.service.verbose = 3
+        if verbose >=0: self.service.verbose = verbose
         site = server.Site(resource.IResource(self.service))
         self.p = reactor.listenTCP(0, site,
                                    interface="127.0.0.1")
@@ -135,20 +142,15 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         return d
 
     def query(self, *args):
-        factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', *args)
-	if hasattr(factory, "path"): # twisted-2.4
-            factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', None, None, *args)
-        factory.protocol = QueryProtocol
-        factory.cookie = self.cookie
-        reactor.connectTCP('127.0.0.1', self.port, factory)
-        return factory.deferred
+        pass
 
     def login(self):
         def validate(result):
             self.assertEquals(2, len(result))
             self.assertEquals({'type': 'PacketAuthOk'}, result[0])
             serial_packet = result[1]
-            print "serial_packet " + str(serial_packet)
+            if int(os.environ.get('VERBOSE_T', '-1')) > 0:
+                print "serial_packet " + str(serial_packet)
             self.assertEquals(serial_packet['type'], 'PacketSerial')
             self.failUnless(serial_packet.has_key('cookie'))
             self.cookie = serial_packet['cookie']
@@ -248,6 +250,49 @@ class XMLRPCPokerServiceTestCase(unittest.TestCase):
         d.addCallback(self.logout)
         return d
 
+    def stats(self):
+        d = self.query('no session', { 'type': 'PacketPokerStatsQuery' })
+        def validate(packet):
+            self.assertEquals('PacketPokerStats', packet[0]['type'])
+            self.assertEquals(1, packet[0]['players'])
+            return packet
+        
+        d.addCallback(validate)
+        return d
+        
+    def test06_stats(self):
+        self.service.startService()
+        return self.stats()
+        return d
+
+class XMLRPCPokerServiceTestCase(PokerServiceTestCase):
+
+    def query(self, *args):
+        factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', *args)
+	if hasattr(factory, "path"): # twisted-2.4
+            factory = xmlrpc.QueryFactory('/RPC2', '127.0.0.1:' + str(self.port), 'handlePacket', None, None, *args)
+        factory.protocol = QueryProtocol
+        factory.cookie = self.cookie
+        reactor.connectTCP('127.0.0.1', self.port, factory)
+        return factory.deferred
+
+
+class RESTPokerServiceTestCase(PokerServiceTestCase):
+
+    def query(self, *args):
+        if args[0] == 'use sessions':
+            session = 'yes'
+        else:
+            session = 'no'
+        url = 'http://127.0.0.1:' + str(self.port) + '/REST?session=' + session
+        postdata = Packet.JSON.encode(args[1])
+        d = client.getPage(url, postdata = postdata, headers = {'Cookie': self.cookie})
+        def json_decode(args):
+            return pokerservice.PokerXML.fromutf8(simplejson.JSONDecoder().decode(args), pokerservice.PokerXML.encoding)
+        d.addBoth(json_decode)
+        return d
+
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -255,9 +300,10 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
+    suite.addTest(loader.loadClass(RESTPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
@@ -272,5 +318,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-xmlrpc.py ) ; ( cd ../tests ; make TESTS='test-xmlrpc.py' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-webservice.py ) ; ( cd ../tests ; make TESTS='test-webservice.py' check )"
 # End:
