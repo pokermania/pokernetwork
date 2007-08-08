@@ -25,3 +25,5 @@ TESTS = \
 	test_poker_traffic_ \
 	test_poker_players_ \
 	test_poker_hands_
+
+EXTRA_DIST = ${TESTS}
