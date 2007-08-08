@@ -22,8 +22,8 @@ dist_munin_SCRIPTS = \
 	poker_hands_
 
 TESTS = \
-	test_poker_traffic_ \
-	test_poker_players_ \
-	test_poker_hands_
+	${srcdir}/test_poker_traffic_ \
+	${srcdir}/test_poker_players_ \
+	${srcdir}/test_poker_hands_
 
 EXTRA_DIST = ${TESTS}
