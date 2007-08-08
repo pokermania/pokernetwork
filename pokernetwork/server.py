@@ -93,7 +93,7 @@ class PokerServerProtocol(UGAMEProtocol):
         self.sendPackets(packets)
 
     def sendPacket(self, packet):
-        self.transport.write(packet.pack())
+        self.dataWrite(packet.pack())
 
     def protocolEstablished(self):
         self.transport.setTcpKeepAlive(True)
