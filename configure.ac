@@ -333,6 +333,7 @@ AC_CONFIG_FILES([
         conf/poker.server.xml
         pokerweb/Makefile
         tests/Makefile
+        pokernetwork/munin/Makefile
         tests/conf/poker2d.xml
         Makefile
         po/Makefile.in
