@@ -41,10 +41,10 @@ prevver="$2"
 init_munin() {
         if [ "$prevver" ]; then
                 echo -n "Initializing new munin.."
-                munin-node-configure --family poker-network --shell --newer "${prevver%-*}" | sh
+                munin-node-configure --families poker-network --shell --newer "${prevver%-*}" | sh
         else
                 echo -n "Initializing munin.."
-                munin-node-configure --family poker-network --shell | sh
+                munin-node-configure --families poker-network --shell | sh
         fi
         echo "done."
 }
