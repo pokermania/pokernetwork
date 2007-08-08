@@ -301,7 +301,7 @@ AC_CONFIG_FILES([
         tests/test-pokertable.py
         tests/test-string.py
         tests/test-pokerchildren.py
-        tests/test-xmlrpc.py
+        tests/test-webservice.py
 	tests/test-pokerinteractor.py
 	tests/test-pokerrenderer.py
 	tests/test-protocol.py
