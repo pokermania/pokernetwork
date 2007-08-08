@@ -61,7 +61,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
             self.ping()
             if self.factory.verbose > 2:
                 print "%ssendPacket(%d) %s " % ( self._prefix, self.user.serial, packet )
-            self.transport.write(packet.pack())
+            self.dataWrite(packet.pack())
         else:
             if self.factory.verbose > 2:
                 print "%ssendPacket bufferized %s " % ( self._prefix, packet )
@@ -76,7 +76,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
         else:
             if self.factory.verbose > 6:
                 print "%ssend ping" % self._prefix
-            self.transport.write(PacketPing().pack())
+            self.dataWrite(PacketPing().pack())
             self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
         
     def protocolEstablished(self):
