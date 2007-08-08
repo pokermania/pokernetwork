@@ -22,8 +22,8 @@
 set -e
 
 : ${IP:=$(basename $0 | sed 's/^poker_players_//g')}
-: ${DEBCONF=/var/cache/debconf/config.dat}
-: ${WGET=wget}
+: ${DEBCONF:=/var/cache/debconf/config.dat}
+: ${WGET:=wget}
 
 if [ "$1" = "autoconf" ]; then
    echo yes
