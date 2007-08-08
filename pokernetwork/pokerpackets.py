@@ -3707,6 +3707,29 @@ Direction: server <= client
 
 Packet.infoDeclare(globals(), PacketPokerExplain, PacketInt, "PACKET_POKER_EXPLAIN", 142) # 0x8e # %SEQ%
 
+########################################
+
+class PacketPokerStatsQuery(PacketString):
+    """ """
+    
+    pass #pragma: no cover
+    
+Packet.infoDeclare(globals(), PacketPokerStatsQuery, PacketString, "PACKET_POKER_STATS_QUERY", 143) # 0x8f # %SEQ%
+
+########################################
+
+class PacketPokerStats(Packet):
+    """ """
+    
+    info = Packet.info + (
+        ('players', 0, 'I'),
+        ('hands', 0, 'I'),
+        ('bytesin', 0, 'I'),
+        ('bytesout', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerStats, Packet, "PACKET_POKER_STATS", 144) # 0x90 # %SEQ%
+
 _TYPES = range(50,149)
 
 # Interpreted by emacs
