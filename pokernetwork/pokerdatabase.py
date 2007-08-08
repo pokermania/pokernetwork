@@ -52,15 +52,18 @@ class PokerDatabase:
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
                                       db = self.parameters["name"])
-            if self.verbose > 2: print "MySQL server version is " + self.db.get_server_info()
+            if self.verbose > 2:
+                self.message("MySQL server version is " + self.db.get_server_info())
         except:
             if self.parameters.has_key('root_user'):
-                if self.verbose: print "connecting as root user '" + self.parameters["root_user"] + "'"
+                if self.verbose:
+                    self.message("connecting as root user '" + self.parameters["root_user"] + "'")
                 db = MySQLdb.connect(host = self.parameters["host"],
                                      port = int(self.parameters.get("port", '3306')),
                                      user = self.parameters["root_user"],
                                      passwd = self.parameters["root_password"])
-                if self.verbose: print "MySQL server version is " + db.get_server_info()
+                if self.verbose:
+                    self.message("MySQL server version is " + db.get_server_info())
                 if int(db.get_server_info().split('.')[0]) < 5:
                     raise UserWarning, "PokerDatabase: MySQL server version is " + db.get_server_info() + " but version >= 5.0 is required"
                 db.query("SHOW DATABASES LIKE '" + self.parameters["name"] + "'")
@@ -69,15 +72,18 @@ class PokerDatabase:
                 # It may be because the database does not exist
                 #
                 if result.num_rows() <= 0:
-                    if self.verbose: print "creating database " + self.parameters["name"]
+                    if self.verbose:
+                        self.message("creating database " + self.parameters["name"])
                     if not exists(self.parameters["schema"]):
                         db.close()
                         raise UserWarning, "PokerDatabase: schema " + self.parameters["schema"] + " file not found"
                     del result
                     db.query("CREATE DATABASE " + self.parameters["name"])
-                    if self.verbose: print "populating database from " + self.parameters["schema"]
+                    if self.verbose:
+                        self.message("populating database from " + self.parameters["schema"])
                     cmd = self.mysql_command + " --host='" + self.parameters["host"] + "' --user='" + self.parameters["root_user"] + "' --password='" + self.parameters["root_password"] + "' '" + self.parameters["name"] + "' < " + self.parameters["schema"]
-                    if self.verbose: print cmd
+                    if self.verbose:
+                        self.message(cmd)
                     os.system(cmd)
                 db.select_db("mysql")
                 #
@@ -85,36 +91,50 @@ class PokerDatabase:
                 #
                 try:
                     sql = "CREATE USER '" + self.parameters['user'] + "'@'%' IDENTIFIED BY '" + self.parameters['password'] + "'"
-                    if self.verbose > 2: print sql
+                    if self.verbose > 2:
+                        self.message(sql)
                     db.query(sql)
                     sql = "CREATE USER '" + self.parameters['user'] + "'@'localhost' IDENTIFIED BY '" + self.parameters['password'] + "'"
-                    if self.verbose > 2: print sql
+                    if self.verbose > 2:
+                        self.message(sql)
                     db.query(sql)
                     db.query("FLUSH PRIVILEGES")
-                    if self.verbose: print "created database user " + self.parameters["user"]
+                    if self.verbose:
+                        self.message("created database user " + self.parameters["user"])
                 except:
                     if self.verbose > 3: print_exc()
-                    if self.verbose: print "poker user '" + self.parameters["user"] + "' already exists"
+                    if self.verbose:
+                        self.message("poker user '" + self.parameters["user"] + "' already exists")
                 #
                 # Or because the user does not have permission
                 #
                 db.query("GRANT ALL ON `" + self.parameters['name'] + "`.* TO '" + self.parameters['user'] + "'@'%'")
                 db.query("FLUSH PRIVILEGES")
                 db.close()
-                if self.verbose: print "granted privilege to " + self.parameters["user"] + "' for database '" + self.parameters['name'] + "'"
+                if self.verbose:
+                    self.message("granted privilege to " + self.parameters["user"] + "' for database '" + self.parameters['name'] + "'")
             else:
-                if self.verbose: print "root_user is not defined in the self.parameters, cannot create schema database"
+                if self.verbose:
+                    self.message("root_user is not defined in the self.parameters, cannot create schema database")
             self.db = MySQLdb.connect(host = self.parameters["host"],
                                       port = int(self.parameters.get("port", '3306')),
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
                                       db = self.parameters["name"])
 
-        if self.verbose: print "PokerDatabase: Database connection to %s/%s open" % ( self.parameters["host"], self.parameters["name"] )
+        if self.verbose:
+            self.message("PokerDatabase: Database connection to %s/%s open" % ( self.parameters["host"], self.parameters["name"] ))
         self.db.query("SET AUTOCOMMIT = 1")
         self.version = Version(self.getVersionFromDatabase())
-        if self.verbose: print "PokerDatabase: database version %s" % self.version
+        if self.verbose:
+            self.message("PokerDatabase: database version %s" % self.version)
 
+    def message(self, string):
+        print "PokerDatabase: " + string
+
+    def error(self, string):
+        self.message("*ERROR* " + string)
+        
     def close(self):
         if hasattr(self, 'db'):
             self.db.close()
@@ -128,7 +148,8 @@ class PokerDatabase:
             cursor.close()
             return version
         except:
-            if self.verbose: print "PokerDatabase: no server table, assuming version 1.0.5"
+            if self.verbose:
+                self.message("PokerDatabase: no server table, assuming version 1.0.5")
             return "1.0.5"
 
     def setVersionInDatabase(self, version):
@@ -141,12 +162,12 @@ class PokerDatabase:
         
     def checkVersion(self):
         if version != self.version:
-            print "PokerDatabase: database version %s must be the same as the poker-network version %s" % ( self.version, version )
+            self.message("database version %s must be the same as the poker-network version %s" % ( self.version, version ))
             if version > self.version:
-                print "PokerDatabase: upgrade the database with pokerdatabaseupgrade"
+                self.message("upgrade the database with pokerdatabaseupgrade")
                 raise ExceptionDatabaseTooOld
             else:
-                print "ERROR: PokerDatabase: upgrade poker-network to version %s or better" % self.version
+                self.error("upgrade poker-network to version %s or better" % self.version)
                 raise ExceptionSoftwareTooOld
 
     def upgrade(self, directory, dry_run):
@@ -158,11 +179,11 @@ class PokerDatabase:
             parameters = self.parameters
             mysql = self.mysql_command + " -h '" + parameters['host'] + "' -u '" + parameters['user'] + "' --password='" + parameters['password'] + "' '" + parameters['name'] + "'"
             for file in self.version.upgradeChain(version, files):
-                print "PokerDatabase: apply " + file
+                self.message("apply " + file)
                 if not dry_run:
                     if os.system(mysql + " < " + file):
                         raise ExceptionUpgradeFailed, "upgrade failed"
-            print "PokerDatabase: upgraded database to version %s" % version
+            self.message("upgraded database to version %s" % version)
             if not dry_run:
                 self.setVersionInDatabase(version)
                 self.version = Version(self.getVersionFromDatabase())
