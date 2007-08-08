@@ -23,6 +23,7 @@ EXTRA_DIST = \
 	pages/tests/test-create_account.html \
 	pages/tests/test-edit_account.html \
 	pages/tests/test-index.html \
+	pages/tests/test-currencies.html \
 	pages/tests/test-login.html \
 	pages/tests/TestSuite.html
 
