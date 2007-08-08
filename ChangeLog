@@ -2,6 +2,25 @@
 
 	* Release 1.2.0
 
+	* debian/python-poker-network.install: install munin plugin
+	* debian/control, debian/control.dapper, debian/control.edgy,
+	  debian/control.etch, debian/control.feisty, debian/control.gutsy,
+	  debian/control.lenny, debian/control.unstable: perl JSON is
+	  required for munin plugin
+	* configure.ac: munin plugin directory has its own standalone
+	  makefile with tests included
+	* Makefile.am: recurse into munin plugins
+	* pokernetwork/munin/Makefile.am: munin scripts
+	* pokernetwork/munin, pokernetwork/munin/Makefile,
+	  pokernetwork/munin/Makefile.am, pokernetwork/munin/Makefile.in,
+	  pokernetwork/munin/poker_hands_,
+	  pokernetwork/munin/poker_players_,
+	  pokernetwork/munin/poker_traffic_,
+	  pokernetwork/munin/test_config.dat,
+	  pokernetwork/munin/test_poker_hands_,
+	  pokernetwork/munin/test_poker_players_,
+	  pokernetwork/munin/test_poker_traffic_,
+	  pokernetwork/munin/test_wget1: munin plugins
 	* tests/test-webservice.py.in: test REST web service
 	  test PacketPokerStat service
 	* tests/test-clientserver.py.in, tests/test-currencyclient.py.in,
