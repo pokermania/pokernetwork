@@ -10,7 +10,9 @@ if [ -f /usr/share/debconf/confmodule ]; then
         . /usr/share/dbconfig-common/dpkg/postrm.mysql
         dbc_go python-poker-network $@
     fi
-    
+
+    rm -f /etc/munin/plugins/poker_*
+
     if [ "$1" = "purge" ]; then
         ucf --purge /etc/poker-network/poker.bot.client
         ucf --purge /etc/poker-network/poker.client.client
