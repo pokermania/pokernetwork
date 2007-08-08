@@ -18,10 +18,10 @@
 #
 set -e
 
-sh -e poker_players_ autoconf | grep yes > /dev/null
+sh -e ${srcdir}/poker_players_ autoconf | grep yes > /dev/null
 
-DEBCONF=${srcdir}/test_config.dat sh -e poker_players_ suggest | grep pokersource.info > /dev/null
+DEBCONF=${srcdir}/test_config.dat sh -e ${srcdir}/poker_players_ suggest | grep pokersource.info > /dev/null
 
-sh -e poker_players_ config | grep players.label > /dev/null
+sh -e ${srcdir}/poker_players_ config | grep players.label > /dev/null
 
-WGET=${srcdir}/test_wget1 sh -e poker_players_ | grep players.value > /dev/null
+WGET=${srcdir}/test_wget1 sh -e ${srcdir}/poker_players_ | grep players.value > /dev/null
