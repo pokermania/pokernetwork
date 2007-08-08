@@ -49,4 +49,4 @@ $obj = jsonToObj($_);
 print "players.value $obj->{'players'}\n";
 EOF
 )
-${WGET} -q -O - --post-data "{'type': 'PacketPokerStatsQuery'}" http://$IP:19382/REST?session=no | perl -MJSON -ne "$script"
+${WGET} -q -O - --post-data '{"type": "PacketPokerStatsQuery"}' http://$IP:19382/REST?session=no | perl -MJSON -ne "$script"
