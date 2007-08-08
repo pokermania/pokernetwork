@@ -1,0 +1,22 @@
+Name: python-poker-network/bots
+Template: python-poker-network/bots
+Owners: python-poker-network
+
+Name: python-poker-network/configure
+Template: python-poker-network/configure
+Value: false
+Owners: python-poker-network
+Flags: seen
+
+Name: python-poker-network/host
+Template: python-poker-network/host
+Value: poker-network-1-1-0.pokersource.info
+Owners: python-poker-network
+Flags: seen
+
+Name: python-poker-network/www
+Template: python-poker-network/www
+Value: poker-network-1-1-0.pokersource.info
+Owners: python-poker-network
+Flags: seen
+

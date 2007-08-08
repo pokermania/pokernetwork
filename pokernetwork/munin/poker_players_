@@ -1,0 +1,52 @@
+#!/bin/sh
+#%# family=poker-network
+#%# capabilities=autoconf suggest
+#
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+set -e
+
+: ${IP:=$(basename $0 | sed 's/^poker_players_//g')}
+: ${DEBCONF=/var/cache/debconf/config.dat}
+: ${WGET=wget}
+
+if [ "$1" = "autoconf" ]; then
+   echo yes
+   exit 0
+fi
+
+if [ "$1" = "suggest" ]; then
+   test -f ${DEBCONF} || exit 0
+   perl -ne 'if(m|^Name: python-poker-network/www| .. m|^$|) { print $1 if(/Value: (.*)/); }' < ${DEBCONF}
+   exit 0
+fi
+
+if [ "$1" = "config" ]; then
+   echo "graph_title poker players"
+   echo "graph_vlabel poker players per ${graph_period}"
+   echo "players.label players"
+   echo "players.type COUNTER"
+   exit 0
+fi
+
+script=$(cat <<'EOF'
+$obj = jsonToObj($_);
+print "players.value $obj->{'players'}\n";
+EOF
+)
+${WGET} -q -O - --post-data "{'type': 'PacketPokerStatsQuery'}" http://$IP:19382/REST?session=no | perl -MJSON -ne "$script"
