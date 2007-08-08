@@ -26,4 +26,7 @@ TESTS = \
 	${srcdir}/test_poker_players_ \
 	${srcdir}/test_poker_hands_
 
-EXTRA_DIST = ${TESTS}
+EXTRA_DIST = \
+	${TESTS} \
+	test_config.dat \
+	test_wget1
