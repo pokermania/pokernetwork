@@ -1,7 +1,69 @@
-2007-08-03  Loic Dachary <loic@dachary.org>
+2007-08-08  Loic Dachary <loic@dachary.org>
 
 	* Release 1.2.0
 
+	* tests/test-webservice.py.in: test REST web service
+	  test PacketPokerStat service
+	* tests/test-clientserver.py.in, tests/test-currencyclient.py.in,
+	  tests/test-gamewindow.py.in, tests/test-poker2d.py.in,
+	  tests/test-pokeravatar.py.in, tests/test-pokerbotlogic.py.in,
+	  tests/test-pokercashier.py.in, tests/test-pokerchildren.py.in,
+	  tests/test-pokerclient.py.in, tests/test-pokerdatabase.py.in,
+	  tests/test-pokerdisplay2d.py.in, tests/test-pokerexplain.py.in,
+	  tests/test-pokergameclient.py.in,
+	  tests/test-pokerinteractor.py.in,
+	  tests/test-pokerinterface.py.in, tests/test-pokerlock.py.in,
+	  tests/test-pokernetworkconfig.py.in,
+	  tests/test-pokerrenderer.py.in, tests/test-pokerservice.py.in,
+	  tests/test-pokertable.py.in, tests/test-protocol.py.in,
+	  tests/test-pygame.py.in, tests/test-quit.py.in,
+	  tests/test-servercrash.py.in, tests/test-string.py.in,
+	  tests/test-svg2gtk.py.in, tests/test-upgrade.py.in,
+	  tests/testpackets.py, tests/testwebservice.php.in,
+	  tests/upgrade.in: control verbosity by the use of testmessages
+	* pokernetwork/pokeravatar.py: implement PacketPokerStatsQuery
+	  packet
+	* pokernetwork/client.py: use dataWrite function instead of
+	  transport.write
+	* tests/testmessages.py: add testmessages utility for all tests to
+	  control their verbosity
+	* tests/Makefile.am: replace test-xmlrpc with test-webservice
+	  add testmessages utility for all tests to control their verbosity
+	* pokernetwork/server.py: use dataWrite function instead of
+	  transport.write
+	* pokernetwork/protocol.py: collect data in/out statistics
+	* pokernetwork/pokertable.py: use message / error function instead
+	  of print
+	* pokernetwork/pokerservice.py: implement rest interface at /REST
+	  use message / error methods for printing
+	  implement stats function for monitoring
+	* pokernetwork/pokerpackets.py: stats query and answer
+	* pokernetwork/pokerdatabase.py: use message / error function
+	  instead of print
+	* pokernetwork/pokeravatar.py: use message / error function instead
+	  of print
+	* configure.ac: Rename xmlrpc to webservice
+
+2007-08-07  Loic Dachary <loic@dachary.org>
+
+	* tests/test-webservice.py.in, tests/test-xmlrpc.py.in: Rename
+	  xmlrpc to webservice
+
+2007-08-03  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerbotlogic.py: look for a specific table to
+	  reduce the bootstrap latency
+	* Makefile.am, examples/stress, examples/stress/poker.bot.xml,
+	  examples/stress/poker.bot100.xml,
+	  examples/stress/poker.bot200.xml,
+	  examples/stress/poker.bot300.xml,
+	  examples/stress/poker.bot400.xml,
+	  examples/stress/poker.bot500.xml,
+	  examples/stress/poker.bot600.xml,
+	  examples/stress/poker.bot700.xml,
+	  examples/stress/poker.bot800.xml,
+	  examples/stress/poker.bot900.xml,
+	  examples/stress/poker.server.xml: Stress test data files.
 	* tests/test-pokerservice.py.in: Test auto_create_account is set to
 	  no and failure to login.
 	* pokernetwork/pokerservice.py: For test purposes only, implement
