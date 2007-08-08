@@ -42,6 +42,7 @@ EXTRA_DIST = \
 	coverage.py \
 	test-poker-interface.py \
 	testpackets.py \
+	testmessages.py \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
 	test-pokerdisplay2d \
@@ -84,7 +85,7 @@ TESTS = coverage-reset \
 	test-pokergameclient.py \
 	test-pokerlock.py \
 	test-pokercashier.py \
-	test-xmlrpc.py \
+	test-webservice.py \
 	test-pokerinteractor.py \
 	test-quit.py \
 	test-pokerrenderer.py \
