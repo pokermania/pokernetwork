@@ -2,6 +2,17 @@
 
 	* Release 1.2.0
 
+	* debian/python-poker-network.postinst,
+	  debian/python-poker-network.postrm: initialize munin plugins
+	* pokernetwork/munin/Makefile, pokernetwork/munin/Makefile.in:
+	  commited by mistake
+	* pokernetwork/munin/test_poker_hands_,
+	  pokernetwork/munin/test_poker_players_,
+	  pokernetwork/munin/test_poker_traffic_: use srcdir to find the
+	  scripts
+	* pokernetwork/munin/Makefile.am: tests are found in srcdir
+	* pokernetwork/munin/Makefile.am: tests are distributed for munin
+	* pokernetwork/munin/Makefile.am: scripts are in the distribution
 	* debian/python-poker-network.install: install munin plugin
 	* debian/control, debian/control.dapper, debian/control.edgy,
 	  debian/control.etch, debian/control.feisty, debian/control.gutsy,
