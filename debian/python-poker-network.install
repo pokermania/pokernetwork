@@ -4,5 +4,6 @@ debian/tmp/usr/share/poker-network/*.sql
 debian/tmp/usr/sbin
 debian/tmp/usr/share/poker-network/conf
 debian/tmp/usr/share/poker-network/upgrades
+debian/tmp/usr/share/munin/plugins
 debian/tmp/usr/share/man/man8
 debian/tmp/usr/lib/pkgconfig
