@@ -221,6 +221,10 @@ class PokerAvatar:
                 self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_EXPLAIN))
             return
         
+        if packet.type == PACKET_POKER_STATS_QUERY:
+            self.sendPacketVerbose(self.service.stats(packet.string))
+            return
+        
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
             return
