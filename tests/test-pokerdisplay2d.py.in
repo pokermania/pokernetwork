@@ -33,6 +33,10 @@ sys.path.insert(0, "@top_srcdir@/tests/test-pokerdisplay2d")
 sys.path.insert(0, "..")
 import unittest
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 import pygame
 from pokernetwork.pokernetworkconfig import Config
 from pokerclient2d.pokerdisplay2d import PokerDisplay2D, PokerPlayer2D, PokerTable2D

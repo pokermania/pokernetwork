@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -36,6 +37,10 @@ from twisted.internet import reactor
 
 twisted.internet.base.DelayedCall.debug = True
 import libxml2
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
 
 from pokernetwork import pokerdatabase
 from pokernetwork import pokernetworkconfig

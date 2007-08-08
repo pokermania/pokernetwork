@@ -32,6 +32,10 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
 from pokernetwork.pokerpackets import *
@@ -73,6 +77,7 @@ class MockService:
 class MockClient:
 
     def __init__(self, serial):
+        self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
         self.serial = serial
         self.deferred = None
         self.raise_if_packet = None
@@ -94,8 +99,12 @@ class MockClient:
                 return True
         return False
 
+    def message(self, message):
+        if self.verbose >= 0:
+            print "MockClient " + message
+        
     def error(self, message):
-        print "MockClient: error: " + message
+        self.message("error " + message)
 
     def join(self, table):
         pass
@@ -110,7 +119,7 @@ class MockClient:
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
 
     def sendPacket(self, packet):
-        print "MockClient::sendPacket: " + str(packet)
+        self.message("sendPacket: " + str(packet))
         self.packets.append(packet)
         if self.deferred:
             if self.raise_if_packet and packet.type == self.raise_if_packet:

@@ -21,6 +21,7 @@ import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 sys.path.insert(0, "@top_srcdir@/tests/test-pygame")
+
 import unittest
 
 class PygameTest(unittest.TestCase):

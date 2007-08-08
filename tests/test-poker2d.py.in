@@ -34,6 +34,10 @@ sys.path.insert(0, "..")
 sys.path.insert(0, "@top_srcdir@/pokerclient2d")
 sys.path.insert(0, "../pokerclient2d/.libs")
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 import poker2d
 import platform
 

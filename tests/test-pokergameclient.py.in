@@ -23,6 +23,10 @@ sys.path.insert(0, "..")
 
 from twisted.trial import unittest, runner, reporter
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokernetwork.pokergameclient import PokerNetworkGameClient
 
 class PokerNetworkGameClientTestCase(unittest.TestCase):

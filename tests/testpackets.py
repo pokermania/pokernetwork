@@ -42,8 +42,6 @@ class PacketsTestBase(unittest.TestCase):
         self.polute(packet)
         size = packet.calcsize()
         packet.infoInit()
-        if self.verbose:
-            print "PACK " + str(packet.pack())
         self.assertEqual(size, packet.infoCalcsize())
         packed = packet.pack()
         self.assertEqual(size, len(packed))

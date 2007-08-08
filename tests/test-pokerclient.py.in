@@ -41,6 +41,10 @@ import twisted.internet.base
 from twisted.internet import reactor, defer, error, base
 from twisted.python import failure, runtime
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokerengine import pokertournament
 #
 # Must be done before importing pokerclient or pokerclient

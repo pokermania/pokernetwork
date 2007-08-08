@@ -33,6 +33,10 @@ sys.path.insert(0, "..")
 
 import unittest
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokernetwork import pokernetworkconfig
 
 class PokerNetworkConfigTestCase(unittest.TestCase):

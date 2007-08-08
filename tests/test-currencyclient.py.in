@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -41,6 +42,10 @@ from twisted.internet import defer
 twisted.internet.base.DelayedCall.debug = True
 
 from urlparse import urlparse
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
 
 from pokernetwork import currencyclient
 

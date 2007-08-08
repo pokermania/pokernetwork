@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -32,6 +33,10 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
 
 from pokerui.pokerrenderer import PokerRenderer, PokerInteractors
 from pokerui.pokerinterface import PokerInterface, INTERFACE_CHECK_WARNING

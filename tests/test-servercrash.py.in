@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
+# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -38,6 +39,10 @@ from twisted.internet import reactor, defer, error
 from twisted.python import failure
 
 twisted.internet.base.DelayedCall.debug = True
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
 
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
