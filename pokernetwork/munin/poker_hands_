@@ -46,7 +46,7 @@ fi
 
 script=$(cat <<'EOF'
 $obj = jsonToObj($_);
-print "hands.value $obj->{'hands'}\n";
+print "hands.value $obj->[0]{'hands'}\n";
 EOF
 )
 ${WGET} -q -O - --post-data '{"type": "PacketPokerStatsQuery"}' http://$IP:19382/REST?session=no | perl -MJSON -ne "$script"
