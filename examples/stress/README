@@ -1,0 +1,12 @@
+Assume a poker-network installation where the MySQL poker user
+password is poker and all other defaults are left untouched.
+
+On the poker server:
+
+sh -x server.sh
+
+
+On the machine running the bots:
+
+sh -x bots.sh poker-network-1-2-0.pokersource.info:10380 1 2 3...
+
