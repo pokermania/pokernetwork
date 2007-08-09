@@ -172,7 +172,8 @@ EXTRA_DIST = \
 	examples/interface.py \
 	examples/xmlrpc-soap.py \
 	examples/run-pokerserver \
-	examples/test-pokerweb \
+	examples/stress/bots.sh \
+	examples/stress/poker.bot000.xml \
 	examples/stress/poker.bot100.xml \
 	examples/stress/poker.bot200.xml \
 	examples/stress/poker.bot300.xml \
@@ -182,8 +183,11 @@ EXTRA_DIST = \
 	examples/stress/poker.bot700.xml \
 	examples/stress/poker.bot800.xml \
 	examples/stress/poker.bot900.xml \
-	examples/stress/poker.bot.xml \
 	examples/stress/poker.server.xml \
+	examples/stress/README \
+	examples/stress/report.sh \
+	examples/stress/server.sh \
+	examples/test-pokerweb \
 	tests/upgrade.in \
 	database/pokerdatabaseupgrade.in \
         poker-network.pc.in \
