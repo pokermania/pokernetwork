@@ -39,6 +39,7 @@ fi
 prevver="$2" 
 
 init_munin() {
+    if type munin-node-configure > /dev/null 2>&1 ; then
         if [ "$prevver" ]; then
                 echo -n "Initializing new munin.."
                 munin-node-configure --families poker-network --shell --newer "${prevver%-*}" | sh
@@ -47,6 +48,8 @@ init_munin() {
                 munin-node-configure --families poker-network --shell | sh
         fi
         echo "done."
+        /etc/init.d/munin-node restart
+    fi
 }
 
 case "$1" in
