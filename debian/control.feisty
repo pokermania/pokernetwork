@@ -9,7 +9,7 @@ Standards-Version: 3.7.2
 Package: python-poker-network
 Section: python
 Architecture: all
-Suggests: mysql-server
+Suggests: mysql-server, munin-node
 Conflicts: python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.0.22), python-twisted, python-zopeinterface, python-mysqldb, python-soappy, python-pyopenssl, python-simplejson, libjson-perl, dbconfig-common, mysql-client, apg, rsync
