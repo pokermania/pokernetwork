@@ -41,7 +41,7 @@ if [ "$1" = "config" ]; then
    echo "graph_vlabel poker players"
    echo "graph_category poker"
    echo "players.label players"
-   echo "players.type ABSOLUTE"
+   echo "players.type GAUGE"
    exit 0
 fi
 
