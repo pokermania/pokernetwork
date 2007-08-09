@@ -1006,11 +1006,15 @@
 <table name="A0999" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1"/>
 <table name="A1000" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1"/>
 
-  <listen tcp="19480" tcp_ssl="19481" http="19482" http_ssl="19483"/>
+  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383"/>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
+<!--
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork" root_user="root" root_password="" schema="../database/schema.sql" command="mysql"/>
   <path>/etc/poker-engine2.3 /etc/poker-engine ../conf</path> 
+-->
+  <database name="pokernetworktest" host="localhost" port="3306" user="python-poker-net" password="poker" root_user="root" root_password="" schema="/usr/share/poker-network/schema.sql" command="/usr/bin/mysql"/>
+  <path>/etc/poker-engine /etc/poker-network</path> 
   <users temporary="XXX"/>
 </server>
 <!-- 

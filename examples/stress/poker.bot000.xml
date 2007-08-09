@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="3" rebuy="yes" reconnect="yes" watch="no" level="0" ping="240" verbose="0" no_display_packets="yes" name_prefix="BOT" poker_network_version="1.2.0"> <!-- disconnect_delay="1,280" reconnect_delay="60,60" -->
+  <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="15"/>
+  <name>test</name>
+  <passwd>test</passwd>
+  <servers>localhost:19480</servers>
+  <muck>yes</muck>
+  <auto_post>yes</auto_post>
+  <path>/etc/poker-engine</path> 
+  <currency>wget --quiet -O- 'http://localhost/test-poker-web/currency_one.php?command=get_note&amp;value=500000&amp;count=10&amp;autocommit=yes'</currency>
+
+<table name="A0001" count="10"/>
+<table name="A0002" count="10"/>
+<table name="A0003" count="10"/>
+<table name="A0004" count="10"/>
+<table name="A0005" count="10"/>
+<table name="A0006" count="10"/>
+<table name="A0007" count="10"/>
+<table name="A0008" count="10"/>
+<table name="A0009" count="10"/>
+<table name="A0010" count="10"/>
+<table name="A0011" count="10"/>
+<table name="A0012" count="10"/>
+<table name="A0013" count="10"/>
+<table name="A0014" count="10"/>
+<table name="A0015" count="10"/>
+<table name="A0016" count="10"/>
+<table name="A0017" count="10"/>
+<table name="A0018" count="10"/>
+<table name="A0019" count="10"/>
+<table name="A0020" count="10"/>
+<table name="A0021" count="10"/>
+<table name="A0022" count="10"/>
+<table name="A0023" count="10"/>
+<table name="A0024" count="10"/>
+<table name="A0025" count="10"/>
+<table name="A0026" count="10"/>
+<table name="A0027" count="10"/>
+<table name="A0028" count="10"/>
+<table name="A0029" count="10"/>
+<table name="A0030" count="10"/>
+<table name="A0031" count="10"/>
+<table name="A0032" count="10"/>
+<table name="A0033" count="10"/>
+<table name="A0034" count="10"/>
+<table name="A0035" count="10"/>
+<table name="A0036" count="10"/>
+<table name="A0037" count="10"/>
+<table name="A0038" count="10"/>
+<table name="A0039" count="10"/>
+<table name="A0040" count="10"/>
+<table name="A0041" count="10"/>
+<table name="A0042" count="10"/>
+<table name="A0043" count="10"/>
+<table name="A0044" count="10"/>
+<table name="A0045" count="10"/>
+<table name="A0046" count="10"/>
+<table name="A0047" count="10"/>
+<table name="A0048" count="10"/>
+<table name="A0049" count="10"/>
+<table name="A0050" count="10"/>
+<table name="A0051" count="10"/>
+<table name="A0052" count="10"/>
+<table name="A0053" count="10"/>
+<table name="A0054" count="10"/>
+<table name="A0055" count="10"/>
+<table name="A0056" count="10"/>
+<table name="A0057" count="10"/>
+<table name="A0058" count="10"/>
+<table name="A0059" count="10"/>
+<table name="A0060" count="10"/>
+<table name="A0061" count="10"/>
+<table name="A0062" count="10"/>
+<table name="A0063" count="10"/>
+<table name="A0064" count="10"/>
+<table name="A0065" count="10"/>
+<table name="A0066" count="10"/>
+<table name="A0067" count="10"/>
+<table name="A0068" count="10"/>
+<table name="A0069" count="10"/>
+<table name="A0070" count="10"/>
+<table name="A0071" count="10"/>
+<table name="A0072" count="10"/>
+<table name="A0073" count="10"/>
+<table name="A0074" count="10"/>
+<table name="A0075" count="10"/>
+<table name="A0076" count="10"/>
+<table name="A0077" count="10"/>
+<table name="A0078" count="10"/>
+<table name="A0079" count="10"/>
+<table name="A0080" count="10"/>
+<table name="A0081" count="10"/>
+<table name="A0082" count="10"/>
+<table name="A0083" count="10"/>
+<table name="A0084" count="10"/>
+<table name="A0085" count="10"/>
+<table name="A0086" count="10"/>
+<table name="A0087" count="10"/>
+<table name="A0088" count="10"/>
+<table name="A0089" count="10"/>
+<table name="A0090" count="10"/>
+<table name="A0091" count="10"/>
+<table name="A0092" count="10"/>
+<table name="A0093" count="10"/>
+<table name="A0094" count="10"/>
+<table name="A0095" count="10"/>
+<table name="A0096" count="10"/>
+<table name="A0097" count="10"/>
+<table name="A0098" count="10"/>
+<table name="A0099" count="10"/>
+
+</settings>
+<!-- 
+Local Variables:
+compile-command: "for i in $(seq 1 1200) ; do printf '<table name=\"A%04d\" count=\"10\"/>\n' $i ; done"
+End:
+-->
