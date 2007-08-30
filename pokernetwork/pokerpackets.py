@@ -111,6 +111,11 @@
 #     PACKET_POKER_RAISE
 #     PACKET_POKER_FOLD
 #     PACKET_POKER_CHECK
+#
+#     What to send after receiving PACKET_POKER_MUCK_REQUEST ?
+#
+#     PACKET_POKER_MUCK_ACCEPT or
+#     PACKET_POKER_MUCK_DENY
 #     
 
 import sys
@@ -3249,11 +3254,14 @@ PacketNames[PACKET_POKER_MUCK_REQUEST] = "POKER_MUCK_REQUEST"
 class PacketPokerMuckRequest(PacketPokerId):
     """\
 Semantics: server is announcing a muck request to muckable players
-in game "game_id".
+in game "game_id". The packet is sent to all players at the table.
+If a player in the list does not respond in time (the actual timeout
+value depends on the server configuration and is usualy 5 seconds),
+her hand will be mucked.
 
 Direction: server <=> client
 game_id: integer uniquely identifying a game.
-muckable_serials: list of muckable candidates
+muckable_serials: list of serials of players that are given a the choice to muck.
     """
     type = PACKET_POKER_MUCK_REQUEST
 
@@ -3289,6 +3297,35 @@ PACKET_POKER_AUTO_MUCK = 129 # 0x81 # %SEQ%
 PacketNames[PACKET_POKER_AUTO_MUCK] = "POKER_AUTO_MUCK"
 
 class PacketPokerAutoMuck(PacketPokerId):
+    """\
+Semantics: By default the client will not be proposed to muck : the
+server will always muck for him.
+The client may send the PacketPokerAutoMuck to inform the server of its
+muck preferences for "game_id". The "info" field must be set to one
+of the following:
+
+AUTO_MUCK_NEVER  0x00
+AUTO_MUCK_WIN    0x01
+AUTO_MUCK_LOSE   0x02
+AUTO_MUCK_ALWAYS AUTO_MUCK_WIN + AUTO_MUCK_LOSE
+
+When "info" is set to AUTO_MUCK_NEVER, the server will always send
+a PacketPokerMuckRequest including the serial of the player for
+this "game_id" when mucking is an option. If "info" is set to
+AUTO_MUCK_WIN the server will
+not include the serial of the player in the PacketPokerMuckRequest packet
+for this "game_id" if the player wins but is not forced to
+how its cards (i.e. when the opponent folded to him).
+If "info" is set to AUTO_MUCK_LOSE the server will not include the serial
+of the player in the PacketPokerMuckRequest packet for this "game_id"
+when the player loses the hand but is not forced to show his cards.
+AUTO_MUCK_ALWAYS is the equivalent of requesting AUTO_MUCK_LOSE and
+AUTO_MUCK_WIN at the same time and is the default.
+
+Direction: server <= client
+game_id: integer uniquely identifying a game.
+info: bitfield indicating what muck situations are of interest.
+    """
 
     type = PACKET_POKER_AUTO_MUCK
 
