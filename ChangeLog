@@ -1,3 +1,10 @@
+2007-09-07  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokerclient2d/pokerdisplay2d.py: 
+	* pokerclient2d/gamewindow.py: 
+	Fix SIGV at startup (LP #137573), by calling signalautoconnect on
+	the glade tree before modifications.
+
 2007-08-08  Loic Dachary <loic@dachary.org>
 
 	* Release 1.2.0

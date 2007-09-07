@@ -396,8 +396,11 @@ class PokerDisplay2D(PokerDisplay):
         if exists(gtkrc):
             gtk.rc_parse(gtkrc)
         glade_file = self.datadir + "/interface/table/mockup.glade"
+        glade = gtk.glade.XML(glade_file)
+        glade.signal_autoconnect(self)
         from gamewindow import GameWindowGlade
-        self.glade = GameWindowGlade(glade_file)
+        self.glade = GameWindowGlade(glade)
+        self.glade.signal_autoconnect(self)
         self.actions = {
             "call": self.glade.get_widget("call"),
             "raise": self.glade.get_widget("raise"),
@@ -412,7 +415,6 @@ class PokerDisplay2D(PokerDisplay):
             "fold": self.glade.get_widget("fold"),
             }
         self.switch = self.glade.get_widget("switch")
-        self.glade.signal_autoconnect(self)
 #        self.actions['check'].add_accelerator("clicked", gtk.AccelGroup(), gtk.gdk.keyval_from_name("p"), gtk.gdk.MOD1_MASK, gtk.ACCEL_VISIBLE)
 
         self.animations = pokeranimation2d.create(self.glade, config, settings)

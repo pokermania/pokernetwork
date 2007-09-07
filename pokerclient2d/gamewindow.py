@@ -26,13 +26,12 @@
 #
 
 import gtk
-import gtk.glade
 import unittest
 
 class GameWindowGlade:
-    def __init__(self, glade_file):
+    def __init__(self, glade):
         self.widgets = {}
-        self.glade = gtk.glade.XML(glade_file)
+        self.glade = glade
         window = self.glade.get_widget('game_window')
         fixed = self.glade.get_widget('game_window_fixed')
         window.remove(fixed)
@@ -147,7 +146,6 @@ class GameWindowGlade:
         for name, widget in self.widgets.iteritems():
             method = getattr(instance, "on_%s_clicked" % name, None)
             if method: widget.connect("clicked", method)
-        return self.glade.signal_autoconnect(instance)
 
 if __name__ == '__main__':
     glade = GameWindowGlade('data/interface/table/mockup.glade')
