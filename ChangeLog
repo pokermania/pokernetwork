@@ -1,6 +1,26 @@
-2007-09-14  Johan Euphrosine  <proppy@aminche.com>
+2007-09-14  Loic Dachary <loic@dachary.org>
 
 	* Release 1.2.0
+
+	* tests/test-servercrash.py.in, tests/test-webservice.py.in,
+	  tests/testmessages.py: improve verbosity control
+	* tests/test-pokerservice.py.in: create a base class for tests and
+	  add a number of tests mainly designed to cover all code
+	  containing messages
+	* tests/test-pokeravatar.py.in, tests/test-pokerchildren.py.in,
+	  tests/test-pokerclient.py.in,
+	  tests/test-pokerclientpackets.py.in,
+	  tests/test-pokerexplain.py.in: improve verbosity control
+	* pokernetwork/pokerservice.py: improve verbosity control
+	  remove dead code
+	* pokernetwork/pokerdatabase.py: improve verbosity control
+	* debian/control, debian/control.breezy, debian/control.dapper,
+	  debian/control.edgy, debian/control.etch, debian/control.feisty,
+	  debian/control.gutsy, debian/control.hoary, debian/control.lenny,
+	  debian/control.sarge, debian/control.unstable: get rid of
+	  obsolete distributions and add ttf-freefont
+
+2007-09-14  Johan Euphrosine  <proppy@aminche.com>
 
 	* tests/test-gamewindow.py.in:
 	Fixed outdated test-gamewindow.py.in: GameWindowGlade(glade_instance)
