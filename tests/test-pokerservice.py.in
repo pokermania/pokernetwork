@@ -34,7 +34,9 @@ sys.path.insert(0, "..")
 from string import split
 import libxml2
 import random
+import sets
 from MySQLdb.cursors import DictCursor
+from _mysql_exceptions import IntegrityError
 from pprint import pprint
 
 from tests import testclock
@@ -45,7 +47,7 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages
+from tests.testmessages import silence_all_messages, messages_out
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -72,7 +74,7 @@ from pokerengine import pokertournament
 pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -118,25 +120,6 @@ class PokerServiceTestCaseBase(unittest.TestCase):
 #        d.addCallback(lambda x: self.destroyDb())
         return d
 
-class PokerServiceTestCase(PokerServiceTestCaseBase):
-
-    # ----------------------------------------------------------------
-    def test01_auth(self):
-        self.service.startService()
-        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
-        self.assertEquals(None, message)
-        self.assertEquals(4, serial)
-        self.assertEquals("user1", name)
-        self.assertEquals(user.User.REGULAR, privilege)
-
-    # ----------------------------------------------------------------
-    def test01_auth_fail(self):
-        self.service.startService()
-        self.service.poker_auth.auto_create_account = False
-        ( status, message ) = self.service.auth("user1", "password1", "role1")
-        self.assertEquals("Invalid login or password", message)
-        self.assertEquals(False, status)
-
     # ----------------------------------------------------------------
     def createUsers(self):
         cursor = self.db.cursor()
@@ -157,6 +140,41 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 self.assertEqual(1, cursor.rowcount)
 
         cursor.close()
+
+class PokerServiceTestCase(PokerServiceTestCaseBase):
+
+    # ----------------------------------------------------------------
+    def test01_auth(self):
+        self.service.startService()
+        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
+        self.assertEquals(None, message)
+        self.assertEquals(4, serial)
+        self.assertEquals("user1", name)
+        self.assertEquals(user.User.REGULAR, privilege)
+
+    # ----------------------------------------------------------------
+    def test01_auth_invalid_login(self):
+        self.service.startService()
+        self.service.poker_auth.auto_create_account = False
+        ( status, message ) = self.service.auth("user1", "password1", sets.Set("role1"))
+        self.assertEquals("Invalid login or password", message)
+        self.assertEquals(False, status)
+
+    # ----------------------------------------------------------------
+    def test01_auth_already_logged(self):
+        class Client:
+            def __init__(self):
+                self.roles = sets.Set('role1')
+            def getName(self):
+                return "user1"
+
+        self.service.startService()
+        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", sets.Set('role1'))
+        self.service.serial2client[serial] = Client()
+        ( status, message ) = self.service.auth("user1", "password1", sets.Set('role1'))
+        self.assertEquals('Already logged in from somewhere else', message)
+        self.assertEquals(False, status)
+            
     # ----------------------------------------------------------------
     def cashIn(self):
 
@@ -267,17 +285,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         d = self.cashIn()
         d.addCallback(self.cashOut)
         return d
-
-    # ----------------------------------------------------------------
-    def test08_setAccount(self):
-        self.service.startService()
-        affiliate = 3
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'test08_1',
-                                                             password = 'PASSWORD',
-                                                             email = 'test08_1@HOME.COM',
-                                                             affiliate = affiliate))
-        self.assertEquals(info.type, PACKET_POKER_PERSONAL_INFO, str(info))
-        self.assertEquals(affiliate, info.affiliate)
 
     # ----------------------------------------------------------------
 
@@ -566,6 +573,374 @@ class TimerTestCase(unittest.TestCase):
         service.cancelTimers('foo')
         self.assertEqual([], service.timer.keys())
     
+class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
+
+    def test_ok(self):
+        tourney_serial = 100
+        self.service.startService()
+        self.createUsers()
+        user_serial = self.user1_serial
+        tourney = pokertournament.PokerTournament(serial = tourney_serial,
+                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+        tourney.currency_serial = 1
+        self.service.tourneys[tourney_serial] = tourney
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = tourney_serial))
+        packet = PacketPokerId(serial = user_serial,
+                               game_id = tourney_serial)
+        return_packet = self.service.tourneyUnregister(packet)
+        self.assertEqual(packet, return_packet)
+        
+    def test_does_not_exist(self):
+        tourney_serial = 100
+        user_serial = 1
+        self.service.startService()
+        p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
+                                                         game_id = tourney_serial))
+        self.assertEqual(PacketPokerTourneyUnregister.DOES_NOT_EXIST, p.code)
+        
+    def test_not_registered(self):
+        tourney_serial = 100
+        user_serial = 1
+        self.service.startService()
+        tourney = pokertournament.PokerTournament(serial = tourney_serial,
+                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+        self.service.tourneys[tourney_serial] = tourney
+        p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
+                                                         game_id = tourney_serial))
+        self.assertEqual(PacketPokerTourneyUnregister.NOT_REGISTERED, p.code)
+        
+    def test_too_late(self):
+        tourney_serial = 100
+        user_serial = 1
+        self.service.startService()
+        tourney = pokertournament.PokerTournament(serial = tourney_serial,
+                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+        tourney.register(user_serial)
+        tourney.currency_serial = 1
+        tourney.state = pokertournament.TOURNAMENT_STATE_RUNNING
+        self.service.tourneys[tourney_serial] = tourney
+        p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
+                                                         game_id = tourney_serial))
+        self.assertEqual(PacketPokerTourneyUnregister.TOO_LATE, p.code)
+        
+    def test_no_user2money(self):
+        tourney_serial = 100
+        user_serial = 1
+        self.service.startService()
+        tourney = pokertournament.PokerTournament(serial = tourney_serial,
+                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+        tourney.register(user_serial)
+        tourney.currency_serial = 1
+        tourney.buy_in = 1000
+        self.service.tourneys[tourney_serial] = tourney
+        p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
+                                                         game_id = tourney_serial))
+        self.assertEqual(PacketPokerTourneyUnregister.SERVER_ERROR, p.code)
+        self.assertTrue("not in user2money" in p.message)
+        
+    def test_no_user2tourney(self):
+        tourney_serial = 100
+        self.service.startService()
+        self.createUsers()
+        user_serial = self.user1_serial
+        tourney = pokertournament.PokerTournament(serial = tourney_serial,
+                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+        tourney.register(user_serial)
+        tourney.currency_serial = 1
+        self.service.tourneys[tourney_serial] = tourney
+        p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
+                                                         game_id = tourney_serial))
+        self.assertEqual(PacketPokerTourneyUnregister.SERVER_ERROR, p.code)
+        self.assertTrue("not in user2tourney" in p.message)
+        
+class TourneyCancelTestCase(PokerServiceTestCaseBase):
+    def test_ok(self):
+        class Tournament:
+            def __init__(self):
+                self.players = [1]
+                self.serial = 1
+
+        self.service.tourneys = {}
+        self.service.tourneyCancel(Tournament())
+        self.assertTrue('tourneyCancel:' in messages_out[-1])
+
+class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
+
+    tourney_serial = 10
+
+    class Tournament:
+        def __init__(self):
+            self.serial = TourneyMovePlayerTestCase.tourney_serial
+
+    class Table:
+        def __init__(self):
+            self.serial2client = {}
+            
+        def movePlayer(self, client, serial, to_game_id):
+            pass
+
+    def test_ok(self):
+        self.service.startService()
+        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table()
+        user_serial = 1
+        table_serial = 100
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO user2tourney (user_serial, tourney_serial, table_serial) VALUES (%d, %d, %d)" % ( user_serial, TourneyMovePlayerTestCase.tourney_serial, table_serial ))
+        self.assertTrue(self.service.tourneyMovePlayer(TourneyMovePlayerTestCase.Tournament(), table_serial, 200, user_serial))
+        cursor.close()
+
+    def test_missing_db_record(self):
+        self.service.startService()
+        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table()
+        user_serial = 1
+        table_serial = 100
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO user2tourney (user_serial, tourney_serial, table_serial) VALUES (%d, %d, %d)" % ( user_serial, TourneyMovePlayerTestCase.tourney_serial, table_serial ))
+        wrong_user_serial = 2
+        self.assertFalse(self.service.tourneyMovePlayer(TourneyMovePlayerTestCase.Tournament(), table_serial, 200, wrong_user_serial))
+        cursor.close()
+        
+class ListHandsTestCase(PokerServiceTestCaseBase):
+
+    def test_ok(self):
+        self.service.startService()
+        ( total, hands ) = self.service.listHands("SELECT '1'", "SELECT '2'")
+        self.assertEqual(["1"], hands)
+        self.assertEqual("2", total)
+
+class SetAccountTestCase(PokerServiceTestCaseBase):
+
+    def test_insert_ok(self):
+        self.service.startService()
+        affiliate = 3
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'test08_1',
+                                                             password = 'PASSWORD',
+                                                             email = 'test08_1@HOME.COM',
+                                                             affiliate = affiliate,
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        self.assertEquals(affiliate, info.affiliate)
+
+    def test_update_ok(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
+                                                             password = 'password1',
+                                                             email = 'a@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        serial = info.serial
+        info = self.service.setAccount(PacketPokerSetAccount(serial = serial,
+                                                             name = 'user1',
+                                                             password = 'password2',
+                                                             email = 'a@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+
+    def test_setPersonalInfo_fail(self):
+        self.service.startService()
+        self.service.setPersonalInfo = lambda x: False
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'test08_1',
+                                                             password = 'PASSWORD',
+                                                             email = 'test08_1@HOME.COM',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals("unable to set personal information", info.message)
+        self.assertEquals(PacketPokerSetAccount.SERVER_ERROR, info.code)
+
+    def test_name_already_exists(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
+                                                             password = 'password1',
+                                                             email = 'a@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        serial = info.serial
+        info = self.service.setAccount(PacketPokerSetAccount(serial = 10001,
+                                                             email = 'a@b.c',
+                                                             name = 'user1'))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals(PacketPokerSetAccount.NAME_ALREADY_EXISTS, info.code)
+
+    def test_email_already_exists(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
+                                                             password = 'password1',
+                                                             email = '1@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        serial = info.serial
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user2',
+                                                             password = 'password2',
+                                                             email = '2@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        info = self.service.setAccount(PacketPokerSetAccount(serial = serial,
+                                                             name = 'user1',
+                                                             email = '2@b.c'))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals(PacketPokerSetAccount.EMAIL_ALREADY_EXISTS, info.code)
+
+    def test_update_duplicate_serial(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
+                                                             password = 'password1',
+                                                             email = 'a@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        serial = info.serial
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user2',
+                                                             password = 'password2',
+                                                             email = '2@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        cursor = self.db.cursor()
+        cursor.execute('ALTER TABLE users CHANGE COLUMN serial s1 INT UNSIGNED NOT NULL AUTO_INCREMENT')
+        cursor.execute('ALTER TABLE users ADD COLUMN serial INT UNSIGNED NOT NULL')
+        cursor.execute('DROP INDEX name_idx ON users')
+        cursor.execute('DROP INDEX email_idx ON users')
+        cursor.execute('UPDATE users SET serial = %d' % serial)
+        info = self.service.setAccount(PacketPokerSetAccount(serial = serial,
+                                                             name = 'user1',
+                                                             password = 'password4',
+                                                             email = 'a@b.c'))
+        self.assertEquals(info.type, PACKET_ERROR)
+        self.assertEquals(PacketPokerSetAccount.SERVER_ERROR, info.code)
+        
+    def test_name_error(self):
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'ab'))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals(PacketPokerSetAccount.NAME_TOO_SHORT, info.code)
+        
+    def test_password_error(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef',
+                                                             password = ''))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals(PacketPokerSetAccount.PASSWORD_TOO_SHORT, info.code)
+        
+    def test_email_error(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef',
+                                                             password = 'ABCDEF',
+                                                             email = ''))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals(PacketPokerSetAccount.INVALID_EMAIL, info.code)
+        
+    def test_email_duplicate(self):
+        self.service.startService()
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
+                                                             password = 'password1',
+                                                             email = 'a@b.c',
+                                                             birthdate = '1980/01/01'))
+        self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'user2',
+                                                             password = 'password2',
+                                                             email = 'a@b.c'))
+        self.assertEquals(PACKET_ERROR, info.type)
+        self.assertEquals(PacketPokerSetAccount.EMAIL_ALREADY_EXISTS, info.code)
+        
+    def test_user_private_duplicate(self):
+        self.service.startService()
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO users_private (serial) VALUES (4)")
+        cursor.close()
+        raised = False
+        try:
+            info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
+                                                                 password = 'password1',
+                                                                 email = 'a@b.c',
+                                                                 birthdate = '1980/01/01'))
+        except IntegrityError:
+            raised = True
+        self.assertTrue(raised)
+        
+class ShutdownCheckTestCase(PokerServiceTestCaseBase):
+
+    class PokerGame:
+        def isEndOrNull(self):
+            return not self.playing
+    
+    class PokerTable:
+        def __init__(self):
+            self.game = ShutdownCheckTestCase.PokerGame()
+                
+
+    def tearDown(self):
+        pass
+    
+    def test_down(self):
+        self.deferred_called = False
+        def c(x):
+            self.deferred_called = True
+        d = defer.Deferred()
+        d.addCallback(c)
+        self.service.shutdown_deferred = d
+        self.service.down = True
+        self.service.shutdownCheck()
+        self.assertTrue(self.deferred_called)
+        del self.deferred_called
+
+    def test_ok(self):
+        table = ShutdownCheckTestCase.PokerTable()
+        table.game.playing = True
+        self.service.tables = [ table ]
+        self.service.down = False
+        d = defer.Deferred()
+        self.service.shutdown_deferred = d
+        self.service.shutdownCheck()
+        self.assertEqual(d, self.service.shutdown_deferred)
+        table.game.playing = False
+        def f(status):
+            self.assertTrue(self.service.down)
+            return status
+        d.addCallback(f)
+        return d
+    
+class TourneyFinishedTestCase(PokerServiceTestCaseBase):
+
+    def test_ok(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        tournament = Tournament()
+        winner_serial = 10
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = self.user2_serial
+        self.service.tourneyFinished(tournament)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT amount FROM user2money WHERE user_serial = %d" % winner_serial)
+        (amount,) = cursor.fetchone()
+        self.assertEqual(tournament.prize_min, amount)
+        cursor.close()
+        
+    def test_no_bailor(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        tournament = Tournament()
+        winner_serial = 10
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = 2000
+        self.assertEqual(False, self.service.tourneyFinished(tournament))
+        self.assertTrue("bailor failed to provide requested money" in messages_out[-1])
+        
 class BreakTestCase(PokerServiceTestCaseBase):
 
     def test_tourneyNewState(self):
@@ -755,11 +1130,12 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
         self.assertEqual(15, row['points'])
         cursor.close()
 
-class PokerServiceMockup:
-    verbose = 0
 class PokerXMLTestCase(unittest.TestCase):
+    class PokerServiceMockup:
+        verbose = 0
+
     def test_packets2maps(self):
-        pokerxml = pokerservice.PokerXML(PokerServiceMockup()) 
+        pokerxml = pokerservice.PokerXML(PokerXMLTestCase.PokerServiceMockup()) 
         message = "serialize me"
         packet = PacketError(message = message)
         self.assertEqual(message, packet.message)
@@ -771,11 +1147,18 @@ class PokerXMLTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test14"
+#    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(TimerTestCase))
     suite.addTest(loader.loadClass(BreakTestCase))
+    suite.addTest(loader.loadClass(TourneyFinishedTestCase))
+    suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
+    suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+    suite.addTest(loader.loadClass(TourneyCancelTestCase))
+    suite.addTest(loader.loadClass(ShutdownCheckTestCase))
+    suite.addTest(loader.loadClass(ListHandsTestCase))
+    suite.addTest(loader.loadClass(SetAccountTestCase))
     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
     suite.addTest(loader.loadClass(PokerXMLTestCase))
     return runner.TrialRunner(
