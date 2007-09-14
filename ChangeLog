@@ -1,13 +1,13 @@
 2007-09-07  Johan Euphrosine  <proppy@aminche.com>
 
+	* Release 1.2.0
+
 	* pokerclient2d/pokerdisplay2d.py: 
 	* pokerclient2d/gamewindow.py: 
 	Fix SIGV at startup (LP #137573), by calling signalautoconnect on
 	the glade tree before modifications.
 
 2007-08-08  Loic Dachary <loic@dachary.org>
-
-	* Release 1.2.0
 
 	* debian/python-poker-network.postinst,
 	  debian/python-poker-network.postrm: initialize munin plugins
@@ -4749,5 +4749,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-07-30/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-09-07/p'"
 End:
