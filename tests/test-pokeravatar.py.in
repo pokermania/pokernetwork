@@ -124,7 +124,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # Setup server
         #
         self.service = pokerservice.PokerService(settings)
-        self.service.verbose = 3
+        self.service.verbose = 6
         self.service.startService()
         factory = pokerservice.IPokerFactory(self.service)
         self.p = reactor.listenTCP(0, factory,

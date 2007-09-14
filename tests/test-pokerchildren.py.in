@@ -86,7 +86,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def test01_rsync_ok(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '6') + """" >
 <user path="test-pokerchildren-dir" />
 <rsync source="source" target="target" path="touch" dir="test-pokerchildren-dir" />
 </settings>
@@ -112,7 +112,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def test02_rsync_fail(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '6') + """" >
 <user path="test-pokerchildren-dir" />
 <rsync source="source" target="target" path="sh" dir="test-pokerchildren-dir" />
 </settings>
@@ -139,7 +139,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def test03_child_kill(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '6') + """" >
 <web browser="sleep">6</web>
 </settings>
 """
@@ -156,7 +156,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def test04_rsync_fail_host_does_not_respond(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '6') + """" >
 <user path="test-pokerchildren-dir" />
 <rsync source="" target="" path="rsync" dir="" />
 </settings>
@@ -181,7 +181,7 @@ class PokerChildrenTestCase(unittest.TestCase):
 
     def test05_rsync_fail_no_network(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings verbose=\"""" + os.environ.get('VERBOSE_T', '3') + """" >
+<settings verbose=\"""" + os.environ.get('VERBOSE_T', '6') + """" >
 <user path="test-pokerchildren-dir" />
 <rsync source="" target="" path="rsync" dir="" />
 </settings>

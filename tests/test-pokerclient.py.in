@@ -76,7 +76,7 @@ class ConstantPlayerShuffler:
 pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -94,7 +94,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 """
 
 settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings display2d="yes" display3d="no" ping="15000" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
+<settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
    <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
   <name>user1</name>
@@ -135,7 +135,7 @@ class PokerClientTestCase(unittest.TestCase):
         # Setup server
         #
         self.service = pokerservice.PokerService(settings)
-        self.service.verbose = 3
+        self.service.verbose = 6
         self.service.startService()
         factory = pokerservice.IPokerFactory(self.service)
         self.p = reactor.listenTCP(0, factory,

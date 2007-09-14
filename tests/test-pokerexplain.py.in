@@ -72,22 +72,11 @@ class PokerExplainTestCase(unittest.TestCase):
         self.explain = PokerExplain()
         self.explain.games.dirs = [ '../@srcdir@/poker-engine' ]
         self.explain.setVerbose(10)
-        verbose = int(os.environ.get('VERBOSE_T', 3))
-        self.explain.old_message = self.explain.message
-        def message01(string):
-            if verbose > 0:
-                self.explain.old_message(string)
-        self.explain.message = message01
-        pokergame.PokerGame.old_message = pokergame.PokerGame.message
-        def message02(object, string):
-            if verbose > 0:
-                print str(object) + string
-        pokergame.PokerGame.message = message02
 
     def test01_utilities(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)
-        self.explain.old_message("")
+        self.explain.message("")
         self.explain.setVerbose(10)
         self.explain.error("test")
         self.explain.setPrefix("foo")
