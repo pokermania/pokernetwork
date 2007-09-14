@@ -29,7 +29,7 @@
 import os
 from os.path import exists
 import re
-from traceback import print_exc, print_stack
+from traceback import format_exc, print_stack
 import MySQLdb
 from MySQLdb.cursors import DictCursor
 
@@ -102,7 +102,7 @@ class PokerDatabase:
                     if self.verbose:
                         self.message("created database user " + self.parameters["user"])
                 except:
-                    if self.verbose > 3: print_exc()
+                    if self.verbose > 3: self.message(format_exc())
                     if self.verbose:
                         self.message("poker user '" + self.parameters["user"] + "' already exists")
                 #
