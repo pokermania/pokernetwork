@@ -29,7 +29,7 @@ Description: multiplayer poker server and client library
 Package: python-poker2d
 Section: python
 Architecture: any
-Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), python-glade2, python-pygame, python-gtk2, gtk2-engines-pixbuf, libsdl1.2debian-all, rsync
+Depends: ${shlibs:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), python-glade2, python-pygame, python-gtk2, gtk2-engines-pixbuf, libsdl1.2debian-all, rsync, ttf-freefont
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Conflicts: python2.3-python-poker2d (<< 1.0.21), python2.4-python-poker2d (<< 1.0.21)
