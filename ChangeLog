@@ -1,6 +1,13 @@
-2007-09-07  Johan Euphrosine  <proppy@aminche.com>
+2007-09-14  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.2.0
+
+	* tests/test-gamewindow.py.in:
+	Fixed outdated test-gamewindow.py.in: GameWindowGlade(glade_instance)
+	* debian/control.gutsy (Pre-Depends): 
+	Depends->Pre-Depends: dbconfig-common
+
+2007-09-07  Johan Euphrosine  <proppy@aminche.com>
 
 	* pokerclient2d/pokerdisplay2d.py: 
 	* pokerclient2d/gamewindow.py: 
