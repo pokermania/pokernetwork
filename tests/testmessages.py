@@ -24,22 +24,42 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
+import sys
+import StringIO
+
+messages_out = []
+
+def redirect_messages(a_class):
+    stdout = sys.stdout
+    sys.stdout = StringIO.StringIO()
+    class F(a_class):
+        def __init__(self, *args, **kwargs):
+            self._prefix = 'P'
+            self.prefix = 'P'
+            self.id = 1
+            self.name = 'name'
+    F().message('')
+    sys.stdout = stdout
+    a_class.message = lambda self, string: messages_out.append(string)
+    
 def silence_all_messages():
     from pokernetwork import pokerservice
-    pokerservice.PokerService.message = lambda self, string: True
-    pokerservice.PokerXML.message = lambda self, string: True
-    pokerservice.PokerAuth.message = lambda self, string: True
+    redirect_messages(pokerservice.PokerService)
+    redirect_messages(pokerservice.PokerXML)
+    redirect_messages(pokerservice.PokerAuth)
     from pokernetwork import pokerlock
-    pokerlock.PokerLock.message = lambda self, string: True
+    redirect_messages(pokerlock.PokerLock)
     from pokernetwork import pokeravatar
-    pokeravatar.PokerAvatar.message = lambda self, string: True
+    redirect_messages(pokeravatar.PokerAvatar)
+    from pokernetwork import pokerexplain
+    redirect_messages(pokerexplain.PokerExplain)
     from pokernetwork import pokertable
-    pokertable.PokerTable.message = lambda self, string: True
+    redirect_messages(pokertable.PokerTable)
     from pokernetwork import pokercashier
-    pokercashier.PokerCashier.message = lambda self, string: True
+    redirect_messages(pokercashier.PokerCashier)
     from pokernetwork import pokerdatabase
-    pokerdatabase.PokerDatabase.message = lambda self, string: True
+    redirect_messages(pokerdatabase.PokerDatabase)
     from pokerengine import pokergame
-    pokergame.PokerGame.message = lambda self, string: True
+    redirect_messages(pokergame.PokerGame)
     from pokerengine import pokertournament
-    pokertournament.PokerTournament.message = lambda self, string: True
+    redirect_messages(pokertournament.PokerTournament)

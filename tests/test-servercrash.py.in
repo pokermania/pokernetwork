@@ -82,7 +82,7 @@ class PokerCrashTestCase(unittest.TestCase):
         # Setup server
         #
         self.service = pokerservice.PokerService(settings)
-        self.service.verbose = 3
+        self.service.verbose = 6
 
     # -------------------------------------------------
     def setUp(self):
