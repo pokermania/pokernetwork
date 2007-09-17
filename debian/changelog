@@ -1,7 +1,11 @@
 poker-network (1.2.0-1) unstable; urgency=low
 
   * upstream sync
-
+  
+  * rm config files if ucf is not available (closes: 431524)
+  
+  * upstream includes fix for autoconnect bug (closes: 440485)
+  
  -- Loic Dachary (OuoU) <loic@debian.org>  Wed,  1 Aug 2007 18:07:20 +0200
 
 poker-network (1.1.1-1) unstable; urgency=low
