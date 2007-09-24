@@ -1,3 +1,9 @@
+2007-09-24  Johan Euphrosine  <proppy@aminche.com>
+
+	* Release 1.2.1
+
+	* debian/control.feisty: overwrite with control.gutsy
+
 2007-09-14  Loic Dachary <loic@dachary.org>
 
 	* Release 1.2.0
