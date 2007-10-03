@@ -76,6 +76,8 @@ class PokerClientPacketsTestCase(testpackets.PacketsTestBase):
     #--------------------------------------------------------------    
     def test_backward(self):
         for type_index in pokerclientpackets._TYPES:
+            if type_index > 208:
+                break
             self.assertEqual(pokerclientpackets.PacketFactory.has_key(type_index), OLDpokerclientpackets.PacketFactory.has_key(type_index))
             if pokerclientpackets.PacketFactory.has_key(type_index):
                 if self.verbose > 0:
