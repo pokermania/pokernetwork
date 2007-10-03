@@ -2,6 +2,22 @@
 
 	* Release 1.3.0
 
+	* pokernetwork/pokerbot.py: provide serial argument in tournament
+	  bots too
+	* pokernetwork/packets.py: print the symbolic name of the packet in
+	  infoStr
+	* pokernetwork/pokerclient.py: gameEvent moved to pokerexplain
+	* pokernetwork/pokerclientpackets.py: Context: when all players are
+	  all-in, the board cards will be
+	  dealt automatically. The POKER_ALLIN_SHOWDOWN packet is created
+	  as soon as such a situation is detected. The client can chose
+	  to behave differently, for instance to postpone the display of
+	  the board cards until after the muck phase of the game.
+	* pokernetwork/pokerexplain.py: when all players are allin save
+	  one, forge a ALLIN_SHOWDOWN packet
+	* ChangeLog, NEWS, debian/changelog, pokernetwork/__init__.py:
+	  version bump to 1.3.0
+
 2007-09-24  Johan Euphrosine  <proppy@aminche.com>
 
 	* debian/control.feisty: overwrite with control.gutsy
@@ -4784,5 +4800,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-09-07/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-09-24/p'"
 End:
