@@ -777,6 +777,26 @@ class PacketPokerPlayerMeInFirstPerson(PacketPokerId):
 
 Packet.infoDeclare(globals(), PacketPokerPlayerMeInFirstPerson, PacketPokerId, "PACKET_POKER_PLAYER_ME_IN_FIRST_PERSON", 208) # 0xd0 # %SEQ%
 
+########################################
+
+class PacketPokerAllinShowdown(Packet):
+    """\
+Semantics: the game "game_id" will automatically go to showdown
+
+Direction: client <=> client
+
+Context: when all players are all-in, the board cards will be
+dealt automatically. The POKER_ALLIN_SHOWDOWN packet is created
+as soon as such a situation is detected. The client can chose
+to behave differently, for instance to postpone the display of
+the board cards until after the muck phase of the game.
+
+game_id: integer uniquely identifying a game.
+"""
+    info = Packet.info + ( ( 'game_id', 0, 'I'), )
+
+Packet.infoDeclare(globals(), PacketPokerAllinShowdown, Packet, "PACKET_POKER_ALLIN_SHOWDOWN", 209) # 0xd1 # %SEQ%
+
 _TYPES = range(170,254)
 
 # Interpreted by emacs
