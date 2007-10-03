@@ -562,50 +562,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.sendPacket(PacketLogout())
         self.user.logout()
 
-    def gameEvent(self, game_id, type, *args):
-        if self.factory.verbose > 4:
-            self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, type, str(args) ))
-
-        forward_packets = self.forward_packets
-        if not forward_packets:
-            if self.factory.verbose > 3:
-                self.message("gameEvent: called outside _handleConnection for game %d, ignored" % game_id)
-            return
-
-        game = self.factory.getGame(game_id)
-        if not game:
-            if self.factory.verbose > 3:
-                self.message("gameEvent: called for unknown game %d, ignored" % game_id)
-            return
-
-        if type == "end_round":
-            forward_packets.append(PacketPokerEndRound(game_id = game_id))
-
-        elif type == "end_round_last":
-            forward_packets.append(PacketPokerEndRoundLast(game_id = game_id))
-
-        elif type == "money2bet":
-            ( serial, amount ) = args
-            player = game.getPlayer(serial)
-            last_action = game.historyGet()[-1][0]
-            if ( last_action == "raise" or last_action == "call" ) :
-                if not self.no_display_packets:
-                    forward_packets.extend(self.updateBetLimit(game))
-                if last_action == "raise":
-                    forward_packets.append(PacketPokerHighestBetIncrease(game_id = game.id))
-            if not self.no_display_packets:
-                forward_packets.extend(self.chipsPlayer2Bet(game, player, amount))
-
-        elif type == "bet2pot":
-            ( serial, amount ) = args
-            if not self.no_display_packets and game.isBlindAnteRound():
-                player = game.getPlayer(serial)
-                forward_packets.extend(self.chipsBet2Pot(game, player, amount, 0))
-
-        elif type == "round_cap_decrease":
-            if not self.no_display_packets:
-                forward_packets.extend(self.updateBetLimit(game))
-
     def setPlayerDelay(self, game, serial, value):
         player = game.getPlayer(serial)
         if player == None:
