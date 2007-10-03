@@ -235,7 +235,7 @@ class Packet:
         return "type = %s(%d)" % ( PacketNames[self.type], self.type )
 
     def infoStr(self):
-        strings = []
+        strings = [ PacketNames[self.type] + " " ]
         for (field, default, format) in self.info:
             strings.append(field + " = " + str(self.__dict__[field]))
         return " ".join(strings)
