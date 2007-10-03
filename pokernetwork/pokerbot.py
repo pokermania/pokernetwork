@@ -241,7 +241,8 @@ def makeApplication(argv):
         for i in range(0, int(tournament["count"])):
             tournament['tournament'] = True
             factory = PokerBotFactory(settings = settings,
-                                      join_info = tournament)
+                                      join_info = tournament,
+                                      serial = bots_count)
             bot = Bot(host, port, factory)
             factory.bot = bot
             bot.setServiceParent(services)
