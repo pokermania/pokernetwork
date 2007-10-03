@@ -219,6 +219,10 @@ class PokerExplain:
             if not self.no_display_packets:
                 forward_packets.extend(self.updateBetLimit(game))
 
+        elif type == "position":
+            if game.inGameCount() < 2:
+                forward_packets.append(PacketPokerAllinShowdown(game_id = game.id))
+                
         return True
 
     def handleSerial(self, packet):
