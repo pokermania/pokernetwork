@@ -189,7 +189,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         test_packet = TestPacketClass()
         packet = packets.Packet()
         self.assertEqual(packet.calcsize(), test_packet.calcsize())
-        self.assertEqual("type = 11 length = 3", str(test_packet))
+        self.assertEqual("AUTH_REQUEST  type = 11 length = 3", str(test_packet))
 
     def test_unpackpackets_errors(self):
         #
