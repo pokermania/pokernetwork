@@ -239,6 +239,7 @@ def makeApplication(argv):
             bot.setServiceParent(services)
     for tournament in settings.headerGetProperties("/settings/tournament"):
         for i in range(0, int(tournament["count"])):
+            bots_count += 1
             tournament['tournament'] = True
             factory = PokerBotFactory(settings = settings,
                                       join_info = tournament,
