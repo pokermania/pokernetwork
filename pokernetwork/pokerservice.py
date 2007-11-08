@@ -1869,6 +1869,8 @@ class PokerXML(resource.Resource):
         maps = []
         for packet in packets:
             attributes = packet.__dict__.copy()
+            if isinstance(packet, PacketList):
+                attributes['packets'] = self.packets2maps(attributes['packets'])
             if 'message' in dir(packet):
                 attributes['message'] = getattr(packet, 'message')
             #
