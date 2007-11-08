@@ -265,6 +265,16 @@ class PokerServiceTestCase(unittest.TestCase):
         return self.stats()
         return d
 
+    def test07_tableSelect(self):
+        self.service.startService()
+        d = self.query('no session', { 'type': 'PacketPokerTableSelect', 'string': ''})
+        def validate(packet):
+            self.assertEquals('PacketPokerTableList', packet[0]['type'])
+            return packet
+
+        d.addCallback(validate)
+        return d
+
 class XMLRPCPokerServiceTestCase(PokerServiceTestCase):
 
     def query(self, *args):
