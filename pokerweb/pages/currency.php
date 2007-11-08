@@ -115,8 +115,8 @@ class currency {
     }
 
     $this->db_persist = $GLOBALS['currency_db_persist'];
-    $this->db_host = "localhost";
-    $this->db_port = 3306;
+    $this->db_host = $GLOBALS['currency_db_host'];
+    $this->db_port = $GLOBALS['currency_db_port'];
     $this->db_base = $base;
     $this->db_user = $user;
     $this->db_password = $password;
