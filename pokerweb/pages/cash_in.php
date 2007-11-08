@@ -83,6 +83,8 @@ if(_post_string('submit')) {
   } catch(Exception $error) {
     $poker_error = $error->getMessage();
   }
+} else {
+  $currency = 1;
 }
 
 hci_header();
