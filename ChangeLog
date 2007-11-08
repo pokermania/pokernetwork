@@ -1,6 +1,17 @@
-2007-10-03  Loic Dachary  <loic@dachary.org>
+2007-11-08  Loic Dachary <loic@dachary.org>
 
 	* Release 1.3.0
+
+	* pokernetwork/pokerservice.py: serialization recurse on packets
+	  member of PacketList instances
+	* tests/test-webservice.py.in: test that PacketList derivatives are
+	  serialized properly
+	* pokerweb/pages/currency.php: get the mysql server port and host
+	  from global variables
+	* pokerweb/pages/cash_in.php: currency 1 is the default currency
+	* conf/poker.server.xml.in: documentation of auto-cashin
+
+2007-10-03  Loic Dachary  <loic@dachary.org>
 
 	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
 	  conf/poker.server.xml.in, examples/poker.bot.xml,
