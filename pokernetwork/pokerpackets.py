@@ -159,6 +159,15 @@
 #     PACKET_POKER_TABLE_MOVE (or PACKET_POKER_PLAYER_LEAVE if explain mode)
 #     (and PACKET_POKER_SEATS if explain mode)
 #     
+#     How to instruct the server to wait for the client before dealing
+#     the next hand ? 
+# 
+#     PACKET_POKER_PROCESSING_HAND
+#
+#     How to tell the server that the client has finished displaying the
+#     current hand and can deal the next one ?
+#
+#     PACKET_POKER_READY_TO_PLAY
 # 
 
 import sys
