@@ -41,12 +41,6 @@
 #
 #     POKER_CASH_IN
 #
-#     What should the client expect when moved to another
-#       table during a tournament ?
-#
-#     PACKET_POKER_TABLE_MOVE (or PACKET_POKER_PLAYER_LEAVE if explain mode)
-#     (and PACKET_POKER_SEATS if explain mode)
-#     
 #     How to sit at a cash game table ?
 #     
 #     PACKET_POKER_TABLE_JOIN
@@ -117,6 +111,55 @@
 #     PACKET_POKER_MUCK_ACCEPT or
 #     PACKET_POKER_MUCK_DENY
 #     
+#     How to list tournaments ?
+#     
+#     PACKET_POKER_TOURNEY_SELECT
+#
+#     What to expect in response to PACKET_POKER_TOURNEY_SELECT ? 
+#
+#     PACKET_POKER_TOURNEY_LIST containing
+#       PACKET_POKER_TOURNEY packets
+#
+#     How to list players registered in a tournament ? 
+#
+#     PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST
+#
+#     What to expect in response to PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST ? 
+#
+#     PACKET_POKER_TOURNEY_PLAYERS_LIST
+#  
+#     How to register to a tournament ?
+#
+#     PACKET_POKER_TOURNEY_REGISTER
+#
+#     What to expect in response to PACKET_POKER_TOURNEY_REGISTER ? 
+#
+#     PACKET_POKER_TOURNEY_REGISTER if success (the same that was sent)
+#     PACKET_ERROR if failure
+#
+#     How to unregister to a tournament ?
+#
+#     PACKET_POKER_TOURNEY_UNREGISTER
+#
+#     What to expect in response to PACKET_POKER_TOURNEY_UNREGISTER ? 
+#
+#     PACKET_POKER_TOURNEY_UNREGISTER if success (the same that was sent)
+#     PACKET_ERROR if failure
+#
+#     What is sent to the tournament player that was busted out of a 
+#     tournament (or is the winner) ?  
+# 
+#     PACKET_POKER_TOURNEY_RANK
+#
+#     What is sent to the player when the tournament starts ? 
+#
+#     What should the client expect when moved to another
+#       table during a tournament ?
+#
+#     PACKET_POKER_TABLE_MOVE (or PACKET_POKER_PLAYER_LEAVE if explain mode)
+#     (and PACKET_POKER_SEATS if explain mode)
+#     
+# 
 
 import sys
 from time import strftime, gmtime
@@ -2706,7 +2749,7 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
                  self.calcsizestring(self.addr_country) +
                  self.calcsizestring(self.phone) +
                  self.calcsizestring(self.gender) +
-                 self.calcsizestring(self.birthdate)
+                 self.calcsizestring(str(self.birthdate))
                  )
 
     def __str__(self):
