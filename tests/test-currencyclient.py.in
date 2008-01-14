@@ -74,6 +74,7 @@ class CurrencyClientTestCase(unittest.TestCase):
 cat <<'EOF' | QUERY_STRING='""" + query + """' @PHP@ --define extension=mysql.so
 <?
   ini_set('include_path', '@srcdir@/../../pokerweb/pages:' . ini_get('include_path'));
+  $GLOBALS['currency_db_base'] = 'currencytest';
   $GLOBALS['currency_db_host'] = '@MYSQL_TEST_DBHOST@';
   $GLOBALS['currency_db_user'] = '@MYSQL_TEST_DBROOT@';
   $GLOBALS['currency_db_password'] = '@MYSQL_TEST_DBROOT_PASSWORD@';
