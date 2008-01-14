@@ -39,6 +39,8 @@ AM_MAINTAINER_MODE
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION(0.13)
 
+POKERNETWORK_AC_PROG_APG(2.2, AC_MSG_ERROR([*** pokernetwork/pokerbotlogic.py requires a working /usr/bin/apg  ***]), AC_MSG_ERROR([*** apg >= 2.2.0 is not installed - pokernetwork/pokerbotlogic.py needs it. ***]))
+
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(WGET, [wget])
 AC_PATH_PROG(MYSQL, [mysql])

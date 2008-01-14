@@ -1,5 +1,11 @@
 2008-01-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* configure.ac: Added call to new macro, POKERNETWORK_AC_PROG_APG.
+
+	* config/apg.m4: Created file.
+
+	* debian/control (Build-Depends): Added apg, rsync.
+
 	* tests/test-pokerbotlogic.py.in (NoteGeneratorTestCase.test_all):
 	Used 'printf' instead of 'echo -e'.
 
