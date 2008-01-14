@@ -111,7 +111,7 @@ TESTS = coverage-reset \
 if UNITTEST
 if POKER2D
 
-noinst_PROGRAMS = test-unittestmain setupMysqlVariables
+noinst_PROGRAMS = test-unittestmain
 
 test_unittestmain_SOURCES = test-unittestmain.cpp \
                             test-unittestgui.cpp \
