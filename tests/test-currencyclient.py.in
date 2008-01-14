@@ -52,10 +52,11 @@ from pokernetwork import currencyclient
 class CurrencyClientTestCase(unittest.TestCase):
 
     def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS currencytest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS currencytest'")
+        for database in ('currency', 'currencytest'):
+            if len("root") > 0:
+                os.system("/usr/bin/mysql -u root --password='root' -h 'localhost' -e 'DROP DATABASE IF EXISTS %s'" % database)
+            else:
+                os.system("/usr/bin/mysql -u root -h 'localhost' -e 'DROP DATABASE IF EXISTS %s'" % database)
     
     # -----------------------------------------------------------------------------
     def setUp(self):
