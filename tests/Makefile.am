@@ -50,7 +50,8 @@ EXTRA_DIST = \
 	vncpasswd \
 	testclock.py \
 	__init__.py \
-	test-fc.py
+	test-fc.py \
+	setupMysqlVariables
 
 if UNITTEST
 if POKER2D
