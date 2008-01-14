@@ -62,32 +62,29 @@ else
 
   if test "$APG" = "no" ; then
       ifelse([$2], , :, [$2])
-      echo "BLAH"
-      exit 1
   else
       # check that we have the right version
 
       AC_MSG_CHECKING(for apg - version >= $min_apg_version)
 
-      APG_VERSION=`$APG -v 2>&1 | grep '^version *[[0-9\.]]*  *' | sed 's/^version *\([[0-9\.]]*\) *(.*$/\1/'`
+      APG_VERSION=`$APG -v 2>&1 | grep '^version *[[0-9\.]]* .*' | sed 's/^version *\([[0-9\.]]*\) .*/\1/'`
 
-      apg_version_have_major=`echo $APG_VERSION | sed 's/\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-      apg_version_have_minor=`echo $APG_VERSION | sed 's/\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-      min_apg_version_major=`echo $min_apg_version | sed 's/\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-      min_apg_version_minor=`echo $min_apg_version | sed 's/\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-
+      apg_version_have_major=`echo $APG_VERSION | sed 's/^\([[0-9]]*\)\.\([[0-9]]*\).*$/\1/'`
+      apg_version_have_minor=`echo $APG_VERSION | sed 's/^\([[0-9]]*\)\.\([[0-9]]*\).*$/\2/'`
+      min_apg_version_major=`echo $min_apg_version | sed 's/^\([[0-9]]*\)\.\([[0-9]]*\).*$/\1/'`
+      min_apg_version_minor=`echo $min_apg_version | sed 's/^\([[0-9]]*\)\.\([[0-9]]*\).*$/\2/'`
      if test -z "$APG_VERSION";
      then
         AC_MSG_RESULT(no)
 	AC_MSG_WARN([apg was found, but it its version could not be determined.])
-        ifelse([$3], , :, [$3])
+        ifelse([$4], , :, [$4])
      elif test \( $min_apg_version_major -gt $apg_version_have_major \) -o \
           \( \( $min_apg_version_major -le $apg_version_have_major \) -a \
             \( $min_apg_version_minor -gt $apg_version_have_minor \) \) ; \
      then
         AC_MSG_RESULT(no)
 	AC_MSG_WARN([apg was found, but it was only version $APG_VERSION.])
-        ifelse([$3], , :, [$3])
+        ifelse([$4], , :, [$4])
      else
         AC_MSG_RESULT(yes)
         ifelse([$3], , :, [$3])
