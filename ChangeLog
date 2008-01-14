@@ -1,6 +1,9 @@
 2008-01-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
-	* tests/test-pokeravatar.py: Changed to use MYSQL_TEST_* variables.
+	* tests/test-pokerbotlogic.py.in (NoteGeneratorTestCase.test_all):
+	Used 'printf' instead of 'echo -e'.
+
+	* tests/test-pokeravatar.py.in: Changed to use MYSQL_TEST_* variables.
 
 	* tests/test-pokerclient.py.in: Changed to use MYSQL_TEST_* variables.
 

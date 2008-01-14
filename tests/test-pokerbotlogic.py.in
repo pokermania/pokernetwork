@@ -44,7 +44,7 @@ class StringGeneratorTestCase(unittest.TestCase):
 class NoteGeneratorTestCase(unittest.TestCase):
 
     def test_all(self):
-        generator = NoteGenerator("echo -e 'one\ttwo' ; echo -e 'three\tfour'")
+        generator = NoteGenerator("printf 'one\ttwo\n' ; printf 'three\tfour\n'")
         self.assertEqual(['three', 'four'], generator.getNote())
         self.assertEqual(['one', 'two'], generator.getNote())
         generator.command = ""
