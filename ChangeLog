@@ -1,5 +1,7 @@
 2008-01-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* Release 1.3.0
+
 	* configure.ac: Added call to new macro, POKERNETWORK_AC_PROG_APG.
 
 	* config/apg.m4: Created file.
@@ -39,8 +41,6 @@
 	* tests/setupMysqlVariables: Created File.
 
 2007-11-08  Loic Dachary <loic@dachary.org>
-
-	* Release 1.3.0
 
 	* pokernetwork/pokerservice.py: serialization recurse on packets
 	  member of PacketList instances
