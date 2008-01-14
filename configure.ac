@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
@@ -263,6 +264,34 @@ AC_ARG_WITH(poker-dbroot-password,
     [ POKER_DBROOT_PASSWORD=$with_poker_dbroot_password ],
     [ POKER_DBROOT_PASSWORD= ] )
 AC_SUBST(POKER_DBROOT_PASSWORD)
+
+AC_ARG_WITH(test-dbhost,
+[  --with-test-dbhost=<hostname>
+              hostname for the MySQL server the tests will use (default localhost). ],
+    [ MYSQL_TEST_DBHOST=$with_test_dbhost ],
+    [ MYSQL_TEST_DBHOST=localhost ] )
+AC_SUBST(MYSQL_TEST_DBHOST)
+
+AC_ARG_WITH(test-dbroot,
+[  --with-test-dbroot=<user>
+                  root user name for MySQL server used during tests (default root). ],
+    [ MYSQL_TEST_DBROOT=$with_test_dbroot ],
+    [ MYSQL_TEST_DBROOT=root ] )
+AC_SUBST(MYSQL_TEST_DBROOT)
+
+AC_ARG_WITH(test-dbroot-password,
+[  --with-test-dbroot-password=<password>
+                  password for the MySQL root user used during tests (default none). ],
+    [ MYSQL_TEST_DBROOT_PASSWORD=$with_test_dbroot_password ],
+    [ MYSQL_TEST_DBROOT_PASSWORD= ] )
+AC_SUBST(MYSQL_TEST_DBROOT_PASSWORD)
+
+AS_IF([test "x$with_test_dbroot_password" != x],
+            [if test `echo $ECHO_N "$with_test_dbroot_password" |  tr ' ' 'G'` != "$with_test_dbroot_password";
+            then
+                AC_MSG_FAILURE([Tests will not properly work if the you use a --with-test-dbroot-password that has whitespace in it.])
+            fi
+           ])
 
 AM_UNITTEST
 

@@ -48,15 +48,18 @@ from pokernetwork import version
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="1">
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """
             
 class PokerDatabaseTestCase(unittest.TestCase):
 
     def destroyDb(self):
-        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@'  -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):

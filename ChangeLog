@@ -1,3 +1,34 @@
+2008-01-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py: Changed to use MYSQL_TEST_* variables.
+
+	* tests/test-pokerclient.py.in: Changed to use MYSQL_TEST_* variables.
+
+	* tests/test-currencyclient.py.in: Changed to use MYSQL_TEST_* variables.
+
+	* tests/test-pokerservice.py.in: Changed to use MYSQL_TEST_* variables.
+
+	* tests/test-webservice.py.in: Changed to use MYSQL_TEST_* variables.
+
+	* tests/setupMysqlVariables: Changed variables to new MYSQL_TEST ones.
+
+	* tests/Makefile.am: Changed variable exports related to databases
+	to use the new test ones as below.
+
+	* configure.ac (POKER_DBROOT_PASSWORD): Added variable.
+	(MYSQL_TEST_DBHOST): Added variable.
+	(POKER_DBROOT_PASSWORD): Added variable.
+
+2008-01-12  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/Makefile.am: exported various variables so subprocesses,
+	such as the tests, can find them.
+
+	* tests/run.in: Now loads setupMysqlVariables.
+	(TZ): Checked to see if it is empty before setting.
+
+	* tests/setupMysqlVariables: Created File.
+
 2007-11-08  Loic Dachary <loic@dachary.org>
 
 	* Release 1.3.0

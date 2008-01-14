@@ -51,7 +51,7 @@ class PokerLockTestCase(unittest.TestCase):
         verbose = int(os.environ.get('VERBOSE_T', '-1'))
         if verbose < 0:
             pokerlock.PokerLock.message = lambda self, string: True
-        self.parameters = {'host': 'localhost', 'user': 'root', 'password': ''}
+        self.parameters = {'host': '@MYSQL_TEST_DBHOST@', 'user': '@MYSQL_TEST_DBROOT@', 'password': '@MYSQL_TEST_DBROOT_PASSWORD@'}
         pokerlock.PokerLock.queue_timeout = 30
         self.locker = pokerlock.PokerLock(self.parameters)
         if verbose >= 0: self.locker.verbose = verbose;

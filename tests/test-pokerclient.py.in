@@ -87,7 +87,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
@@ -125,7 +125,10 @@ TABLE3 = 102
 class PokerClientTestCase(unittest.TestCase):
 
     def destroyDb(self, arg = None):
-        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
     def setUpServer(self):
         settings = pokernetworkconfig.Config([])

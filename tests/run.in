@@ -29,16 +29,17 @@ set -e
 
 echo "RUNNING: $*" 
 
-if ! mysql -u "root" -h "localhost" -e "show databases" >/dev/null 2>&1 ; then
-    echo 'skipped because mysql -u "root" -e -h "localhost" "show databases" fails"'
+. ${top_srcdir}/tests/setupMysqlVariables
+
+if ! $MYSQL_ROOT_CMD -e "show databases" >/dev/null 2>&1 ; then
+    echo "skipped because $MYSQL_ROOT_CMD -e \"show databases\" fails"
     exit 0
 fi
-
 #
 # User for currency test
 #
-echo "CREATE USER 'currency'@ '%' IDENTIFIED BY '********';" | mysql -u root -h localhost > /dev/null 2>&1 || true
-echo "GRANT ALL PRIVILEGES ON * . * TO 'currency'@ '%' IDENTIFIED BY '********'" | mysql -u root -h localhost > /dev/null 2>&1 || true
+echo "CREATE USER 'currency'@ '%' IDENTIFIED BY '********';" | $MYSQL_ROOT_CMD > /dev/null 2>&1 || true
+echo "GRANT ALL PRIVILEGES ON * . * TO 'currency'@ '%' IDENTIFIED BY '********'" | $MYSQL_ROOT_CMD > /dev/null 2>&1 || true
 
 : ${srcdir:=.}
 export srcdir
@@ -56,7 +57,9 @@ fi
 #
 # For some reason php5 is unhappy if TZ is not set.
 #
-export TZ=Europe/Paris
+if [ -z "$TZ" ]; then
+    export TZ=Europe/Paris
+fi
 
 DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/poker{network,ui,client2d}/*.py) 
 : ${COVERAGE_FILES:=$DEFAULT_COVERAGE_FILES}

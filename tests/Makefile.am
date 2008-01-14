@@ -110,7 +110,7 @@ TESTS = coverage-reset \
 if UNITTEST
 if POKER2D
 
-noinst_PROGRAMS = test-unittestmain
+noinst_PROGRAMS = test-unittestmain setupMysqlVariables
 
 test_unittestmain_SOURCES = test-unittestmain.cpp \
                             test-unittestgui.cpp \
@@ -129,6 +129,10 @@ endif
 .PHONY: coverage-reset coverage-report poker-interface 
 
 export top_srcdir
+export MYSQL_TEST_DBHOST
+export MYSQL_TEST_DBROOT
+export MYSQL_TEST_DBROOT_PASSWORD
+export MYSQL
 
 clean-local:
 	rm -fr .coverage annotated _trial_temp phpunit

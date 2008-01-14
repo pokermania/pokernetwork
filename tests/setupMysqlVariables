@@ -1,10 +1,7 @@
+#!@BASH@
 # -*- sh -*-
-# Copyright (C) 2005, 2006 Mekensleep
 #
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+# Copyright (C) 2008 Bradley M. Kuhn
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,28 +18,27 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # Authors:
-#  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 
-. ${top_srcdir}/tests/setupMysqlVariables
 
-( 
+if [ -z "$MYSQL" ]; then
+    MYSQL=mysql
+fi
+MYSQL_ROOT_CMD="$MYSQL -u"
 
-cat <<EOF
+if [ ! -z "$MYSQL_TEST_DBROOT" ]; then
+    MYSQL_ROOT_CMD="$MYSQL_ROOT_CMD $MYSQL_TEST_DBROOT"
+else
+    MYSQL_ROOT_CMD="$MYSQL_ROOT_CMD root"
+fi
 
-USE mysql;
+if [ ! -z "$MYSQL_TEST_DBROOT_PASSWORD" ]; then
+    MYSQL_ROOT_CMD="$MYSQL_ROOT_CMD --password=$MYSQL_TEST_DBROOT_PASSWORD"
+fi
 
-GRANT SELECT , INSERT , UPDATE , DELETE , CREATE , DROP , FILE , INDEX , ALTER , CREATE TEMPORARY TABLES ON * . * TO 'pokernetworktest'@'${LOCALHOST}'
-IDENTIFIED BY 'pokernetwork'
-WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;
-
-DROP DATABASE IF EXISTS pokernetworktest;
-CREATE DATABASE pokernetworktest;
-USE pokernetworktest;
-EOF
-
-cat $SCHEMA
-
-echo "$INIT_SQL"
-
-) | $MYSQL_ROOT_CMD
+if [ ! -z "$MYSQL_TEST_DBHOST" ]; then
+    MYSQL_ROOT_CMD="$MYSQL_ROOT_CMD -h $MYSQL_TEST_DBHOST"
+else
+    MYSQL_ROOT_CMD="$MYSQL_ROOT_CMD -h localhost"
+fi
