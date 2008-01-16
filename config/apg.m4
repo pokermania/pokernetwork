@@ -67,7 +67,7 @@ else
 
       AC_MSG_CHECKING(for apg - version >= $min_apg_version)
 
-      APG_VERSION=`$APG -v 2>&1 | grep '^version *[[0-9\.]]* .*' | sed 's/^version *\([[0-9\.]]*\) .*/\1/'`
+      APG_VERSION=`$APG -v 2>&1 | grep '^version *[[0-9\.]]' | sed 's/^version *\([[0-9\.a-zA-Z]]*\) .*/\1/'`
 
       apg_version_have_major=`echo $APG_VERSION | sed 's/^\([[0-9]]*\)\.\([[0-9]]*\).*$/\1/'`
       apg_version_have_minor=`echo $APG_VERSION | sed 's/^\([[0-9]]*\)\.\([[0-9]]*\).*$/\2/'`
