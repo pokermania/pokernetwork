@@ -50,6 +50,19 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
+settings_stripped_deck_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" autodeal="yes" >
+  <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
+
+  <decks>
+    <deck>9c 9d 9h Ts Tc Td Th Ts Jc Jd Jh Js Qc Qd Qh Qs Kc Kd Kh Ks Ac Ad Ah As</deck>
+  </decks>
+
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
 class MockService:
 
     def __init__(self, settings):
@@ -139,9 +152,9 @@ class MockClient:
 class PokerTableTestCase(unittest.TestCase):
 
     # -------------------------------------------------------------------
-    def setUp(self):
+    def setUp(self, settingsXmlStr=settings_xml):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
         self.table = pokertable.PokerTable(MockService(settings), 100, 
                                            { 'name': "table1",
@@ -242,6 +255,12 @@ class PokerTableTestCase(unittest.TestCase):
         self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
         self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
 
+
+# -------------------------------------------------------------------
+class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
+    def setUp(self, settingsXmlStr=settings_stripped_deck_xml):
+        PokerTableTestCase.setUp(self, settingsXmlStr)
+
 # -------------------------------------------------------------------
 
 def Run():
@@ -249,6 +268,7 @@ def Run():
 #    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
+    suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
