@@ -315,6 +315,15 @@ class PokerTableTestCase(unittest.TestCase):
         #self.assertEqual(True, self.table.buyInPlayer(4, self.table.game.maxBuyIn()))
         #client = self.clients[1]
         #self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+    # -------------------------------------------------------------------
+    def test09_list_players(self):
+        """Test to make sure the list of players given by pokertable is right"""
+        d = {}
+        for ii in [0, 1, 2, 3]:
+            d['Player%d' % ii] = self.createPlayer(ii)
+        for x in self.table.listPlayers():
+            del d[x[0]]
+        self.assertEqual({}, d)
 
 
 # -------------------------------------------------------------------

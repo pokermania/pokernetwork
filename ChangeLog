@@ -10,6 +10,7 @@
 	(MockClient.__str__): Wrote function.
 	(MockService.getName): Wrote function.
 	(MockClient.getName): name => Player
+	(PokerTableTestCase.test09_list_players): Wrote function.
 
 2008-01-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
