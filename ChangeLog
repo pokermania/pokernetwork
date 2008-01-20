@@ -1,3 +1,10 @@
+2008-01-20  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokertable.py.in (PokerTableTestCase.createPlayer):
+	Created option so that you can create a MockClient without
+	join/seat/buyIn of the player.
+	(PokerTableTestCase.test08_player_has_trouble_joining): Created test.
+
 2008-01-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokertable.py.in (PokerTableTestCase.setUp): Added

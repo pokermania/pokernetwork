@@ -171,13 +171,15 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.cancelPlayerTimers()
         del self.table
 
-    def createPlayer(self, serial):
+    def createPlayer(self, serial, buySit=True):
         client = MockClient(serial)
         self.clients[serial] = client
         self.table.joinPlayer(client, serial)
-        self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
-        self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
-        self.table.sitPlayer(client, serial)
+        if buySit:
+            self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+            self.table.sitPlayer(client, serial)
+        return client
 
     # -------------------------------------------------------------------
     def test01_autodeal(self):
@@ -254,6 +256,17 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.scheduleAutoDeal()
         self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
         self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
+    # -------------------------------------------------------------------
+    def test08_player_has_trouble_joining(self):
+        """Test for when the table is full and a player is trying hard to join"""
+        player = []
+        for ii in [0, 1, 2, 3]:
+            player.append(self.createPlayer(ii))
+        player.append(self.createPlayer(4, False))
+        self.assertEqual(True, self.table.joinPlayer(player[4], 4))
+        self.assertEqual(False, self.table.seatPlayer(player[4], 4, -1))
+        client = self.clients[1]
+        self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
 
 
 # -------------------------------------------------------------------
