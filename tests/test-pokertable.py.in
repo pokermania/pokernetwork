@@ -73,9 +73,25 @@ class MockService:
         self.shutting_down = False
         self.hand_serial = 0
         self.chat = False
+        self.players = {}
 
-    def seatPlayer(self, serial, game_id, amount):
-        return True
+    def message(self, message):
+        if self.verbose >= 0:
+            print "MockService " + message
+        
+    def getName(self, serial):
+        return "MockServiceName%d" % serial
+
+    def error(self, message):
+        self.message("error " + message)
+
+    def seatPlayer(self, serial, table_id, amount):
+        if self.players.has_key(serial):
+            self.error("Player is already seated at table, ." % table_id)
+            return False
+        else:
+            self.players[serial] = { 'table_id' : table_id, 'amount' : amount }
+            return True
 
     def buyInPlayer(self, serial, game_id, currency_serial, amount):
         return amount
@@ -87,6 +103,15 @@ class MockService:
     def tableMoneyAndBet(self, table_id):
         return (0, 0)
 
+    def leavePlayer(self, serial, table_id, currency_serial):
+        if self.players.has_key(serial):
+            del self.players[serial]
+            return True
+        else:
+            self.error("Player is already seated at table, ." % table_id)
+            return False
+        
+
 class MockClient:
 
     def __init__(self, serial):
@@ -97,6 +122,9 @@ class MockClient:
         self.type = None
         self.tables = []
         self.packets = []
+
+    def __str__(self):
+        return "MockClient of Player%d" % self.serial
 
     def waitFor(self, type):
         self.deferred = defer.Deferred()
@@ -122,6 +150,12 @@ class MockClient:
     def join(self, table):
         pass
 
+    def removePlayer(self, table, serial):
+        if self.tables.count(table) != 1:
+            self.error(table + " does not occur exactly once for this player.")
+        self.tables.remove(table)
+        return True
+
     def sitPlayer(self, table, serial):
         table.game.sit(serial)
 
@@ -130,7 +164,7 @@ class MockClient:
         if table.game.addPlayer(self.serial, seat):
             player = table.game.getPlayer(self.serial)
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
-
+        return True
     def sendPacket(self, packet):
         self.message("sendPacket: " + str(packet))
         self.packets.append(packet)
@@ -147,7 +181,7 @@ class MockClient:
         return table.game.payBuyIn(self.serial, amount)
 
     def getName(self):
-        return "name%d" % self.serial
+        return "Player%d" % self.serial
 
 class PokerTableTestCase(unittest.TestCase):
 
@@ -259,14 +293,23 @@ class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def test08_player_has_trouble_joining(self):
         """Test for when the table is full and a player is trying hard to join"""
-        player = []
         for ii in [0, 1, 2, 3]:
-            player.append(self.createPlayer(ii))
-        player.append(self.createPlayer(4, False))
-        self.assertEqual(True, self.table.joinPlayer(player[4], 4))
-        self.assertEqual(False, self.table.seatPlayer(player[4], 4, -1))
-        client = self.clients[1]
-        self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+            self.createPlayer(ii)
+        self.createPlayer(4, False)
+        player0 = self.clients[0]
+        player4 = self.clients[4]
+
+        # player4 can't sit because the table is full of 0-3
+        self.assertEqual(False, self.table.seatPlayer(player4, 4, -1))
+
+        # player0 should be able to leave, which will create an open seat...
+        self.assertEqual(True, self.table.leavePlayer(player0, 0))
+
+        # .... allowing player4 to sit down and buyIn
+        #self.assertEqual(True, self.table.seatPlayer(player4, 4, -1))
+        #self.assertEqual(True, self.table.buyInPlayer(4, self.table.game.maxBuyIn()))
+        #client = self.clients[1]
+        #self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
 
 
 # -------------------------------------------------------------------
@@ -298,4 +341,3 @@ if __name__ == '__main__':
 # Local Variables:
 # compile-command: "( cd .. ; ./config.status tests/test-pokertable.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py' TESTS='coverage-reset test-pokertable.py coverage-report' check )"
 # End:
-

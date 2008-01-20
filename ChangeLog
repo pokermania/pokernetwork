@@ -4,6 +4,12 @@
 	Created option so that you can create a MockClient without
 	join/seat/buyIn of the player.
 	(PokerTableTestCase.test08_player_has_trouble_joining): Created test.
+	(MockClient.removePlayer): Wrote function.
+	(MockService.leavePlayer): Wrote function.
+	(MockService.sitPlayer): Wrote function.
+	(MockClient.__str__): Wrote function.
+	(MockService.getName): Wrote function.
+	(MockClient.getName): name => Player
 
 2008-01-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
