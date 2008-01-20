@@ -306,6 +306,11 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.leavePlayer(player0, 0))
 
         # .... allowing player4 to sit down and buyIn
+
+        #  Howver, This doesn't work, I get 'False' below when I try to
+        #  seat player 4.  I don't yet understand why.  It might be my
+        #  misunderstanding of pokertable class -- bkuhn
+
         #self.assertEqual(True, self.table.seatPlayer(player4, 4, -1))
         #self.assertEqual(True, self.table.buyInPlayer(4, self.table.game.maxBuyIn()))
         #client = self.clients[1]
