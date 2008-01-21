@@ -155,7 +155,12 @@ class MockClient:
         if self.tables.count(table) != 1:
             self.error(table + " does not occur exactly once for this player.")
         self.tables.remove(table)
-        return True
+
+        # Loic indicates that it's the job of the Client to pass along
+        # player removes to the game class, so this is done here to be
+        # consistent with what the pokertable API expects.
+
+        return table.game.removePlayer(serial)
 
     def sitPlayer(self, table, serial):
         table.game.sit(serial)
@@ -294,38 +299,32 @@ class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def test08_player_has_trouble_joining(self):
         """Test for when the table is full and a player is trying hard to join"""
-        for ii in [0, 1, 2, 3]:
+        # Do not use serials of 0's here -- pokerengine will hate that. :)
+        for ii in [1, 2, 3, 4]:
             self.createPlayer(ii)
-        self.createPlayer(4, False)
-        player0 = self.clients[0]
-        player4 = self.clients[4]
+        self.createPlayer(5, False)
+        player1 = self.clients[1]
+        player5 = self.clients[5]
 
-        # player4 can't sit because the table is full of 0-3
-        self.assertEqual(False, self.table.seatPlayer(player4, 4, -1))
+        # player5 can't sit because the table is full of 0-3
+        self.assertEqual(False, self.table.seatPlayer(player5, 5, -1))
 
-        # player0 should be able to leave, which will create an open seat...
-        self.assertEqual(True, self.table.leavePlayer(player0, 0))
+        # player1 leaves on his own...
+        self.assertEqual(True, self.table.leavePlayer(player1, 1))
+        self.assertEqual(True, self.table.seatPlayer(player5, 5, -1))
+        self.assertEqual(True, self.table.buyInPlayer(player5, self.table.game.maxBuyIn()))
+        # And we kick of player2; We hate that guy! 
+        self.assertEqual(None, self.table.kickPlayer(2))
 
-        # .... allowing player4 to sit down and buyIn
-
-        #  Howver, This doesn't work, I get 'False' below when I try to
-        #  seat player 4.  I don't yet understand why.  It might be my
-        #  misunderstanding of pokertable class -- bkuhn
-
-        #self.assertEqual(True, self.table.seatPlayer(player4, 4, -1))
-        #self.assertEqual(True, self.table.buyInPlayer(4, self.table.game.maxBuyIn()))
-        #client = self.clients[1]
-        #self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
         d = {}
-        for ii in [0, 1, 2, 3]:
+        for ii in [1, 2, 3, 4]:
             d['Player%d' % ii] = self.createPlayer(ii)
         for x in self.table.listPlayers():
             del d[x[0]]
         self.assertEqual({}, d)
-
 
 # -------------------------------------------------------------------
 class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
