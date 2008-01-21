@@ -4,6 +4,9 @@
 	(PokerTableTestCase.test08_player_has_trouble_joining): Added test
 	for two kick attempts in a row.
 	(PokerTableTestCase.test13_disconnect): Wrote function.
+	(PokerTableTestCase.test14_closed_games): Wrote function.
+	(PokerTableTestCase.test08_5_kick): Wrote function.
+	(PokerTableTestCase.test08_7_sitout): Wrote function.
 
 2008-01-20  Bradley M. Kuhn  <bkuhn@ebb.org>
 

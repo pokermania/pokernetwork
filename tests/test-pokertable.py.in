@@ -323,6 +323,9 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 30))
 
+        # player5 cannot sit out either because she isn't joined yet.
+        self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
+
         # player1 leaves on his own...
         self.assertEqual(True, self.table.leavePlayer(player[1], 1))
 
@@ -330,8 +333,6 @@ class PokerTableTestCase(unittest.TestCase):
         # her settings.  However, she tries to sit out before getting the
         # seat, rebuy before even buying, and then buys in for nothing,
         # and thus must rebuy
-
-        self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
 
         self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 2))
@@ -350,18 +351,26 @@ class PokerTableTestCase(unittest.TestCase):
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
 
-        # player4 sits out but tries it twice.  (Guess he clicked too much
-        # on the button)
-        self.assertEqual(True, self.table.sitOutPlayer(player[4], 4))
-        self.assertEqual(True, self.table.sitOutPlayer(player[4], 4))
+    # -------------------------------------------------------------------
+    def test08_5_kick(self):
+        """Test that kick works correctly"""
+        player = self.createPlayer(2)
 
-        # Finally, we kick off player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
         # Test to make sure it's ok if we kick him twice.
         try:
             self.assertEqual(None, self.table.kickPlayer(2))
         except KeyError, ke:
             self.assertEqual(2, ke[0])
+    # -------------------------------------------------------------------
+    def test08_7_sitout(self):
+        """Test that sitOut works correctly"""
+        player = self.createPlayer(4)
+
+        # player4 sits out but tries it twice.  (Guess he clicked too much
+        # on the button)
+        self.assertEqual(True, self.table.sitOutPlayer(player, 4))
+        self.assertEqual(True, self.table.sitOutPlayer(player, 4))
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
