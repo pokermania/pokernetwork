@@ -110,7 +110,9 @@ class MockService:
         else:
             self.error("Player is already seated at table, ." % table_id)
             return False
-        
+
+    def deleteTable(self, x):
+        pass
 
 class MockClient:
     def __init__(self, serial):
@@ -169,6 +171,7 @@ class MockClient:
             player = table.game.getPlayer(self.serial)
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
         return True
+
     def sendPacket(self, packet):
         self.message("sendPacket: " + str(packet))
         self.packets.append(packet)
@@ -305,6 +308,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.buyInPlayer(player5, self.table.game.maxBuyIn()))
         # And we kick of player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
+
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
@@ -314,6 +318,12 @@ class PokerTableTestCase(unittest.TestCase):
         for x in self.table.listPlayers():
             del d[x[0]]
         self.assertEqual({}, d)
+
+    # -------------------------------------------------------------------
+    def test10_destroy_table(self):
+        """Test table destruction"""
+        self.table.destroy()
+
 # -------------------------------------------------------------------
 class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_stripped_deck_xml):
