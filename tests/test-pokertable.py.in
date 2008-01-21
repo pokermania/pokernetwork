@@ -320,7 +320,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual({}, d)
 
     # -------------------------------------------------------------------
-    def test10_destroy_table(self):
+    def test99_destroy_table(self):
         """Test table destruction"""
         self.table.destroy()
 
