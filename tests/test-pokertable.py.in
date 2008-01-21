@@ -211,6 +211,8 @@ class PokerTableTestCase(unittest.TestCase):
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
                                              'seats': 4,
+                                             'player_timeout' : 6, 
+                                             'muck_timeout' : 1,
                                              'currency_serial': 0
                                              })
         self.clients = {}
@@ -376,7 +378,7 @@ class PokerTableTestCase(unittest.TestCase):
                      'betting_structure = 2-4-limit', 'seats = 4', \
                      'average_pot = 0', 'hands_per_hour = 0', \
                      'percent_flop = 0', 'players = 0', 'observers = 0', \
-                     'waiting = 0', 'player_timeout = 60', 'muck_timeout = 5',
+                     'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1', \
                      'currency_serial = 0', 'skin = default' ]:
             self.failUnlessSubstring(str, packetStr)
     # -------------------------------------------------------------------
