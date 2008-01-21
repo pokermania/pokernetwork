@@ -115,6 +115,13 @@ class PokerTable:
         self.broadcast(PacketPokerTableDestroy(game_id = self.game.id))
         for client in self.serial2client.values() + self.observers:
             del client.tables[self.game.id]
+            # FIXME: I don't think that PokerTable should be reaching into
+            #        the member variables of the client classes.  Really
+            #        the line above should be something like
+            #        client.removeTable(self.game.id).  I did not change
+            #        based on IRC discussions with Loic, but I have
+            #        written tests in ../tests/test-pokertable.py.in that
+            #        should check after this change is made.
             
         self.factory.deleteTable(self)
         del self.factory
@@ -1208,6 +1215,13 @@ class PokerTable:
         else:
             del self.serial2client[serial]
         del client.tables[self.game.id]
+        # FIXME: I don't think that PokerTable should be reaching into the
+        #        member variables of the client classes.  Really the line
+        #        above should be something like
+        #        client.removeTable(self.game.id).  I did not change based
+        #        on IRC discussions with Loic, but I have written tests in
+        #        ../tests/test-pokertable.py.in that should check after
+        #        this change is made.
 
     def buyInPlayer(self, client, amount):
         game = self.game

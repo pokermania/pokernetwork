@@ -7,6 +7,15 @@
 	(PokerTableTestCase.test14_closed_games): Wrote function.
 	(PokerTableTestCase.test08_5_kick): Wrote function.
 	(PokerTableTestCase.test08_7_sitout): Wrote function.
+	(PokerTableTestCase.createPlayer): Added clientClass option.
+	(MockClientWithRemoveTable): Created class.
+	(MockClientWithRemoveTable.removeTable): Wrote function.
+	(MockClientWithTableDict): Created class.
+	(MockClientWithTableDict.__init__): Wrote function.
+	(MockClientWithTableDict.addPlayer): Wrote function.
+
+	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
+	(PokerTable.destroyPlayer): Added FIXME note.
 
 2008-01-20  Bradley M. Kuhn  <bkuhn@ebb.org>
 
