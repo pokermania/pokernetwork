@@ -1,3 +1,9 @@
+2008-01-21  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokertable.py.in
+	(PokerTableTestCase.test08_player_has_trouble_joining): Added test
+	for two kick attempts in a row.
+
 2008-01-20  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokertable.py.in (PokerTableTestCase.createPlayer):

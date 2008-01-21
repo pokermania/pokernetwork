@@ -354,6 +354,11 @@ class PokerTableTestCase(unittest.TestCase):
 
         # Finally, we kick off player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
+        # Test to make sure it's ok if we kick him twice.
+        try:
+            self.assertEqual(None, self.table.kickPlayer(2))
+        except KeyError, ke:
+            self.assertEqual(2, ke[0])
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
