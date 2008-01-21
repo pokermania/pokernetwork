@@ -188,6 +188,9 @@ class MockClient:
             elif self.type == packet.type:
                 reactor.callLater(0, lambda: self.deferred.callback(packet))
 
+    def sendPacketVerbose(self, packet):
+        self.sendPacket(packet)
+
     def getSerial(self):
         return self.serial
 
@@ -403,8 +406,31 @@ class PokerTableTestCase(unittest.TestCase):
         p1 = self.createPlayer(1)
         # I think this test should actually work; I don't think that
         #  pokertable.destory 
-        self.table.disconnectPlayer(p1, 1)
+#        self.table.disconnectPlayer(p1, 1)
+    # -------------------------------------------------------------------
+    def test14_closed_games(self):
+        """Do typical operations act as expected when the game is closed?"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+        self.table.game.close()
+        self.table.quitPlayer(player[1], 1)
 
+        # Leaving a closed table generates an error.  player[2] is going
+        # to leave, we wait for the error packet to come back, and make
+        # sure that they other_type indicates it's a response to our leave
+        # request.
+
+        deferredLeaveErrorWait = player[2].waitFor(PACKET_POKER_ERROR)
+        def checkReturnPacket(packet):
+            self.assertEqual(PACKET_POKER_PLAYER_LEAVE, packet.other_type)
+            self.failUnlessSubstring("annot leave", packet.message)
+        deferredLeaveErrorWait.addCallback(checkReturnPacket)
+
+        self.table.leavePlayer(player[2], 2)
+        return deferredLeaveErrorWait
+
+        #  Leave players should get packets that mentions forbidding leaving
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
