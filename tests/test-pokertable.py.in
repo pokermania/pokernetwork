@@ -304,6 +304,7 @@ class PokerTableTestCase(unittest.TestCase):
             self.createPlayer(ii)
         self.createPlayer(5, False)
         player1 = self.clients[1]
+        player2 = self.clients[2]
         player5 = self.clients[5]
 
         # player5 can't sit because the table is full of 1-4...
@@ -314,19 +315,27 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(False, self.table.muckAccept(player5, 5))
         self.assertEqual(False, self.table.muckDeny(player5, 5))
         self.assertEqual(False, self.table.autoBlindAnte(player5, 5, True))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player5, 30))
 
         # player1 leaves on his own...
         self.assertEqual(True, self.table.leavePlayer(player1, 1))
 
-        # ... which allows player5 to finally join legitimately and play
-        # with his settings.
+        # ... which allows player5 to finally join legitimately and change
+        # her settings.  However, she buys in for nothing then must rebuy
         self.assertEqual(True, self.table.seatPlayer(player5, 5, -1))
-        self.assertEqual(True, self.table.buyInPlayer(player5, self.table.game.maxBuyIn()))
+        self.assertEqual(True, self.table.buyInPlayer(player5, 0))
 
         # I wonder if these should really return True rather than None?  -- bkuhn
         self.assertEqual(None, self.table.muckAccept(player5, 5))
         self.assertEqual(None, self.table.muckDeny(player5, 5))
         self.assertEqual(None, self.table.autoBlindAnte(player5, 5, True))
+
+        self.assertEqual(True, self.table.rebuyPlayerRequest(player5, \
+                                              self.table.game.maxBuyIn()))
+
+        # player2 tries to rebuy but is already at the max
+
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player2, 1))
 
         # Finally, we kick off player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
