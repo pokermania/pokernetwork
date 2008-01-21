@@ -272,13 +272,15 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.cancelPlayerTimers()
         del self.table
 
-    def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient):
+    def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
+        if table == None:
+            table = self.table
         client = clientClass(serial)
         self.clients[serial] = client
-        self.table.joinPlayer(client, serial)
+        table.joinPlayer(client, serial)
         if getReadyToPlay:
-            self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
-            self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+            self.assertEqual(True, table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
             self.table.sitPlayer(client, serial)
         return client
 
@@ -468,9 +470,17 @@ class PokerTableTestCase(unittest.TestCase):
     def test15_moveTo(self):
         """Make sure a player can move from one place to another"""
         player = self.createPlayer(1)
+        otherTablePlayer = self.createPlayer(2, table=self.table2)
+
+        expectPlayerDeferred = otherTablePlayer.waitFor(PACKET_POKER_PLAYER_ARRIVE)
+        def checkReturnPacket(packet):
+            self.assertEqual(packet.name, "Player1")
+            self.assertEqual(packet.game_id, 202)
+        expectPlayerDeferred.addCallback(checkReturnPacket)
 
         self.table.movePlayer(player, 1, self.table2.game.id)
 
+        return expectPlayerDeferred
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
@@ -538,13 +548,15 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         service.table2 = self.table2
         self.clients = {}
 
-    def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient):
+    def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
+        if table == None:
+            table = self.table
         client = clientClass(serial)
         self.clients[serial] = client
-        self.table.joinPlayer(client, serial)
+        table.joinPlayer(client, serial)
         if getReadyToPlay:
-            self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
-            self.table.sitPlayer(client, serial)
+            self.assertEqual(True, table.seatPlayer(client, serial, -1))
+            table.sitPlayer(client, serial)
         return client
 
     # -------------------------------------------------------------------

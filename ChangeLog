@@ -33,6 +33,11 @@
 	(MockClient.getPlayerInfo.MockPlayerInfo): Created class.
 	(MockClient.getPlayerInfo): Rewrote function to return an object
 	rather than a string.
+	(PokerTableTestCase.createPlayer): Added table as an argument.
+	(PokerTableTestCaseTransient.createPlayer): Added table as an
+	argument.
+	(PokerTableTestCase.test15_moveTo): Added check for return
+	packet's contents.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
