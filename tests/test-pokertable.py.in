@@ -352,8 +352,6 @@ class PokerTableTestCase(unittest.TestCase):
 
         # Finally, we kick off player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
-
-
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
@@ -363,7 +361,6 @@ class PokerTableTestCase(unittest.TestCase):
         for x in self.table.listPlayers():
             del d[x[0]]
         self.assertEqual({}, d)
-
     # -------------------------------------------------------------------
     def test10_info_and_chat(self):
         """Test player discussions and info"""
@@ -373,7 +370,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
     # -------------------------------------------------------------------
     def test11_packet(self):
-        """Test player discussions and info"""
+        """Test toPacket"""
         packetStr = "%s" % self.table.toPacket()
         for str in [ 'id = 100', 'name = table1', 'variant = holdem', \
                      'betting_structure = 2-4-limit', 'seats = 4', \
@@ -382,12 +379,21 @@ class PokerTableTestCase(unittest.TestCase):
                      'waiting = 0', 'player_timeout = 60', 'muck_timeout = 5',
                      'currency_serial = 0', 'skin = default' ]:
             self.failUnlessSubstring(str, packetStr)
-
+    # -------------------------------------------------------------------
+    def test12_everyone_timeout(self):
+        """Test if all players fall through timeout"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+        self.table.update()
+        return defer.DeferredList((player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)))
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         self.table.destroy()
-
 # -------------------------------------------------------------------
 class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_stripped_deck_xml):

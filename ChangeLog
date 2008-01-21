@@ -19,6 +19,7 @@
 	(MockClient.autoBlindAnte): Wrote function.
 	(PokerTableTestCase.test11_packet): Wrote function.
 	(MockClient.sitOutPlayer): Wrote function.
+	(PokerTableTestCase.test12_everyone_timeout): Wrote function.
 
 2008-01-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
