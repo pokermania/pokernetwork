@@ -190,6 +190,9 @@ class MockClient:
     def getName(self):
         return "Player%d" % self.serial
 
+    def getPlayerInfo(self):
+        return "Name: " + self.getName() + ", Serial: %d" % self.getSerial()
+
 class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def setUp(self, settingsXmlStr=settings_xml):
@@ -318,6 +321,14 @@ class PokerTableTestCase(unittest.TestCase):
         for x in self.table.listPlayers():
             del d[x[0]]
         self.assertEqual({}, d)
+
+    # -------------------------------------------------------------------
+    def test10_info_and_chat(self):
+        """Test player discussions and info"""
+        for ii in [1, 2, 3, 4]:
+            self.createPlayer(ii)
+        self.failUnlessSubstring("Player2", self.table.getPlayerInfo(2))
+        self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
 
     # -------------------------------------------------------------------
     def test99_destroy_table(self):

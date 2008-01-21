@@ -14,6 +14,8 @@
 	(PokerTableTestCase.test10_destroy_table): Wrote function.
 	(MockService.deleteTable): Wrote function.
 	(PokerTableTestCase.test99_destroy_table): Renamed test10 to this.
+	(MockClient.getPlayerInfo): Wrote function.
+	(PokerTableTestCase.test10_info_and_chat): Wrote function.
 
 2008-01-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
