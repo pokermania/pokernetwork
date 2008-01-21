@@ -445,6 +445,14 @@ class PokerTableTestCase(unittest.TestCase):
         """Test table destruction"""
         self.table.destroy()
 # -------------------------------------------------------------------
+
+# I seriously considered not having *all* the same tests run with
+# predifined decks because it was not needed to get coverage.  A simple
+# setup test would have worked.  However, I think it's good leaving it
+# this way because if predifined decks are later used extensively, we
+# would want all the tests to run and when additional use of predefined
+# decks is added.  -- bkuhn, 2008-01-21
+
 class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_stripped_deck_xml):
         PokerTableTestCase.setUp(self, settingsXmlStr)
