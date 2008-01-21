@@ -176,6 +176,9 @@ class MockClient:
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
         return True
 
+    def sitOutPlayer(self, table, serial):
+        table.game.sitOutNextTurn(serial)
+
     def sendPacket(self, packet):
         self.message("sendPacket: " + str(packet))
         self.packets.append(packet)
@@ -300,42 +303,52 @@ class PokerTableTestCase(unittest.TestCase):
     def test08_player_has_trouble_joining(self):
         """Test for when the table is full and a player is trying hard to join"""
         # Do not use serials of 0's here -- pokerengine will hate that. :)
+        player = {}
         for ii in [1, 2, 3, 4]:
-            self.createPlayer(ii)
-        self.createPlayer(5, False)
-        player1 = self.clients[1]
-        player2 = self.clients[2]
-        player5 = self.clients[5]
+            player[ii] = self.createPlayer(ii)
+        player[5] = self.createPlayer(5, False)
 
         # player5 can't sit because the table is full of 1-4...
-        self.assertEqual(False, self.table.seatPlayer(player5, 5, -1))
+        self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
 
         #  ... but player5 decides to set all sorts of things that she can't
         #      because she's still just an observer.
-        self.assertEqual(False, self.table.muckAccept(player5, 5))
-        self.assertEqual(False, self.table.muckDeny(player5, 5))
-        self.assertEqual(False, self.table.autoBlindAnte(player5, 5, True))
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player5, 30))
+        self.assertEqual(False, self.table.muckAccept(player[5], 5))
+        self.assertEqual(False, self.table.muckDeny(player[5], 5))
+        self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 30))
 
         # player1 leaves on his own...
-        self.assertEqual(True, self.table.leavePlayer(player1, 1))
+        self.assertEqual(True, self.table.leavePlayer(player[1], 1))
 
         # ... which allows player5 to finally join legitimately and change
-        # her settings.  However, she buys in for nothing then must rebuy
-        self.assertEqual(True, self.table.seatPlayer(player5, 5, -1))
-        self.assertEqual(True, self.table.buyInPlayer(player5, 0))
+        # her settings.  However, she tries to sit out before getting the
+        # seat, rebuy before even buying, and then buys in for nothing,
+        # and thus must rebuy
+
+        self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
+
+        self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 2))
+
+        self.assertEqual(True, self.table.buyInPlayer(player[5], 0))
 
         # I wonder if these should really return True rather than None?  -- bkuhn
-        self.assertEqual(None, self.table.muckAccept(player5, 5))
-        self.assertEqual(None, self.table.muckDeny(player5, 5))
-        self.assertEqual(None, self.table.autoBlindAnte(player5, 5, True))
+        self.assertEqual(None, self.table.muckAccept(player[5], 5))
+        self.assertEqual(None, self.table.muckDeny(player[5], 5))
+        self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
-        self.assertEqual(True, self.table.rebuyPlayerRequest(player5, \
+        self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
                                               self.table.game.maxBuyIn()))
 
         # player2 tries to rebuy but is already at the max
 
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player2, 1))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
+
+        # player4 sits out but tries it twice.  (Guess he clicked too much
+        # on the button)
+        self.assertEqual(True, self.table.sitOutPlayer(player[4], 4))
+        self.assertEqual(True, self.table.sitOutPlayer(player[4], 4))
 
         # Finally, we kick off player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
