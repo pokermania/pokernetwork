@@ -50,7 +50,6 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <users temporary="BOT"/>
 </server>
 """
-
 settings_stripped_deck_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" autodeal="yes" >
   <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
@@ -114,7 +113,6 @@ class MockService:
         
 
 class MockClient:
-
     def __init__(self, serial):
         self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
         self.serial = serial
@@ -190,7 +188,6 @@ class MockClient:
         return "Player%d" % self.serial
 
 class PokerTableTestCase(unittest.TestCase):
-
     # -------------------------------------------------------------------
     def setUp(self, settingsXmlStr=settings_xml):
         settings = pokernetworkconfig.Config([])
@@ -204,7 +201,6 @@ class PokerTableTestCase(unittest.TestCase):
                                              'currency_serial': 0
                                              })
         self.clients = {}
-
     # -------------------------------------------------------------------
     def tearDown(self):
         self.table.cancelDealTimeout()
@@ -228,7 +224,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.scheduleAutoDeal()
         return defer.DeferredList((self.clients[1].waitFor(PACKET_POKER_START),
                                    self.clients[2].waitFor(PACKET_POKER_START)))
-
     # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
@@ -238,7 +233,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
-
     # -------------------------------------------------------------------
     def test03_autodeal_transient(self):
         """ Transient tables hand deal has a minimum duration if all players are in auto mode """
@@ -250,7 +244,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.game_delay["start"] = time.time()
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
-
     # -------------------------------------------------------------------
     def test04_autodeal_transient_now(self):
         """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
@@ -263,7 +256,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.scheduleAutoDeal()
         self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
         return self.clients[2].waitFor(PACKET_POKER_START)
-
     # -------------------------------------------------------------------
     def test05_autodeal_transient_normal(self):
         """ Transient tables hand deal normaly if at least one player is not in auto mode """
@@ -273,14 +265,12 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.scheduleAutoDeal()
         self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
         return self.clients[2].waitFor(PACKET_POKER_START)
-
     # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
         self.createPlayer(1)
         client = self.clients[1]
         self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
-
     # -------------------------------------------------------------------
     def test07_break_message(self):
         """ Tournament break issue a message to all players """
@@ -315,7 +305,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.buyInPlayer(player5, self.table.game.maxBuyIn()))
         # And we kick of player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
-
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
@@ -325,14 +314,11 @@ class PokerTableTestCase(unittest.TestCase):
         for x in self.table.listPlayers():
             del d[x[0]]
         self.assertEqual({}, d)
-
 # -------------------------------------------------------------------
 class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_stripped_deck_xml):
         PokerTableTestCase.setUp(self, settingsXmlStr)
-
 # -------------------------------------------------------------------
-
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test07"
@@ -343,8 +329,7 @@ def Run():
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
-
-# -----------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
