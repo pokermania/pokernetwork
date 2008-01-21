@@ -398,6 +398,14 @@ class PokerTableTestCase(unittest.TestCase):
                                    player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
                                    player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)))
     # -------------------------------------------------------------------
+    def test13_disconnect(self):
+        """Test a disconnected player"""
+        p1 = self.createPlayer(1)
+        # I think this test should actually work; I don't think that
+        #  pokertable.destory 
+        self.table.disconnectPlayer(p1, 1)
+
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         self.table.destroy()
