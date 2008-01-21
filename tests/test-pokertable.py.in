@@ -151,16 +151,20 @@ class MockClient:
     def join(self, table):
         pass
 
+    # Loic indicates that it's the job of the Client to pass along a few
+    # things, including "player removes", and various clients settings, to
+    # the game class.  These next few functions do that to be consistent
+    # with what the pokertable API expects.
+
     def removePlayer(self, table, serial):
         if self.tables.count(table) != 1:
             self.error(table + " does not occur exactly once for this player.")
         self.tables.remove(table)
 
-        # Loic indicates that it's the job of the Client to pass along
-        # player removes to the game class, so this is done here to be
-        # consistent with what the pokertable API expects.
-
         return table.game.removePlayer(serial)
+
+    def autoBlindAnte(self, table, serial, auto):
+        table.game.getPlayer(serial).auto_blind_ante = auto
 
     def sitPlayer(self, table, serial):
         table.game.sit(serial)
@@ -302,15 +306,31 @@ class PokerTableTestCase(unittest.TestCase):
         player1 = self.clients[1]
         player5 = self.clients[5]
 
-        # player5 can't sit because the table is full of 0-3
+        # player5 can't sit because the table is full of 1-4...
         self.assertEqual(False, self.table.seatPlayer(player5, 5, -1))
+
+        #  ... but player5 decides to set all sorts of things that she can't
+        #      because she's still just an observer.
+        self.assertEqual(False, self.table.muckAccept(player5, 5))
+        self.assertEqual(False, self.table.muckDeny(player5, 5))
+        self.assertEqual(False, self.table.autoBlindAnte(player5, 5, True))
 
         # player1 leaves on his own...
         self.assertEqual(True, self.table.leavePlayer(player1, 1))
+
+        # ... which allows player5 to finally join legitimately and play
+        # with his settings.
         self.assertEqual(True, self.table.seatPlayer(player5, 5, -1))
         self.assertEqual(True, self.table.buyInPlayer(player5, self.table.game.maxBuyIn()))
-        # And we kick of player2; We hate that guy! 
+
+        # I wonder if these should really return True rather than None?  -- bkuhn
+        self.assertEqual(None, self.table.muckAccept(player5, 5))
+        self.assertEqual(None, self.table.muckDeny(player5, 5))
+        self.assertEqual(None, self.table.autoBlindAnte(player5, 5, True))
+
+        # Finally, we kick off player2; We hate that guy! 
         self.assertEqual(None, self.table.kickPlayer(2))
+
 
     # -------------------------------------------------------------------
     def test09_list_players(self):
