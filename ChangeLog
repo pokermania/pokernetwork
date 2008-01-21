@@ -22,6 +22,17 @@
 	(PokerTableTestCaseTransient): reorganized transient tests that
 	had been in PokerTableTestCase.
 	(PokerTableTestCase.test08_8_buyinOverMax): Wrote function.
+	(MockService.getTable): Wrote function.
+	(MockService.movePlayer): Wrote function.
+	(MockClient.getPlayerInfo): Changed to return dictionary.
+	(PokerTableTestCase.setUp): Added table2.
+	(PokerTableTestCaseTransient.setUp): Added table2.
+	(PokerTableTestCase.test15_moveTo): Wrote function.
+	(PokerTableTestCase.test10_info_and_chat): Fixed to work with new
+	playerInfo.
+	(MockClient.getPlayerInfo.MockPlayerInfo): Created class.
+	(MockClient.getPlayerInfo): Rewrote function to return an object
+	rather than a string.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.

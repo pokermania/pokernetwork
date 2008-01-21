@@ -74,6 +74,17 @@ class MockService:
         self.hand_serial = 0
         self.chat = False
         self.players = {}
+        self.table1 = None
+        self.table2 = None
+
+    def getTable(self, gameId):
+        if gameId == self.table1.game.id:
+            return self.table1
+        elif gameId == self.table2.game.id:
+            return self.table2
+        else:
+            self.error("Unknown game requested: " + gameId)
+            return None
 
     def message(self, message):
         if self.verbose >= 0:
@@ -84,6 +95,9 @@ class MockService:
 
     def error(self, message):
         self.message("error " + message)
+
+    def movePlayer(self, serial, fromGameId, toGameId):
+        return 0
 
     def seatPlayer(self, serial, table_id, amount):
         if self.players.has_key(serial):
@@ -202,7 +216,13 @@ class MockClient:
         return "Player%d" % self.serial
 
     def getPlayerInfo(self):
-        return "Name: " + self.getName() + ", Serial: %d" % self.getSerial()
+        class MockPlayerInfo:
+            def __init__(self, player):
+                self.player = player
+                self.name = self.player.getName()
+                self.url = "http://fake"
+                self.outfit = None
+        return MockPlayerInfo(self)
 # --------------------------------------------------------------------------------
 class MockClientWithTableDict(MockClient):
     def __init__(self, serial):
@@ -224,7 +244,8 @@ class PokerTableTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
-        self.table = pokertable.PokerTable(MockService(settings), 100, 
+        service = MockService(settings)
+        self.table = pokertable.PokerTable(service, 101, 
                                            { 'name': "table1",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -233,6 +254,17 @@ class PokerTableTestCase(unittest.TestCase):
                                              'muck_timeout' : 1,
                                              'currency_serial': 0
                                              })
+        self.table2 = pokertable.PokerTable(service, 202, 
+                                           { 'name': "table2",
+                                             'variant': "holdem",
+                                             'betting_structure': "2-4-limit",
+                                             'seats': 4,
+                                             'player_timeout' : 6, 
+                                             'muck_timeout' : 1,
+                                             'currency_serial': 0
+                                             })
+        service.table1 = self.table
+        service.table2 = self.table2
         self.clients = {}
     # -------------------------------------------------------------------
     def tearDown(self):
@@ -370,13 +402,14 @@ class PokerTableTestCase(unittest.TestCase):
         """Test player discussions and info"""
         for ii in [1, 2, 3, 4]:
             self.createPlayer(ii)
-        self.failUnlessSubstring("Player2", self.table.getPlayerInfo(2))
+        d = self.table.getPlayerInfo(2)
+        self.failUnlessSubstring("Player2", d.name)
         self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
     # -------------------------------------------------------------------
     def test11_packet(self):
         """Test toPacket"""
         packetStr = "%s" % self.table.toPacket()
-        for str in [ 'id = 100', 'name = table1', 'variant = holdem', \
+        for str in [ 'id = 101', 'name = table1', 'variant = holdem', \
                      'betting_structure = 2-4-limit', 'seats = 4', \
                      'average_pot = 0', 'hands_per_hour = 0', \
                      'percent_flop = 0', 'players = 0', 'observers = 0', \
@@ -431,6 +464,12 @@ class PokerTableTestCase(unittest.TestCase):
 
         self.table.leavePlayer(player[2], 2)
         return deferredLeaveErrorWait
+    # -------------------------------------------------------------------
+    def test15_moveTo(self):
+        """Make sure a player can move from one place to another"""
+        player = self.createPlayer(1)
+
+        self.table.movePlayer(player, 1, self.table2.game.id)
 
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
@@ -474,7 +513,8 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
-        self.table = pokertable.PokerTable(MockService(settings), 100, 
+        service = MockService(settings)
+        self.table = pokertable.PokerTable(service, 101, 
                                            { 'name': "table1",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -484,6 +524,18 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'transient' : True,
                                              'currency_serial': 0
                                              })
+        self.table2 = pokertable.PokerTable(service, 202, 
+                                           { 'name': "table2",
+                                             'variant': "holdem",
+                                             'betting_structure': "2-4-limit",
+                                             'seats': 4,
+                                             'player_timeout' : 6, 
+                                             'muck_timeout' : 1,
+                                             'transient' : True,
+                                             'currency_serial': 0
+                                             })
+        service.table1 = self.table
+        service.table2 = self.table2
         self.clients = {}
 
     def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient):
