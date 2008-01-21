@@ -329,11 +329,6 @@ class PokerTableTestCase(unittest.TestCase):
 
         self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
                                               self.table.game.maxBuyIn()))
-
-        # player2 tries to rebuy but is already at the max
-
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
-
     # -------------------------------------------------------------------
     def test08_5_kick(self):
         """Test that kick works correctly"""
@@ -354,6 +349,13 @@ class PokerTableTestCase(unittest.TestCase):
         # on the button)
         self.assertEqual(True, self.table.sitOutPlayer(player, 4))
         self.assertEqual(True, self.table.sitOutPlayer(player, 4))
+    # -------------------------------------------------------------------
+    def test08_8_buyinOverMax(self):
+        """Test that buyins over the maximum are refused"""
+        player = self.createPlayer(1)
+
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player, 1))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player, 2))
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
@@ -579,8 +581,6 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         # in transient mode, this doesn't work anyway
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
-
-
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()

@@ -21,6 +21,7 @@
 	cut-and-paste.
 	(PokerTableTestCaseTransient): reorganized transient tests that
 	had been in PokerTableTestCase.
+	(PokerTableTestCase.test08_8_buyinOverMax): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
