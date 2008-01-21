@@ -349,6 +349,17 @@ class PokerTableTestCase(unittest.TestCase):
             self.createPlayer(ii)
         self.failUnlessSubstring("Player2", self.table.getPlayerInfo(2))
         self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
+    # -------------------------------------------------------------------
+    def test11_packet(self):
+        """Test player discussions and info"""
+        packetStr = "%s" % self.table.toPacket()
+        for str in [ 'id = 100', 'name = table1', 'variant = holdem', \
+                     'betting_structure = 2-4-limit', 'seats = 4', \
+                     'average_pot = 0', 'hands_per_hour = 0', \
+                     'percent_flop = 0', 'players = 0', 'observers = 0', \
+                     'waiting = 0', 'player_timeout = 60', 'muck_timeout = 5',
+                     'currency_serial = 0', 'skin = default' ]:
+            self.failUnlessSubstring(str, packetStr)
 
     # -------------------------------------------------------------------
     def test99_destroy_table(self):

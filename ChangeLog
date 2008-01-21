@@ -17,6 +17,7 @@
 	(MockClient.getPlayerInfo): Wrote function.
 	(PokerTableTestCase.test10_info_and_chat): Wrote function.
 	(MockClient.autoBlindAnte): Wrote function.
+	(PokerTableTestCase.test11_packet): Wrote function.
 
 2008-01-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
