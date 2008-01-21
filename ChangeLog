@@ -13,6 +13,14 @@
 	(MockClientWithTableDict): Created class.
 	(MockClientWithTableDict.__init__): Wrote function.
 	(MockClientWithTableDict.addPlayer): Wrote function.
+	(MockService.destroyTable): Wrote function.
+	(PokerTableTestCaseTransient): Created class for transient tests.
+	(PokerTableTestCaseTransient.setUp): Wrote function, mostly
+	cut-and-paste.
+	(PokerTableTestCaseTransient.createPlayer): Wrote function, mostly
+	cut-and-paste.
+	(PokerTableTestCaseTransient): reorganized transient tests that
+	had been in PokerTableTestCase.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.

@@ -114,6 +114,9 @@ class MockService:
     def deleteTable(self, x):
         pass
 
+    def destroyTable(self, x):
+        pass
+
 class MockClient:
     def __init__(self, serial):
         self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
@@ -237,11 +240,11 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.cancelPlayerTimers()
         del self.table
 
-    def createPlayer(self, serial, buySit=True, clientClass=MockClient):
+    def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient):
         client = clientClass(serial)
         self.clients[serial] = client
         self.table.joinPlayer(client, serial)
-        if buySit:
+        if getReadyToPlay:
             self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
             self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
             self.table.sitPlayer(client, serial)
@@ -263,38 +266,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
-    # -------------------------------------------------------------------
-    def test03_autodeal_transient(self):
-        """ Transient tables hand deal has a minimum duration if all players are in auto mode """
-        self.createPlayer(1)
-        self.table.game.autoPlayer(1)
-        self.createPlayer(2)
-        self.table.game.autoPlayer(2)
-        self.table.transient = True
-        self.table.game_delay["start"] = time.time()
-        self.table.scheduleAutoDeal()
-        return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
-    # -------------------------------------------------------------------
-    def test04_autodeal_transient_now(self):
-        """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
-        self.createPlayer(1)
-        self.table.game.autoPlayer(1)
-        self.createPlayer(2)
-        self.table.game.autoPlayer(2)
-        self.table.game_delay["start"] = time.time() - 300
-        self.table.transient = True
-        self.table.scheduleAutoDeal()
-        self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
-        return self.clients[2].waitFor(PACKET_POKER_START)
-    # -------------------------------------------------------------------
-    def test05_autodeal_transient_normal(self):
-        """ Transient tables hand deal normaly if at least one player is not in auto mode """
-        self.createPlayer(1)
-        self.createPlayer(2)
-        self.table.transient = True
-        self.table.scheduleAutoDeal()
-        self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
-        return self.clients[2].waitFor(PACKET_POKER_START)
     # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
@@ -490,6 +461,126 @@ class PokerTableTestCase(unittest.TestCase):
 class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_stripped_deck_xml):
         PokerTableTestCase.setUp(self, settingsXmlStr)
+
+# -------------------------------------------------------------------
+
+# This class tests the same operations as PokerTableTestCase but for tables that
+#  are transient.  Note the outcome of various operations are quite different
+#  when the table is transient.
+class PokerTableTestCaseTransient(PokerTableTestCase):
+    def setUp(self, settingsXmlStr=settings_xml):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
+        settings.header = settings.doc.xpathNewContext()
+        self.table = pokertable.PokerTable(MockService(settings), 100, 
+                                           { 'name': "table1",
+                                             'variant': "holdem",
+                                             'betting_structure': "2-4-limit",
+                                             'seats': 4,
+                                             'player_timeout' : 6, 
+                                             'muck_timeout' : 1,
+                                             'transient' : True,
+                                             'currency_serial': 0
+                                             })
+        self.clients = {}
+
+    def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient):
+        client = clientClass(serial)
+        self.clients[serial] = client
+        self.table.joinPlayer(client, serial)
+        if getReadyToPlay:
+            self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
+            self.table.sitPlayer(client, serial)
+        return client
+
+    # -------------------------------------------------------------------
+    def test01_autodeal(self):
+        """ Transient tables hand deal has a minimum duration if all players are in auto mode """
+        self.createPlayer(1)
+        self.table.game.autoPlayer(1)
+        self.createPlayer(2)
+        self.table.game.autoPlayer(2)
+        self.table.game_delay["start"] = time.time()
+        self.table.scheduleAutoDeal()
+        return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
+    # -------------------------------------------------------------------
+    def test02_autodeal_check(self):
+        self.createPlayer(1)
+        self.table.processingHand(1)
+        self.table.game_delay["delay"] = 2
+        self.table.game_delay["start"] = time.time()
+        self.createPlayer(2)
+        self.table.scheduleAutoDeal()
+        return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
+    # -------------------------------------------------------------------
+    def test04_autodeal_transient_now(self):
+        """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
+        self.createPlayer(1)
+        self.table.game.autoPlayer(1)
+        self.createPlayer(2)
+        self.table.game.autoPlayer(2)
+        self.table.game_delay["start"] = time.time() - 300
+        self.table.scheduleAutoDeal()
+        self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
+        return self.clients[2].waitFor(PACKET_POKER_START)
+    # -------------------------------------------------------------------
+    def test05_autodeal_transient_normal(self):
+        """ Transient tables hand deal normaly if at least one player is not in auto mode """
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.scheduleAutoDeal()
+        self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
+        return self.clients[2].waitFor(PACKET_POKER_START)
+
+    def test08_player_has_trouble_joining(self):
+        """Test for when the table is full and a player is trying hard to join"""
+        # Do not use serials of 0's here -- pokerengine will hate that. :)
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+        player[5] = self.createPlayer(5, False)
+
+        # player5 can't sit because the table is full of 1-4...
+        self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
+
+        #  ... but player5 decides to set all sorts of things that she can't
+        #      because she's still just an observer.
+        self.assertEqual(False, self.table.muckAccept(player[5], 5))
+        self.assertEqual(False, self.table.muckDeny(player[5], 5))
+        self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 30))
+
+        # player5 cannot sit out either because she isn't joined yet.
+        self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
+
+        # player1 leaves on his own...
+        self.assertEqual(True, self.table.leavePlayer(player[1], 1))
+
+        # ... which allows player5 to finally join legitimately and change
+        # her settings.  However, she tries to sit out before getting the
+        # seat, rebuy before even buying, and then buys in for nothing,
+        # and thus must rebuy
+
+        self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 2))
+
+        # this table is transient, so no one can buy in.
+        self.assertEqual(False, self.table.buyInPlayer(player[5], 0))
+
+        # I wonder if these should really return True rather than None?  -- bkuhn
+        self.assertEqual(None, self.table.muckAccept(player[5], 5))
+        self.assertEqual(None, self.table.muckDeny(player[5], 5))
+        self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
+
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], \
+                                              self.table.game.maxBuyIn()))
+
+        # player2 tries to rebuy but is already at the max, and besides,
+        # in transient mode, this doesn't work anyway
+
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
+
+
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
@@ -497,6 +588,7 @@ def Run():
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))
+    suite.addTest(loader.loadClass(PokerTableTestCaseTransient))
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
