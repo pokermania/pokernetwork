@@ -641,6 +641,10 @@ class PokerTableTestCase(unittest.TestCase):
         player.lookForPacket(PACKET_POKER_SIT_OUT)
         checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
         checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
+
+        # To get coverage of a player who isn't joined to the table requesting.
+        player2 = self.createPlayer(2, False)
+        self.table.handReplay(player2, 777)
     # -------------------------------------------------------------------
     def test19_serial2clientEmpty(self):
         """Test replay of hand from pokertable"""
@@ -814,7 +818,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test20"
+#    loader.methodPrefix = "test18"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
