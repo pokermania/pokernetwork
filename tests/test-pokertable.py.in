@@ -578,10 +578,10 @@ class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def test18_handReplay(self):
         """Test replay of hand from pokertable"""
-        player = self.createPlayer(1)
+        player1 = self.createPlayer(1)
 
         # First try a hand that doesn't exist
-        self.assertEqual(None, self.table.handReplay(player, 0))
+        self.assertEqual(None, self.table.handReplay(player1, 0))
 
         def checkHandSerial(packet):
             self.assertEqual(packet.hand_serial, 777)
@@ -621,30 +621,30 @@ class PokerTableTestCase(unittest.TestCase):
         def checkMuckSerials(packet):
             self.assertEqual(packet.muckable_serials, (1, 2))
 
-        self.table.handReplay(player, 777)
-
-        checkHandSerial(player.lookForPacket(PACKET_POKER_START))
-        checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
-        checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
-        checkPosition(player.lookForPacket(PACKET_POKER_POSITION))
-        checkBlindRequest(player.lookForPacket(PACKET_POKER_BLIND_REQUEST))
-        checkBlindAmount(player.lookForPacket(PACKET_POKER_BLIND))
-        checkAnteAmount(player.lookForPacket(PACKET_POKER_ANTE_REQUEST))
-        checkAnteAmount(player.lookForPacket(PACKET_POKER_ANTE))
-        checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
-        player.lookForPacket(PACKET_POKER_CALL)
-        player.lookForPacket(PACKET_POKER_CHECK)
-        player.lookForPacket(PACKET_POKER_FOLD)
-        checkRaiseAmount(player.lookForPacket(PACKET_POKER_RAISE))
-        checkCanceledAmount(player.lookForPacket(PACKET_POKER_CANCELED))
-        checkRakeAmount(player.lookForPacket(PACKET_POKER_RAKE))
-        player.lookForPacket(PACKET_POKER_SIT_OUT)
-        checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
-        checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
-
         # To get coverage of a player who isn't joined to the table requesting.
         player2 = self.createPlayer(2, False)
-        self.table.handReplay(player2, 777)
+
+        for player in (player1, player2):
+            self.table.handReplay(player, 777)
+            checkHandSerial(player.lookForPacket(PACKET_POKER_START))
+            checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
+            checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
+            checkPosition(player.lookForPacket(PACKET_POKER_POSITION))
+            checkBlindRequest(player.lookForPacket(PACKET_POKER_BLIND_REQUEST))
+            checkBlindAmount(player.lookForPacket(PACKET_POKER_BLIND))
+            checkAnteAmount(player.lookForPacket(PACKET_POKER_ANTE_REQUEST))
+            checkAnteAmount(player.lookForPacket(PACKET_POKER_ANTE))
+            checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
+            player.lookForPacket(PACKET_POKER_CALL)
+            player.lookForPacket(PACKET_POKER_CHECK)
+            player.lookForPacket(PACKET_POKER_FOLD)
+            checkRaiseAmount(player.lookForPacket(PACKET_POKER_RAISE))
+            checkCanceledAmount(player.lookForPacket(PACKET_POKER_CANCELED))
+            checkRakeAmount(player.lookForPacket(PACKET_POKER_RAKE))
+            player.lookForPacket(PACKET_POKER_SIT_OUT)
+            checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
+            checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
+
     # -------------------------------------------------------------------
     def test19_serial2clientEmpty(self):
         """Test replay of hand from pokertable"""
@@ -818,7 +818,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+    loader.methodPrefix = "test18"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
