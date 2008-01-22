@@ -51,6 +51,8 @@
 	sit/seat tests.
 	(PokerTableTestCase.test08_2_brokenSeatFactory): Wrote function.
 	(Run): set environment variable here
+	(MockService.getPlayerInfo): Wrote function.
+	(PokerTableTestCase.test19_serial2clientEmpty): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.

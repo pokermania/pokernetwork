@@ -94,6 +94,12 @@ class MockService:
     def getName(self, serial):
         return "MockServiceName%d" % serial
 
+    def getPlayerInfo(self, serial):
+        class Dummy:
+            def __init__(self):
+                self.name = "MockServicePlayerInfo"
+        return Dummy()
+
     def error(self, message):
         self.message("error " + message)
 
@@ -633,6 +639,12 @@ class PokerTableTestCase(unittest.TestCase):
         checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
 
     # -------------------------------------------------------------------
+    def test19_serial2clientEmpty(self):
+        """Test replay of hand from pokertable"""
+        self.assertEqual("MockServiceName1", self.table.getName(1))
+        d = self.table.getPlayerInfo(1)
+        self.failUnlessSubstring("MockServicePlayerInfo", d.name)
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
@@ -799,7 +811,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test19"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
