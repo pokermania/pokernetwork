@@ -64,6 +64,51 @@ settings_stripped_deck_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
+board = PokerCards() 
+hand1 = PokerCards(['Qd', 'Ts'])
+hand2 = PokerCards(['Kh', 'Kc'])
+flop  = PokerCards(['Jd', 'Js', "Jc"])
+turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
+river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
+exampleHand =  [ \
+    ('game', 1, 777, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}), \
+        ('wait_for', 1, 'first_round'), \
+        ('player_list', [1, 2]), \
+        ('round', 'round1', board, { 1 : hand1, 2 : hand2}), \
+        ('round', 'round2', flop, { 1 : hand1, 2 : hand2}), \
+        ('round', 'round3', turn, { 1 : hand1, 2 : hand2}), \
+        ('round', 'round4', river, { 1 : hand1, 2 : hand2}), \
+        ('showdown', river, {1 : hand1, 2 : hand2}), \
+        ('position', 1), \
+        ('blind_request', 1, 222, 735, 'big_and_dead'), \
+        ('wait_blind', 1), \
+        ('blind', 1, 222, 0), \
+        ('ante_request', 1, 111), \
+        ('ante', 1, 111), \
+        ('all-in', 1), \
+        ('call', 1, 411), \
+        ('check', 1), \
+        ('fold', 1), \
+        ('raise', 1, 888), \
+        ('canceled', 1, 10), \
+        ('rake', 7, { 1 : 7}), \
+        ('end', [1], [{ 'serial2share': { 1: 500 } }]), \
+        ('sitOut', 1), \
+        ('leave', [(1, 2), (2, 7)]), \
+        ('finish', 1), \
+        ('muck', (1,2)), \
+        ('rebuy', 1, 9999), \
+        ('unknown',) ]
+
+def convertHandHistoryToDict (hist):
+    dict = {}
+    for entry in hist:
+        key = entry[0]
+        dict[key] = entry[1:-1]
+    return dict
+exampleHandDict = convertHandHistoryToDict(exampleHand)
+print exampleHandDict
+
 class MockService:
 
     def __init__(self, settings):
@@ -77,6 +122,7 @@ class MockService:
         self.players = {}
         self.table1 = None
         self.table2 = None
+        self.testObject = None
 
     def getTable(self, gameId):
         if gameId == self.table1.game.id:
@@ -144,45 +190,19 @@ class MockService:
         if handId <= 0:
             return None
         else:
-            board = PokerCards() 
-            hand1 = PokerCards(['Qd', 'Ts'])
-            hand2 = PokerCards(['Kh', 'Kc'])
-            flop  = PokerCards(['Jd', 'Js', "Jc"])
-            turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
-            river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
-            return  [ \
-                        ('game', 1, 777, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}), \
-                        ('wait_for', 1, 'first_round'), \
-                        ('player_list', [1, 2]), \
-                        ('round', 'round1', board, { 1 : hand1, 2 : hand2}), \
-                        ('round', 'round2', flop, { 1 : hand1, 2 : hand2}), \
-                        ('round', 'round3', turn, { 1 : hand1, 2 : hand2}), \
-                        ('round', 'round4', river, { 1 : hand1, 2 : hand2}), \
-                        ('showdown', river, {1 : hand1, 2 : hand2}), \
-                        ('position', 1), \
-                        ('blind_request', 1, 222, 735, 'big_and_dead'), \
-                        ('wait_blind', 1), \
-                        ('blind', 1, 222, 0), \
-                        ('ante_request', 1, 111), \
-                        ('ante', 1, 111), \
-                        ('all-in', 1), \
-                        ('call', 1, 411), \
-                        ('check', 1), \
-                        ('fold', 1), \
-                        ('raise', 1, 888), \
-                        ('canceled', 1, 10), \
-                        ('rake', 7, { 1 : 7}), \
-                        ('end', [1], [{ 'serial2share': { 1: 500 } }]), \
-                        ('sitOut', 1), \
-                        ('leave', [(1, 2), (2, 7)]), \
-                        ('finish', 1), \
-                        ('muck', (1,2)), \
-                        ('rebuy', 1, 9999), \
-                        ('unknown',) ]
+            return exampleHand
 
     def saveHand(self, history, serial):
-            pass
+        if self.testObject:
+            historyDict = convertHandHistoryToDict(history)
+            for (action, fields) in historyDict.iteritems():
+                if action == "showdown":
+                    # syncDatabase() ignores showdown
+                    self.testObject.assertEqual(fields, (None,))
+                else:
+                    self.testObject.assertEqual(exampleHandDict[action], fields)
 
+    # FIXME: Next three functions should test validity of output as above
     def updatePlayerMoney(self, serial, gameId, amount):
             pass
 
@@ -695,6 +715,7 @@ class PokerTableTestCase(unittest.TestCase):
         for ii in [1, 2, 3, 4]:
             player[ii] = self.createPlayer(ii)
             self.table.readyToPlay(ii)
+        self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(777)
         self.table.syncDatabase()
 
