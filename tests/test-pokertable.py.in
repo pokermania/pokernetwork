@@ -378,10 +378,17 @@ class PokerTableTestCase(unittest.TestCase):
             player[ii] = self.createPlayer(ii)
         player[5] = self.createPlayer(5, False)
 
+        # people at table aren't obsrevers
+        self.assertEqual(False, self.table.isSerialObserver(1))
+
         # player5 can't sit because the table is full of 1-4...
         self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
+        # player5 still not an observer
+        self.assertEqual(False, self.table.isSerialObserver(5))
 
         self.assertEqual(True, self.table.joinPlayer(player[5], 5))
+        # player5 now an observer
+        self.assertEqual(True, self.table.isSerialObserver(5))
         #  ... but player5 decides to set all sorts of things that she can't
         #      because she's still just an observer.
         self.assertEqual(False, self.table.muckAccept(player[5], 5))
@@ -818,7 +825,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test18"
+    loader.methodPrefix = "test08"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

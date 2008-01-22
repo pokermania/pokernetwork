@@ -54,6 +54,8 @@
 	(MockService.getPlayerInfo): Wrote function.
 	(PokerTableTestCase.test19_serial2clientEmpty): Wrote function.
 	(PokerTableTestCase.test18_handReplay): Added rake check.
+	(PokerTableTestCase.test08_player_has_trouble_joining): Added
+	isSerialObserver calls.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
