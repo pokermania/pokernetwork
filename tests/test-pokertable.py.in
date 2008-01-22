@@ -179,6 +179,19 @@ class MockService:
                         ('muck', (1,2)), \
                         ('rebuy', 1, 9999), \
                         ('unknown',) ]
+
+    def saveHand(self, history, serial):
+            pass
+
+    def updatePlayerMoney(self, serial, gameId, amount):
+            pass
+
+    def updatePlayerRake(self, currencySerial, serial, rakeAmount):
+            pass
+
+    def resetBet(self, gameId):
+            pass
+
 class MockClient:
     def __init__(self, serial):
         self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
@@ -292,8 +305,8 @@ class PokerTableTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
-        service = MockService(settings)
-        self.table = pokertable.PokerTable(service, 101, 
+        self.service = MockService(settings)
+        self.table = pokertable.PokerTable(self.service, 101, 
                                            { 'name': "table1",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -302,7 +315,7 @@ class PokerTableTestCase(unittest.TestCase):
                                              'muck_timeout' : 1,
                                              'currency_serial': 0
                                              })
-        self.table2 = pokertable.PokerTable(service, 202, 
+        self.table2 = pokertable.PokerTable(self.service, 202, 
                                            { 'name': "table2",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -311,8 +324,8 @@ class PokerTableTestCase(unittest.TestCase):
                                              'muck_timeout' : 1,
                                              'currency_serial': 0
                                              })
-        service.table1 = self.table
-        service.table2 = self.table2
+        self.service.table1 = self.table
+        self.service.table2 = self.table2
         self.clients = {}
     # -------------------------------------------------------------------
     def tearDown(self):
@@ -676,6 +689,16 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.joinPlayer(p, 2))
         self.assertEquals(True, self.table.quitPlayer(p, 2))
     # -------------------------------------------------------------------
+    def test21_syncDatabase(self):
+        """Test syncing the Database back to the MockService"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+            self.table.readyToPlay(ii)
+        self.table.game.turn_history = self.service.loadHand(777)
+        self.table.syncDatabase()
+
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
@@ -717,8 +740,8 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
-        service = MockService(settings)
-        self.table = pokertable.PokerTable(service, 101, 
+        self.service = MockService(settings)
+        self.table = pokertable.PokerTable(self.service, 101, 
                                            { 'name': "table1",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -728,7 +751,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'transient' : True,
                                              'currency_serial': 0
                                              })
-        self.table2 = pokertable.PokerTable(service, 202, 
+        self.table2 = pokertable.PokerTable(self.service, 202, 
                                            { 'name': "table2",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -738,8 +761,8 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'transient' : True,
                                              'currency_serial': 0
                                              })
-        service.table1 = self.table
-        service.table2 = self.table2
+        self.service.table1 = self.table
+        self.service.table2 = self.table2
         self.clients = {}
 
     def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
@@ -842,7 +865,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test20"
+#    loader.methodPrefix = "test21"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

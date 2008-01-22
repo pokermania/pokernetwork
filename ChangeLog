@@ -57,6 +57,11 @@
 	(PokerTableTestCase.test08_player_has_trouble_joining): Added
 	isSerialObserver calls.
 	(PokerTableTestCase.test20altForNewClientAPI_quitting): Wrote function.
+	(MockService.saveHand): Wrote function.
+	(MockService.updatePlayerMoney): Wrote function.
+	(MockService.updatePlayerRake): Wrote function.
+	(MockService.resetBet): Wrote function.
+	(PokerTableTestCase.test21_syncDatabase): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
