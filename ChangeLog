@@ -50,6 +50,7 @@
 	(PokerTableTestCase.test08_player_has_trouble_joining): Added more
 	sit/seat tests.
 	(PokerTableTestCase.test08_2_brokenSeatFactory): Wrote function.
+	(Run): set environment variable here
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.

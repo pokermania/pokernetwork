@@ -800,6 +800,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test08"
+    os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))
