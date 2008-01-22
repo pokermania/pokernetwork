@@ -41,6 +41,9 @@
 	(PokerTableTestCase.test16_autoMuckTimeoutPolicy): Wrote function.
 	(PokerTableTestCase.test17_bogusTimeoutPolicy): Wrote function.
 	(PokerTableTestCase.test16a_resetTimeoutPolicy): Wrote function.
+	(MockService.loadHand): Wrote function.
+	(MockClient.lookForPacket): Changed to return packet found.
+	(PokerTableTestCase.test18_handReplay): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.

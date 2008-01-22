@@ -41,6 +41,7 @@ from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
+from pokerengine.pokercards import PokerCards
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" autodeal="yes" >
@@ -131,6 +132,41 @@ class MockService:
     def destroyTable(self, x):
         pass
 
+    def loadHand(self, handId):
+        # Only ever return the one hand; the only one this mock game ever had...
+        #  ... but only if they give a positive integer as a handId.
+        if handId <= 0:
+            return None
+        else:
+            board = PokerCards() 
+            hand1 = PokerCards(['Qd', 'Ts'])
+            hand2 = PokerCards(['Kh', 'Kc'])
+
+            return  [ \
+                        ('game', 1, 777, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}), \
+                        ('wait_for', 1, 'first_round'), \
+                        ('player_list', [1, 2]), \
+                        ('round', 'round1', board, { 1 : hand1, 2 : hand2}), \
+                        ('showdown', board, {1 : hand1, 2 : hand2}), \
+                        ('position', 1), \
+                        ('blind_request', 1, 222, 735, 'big_and_dead'), \
+                        ('wait_blind', 1), \
+                        ('blind', 1, 222, 0), \
+                        ('ante_request', 1, 111), \
+                        ('ante', 1, 111), \
+                        ('all-in', 1), \
+                        ('call', 1, 411), \
+                        ('check', 1), \
+                        ('fold', 1), \
+                        ('raise', 1, 888), \
+                        ('canceled', 1, 10), \
+                        ('end', [1], [{ 'serial2share': { 1: 500 } }]), \
+                        ('sitOut', 1), \
+                        ('leave', [(1, 2), (2, 7)]), \
+                        ('finish', 1), \
+                        ('muck', (1,2)), \
+                        ('rebuy', 1, 9999), \
+                        ('unknown',) ]
 class MockClient:
     def __init__(self, serial):
         self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
@@ -155,7 +191,7 @@ class MockClient:
     def lookForPacket(self, type):
         for packet in self.packets:
             if packet.type == type:
-                return True
+                return packet
         return False
 
     def message(self, message):
@@ -508,9 +544,73 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.update()
         return player.waitFor(PACKET_POKER_TIMEOUT_NOTICE)
     # -------------------------------------------------------------------
-    def test16a_resetTimeoutPolicy(self):
+    def test17a_resetTimeoutPolicy(self):
         """Set timeout policy back to the default"""
         self.table.timeout_policy = "sitOut"
+    # -------------------------------------------------------------------
+    def test18_handReplay(self):
+        """Test replay of hand from pokertable"""
+        player = self.createPlayer(1)
+
+        # First try a hand that doesn't exist
+        self.assertEqual(None, self.table.handReplay(player, 0))
+
+        def checkHandSerial(packet):
+            self.assertEqual(packet.hand_serial, 777)
+        def checkAmount(amount, value):
+            self.assertEqual(amount, value)
+        def checkAnteAmount(packet):
+            checkAmount(packet.amount, 111)
+        def checkBlindAmount(packet):
+            checkAmount(packet.amount, 222)
+        def checkCallAmount(packet):
+            checkAmount(packet.amount, 411)
+        def checkRaiseAmount(packet):
+            checkAmount(packet.amount, 888)
+        def checkRebuyAmount(packet):
+            checkAmount(packet.amount, 9999)
+        def checkCanceledAmount(packet):
+            checkAmount(packet.amount, 10)
+        def checkPosition(packet):
+            self.assertEqual(packet.position, 1)
+        def checkBlindRequest(packet):
+            self.assertEqual(packet.state, "big_and_dead")
+            checkBlindAmount(packet)
+        def checkPlayerMoney(packet):
+            self.assertEqual(True, packet.serial == 1 or packet.serial == 2)
+            if packet.serial == 1:
+                self.assertEqual(packet.amount, 7890)
+            else:
+                self.assertEqual(packet.amount, 1234)
+        def checkPlayerCards(packet):
+            self.assertEqual(True, packet.serial == 1 or packet.serial == 2)
+            if packet.serial == 1:
+                self.assertEqual(packet.cards, [23, 47])
+            else:
+                self.assertEqual(packet.cards, [11, 37])
+        def checkMuckSerials(packet):
+            self.assertEqual(packet.muckable_serials, (1, 2))
+
+        self.table.handReplay(player, 777)
+
+        checkHandSerial(player.lookForPacket(PACKET_POKER_START))
+        checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
+        checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
+        checkPosition(player.lookForPacket(PACKET_POKER_POSITION))
+        checkBlindRequest(player.lookForPacket(PACKET_POKER_BLIND_REQUEST))
+        checkBlindAmount(player.lookForPacket(PACKET_POKER_BLIND))
+        checkAnteAmount(player.lookForPacket(PACKET_POKER_ANTE_REQUEST))
+        checkAnteAmount(player.lookForPacket(PACKET_POKER_ANTE))
+        checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
+        player.lookForPacket(PACKET_POKER_CALL)
+        player.lookForPacket(PACKET_POKER_CHECK)
+        player.lookForPacket(PACKET_POKER_FOLD)
+        checkRaiseAmount(player.lookForPacket(PACKET_POKER_RAISE))
+        checkCanceledAmount(player.lookForPacket(PACKET_POKER_CANCELED))
+        player.lookForPacket(PACKET_POKER_SIT_OUT)
+        checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
+        checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
+
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
@@ -678,7 +778,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))
