@@ -482,6 +482,36 @@ class PokerTableTestCase(unittest.TestCase):
 
         return expectPlayerDeferred
     # -------------------------------------------------------------------
+    def test16_autoMuckTimeoutPolicy(self):
+        """Make sure other timeout policies function properly"""
+        player = self.createPlayer(1)
+        player2 = self.createPlayer(2)
+        # Sit out policy is the default
+        self.assertEqual(self.table.timeout_policy,  "sitOut")
+        self.table.timeout_policy =  "fold"
+
+        expectPlayerAutoFold = player2.waitFor(PACKET_POKER_AUTO_FOLD)
+        def checkReturnPacket(packet):
+            # Don't assert which serial we get here, as it could be from
+            # either player
+            self.assertEqual(packet.game_id, 101)
+        expectPlayerAutoFold.addCallback(checkReturnPacket)
+
+        self.table.update()
+
+        return expectPlayerAutoFold
+    # -------------------------------------------------------------------
+    def test17_bogusTimeoutPolicy(self):
+        self.table.timeout_policy =  "muck"
+        player = self.createPlayer(1)
+        player2 = self.createPlayer(2)
+        self.table.update()
+        return player.waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+    # -------------------------------------------------------------------
+    def test16a_resetTimeoutPolicy(self):
+        """Set timeout policy back to the default"""
+        self.table.timeout_policy = "sitOut"
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)

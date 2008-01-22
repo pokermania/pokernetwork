@@ -38,6 +38,9 @@
 	argument.
 	(PokerTableTestCase.test15_moveTo): Added check for return
 	packet's contents.
+	(PokerTableTestCase.test16_autoMuckTimeoutPolicy): Wrote function.
+	(PokerTableTestCase.test17_bogusTimeoutPolicy): Wrote function.
+	(PokerTableTestCase.test16a_resetTimeoutPolicy): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
