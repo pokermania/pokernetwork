@@ -141,13 +141,18 @@ class MockService:
             board = PokerCards() 
             hand1 = PokerCards(['Qd', 'Ts'])
             hand2 = PokerCards(['Kh', 'Kc'])
-
+            flop  = PokerCards(['Jd', 'Js', "Jc"])
+            turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
+            river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
             return  [ \
                         ('game', 1, 777, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}), \
                         ('wait_for', 1, 'first_round'), \
                         ('player_list', [1, 2]), \
                         ('round', 'round1', board, { 1 : hand1, 2 : hand2}), \
-                        ('showdown', board, {1 : hand1, 2 : hand2}), \
+                        ('round', 'round2', flop, { 1 : hand1, 2 : hand2}), \
+                        ('round', 'round3', turn, { 1 : hand1, 2 : hand2}), \
+                        ('round', 'round4', river, { 1 : hand1, 2 : hand2}), \
+                        ('showdown', river, {1 : hand1, 2 : hand2}), \
                         ('position', 1), \
                         ('blind_request', 1, 222, 735, 'big_and_dead'), \
                         ('wait_blind', 1), \
