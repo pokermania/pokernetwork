@@ -171,6 +171,7 @@ class MockService:
                         ('fold', 1), \
                         ('raise', 1, 888), \
                         ('canceled', 1, 10), \
+                        ('rake', 7, { 1 : 7}), \
                         ('end', [1], [{ 'serial2share': { 1: 500 } }]), \
                         ('sitOut', 1), \
                         ('leave', [(1, 2), (2, 7)]), \
@@ -598,6 +599,8 @@ class PokerTableTestCase(unittest.TestCase):
             checkAmount(packet.amount, 9999)
         def checkCanceledAmount(packet):
             checkAmount(packet.amount, 10)
+        def checkRakeAmount(packet):
+            self.assertEqual(packet.value, 7)
         def checkPosition(packet):
             self.assertEqual(packet.position, 1)
         def checkBlindRequest(packet):
@@ -634,10 +637,10 @@ class PokerTableTestCase(unittest.TestCase):
         player.lookForPacket(PACKET_POKER_FOLD)
         checkRaiseAmount(player.lookForPacket(PACKET_POKER_RAISE))
         checkCanceledAmount(player.lookForPacket(PACKET_POKER_CANCELED))
+        checkRakeAmount(player.lookForPacket(PACKET_POKER_RAKE))
         player.lookForPacket(PACKET_POKER_SIT_OUT)
         checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
         checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
-
     # -------------------------------------------------------------------
     def test19_serial2clientEmpty(self):
         """Test replay of hand from pokertable"""
@@ -811,7 +814,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test19"
+#    loader.methodPrefix = "test20"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
