@@ -318,8 +318,8 @@ class PokerTableTestCase(unittest.TestCase):
             table = self.table
         client = clientClass(serial)
         self.clients[serial] = client
-        table.joinPlayer(client, serial)
         if getReadyToPlay:
+            self.assertEqual(True, table.joinPlayer(client, serial))
             self.assertEqual(True, table.seatPlayer(client, serial, -1))
             self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
             self.table.sitPlayer(client, serial)
@@ -374,11 +374,13 @@ class PokerTableTestCase(unittest.TestCase):
         # player5 can't sit because the table is full of 1-4...
         self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
 
+        self.assertEqual(True, self.table.joinPlayer(player[5], 5))
         #  ... but player5 decides to set all sorts of things that she can't
         #      because she's still just an observer.
         self.assertEqual(False, self.table.muckAccept(player[5], 5))
         self.assertEqual(False, self.table.muckDeny(player[5], 5))
         self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(False, self.table.buyInPlayer(player[5], 0))
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 30))
 
         # player5 cannot sit out either because she isn't joined yet.
@@ -388,14 +390,22 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.leavePlayer(player[1], 1))
 
         # ... which allows player5 to finally join legitimately and change
-        # her settings.  However, she tries to sit out before getting the
-        # seat, rebuy before even buying, and then buys in for nothing,
-        # and thus must rebuy
+        # her settings.  However, she tries to sit in everyone else's
+        # seat, she tries to sit out before getting the seat, rebuy before
+        # even buying, and then buys in for nothing, and thus must rebuy
+
+        for p in self.table.game.playersAll():
+            self.assertEqual(False, self.table.seatPlayer(player[5], 5, p.seat))
+
+        self.assertEqual(False, self.table.sitPlayer(player[5], 5))
 
         self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 2))
 
         self.assertEqual(True, self.table.buyInPlayer(player[5], 0))
+
+        # ... but cannot sit down again
+        self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
 
         # I wonder if these should really return True rather than None?  -- bkuhn
         self.assertEqual(None, self.table.muckAccept(player[5], 5))
@@ -404,6 +414,12 @@ class PokerTableTestCase(unittest.TestCase):
 
         self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
                                               self.table.game.maxBuyIn()))
+    # -------------------------------------------------------------------
+    def test08_2_brokenSeatFactory(self):
+        player = self.createPlayer(1)
+        self.table.factory.seatPlayer = lambda (a, b, c): False
+        self.assertEqual(False, self.table.seatPlayer(player, 1, -1))
+
     # -------------------------------------------------------------------
     def test08_5_kick(self):
         """Test that kick works correctly"""
@@ -783,7 +799,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))

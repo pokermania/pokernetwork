@@ -45,6 +45,11 @@
 	(MockClient.lookForPacket): Changed to return packet found.
 	(PokerTableTestCase.test18_handReplay): Wrote function.
 	(MockService.loadHand): Added extra rounds to cover board cache.
+	(PokerTableTestCase.createPlayer): Don't join automatically unless
+	getReadyToPlay set.
+	(PokerTableTestCase.test08_player_has_trouble_joining): Added more
+	sit/seat tests.
+	(PokerTableTestCase.test08_2_brokenSeatFactory): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
