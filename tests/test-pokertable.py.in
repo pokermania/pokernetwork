@@ -651,13 +651,30 @@ class PokerTableTestCase(unittest.TestCase):
             player.lookForPacket(PACKET_POKER_SIT_OUT)
             checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
             checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
-
     # -------------------------------------------------------------------
     def test19_serial2clientEmpty(self):
         """Test replay of hand from pokertable"""
         self.assertEqual("MockServiceName1", self.table.getName(1))
         d = self.table.getPlayerInfo(1)
         self.failUnlessSubstring("MockServicePlayerInfo", d.name)
+    # -------------------------------------------------------------------
+    def test20_quitting(self):
+        p = self.createPlayer(1)
+        self.assertEquals(True, self.table.quitPlayer(p, 1))
+        p = self.createPlayer(2, False, clientClass=MockClientWithTableDict)
+        self.assertEqual(True, self.table.joinPlayer(p, 2))
+        p.tables[self.table.game.id] = self.table
+        self.assertEquals(True, self.table.quitPlayer(p, 2))
+    # -------------------------------------------------------------------
+    def test20altForNewClientAPI_quitting(self):
+        # This is disabled until the API changes
+        return True
+
+        p = self.createPlayer(1)
+        self.assertEquals(True, self.table.quitPlayer(p, 1))
+        p = self.createPlayer(2, False, clientClass=MockClientWithRemoveTable)
+        self.assertEqual(True, self.table.joinPlayer(p, 2))
+        self.assertEquals(True, self.table.quitPlayer(p, 2))
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
@@ -825,7 +842,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test08"
+    loader.methodPrefix = "test20"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
