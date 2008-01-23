@@ -70,6 +70,7 @@ hand2 = PokerCards(['Kh', 'Kc'])
 flop  = PokerCards(['Jd', 'Js', "Jc"])
 turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
 river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
+
 exampleHand =  [ \
     ('game', 1, 777, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}), \
         ('wait_for', 1, 'first_round'), \
@@ -107,7 +108,6 @@ def convertHandHistoryToDict (hist):
         dict[key] = entry[1:-1]
     return dict
 exampleHandDict = convertHandHistoryToDict(exampleHand)
-print exampleHandDict
 
 class MockService:
 
@@ -202,15 +202,21 @@ class MockService:
                 else:
                     self.testObject.assertEqual(exampleHandDict[action], fields)
 
-    # FIXME: Next three functions should test validity of output as above
     def updatePlayerMoney(self, serial, gameId, amount):
-            pass
+        if self.testObject:
+            self.testObject.assertEqual(amount,  -1122)
+            self.testObject.assertEqual(gameId,  101)
+            self.testObject.assertEqual(serial,  1)
+
 
     def updatePlayerRake(self, currencySerial, serial, rakeAmount):
-            pass
+        if self.testObject:
+            self.testObject.assertEqual(rakeAmount,  7)
+            self.testObject.assertEqual(serial,  1)
 
     def resetBet(self, gameId):
-            pass
+        if self.testObject:
+            self.testObject.assertEqual(gameId,  101)
 
 class MockClient:
     def __init__(self, serial):
