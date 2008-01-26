@@ -4,6 +4,11 @@
 	(PokerTableTestCase.test23_broadcastingPlayerCards): Wrote function.
 	(PokerTableTestCase.test22_possibleObserverLoggedIn): Modified to
 	fully cover pokertable.possibleObserverLoggedIn
+	(PokerTableTestCaseTransient.setUp): Made transient table tests a
+	tourney one too.
+	(PokerTableTestCase.test21_syncDatabase): Added a tourneyEndTurn
+	call here as well.
+	(MockService.tourneyEndTurn): Wrote function.
 
 2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 

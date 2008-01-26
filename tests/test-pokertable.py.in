@@ -214,6 +214,11 @@ class MockService:
             self.testObject.assertEqual(rakeAmount,  7)
             self.testObject.assertEqual(serial,  1)
 
+    def tourneyEndTurn(self, tourney, game_id):
+        if self.testObject:
+            self.testObject.assertEqual(game_id,  101)
+            self.testObject.assertEqual(tourney,  'My Old Sit and Go')
+
     def resetBet(self, gameId):
         if self.testObject:
             self.testObject.assertEqual(gameId,  101)
@@ -724,6 +729,8 @@ class PokerTableTestCase(unittest.TestCase):
         self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(777)
         self.table.syncDatabase()
+        self.table.tourneyEndTurn()
+
     # -------------------------------------------------------------------
     def test22_possibleObserverLoggedIn(self):
         """Test possibleObserverLoggedIn"""
@@ -929,7 +936,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test22"
+#    loader.methodPrefix = "test21"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
