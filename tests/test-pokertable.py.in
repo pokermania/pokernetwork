@@ -44,7 +44,7 @@ from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
 from pokerengine.pokercards import PokerCards
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3" autodeal="yes" >
+<server verbose="4" autodeal="yes" >
   <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
@@ -52,7 +52,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 settings_stripped_deck_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3" autodeal="yes" >
+<server verbose="4" autodeal="yes" >
   <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
   <decks>
@@ -937,7 +937,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test21"
-    os.environ['VERBOSE_T'] = '3'
+    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))

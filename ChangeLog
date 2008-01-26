@@ -9,6 +9,7 @@
 	(PokerTableTestCase.test21_syncDatabase): Added a tourneyEndTurn
 	call here as well.
 	(MockService.tourneyEndTurn): Wrote function.
+	Set verbose to 4 throughout.
 
 2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 
