@@ -724,7 +724,36 @@ class PokerTableTestCase(unittest.TestCase):
         self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(777)
         self.table.syncDatabase()
-
+    # -------------------------------------------------------------------
+    def test22_possibleObserverLoggedIn(self):
+        """Test possibleObserverLoggedIn"""
+        p = self.createPlayer(1)
+        self.table.disconnectPlayer(p, 1)
+        self.table.possibleObserverLoggedIn(p, 1)
+    # -------------------------------------------------------------------
+    def test23_broadcastingPlayerCards(self):
+        """Test to make sure PokerPlayerCards are broadcasted correctly.  This
+        test is not particularly good, in my view, because it was written
+        to target certain lines in private2public directly and may not
+        actually be an adequate test of actual functionality."""
+        p = self.createPlayer(1)
+        p2 = self.createPlayer(2)
+        c1 = PokerCards([ 'As', 'Ah' ])
+        c1.allHidden()
+        self.table.game.getPlayer(2).hand.set(c1)
+        self.table.broadcast([ PacketPokerPlayerCards(game_id = self.table.game.id, serial = 2,
+                                                      cards = self.table.game.getPlayer(2).hand.toRawList())])
+        def checkReturnPacketBySerial(packet, serial):
+            self.assertEqual(packet.serial, 2)
+            if serial == 2:
+                hand_expected = [243, 204]
+            else:
+                hand_expected = [255, 255]
+            self.assertEqual(packet.cards, hand_expected)
+            self.assertEqual(packet.game_id, 101)
+        
+        checkReturnPacketBySerial(p.lookForPacket(PACKET_POKER_PLAYER_CARDS), 1)
+        checkReturnPacketBySerial(p2.lookForPacket(PACKET_POKER_PLAYER_CARDS), 2)
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
@@ -892,7 +921,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test21"
+    loader.methodPrefix = "test22"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

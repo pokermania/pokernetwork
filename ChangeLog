@@ -1,3 +1,15 @@
+2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokertable.py.in
+	(PokerTableTestCase.test23_broadcastingPlayerCards): Wrote function.
+
+2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokertable.py.in (MockService.updatePlayerMoney):
+	Made actual tests in function.
+	(MockService.updatePlayerRake): Made actual tests in function.
+	(MockService.resetBet): Made actual tests in function.
+
 2008-01-21  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokertable.py.in
@@ -62,6 +74,7 @@
 	(MockService.updatePlayerRake): Wrote function.
 	(MockService.resetBet): Wrote function.
 	(PokerTableTestCase.test21_syncDatabase): Wrote function.
+	(convertHandHistoryToDict): Wrote function.
 
 	* pokernetwork/pokertable.py (PokerTable.destroy): Added FIXME note.
 	(PokerTable.destroyPlayer): Added FIXME note.
