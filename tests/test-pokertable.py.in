@@ -31,6 +31,9 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
 
+from random import seed, randint
+import copy
+
 twisted.internet.base.DelayedCall.debug = True
 
 from tests.testmessages import silence_all_messages
@@ -43,6 +46,10 @@ from pokernetwork.pokerpackets import *
 from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
 from pokerengine.pokercards import PokerCards
 
+global table1ID
+global table2ID
+table1ID = 100
+table2ID = 200
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4" autodeal="yes" >
   <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
@@ -72,7 +79,6 @@ turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
 river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
 
 exampleHand =  [ \
-    ('game', 1, 777, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}), \
         ('wait_for', 1, 'first_round'), \
         ('player_list', [1, 2]), \
         ('round', 'round1', board, { 1 : hand1, 2 : hand2}), \
@@ -107,7 +113,6 @@ def convertHandHistoryToDict (hist):
         key = entry[0]
         dict[key] = entry[1:-1]
     return dict
-exampleHandDict = convertHandHistoryToDict(exampleHand)
 
 class MockService:
 
@@ -118,6 +123,7 @@ class MockService:
         self.simultaneous = 4
         self.shutting_down = False
         self.hand_serial = 0
+        self.hands = {}
         self.chat = False
         self.players = {}
         self.table1 = None
@@ -190,22 +196,29 @@ class MockService:
         if handId <= 0:
             return None
         else:
-            return exampleHand
+            l = copy.deepcopy(exampleHand)
+            l.insert(0, ('game', 1, handId, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}))
+            self.hands[handId] = convertHandHistoryToDict(l)
+            print "Loading %d" % handId
+            print l
+            return l
 
     def saveHand(self, history, serial):
         if self.testObject:
             historyDict = convertHandHistoryToDict(history)
+            handId = historyDict['game'][1]
+            origDict = self.hands[handId]
             for (action, fields) in historyDict.iteritems():
                 if action == "showdown":
                     # syncDatabase() ignores showdown
                     self.testObject.assertEqual(fields, (None,))
                 else:
-                    self.testObject.assertEqual(exampleHandDict[action], fields)
+                    self.testObject.assertEqual(origDict[action], fields)
 
     def updatePlayerMoney(self, serial, gameId, amount):
         if self.testObject:
             self.testObject.assertEqual(amount,  -1122)
-            self.testObject.assertEqual(gameId,  101)
+            self.testObject.assertEqual(gameId,  self.testObject.table1_value)
             self.testObject.assertEqual(serial,  1)
 
 
@@ -216,12 +229,12 @@ class MockService:
 
     def tourneyEndTurn(self, tourney, game_id):
         if self.testObject:
-            self.testObject.assertEqual(game_id,  101)
+            self.testObject.assertEqual(game_id,  self.testObject.table1_value)
             self.testObject.assertEqual(tourney,  'My Old Sit and Go')
 
     def resetBet(self, gameId):
         if self.testObject:
-            self.testObject.assertEqual(gameId,  101)
+            self.testObject.assertEqual(gameId,  self.testObject.table1_value)
 
 class MockClient:
     def __init__(self, serial):
@@ -333,11 +346,18 @@ class MockClientWithRemoveTable(MockClient):
 class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def setUp(self, settingsXmlStr=settings_xml):
+        global table1ID
+        global table2ID
+        table1ID = table1ID + 1
+        table2ID += 1
+        self.table1_value = table1ID
+        self.table2_value = table2ID
+
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
         self.service = MockService(settings)
-        self.table = pokertable.PokerTable(self.service, 101, 
+        self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -346,7 +366,7 @@ class PokerTableTestCase(unittest.TestCase):
                                              'muck_timeout' : 1,
                                              'currency_serial': 0
                                              })
-        self.table2 = pokertable.PokerTable(self.service, 202, 
+        self.table2 = pokertable.PokerTable(self.service, table2ID, 
                                            { 'name': "table2",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -363,6 +383,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.cancelDealTimeout()
         self.table.cancelPlayerTimers()
         del self.table
+        del self.service
 
     def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
         if table == None:
@@ -526,7 +547,8 @@ class PokerTableTestCase(unittest.TestCase):
     def test11_packet(self):
         """Test toPacket"""
         packetStr = "%s" % self.table.toPacket()
-        for str in [ 'id = 101', 'name = table1', 'variant = holdem', \
+        idstr = 'id = %d' % self.table.game.id
+        for str in [ idstr, 'name = table1', 'variant = holdem', \
                      'betting_structure = 2-4-limit', 'seats = 4', \
                      'average_pot = 0', 'hands_per_hour = 0', \
                      'percent_flop = 0', 'players = 0', 'observers = 0', \
@@ -590,7 +612,7 @@ class PokerTableTestCase(unittest.TestCase):
         expectPlayerDeferred = otherTablePlayer.waitFor(PACKET_POKER_PLAYER_ARRIVE)
         def checkReturnPacket(packet):
             self.assertEqual(packet.name, "Player1")
-            self.assertEqual(packet.game_id, 202)
+            self.assertEqual(packet.game_id, self.table2_value)
         expectPlayerDeferred.addCallback(checkReturnPacket)
 
         self.table.movePlayer(player, 1, self.table2.game.id)
@@ -609,7 +631,7 @@ class PokerTableTestCase(unittest.TestCase):
         def checkReturnPacket(packet):
             # Don't assert which serial we get here, as it could be from
             # either player
-            self.assertEqual(packet.game_id, 101)
+            self.assertEqual(packet.game_id, self.table1_value)
         expectPlayerAutoFold.addCallback(checkReturnPacket)
 
         self.table.update()
@@ -634,8 +656,9 @@ class PokerTableTestCase(unittest.TestCase):
         # First try a hand that doesn't exist
         self.assertEqual(None, self.table.handReplay(player1, 0))
 
+        myHandId = randint(777, 79825)
         def checkHandSerial(packet):
-            self.assertEqual(packet.hand_serial, 777)
+            self.assertEqual(packet.hand_serial, myHandId)
         def checkAmount(amount, value):
             self.assertEqual(amount, value)
         def checkAnteAmount(packet):
@@ -676,7 +699,7 @@ class PokerTableTestCase(unittest.TestCase):
         player2 = self.createPlayer(2, False)
 
         for player in (player1, player2):
-            self.table.handReplay(player, 777)
+            self.table.handReplay(player, myHandId)
             checkHandSerial(player.lookForPacket(PACKET_POKER_START))
             checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
             checkPlayerCards(player.lookForPacket(PACKET_POKER_PLAYER_CARDS))
@@ -727,9 +750,24 @@ class PokerTableTestCase(unittest.TestCase):
             player[ii] = self.createPlayer(ii)
             self.table.readyToPlay(ii)
         self.service.testObject = self
-        self.table.game.turn_history = self.service.loadHand(777)
-        self.table.syncDatabase()
-        self.table.tourneyEndTurn()
+        self.table.game.turn_history = self.service.loadHand(randint(777, 8975))
+#        self.table.syncDatabase()
+#        self.table.tourneyEndTurn()
+        self.table.update()
+        l = []
+#        for ii in [1, 2]:
+#            l.append(player[ii].waitFor(PACKET_POKER_MUCK_REQUEST))
+        return player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+
+#        return defer.DeferredList(l)
+
+#         reactor.iterate()
+#         pending = reactor.getDelayedCalls()
+#         if pending:
+#             for p in pending:
+#                 if p.active():
+#                     print "still pending:" + str(p)
+#                     p.cancel()
 
     # -------------------------------------------------------------------
     def test22_possibleObserverLoggedIn(self):
@@ -763,13 +801,14 @@ class PokerTableTestCase(unittest.TestCase):
             else:
                 hand_expected = [255, 255]
             self.assertEqual(packet.cards, hand_expected)
-            self.assertEqual(packet.game_id, 101)
+            self.assertEqual(packet.game_id, self.table1_value)
         
         checkReturnPacketBySerial(p.lookForPacket(PACKET_POKER_PLAYER_CARDS), 1)
         checkReturnPacketBySerial(p2.lookForPacket(PACKET_POKER_PLAYER_CARDS), 2)
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
+        return True
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
@@ -806,11 +845,18 @@ class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
 #  when the table is transient.
 class PokerTableTestCaseTransient(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_xml):
+        global table1ID
+        global table2ID
+        table1ID = table1ID + 1
+        table2ID += 1
+        self.table1_value = table1ID
+        self.table2_value = table2ID
+
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
         self.service = MockService(settings)
-        self.table = pokertable.PokerTable(self.service, 101, 
+        self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -821,7 +867,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'tourney' : 'My Old Sit and Go',
                                              'currency_serial': 0
                                              })
-        self.table2 = pokertable.PokerTable(self.service, 202, 
+        self.table2 = pokertable.PokerTable(self.service, table2ID, 
                                            { 'name': "table2",
                                              'variant': "holdem",
                                              'betting_structure': "2-4-limit",
@@ -935,6 +981,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
 # -------------------------------------------------------------------
 def Run():
+    seed(time.time())
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test21"
     os.environ['VERBOSE_T'] = '4'

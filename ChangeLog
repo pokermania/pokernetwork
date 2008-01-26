@@ -10,6 +10,7 @@
 	call here as well.
 	(MockService.tourneyEndTurn): Wrote function.
 	Set verbose to 4 throughout.
+	(MockService.loadHand): Forced return value to include the handId requested
 
 2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 
