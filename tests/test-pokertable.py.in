@@ -729,7 +729,13 @@ class PokerTableTestCase(unittest.TestCase):
         """Test possibleObserverLoggedIn"""
         p = self.createPlayer(1)
         self.table.disconnectPlayer(p, 1)
+        p2 = self.createPlayer(2)
+        # Player 1 is already at the table, so this should be meaningless:
         self.table.possibleObserverLoggedIn(p, 1)
+        # Player 2's object has been "lost", s owe created
+        p2_reconnected = self.createPlayer(3, getReadyToPlay=False) 
+        self.table.joinPlayer(p2_reconnected, 3)
+        self.table.possibleObserverLoggedIn(p2_reconnected, 2)
     # -------------------------------------------------------------------
     def test23_broadcastingPlayerCards(self):
         """Test to make sure PokerPlayerCards are broadcasted correctly.  This
@@ -921,7 +927,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 # -------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test22"
+#    loader.methodPrefix = "test22"
     os.environ['VERBOSE_T'] = '3'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

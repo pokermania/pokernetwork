@@ -2,6 +2,8 @@
 
 	* tests/test-pokertable.py.in
 	(PokerTableTestCase.test23_broadcastingPlayerCards): Wrote function.
+	(PokerTableTestCase.test22_possibleObserverLoggedIn): Modified to
+	fully cover pokertable.possibleObserverLoggedIn
 
 2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 
