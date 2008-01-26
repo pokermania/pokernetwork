@@ -811,6 +811,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
                                              'transient' : True,
+                                             'tourney' : 'My Old Sit and Go',
                                              'currency_serial': 0
                                              })
         self.table2 = pokertable.PokerTable(self.service, 202, 
@@ -821,6 +822,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
                                              'transient' : True,
+                                             'tourney' : 'My Old Sit and Go',
                                              'currency_serial': 0
                                              })
         self.service.table1 = self.table
