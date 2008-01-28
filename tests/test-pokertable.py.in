@@ -359,6 +359,10 @@ class MockClient:
                 self.outfit = None
         return MockPlayerInfo(self)
 # --------------------------------------------------------------------------------
+class MockClientBot(MockClient):
+    def getName(self):
+        return "BOT%d" % self.serial
+# --------------------------------------------------------------------------------
 class MockClientWithTableDict(MockClient):
     def __init__(self, serial):
         self.tables = {}
@@ -427,12 +431,24 @@ class PokerTableTestCase(unittest.TestCase):
             self.table.sitPlayer(client, serial)
         return client
     # -------------------------------------------------------------------
+    def createBot(self, serial, getReadyToPlay=True, clientClass=MockClientBot, table=None):
+        return self.createPlayer(serial, getReadyToPlay, clientClass, table)
+    # -------------------------------------------------------------------
     def test01_autodeal(self):
         self.createPlayer(1)
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
         return defer.DeferredList((self.clients[1].waitFor(PACKET_POKER_START),
                                    self.clients[2].waitFor(PACKET_POKER_START)))
+    # -------------------------------------------------------------------
+    def test01_5_autodealWithBots(self):
+        """Test that autodeal won't happen when it's all bots sitting down.  I
+        wish there was a packet we could catch here to confirm, but I
+        can't even do a raise_if_packet because none are coming."""
+        self.createBot(1)
+        self.createBot(2)
+        self.createBot(3)
+        self.assertEquals(None, self.table.scheduleAutoDeal())
     # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
@@ -1103,7 +1119,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test13"
+#    loader.methodPrefix = "test01"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
