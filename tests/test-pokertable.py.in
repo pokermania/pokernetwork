@@ -453,6 +453,13 @@ class PokerTableTestCase(unittest.TestCase):
         self.createBot(3)
         self.assertEquals(None, self.table.scheduleAutoDeal())
     # -------------------------------------------------------------------
+    def test01_7_autodealShutDown(self):
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.service.shutting_down = True
+        self.assertEquals(None, self.table.scheduleAutoDeal())
+
+    # -------------------------------------------------------------------
 #     def test01_7_testClientsBogusPokerProcessingHand(self):
 #         """Test specific situation in autodeal when poker clients send a Processing Hand before a Ready To Play"""
 #         player = {}
@@ -1202,7 +1209,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test27"
+#    loader.methodPrefix = "test01"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

@@ -39,6 +39,7 @@
 	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test27_buyinFailures):
 	Wrote function.
 	(PokerTableTestCase.test27_buyinFailures): Wrote function.
+	(PokerTableTestCase.test01_7_autodealShutDown): Wrote function.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 
