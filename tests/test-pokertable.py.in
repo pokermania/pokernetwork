@@ -860,6 +860,8 @@ class PokerTableTestCase(unittest.TestCase):
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
+         # Make sure we can't update once table is destroyed.
+        self.assertEquals(None, self.table.update())
         return d
     # -------------------------------------------------------------------
     def test99altForNewClientAPI_destroy_table(self):
@@ -1119,7 +1121,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
+#    loader.methodPrefix = "test99"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
@@ -1140,7 +1142,3 @@ if __name__ == '__main__':
 # Local Variables:
 # compile-command: "( cd .. ; ./config.status tests/test-pokertable.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py' TESTS='coverage-reset test-pokertable.py coverage-report' check )"
 # End:
-
-
-
-
