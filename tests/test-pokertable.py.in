@@ -450,6 +450,15 @@ class PokerTableTestCase(unittest.TestCase):
         self.createBot(3)
         self.assertEquals(None, self.table.scheduleAutoDeal())
     # -------------------------------------------------------------------
+#     def test01_7_testClientsBogusPokerProcessingHand(self):
+#         """Test specific situation in autodeal when poker clients send a Processing Hand before a Ready To Play"""
+#         player = {}
+#         for ii in [1, 2, 3, 4]:
+#             player[ii] = self.createPlayer(ii)
+#         player[1].sendPacket(PacketPokerProcessingHand())
+#         player[1].sendPacket(PacketPokerReadyToPlay())
+#         self.table.scheduleAutoDeal()
+    # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
         self.table.processingHand(1)
@@ -1121,7 +1130,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test99"
+#    loader.methodPrefix = "test01"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
