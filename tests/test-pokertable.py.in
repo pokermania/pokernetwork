@@ -74,9 +74,12 @@ settings_stripped_deck_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 board = PokerCards() 
 hand1 = PokerCards(['Qd', 'Ts'])
 hand2 = PokerCards(['Kh', 'Kc'])
+hand1_extra_river = PokerCards(['Qd', 'Ts', '9c'])
+hand2_extra_river = PokerCards(['Qd', 'Ts', '9h'])
 flop  = PokerCards(['Jd', 'Js', "Jc"])
 turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
 river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
+river_extra_river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad', '9d'])
 
 exampleHand =  [ \
         ('wait_for', 1, 'first_round'), \
@@ -85,7 +88,12 @@ exampleHand =  [ \
         ('round', 'round2', flop, { 1 : hand1, 2 : hand2}), \
         ('round', 'round3', turn, { 1 : hand1, 2 : hand2}), \
         ('round', 'round4', river, { 1 : hand1, 2 : hand2}), \
+# Round 5 doesn't changed the board to test certain code in
+# compressedHistory: it expects that if you haven't changed the board in a
+# new round, the history gives you "None"
+        ('round', 'round5', river, { 1 : hand1, 2 : hand2}), \
         ('showdown', river, {1 : hand1, 2 : hand2}), \
+        ('showdown', river_extra_river, {1 : hand1_extra_river, 2 : hand2_extra_river}), \
         ('position', 1), \
         ('blind_request', 1, 222, 735, 'big_and_dead'), \
         ('wait_blind', 1), \
@@ -100,7 +108,7 @@ exampleHand =  [ \
         ('fold', 1), \
         ('raise', 1, 888), \
 # Note: 3 appears first here to test something appearing first as a raise.
-        ('raise', 3, 976), \
+        ('raise', 10, 976), \
         ('canceled', 4, 10), \
         ('rake', 7, { 1 : 7}), \
         ('end', [8, 1], [{ 'serial2share': { 8: 888, 1: 233 } }]), \
@@ -201,7 +209,7 @@ class MockService:
             return None
         else:
             l = copy.deepcopy(exampleHand)
-            l.insert(0, ('game', 1, handId, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}))
+            l.insert(0, ('game', 1, handId, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234, 'values' : ''}))
             self.hands[handId] = convertHandHistoryToDict(l)
             return l
 
@@ -212,17 +220,23 @@ class MockService:
             origDict = self.hands[handId]
             for (action, fields) in historyDict.iteritems():
                 if action == "showdown":
-                    # syncDatabase() ignores showdown
-                    self.testObject.assertEqual(fields, (None,))
+                    self.testObject.failUnless(fields == (None,) or fields == (PokerCards([34, 48, 35, 34, 25, 20]),))
+                elif action == "round" and fields[0] == "round5":
+                    self.testObject.assertEqual(fields, ('round5', None,))
                 else:
                     self.testObject.assertEqual(origDict[action], fields)
 
     def updatePlayerMoney(self, serial, gameId, amount):
+        # Most of this function matches up with the false hand history above
+        #  Compare it to that when figuring out where these numbers come from,
+        #  except for serial 3, which is based on the ante he makes in test21
         if self.testObject:
             self.testObject.assertEqual(gameId,  self.testObject.table1_value)
             if serial == 1:
                 self.testObject.assertEqual(amount,  -1399)
             elif serial == 3:
+                self.testObject.assertEqual(amount,  -100)
+            elif serial == 10:
                 self.testObject.assertEqual(amount,  -976)
             elif serial == 4:
                 self.testObject.assertEqual(amount,  10)
@@ -567,11 +581,18 @@ class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def test10_info_and_chat(self):
         """Test player discussions and info"""
+        p = {}
         for ii in [1, 2, 3, 4]:
-            self.createPlayer(ii)
+            p[ii] = self.createPlayer(ii)
         d = self.table.getPlayerInfo(2)
         self.failUnlessSubstring("Player2", d.name)
         self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
+        x = p[ii].waitFor(PACKET_POKER_CHAT)
+        def chatCatch(packet):
+            self.assertEqual(serial, 1)
+            self.assertEqual(serial, "Hi, I am the One.")
+        x.callback(chatCatch)
+        return x
     # -------------------------------------------------------------------
     def test11_packet(self):
         """Test toPacket"""
@@ -591,6 +612,7 @@ class PokerTableTestCase(unittest.TestCase):
         for ii in [1, 2, 3, 4]:
             player[ii] = self.createPlayer(ii)
         self.table.update()
+
         return defer.DeferredList((player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
                                    player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
                                    player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
@@ -786,9 +808,6 @@ class PokerTableTestCase(unittest.TestCase):
 #        self.table.syncDatabase()
 #        self.table.tourneyEndTurn()
         self.table.update()
-        l = []
-#        for ii in [1, 2]:
-#            l.append(player[ii].waitFor(PACKET_POKER_MUCK_REQUEST))
         return player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
 
 #        return defer.DeferredList(l)
@@ -1014,7 +1033,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test21"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
@@ -1035,3 +1054,7 @@ if __name__ == '__main__':
 # Local Variables:
 # compile-command: "( cd .. ; ./config.status tests/test-pokertable.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py' TESTS='coverage-reset test-pokertable.py coverage-report' check )"
 # End:
+
+
+
+
