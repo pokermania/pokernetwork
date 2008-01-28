@@ -178,7 +178,10 @@ class MockService:
             return True
 
     def buyInPlayer(self, serial, game_id, currency_serial, amount):
-        return amount
+        if serial == 9 and amount != 1000 and amount != 100000000:
+            return 0
+        else:
+            return amount
 
     def getHandSerial(self):
         self.hand_serial += 1
@@ -894,6 +897,20 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(None, self.table.playerWarningTimer(2))
         self.assertEqual(None, self.table.playerTimeoutTimer(2))
     # -------------------------------------------------------------------
+    def test27_buyinFailures(self):
+        p9 = self.createPlayer(9, False)
+        self.assertEqual(True, self.table.joinPlayer(p9, 9))
+        self.assertEqual(True, self.table.seatPlayer(p9, 9, -1))
+        self.assertEqual(True, self.table.buyInPlayer(p9, 1000))
+
+        self.table.game.getPlayer(9).money = 0
+        self.assertEqual(False, self.table.rebuyPlayerRequest(p9, 50))
+
+        p1 = self.createPlayer(1)
+        self.table.game.getPlayer(1).money = 50
+        self.table.game.rebuy = lambda a, b: False
+        self.assertEqual(False, self.table.rebuyPlayerRequest(p1, 0))
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
@@ -1020,6 +1037,9 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.table.update()
 
         return defPlayer3Blind
+    def test27_buyinFailures(self):
+        """This test doesn't matter in this subclass"""
+        return True
 # -------------------------------------------------------------------
 # This class tests the same operations as PokerTableTestCase but for tables that
 #  are transient.  Note the outcome of various operations are quite different
@@ -1174,11 +1194,15 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.table.scheduleAutoDeal()
         self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
         self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
+
+    def test27_buyinFailures(self):
+        """This test doesn't matter in this subclass"""
+        return True
 # -------------------------------------------------------------------
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test26"
+#    loader.methodPrefix = "test27"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
