@@ -808,7 +808,6 @@ class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
-        return True
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
