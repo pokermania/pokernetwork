@@ -537,10 +537,10 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(False, self.table2.joinPlayer(player[5], 5))
     # -------------------------------------------------------------------
     def test08_2_brokenSeatFactory(self):
-        player = self.createPlayer(1)
-        self.table.factory.seatPlayer = lambda (a, b, c): False
+        player = self.createPlayer(1, False)
+        self.assertEqual(True, self.table.joinPlayer(player, 1))
+        self.table.factory.seatPlayer = lambda a, b, c: False
         self.assertEqual(False, self.table.seatPlayer(player, 1, -1))
-
     # -------------------------------------------------------------------
     def test08_5_kick(self):
         """Test that kick works correctly"""
@@ -1130,7 +1130,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
+#    loader.methodPrefix = "test08"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
