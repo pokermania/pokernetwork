@@ -5,6 +5,8 @@
 	(MockService.loadHand): Added 'values' to the serials2chips dict.
 	(MockService.saveHand): Fixed showdown test since we now have two
 	showdowns.
+	(PokerTableTestCase.test24_treeFallingInWoodsWithNoPlayerToHearIt):
+	Wrote function.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

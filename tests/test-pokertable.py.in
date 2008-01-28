@@ -857,6 +857,10 @@ class PokerTableTestCase(unittest.TestCase):
         checkReturnPacketBySerial(p.lookForPacket(PACKET_POKER_PLAYER_CARDS), 1)
         checkReturnPacketBySerial(p2.lookForPacket(PACKET_POKER_PLAYER_CARDS), 2)
     # -------------------------------------------------------------------
+    def test24_treeFallingInWoodsWithNoPlayerToHearIt(self):
+        """Test a broadcast message that no one is here to hear"""
+        self.assertEqual(False, self.table.broadcastMessage(PacketPokerGameMessage, "Tommy, can you hear me?"))
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
@@ -1033,7 +1037,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test21"
+#    loader.methodPrefix = "test24"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
