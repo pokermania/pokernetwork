@@ -30,6 +30,9 @@
 	(PokerTableTestCase.test99_destroy_table): Added test for updating
 	a destroyed table.
 	(MockService.tableMoneyAndBet): Changed return value to force error.
+	(PokerTableTestCase.test08_2_brokenSeatFactory): Fixed function to
+	make sure player joined first.
+	(PokerTableTestCase.test20_1_brokenLeaving): Wrote function.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

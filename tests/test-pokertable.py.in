@@ -813,6 +813,13 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.joinPlayer(p, 2))
         self.assertEquals(True, self.table.quitPlayer(p, 2))
     # -------------------------------------------------------------------
+    def test20_1_brokenLeaving(self):
+        p = self.createPlayer(1)
+        self.assertEquals(True, self.table.leavePlayer(p, 1))
+        # Special test: player 9's removePlayer always fails
+        p = self.createPlayer(9)
+        self.assertEquals(True, self.table.leavePlayer(p, 9))
+    # -------------------------------------------------------------------
     def test21_syncDatabase(self):
         """Test syncing the Database back to the MockService"""
         player = {}
@@ -1130,7 +1137,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+    loader.methodPrefix = "test20"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
