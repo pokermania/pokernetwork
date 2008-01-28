@@ -527,6 +527,17 @@ class PokerTableTestCase(unittest.TestCase):
             self.assertEqual(None, self.table.kickPlayer(2))
         except KeyError, ke:
             self.assertEqual(2, ke[0])
+        # Special test: player 9's removePlayer always fails, so it covers error
+#         def fakeGameRemovePlayer(serial):
+#             ret = PokerGame.removePlayer(serial)
+#             if x == 9:
+#                 return False
+#             else:
+#                 return ret
+
+#         self.table.game.removePlayer = fakeGameRemovePlayer
+#         p = self.createPlayer(9)
+#         self.assertEquals(None, self.table.kickPlayer(9))
 
     # -------------------------------------------------------------------
     def test08_7_sitout(self):
@@ -1003,7 +1014,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test20"
+#    loader.methodPrefix = "test08"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
