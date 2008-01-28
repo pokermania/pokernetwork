@@ -92,14 +92,18 @@ exampleHand =  [ \
         ('blind', 1, 222, 0), \
         ('ante_request', 1, 111), \
         ('ante', 1, 111), \
+        ('ante', 5, 555), \
         ('all-in', 1), \
         ('call', 1, 411), \
+        ('call', 6, 626), \
         ('check', 1), \
         ('fold', 1), \
         ('raise', 1, 888), \
-        ('canceled', 1, 10), \
+# Note: 3 appears first here to test something appearing first as a raise.
+        ('raise', 3, 976), \
+        ('canceled', 4, 10), \
         ('rake', 7, { 1 : 7}), \
-        ('end', [1], [{ 'serial2share': { 1: 500 } }]), \
+        ('end', [8, 1], [{ 'serial2share': { 8: 888, 1: 233 } }]), \
         ('sitOut', 1), \
         ('leave', [(1, 2), (2, 7)]), \
         ('finish', 1), \
@@ -199,8 +203,6 @@ class MockService:
             l = copy.deepcopy(exampleHand)
             l.insert(0, ('game', 1, handId, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234}))
             self.hands[handId] = convertHandHistoryToDict(l)
-            print "Loading %d" % handId
-            print l
             return l
 
     def saveHand(self, history, serial):
@@ -217,10 +219,22 @@ class MockService:
 
     def updatePlayerMoney(self, serial, gameId, amount):
         if self.testObject:
-            self.testObject.assertEqual(amount,  -1122)
             self.testObject.assertEqual(gameId,  self.testObject.table1_value)
-            self.testObject.assertEqual(serial,  1)
-
+            if serial == 1:
+                self.testObject.assertEqual(amount,  -1399)
+            elif serial == 3:
+                self.testObject.assertEqual(amount,  -976)
+            elif serial == 4:
+                self.testObject.assertEqual(amount,  10)
+            elif serial == 5:
+                self.testObject.assertEqual(amount,  -555)
+            elif serial == 6:
+                self.testObject.assertEqual(amount,  -626)
+            elif serial == 8:
+                self.testObject.assertEqual(amount,  888)
+            else:
+                self.testObject.fail("Unkown serial in hand history: %d" % serial)
+                
 
     def updatePlayerRake(self, currencySerial, serial, rakeAmount):
         if self.testObject:
@@ -982,7 +996,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test21"
+#    loader.methodPrefix = "test18"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

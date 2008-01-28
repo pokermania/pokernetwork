@@ -11,6 +11,8 @@
 	(MockService.tourneyEndTurn): Wrote function.
 	Set verbose to 4 throughout.
 	(MockService.loadHand): Forced return value to include the handId requested
+	(MockService.updatePlayerMoney): Added additional values for new
+	tests in the example hand.
 
 2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 
