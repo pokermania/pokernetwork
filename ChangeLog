@@ -29,6 +29,7 @@
 	(PokerTableTestCase.createBot): Wrote function.
 	(PokerTableTestCase.test99_destroy_table): Added test for updating
 	a destroyed table.
+	(MockService.tableMoneyAndBet): Changed return value to force error.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

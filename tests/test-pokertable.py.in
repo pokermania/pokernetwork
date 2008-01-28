@@ -185,7 +185,7 @@ class MockService:
         return self.hand_serial
 
     def tableMoneyAndBet(self, table_id):
-        return (0, 0)
+        return (0, 500)
 
     def leavePlayer(self, serial, table_id, currency_serial):
         if self.players.has_key(serial):
@@ -813,7 +813,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(randint(777, 8975))
         self.table.update()
-        return player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+        return player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
     # -------------------------------------------------------------------
     def test22_possibleObserverLoggedIn(self):
         """Test possibleObserverLoggedIn"""
