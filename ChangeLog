@@ -13,6 +13,8 @@
 	(MockService.loadHand): Forced return value to include the handId requested
 	(MockService.updatePlayerMoney): Added additional values for new
 	tests in the example hand.
+	(PokerTableTestCase.test20_quitting): Added player 9 create/quit.
+	(MockClient.removePlayer): removing Player 9 now always returns False.
 
 2008-01-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 

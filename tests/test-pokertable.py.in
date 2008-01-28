@@ -295,6 +295,9 @@ class MockClient:
     def removePlayer(self, table, serial):
         if not self.tables.has_key(table.game.id):
             self.error("Table with game number %d does not occur exactly once for this player." % table.game.id)
+        if serial == 9:
+            table.game.removePlayer(serial)
+            return False
         return table.game.removePlayer(serial)
 
     def autoBlindAnte(self, table, serial, auto):
@@ -524,6 +527,7 @@ class PokerTableTestCase(unittest.TestCase):
             self.assertEqual(None, self.table.kickPlayer(2))
         except KeyError, ke:
             self.assertEqual(2, ke[0])
+
     # -------------------------------------------------------------------
     def test08_7_sitout(self):
         """Test that sitOut works correctly"""
@@ -746,6 +750,9 @@ class PokerTableTestCase(unittest.TestCase):
         self.assertEqual(True, self.table.joinPlayer(p, 2))
         p.tables[self.table.game.id] = self.table
         self.assertEquals(True, self.table.quitPlayer(p, 2))
+        # Special test: player 9's removePlayer always fails
+        p = self.createPlayer(9)
+        self.assertEquals(True, self.table.quitPlayer(p, 9))
     # -------------------------------------------------------------------
     def test20altForNewClientAPI_quitting(self):
         # This is disabled until the API changes
@@ -996,7 +1003,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test20"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
