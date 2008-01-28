@@ -7,6 +7,20 @@
 	showdowns.
 	(PokerTableTestCase.test24_treeFallingInWoodsWithNoPlayerToHearIt):
 	Wrote function.
+	(PokerTableTestCaseTransient.test07_break_message.Tournament):
+	Moved to Trainsient table area only.
+	(PokerTableTestCaseWithPredefinedDecks): Renamed class to
+	WithPredefinedDecksAndNoAutoDeal
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test01_autodeal):
+	Derived function from superclass.
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test02_autodeal_check):
+	Derived function from superclass.
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test12_everyone_timeout):
+	Derived function from superclass.
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test16_autoMuckTimeoutPolicy):
+	Derived function from superclass.
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test17_bogusTimeoutPolicy):
+	Derived function from superclass.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

@@ -58,8 +58,8 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <users temporary="BOT"/>
 </server>
 """
-settings_stripped_deck_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="4" autodeal="yes" >
+settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="4" autodeal="no" >
   <delays autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
   <decks>
@@ -427,7 +427,6 @@ class PokerTableTestCase(unittest.TestCase):
             self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
             self.table.sitPlayer(client, serial)
         return client
-
     # -------------------------------------------------------------------
     def test01_autodeal(self):
         self.createPlayer(1)
@@ -450,21 +449,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.createPlayer(1)
         client = self.clients[1]
         self.assertEqual(False, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
-    # -------------------------------------------------------------------
-    def test07_break_message(self):
-        """ Tournament break issue a message to all players """
-        class Tournament:
-            def __init__(self):
-                self.state = pokertournament.TOURNAMENT_STATE_BREAK_WAIT
-                
-        self.createPlayer(1)
-        self.createPlayer(2)
-        self.table.transient = True
-        self.table.tourney = Tournament()
-        self.table.game.isTournament = lambda: True
-        self.table.scheduleAutoDeal()
-        self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
-        self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
     # -------------------------------------------------------------------
     def test08_player_has_trouble_joining(self):
         """Test for when the table is full and a player is trying hard to join"""
@@ -805,21 +789,8 @@ class PokerTableTestCase(unittest.TestCase):
             self.table.readyToPlay(ii)
         self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(randint(777, 8975))
-#        self.table.syncDatabase()
-#        self.table.tourneyEndTurn()
         self.table.update()
         return player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
-
-#        return defer.DeferredList(l)
-
-#         reactor.iterate()
-#         pending = reactor.getDelayedCalls()
-#         if pending:
-#             for p in pending:
-#                 if p.active():
-#                     print "still pending:" + str(p)
-#                     p.cancel()
-
     # -------------------------------------------------------------------
     def test22_possibleObserverLoggedIn(self):
         """Test possibleObserverLoggedIn"""
@@ -888,12 +859,86 @@ class PokerTableTestCase(unittest.TestCase):
 # would want all the tests to run and when additional use of predefined
 # decks is added.  -- bkuhn, 2008-01-21
 
-class PokerTableTestCaseWithPredefinedDecks(PokerTableTestCase):
-    def setUp(self, settingsXmlStr=settings_stripped_deck_xml):
+# I later decided to mix together the tests for predefined decks with
+# tests for autodeal turned off; that's why so many tests are replaced.
+
+class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
+    def setUp(self, settingsXmlStr=settings_stripped_deck_no_autodeal_xml):
         PokerTableTestCase.setUp(self, settingsXmlStr)
 
-# -------------------------------------------------------------------
+    # -------------------------------------------------------------------
+    def test01_autodeal(self):
+        self.createPlayer(1)
+        self.createPlayer(2)
+        # Nothing should happen, we don't have autodeal
+        self.assertEqual(None, self.table.scheduleAutoDeal())
+    # -------------------------------------------------------------------
+    def test02_autodeal_check(self):
+        self.createPlayer(1)
+        self.table.processingHand(1)
+        self.table.game_delay["delay"] = 2
+        self.table.game_delay["start"] = time.time()
+        self.createPlayer(2)
+        self.assertEqual(None, self.table.scheduleAutoDeal())
+    # -------------------------------------------------------------------
+    def test12_everyone_timeout(self):
+        """Test if all players fall through timeout"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+        self.table.cancelDealTimeout()
+        self.table.beginTurn()
+        self.table.update()
 
+        return defer.DeferredList((player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)))
+    # -------------------------------------------------------------------
+    def test16_autoMuckTimeoutPolicy(self):
+        """Make sure other timeout policies function properly"""
+        player = self.createPlayer(1)
+        player2 = self.createPlayer(2)
+        # Sit out policy is the default
+        self.assertEqual(self.table.timeout_policy,  "sitOut")
+        self.table.timeout_policy =  "fold"
+
+        expectPlayerAutoFold = player2.waitFor(PACKET_POKER_AUTO_FOLD)
+        def checkReturnPacket(packet):
+            # Don't assert which serial we get here, as it could be from
+            # either player
+            self.assertEqual(packet.game_id, self.table1_value)
+        expectPlayerAutoFold.addCallback(checkReturnPacket)
+
+        self.table.cancelDealTimeout()
+        self.table.beginTurn()
+        self.table.update()
+
+        return expectPlayerAutoFold
+    # -------------------------------------------------------------------
+    def test17_bogusTimeoutPolicy(self):
+        self.table.timeout_policy =  "muck"
+        player = self.createPlayer(1)
+        player2 = self.createPlayer(2)
+
+        self.table.cancelDealTimeout()
+        self.table.beginTurn()
+        self.table.update()
+        return player.waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+    # -------------------------------------------------------------------
+    def test21_syncDatabase(self):
+        """Test syncing the Database back to the MockService"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+            self.table.readyToPlay(ii)
+        self.service.testObject = self
+        self.table.game.turn_history = self.service.loadHand(randint(777, 8975))
+        self.table.beginTurn()
+        self.table.update()
+        return player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+
+# -------------------------------------------------------------------
 # This class tests the same operations as PokerTableTestCase but for tables that
 #  are transient.  Note the outcome of various operations are quite different
 #  when the table is transient.
@@ -1033,6 +1078,20 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         # in transient mode, this doesn't work anyway
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
+    # -------------------------------------------------------------------
+    def test07_break_message(self):
+        """ Tournament break issue a message to all players """
+        class Tournament:
+            def __init__(self):
+                self.state = pokertournament.TOURNAMENT_STATE_BREAK_WAIT
+                
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.tourney = Tournament()
+        self.table.game.isTournament = lambda: True
+        self.table.scheduleAutoDeal()
+        self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
+        self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
 # -------------------------------------------------------------------
 def Run():
     seed(time.time())
@@ -1041,7 +1100,7 @@ def Run():
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
-    suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecks))
+    suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal))
     suite.addTest(loader.loadClass(PokerTableTestCaseTransient))
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
