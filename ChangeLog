@@ -21,6 +21,9 @@
 	Derived function from superclass.
 	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test17_bogusTimeoutPolicy):
 	Derived function from superclass.
+	(PokerTableTestCase.test08_5_kick): Added use of fakeGameRemovePlayer.
+	(PokerTableTestCase.test08_player_has_trouble_joining): Added test
+	for player5 joining table 2.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

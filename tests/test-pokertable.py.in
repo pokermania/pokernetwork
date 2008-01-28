@@ -118,7 +118,6 @@ exampleHand =  [ \
         ('muck', (1,2)), \
         ('rebuy', 1, 9999), \
         ('unknown',) ]
-
 def convertHandHistoryToDict (hist):
     dict = {}
     for entry in hist:
@@ -132,7 +131,7 @@ class MockService:
         self.settings = settings
         self.verbose = settings.headerGetInt("/server/@verbose")
         self.dirs = split(settings.headerGet("/server/path"))
-        self.simultaneous = 4
+        self.simultaneous = 1
         self.shutting_down = False
         self.hand_serial = 0
         self.hands = {}
@@ -415,7 +414,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.cancelPlayerTimers()
         del self.table
         del self.service
-
+    # -------------------------------------------------------------------
     def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
         if table == None:
             table = self.table
@@ -508,6 +507,9 @@ class PokerTableTestCase(unittest.TestCase):
 
         self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
                                               self.table.game.maxBuyIn()))
+        # finally, player5 tries to join table 2, which isn't permitted since
+        # we've set MockService.simultaneous to 1
+        self.assertEqual(False, self.table2.joinPlayer(player[5], 5))
     # -------------------------------------------------------------------
     def test08_2_brokenSeatFactory(self):
         player = self.createPlayer(1)
@@ -525,18 +527,21 @@ class PokerTableTestCase(unittest.TestCase):
             self.assertEqual(None, self.table.kickPlayer(2))
         except KeyError, ke:
             self.assertEqual(2, ke[0])
-        # Special test: player 9's removePlayer always fails, so it covers error
-#         def fakeGameRemovePlayer(serial):
-#             ret = PokerGame.removePlayer(serial)
-#             if x == 9:
-#                 return False
-#             else:
-#                 return ret
 
-#         self.table.game.removePlayer = fakeGameRemovePlayer
-#         p = self.createPlayer(9)
-#         self.assertEquals(None, self.table.kickPlayer(9))
+        # Special test: player 9's removePlayer always fails, so it covers
+        # error conditions.  Note that this has to be reset via this method in
+        # tests that wish to use it:
 
+        def fakeGameRemovePlayer(serial):
+            from pokerengine.pokergame import PokerGameServer
+            ret = PokerGameServer.removePlayer(self.table.game, serial)
+            if serial == 9:
+                return False
+            else:
+                return ret
+        self.table.game.removePlayer = fakeGameRemovePlayer
+        p = self.createPlayer(9)
+        self.assertEquals(None, self.table.kickPlayer(9))
     # -------------------------------------------------------------------
     def test08_7_sitout(self):
         """Test that sitOut works correctly"""
@@ -605,7 +610,9 @@ class PokerTableTestCase(unittest.TestCase):
     def test13_disconnect(self):
         """Test a disconnected player"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
+        p9 = self.createPlayer(9, clientClass=MockClientWithTableDict)
         self.table.disconnectPlayer(p1, 1)
+        self.table.disconnectPlayer(p9, 9)
     # -------------------------------------------------------------------
     def test13altForNewClientAPI_disconnect(self):
         """Test player disconnection once the client API has a removeTable method
@@ -1096,7 +1103,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test24"
+#    loader.methodPrefix = "test13"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
