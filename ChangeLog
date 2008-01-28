@@ -33,6 +33,8 @@
 	(PokerTableTestCase.test08_2_brokenSeatFactory): Fixed function to
 	make sure player joined first.
 	(PokerTableTestCase.test20_1_brokenLeaving): Wrote function.
+	(PokerTableTestCase.test25_buyingInWhilePlaying): Wrote function.
+	(PokerTableTestCase.test26_wrongPlayerUpdateTimes): Wrote function.
 
 2008-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

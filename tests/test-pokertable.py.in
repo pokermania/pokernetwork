@@ -871,6 +871,29 @@ class PokerTableTestCase(unittest.TestCase):
         """Test a broadcast message that no one is here to hear"""
         self.assertEqual(False, self.table.broadcastMessage(PacketPokerGameMessage, "Tommy, can you hear me?"))
     # -------------------------------------------------------------------
+    def test25_buyingInWhilePlaying(self):
+        """Test if all players fall through timeout"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+
+        def postBlindCallback(packet):
+            player[3].sendPacket(PacketPokerBlind())
+            self.table.buyInPlayer(player[3], 10)
+        defPlayer3Blind = player[3].waitFor(PACKET_POKER_BLIND_REQUEST)
+        
+        defPlayer3Blind.addCallback(postBlindCallback)
+
+        self.table.update()
+        return defPlayer3Blind
+    # -------------------------------------------------------------------
+    def test26_wrongPlayerUpdateTimes(self):
+        """Test if playerUpdateTimers get called with the wrong serial"""
+        p = self.createPlayer(1)
+        p = self.createPlayer(2)
+        self.assertEqual(None, self.table.playerWarningTimer(2))
+        self.assertEqual(None, self.table.playerTimeoutTimer(2))
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
@@ -978,7 +1001,25 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.table.beginTurn()
         self.table.update()
         return player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+    # -------------------------------------------------------------------
+    def test25_buyingInWhilePlaying(self):
+        """Test if all players fall through timeout"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+        self.table.beginTurn()
 
+        def postBlindCallback(packet):
+            player[3].sendPacket(PacketPokerBlind(serial = 3, game_id = packet.game_id, amount = packet.amount, dead = packet.dead))
+            self.assertEqual(False, self.table.buyInPlayer(player[3], 10))
+
+        defPlayer3Blind = player[3].waitFor(PACKET_POKER_BLIND_REQUEST)
+        
+        defPlayer3Blind.addCallback(postBlindCallback)
+
+        self.table.update()
+
+        return defPlayer3Blind
 # -------------------------------------------------------------------
 # This class tests the same operations as PokerTableTestCase but for tables that
 #  are transient.  Note the outcome of various operations are quite different
@@ -1137,7 +1178,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-    loader.methodPrefix = "test20"
+#    loader.methodPrefix = "test26"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
