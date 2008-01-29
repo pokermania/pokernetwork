@@ -47,7 +47,7 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork import version
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="1">
+<server verbose="3">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
@@ -61,47 +61,44 @@ class PokerDatabaseTestCase(unittest.TestCase):
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
-    # -----------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.db = pokerdatabase.PokerDatabase(settings)
-    
-    # -----------------------------------------------------------------------------------------------------    
+    # ----------------------------------------------------------------------------
     def tearDown(self):
         self.db.close()
         del self.db
         self.destroyDb()
-        
-    # -----------------------------------------------------------------------------------------------------    
+    # ----------------------------------------------------------------------------
     def test01_upgrade(self):
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
         self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase', False)
-
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
     suite.addTest(unittest.makeSuite(PokerDatabaseTestCase))
     return suite
     
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerdatabase
   
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"
+    os.environ['VERBOSE_T'] = '4'
     suite = loader.loadClass(PokerDatabaseTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
-    
-# -----------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
