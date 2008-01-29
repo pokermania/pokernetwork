@@ -1,3 +1,13 @@
+2008-01-28  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerdatabase.py.in
+	(PokerDatabaseTestCase.test02_dbVersionTooOld): Wrote function.
+	(PokerDatabaseTestCase.setUp): Do not create self.db here, since
+	sometimes we want it to be a dummy.
+	(PokerDatabaseTestCase.tearDown): try/except around db close; it
+	may never get created.
+	(Run): Switch to VERBOSE_T == 4 to get maximum verbosity coverage.
+
 2008-01-27  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokertable.py.in (MockService.saveHand): Added round5

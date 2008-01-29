@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
@@ -25,7 +26,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
@@ -67,17 +68,42 @@ class PokerDatabaseTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
-        self.db = pokerdatabase.PokerDatabase(settings)
+        self.settings = settings
     # ----------------------------------------------------------------------------
     def tearDown(self):
-        self.db.close()
-        del self.db
-        self.destroyDb()
+        try:
+            self.db.close()
+            del self.db
+            self.destroyDb()
+        except:
+            pass
     # ----------------------------------------------------------------------------
     def test01_upgrade(self):
+        self.db = pokerdatabase.PokerDatabase(self.settings)
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
         self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase', False)
+    # ----------------------------------------------------------------------------
+    def test02_dbVersionTooOld(self):
+        import MySQLdb
+        class DummyMySQL:
+            def get_server_info(self):
+                return "3.2.5"
+            def query(self, string):
+                return string
+            def close(self):
+                pass
+        def dummyConnect(host, port, user, passwd, db='mysql'):
+            parameters = self.settings.headerGetProperties("/server/database")[0]
+            if user == parameters['user']:
+                raise SqlError
+            else:
+                return DummyMySQL()
+        MySQLdb.connect = dummyConnect
+        try:
+            self.db = pokerdatabase.PokerDatabase(self.settings)
+        except UserWarning, uw:
+            self.assertEqual(uw.args[0], "PokerDatabase: MySQL server version is 3.2.5 but version >= 5.0 is required")
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
@@ -91,7 +117,7 @@ def GetTestedModule():
 # --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test02"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.loadClass(PokerDatabaseTestCase)
     return runner.TrialRunner(reporter.TextReporter,
