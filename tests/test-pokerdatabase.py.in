@@ -38,6 +38,7 @@ from twisted.internet import reactor
 
 twisted.internet.base.DelayedCall.debug = True
 import libxml2
+import re
 
 from tests.testmessages import silence_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
@@ -47,28 +48,32 @@ from pokernetwork import pokerdatabase
 from pokernetwork import pokernetworkconfig
 from pokernetwork import version
 
+actualSchemaFile = "@srcdir@/../../database/schema.sql"
+
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="%s" command="@MYSQL@" />
 </server>
-"""
-
+""" % actualSchemaFile
 settings_missing_schema_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
 </server>
 """
-            
+settings_root_both_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3">
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+</server>
+"""
 class PokerDatabaseTestCase(unittest.TestCase):
-
     def destroyDb(self):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@'  -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-
     # ----------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
@@ -76,6 +81,19 @@ class PokerDatabaseTestCase(unittest.TestCase):
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.settings = settings
+
+        r = re.compile("""INSERT\s+INTO\s+server\s+\(\s*version\s*\)\s+VALUES\s*\("([\d\.]+)"\s*\)""", flags=re.I)
+        infile = open(actualSchemaFile, "r")
+        self.pokerdbVersion = "0.0.0"
+        while infile:
+            line = infile.readline()
+            m = re.match(r, line)
+            if m:
+                self.pokerdbVersion = m.group(1)
+                break
+        infile.close()
+        # We should be able to find the version number
+        self.assertNotEquals(self.pokerdbVersion, "0.0.0")
     # ----------------------------------------------------------------------------
     def tearDown(self):
         try:
@@ -90,6 +108,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
         self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase', False)
+        self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
     # ----------------------------------------------------------------------------
     def test02_dbVersionTooOld(self):
         import MySQLdb
@@ -112,8 +131,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
             self.db = pokerdatabase.PokerDatabase(self.settings)
         except UserWarning, uw:
             self.assertEqual(uw.args[0], "PokerDatabase: MySQL server version is 3.2.5 but version >= 5.0 is required")
-        MySQLdb.connect = realconnect 
-
+        MySQLdb.connect = realconnect
     # ----------------------------------------------------------------------------
     def test03_schemaFileMissing(self):
         settings = pokernetworkconfig.Config([])
@@ -123,14 +141,23 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.settings = settings
         try:
             self.db = pokerdatabase.PokerDatabase(self.settings)
+            assert("Schema file was missing so this line should not be reached.")
         except UserWarning, uw:
             self.assertEqual(uw.args[0], "PokerDatabase: schema /this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql file not found")
+    # ----------------------------------------------------------------------------
+    def test04_rootBothUsers(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_root_both_users_xml,
+                                           len(settings_root_both_users_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        self.db = pokerdatabase.PokerDatabase(self.settings)
+        self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
     suite.addTest(unittest.makeSuite(PokerDatabaseTestCase))
     return suite
-    
 # --------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerdatabase
@@ -138,8 +165,9 @@ def GetTestedModule():
 # --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test04"
     os.environ['VERBOSE_T'] = '4'
+
     suite = loader.loadClass(PokerDatabaseTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',

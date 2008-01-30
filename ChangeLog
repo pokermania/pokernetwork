@@ -4,6 +4,11 @@
 	(PokerDatabaseTestCase.test03_schemaFileMissing): Wrote function.
 	(PokerDatabaseTestCase.test02_dbVersionTooOld): Fixed to restore
 	original MySQL function when test is done.
+	(PokerDatabaseTestCase.test04_rootBothUsers): Wrote function.
+	(PokerDatabaseTestCase.test01_upgrade): Added assert for final
+	version number.
+	(PokerDatabaseTestCase.setUp): Added code to find version number
+	by parsing file.
 
 2008-01-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
