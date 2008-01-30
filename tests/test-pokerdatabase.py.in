@@ -53,6 +53,13 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """
+
+settings_missing_schema_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3">
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
+</server>
+"""
             
 class PokerDatabaseTestCase(unittest.TestCase):
 
@@ -99,11 +106,25 @@ class PokerDatabaseTestCase(unittest.TestCase):
                 raise SqlError
             else:
                 return DummyMySQL()
+        realconnect = MySQLdb.connect
         MySQLdb.connect = dummyConnect
         try:
             self.db = pokerdatabase.PokerDatabase(self.settings)
         except UserWarning, uw:
             self.assertEqual(uw.args[0], "PokerDatabase: MySQL server version is 3.2.5 but version >= 5.0 is required")
+        MySQLdb.connect = realconnect 
+
+    # ----------------------------------------------------------------------------
+    def test03_schemaFileMissing(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_missing_schema_xml,
+                                           len(settings_missing_schema_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        try:
+            self.db = pokerdatabase.PokerDatabase(self.settings)
+        except UserWarning, uw:
+            self.assertEqual(uw.args[0], "PokerDatabase: schema /this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql file not found")
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
@@ -117,7 +138,7 @@ def GetTestedModule():
 # --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
+#    loader.methodPrefix = "test03"
     os.environ['VERBOSE_T'] = '4'
     suite = loader.loadClass(PokerDatabaseTestCase)
     return runner.TrialRunner(reporter.TextReporter,

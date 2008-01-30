@@ -1,3 +1,10 @@
+2008-01-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerdatabase.py.in
+	(PokerDatabaseTestCase.test03_schemaFileMissing): Wrote function.
+	(PokerDatabaseTestCase.test02_dbVersionTooOld): Fixed to restore
+	original MySQL function when test is done.
+
 2008-01-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerdatabase.py.in
