@@ -98,7 +98,13 @@ class PokerDatabaseTestCase(unittest.TestCase):
     def tearDown(self):
         try:
             self.db.close()
+        except:
+            pass
+        try:
             del self.db
+        except:
+            pass
+        try:
             self.destroyDb()
         except:
             pass
