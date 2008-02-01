@@ -68,6 +68,12 @@ settings_root_both_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """
+settings_missing_root_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3">
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
+  schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+</server>
+"""
 class PokerDatabaseTestCase(unittest.TestCase):
     def destroyDb(self):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
@@ -159,6 +165,21 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.settings = settings
         self.db = pokerdatabase.PokerDatabase(self.settings)
         self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
+    # ----------------------------------------------------------------------------
+    def test05_missingRootUser(self):
+        import MySQLdb
+
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_missing_root_users_xml,
+                                           len(settings_missing_root_users_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        try:
+            self.db = pokerdatabase.PokerDatabase(self.settings)
+            assert("Root user information was missing so this line should not be reached.")
+        except MySQLdb.OperationalError, oe: # handle trouble
+            self.assertEquals(oe.args[1], "Unknown database 'pokernetworktest'")
+            self.assertEquals(oe.args[0], 1049)
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
