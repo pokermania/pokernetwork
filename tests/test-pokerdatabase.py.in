@@ -51,25 +51,25 @@ from pokernetwork import version
 actualSchemaFile = "@srcdir@/../../database/schema.sql"
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3">
+<server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="%s" command="@MYSQL@" />
 </server>
 """ % actualSchemaFile
 settings_missing_schema_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3">
+<server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
 </server>
 """
 settings_root_both_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3">
+<server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """
 settings_missing_root_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3">
+<server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
   schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
@@ -180,6 +180,24 @@ class PokerDatabaseTestCase(unittest.TestCase):
         except MySQLdb.OperationalError, oe: # handle trouble
             self.assertEquals(oe.args[1], "Unknown database 'pokernetworktest'")
             self.assertEquals(oe.args[0], 1049)
+    # ----------------------------------------------------------------------------
+    def test06_databaseAlreadyExists(self):
+        """Test for when the database already exists"""
+        import MySQLdb
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_root_both_users_xml,
+                                           len(settings_root_both_users_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        parameters = settings.headerGetProperties("/server/database")[0]
+        db = MySQLdb.connect(host = parameters["host"],
+                             port = int(parameters.get("port", '3306')),
+                             user = parameters["root_user"],
+                             passwd = parameters["root_password"])
+        db.query("CREATE DATABASE " + parameters["name"])
+        db.close()
+        self.db = pokerdatabase.PokerDatabase(self.settings)
+        self.assertEquals(self.db.getVersion(), '1.0.5')
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
@@ -192,7 +210,7 @@ def GetTestedModule():
 # --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test06"
     os.environ['VERBOSE_T'] = '4'
 
     suite = loader.loadClass(PokerDatabaseTestCase)
