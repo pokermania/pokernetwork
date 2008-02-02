@@ -9,6 +9,7 @@
 	case cruft is left around.
 	(PokerDatabaseTestCase.test07_multipleRowsInVersionTable): Wrote function.
 	(PokerDatabaseTestCase.test08_forceTestDatabaseTooOld): Wrote function.
+	(PokerDatabaseTestCase.test09_forceTestPokerNetworkTooOld): Wrote function.
 
 2008-02-01  Bradley M. Kuhn  <bkuhn@ebb.org>
 

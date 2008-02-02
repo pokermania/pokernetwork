@@ -257,8 +257,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         pokerdatabase.version = ver
 
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml,
-                                           len(settings_xml))
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.settings = settings
         parameters = settings.headerGetProperties("/server/database")[0]
@@ -269,6 +268,27 @@ class PokerDatabaseTestCase(unittest.TestCase):
             assert("Should have gotten ExceptionDatabaseTooOld and this line should not have been reached.")
         except pokerdatabase.ExceptionDatabaseTooOld, edto:
             self.assertEquals(edto.args, ())
+            pokerdatabase.version = realDBVersion  # Restore original version
+    # ----------------------------------------------------------------------------
+    def test09_forceTestPokerNetworkTooOld(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        parameters = settings.headerGetProperties("/server/database")[0]
+
+        try:
+            self.db = pokerdatabase.PokerDatabase(self.settings)
+            import pokernetwork.version
+            ver = pokernetwork.version.Version("32767.32767.32767")
+            realDBVersion = self.db.version
+            self.db.version = ver
+
+            self.db.checkVersion()
+            assert("Should have gotten ExceptionSoftwareTooOld and this line should not have been reached.")
+        except pokerdatabase.ExceptionSoftwareTooOld, edto:
+            self.assertEquals(edto.args, ())
+            self.db.version = realDBVersion  # Restore original version
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
