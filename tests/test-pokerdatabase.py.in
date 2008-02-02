@@ -52,13 +52,13 @@ actualSchemaFile = "@srcdir@/../../database/schema.sql"
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="testuser" password="mytestuser"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="%s" command="@MYSQL@" />
 </server>
 """ % actualSchemaFile
 settings_missing_schema_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="testuser" password="mytestuser"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
 </server>
 """
