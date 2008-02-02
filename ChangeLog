@@ -7,6 +7,7 @@
 	exception when it attempts to recreate the root user.
 	(PokerDatabaseTestCase.setUp): Added a tearDown() call just in
 	case cruft is left around.
+	(PokerDatabaseTestCase.test07_multipleRowsInVersionTable): Wrote function.
 
 2008-02-01  Bradley M. Kuhn  <bkuhn@ebb.org>
 
