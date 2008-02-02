@@ -249,6 +249,26 @@ class PokerDatabaseTestCase(unittest.TestCase):
             self.db.setVersionInDatabase("1.3.0")
         except ExceptionUpgradeFailed, euf: # handle trouble
             self.assertEquals(euf.args[0], "update server set version = '1.3.0': changed 2 rows, expected one or zero")
+    # ----------------------------------------------------------------------------
+    def test08_forceTestDatabaseTooOld(self):
+        import pokernetwork.version
+        ver = pokernetwork.version.Version("32767.32767.32767")
+        realDBVersion = pokerdatabase.version
+        pokerdatabase.version = ver
+
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml,
+                                           len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        parameters = settings.headerGetProperties("/server/database")[0]
+
+        try:
+            self.db = pokerdatabase.PokerDatabase(self.settings)
+            self.db.checkVersion()
+            assert("Should have gotten ExceptionDatabaseTooOld and this line should not have been reached.")
+        except pokerdatabase.ExceptionDatabaseTooOld, edto:
+            self.assertEquals(edto.args, ())
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
@@ -261,7 +281,7 @@ def GetTestedModule():
 # --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test08"
     os.environ['VERBOSE_T'] = '4'
 
     suite = loader.loadClass(PokerDatabaseTestCase)
