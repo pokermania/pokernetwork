@@ -1,9 +1,25 @@
+2008-02-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerdatabase.py.in
+	(PokerDatabaseTestCase.tearDown): Added code to delete the test user.
+	(Run): Used VerboseTextReporter instead of regular TextReporter.
+	(PokerDatabaseTestCase.test04_rootBothUsers): Added catch for
+	exception when it attempts to recreate the root user.
+	(PokerDatabaseTestCase.setUp): Added a tearDown() call just in
+	case cruft is left around.
+
+2008-02-01  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerdatabase.py.in: Fixed name test user to not be
+	the same as the database.
+
 2008-01-31  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerdatabase.py.in
 	(PokerDatabaseTestCase.test05_missingRootUser): Wrote function.
 	(PokerDatabaseTestCase.tearDown): Made separate try for each
 	operation.
+	(PokerDatabaseTestCase.test06_databaseAlreadyExists): Wrote function.
 
 2008-01-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 

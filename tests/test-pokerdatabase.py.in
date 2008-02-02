@@ -52,13 +52,13 @@ actualSchemaFile = "@srcdir@/../../database/schema.sql"
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="testuser" password="mytestuser"
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernettestuser" password="mytestuser"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="%s" command="@MYSQL@" />
 </server>
 """ % actualSchemaFile
 settings_missing_schema_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="testuser" password="mytestuser"
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktestuser" password="mytestuser"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
 </server>
 """
@@ -82,7 +82,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
     # ----------------------------------------------------------------------------
     def setUp(self):
-        self.destroyDb()
+        self.tearDown()
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
@@ -106,6 +106,29 @@ class PokerDatabaseTestCase(unittest.TestCase):
             self.db.close()
         except:
             pass
+        try:
+            import MySQLdb
+            settings = pokernetworkconfig.Config([])
+            settings.doc = libxml2.parseMemory(settings_xml,
+                                           len(settings_xml))
+            settings.header = settings.doc.xpathNewContext()
+            parameters = settings.headerGetProperties("/server/database")[0]
+            db = MySQLdb.connect(host = parameters["host"],
+                                 port = int(parameters.get("port", '3306')),
+                                 user = parameters["root_user"],
+                                 passwd = parameters["root_password"],
+                                 db = 'mysql')
+            try:
+                db.query("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'" % parameters['user'])
+                db.query("drop user '%s'" % parameters['user'])
+            except:
+                db.query("delete from user where user = '%s'" % parameters['user'])
+
+            db.query("FLUSH PRIVILEGES")
+            db.close()
+        except Exception, e:
+            print e
+            assert("Unable to delete the user, " + parameters["user"] + "; some tests will fail incorrectly.")
         try:
             del self.db
         except:
@@ -163,7 +186,11 @@ class PokerDatabaseTestCase(unittest.TestCase):
                                            len(settings_root_both_users_xml))
         settings.header = settings.doc.xpathNewContext()
         self.settings = settings
-        self.db = pokerdatabase.PokerDatabase(self.settings)
+        try:
+            self.db = pokerdatabase.PokerDatabase(self.settings)
+        except OperationalError, oe:
+            self.assertEquals(oe.args[0], 1396)
+            self.assertEquals(oe.args[1], "Operation CREATE USER failed for 'root'@'%'")
         self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
     # ----------------------------------------------------------------------------
     def test05_missingRootUser(self):
@@ -210,11 +237,11 @@ def GetTestedModule():
 # --------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+#    loader.methodPrefix = "test07"
     os.environ['VERBOSE_T'] = '4'
 
     suite = loader.loadClass(PokerDatabaseTestCase)
-    return runner.TrialRunner(reporter.TextReporter,
+    return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
                               ).run(suite)
