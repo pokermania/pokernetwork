@@ -10,6 +10,9 @@
 	(PokerDatabaseTestCase.test07_multipleRowsInVersionTable): Wrote function.
 	(PokerDatabaseTestCase.test08_forceTestDatabaseTooOld): Wrote function.
 	(PokerDatabaseTestCase.test09_forceTestPokerNetworkTooOld): Wrote function.
+	(PokerDatabaseTestCase.test10_badUpgradeSqlFiles): Wrote function.
+	(PokerDatabaseTestCase.test01_upgrade): Changed directory for
+	upgrade scripts to .../good.
 
 2008-02-01  Bradley M. Kuhn  <bkuhn@ebb.org>
 

@@ -142,7 +142,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db = pokerdatabase.PokerDatabase(self.settings)
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
-        self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase', False)
+        self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase/good', False)
         self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
     # ----------------------------------------------------------------------------
     def test02_dbVersionTooOld(self):
@@ -276,7 +276,6 @@ class PokerDatabaseTestCase(unittest.TestCase):
         settings.header = settings.doc.xpathNewContext()
         self.settings = settings
         parameters = settings.headerGetProperties("/server/database")[0]
-
         try:
             self.db = pokerdatabase.PokerDatabase(self.settings)
             import pokernetwork.version
@@ -289,6 +288,17 @@ class PokerDatabaseTestCase(unittest.TestCase):
         except pokerdatabase.ExceptionSoftwareTooOld, edto:
             self.assertEquals(edto.args, ())
             self.db.version = realDBVersion  # Restore original version
+    # ----------------------------------------------------------------------------
+    def test10_badUpgradeSqlFiles(self):
+        self.db = pokerdatabase.PokerDatabase(self.settings)
+        self.db.setVersionInDatabase("0.0.5")
+        self.db.version = version.Version("0.0.5")
+        try:
+            self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase/bad', False)
+            assert("Should have gotten ExceptionUpgradeFailed and this line should not have been reached.")
+        except pokerdatabase.ExceptionUpgradeFailed, euf:
+            self.assertEquals(euf.args[0], "upgrade failed")
+        self.assertEquals(self.db.getVersion(), "0.0.5")
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)
