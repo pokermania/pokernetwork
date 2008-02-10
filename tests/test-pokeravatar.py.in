@@ -243,7 +243,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.login_again)
+#        d.addCallback(self.login_again)
         d.addCallback(self.quit)
         return d
     # ----------------------------------------------------------------------------
@@ -253,7 +253,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.login_again)
+#        d.addCallback(self.login_again)
         def handleTable((client, packet)):
             avatar = self.service.avatars[0]
             avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
@@ -272,7 +272,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
