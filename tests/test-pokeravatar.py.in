@@ -269,10 +269,23 @@ class PokerAvatarTestCase(unittest.TestCase):
 
         d.addCallback(handleTable)
         return d
+    # ----------------------------------------------------------------------------
+    def test05_testStrInterpolation(self):
+        """Tests to make sure the string output of an avatar is accurate"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        def stringAvatar((client, packet)):
+            print str(self.service.avatars[0])
+            self.assertEquals(str(self.service.avatars[0]),
+                              "PokerAvatar serial = 4, name = user0")
+            
+        d.addCallback(stringAvatar)
+        return d
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

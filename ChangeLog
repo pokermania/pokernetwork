@@ -1,5 +1,9 @@
 2008-02-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test04_createTable): Wrote function.
+	(PokerAvatarTestCase.test05_testStrInterpolation): Wrote funciton.
+
 	* pokernetwork/pokeravatar.py (PokerAvatar.__str__): Fixed bug;
 	stringification shouldn't have a print in it.
 
