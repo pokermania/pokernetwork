@@ -233,7 +233,8 @@ class PokerAvatarTestCase(unittest.TestCase):
     def login_again(self, (client, packet)):
         avatar = self.service.avatars[0]
         self.assertNotEqual(None, avatar.explain)
-        avatar.handlePacket(PacketLogin(name = 'user0', password = 'password1'))
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketLogin(name = 'user0', password = 'password1'))
         answer = avatar._packets_queue[0]
         self.assertEqual(PACKET_ERROR, answer.type)
         return (client, packet)
@@ -289,8 +290,8 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test06_setRoles(self):
         """Tests setting of roles"""
-        # I have the test being script only to commit to trunk
         return
+        # I have the test being skipped only to commit to trunk
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
