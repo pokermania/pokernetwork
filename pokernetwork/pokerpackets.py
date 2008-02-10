@@ -3247,6 +3247,18 @@ PACKET_POKER_SET_ROLE = 125 # 0x7d # %SEQ%
 PacketNames[PACKET_POKER_SET_ROLE] = "POKER_SET_ROLE"
 
 class PacketPokerSetRole(PacketPokerRoles):
+    """
+Semantics: tell the server the purpose of the connection.
+There are two possible roles : PLAY for a regular client
+that plays poker, EDIT for a connection used to edit the
+player properties but not play. There can only be one
+active role per user at a given time.
+
+The user must not be not logged in when this packet is
+sent or undefined results will occur.
+
+Direction: server <= client
+"""
 
     UNKNOWN_ROLE = 1
     NOT_AVAILABLE = 2
