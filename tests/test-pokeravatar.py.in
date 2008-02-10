@@ -162,7 +162,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(connectClient1)
         self.setUpClient(1)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def cleanSessions(self, arg):
         #
         # twisted Session code has leftovers : disable the hanging delayed call warnings
@@ -175,14 +175,14 @@ class PokerAvatarTestCase(unittest.TestCase):
 #                    print "still pending:" + str(p)
                     p.cancel()
         return arg
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def tearDown(self):
         d = self.service.stopService()
         d.addCallback(lambda x: self.p.stopListening())
 #        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
         return d
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def quit(self, args):
         client = args[0]
         if self.service.verbose > 0:
@@ -193,22 +193,22 @@ class PokerAvatarTestCase(unittest.TestCase):
             return client.connection_lost_deferred
         else:
             raise UserWarning, "quit does not have transport %d" % client.getSerial()
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def ping(self, client):
         client.sendPacket(PacketPing())
         return (client,)
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def test01_ping(self):
         """ test01_ping """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
         return d
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def sendExplain(self, client):
         client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         return client.packetDeferred(True, PACKET_ACK)
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def explain(self, (client, packet)):
         avatar = self.service.avatars[0]
         self.assertNotEqual(None, avatar.explain)
@@ -217,7 +217,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertEqual([packet_serial], avatar.explain.explain(packet_serial))
         self.assertEqual(serial, avatar.explain.getSerial())
         return (client,)
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def test02_explain(self):
         """ test02_explain """
         d = self.client_factory[0].established_deferred
@@ -225,11 +225,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.explain)
         d.addCallback(self.quit)
         return d
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def login(self, (client, packet), index):
         client.sendPacket(PacketLogin(name = 'user%d' % index, password = 'password1'))
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
-    # ----------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     def login_again(self, (client, packet)):
         avatar = self.service.avatars[0]
         self.assertNotEqual(None, avatar.explain)
@@ -237,16 +237,16 @@ class PokerAvatarTestCase(unittest.TestCase):
         answer = avatar._packets_queue[0]
         self.assertEqual(PACKET_ERROR, answer.type)
         return (client, packet)
-    # ----------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     def test03_login_again(self):
         """ test03_login """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-#        d.addCallback(self.login_again)
+        d.addCallback(self.login_again)
         d.addCallback(self.quit)
         return d
-    # ----------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     def test04_createTable(self):
         """Tests receipt of a table creation packet, followed by creation of a
            table once the avatar is logged in."""
@@ -268,10 +268,11 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(vv.game.betting_structure, '2-4-limit')
             # Set Explain should now generate an error that we're at a table.
             self.assertEquals(avatar.setExplain("This should fail"), False)
+            return (client, packet)
 
         d.addCallback(handleTable)
         return d
-    # ----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def test05_testStrInterpolation(self):
         """Tests to make sure the string output of an avatar is accurate"""
         d = self.client_factory[0].established_deferred
@@ -281,13 +282,29 @@ class PokerAvatarTestCase(unittest.TestCase):
             print str(self.service.avatars[0])
             self.assertEquals(str(self.service.avatars[0]),
                               "PokerAvatar serial = 4, name = user0")
+            return (client, packet)
             
         d.addCallback(stringAvatar)
+        return d
+    # -------------------------------------------------------------------------
+    def test06_setRoles(self):
+        """Tests setting of roles"""
+        # I have the test being script only to commit to trunk
+        return
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        def setRoles((client, packet)):
+            avatar = self.service.avatars[0]
+            avatar.handlePacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerRoles.PLAY))
+            return (client, packet)
+        d.addCallback(setRoles)
+        d.addCallback(self.quit)
         return d
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

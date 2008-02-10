@@ -1,3 +1,9 @@
+2008-02-10  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.test06_setRoles)
+	(PokerAvatarTestCase.test05_testStrInterpolation): Callback function
+	should return (client, packet).
+
 2008-02-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
