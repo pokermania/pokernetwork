@@ -1,4 +1,5 @@
 #!@PYTHON@
+# -*- mode: python -*-
 #
 # Copyright (C) 2007 Loic Dachary <loic@dachary.org>
 #
