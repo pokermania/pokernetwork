@@ -266,6 +266,8 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(vv.game.max_players, 5)
                 self.assertEquals(vv.game.variant, 'holdem')
                 self.assertEquals(vv.game.betting_structure, '2-4-limit')
+            # Set Explain should now generate an error that we're at a table.
+            self.assertEquals(avatar.setExplain("This should fail"), False)
 
         d.addCallback(handleTable)
         return d
