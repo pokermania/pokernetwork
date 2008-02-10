@@ -290,16 +290,72 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test06_setRoles(self):
         """Tests setting of roles"""
-        return
-        # I have the test being skipped only to commit to trunk
+        # 
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        def setRoles((client, packet)):
+            avatar = self.service.avatars[0]
+            avatar.handlePacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerRoles.PLAY))
+            try:
+                avatar.logout()
+            except KeyError, ke:
+                self.assertEquals(ke.args[0], client.getSerial())
+            avatar.roles = ""
+            return (client, packet)
+        d.addCallback(setRoles)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.quit)
+        return d
+    # -------------------------------------------------------------------------
+    def test06_5_setRolesIsAnErrorWhenDoneAfterLogin(self):
+        """Tests setting of roles after a login has already occurred.  Results are
+        undefined in this case."""
+        # While I was writing full coverage tests here, Loic and I
+        # discovered that bad behavior occurs if you set roles after
+        # you've logged in.  It must be done before, as is done in the
+        # above test.  Loic documented this in
+        # pokernetwork/pokerpackets.py as of r3654 about this issue.  This
+        # test here looks for the blow-up that we discovered in the
+        # undefined behavhior.  Since we've determined the behavior to be
+        # undefined, this test might need to be updated later to test for
+        # the undefined behavior we see. ;) Perhaps testing for things
+        # that aren't defined with this.
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         def setRoles((client, packet)):
             avatar = self.service.avatars[0]
             avatar.handlePacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerRoles.PLAY))
+            try:
+                avatar.logout()
+            except KeyError, ke:
+                self.assertEquals(ke.args[0], client.getSerial())
+            # Reset avatar role values back to blank so future errors of
+            # this type do not occur.
+            avatar.roles = ""
             return (client, packet)
         d.addCallback(setRoles)
+        return d
+    # -------------------------------------------------------------------------
+    def test07_getImage(self):
+        """Tests player getting its image"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        def getImage((client, packet)):
+            avatar = self.service.avatars[0]
+            avatar.queuePackets()
+            avatar.handlePacketLogic(PacketPokerGetPlayerImage(
+                    serial = client.getSerial()))
+            found = False
+            for packet in avatar._packets_queue:
+                if packet.type == PACKET_POKER_PLAYER_IMAGE:
+                    found = True
+                    self.assertEquals(packet.serial, client.getSerial())
+                    self.assertEquals(packet.image_type, "image/png")
+            self.assertEquals(found, True)
+            return (client, packet)
+        d.addCallback(getImage)
         d.addCallback(self.quit)
         return d
 # ------------------------------------------------------

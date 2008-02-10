@@ -1,8 +1,12 @@
 2008-02-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
-	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.test06_setRoles)
+	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.test05_testStrInterpolation): Callback function
 	should return (client, packet).
+	(PokerAvatarTestCase.test07_getImage): Wrote function.
+	(PokerAvatarTestCase.test06_5_setRolesIsAnErrorWhenDoneAfterLogin):
+	Wrote function.
+	(PokerAvatarTestCase.test06_setRoles): Roles must be set before login.
 
 2008-02-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
