@@ -1,3 +1,8 @@
+2008-02-09  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.__str__): Fixed bug;
+	stringification shouldn't have a print in it.
+
 2008-02-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* Release 1.3.0

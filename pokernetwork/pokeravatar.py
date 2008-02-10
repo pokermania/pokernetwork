@@ -55,7 +55,7 @@ class PokerAvatar:
         self.noqueuePackets()
 
     def __str__(self):
-        print "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
+        return "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
 
     def setExplain(self, what):
         if self.tables:
