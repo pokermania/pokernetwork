@@ -296,11 +296,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         def setRoles((client, packet)):
             avatar = self.service.avatars[0]
             avatar.handlePacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerRoles.PLAY))
-            try:
-                avatar.logout()
-            except KeyError, ke:
-                self.assertEquals(ke.args[0], client.getSerial())
-            avatar.roles = ""
             return (client, packet)
         d.addCallback(setRoles)
         d.addCallback(self.login, 0)

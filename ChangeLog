@@ -7,6 +7,8 @@
 	(PokerAvatarTestCase.test06_5_setRolesIsAnErrorWhenDoneAfterLogin):
 	Wrote function.
 	(PokerAvatarTestCase.test06_setRoles): Roles must be set before login.
+	(PokerAvatarTestCase.test06_setRoles.setRoles): should not
+	try/catch error as test following it does.
 
 2008-02-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
