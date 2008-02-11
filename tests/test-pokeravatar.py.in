@@ -254,7 +254,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-#        d.addCallback(self.login_again)
         def handleTable((client, packet)):
             avatar = self.service.avatars[0]
             avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
@@ -353,10 +352,82 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(getImage)
         d.addCallback(self.quit)
         return d
+    # -------------------------------------------------------------------------
+    def joinTable(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        table = self.service.getTable(101)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
+                                                      game_id = 101))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_TABLE:
+                found = True
+                myGame = None
+                for  (kk, vv) in avatar.tables.items():
+                    myGame = vv.game
+                    self.assertEquals(vv.game.id, table.game.id)
+                    self.assertEquals(vv.game.name, "Table2")
+                    self.assertEquals(vv.game.max_players, 10)
+                    self.assertEquals(vv.game.variant, 'holdem')
+                    self.assertEquals(vv.game.betting_structure, '100-200-no-limit')
+        self.assertEquals(found, True)
+        print "GAME:"
+        print table.game.serial2player
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test08_joinTable(self):
+        """Tests table joining."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable)
+        d.addCallback(self.quit)
+        return d
+    # -------------------------------------------------------------------------
+    def sitTable(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        table = self.service.getTable(101)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSeat(serial = client.getSerial(),
+                                                 seat = 1, game_id = 101))
+        found = 0
+        print "Packets: "
+        for packet in avatar.resetPacketsQueue():
+            print packet
+            if packet.type == PACKET_POKER_SEATS:
+                found += 1
+                self.assertEquals(packet.game_id, table.game.id)
+                self.assertEquals(packet.seats, [0, client.getSerial(),
+                                                 0, 0, 0, 0, 0, 0, 0, 0])
+            if packet.type == PACKET_POKER_PLAYER_ARRIVE:
+                found += 1 
+                self.assertEquals(packet.game_id, table.game.id)
+                self.assertEquals(packet.name, "user0")
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.seat, 1)
+            if packet.type == PACKET_POKER_PLAYER_CHIPS:
+                found += 1
+                self.assertEquals(packet.game_id, table.game.id)
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.bet, 0)
+                self.assertEquals(packet.money, 0)
+        self.assertEquals(found, 3)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test09_sitTable(self):
+        """Tests table joining table and sitting down."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable)
+        d.addCallback(self.sitTable)
+        d.addCallback(self.quit)
+        return d
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+#    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

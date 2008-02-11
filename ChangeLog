@@ -9,6 +9,10 @@
 	(PokerAvatarTestCase.test06_setRoles): Roles must be set before login.
 	(PokerAvatarTestCase.test06_setRoles.setRoles): should not
 	try/catch error as test following it does.
+	(PokerAvatarTestCase.test08_joinTable): Wrote function.
+	(PokerAvatarTestCase.joinTable): Wrote helper function.
+	(PokerAvatarTestCase.test09_sitTable): Wrote function.
+	(PokerAvatarTestCase.sitTable): Wrote helper function.
 
 2008-02-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
