@@ -1,3 +1,11 @@
+2008-02-11  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.sitTable):
+	Removed extraneous prints.
+	(PokerAvatarTestCase.test10_explainFailsOnceAtTable): Wrote
+	function.
+	(PokerAvatarTestCase.forceExplain): Wrote function.
+
 2008-02-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
