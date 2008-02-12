@@ -5,6 +5,9 @@
 	(PokerAvatarTestCase.test10_explainFailsOnceAtTable): Wrote
 	function.
 	(PokerAvatarTestCase.forceExplain): Wrote function.
+	(PokerAvatarTestCase.test11_loginWithPasswordTooLong): Wrote
+	function.
+	(PokerAvatarTestCase.loginWithPasswordTooLong): Wrote function.
 
 2008-02-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 

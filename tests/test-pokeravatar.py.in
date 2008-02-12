@@ -447,10 +447,30 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.forceExplain, 0)
         d.addCallback(self.quit)
         return d
+    # ------------------------------------------------------------------------
+    def loginWithPasswordTooLong(self, (client, packet), index):
+        client.sendPacket(PacketLogin(name = 'user%d' % index, password = 'passwordislongerthan15chars'))
+        d = client.packetDeferred(True, PACKET_AUTH_REFUSED)
+        def checkbadLoginReturn( (client, packet) ):
+            self.assertEquals(packet.type, PACKET_AUTH_REFUSED)
+            self.assertEquals(packet.message, "password must be at most 15 characters long")
+            self.assertEquals(packet.code, 6)
+            self.assertEquals(packet.other_type, PACKET_LOGIN)
+            self.assertEquals(client.getSerial(), 0)
+        d.addCallback(checkbadLoginReturn)
+        return d
+    # ------------------------------------------------------------------------
+    def test11_loginWithPasswordTooLong(self):
+        """Tests to be sure setting explain fails when you are already
+        connected to to table."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.loginWithPasswordTooLong, 0)
+        return d
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test10"
+#    loader.methodPrefix = "test11"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
