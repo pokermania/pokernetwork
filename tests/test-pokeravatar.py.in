@@ -353,8 +353,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def joinTable(self, (client, packet)):
-        avatar = self.service.avatars[0]
+    def joinTable(self, (client, packet), id):
+        avatar = self.service.avatars[id]
         table = self.service.getTable(101)
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
@@ -372,8 +372,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(vv.game.variant, 'holdem')
                     self.assertEquals(vv.game.betting_structure, '100-200-no-limit')
         self.assertEquals(found, True)
-        print "GAME:"
-        print table.game.serial2player
         return (client, packet)
     # ------------------------------------------------------------------------
     def test08_joinTable(self):
@@ -381,12 +379,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable)
+        d.addCallback(self.joinTable, 0)
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def sitTable(self, (client, packet)):
-        avatar = self.service.avatars[0]
+    def sitTable(self, (client, packet), id):
+        avatar = self.service.avatars[id]
         table = self.service.getTable(101)
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerSeat(serial = client.getSerial(),
@@ -403,7 +401,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             if packet.type == PACKET_POKER_PLAYER_ARRIVE:
                 found += 1 
                 self.assertEquals(packet.game_id, table.game.id)
-                self.assertEquals(packet.name, "user0")
+                self.assertEquals(packet.name, "user%d" % id)
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.seat, 1)
             if packet.type == PACKET_POKER_PLAYER_CHIPS:
@@ -420,8 +418,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable)
-        d.addCallback(self.sitTable)
+        d.addCallback(self.joinTable, 0)
+        d.addCallback(self.sitTable, 0)
         d.addCallback(self.quit)
         return d
 # ------------------------------------------------------
