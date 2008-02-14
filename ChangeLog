@@ -3,6 +3,8 @@
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.test12_buyIntoGame): Wrote function.
 	(PokerAvatarTestCase.buyInTable): Wrote function.
+	(PokerAvatarTestCase.test13_stats): Wrote function.
+	(PokerAvatarTestCase.statsQuery): Wrote function.
 
 2008-02-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 

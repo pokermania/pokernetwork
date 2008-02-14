@@ -494,11 +494,34 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.quit)
         return d
-# ------------------------------------------------------
+    # ------------------------------------------------------------------------
+    def statsQuery(self, (client, packet), id):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerStatsQuery(serial = client.getSerial()))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_STATS:
+                found = True
+                self.assertEquals(packet.length, 19)
+                self.assertEquals(packet.players, 2)
+                assert(packet.bytesin > 0)
+                assert(packet.bytesout > 0)
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test13_stats(self):
+        """Test stats request"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.statsQuery, 0)
+        return d
+    # ------------------------------------------------------------------------
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test12"
+#    loader.methodPrefix = "test13"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
