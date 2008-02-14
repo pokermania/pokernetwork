@@ -1,3 +1,15 @@
+2008-02-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test12_buyIntoGame): Wrote function.
+	(PokerAvatarTestCase.buyInTable): Wrote function.
+
+2008-02-12  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.joinTable):
+	Removed myGame variable; no longer needed.
+	Changed currency_serial for Table2 to 0.
+
 2008-02-11  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.sitTable):
