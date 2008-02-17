@@ -1,3 +1,15 @@
+2008-02-17  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.readyToPlay):
+	Wrote function.
+	(PokerAvatarTestCase.dealTable): Wrote function.
+	(PokerAvatarTestCase.test15_handPlay): Wrote function.
+	(PokerAvatarTestCase.joinTable): Added gameId as a parameter.
+	(PokerAvatarTestCase.sitTable): Added gameId as a parameter.
+	(PokerAvatarTestCase.autoBlindAnte): Wrote function.
+	(PokerAvatarTestCase.sitTable): Renamed function to seatTable.
+	(PokerAvatarTestCase.sitTable): Wrote a new function by this name.
+
 2008-02-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in

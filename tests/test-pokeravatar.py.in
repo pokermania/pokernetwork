@@ -353,12 +353,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def joinTable(self, (client, packet), id):
+    def joinTable(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
-        table = self.service.getTable(101)
+        table = self.service.getTable(gameId)
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
-                                                      game_id = 101))
+                                                      game_id = gameId))
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TABLE:
@@ -377,17 +377,17 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0)
+        d.addCallback(self.joinTable, 0, 101)
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def sitTable(self, (client, packet), id):
+    def seatTable(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
-        table = self.service.getTable(101)
+        table = self.service.getTable(gameId)
         seatNumber = id + 1
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerSeat(serial = client.getSerial(),
-                                                 seat = seatNumber, game_id = 101))
+                                                seat = seatNumber, game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_SEATS:
@@ -409,13 +409,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertEquals(found, 3)
         return (client, packet)
     # ------------------------------------------------------------------------
-    def test09_sitTable(self):
+    def test09_seatTable(self):
         """Tests table joining table and sitting down."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0)
-        d.addCallback(self.sitTable, 0)
+        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -440,8 +440,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0)
-        d.addCallback(self.sitTable, 0)
+        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.forceExplain, 0)
         d.addCallback(self.quit)
         return d
@@ -489,8 +489,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0)
-        d.addCallback(self.sitTable, 0)
+        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.quit)
         return d
@@ -518,10 +518,87 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.statsQuery, 0)
         return d
     # ------------------------------------------------------------------------
+    def readyToPlay(self, (client, packet), id, gameId ):
+        
+#        client.sendPacket(PacketPokerReadyToPlay(serial = client.getSerial(),
+#                                                 game_id = gameId))
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerReadyToPlay(serial = client.getSerial(),
+                                                        game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ACK:
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def autoBlindAnte(self, (client, packet), id, gameId ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerAutoBlindAnte(serial= client.getSerial(),
+                                                        game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, gameId)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def dealTable(self, (client, packet), gameId):
+        table = self.service.getTable(gameId)
+        table.beginTurn()
+        table.update()
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def sitTable(self, (client, packet), id, gameId):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        seatNumber = id + 1
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSit(serial = client.getSerial(),
+                                                game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_SIT:
+                found = True
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, client.getSerial())
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test15_handPlay(self):
+        """Test playing an actual hand all the way through"""
+        # The sequence of how to get yourself seated in a cash game was
+        # taken from the instructions at the top of pokerpackets.py
+        # labelled "How to sit at a cash game table ?"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 101)
+        d2.addCallback(self.seatTable, 1, 101)
+        d2.addCallback(self.buyInTable, 1, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d2.addCallback(self.sitTable, 1, 101)
+        d2.addCallback(self.readyToPlay, 1, 101)
+        d2.addCallback(self.dealTable, 101)
+        return defer.DeferredList((d, d2))
+    # ------------------------------------------------------------------------
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test13"
+    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
