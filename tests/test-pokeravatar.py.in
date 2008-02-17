@@ -553,6 +553,46 @@ class PokerAvatarTestCase(unittest.TestCase):
         table.update()
         return (client, packet)
     # ------------------------------------------------------------------------
+    def beginHandSetup(self, (client, packet), gameId):
+        table = self.service.getTable(gameId)
+        avatar0 = self.service.avatars[0]
+        avatar1 = self.service.avatars[1]
+        avatar0.queuePackets()
+        avatar1.queuePackets()
+        # Handle the packets that initially arrive.  I learned what to
+        # expect from "What to expect while a hand is being played?" in
+        # pokerpackets.py
+        packetList = []
+        packetList.extend(avatar0.resetPacketsQueue())
+        packetList.extend(avatar1.resetPacketsQueue())
+        playersExpect = [ avatar0.getSerial(), avatar1.getSerial() ]
+        playersExpect.sort()
+        found = 0
+        print "Packets: "
+        print packetList
+        for packet in packetList:
+            if packet.type == PACKET_POKER_IN_GAME:
+                found += 1
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.game_id, gameId)
+                packet.players.sort()
+                self.assertEquals(packet.players, playersExpect)
+            if packet.type == PACKET_POKER_DEALER:
+                found += 1
+                self.assertEquals(packet.dealer, 1)
+                self.assertEquals(packet.previous_dealer, -1)
+                self.assertEquals(packet.game_id, gameId)
+            if packet.type == PACKET_POKER_START:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.level, 0)
+                self.assertEquals(packet.hand_serial, 1)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.hands_count, 0)
+                self.assertEquals(packet.time, 0)
+        self.assertEquals(found, 6)
+        return (client, packet)
+    # ------------------------------------------------------------------------
     def sitTable(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
@@ -593,12 +633,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.sitTable, 1, 101)
         d2.addCallback(self.readyToPlay, 1, 101)
         d2.addCallback(self.dealTable, 101)
+        d2.addCallback(self.beginHandSetup, 101)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
