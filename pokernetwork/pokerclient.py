@@ -669,8 +669,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 if packet.game_id != self.getCurrentGameId():
                    self.postMuck(game, True)
 
-        if not self.explain.explain(packet):
-            return
+        self.explain.explain(packet)
 
         if game:
             if packet.type == PACKET_POKER_PLAYER_ARRIVE:
