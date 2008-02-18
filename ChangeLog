@@ -1,3 +1,9 @@
+2008-02-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test99_testTinyFunctions): Wrote function.
+	(PokerAvatarTestCase.tinyFunctions): Wrote function.
+
 2008-02-17  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.readyToPlay):

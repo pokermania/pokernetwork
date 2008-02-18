@@ -787,10 +787,23 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.startHandAndReceiveCards, 101)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
+    def tinyFunctions(self, (client, packet), id):
+        avatar = self.service.avatars[id]
+        self.assertEquals(avatar.getUrl(), "random")
+        self.assertEquals(avatar.getOutfit(), "random")
+    # ------------------------------------------------------------------------
+    def test99_testTinyFunctions(self):
+        """Test a few small functions that are not otherwise called"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.tinyFunctions, 0)
+        return d
+    # ------------------------------------------------------------------------
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test99"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
