@@ -622,6 +622,124 @@ class PokerAvatarTestCase(unittest.TestCase):
             # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
             # serial 5, but I thought it was safe to ignore them here.
         self.assertEquals(found, 14)
+        avatar0.queuePackets()
+        avatar1.queuePackets()
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def doBlindPost(self, (client, packet), id, gameId):
+        # By now, we should have seen as noted above, a request for the
+        # blinds for avatar1 for 100 small blind.  Here we send it.
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(),
+                                                   game_id = gameId, dead = 0,
+                                                   amount = 100))
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def startHandAndReceiveCards(self, (client, packet), gameId):
+        table = self.service.getTable(gameId)
+        avatar = []
+        avatar.append(self.service.avatars[0])
+        avatar.append(self.service.avatars[1])
+
+        packetList = []
+        packetList.append(avatar[0].resetPacketsQueue())
+        packetList.append(avatar[1].resetPacketsQueue())
+        found = 0
+
+        # First look for all the packets that both of them get and should have.
+        p = []
+        p.extend(packetList[0])
+        p.extend(packetList[1])
+        found = 0
+        for packet in p:
+            if packet.type == PACKET_POKER_BLIND:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.dead, 0)
+                if packet.serial == avatar[1].getSerial():
+                    self.assertEquals(packet.amount, 100)
+                elif packet.serial == avatar[0].getSerial():
+                    self.assertEquals(packet.amount, 200)
+                else:
+                    self.assertEquals("", "Unknown serial: %d" % packet.serial)
+            elif packet.type == PACKET_POKER_CHIPS_PLAYER2BET:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.cookie, "")
+                if (packet.serial == avatar[0].getSerial()):
+                        self.assertEquals(packet.chips, [100, 2])
+                elif (packet.serial == avatar[1].getSerial()):
+                    self.assertEquals(packet.chips, [100, 1])
+                else:
+                        assert("unknown serial in player2bet packet: %d" 
+                               % packet.serial)
+            elif packet.type == PACKET_POKER_CHIPS:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                if (packet.serial == avatar[0].getSerial()):
+                    self.assertEquals(packet.bet, 200)
+                    self.assertEquals(packet.money, 800)
+                elif (packet.serial == avatar[1].getSerial()):
+                    self.assertEquals(packet.bet, 100)
+                    self.assertEquals(packet.money, 900)
+                else:
+                    self.assertEquals(
+                        "unknown serial in player2bet packet: %d" 
+                        % packet.serial, "")
+            elif packet.type == PACKET_POKER_CHAT:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                if (packet.message not in [ "Dealer: user1 pays 1 blind\n",
+                                            "Dealer: user0 pays 2 blind\n",
+                                            "Dealer: pre-flop, 2 players\n" ]):
+                    self.assertEquals("Unexpected message: %s" %
+                                      packet.message, "")
+            elif packet.type == PACKET_POKER_STATE:
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.string, "pre-flop")
+            elif packet.type == PACKET_POKER_BEGIN_ROUND:
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.cookie, "")
+
+        self.assertEquals(found, 14)
+
+        for avid in [0, 1]:
+            otherid = avid -1
+            if otherid < 0:
+                otherid = 1
+            for packet in packetList[avid]:
+                if packet.type == PACKET_POKER_PLAYER_CARDS:
+                    self.assertEquals(packet.game_id, gameId)
+                    if (packet.serial == avatar[avid].getSerial()):
+                        self.assertEquals(len(packet.cards), 2)
+                        for c in packet.cards:
+                            self.assertTrue(c <  255)
+                            self.assertTrue(c >  0)
+                    elif (packet.serial == avatar[otherid].getSerial()):
+                        self.assertEquals(packet.cards, [255, 255])
+                elif packet.type == PACKET_POKER_BET_LIMIT:
+                    print "LIMIT: %d" % avid
+                    print packet
+                    self.assertEquals(packet.game_id, gameId)
+                    self.assertEquals(packet.serial, 0)
+                    self.assertEquals(packet.cookie, "")
+                    self.assertEquals(packet.step, 100)
+                    if (avid == 0):
+                        self.assertEquals(packet.min, 200)
+                        self.assertEquals(packet.max, 200)
+                        self.assertEquals(packet.allin, 800)
+                        self.assertEquals(packet.pot, 300)
+                        self.assertEquals(packet.call, 0)
+                    else:
+                        self.assertEquals(packet.min, 300)
+                        self.assertEquals(packet.max, 300)
+                        self.assertEquals(packet.allin, 900)
+                        self.assertEquals(packet.pot, 500)
+                        self.assertEquals(packet.call, 100)
         return (client, packet)
     # ------------------------------------------------------------------------
     def sitTable(self, (client, packet), id, gameId):
@@ -660,11 +778,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.joinTable, 1, 101)
         d2.addCallback(self.seatTable, 1, 101)
         d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
+        # Note: this avatar does not autopost, and doBlindPost handles it.
         d2.addCallback(self.sitTable, 1, 101)
         d2.addCallback(self.readyToPlay, 1, 101)
         d2.addCallback(self.dealTable, 101)
         d2.addCallback(self.beginHandSetup, 101)
+        d2.addCallback(self.doBlindPost, 1, 101)
+        d2.addCallback(self.startHandAndReceiveCards, 101)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
 def Run():

@@ -10,6 +10,8 @@
 	(PokerAvatarTestCase.sitTable): Renamed function to seatTable.
 	(PokerAvatarTestCase.sitTable): Wrote a new function by this name.
 	(PokerAvatarTestCase.beginHandSetup): Wrote function.
+	(PokerAvatarTestCase.doBlindPost): Wrote function.
+	(PokerAvatarTestCase.startHandAndReceiveCards): Wrote function.
 
 2008-02-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
