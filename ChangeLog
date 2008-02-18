@@ -14,6 +14,9 @@
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.test99_testTinyFunctions): Wrote function.
 	(PokerAvatarTestCase.tinyFunctions): Wrote function.
+	(PokerAvatarTestCase.test16_explainTooLate): Wrote function.
+	(PokerAvatarTestCase.pingThenUnprivRegisterTourney): Wrote function.
+	(PokerAvatarTestCase.test17_pingAndUnpriv): Wrote function.
 
 2008-02-17  Bradley M. Kuhn  <bkuhn@ebb.org>
 

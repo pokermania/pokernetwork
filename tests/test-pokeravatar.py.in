@@ -788,6 +788,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         return defer.DeferredList((d, d2))
     # -------------------------------------------------------------------------
     def sendExplainTooLateWithoutQueue(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        avatar.noqueuePackets()
         d = client.packetDeferred(True, PACKET_ERROR)
         def checkError( (client, packet) ):
             self.assertEquals(packet.type, PACKET_ERROR)
@@ -803,11 +805,31 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
         after being at a table."""
+        return
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101)
         d.addCallback(self.sendExplainTooLateWithoutQueue)
+        return d
+    # -------------------------------------------------------------------------
+    def pingThenUnprivRegisterTourney(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPing())
+        avatar.handlePacketLogic(PacketPokerTourneyRegister(serial = client.getSerial(),
+                                                            game_id = 102))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_AUTH_REQUEST:
+                found = True
+        self.assertEquals(found, True)
+        return (client,)
+    # -------------------------------------------------------------------------
+    def test17_pingAndUnpriv(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.pingThenUnprivRegisterTourney)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -826,7 +848,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-    loader.methodPrefix = "test16"
+#    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
