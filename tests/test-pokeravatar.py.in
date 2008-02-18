@@ -214,7 +214,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertNotEqual(None, avatar.explain)
         serial = 200
         packet_serial = PacketSerial(serial = serial)
-        self.assertEqual([packet_serial], avatar.explain.explain(packet_serial))
+        self.assertTrue(avatar.explain.explain(packet_serial))
+        self.assertEqual(packet_serial, avatar.explain.forward_packets[0])
         self.assertEqual(serial, avatar.explain.getSerial())
         return (client,)
     # -------------------------------------------------------------------------
