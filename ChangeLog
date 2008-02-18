@@ -1,3 +1,14 @@
+2008-02-18  Loic Dachary  <loic@pokerdev.pokersource.info>
+
+	* Release 1.3.0
+
+	* pokernetwork/pokerexplain.py: explain function returns True or False. Resulting packets are to be found, always, in explain.forward_packets. 
+
+	* pokernetwork/pokeravatar.py: When used server side, the error
+	packet is returned to the client instead of being discarded.
+
+	* tests/test-pokerexplain.py.in: adapt to new return value
+
 2008-02-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -71,8 +82,6 @@
 	stringification shouldn't have a print in it.
 
 2008-02-02  Bradley M. Kuhn  <bkuhn@ebb.org>
-
-	* Release 1.3.0
 
 	* tests/test-pokerdatabase.py.in
 	(PokerDatabaseTestCase.tearDown): Added code to delete the test user.
