@@ -1,3 +1,10 @@
+2008-02-18  Loic Dachary  <loic@pokerdev.pokersource.info>
+
+	* Release 1.3.0
+
+	* pokernetwork/pokerclient.py: ERROR packets are no longer
+	consumed by the pokerclient layer.
+
 2008-02-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -5,8 +12,6 @@
 	(PokerAvatarTestCase.requestsWithWrongSerial): Wrote function.
 
 2008-02-18  Loic Dachary  <loic@pokerdev.pokersource.info>
-
-	* Release 1.3.0
 
 	* pokernetwork/pokerexplain.py: explain function returns True or False. Resulting packets are to be found, always, in explain.forward_packets. 
 
