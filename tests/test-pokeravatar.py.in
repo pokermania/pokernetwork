@@ -787,7 +787,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.startHandAndReceiveCards, 101)
         return defer.DeferredList((d, d2))
     # -------------------------------------------------------------------------
-    def sendExplainTooLateWithoutQueue(self, (client, packet)):
+    def sendExplainTooLate(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        avatar.noqueuePackets()
+        client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         avatar = self.service.avatars[0]
         avatar.noqueuePackets()
         d = client.packetDeferred(True, PACKET_ERROR)
@@ -796,12 +799,30 @@ class PokerAvatarTestCase(unittest.TestCase):
             self.assertEquals(packet.other_type, PACKET_POKER_EXPLAIN)
             self.assertEquals(packet.code, 0)
             self.assertEquals(packet.message, "no message")
-#        d.addCallback(checkError)
-        client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
+        d.addCallback(checkError)
         return  d
 #        return (client, packet)
 
     # -------------------------------------------------------------------------
+    # <dachary> the error is returned by the server to the explain layer  [14:16]
+    # <dachary> and in pokerexplain.py:290
+    # <dachary> instead of passing the error back to the client
+    # <dachary> the explain layer logs the error and returns
+    # <dachary> since the packet was sent to the client, it would be more sensible
+    #           to return the error to the client  [14:18]
+    # <dachary> the reason why it behaves in this way is that the explain layer was
+    #           formerly part of the client
+    # <dachary> only part of the client
+    # <dachary> now it can also be used as part of the server
+    # <dachary> Therefore I think it qualifies as a bug  [14:19]
+    # <dachary> because the client has no way to get the error message
+    # <dachary> never  [14:20]
+    # <dachary> whatever the error is
+    # <dachary> and this sucks
+    # <dachary> big time
+    # <dachary> it means that the users of the explain layer never do mistakes
+    # <dachary> or they are crazy
+    # <dachary> or both  [14:21]
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
         after being at a table."""
@@ -810,7 +831,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101)
-        d.addCallback(self.sendExplainTooLateWithoutQueue)
+        d.addCallback(self.sendExplainTooLate)
         return d
     # -------------------------------------------------------------------------
     def pingThenUnprivRegisterTourney(self, (client, packet)):
