@@ -786,6 +786,29 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.doBlindPost, 1, 101)
         d2.addCallback(self.startHandAndReceiveCards, 101)
         return defer.DeferredList((d, d2))
+    # -------------------------------------------------------------------------
+    def sendExplainTooLateWithoutQueue(self, (client, packet)):
+        d = client.packetDeferred(True, PACKET_ERROR)
+        def checkError( (client, packet) ):
+            self.assertEquals(packet.type, PACKET_ERROR)
+            self.assertEquals(packet.other_type, PACKET_POKER_EXPLAIN)
+            self.assertEquals(packet.code, 0)
+            self.assertEquals(packet.message, "no message")
+#        d.addCallback(checkError)
+        client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
+        return  d
+#        return (client, packet)
+
+    # -------------------------------------------------------------------------
+    def test16_explainTooLate(self):
+        """This test covers the case where you attempt to turn on explain
+        after being at a table."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.sendExplainTooLateWithoutQueue)
+        return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
@@ -803,7 +826,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test99"
+    loader.methodPrefix = "test16"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
