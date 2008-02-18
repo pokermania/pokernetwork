@@ -171,6 +171,19 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(reason, packet.reason)
         self.assertEqual(pot_index, packet.pot)
 
+    def test08_gameEvent_position(self):
+        self.explain.forward_packets = [ 'fake' ]
+        class PokerGame:
+            id = 3
+            def inGameCount(self):
+                return 1
+        class PokerGames:
+            def getGame(self, id):
+                return PokerGame()
+        self.explain.games = PokerGames()
+        self.assertEquals(True, self.explain.gameEvent(1, "position"))
+        self.assertEquals(PACKET_POKER_ALLIN_SHOWDOWN, self.explain.forward_packets[1].type)
+
     def test08_gameEvent_failure(self):
         self.failIf(self.explain.gameEvent(1, "end_round"))
         self.explain.forward_packets = [ 'fake' ]
@@ -530,16 +543,16 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_CURRENT_GAMES, packets[4].type)
 
     def test20_explain_poker_table(self):
-        packets = self.explain.explain(PacketPokerTable(id = 0))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_TABLE, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerTable(id = 0)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_TABLE, self.explain.forward_packets[0].type)
 
-        packets = self.explain.explain(PacketPokerTable(id = 1,
-                                                        betting_structure = '1-2-no-limit',
-                                                        variant = 'holdem'))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_TABLE, packets[0].type)
-        self.assertEqual(PACKET_POKER_CURRENT_GAMES, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerTable(id = 1,
+                                                              betting_structure = '1-2-no-limit',
+                                                              variant = 'holdem')))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_TABLE, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_CURRENT_GAMES, self.explain.forward_packets[1].type)
 
     def test21_explain_serial(self):
         self.explain.explain(PacketSerial(serial = 42))
@@ -561,8 +574,8 @@ class PokerExplainTestCase(unittest.TestCase):
 
         poker_start = PacketPokerStart(game_id = game_id, hand_serial = 0)
         
-        packets = self.explain.explain(poker_start)
-        self.assertEqual([], packets)
+        self.explain.explain(poker_start)
+        self.assertEqual([], self.explain.forward_packets)
 
         poker_start.hand_serial = 1
         game.state = "plop"
@@ -585,40 +598,40 @@ class PokerExplainTestCase(unittest.TestCase):
         player.bet = 10
 
         amount = 1
-        packets = self.explain.explain(PacketPokerCanceled(game_id = game_id,
-                                                           serial = player_serial,
-                                                           amount = amount))
-        self.assertEqual(5, len(packets))
-        self.assertEqual(PACKET_POKER_CANCELED, packets[0].type)
-        self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packets[1].type)
-        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[2].type)
+        self.assertTrue(self.explain.explain(PacketPokerCanceled(game_id = game_id,
+                                                                 serial = player_serial,
+                                                                 amount = amount)))
+        self.assertEqual(5, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_CANCELED, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_CHIPS_BET2POT, self.explain.forward_packets[1].type)
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[2].type)
 
     def test26_explain_player_arrive(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)
         player_serial = 3
-        packets = self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
-                                                               serial = player_serial,
-                                                               seat = 2,
-                                                               name = 'name',
-                                                               url = 'url',
-                                                               outfit = 'outfit',
-                                                               auto_blind_ante = 1,
-                                                               wait_for = 0))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_PLAYER_ARRIVE, packets[0].type)
-        self.assertEqual(PACKET_POKER_SEATS, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
+                                                                     serial = player_serial,
+                                                                     seat = 2,
+                                                                     name = 'name',
+                                                                     url = 'url',
+                                                                     outfit = 'outfit',
+                                                                     auto_blind_ante = 1,
+                                                                     wait_for = 0)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_ARRIVE, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_SEATS, self.explain.forward_packets[1].type)
 
     def test27_explain_player_leave(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)
         player_serial = 3
         self.failUnless(game.addPlayer(player_serial, 1))
-        packets = self.explain.explain(PacketPokerPlayerLeave(game_id = game_id,
-                                                              serial = player_serial))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_PLAYER_LEAVE, packets[0].type)
-        self.assertEqual(PACKET_POKER_SEATS, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerPlayerLeave(game_id = game_id,
+                                                                    serial = player_serial)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_LEAVE, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_SEATS, self.explain.forward_packets[1].type)
 
     def test28_explain_player_self(self):
         game_id = 1
@@ -627,10 +640,10 @@ class PokerExplainTestCase(unittest.TestCase):
         player_serial = 3
         game.position_info = [ player_serial, False ]
         self.explain.serial = player_serial
-        packets = self.explain.explain(PacketPokerPlayerSelf(game_id = game_id,
-                                                             serial = player_serial))
-        self.assertEqual(PACKET_POKER_PLAYER_SELF, packets[0].type)
-        self.assertEqual(PACKET_NONE, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerPlayerSelf(game_id = game_id,
+                                                                   serial = player_serial)))
+        self.assertEqual(PACKET_POKER_PLAYER_SELF, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_NONE, self.explain.forward_packets[1].type)
 
     def test29_explain_position(self):
         game_id = 1
@@ -639,10 +652,10 @@ class PokerExplainTestCase(unittest.TestCase):
         game.state = pokergame.GAME_STATE_PRE_FLOP
         player_serial = 3
         game.player_list = [ player_serial ]
-        packets = self.explain.explain(PacketPokerPosition(game_id = game_id,
-                                                           position = 0))
-        self.assertEqual(PACKET_POKER_POSITION, packets[0].type)
-        self.assertEqual(player_serial, packets[0].serial)
+        self.assertTrue(self.explain.explain(PacketPokerPosition(game_id = game_id,
+                                                                 position = 0)))
+        self.assertEqual(PACKET_POKER_POSITION, self.explain.forward_packets[0].type)
+        self.assertEqual(player_serial, self.explain.forward_packets[0].serial)
 
     def test30_explain_setters(self):
         game_id = 1
@@ -653,42 +666,43 @@ class PokerExplainTestCase(unittest.TestCase):
         #
         # PacketPokerSeats
         #
-        self.assertEqual([], self.explain.explain(PacketPokerSeats(game_id = game_id)))
+        self.assertTrue(self.explain.explain(PacketPokerSeats(game_id = game_id)))
+        self.assertEqual([], self.explain.forward_packets)
         #
         # PacketPokerPlayerCards
         #
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerPlayerCards(game_id = game_id,
                                    serial = player_serial,
                                    cards = [ 1 ])
-            )
-        self.assertEqual(PACKET_POKER_PLAYER_CARDS, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_PLAYER_CARDS, self.explain.forward_packets[0].type)
         #
         # PacketPokerBoardCards
         #
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerBoardCards(game_id = game_id,
                                   cards = [ 1 ])
-            )
-        self.assertEqual(PACKET_POKER_BOARD_CARDS, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_BOARD_CARDS, self.explain.forward_packets[0].type)
         #
         # PacketPokerDealer
         #
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerDealer(game_id = game_id,
                               dealer = 1)
-            )
-        self.assertEqual(PACKET_POKER_DEALER, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_DEALER, self.explain.forward_packets[0].type)
         #
         # PacketPokerSitOut
         #
         player.sit_out = False
         self.failUnless(player.isSit())
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerSitOut(game_id = game_id,
                               serial = player_serial)
-            )
-        self.assertEqual(PACKET_POKER_SIT_OUT, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_SIT_OUT, self.explain.forward_packets[0].type)
         self.failUnless(player.isSitOut())
         #
         # PacketPokerSit
@@ -697,62 +711,62 @@ class PokerExplainTestCase(unittest.TestCase):
         player.money = 10000
         player.sit_out = True
         self.failIf(player.isSit())
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerSit(game_id = game_id,
                            serial = player_serial)
-            )
-        self.assertEqual(PACKET_POKER_SIT, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_SIT, self.explain.forward_packets[0].type)
         self.failUnless(player.isSit())
         #
         # PacketPokerAutoFold
         #
         self.failIf(player.isAuto())
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerAutoFold(game_id = game_id,
                                serial = player_serial)
-            )
-        self.assertEqual(PACKET_POKER_AUTO_FOLD, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_AUTO_FOLD, self.explain.forward_packets[0].type)
         self.failUnless(player.isAuto())
         #
         # PacketPokerAutoBlindAnte
         #
         self.failIf(player.isAutoBlindAnte())
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerAutoBlindAnte(game_id = game_id,
                                      serial = player_serial)
-            )
-        self.assertEqual(PACKET_POKER_AUTO_BLIND_ANTE, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_AUTO_BLIND_ANTE, self.explain.forward_packets[0].type)
         self.failUnless(player.isAutoBlindAnte())
         #
         # PacketPokerNoautoBlindAnte
         #
         player.auto_blind_ante = True
         self.failUnless(player.isAutoBlindAnte())
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerNoautoBlindAnte(game_id = game_id,
                                        serial = player_serial)
-            )
-        self.assertEqual(PACKET_POKER_NOAUTO_BLIND_ANTE, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_NOAUTO_BLIND_ANTE, self.explain.forward_packets[0].type)
         self.failIf(player.isAutoBlindAnte())
         #
         # PacketPokerMuckRequest
         #
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerMuckRequest(game_id = game_id,
                                    muckable_serials = [player_serial])
-            )
-        self.assertEqual(PACKET_POKER_MUCK_REQUEST, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_MUCK_REQUEST, self.explain.forward_packets[0].type)
         self.assertEqual([player_serial], game.muckable_serials)
         #
         # PacketPokerRake
         #
         game.getRakeContributions = lambda: 0
         rake_amount = 101
-        packets = self.explain.explain(
+        self.assertTrue(self.explain.explain(
             PacketPokerRake(game_id = game_id,
                             value = rake_amount)
-            )
-        self.assertEqual(PACKET_POKER_RAKE, packets[0].type)
+            ))
+        self.assertEqual(PACKET_POKER_RAKE, self.explain.forward_packets[0].type)
         self.assertEqual(rake_amount, game.raked_amount)
 
     def test31_explain_game_action(self):
@@ -764,22 +778,22 @@ class PokerExplainTestCase(unittest.TestCase):
         fold = []
         game.fold = lambda serial: fold.append('fold')
         game.isSitOut = lambda serial: fold.append('isSitOut') or True
-        packets = self.explain.explain(PacketPokerFold(game_id = game_id))
-        self.assertEqual(2, len(packets))
+        self.assertTrue(self.explain.explain(PacketPokerFold(game_id = game_id)))
+        self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(['fold', 'isSitOut'], fold)
         #
         # call
         #
         call = []
         game.call = lambda serial: call.append('call')
-        packets = self.explain.explain(PacketPokerCall(game_id = game_id))
+        self.assertTrue(self.explain.explain(PacketPokerCall(game_id = game_id)))
         self.assertEqual(['call'], call)
         #
         # check
         #
         check = []
         game.check = lambda serial: check.append('check')
-        packets = self.explain.explain(PacketPokerCheck(game_id = game_id))
+        self.assertTrue(self.explain.explain(PacketPokerCheck(game_id = game_id)))
         self.assertEqual(['check'], check)
         #
         # raise
@@ -787,8 +801,8 @@ class PokerExplainTestCase(unittest.TestCase):
         _raise = []
         game.callNraise = lambda serial, amount: _raise.append(amount)
         raise_amount = 303
-        packets = self.explain.explain(PacketPokerRaise(game_id = game_id,
-                                                        amount = raise_amount))
+        self.assertTrue(self.explain.explain(PacketPokerRaise(game_id = game_id,
+                                                              amount = raise_amount)))
         self.assertEqual([raise_amount], _raise)
         #
         # blind
@@ -796,8 +810,8 @@ class PokerExplainTestCase(unittest.TestCase):
         blind = []
         game.blind = lambda serial, amount, dead: blind.append(amount)
         blind_amount = 404
-        packets = self.explain.explain(PacketPokerBlind(game_id = game_id,
-                                                        amount = blind_amount))
+        self.assertTrue(self.explain.explain(PacketPokerBlind(game_id = game_id,
+                                                              amount = blind_amount)))
         self.assertEqual([blind_amount], blind)
         #
         # ante
@@ -805,8 +819,8 @@ class PokerExplainTestCase(unittest.TestCase):
         ante = []
         game.ante = lambda serial, amount: ante.append(amount)
         ante_amount = 505
-        packets = self.explain.explain(PacketPokerAnte(game_id = game_id,
-                                                        amount = ante_amount))
+        self.assertTrue(self.explain.explain(PacketPokerAnte(game_id = game_id,
+                                                             amount = ante_amount)))
         self.assertEqual([ante_amount], ante)
         #
         # blind_request
@@ -814,8 +828,8 @@ class PokerExplainTestCase(unittest.TestCase):
         blind_request = []
         game.setPlayerBlind = lambda serial, state: blind_request.append(state)
         blind_state = "small"
-        packets = self.explain.explain(PacketPokerBlindRequest(game_id = game_id,
-                                                               state = blind_state))
+        self.assertTrue(self.explain.explain(PacketPokerBlindRequest(game_id = game_id,
+                                                                     state = blind_state)))
         self.assertEqual([blind_state], blind_request)
 
     def test32_explain_state_flop(self):
@@ -835,18 +849,18 @@ class PokerExplainTestCase(unittest.TestCase):
         game.downCardsDealtThisRoundCount = lambda: game_actions.append('downCardsDealtThisRoundCount') or down_cards_count
         cards_count = 2
         game.cardsDealtThisRoundCount = lambda: game_actions.append('cardsDealtThisRoundCount') or cards_count
-        packets = self.explain.explain(PacketPokerState(game_id = game_id,
-                                                        string = pokergame.GAME_STATE_FLOP))
-        self.assertEqual(6, len(packets))
-        self.assertEqual(PACKET_POKER_STATE, packets[0].type)
-        self.assertEqual('moveBet2Player', packets[1])
-        self.assertEqual(PACKET_POKER_DEAL_CARDS, packets[2].type)
-        self.assertEqual(down_cards_count, packets[2].numberOfCards)
-        self.assertEqual(PACKET_POKER_PLAYER_CARDS, packets[3].type)
-        self.assertEqual([], packets[3].cards)
-        self.assertEqual(PACKET_POKER_BEGIN_ROUND, packets[4].type)
-        self.assertEqual(PACKET_POKER_POSITION, packets[5].type)
-        self.assertEqual(player_serial, packets[5].serial)
+        self.assertTrue(self.explain.explain(PacketPokerState(game_id = game_id,
+                                                              string = pokergame.GAME_STATE_FLOP)))
+        self.assertEqual(6, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_STATE, self.explain.forward_packets[0].type)
+        self.assertEqual('moveBet2Player', self.explain.forward_packets[1])
+        self.assertEqual(PACKET_POKER_DEAL_CARDS, self.explain.forward_packets[2].type)
+        self.assertEqual(down_cards_count, self.explain.forward_packets[2].numberOfCards)
+        self.assertEqual(PACKET_POKER_PLAYER_CARDS, self.explain.forward_packets[3].type)
+        self.assertEqual([], self.explain.forward_packets[3].cards)
+        self.assertEqual(PACKET_POKER_BEGIN_ROUND, self.explain.forward_packets[4].type)
+        self.assertEqual(PACKET_POKER_POSITION, self.explain.forward_packets[5].type)
+        self.assertEqual(player_serial, self.explain.forward_packets[5].serial)
         
     def test33_explain_state_end(self):
         game_id = 1
@@ -859,10 +873,10 @@ class PokerExplainTestCase(unittest.TestCase):
         game_actions = []
         game.isSingleUncalledBet = lambda side_pots: game_actions.append('isSingleUncalledBet') or True
         
-        packets = self.explain.explain(PacketPokerState(game_id = game_id,
-                                                        string = pokergame.GAME_STATE_END))
-        self.assertEqual(2, len(packets))
-        self.assertEqual('moveBet2Player', packets[1])
+        self.assertTrue(self.explain.explain(PacketPokerState(game_id = game_id,
+                                                              string = pokergame.GAME_STATE_END)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual('moveBet2Player', self.explain.forward_packets[1])
 
         game_actions = []
         game.isFirstRound = lambda: True
@@ -872,10 +886,10 @@ class PokerExplainTestCase(unittest.TestCase):
         game.initRound = lambda: game_actions.append('initRound')
         game.state = pokergame.GAME_STATE_FLOP
         game.endState = lambda: game_actions.append('endState')
-        packets = self.explain.explain(PacketPokerState(game_id = game_id,
-                                                        string = pokergame.GAME_STATE_END))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_STATE, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerState(game_id = game_id,
+                                                              string = pokergame.GAME_STATE_END)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_STATE, self.explain.forward_packets[0].type)
         self.assertEqual(['blindAnteRoundEnd', 'endState', 'initRound'], game_actions)
 
     def test34_explain_in_game(self):
@@ -890,30 +904,30 @@ class PokerExplainTestCase(unittest.TestCase):
         # player in game and wait for
         #
         player.wait_for = True
-        packets = self.explain.explain(PacketPokerInGame(game_id = game_id,
-                                                         players = [player_serial]))
-        self.assertEqual(3, len(packets))
-        self.assertEqual(PACKET_POKER_IN_GAME, packets[0].type)
-        self.assertEqual(PACKET_POKER_SIT, packets[1].type)
-        self.assertEqual(PACKET_POKER_WAIT_FOR, packets[2].type)
+        self.assertTrue(self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                               players = [player_serial])))
+        self.assertEqual(3, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_SIT, self.explain.forward_packets[1].type)
+        self.assertEqual(PACKET_POKER_WAIT_FOR, self.explain.forward_packets[2].type)
 
         #
         # player not in game and wait for
         #
-        packets = self.explain.explain(PacketPokerInGame(game_id = game_id,
-                                                         players = []))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_IN_GAME, packets[0].type)
-        self.assertEqual(PACKET_POKER_WAIT_FOR, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                               players = [])))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_WAIT_FOR, self.explain.forward_packets[1].type)
         #
         # player not in game and not wait for
         #
         player.wait_for = False
-        packets = self.explain.explain(PacketPokerInGame(game_id = game_id,
-                                                         players = []))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_IN_GAME, packets[0].type)
-        self.assertEqual(PACKET_POKER_SIT_OUT, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                               players = [])))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_SIT_OUT, self.explain.forward_packets[1].type)
         
     def test35_explain_wait_for(self):
         game_id = 1
@@ -922,10 +936,10 @@ class PokerExplainTestCase(unittest.TestCase):
         self.failUnless(game.addPlayer(player_serial, 1))
         player = game.getPlayer(player_serial)
         wait_for = "big"
-        packets = self.explain.explain(PacketPokerWaitFor(game_id = game_id,
-                                                          serial = player_serial,
-                                                          reason = wait_for))
-        self.assertEqual(0, len(packets))
+        self.assertTrue(self.explain.explain(PacketPokerWaitFor(game_id = game_id,
+                                                                serial = player_serial,
+                                                                reason = wait_for)))
+        self.assertEqual(0, len(self.explain.forward_packets))
         self.assertEqual(player.wait_for, wait_for)
 
     def test36_explain_timeout(self):
@@ -939,26 +953,26 @@ class PokerExplainTestCase(unittest.TestCase):
         # timeout = 33
         #
         timeout = 33
-        packets = self.explain.explain(PacketPokerTimeoutWarning(game_id = game_id,
-                                                                 serial = player_serial,
-                                                                 timeout = timeout))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_TIMEOUT_WARNING, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerTimeoutWarning(game_id = game_id,
+                                                                       serial = player_serial,
+                                                                       timeout = timeout)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_TIMEOUT_WARNING, self.explain.forward_packets[0].type)
         self.assertEqual(timeout, player.getUserData()['timeout'][1])
         #
         # timeout = 0
         #
-        packets = self.explain.explain(PacketPokerTimeoutWarning(game_id = game_id,
-                                                                 serial = player_serial,
-                                                                 timeout = 0))
-        self.assertEqual(0, len(packets))
+        self.assertTrue(self.explain.explain(PacketPokerTimeoutWarning(game_id = game_id,
+                                                                       serial = player_serial,
+                                                                       timeout = 0)))
+        self.assertEqual(0, len(self.explain.forward_packets))
         #
         # unset the player timeout when the deconnection notice comes
         #
-        packets = self.explain.explain(PacketPokerTimeoutNotice(game_id = game_id,
-                                                                serial = player_serial))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_TIMEOUT_NOTICE, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerTimeoutNotice(game_id = game_id,
+                                                                      serial = player_serial)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_TIMEOUT_NOTICE, self.explain.forward_packets[0].type)
         self.assertEqual(None, player.getUserData()['timeout'])
 
     def test37_explain_rebuy(self):
@@ -970,11 +984,11 @@ class PokerExplainTestCase(unittest.TestCase):
         rebuy = []
         game.rebuy = lambda serial, amount: rebuy.append(amount) or True
         amount = 11
-        packets = self.explain.explain(PacketPokerRebuy(game_id = game_id,
-                                                        serial = player_serial,
-                                                        amount = amount))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerRebuy(game_id = game_id,
+                                                              serial = player_serial,
+                                                              amount = amount)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[0].type)
 
     def test38_explain_player_chips(self):
         game_id = 1
@@ -987,24 +1001,24 @@ class PokerExplainTestCase(unittest.TestCase):
         #
         # set the money/bet
         #
-        packets = self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
-                                                              serial = player_serial,
-                                                              money = money - 1,
-                                                              bet = bet - 1))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                                    serial = player_serial,
+                                                                    money = money - 1,
+                                                                    bet = bet - 1)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[0].type)
         self.assertEqual(money - 1, player.money)
         self.assertEqual(bet - 1, player.bet)
         self.failUnless(player.isBuyInPayed())
         #
         # override the money/bet
         #
-        packets = self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
-                                                              serial = player_serial,
-                                                              money = money,
-                                                              bet = bet))
-        self.assertEqual(1, len(packets))
-        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packets[0].type)
+        self.assertTrue(self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                                    serial = player_serial,
+                                                                    money = money,
+                                                                    bet = bet)))
+        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[0].type)
         self.assertEqual(money, player.money)
         self.assertEqual(bet, player.bet)
 
@@ -1017,14 +1031,14 @@ class PokerExplainTestCase(unittest.TestCase):
         # winners are known
         #
         game.winners = [1]
-        packets = self.explain.explain(PacketPokerWin(game_id = game_id,
-                                                      serials = [1]))
-        self.assertEqual(5, len(packets))
-        self.assertEqual(PACKET_POKER_WIN, packets[0].type)
-        self.assertEqual(PACKET_POKER_PLAYER_WIN, packets[1].type)
-        self.assertEqual(PACKET_POKER_SHOWDOWN, packets[2].type)
-        self.assertEqual('packetsPot2Player', packets[3])
-        self.assertEqual(PACKET_POKER_POSITION, packets[4].type)
+        self.assertTrue(self.explain.explain(PacketPokerWin(game_id = game_id,
+                                                            serials = [1])))
+        self.assertEqual(5, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_WIN, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_PLAYER_WIN, self.explain.forward_packets[1].type)
+        self.assertEqual(PACKET_POKER_SHOWDOWN, self.explain.forward_packets[2].type)
+        self.assertEqual('packetsPot2Player', self.explain.forward_packets[3])
+        self.assertEqual(PACKET_POKER_POSITION, self.explain.forward_packets[4].type)
         #
         # winners in packet and computed from the game are inconsistant
         #
@@ -1038,14 +1052,14 @@ class PokerExplainTestCase(unittest.TestCase):
         game.winners = []
         game.endTurn = lambda: True
         self.explain.packetsShowdown = lambda game: ['packetsShowdown']
-        packets = self.explain.explain(PacketPokerWin(game_id = game_id, serials = [1]))
-        self.assertEqual(6, len(packets))
-        self.assertEqual(PACKET_POKER_WIN, packets[0].type)
-        self.assertEqual(PACKET_POKER_PLAYER_WIN, packets[1].type)
-        self.assertEqual('packetsShowdown', packets[2])
-        self.assertEqual(PACKET_POKER_SHOWDOWN, packets[3].type)
-        self.assertEqual('packetsPot2Player', packets[4])
-        self.assertEqual(PACKET_POKER_POSITION, packets[5].type)
+        self.assertTrue(self.explain.explain(PacketPokerWin(game_id = game_id, serials = [1])))
+        self.assertEqual(6, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_WIN, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_PLAYER_WIN, self.explain.forward_packets[1].type)
+        self.assertEqual('packetsShowdown', self.explain.forward_packets[2])
+        self.assertEqual(PACKET_POKER_SHOWDOWN, self.explain.forward_packets[3].type)
+        self.assertEqual('packetsPot2Player', self.explain.forward_packets[4])
+        self.assertEqual(PACKET_POKER_POSITION, self.explain.forward_packets[5].type)
 
     def test40_explain_position(self):
         game_id = 1
@@ -1059,38 +1073,38 @@ class PokerExplainTestCase(unittest.TestCase):
         #
         game.position_info = [player_serial, True]
         game.getSerialInPosition = lambda: player_serial
-        packets = self.explain.explain(PacketPokerId(game_id = game_id))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packets[1].type)
-        self.assertEqual(player_serial, packets[1].serial)
+        self.assertTrue(self.explain.explain(PacketPokerId(game_id = game_id)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_SELF_IN_POSITION, self.explain.forward_packets[1].type)
+        self.assertEqual(player_serial, self.explain.forward_packets[1].serial)
         #
         # game running, position is not osbolete and self lost its position to another player
         #
         game.position_info = [player_serial, False]
         other_player_serial = 75
         game.getSerialInPosition = lambda: other_player_serial
-        packets = self.explain.explain(PacketPokerId(game_id = game_id))
-        self.assertEqual(3, len(packets))
-        self.assertEqual(PACKET_POKER_POSITION, packets[1].type)
-        self.assertEqual(other_player_serial, packets[1].serial)
-        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, packets[2].type)
-        self.assertEqual(other_player_serial, packets[2].serial)
+        self.assertTrue(self.explain.explain(PacketPokerId(game_id = game_id)))
+        self.assertEqual(3, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_POSITION, self.explain.forward_packets[1].type)
+        self.assertEqual(other_player_serial, self.explain.forward_packets[1].serial)
+        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, self.explain.forward_packets[2].type)
+        self.assertEqual(other_player_serial, self.explain.forward_packets[2].serial)
         #
         # game running, position is not obsolete and self lost its position 
         #
         game.position_info = [player_serial, False]
         game.getSerialInPosition = lambda: 0
-        packets = self.explain.explain(PacketPokerId(game_id = game_id))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerId(game_id = game_id)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, self.explain.forward_packets[1].type)
         #
         # game not running, self in position
         #
         game.position_info = [player_serial, False]
         game.isRunning = lambda: False
-        packets = self.explain.explain(PacketPokerId(game_id = game_id))
-        self.assertEqual(2, len(packets))
-        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, packets[1].type)
+        self.assertTrue(self.explain.explain(PacketPokerId(game_id = game_id)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, self.explain.forward_packets[1].type)
         
 # ----------------------------------------------------------------
 def Run():

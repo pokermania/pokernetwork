@@ -630,7 +630,7 @@ class PokerExplain:
                                                                message = message))
                 game.history_index = len(game.historyGet())
 
-        return self.forward_packets
+        return True
 
     def serial2name(self, game, serial):
         player = game.getPlayer(serial)
