@@ -802,25 +802,6 @@ class PokerAvatarTestCase(unittest.TestCase):
 #        return (client, packet)
 
     # -------------------------------------------------------------------------
-    # <dachary> the error is returned by the server to the explain layer  [14:16]
-    # <dachary> and in pokerexplain.py:290
-    # <dachary> instead of passing the error back to the client
-    # <dachary> the explain layer logs the error and returns
-    # <dachary> since the packet was sent to the client, it would be more sensible
-    #           to return the error to the client  [14:18]
-    # <dachary> the reason why it behaves in this way is that the explain layer was
-    #           formerly part of the client
-    # <dachary> only part of the client
-    # <dachary> now it can also be used as part of the server
-    # <dachary> Therefore I think it qualifies as a bug  [14:19]
-    # <dachary> because the client has no way to get the error message
-    # <dachary> never  [14:20]
-    # <dachary> whatever the error is
-    # <dachary> and this sucks
-    # <dachary> big time
-    # <dachary> it means that the users of the explain layer never do mistakes
-    # <dachary> or they are crazy
-    # <dachary> or both  [14:21]
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
         after being at a table."""
@@ -829,6 +810,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
         d.addCallback(self.sendExplainTooLate)
         return d
     # -------------------------------------------------------------------------
@@ -851,17 +836,19 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.pingThenUnprivRegisterTourney)
         return d
     # -------------------------------------------------------------------------
-    def requestsWithWrongSerial(self, (client, packet)):
+    def requestsWithWrongSerial(self, (client, packet), avid, gameId):
         import StringIO
 
-        avatar = self.service.avatars[0]
+        avatar = self.service.avatars[avid]
         avatar.queuePackets()
         someoneElseSerial = client.getSerial() + 1
-        userByUser = " for user %d by user %d" % (client.getSerial(), someoneElseSerial)
+        userByUser = " for user %d by user %d" % (someoneElseSerial, client.getSerial())
         forPlayerByPlayer = " for player %d by player %d" % \
-            (client.getSerial(), someoneElseSerial)
+            (someoneElseSerial, client.getSerial())
+        playerByPlayer = " player %d by player %d" % \
+            (someoneElseSerial, client.getSerial())
         ofPlayerByPlayer = " of player %d by player %d" % \
-            (client.getSerial(), someoneElseSerial)
+            (someoneElseSerial, client.getSerial())
         messageStart = "PokerAvatar: "
         badPacketAttempts = {
             'user_info' : { 'output' : 
@@ -871,7 +858,8 @@ class PokerAvatarTestCase(unittest.TestCase):
             'get_personal' : { 'output' :
                               "%sattempt to get personal info%s\n" % (messageStart, userByUser),
                                 'packet' :
-                                    PacketPokerGetPersonalInfo(serial = someoneElseSerial) },
+                                    PacketPokerGetPersonalInfo(serial = someoneElseSerial),
+                               'err_type': PACKET_AUTH_REQUEST },
             'player_info' : { 'output': "%sattempt to set player info%s" \
                                   % (messageStart, forPlayerByPlayer),
                               'packet': 
@@ -892,33 +880,35 @@ class PokerAvatarTestCase(unittest.TestCase):
                                         firstname = "YOU_HAVE",
                                         lastname = "BEEN_CRACKED", birthday = "2001-01-01") },
             'cash_in' : { 'output' :
-                              "%sattempt to get cash in%s\n" % (messageStart, userByUser),
+                              "%sattempt to cash in%s\n" % (messageStart, userByUser),
                           'packet' : 
                           PacketPokerCashIn(serial = someoneElseSerial, 
                                             name = "YOU_BEEN_CRACKED", value = 1000000,
                                             url = "http://example.com/myhack"),
-                          'err_type' : PACKET_POKER_CASH_IN },
+                          'err_type' : PACKET_POKER_ERROR,
+                          'other_type' : PACKET_POKER_CASH_IN },
             'cash_out' : { 'output' :
-                               "%sattempt to get cash out%s\n" % (messageStart, userByUser),
+                               "%sattempt to cash out%s\n" % (messageStart, userByUser),
                            'packet' : 
-                           PacketPokerCashIn(serial = someoneElseSerial, 
+                           PacketPokerCashOut(serial = someoneElseSerial, 
                                              name = "YOU_BEEN_CRACKED", value = 1000000,
                                              url = "http://example.com/myhack"),
-                           'err_type' : PACKET_POKER_CASH_OUT },
+                           'err_type' : PACKET_POKER_ERROR,
+                           'other_type' : PACKET_POKER_CASH_OUT },
             'tourney_reg': { 'output':
                                "%sattempt to register in tournament %d%s" 
-                                         % (messageStart, 102, forPlayerByPlayer),
+                                         % (messageStart, gameId, forPlayerByPlayer),
                              'packet' : 
                              PacketPokerTourneyRegister(serial = someoneElseSerial,
-                                                        game_id = 102) },
+                                                        game_id = gameId) },
             'tourney_unreg': { 'output':
                                    "%sattempt to unregister from tournament %d%s"
-                                         % (messageStart, 102, forPlayerByPlayer),
+                                         % (messageStart, gameId, forPlayerByPlayer),
                              'packet' : 
                                PacketPokerTourneyUnregister(serial = someoneElseSerial,
-                                                            game_id = 102) },
+                                                            game_id = gameId) },
             'hand_hist' : { 'output':
-                                "%sattempt to get history of%s" % (messageStart, ofPlayerByPlayer),
+                                "%sattempt to get history%s" % (messageStart, ofPlayerByPlayer),
                             'packet' :
                                 PacketPokerHandHistory(serial = someoneElseSerial,
                                                        serial2name = { someoneElseSerial : "YOU_BEEN_CRACKED" },
@@ -927,142 +917,144 @@ class PokerAvatarTestCase(unittest.TestCase):
                                 "%sattempt to set ready to play%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerHandHistory(serial = someoneElseSerial,
-                                                       game_id = 102) },
+                                PacketPokerReadyToPlay(serial = someoneElseSerial,
+                                                       game_id = gameId) },
             'proc' : { 'output':
                            "%sattempt to set processing hand%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
                                 PacketPokerProcessingHand(serial = someoneElseSerial,
-                                                          game_id = 102) },
+                                                          game_id = gameId) },
             'seat' : { 'output':
                            "%sattempt to get seat%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
                                 PacketPokerSeat(serial = someoneElseSerial, 
-                                                seat = 255, game_id = 102) },
+                                                seat = 255, game_id = gameId) },
             'buyin' : { 'output':
                            "%sattempt to bring money%s" % (messageStart, \
                             forPlayerByPlayer),
                             'packet' :
                                 PacketPokerBuyIn(serial = someoneElseSerial, 
-                                                 amount = 1000, game_id = 102) },
+                                                 amount = 1000, game_id = gameId) },
             'rebuy' : { 'output':
                            "%sattempt to rebuy%s" % (messageStart, forPlayerByPlayer),
                             'packet' :
                                 PacketPokerRebuy(serial = someoneElseSerial, 
-                                                 amount = 1000, game_id = 102) },
+                                                 amount = 1000, game_id = gameId) },
             'chat' : { 'output':
                            "%sattempt chat%s" % (messageStart, forPlayerByPlayer),
                             'packet' :
-                                PacketPokerChat(serial = someoneElseSerial, game_id = 102,
+                                PacketPokerChat(serial = someoneElseSerial, game_id = gameId,
                                     message = "I AM IN YOUR SERIALZ CHATING YOUR POKERZ") },
             'leave' : { 'output':
                            "%sattempt to leave%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerPlayerLeave(serial = someoneElseSerial, game_id = 102,
+                                PacketPokerPlayerLeave(serial = someoneElseSerial, game_id = gameId,
                                                        seat = 2) },
             'sit' : { 'output':
                            "%sattempt to sit back%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerSit(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerSit(serial = someoneElseSerial, game_id = gameId) },
             'sitout' : { 'output':
                            "%sattempt to sit out%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerSitOut(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerSitOut(serial = someoneElseSerial, game_id = gameId) },
             'autoblind' : { 'output':
                            "%sattempt to set auto blind/ante%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerAutoBlindAnte(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerAutoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
             'noautoblind' : { 'output':
                            "%sattempt to set auto blind/ante%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerNoautoBlindAnte(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerNoautoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
             'muckaccept' : { 'output':
                            "%sattempt to accept muck%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerMuckAccept(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerMuckAccept(serial = someoneElseSerial, game_id = gameId) },
             'muckdeny' : { 'output':
                            "%sattempt to deny muck%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerMuckDeny(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerMuckDeny(serial = someoneElseSerial, game_id = gameId) },
             'blind' : { 'output':
                            "%sattempt to pay the blind%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
+                            ofPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerBlind(serial = someoneElseSerial, game_id = 102, dead = 0,
+                                PacketPokerBlind(serial = someoneElseSerial, game_id = gameId, dead = 0,
                                                amount = 100) },
             'waitblind' : { 'output':
-                           "%sattempt to pay the blind%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
+                           "%sattempt to wait for big blind%s %s" % (messageStart, \
+                            ofPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerWaitBigBlind(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerWaitBigBlind(serial = someoneElseSerial, game_id = gameId) },
             'ante' : { 'output':
                            "%sattempt to pay the ante%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
+                            ofPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerBlind(serial = someoneElseSerial, game_id = 102,amount = 10) },
+                                PacketPokerAnte(serial = someoneElseSerial, game_id = gameId,amount = 10) },
             'fold' : { 'output':
                            "%sattempt to fold%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
+                            playerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerFold(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerFold(serial = someoneElseSerial, game_id = gameId) },
             'call' : { 'output':
                            "%sattempt to call%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerCall(serial = someoneElseSerial, game_id = 102) },
+                                PacketPokerCall(serial = someoneElseSerial, game_id = gameId) },
             'raise' : { 'output':
-                           "%sattempt to call%s %s" % (messageStart, \
+                           "%sattempt to raise%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerRaise(serial = someoneElseSerial, game_id = 102, amount=100) },
+                                PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100) },
             'check' : { 'output':
-                           "%sattempt to call%s %s" % (messageStart, \
+                           "%sattempt to check%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
-                                PacketPokerCheck(serial = someoneElseSerial, game_id = 102) }
+                                PacketPokerCheck(serial = someoneElseSerial, game_id = gameId) }
             }
         # Next, we loop through all the serial-related bad pack list,
         # attempting to handle each one.  Setup stdout to go to a string
         # so that we can test if they generate the right printed output.
         # Also, catch any error packets for those we expect to receive.
-        for info in badPacketAttempts.itervalues():
+        for (key, info) in badPacketAttempts.iteritems():
             avatar.resetPacketsQueue()
             avatar.queuePackets()
             messageOutput = StringIO.StringIO()
             sys.stdout = messageOutput
             avatar.handlePacketLogic(info['packet'])
+            data = messageOutput.getvalue()
             sys.stdout = sys.__stdout__
-            self.assertEquals(messageOutput.getvalue(), info['output'])
             messageOutput.close()
+            self.assertEqual(data.find(info['output']) >= 0, True)
 
             found = False
             for packet in avatar.resetPacketsQueue():
                 found = True
-                self.assertEquals(packet.type, PACKET_ERROR)
-                self.assertEquals(info.has_key('err_type'), packet.err_type)
-                
+                self.assertEquals(packet.type, info['err_type'])
+                if info.has_key('other_type'):
+                    self.assertEquals(info['other_type'], packet.other_type)
             
             self.assertEquals(found, info.has_key('err_type'))
-            
-        # Catch the message output and make sure that it is accurate
-        self.assertEquals("attempt to get user info %s\n" % userByUser, 
-                          messageOutput.getValue())
+            return (client, packet)
     # -------------------------------------------------------------------------
     def test18_badAttempts(self):
-        return True
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.requestsWithWrongSerial)
+        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.requestsWithWrongSerial, 0, 101)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -1081,7 +1073,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test17"
+    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

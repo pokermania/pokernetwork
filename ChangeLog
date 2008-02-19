@@ -1,3 +1,11 @@
+2008-02-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.requestsWithWrongSerial): Various changes to
+	make tests succeed.
+	(PokerAvatarTestCase.test18_badAttempts): user must be logged in
+	and seated for correct output to occur.
+
 2008-02-18  Loic Dachary  <loic@pokerdev.pokersource.info>
 
 	* Release 1.3.0
