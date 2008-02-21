@@ -1043,7 +1043,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(info['other_type'], packet.other_type)
             
             self.assertEquals(found, info.has_key('err_type'))
-            return (client, packet)
+        return (client, packet)
     # -------------------------------------------------------------------------
     def test18_badAttempts(self):
         d = self.client_factory[0].established_deferred
@@ -1073,7 +1073,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 def Run():
     os.environ['VERBOSE_T'] = '4'
     loader = runner.TestLoader()
-    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
