@@ -2,6 +2,10 @@
 
 	* tests/test-pokeravatar.py.in: Set VERBOSE_T to 0 so that
 	messages are not silenced.  test18 won't work otherwise.
+	(PokerAvatarTestCase.badBuyIn): Wrote function.
+	(PokerAvatarTestCase.test19_badBuyIn): Wrote function.
+	(PokerAvatarTestCase.joinTable): Added name and structure as
+	arguments.
 
 2008-02-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 

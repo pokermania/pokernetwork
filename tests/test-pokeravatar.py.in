@@ -355,7 +355,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def joinTable(self, (client, packet), id, gameId):
+    def joinTable(self, (client, packet), id, gameId, name, struct):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         avatar.queuePackets()
@@ -367,11 +367,11 @@ class PokerAvatarTestCase(unittest.TestCase):
                 found = True
                 for  (kk, vv) in avatar.tables.items():
                     self.assertEquals(vv.game.id, table.game.id)
-                    self.assertEquals(vv.game.name, "Table2")
+                    self.assertEquals(vv.game.name, name)
                     self.assertEquals(vv.game.max_players, 10)
                     self.assertEquals(vv.game.variant, 'holdem')
-                    self.assertEquals(vv.game.betting_structure, '2-4-limit')
-        self.assertEquals(found, True)
+                    self.assertEquals(vv.game.betting_structure, struct)
+                    self.assertEquals(found, True)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test08_joinTable(self):
@@ -379,7 +379,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
@@ -416,7 +416,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.quit)
         return d
@@ -442,7 +442,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.forceExplain, 0)
         d.addCallback(self.quit)
@@ -491,7 +491,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.quit)
@@ -768,7 +768,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.autoBlindAnte, 0, 101)
@@ -777,7 +777,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101)
+        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
         d2.addCallback(self.buyInTable, 1, 101, 1000)
         # Note: this avatar does not autopost, and doBlindPost handles it.
@@ -810,8 +810,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
-        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.autoBlindAnte, 0, 101)
         d.addCallback(self.sitTable, 0, 101)
@@ -1050,12 +1050,45 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+
         d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.autoBlindAnte, 0, 101)
         d.addCallback(self.sitTable, 0, 101)
         d.addCallback(self.requestsWithWrongSerial, 0, 101)
+        return d
+    # -------------------------------------------------------------------------
+    def badBuyIn(self, (client, packet), id, gameId, myAmount):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        seatNumber = id + 1
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerBuyIn(serial = client.getSerial(),
+                                               amount = myAmount, game_id = gameId))
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_ERROR:
+                found += 1
+                self.assertEquals(packet.game_id, table.game.id)
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.other_type, PACKET_POKER_BUY_IN)
+        self.assertEquals(found, 1)
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    def test19_badBuyIn(self):
+        """Test to cover the condition where the buyIn fails"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 100, 'Table1', '100-200-no-limit')
+        d.addCallback(self.seatTable, 0, 100)
+
+        # Note: this only "works" (i.e., fails properly) if you have a
+        # currency serial that is valid, because of this line in
+        # pokerservice.py's buyInPlayer
+        #     if not currency_serial: return amount
+        d.addCallback(self.badBuyIn, 0, 100, 1)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -1073,7 +1106,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test19"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
