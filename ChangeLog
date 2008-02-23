@@ -1,3 +1,9 @@
+2008-02-22  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test20_turningOffAutoBlind): Wrote function.
+	(PokerAvatarTestCase.noAutoBlindAnte): Wrote function.
+
 2008-02-21  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in: Set VERBOSE_T to 0 so that
