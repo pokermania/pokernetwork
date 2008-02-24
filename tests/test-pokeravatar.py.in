@@ -1494,6 +1494,35 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertEquals(found, True)
         return (client, packet)
     # ------------------------------------------------------------------------
+    def errorSetPokerPlayerImage(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        def forceFalse(player_info):
+            return False
+        originalFunction = avatar.service.setPlayerImage
+        avatar.service.setPlayerImage = forceFalse
+        avatar.handlePacketLogic(PacketPokerPlayerImage(serial= client.getSerial(),
+                                                        image = "naked.png",
+                                                        image_type = "image/gif"))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.other_type, PACKET_POKER_PLAYER_IMAGE)
+                self.assertEquals(packet.code, PACKET_POKER_PLAYER_IMAGE)
+                self.assertEquals(packet.message, "Failed to save set player image")
+                found = True
+        self.assertEquals(found, True)
+        avatar.service.setPlayerImage = originalFunction
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test31_errorSetPlayerImage(self):
+        """Test for setting the player image."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.errorSetPokerPlayerImage, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1509,7 +1538,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test30"
+#    loader.methodPrefix = "test31"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

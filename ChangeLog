@@ -30,6 +30,8 @@
 	(PokerAvatarTestCase.test16_explainTooLate): Re-enabled test.
 	(PokerAvatarTestCase.setPokerPlayerImage): Wrote function.
 	(PokerAvatarTestCase.test30_setPlayerImage): Wrote function.
+	(PokerAvatarTestCase.errorSetPokerPlayerImage): Wrote function.
+	(PokerAvatarTestCase.test31_errorSetPlayerImage): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
