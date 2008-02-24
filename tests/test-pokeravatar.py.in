@@ -1331,7 +1331,8 @@ class PokerAvatarTestCase(unittest.TestCase):
             avatar.handlePacketLogic(PacketPokerHandSelect(serial= mySerial, count = 5, start = 0,
                                                            string = "Testing"))
         except OperationalError, oe:
-            self.assertEquals(oe,(1054, "Unknown column 'Testing' in 'where clause'"))
+            self.assertEquals(oe[0],1054)
+            self.assertEquals(oe[1], "Unknown column 'Testing' in 'where clause'")
 
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -1434,7 +1435,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test24"
+#    loader.methodPrefix = "test25"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
