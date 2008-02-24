@@ -24,6 +24,10 @@
 	(PokerAvatarTestCase.listHands): Fixed error OperationalError checking.
 	(PokerAvatarTestCase.test29_errorSetPokerPlayerInfo): Wrote function.
 	(PokerAvatarTestCase.errorSetPokerPlayerInfo): Wrote function.
+	(PokerAvatarTestCase.setupCallbackChain): Wrote function.
+	(PokerAvatarTestCase.sendExplainTooLate.checkError): Rewrote to
+	not use packet queue.
+	(PokerAvatarTestCase.test16_explainTooLate): Re-enabled test.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

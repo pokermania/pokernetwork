@@ -210,6 +210,9 @@ class PokerAvatarTestCase(unittest.TestCase):
         client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         return client.packetDeferred(True, PACKET_ACK)
     # -------------------------------------------------------------------------
+    def setupCallbackChain(self, client):
+        return ((client, None))
+    # -------------------------------------------------------------------------
     def explain(self, (client, packet)):
         avatar = self.service.avatars[0]
         self.assertNotEqual(None, avatar.explain)
@@ -837,7 +840,6 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def sendExplainTooLate(self, (client, packet)):
         avatar = self.service.avatars[0]
-        client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         d = client.packetDeferred(True, PACKET_ERROR)
         def checkError( (client, packet) ):
             self.assertEquals(packet.type, PACKET_ERROR)
@@ -845,19 +847,21 @@ class PokerAvatarTestCase(unittest.TestCase):
             self.assertEquals(packet.code, 0)
             self.assertEquals(packet.message, "no message")
         d.addCallback(checkError)
+        # I believe that turning off packet queue here happens to get some
+        # extra coverage in the pokeravatar.sendPacket() function.  Think
+        # twice before using the queue in this test.
+        avatar.noqueuePackets()
+        client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         return  d
-#        return (client, packet)
-
     # -------------------------------------------------------------------------
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
         after being at a table."""
-        return
         d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
+        d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
         d.addCallback(self.buyInTable, 0, 101, 1000)
         d.addCallback(self.autoBlindAnte, 0, 101)
         d.addCallback(self.sitTable, 0, 101)
@@ -1492,7 +1496,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test29"
+#    loader.methodPrefix = "test16"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
