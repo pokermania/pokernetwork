@@ -1116,6 +1116,49 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.noAutoBlindAnte, 0, 101)
         return d
     # ------------------------------------------------------------------------
+    def doBlindPostAndHaveOtherGuyWaitForCardsAndQuit(self, (client, packet), id, gameId):
+        # By now, we should have seen as noted above, a request for the
+        # blinds for avatar1 for 100 small blind.  Here we send it.
+        otherAvatar = self.service.avatars[0]
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(),
+                                                   game_id = gameId, dead = 0,
+                                                   amount = 100))
+        otherAvatar.removePlayer(table, otherAvatar.getSerial())
+        print "ABout to post, then I'll have other guy wait for CARDS"
+        return (client, packet)
+
+    # ------------------------------------------------------------------------
+    def test23_quitPlayerInHand(self):
+        """Test playing an actual hand all the way through"""
+        # The sequence of how to get yourself seated in a cash game was
+        # taken from the instructions at the top of pokerpackets.py
+        # labelled "How to sit at a cash game table ?"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.saveClientObject)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 101)
+        d2.addCallback(self.buyInTable, 1, 101, 1000)
+        d2.addCallback(self.sitTable, 1, 101)
+        d2.addCallback(self.readyToPlay, 1, 101)
+        d2.addCallback(self.dealTable, 101)
+        d2.addCallback(self.beginHandSetup, 101)
+        d2.addCallback(self.doBlindPostAndHaveOtherGuyWaitForCardsAndQuit, 1, 101)
+        return defer.DeferredList((d, d2))
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
