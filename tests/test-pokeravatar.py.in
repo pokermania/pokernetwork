@@ -1193,7 +1193,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                    amount = 100))
         otherAvatar.removePlayer(table, otherAvatar.getSerial())
         return (client, packet)
-
     # ------------------------------------------------------------------------
     def test23_quitPlayerInHand(self):
         """Test when a player quits in the middle of a hand."""
@@ -1247,6 +1246,51 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.getPersonalInfo, 0)
         return d
     # ------------------------------------------------------------------------
+    def listHands(self, (client, packet), id, mySerial):
+        avatar = self.service.avatars[id]
+        if mySerial == -1: mySerial = client.getSerial()
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerHandSelect(serial= mySerial, count = 5, start = 0))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_HAND_LIST:
+                print "HAND LIST: "
+                self.assertEquals(packet.count, 5)
+                self.assertEquals(packet.hands, [])
+                self.assertEquals(packet.total, 0)
+                print packet
+                found = True
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerHandSelect(serial= None, count = 5, start = 0))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_HAND_LIST:
+                self.assertEquals(packet.count, 5)
+                self.assertEquals(packet.hands, [])
+                self.assertEquals(packet.total, 0)
+                print packet
+                found = True
+        self.assertEquals(found, True)
+
+        from _mysql_exceptions import OperationalError
+        try:
+            avatar.handlePacketLogic(PacketPokerHandSelect(serial= mySerial, count = 5, start = 0,
+                                                           string = "Testing"))
+        except OperationalError, oe:
+            print "MY ERORR:"
+            self.asserEquals(oe,(1054, "Unknown column 'Testing' in 'where clause'"))
+
+        return (client, packet)
+        
+    # ------------------------------------------------------------------------
+    def test25_listHands(self):
+        """Test for hand listing."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.listHands, 1, -1)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1262,7 +1306,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test24"
+#    loader.methodPrefix = "test25"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

@@ -1,8 +1,10 @@
 2008-02-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
-       * tests/test-pokeravatar.py.in
-       (PokerAvatarTestCase.getPersonalInfo): Wrote function.
-       (PokerAvatarTestCase.test24_personalInfo): Wrote function.
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.getPersonalInfo):
+	Wrote function.
+	(PokerAvatarTestCase.test24_personalInfo): Wrote function.
+	(PokerAvatarTestCase.listHands): Wrote function.
+	(PokerAvatarTestCase.test25_listHands): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
@@ -11,9 +13,9 @@
 	(PokerAvatarTestCase.sitOut): Wrote function.
 	(PokerAvatarTestCase.sitOutClosedGame): Wrote function.
 	(PokerAvatarTestCase.test22_sitOutClosedGame): Wrote function.
-       (PokerAvatarTestCase.test23_quitPlayerInHand): Wrote function.
-       (PokerAvatarTestCase): Wrote function.
-       (PokerAvatarTestCase.saveClientObject): Wrote function.
+	(PokerAvatarTestCase.test23_quitPlayerInHand): Wrote function.
+	(PokerAvatarTestCase): Wrote function.
+	(PokerAvatarTestCase.saveClientObject): Wrote function.
 
 2008-02-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 
