@@ -7,6 +7,8 @@
 	(PokerAvatarTestCase.test25_listHands): Wrote function.
 	(PokerAvatarTestCase.test26_listTables): Wrote function.
 	(PokerAvatarTestCase.listTables): Wrote function.
+	(PokerAvatarTestCase.getPlayerInfoError): Wrote function.
+	(PokerAvatarTestCase.test27_playerInfoNotLoggedIn): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

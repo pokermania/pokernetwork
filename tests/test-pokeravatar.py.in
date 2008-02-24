@@ -1339,6 +1339,29 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.listTables, 0)
         return d
     # ------------------------------------------------------------------------
+    def getPlayerInfoError(self, (client, packet), id):
+        avatar = self.service.avatars[id]
+        if mySerial == -1: mySerial = client.getSerial()
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerInfo())
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_ERROR:
+                self.assertEquals(packet.code, PacketPokerGetPlayerInfo.NOT_LOGGED)
+                self.assertEquals(packet.message, "Not logged in")
+                self.assertEquals(packet.other_type, PACKET_POKER_GET_PLAYER_INFO)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test27_playerInfoNotLoggedIn(self):
+        """Test for getting player info before login has occurred."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.getPlayerInfoError, 0)
+        d.addCallback(self.listTables, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1354,7 +1377,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test26"
+    loader.methodPrefix = "test27"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
