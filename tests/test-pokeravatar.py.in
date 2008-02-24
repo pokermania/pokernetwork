@@ -1515,6 +1515,14 @@ class PokerAvatarTestCase(unittest.TestCase):
         avatar.service.setPlayerImage = originalFunction
         return (client, packet)
     # ------------------------------------------------------------------------
+    def test30_setPlayerImage(self):
+        """Test for setting the player image."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.setPokerPlayerImage, 0)
+        return d
+    # ------------------------------------------------------------------------
     def test31_errorSetPlayerImage(self):
         """Test for setting the player image."""
         d = self.client_factory[0].established_deferred
