@@ -1470,7 +1470,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test29_errorSetPokerPlayerInfo(self):
-        """Test for setting poker player info."""
+        """Test for errors when setting poker player info."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
