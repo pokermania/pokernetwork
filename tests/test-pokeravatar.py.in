@@ -724,8 +724,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                     elif (packet.serial == avatar[otherid].getSerial()):
                         self.assertEquals(packet.cards, [255, 255])
                 elif packet.type == PACKET_POKER_BET_LIMIT:
-                    print "LIMIT: %d" % avid
-                    print packet
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
                     self.assertEquals(packet.cookie, "")
@@ -1254,11 +1252,9 @@ class PokerAvatarTestCase(unittest.TestCase):
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_HAND_LIST:
-                print "HAND LIST: "
                 self.assertEquals(packet.count, 5)
                 self.assertEquals(packet.hands, [])
                 self.assertEquals(packet.total, 0)
-                print packet
                 found = True
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerHandSelect(serial= None, count = 5, start = 0))
@@ -1268,7 +1264,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(packet.count, 5)
                 self.assertEquals(packet.hands, [])
                 self.assertEquals(packet.total, 0)
-                print packet
                 found = True
         self.assertEquals(found, True)
 
@@ -1277,18 +1272,71 @@ class PokerAvatarTestCase(unittest.TestCase):
             avatar.handlePacketLogic(PacketPokerHandSelect(serial= mySerial, count = 5, start = 0,
                                                            string = "Testing"))
         except OperationalError, oe:
-            print "MY ERORR:"
             self.asserEquals(oe,(1054, "Unknown column 'Testing' in 'where clause'"))
 
         return (client, packet)
-        
     # ------------------------------------------------------------------------
     def test25_listHands(self):
         """Test for hand listing."""
+        # It might be better to improve this test so that a few hands have
+        # actually been played and therfore an actual hand list is available.
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         d.addCallback(self.listHands, 1, -1)
+        return d
+    # ------------------------------------------------------------------------
+    def listTables(self, (client, packet), id):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerTableSelect(string = ""))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_TABLE_LIST:
+                self.assertEquals(packet.players, 0)
+                self.assertEquals(packet.tables, 3)
+                count = 0
+                for p in packet.packets:
+                    count += 1
+                    self.assertEquals(p.average_pot,  0)
+                    self.assertEquals(p.hands_per_hour, 0)
+                    self.assertEquals(p.percent_flop, 0)
+                    self.assertEquals(p.players, 0)
+                    self.assertEquals(p.observers, 0)
+                    self.assertEquals(p.waiting, 0)
+                    self.assertEquals(p.skin,  "default")
+                    self.assertEquals(p.variant, "holdem")
+                    if (p.id == 100):
+                        self.assertEquals(p.name, "Table1")
+                        self.assertEquals(p.betting_structure, "100-200-no-limit")
+                        self.assertEquals(p.seats, 10)
+                        self.assertEquals(p.player_timeout, 60)
+                        self.assertEquals(p.currency_serial, 1)
+                    elif (p.id == 101):
+                        self.assertEquals(p.name, "Table2")
+                        self.assertEquals(p.betting_structure, "2-4-limit")
+                        self.assertEquals(p.player_timeout, 60)
+                        self.assertEquals(p.muck_timeout, 5)
+                        self.assertEquals(p.currency_serial, 0)
+                    elif (p.id == 102):
+                        self.assertEquals(p.name, "Table3")
+                        self.assertEquals(p.betting_structure, "test18pokerclient")
+                        self.assertEquals(p.player_timeout, 600)
+                        self.assertEquals(p.muck_timeout, 600)
+                        self.assertEquals(p.seats, 10)
+                        self.assertEquals(p.currency_serial, 1)
+                self.assertEquals(count, packet.tables)
+                found = True
+        self.assertEquals(found, True)
+
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test26_listTables(self):
+        """Test for table listing."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.listTables, 0)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -1306,7 +1354,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test25"
+#    loader.methodPrefix = "test26"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

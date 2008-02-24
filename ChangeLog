@@ -5,6 +5,8 @@
 	(PokerAvatarTestCase.test24_personalInfo): Wrote function.
 	(PokerAvatarTestCase.listHands): Wrote function.
 	(PokerAvatarTestCase.test25_listHands): Wrote function.
+	(PokerAvatarTestCase.test26_listTables): Wrote function.
+	(PokerAvatarTestCase.listTables): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
