@@ -1127,12 +1127,11 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                    game_id = gameId, dead = 0,
                                                    amount = 100))
         otherAvatar.removePlayer(table, otherAvatar.getSerial())
-        print "ABout to post, then I'll have other guy wait for CARDS"
         return (client, packet)
 
     # ------------------------------------------------------------------------
     def test23_quitPlayerInHand(self):
-        """Test playing an actual hand all the way through"""
+        """Test when a player quits in the middle of a hand."""
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
@@ -1145,7 +1144,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.autoBlindAnte, 0, 101)
         d.addCallback(self.sitTable, 0, 101)
         d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.saveClientObject)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.login, 1)
