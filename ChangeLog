@@ -32,6 +32,7 @@
 	(PokerAvatarTestCase.test30_setPlayerImage): Wrote function.
 	(PokerAvatarTestCase.errorSetPokerPlayerImage): Wrote function.
 	(PokerAvatarTestCase.test31_errorSetPlayerImage): Wrote function.
+	(PokerAvatarTestCase.test32_cashIn): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
