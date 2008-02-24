@@ -1554,6 +1554,29 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.cashIn, 0)
         return d
     # ------------------------------------------------------------------------
+    def cashQuery(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerCashQuery(application_data =
+                                                      "THIS_WILL_NOT_BE_FOUND_AS_VALID_AT_ALL"))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.other_type, PACKET_POKER_CASH_QUERY)
+                self.assertEquals(packet.code, PacketPokerCashQuery.DOES_NOT_EXIST)
+                self.assertEquals(packet.message, "No record with application_data = 'THIS_WILL_NOT_BE_FOUND_AS_VALID_AT_ALL'")
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test33_cashQuery(self):
+        """Test for a cash query operation; it's designed to fail and get a packet error."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.cashQuery, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
