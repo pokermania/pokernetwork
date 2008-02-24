@@ -15,6 +15,10 @@
 	(PokerAvatarTestCase.test06_7_setUnknownRole): Wrote function.
 	(PokerAvatarTestCase.errorSetRoles): Wrote function.
 	(PokerAvatarTestCase.test06_8_setRoleAfterAnotherUserHas): Wrote function.
+	(PokerAvatarTestCase.setPersonalInfo): Wrote function.
+	(PokerAvatarTestCase.test24_personalInfo): Added call to setPersonalInfo.
+	(PokerAvatarTestCase.getPlayerInfoError): Corrected packet error
+	type to search for.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

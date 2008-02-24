@@ -1280,8 +1280,18 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(packet.rating, 1000)
                 self.assertEquals(packet.affiliate, 0)
                 self.assertEquals(packet.addr_street, "")
+                self.assertEquals(packet.firstname, "Joe")
+                self.assertEquals(packet.lastname, "Schmoe")
                 found = True
         self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def setPersonalInfo(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerPersonalInfo(serial= client.getSerial(),
+                                                         firstname = "Joe",
+                                                         lastname = "Schmoe"))
         return (client, packet)
     # ------------------------------------------------------------------------
     def test24_personalInfo(self):
@@ -1289,6 +1299,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
+        d.addCallback(self.setPersonalInfo, 0)
         d.addCallback(self.getPersonalInfo, 0)
         return d
     # ------------------------------------------------------------------------
@@ -1320,7 +1331,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             avatar.handlePacketLogic(PacketPokerHandSelect(serial= mySerial, count = 5, start = 0,
                                                            string = "Testing"))
         except OperationalError, oe:
-            self.asserEquals(oe,(1054, "Unknown column 'Testing' in 'where clause'"))
+            self.assertEquals(oe,(1054, "Unknown column 'Testing' in 'where clause'"))
 
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -1389,12 +1400,11 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def getPlayerInfoError(self, (client, packet), id):
         avatar = self.service.avatars[id]
-        if mySerial == -1: mySerial = client.getSerial()
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerGetPlayerInfo())
         found = False
         for packet in avatar.resetPacketsQueue():
-            if packet.type == PACKET_POKER_ERROR:
+            if packet.type == PACKET_ERROR:
                 self.assertEquals(packet.code, PacketPokerGetPlayerInfo.NOT_LOGGED)
                 self.assertEquals(packet.message, "Not logged in")
                 self.assertEquals(packet.other_type, PACKET_POKER_GET_PLAYER_INFO)
@@ -1407,7 +1417,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.getPlayerInfoError, 0)
-        d.addCallback(self.listTables, 0)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -1425,7 +1434,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+#    loader.methodPrefix = "test24"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
