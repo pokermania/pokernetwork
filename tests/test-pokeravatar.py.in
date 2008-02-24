@@ -289,16 +289,24 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(stringAvatar)
         return d
     # -------------------------------------------------------------------------
+    def normalSetRoles(self, (client, packet), id, myRoles, rolesString):
+        avatar = self.service.avatars[0]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSetRole(serial = client.getSerial(), roles = myRoles))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_ROLES:
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.roles, rolesString)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # -------------------------------------------------------------------------
     def test06_setRoles(self):
         """Tests setting of roles"""
-        # 
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
-        def setRoles((client, packet)):
-            avatar = self.service.avatars[0]
-            avatar.handlePacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerRoles.PLAY))
-            return (client, packet)
-        d.addCallback(setRoles)
+        d.addCallback(self.normalSetRoles, 0, PacketPokerRoles.PLAY, "PLAY")
         d.addCallback(self.login, 0)
         d.addCallback(self.quit)
         return d
@@ -332,6 +340,46 @@ class PokerAvatarTestCase(unittest.TestCase):
             return (client, packet)
         d.addCallback(setRoles)
         return d
+    # -------------------------------------------------------------------------
+    def errorSetRoles(self, (client, packet), id, myRoles, errorCode, errorMessage):
+        avatar = self.service.avatars[0]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSetRole(serial = client.getSerial(), roles = myRoles))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.other_type, PACKET_POKER_SET_ROLE)
+                self.assertEquals(packet.code, errorCode)
+                self.assertEquals(packet.message, errorMessage)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    def test06_7_setUnknownRole(self):
+        """Tests setting of a role that is unknown."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        # This error message will need to be fixed if you add additional valid roles 
+        d.addCallback(self.errorSetRoles, 0, "YOU_HAVE_NEVER_HEARD_OF_THIS_ROLE",
+                      PacketPokerSetRole.UNKNOWN_ROLE, "role YOU_HAVE_NEVER_HEARD_OF_THIS_ROLE is unknown (roles = ['PLAY', 'EDIT'])")
+        d.addCallback(self.login, 0)
+        d.addCallback(self.quit)
+        return d
+    # -------------------------------------------------------------------------
+    def test06_8_setRoleAfterAnotherUserHas(self):
+        """Tests setting of a role that is unknown."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.normalSetRoles, 0, PacketPokerRoles.PLAY, "PLAY")
+        d.addCallback(self.login, 0)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.errorSetRoles, 0, PacketPokerRoles.PLAY,
+                       PacketPokerSetRole.NOT_AVAILABLE,
+                      "another client already has role %s" % PacketPokerRoles.PLAY)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.quit)
+        return defer.DeferredList((d, d2))
     # -------------------------------------------------------------------------
     def test07_getImage(self):
         """Tests player getting its image"""
@@ -1377,7 +1425,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test27"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
