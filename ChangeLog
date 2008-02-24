@@ -36,6 +36,8 @@
 	(PokerAvatarTestCase.test32_cashIn): Wrote function.
 	(PokerAvatarTestCase.cashQuery): Wrote function.
 	(PokerAvatarTestCase.test33_cashQuery): Wrote function.
+	(PokerAvatarTestCase.setPokerAccount): Wrote function.
+	(PokerAvatarTestCase.test34_setPokerAccount): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

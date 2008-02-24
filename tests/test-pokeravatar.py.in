@@ -1577,6 +1577,30 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.cashQuery, 0)
         return d
     # ------------------------------------------------------------------------
+    def setPokerAccount(self, (client, packet), id, packetType ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        if packetType == PACKET_POKER_CREATE_ACCOUNT:
+            avatar.handlePacketLogic(PacketPokerCreateAccount(serial= client.getSerial()))
+        else:
+            avatar.handlePacketLogic(PacketPokerSetAccount(serial= client.getSerial()))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.other_type, packetType)
+                self.assertEquals(packet.code, PacketPokerSetAccount.PASSWORD_TOO_SHORT)
+                self.assertEquals(packet.message, "password must be at least 5 characters long")
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test34_setPokerAccount(self):
+        """Test sending the set poker account packet."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.setPokerAccount, 0, PACKET_POKER_CREATE_ACCOUNT)
+        d.addCallback(self.setPokerAccount, 0, PACKET_POKER_SET_ACCOUNT)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1592,7 +1616,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test32"
+#    loader.methodPrefix = "test34"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
