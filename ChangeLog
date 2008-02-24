@@ -19,6 +19,9 @@
 	(PokerAvatarTestCase.test24_personalInfo): Added call to setPersonalInfo.
 	(PokerAvatarTestCase.getPlayerInfoError): Corrected packet error
 	type to search for.
+	(PokerAvatarTestCase.setPokerPlayerInfo): Wrote function.
+	(PokerAvatarTestCase.test28_setPokerPlayerInfo): Wrote function.
+	(PokerAvatarTestCase.listHands): Fixed error OperationalError checking.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
