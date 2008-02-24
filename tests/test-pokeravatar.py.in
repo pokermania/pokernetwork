@@ -1429,8 +1429,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                        url = "http://example.org"))
         found = False
         for packet in avatar.resetPacketsQueue():
-            print "FOUND PACKETS"
-            print packet
             if packet.type == PACKET_POKER_PLAYER_INFO:
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.name, "The Naked Guy")
@@ -1448,6 +1446,37 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setPokerPlayerInfo, 0)
         return d
     # ------------------------------------------------------------------------
+    def errorSetPokerPlayerInfo(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        def forceFalse(player_info):
+            return False
+        originalFunction = avatar.service.setPlayerInfo
+        avatar.service.setPlayerInfo = forceFalse
+
+        avatar.handlePacketLogic(PacketPokerPlayerInfo(serial= client.getSerial(),
+                                                       name = "The Naked Guy",
+                                                       outfit = "Naked",
+                                                       url = "http://example.org"))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.other_type, PACKET_POKER_PLAYER_INFO)
+                self.assertEquals(packet.code, PACKET_POKER_PLAYER_INFO)
+                self.assertEquals(packet.message, "Failed to save set player information")
+                found = True
+        self.assertEquals(found, True)
+        avatar.service.setPlayerInfo = originalFunction
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test29_errorSetPokerPlayerInfo(self):
+        """Test for setting poker player info."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.errorSetPokerPlayerInfo, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1463,7 +1492,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test28"
+#    loader.methodPrefix = "test29"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

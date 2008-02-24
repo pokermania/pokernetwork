@@ -22,6 +22,8 @@
 	(PokerAvatarTestCase.setPokerPlayerInfo): Wrote function.
 	(PokerAvatarTestCase.test28_setPokerPlayerInfo): Wrote function.
 	(PokerAvatarTestCase.listHands): Fixed error OperationalError checking.
+	(PokerAvatarTestCase.test29_errorSetPokerPlayerInfo): Wrote function.
+	(PokerAvatarTestCase.errorSetPokerPlayerInfo): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
