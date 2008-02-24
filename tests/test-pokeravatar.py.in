@@ -1116,6 +1116,71 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.noAutoBlindAnte, 0, 101)
         return d
     # ------------------------------------------------------------------------
+    def sitOut(self, (client, packet), id, gameId ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSitOut(serial= client.getSerial(),
+                                                        game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_SIT_OUT:
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, gameId)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    def test21_sitOut(self):
+        """Test playing an actual hand all the way through"""
+        # The sequence of how to get yourself seated in a cash game was
+        # taken from the instructions at the top of pokerpackets.py
+        # labelled "How to sit at a cash game table ?"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.sitOut, 0, 101)
+        return d
+    # -------------------------------------------------------------------------
+    def sitOutClosedGame(self, (client, packet), id, gameId ):
+        table = self.service.getTable(gameId)
+        table.game.close()
+
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSitOut(serial= client.getSerial(),
+                                                        game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_AUTO_FOLD:
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, gameId)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    def test22_sitOutClosedGame(self):
+        """Test playing an actual hand all the way through"""
+        # The sequence of how to get yourself seated in a cash game was
+        # taken from the instructions at the top of pokerpackets.py
+        # labelled "How to sit at a cash game table ?"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.sitOutClosedGame, 0, 101)
+        return d
+    # ------------------------------------------------------------------------
     def doBlindPostAndHaveOtherGuyWaitForCardsAndQuit(self, (client, packet), id, gameId):
         # By now, we should have seen as noted above, a request for the
         # blinds for avatar1 for 100 small blind.  Here we send it.
@@ -1197,7 +1262,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test20"
+#    loader.methodPrefix = "test24"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
