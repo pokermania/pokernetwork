@@ -8,21 +8,27 @@
 	(PokerAvatarTestCase.test26_listTables): Wrote function.
 	(PokerAvatarTestCase.listTables): Wrote function.
 	(PokerAvatarTestCase.getPlayerInfoError): Wrote function.
-	(PokerAvatarTestCase.test27_playerInfoNotLoggedIn): Wrote function.
+	(PokerAvatarTestCase.test27_playerInfoNotLoggedIn): Wrote
+	function.
 	(PokerAvatarTestCase.normalSetRoles): Wrote function, pulling out
 	and expanding sub function in test06_setRoles.
-	(PokerAvatarTestCase.test06_setRoles): Rewrote to use normalSetRoles.
+	(PokerAvatarTestCase.test06_setRoles): Rewrote to use
+	normalSetRoles.
 	(PokerAvatarTestCase.test06_7_setUnknownRole): Wrote function.
 	(PokerAvatarTestCase.errorSetRoles): Wrote function.
-	(PokerAvatarTestCase.test06_8_setRoleAfterAnotherUserHas): Wrote function.
+	(PokerAvatarTestCase.test06_8_setRoleAfterAnotherUserHas): Wrote
+	function.
 	(PokerAvatarTestCase.setPersonalInfo): Wrote function.
-	(PokerAvatarTestCase.test24_personalInfo): Added call to setPersonalInfo.
+	(PokerAvatarTestCase.test24_personalInfo): Added call to
+	setPersonalInfo.
 	(PokerAvatarTestCase.getPlayerInfoError): Corrected packet error
 	type to search for.
 	(PokerAvatarTestCase.setPokerPlayerInfo): Wrote function.
 	(PokerAvatarTestCase.test28_setPokerPlayerInfo): Wrote function.
-	(PokerAvatarTestCase.listHands): Fixed error OperationalError checking.
-	(PokerAvatarTestCase.test29_errorSetPokerPlayerInfo): Wrote function.
+	(PokerAvatarTestCase.listHands): Fixed error OperationalError
+	checking.
+	(PokerAvatarTestCase.test29_errorSetPokerPlayerInfo): Wrote
+	function.
 	(PokerAvatarTestCase.errorSetPokerPlayerInfo): Wrote function.
 	(PokerAvatarTestCase.setupCallbackChain): Wrote function.
 	(PokerAvatarTestCase.sendExplainTooLate.checkError): Rewrote to
@@ -58,6 +64,11 @@
 	(PokerAvatarTestCase.test38_tourneyPlayerList): Wrote function.
 	(PokerAvatarTestCase.listPlayers): Wrote function.
 	(PokerAvatarTestCase.test38_tablePlayerList): Wrote function.
+	(PokerAvatarTestCase.test40_tourneyRegister): Wrote function.
+	(PokerAvatarTestCase.tourneyRegister): Wrote function.
+	(PokerAvatarTestCase.CORRECTEDtourneyRegister): Wrote function,
+	should be used at tourneyRegister when https://gna.org/bugs/?11148
+	is closed.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
