@@ -1766,21 +1766,45 @@ class PokerAvatarTestCase(unittest.TestCase):
         # I do not actually believe that pokerservice.tourneyRegister should be throwing
         #      exceptions.TypeError: cannot concatenate 'str' and 'PacketError' objects.
 
-        # In other words, the above tourneyRegister should work.  This one 
+        # In other words, the above tourneyRegister should work.  This bug
+        # is described https://gna.org/bugs/?11148
 
         try:
             avatar.handlePacketLogic(PacketPokerTourneyRegister(serial = client.getSerial(),
                                                                 game_id = 1101134))
+            self.assertEquals("", "If this is reached, then maybe you should switch to CORRECTEDtourneyRegister")
         except TypeError, te:
             self.assertEquals(te[0], "cannot concatenate 'str' and 'PacketError' objects")
         return (client, packet)
     # ------------------------------------------------------------------------
     def test40_tourneyRegister(self):
-        """Test for listing players in at a table."""
+        """Test for registering a players in a tourney."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
         d.addCallback(self.tourneyRegister, 0)
+        return d
+    # ------------------------------------------------------------------------
+    def tourneyUnregister(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerTourneyUnregister(serial = client.getSerial(),
+                                                            game_id = 1101134))
+        count = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.other_type, PACKET_POKER_TOURNEY_UNREGISTER)
+                self.assertEquals(packet.code, PacketPokerTourneyUnregister.DOES_NOT_EXIST)
+                count += 1
+        self.assertEquals(count, 1)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test41_tourneyUnregister(self):
+        """Test for unregistering players from a tourney."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.tourneyUnregister, 0)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -1798,7 +1822,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test40"
+#    loader.methodPrefix = "test41"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

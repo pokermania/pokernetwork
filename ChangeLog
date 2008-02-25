@@ -69,6 +69,8 @@
 	(PokerAvatarTestCase.CORRECTEDtourneyRegister): Wrote function,
 	should be used at tourneyRegister when https://gna.org/bugs/?11148
 	is closed.
+	(PokerAvatarTestCase.tourneyUnregister): Wrote function.
+	(PokerAvatarTestCase.test41_tourneyUnregister): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
