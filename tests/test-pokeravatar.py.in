@@ -1626,8 +1626,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                     assert p.name.find("sitngo") >= 0 or  p.name.find("egular")
                     assert p.name.find("registering") >= 0 or  p.name.find("announced")
                     count += 1
-                    print "tourney: "
-                    print p
                 self.assertEquals(count, 25)
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -1684,11 +1682,32 @@ class PokerAvatarTestCase(unittest.TestCase):
         avatar.service.cashOutCommit = self.originalFunction
     # ------------------------------------------------------------------------
     def test37_cashOutCommit(self):
-        """Test for doing a cash out operation."""
+        """Test for doing a cash out commit operation."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
         d.addCallback(self.cashOutCommit, 0)
+        return d
+    # ------------------------------------------------------------------------
+    def tourneyPlayerList(self, (client, packet), id, gameId ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerTourneyRequestPlayersList(game_id = gameId))
+        for packet in avatar.resetPacketsQueue():
+            count = 0
+            if packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST:
+                self.assertEquals(packet.serial, 1)
+                self.assertEquals(packet.game_id, 0)
+                count += 1
+            self.assertEquals(count, 1)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test38_tourneyPlayerList(self):
+        """Test for listing players in a tourney."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.tourneyPlayerList, 0, 1)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -1706,7 +1725,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test38"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
