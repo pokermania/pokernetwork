@@ -42,6 +42,8 @@
 	in service.
 	(PokerAvatarTestCase.checkCashIn): Wrote function.
 	(PokerAvatarTestCase.test32_cashIn): Added call to checkCashIn.
+	(PokerAvatarTestCase.test35_tourneys): Wrote function.
+	(PokerAvatarTestCase.tourneySelect): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
