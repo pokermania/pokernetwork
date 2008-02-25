@@ -1038,7 +1038,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                             'packet' :
                                 PacketPokerSetAccount(serial= someoneElseSerial),
                              'err_type' : PACKET_ERROR,
-                             'other_type' : POKER_SET_ACCOUNT },
+                             'other_type' : PACKET_POKER_SET_ACCOUNT },
             'automuck' : { 'output':
                            "%sattempt to set auto muck%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
