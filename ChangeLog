@@ -56,6 +56,8 @@
 	incorrect serial test.
 	(PokerAvatarTestCase.tourneyPlayerList): Wrote function.
 	(PokerAvatarTestCase.test38_tourneyPlayerList): Wrote function.
+	(PokerAvatarTestCase.listPlayers): Wrote function.
+	(PokerAvatarTestCase.test38_tablePlayerList): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
