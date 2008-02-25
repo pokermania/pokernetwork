@@ -1,3 +1,17 @@
+2008-02-25  Loic Dachary <loic@dachary.org>
+
+	* Release 1.3.0
+
+	* tests/test-pokeravatar.py.in: fix https://gna.org/bugs/?11148
+	  allows to discard the CORRECTEDtourneyRegister in favor of
+	  tourneyRegister
+	* pokernetwork/pokerservice.py: error + message functions convert
+	  to string before concatenating. (fixes
+	  https://gna.org/bugs/?11148).
+	* pokernetwork/pokeravatar.py: listHands fixed to accomodate
+	  SELECT_ALL packet specifics (fixes https://gna.org/bugs/?11149).
+	  error + message functions convert to string before concatenating.
+
 2008-02-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.getPersonalInfo):
@@ -111,8 +125,6 @@
 	and seated for correct output to occur.
 
 2008-02-18  Loic Dachary  <loic@pokerdev.pokersource.info>
-
-	* Release 1.3.0
 
 	* pokernetwork/pokerclient.py: ERROR packets are no longer
 	consumed by the pokerclient layer.
