@@ -187,10 +187,10 @@ class PokerService(service.Service):
         self.down = False
 
     def message(self, string):
-        print "PokerService: " + string
+        print "PokerService: " + str(string)
 
     def error(self, string):
-        self.message("*ERROR* " + string)
+        self.message("*ERROR* " + str(string))
             
     def stopServiceFinish(self, x):
         if self.cashier: self.cashier.close()
