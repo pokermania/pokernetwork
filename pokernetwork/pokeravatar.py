@@ -1,7 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -76,10 +76,10 @@ class PokerAvatar:
 #       self.message("instance deleted")
 
     def error(self, string):
-        self.message("ERROR " + string)
+        self.message("ERROR " + str(string))
         
     def message(self, string):
-        print "PokerAvatar: " + string
+        print "PokerAvatar: " + str(string)
         
     def isAuthorized(self, type):
         return self.user.hasPrivilege(self.service.poker_auth.GetLevel(type))
@@ -646,8 +646,9 @@ class PokerAvatar:
                                                     packets = packets))
 
     def listHands(self, packet, serial):
-        start = packet.start
-        count = min(packet.count, 200)
+        if packet.type != PACKET_POKER_HAND_SELECT_ALL:
+            start = packet.start
+            count = min(packet.count, 200)
         if serial != None:
             select_list = "select distinct hands.serial from hands,user2hand "
             select_total = "select count(distinct hands.serial) from hands,user2hand "
@@ -662,11 +663,17 @@ class PokerAvatar:
             if packet.string:
                 where = "where " + packet.string
         where += " order by hands.serial desc"
-        limit = " limit %d,%d " % ( start, count )
+        if packet.type != PACKET_POKER_HAND_SELECT_ALL:
+            limit = " limit %d,%d " % ( start, count )
+        else:
+            limit = '';
         (total, hands) = self.service.listHands(select_list + where + limit, select_total + where)
+        if packet.type == PACKET_POKER_HAND_SELECT_ALL:
+            start = 0
+            count = total
         self.sendPacketVerbose(PacketPokerHandList(string = packet.string,
-                                                   start = packet.start,
-                                                   count = packet.count,
+                                                   start = start,
+                                                   count = count,
                                                    hands = hands,
                                                    total = total))
 
