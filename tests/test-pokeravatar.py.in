@@ -1807,6 +1807,39 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.tourneyUnregister, 0)
         return d
     # ------------------------------------------------------------------------
+    def handSelectAll(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        # Need more privs to do a HAND_SELECT_ALL
+        oldPriv = avatar.user.privilege
+        avatar.user.privilege = 32767
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerHandSelectAll(serial = client.getSerial(),
+                                                          string = ""))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            print "THIS PACKET"
+            print packet
+            if packet.type == PACKET_POKER_HAND_LIST:
+#             Unclear what this should be....
+#                self.assertEquals(packet.count, ????)
+                self.assertEquals(packet.start, 0)
+                self.assertEquals(packet.hands, [])
+                self.assertEquals(packet.total, 0)
+                found = True
+        self.assertEquals(found, True)
+        avatar.user.privilege = oldPriv
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    # This test currently fails but probably shouldn't, see
+    #          https://gna.org/bugs/index.php?11149
+    def test42_handSelectAll(self):
+        """Test sending hand select all packet."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.handSelectAll, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1822,7 +1855,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test41"
+    loader.methodPrefix = "test42"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

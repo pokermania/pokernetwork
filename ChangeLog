@@ -71,6 +71,8 @@
 	is closed.
 	(PokerAvatarTestCase.tourneyUnregister): Wrote function.
 	(PokerAvatarTestCase.test41_tourneyUnregister): Wrote function.
+	(PokerAvatarTestCase.test42_handSelectAll): Wrote function.
+	(PokerAvatarTestCase.handSelectAll): Wroute function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
