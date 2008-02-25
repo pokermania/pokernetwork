@@ -49,6 +49,9 @@
 	(PokerAvatarTestCase.cashOut): Wrote function.
 	(PokerAvatarTestCase.checkCashOut): Wrote function.
 	(PokerAvatarTestCase.test36_cashOut): Wrote function.
+	(PokerAvatarTestCase.cashOutCommit): Wrote function.
+	(PokerAvatarTestCase.checkCashOutCommit): Wrote function.
+	(PokerAvatarTestCase.test37_cashOutCommit): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

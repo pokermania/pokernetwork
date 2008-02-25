@@ -1661,6 +1661,31 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.cashOut, 0)
         return d
     # ------------------------------------------------------------------------
+    calledCashOutCommit = False
+    def cashOutCommit(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        PokerAvatarTestCase.calledCashOutCommit = False
+        def fakeCashOutCommit(packet):
+            PokerAvatarTestCase.calledCashOutCommit = True
+        self.originalFunction = avatar.service.cashOutCommit
+        avatar.service.cashOutCommit = fakeCashOutCommit
+        avatar.handlePacketLogic(PacketPokerCashOutCommit(transaction_id = 0))
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def checkCashOutCommit(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        self.assertEquals(PokerAvatarTestCase.calledCashOutCommit, True)
+        avatar.service.cashOutCommit = self.originalFunction
+    # ------------------------------------------------------------------------
+    def test37_cashOutCommit(self):
+        """Test for doing a cash out operation."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.cashOutCommit, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1676,7 +1701,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test36"
+    loader.methodPrefix = "test37"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
