@@ -1033,6 +1033,12 @@ class PokerAvatarTestCase(unittest.TestCase):
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
                                 PacketPokerMuckDeny(serial = someoneElseSerial, game_id = gameId) },
+            'setaccount' : { 'output':
+                           "password must be at least 5 characters long",
+                            'packet' :
+                                PacketPokerSetAccount(serial= someoneElseSerial),
+                             'err_type' : PACKET_ERROR,
+                             'other_type' : POKER_SET_ACCOUNT },
             'automuck' : { 'output':
                            "%sattempt to set auto muck%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
@@ -1096,7 +1102,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(packet.type, info['err_type'])
                 if info.has_key('other_type'):
                     self.assertEquals(info['other_type'], packet.other_type)
-            
             self.assertEquals(found, info.has_key('err_type'))
         return (client, packet)
     # -------------------------------------------------------------------------
@@ -1701,7 +1706,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test37"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

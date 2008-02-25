@@ -52,6 +52,8 @@
 	(PokerAvatarTestCase.cashOutCommit): Wrote function.
 	(PokerAvatarTestCase.checkCashOutCommit): Wrote function.
 	(PokerAvatarTestCase.test37_cashOutCommit): Wrote function.
+	(PokerAvatarTestCase.requestsWithWrongSerial): Added SET_ACCOUNT
+	incorrect serial test.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
