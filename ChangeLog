@@ -38,6 +38,10 @@
 	(PokerAvatarTestCase.test33_cashQuery): Wrote function.
 	(PokerAvatarTestCase.setPokerAccount): Wrote function.
 	(PokerAvatarTestCase.test34_setPokerAccount): Wrote function.
+	(PokerAvatarTestCase.cashIn): Rewrote to mock-up cashIn function
+	in service.
+	(PokerAvatarTestCase.checkCashIn): Wrote function.
+	(PokerAvatarTestCase.test32_cashIn): Added call to checkCashIn.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

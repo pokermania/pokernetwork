@@ -115,7 +115,6 @@ TABLE2 = 101
 TABLE3 = 102
 
 class PokerAvatarTestCase(unittest.TestCase):
-
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -1531,20 +1530,24 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.errorSetPokerPlayerImage, 0)
         return d
     # ------------------------------------------------------------------------
+    calledCashIn = False
     def cashIn(self, (client, packet), id ):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
+        PokerAvatarTestCase.calledCashIn = False
+        def fakeCashIn(packet):
+            PokerAvatarTestCase.calledCashIn = True
+        self.originalFunction = avatar.service.cashIn
+        avatar.service.cashIn = fakeCashIn
         avatar.handlePacketLogic(PacketPokerCashIn(serial= client.getSerial(),
                                                    currency = "http://fake",
                                                    bserial = 0, value = 10))
-        found = False
-        for packet in avatar.resetPacketsQueue():
-            print "Packet found"
-            print packet
-#            if packet.type == PACKET_ACK:
-#                found = True
-#        self.assertEquals(found, True)
         return (client, packet)
+    # ------------------------------------------------------------------------
+    def checkCashIn(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        self.assertEquals(PokerAvatarTestCase.calledCashIn, True)
+        avatar.service.cashIn = self.originalFunction
     # ------------------------------------------------------------------------
     def test32_cashIn(self):
         """Test for doing a cash in operation."""
@@ -1552,6 +1555,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
         d.addCallback(self.cashIn, 0)
+        d.addCallback(self.checkCashIn, 0)
         return d
     # ------------------------------------------------------------------------
     def cashQuery(self, (client, packet), id ):
@@ -1616,7 +1620,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test34"
+#    loader.methodPrefix = "test32"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
