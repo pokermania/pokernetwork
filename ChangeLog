@@ -46,6 +46,9 @@
 	(PokerAvatarTestCase.tourneySelect): Wrote function.
 	(PokerAvatarTestCase.requestsWithWrongSerial): Added automuck
 	packet.
+	(PokerAvatarTestCase.cashOut): Wrote function.
+	(PokerAvatarTestCase.checkCashOut): Wrote function.
+	(PokerAvatarTestCase.test36_cashOut): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

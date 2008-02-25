@@ -1634,6 +1634,33 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.tourneySelect, 0)
         return d
     # ------------------------------------------------------------------------
+    calledCashOut = False
+    def cashOut(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        PokerAvatarTestCase.calledCashOut = False
+        def fakeCashOut(packet):
+            PokerAvatarTestCase.calledCashOut = True
+        self.originalFunction = avatar.service.cashOut
+        avatar.service.cashOut = fakeCashOut
+        avatar.handlePacketLogic(PacketPokerCashOut(serial= client.getSerial(),
+                                                   currency = "http://fake",
+                                                   bserial = 0, value = 10))
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def checkCashOut(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        self.assertEquals(PokerAvatarTestCase.calledCashOut, True)
+        avatar.service.cashOut = self.originalFunction
+    # ------------------------------------------------------------------------
+    def test36_cashOut(self):
+        """Test for doing a cash out operation."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.cashOut, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1649,7 +1676,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test36"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
