@@ -1033,6 +1033,11 @@ class PokerAvatarTestCase(unittest.TestCase):
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
                                 PacketPokerMuckDeny(serial = someoneElseSerial, game_id = gameId) },
+            'automuck' : { 'output':
+                           "%sattempt to set auto muck%s %s" % (messageStart, \
+                            forPlayerByPlayer, "that is not the owner of the game"),
+                            'packet' :
+                                PacketPokerAutoMuck(serial = someoneElseSerial, game_id = gameId, info = 0x01) },
             'blind' : { 'output':
                            "%sattempt to pay the blind%s %s" % (messageStart, \
                             ofPlayerByPlayer, "that is not the owner of the game"),
@@ -1644,7 +1649,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test35"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

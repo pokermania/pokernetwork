@@ -44,6 +44,8 @@
 	(PokerAvatarTestCase.test32_cashIn): Added call to checkCashIn.
 	(PokerAvatarTestCase.test35_tourneys): Wrote function.
 	(PokerAvatarTestCase.tourneySelect): Wrote function.
+	(PokerAvatarTestCase.requestsWithWrongSerial): Added automuck
+	packet.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 
