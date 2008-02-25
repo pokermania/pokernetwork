@@ -73,6 +73,8 @@
 	(PokerAvatarTestCase.test41_tourneyUnregister): Wrote function.
 	(PokerAvatarTestCase.test42_handSelectAll): Wrote function.
 	(PokerAvatarTestCase.handSelectAll): Wroute function.
+	(PokerAvatarTestCase.handHistory): Wrote function.
+	(PokerAvatarTestCase.test43_handHistory): Wrote function.
 
 2008-02-23  Bradley M. Kuhn  <bkuhn@ebb.org>.
 

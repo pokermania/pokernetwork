@@ -1840,6 +1840,37 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.handSelectAll, 0)
         return d
     # ------------------------------------------------------------------------
+    def handHistory(self, (client, packet), id, gameId ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerHandHistory(game_id = gameId, serial = client.getSerial() ))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_ERROR:
+                found = True
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, 101)
+                self.assertEquals(packet.message, "Hand %d was not found in history of player %d"
+                                  % (packet.game_id, client.getSerial()))
+                self.assertEquals(packet.other_type, PACKET_POKER_HAND_HISTORY)
+                self.assertEquals(packet.code, PacketPokerHandHistory.NOT_FOUND)
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test43_handHistory(self):
+        """Test for hand history packet."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.handHistory, 0, 101)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1855,7 +1886,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test42"
+#    loader.methodPrefix = "test43"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
