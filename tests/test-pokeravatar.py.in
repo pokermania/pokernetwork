@@ -1854,6 +1854,58 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.handHistory, 0, 101)
         return d
     # ------------------------------------------------------------------------
+    def loseConnection(self, (client, packet), gameId):
+        table = self.service.getTable(gameId)
+        avatar0 = self.service.avatars[0]
+        avatar0.logout()
+        table.observers.append(avatar0)
+        avatar0.login((4, "user0", 32767))
+        avatar0.queuePackets()
+        count = 0
+        for packet in avatar0.resetPacketsQueue():
+            if packet.type == PACKET_POKER_PLAYER_CARDS:
+                count += 1
+                self.assertEquals(packet.game_id, gameId)
+            elif packet.type == PACKET_POKER_PLAYER_SELF:
+                count += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 4)
+            elif packet.type == PACKET_POKER_BLIND_REQUEST:
+                count += 1
+                self.assertEquals(packet.serial, 4)
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.amount, 200)
+                self.assertEquals(packet.dead, 0)
+                self.assertEquals(packet.state, "big")
+        self.assertEquals(count >= 3, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test44_possibleObserverLoggedIn(self):
+        """Test playing an actual hand all the way through"""
+        # The sequence of how to get yourself seated in a cash game was
+        # taken from the instructions at the top of pokerpackets.py
+        # labelled "How to sit at a cash game table ?"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 101)
+        d2.addCallback(self.buyInTable, 1, 101, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 101)
+        d2.addCallback(self.sitTable, 1, 101)
+        d2.addCallback(self.readyToPlay, 1, 101)
+        d2.addCallback(self.dealTable, 101)
+        d2.addCallback(self.loseConnection, 101)
+        return defer.DeferredList((d, d2))
+    # -------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -1869,7 +1921,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test42"
+#    loader.methodPrefix = "test44"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
