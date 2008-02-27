@@ -1367,7 +1367,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TABLE_LIST:
                 self.assertEquals(packet.players, 0)
-                self.assertEquals(packet.tables, 3)
+                self.assertEquals(packet.tables, 4)
                 count = 0
                 for p in packet.packets:
                     count += 1

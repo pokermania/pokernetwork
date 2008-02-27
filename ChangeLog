@@ -6,6 +6,7 @@
 	(PokerAvatarTestCase.test45_possibleObserverLoggedInWithAnte):
 	Wrote function.
 	(PokerAvatarTestCase.loseConnectionAnte): Wrote function.
+	(PokerAvatarTestCase.listTables): Four tables now.
 
 2008-02-25  Loic Dachary <loic@dachary.org>
 
