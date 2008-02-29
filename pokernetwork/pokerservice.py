@@ -1752,6 +1752,46 @@ def _getRequestCookie(request):
     else:
         return request.getCookie(join(['TWISTED_SESSION'] + request.sitepath, '_'))
 
+#
+# When connecting to the poker server with REST, SOAP or XMLRPC
+# the client must chose to use sessions or not. If using session,
+# the server will issue a cookie and keep track of it during
+# (X == default twisted timeout) minutes.
+#
+# The session cookie is returned as a regular HTTP cookie and
+# the library of the client in charge of the HTTP dialog should
+# handle it transparently. To help the developer using a library
+# that does a poor job at handling the cookies, it is also sent
+# back as the "cookie" field of the PacketSerial packet in response
+# to a successfull authentication request. This cookie may then
+# be used to manually set the cookie header, for instance:
+#
+# Cookie: TWISTED_SESSION=a0bb35083c1ed3bef068d39bd29fad52; Path=/
+#
+# Because this cookie is only sent as an answer to an authentication
+# request, it will not help clients observing the tables. These
+# clients will have to find a way to properly handle the HTTP headers
+# sent by the server.
+#
+# When the client sends a packet to the server using sessions, it must
+# be prepared to receive the backlog of packets accumulated since the
+# last request. For instance,
+#
+#   A client connects in REST session mode
+#   The client sends POKER_TABLE_JOIN and the server replies with
+#   packets describing the state of the table.
+#   A player sitting at the table sends POKER_FOLD.
+#   The server broadcasts the action to all players and observers.
+#   Because the client does not maintain a persistent connection
+#    and is in session mode, the server keeps the POKER_FOLD packet
+#    for later.
+#   The client sends PING to tell the server that it is still alive.
+#   In response the server sends it the cached POKER_FOLD packet and
+#    the client is informed of the action.
+#
+# The tests/test-webservice.py.in tests contain code that will help
+# understand the usage of the REST, SOAP and XMLRPC protocols.
+#
 class PokerXML(resource.Resource):
 
     encoding = "ISO-8859-1"
@@ -1841,14 +1881,17 @@ class PokerXML(resource.Resource):
         else:
             if use_sessions != "use sessions":
                 self.service.destroyAvatar(avatar)
-            elif use_sessions == "use sessions" and logout:
-                session.expire()
+            elif use_sessions == "use sessions":
+                if logout:
+                    session.expire()
+                else:
+                    avatar.queuePackets()
 
             result_maps = self.packets2maps(result_packets)
 
             result_string = self.maps2result(result_maps)
             if self.verbose > 2:
-                self.message("result_string xml " + str(result_string))
+                self.message("result_string " + str(result_string))
             request.setHeader("Content-length", str(len(result_string)))
             return result_string
 
