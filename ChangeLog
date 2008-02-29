@@ -1,3 +1,11 @@
+2008-02-29  Loic Dachary <loic@dachary.org>
+
+	* Release 1.3.0
+
+	* pokernetwork/pokerservice.py: fix the queuing packet bug +
+	  document HTTP based protocols
+	* tests/test-webservice.py.in: test to prove the queuing packet bug
+
 2008-02-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -9,8 +17,6 @@
 	(PokerAvatarTestCase.listTables): Four tables now.
 
 2008-02-25  Loic Dachary <loic@dachary.org>
-
-	* Release 1.3.0
 
 	* tests/test-pokeravatar.py.in: fix https://gna.org/bugs/?11148
 	  allows to discard the CORRECTEDtourneyRegister in favor of
