@@ -39,6 +39,12 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
 
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
+from tests import testclock
+from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
 from tests.testmessages import silence_all_messages
@@ -278,6 +284,26 @@ class PokerServiceTestCase(unittest.TestCase):
         d.addCallback(validate)
         return d
 
+    def test08_polling(self):
+        self.service.startService()
+        d = self.login()
+        def avatarPoll(*args):
+            #
+            # the avatar must be queuing packets broadcasted to it
+            #
+            avatar = self.service.avatars[0]
+            self.assertTrue(avatar._queue_packets)
+            avatar.sendPacket(PacketAck())
+            #
+            # sending a ping packet will return the packets queued
+            # by the avatar
+            #
+            d = self.query('use sessions', { 'type': 'PacketPing' })
+            d.addCallback(self.assertEquals, [{'type': 'PacketAck'}])
+            return d
+        d.addCallback(avatarPoll)
+        return d
+
 class XMLRPCPokerServiceTestCase(PokerServiceTestCase):
 
     def query(self, *args):
@@ -313,7 +339,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     suite.addTest(loader.loadClass(RESTPokerServiceTestCase))
