@@ -1083,10 +1083,13 @@ class PokerExplainTestCase(unittest.TestCase):
         game.position_info = [player_serial, False]
         other_player_serial = 75
         game.getSerialInPosition = lambda: other_player_serial
+        other_player_position = 3
+        game.position = other_player_position
         self.assertTrue(self.explain.explain(PacketPokerId(game_id = game_id)))
         self.assertEqual(3, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_POSITION, self.explain.forward_packets[1].type)
         self.assertEqual(other_player_serial, self.explain.forward_packets[1].serial)
+        self.assertEqual(other_player_position, self.explain.forward_packets[1].position)
         self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, self.explain.forward_packets[2].type)
         self.assertEqual(other_player_serial, self.explain.forward_packets[2].serial)
         #
