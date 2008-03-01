@@ -594,6 +594,7 @@ class PokerExplain:
                     if serial_in_position > 0:
                         if position_changed:
                             forward_packets.append(PacketPokerPosition(game_id = game.id,
+                                                                       position = game.position,
                                                                        serial = serial_in_position))
                         if ( self_was_in_position and not self_in_position ):
                             self.unsetPlayerTimeout(game, self.getSerial())
