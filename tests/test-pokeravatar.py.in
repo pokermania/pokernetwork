@@ -643,7 +643,6 @@ class PokerAvatarTestCase(unittest.TestCase):
             elif packet.type == PACKET_POKER_POSITION:
                 found += 1
                 self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.position, -1)
                 self.assertEquals(True, packet.serial == avatar0.getSerial() 
                                         or packet.serial == avatar1.getSerial())
             elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
