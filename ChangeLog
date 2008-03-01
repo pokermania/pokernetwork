@@ -2,6 +2,9 @@
 
 	* Release 1.3.0
 
+	* tests/test-pokeravatar.py.in: no need to check the position as it
+	  is 1) redundant with the serial, 2) consistency has been checked
+	  in the pokerexplain.py tests
 	* tests/test-pokerexplain.py.in: add check to make sure the
 	  position field of the PokerPosition packet is set.
 	* pokernetwork/pokerexplain.py: because PacketPosition does not
