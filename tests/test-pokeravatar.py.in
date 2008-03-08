@@ -1955,6 +1955,48 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.dealTable, 103)
         d2.addCallback(self.loseConnectionAnte, 103)
         return defer.DeferredList((d, d2))
+    # ------------------------------------------------------------------------
+    def processingHand(self, (client, packet), id, gameId, isBugous=False ):
+        avatar = self.service.avatars[id]
+
+        avatar.bugous_processing_hand = isBugous
+
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerProcessingHand(serial = 
+                                                           client.getSerial(),
+                                                            game_id = gameId))
+        count = 0
+        for packet in avatar.resetPacketsQueue():
+            print "MYFOUND: "
+            print packet
+            if packet.type == PACKET_POKER_ERROR:
+                print "I see this as an error"
+                count += 1
+                self.assertEquals(isBugous, True)
+                self.assertEquals(packet.other_type, PACKET_POKER_PROCESSING_HAND)
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, 103)
+                self.assertEquals(packet.message, "no message")
+                self.assertEquals(packet.code, 0)
+            if packet.type == PACKET_ACK:
+                count += 1
+                self.assertEquals(isBugous, False)
+                print "ACK IS:"
+                print packet
+        self.assertEquals(count, 1)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test46_processingHand(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 103, 'Table4', 'ante-1-2-limit')
+        d.addCallback(self.seatTable, 0, 103)
+        d.addCallback(self.buyInTable, 0, 103, 1000)
+        d.addCallback(self.sitTable, 0, 103)
+        d.addCallback(self.processingHand, 0, 103)
+        d.addCallback(self.processingHand, 0, 103, True)
+        return d
     # -------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
@@ -1971,7 +2013,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test45"
+#    loader.methodPrefix = "test46"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
