@@ -1074,6 +1074,21 @@ class PokerAvatarTestCase(unittest.TestCase):
                             forPlayerByPlayer, "that is not the owner of the game"),
                             'packet' :
                                 PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100) },
+# Note that the 'start' packet test that follows is different from all the
+# other packets in this group.  The point is that if a game.isEndorNull()
+# is true at line 411 of pokeravatar.py, the message sent back --
+# regardless of the serial -- assumes that the player with the right
+# serial has requested it but cannot because a game is already going.  I
+# am not sure this behavior by pokeravatar.handlePacketLogic() is entirely
+# correct, but I am leaving, and have instead rewritten this test to look
+# for the response given by handlePacketLogic when isEndorNull() is true
+# rather than the "someoneElse" response.
+            'start' : { 'output':
+                           "%splayer %d %s" % (messageStart, client.getSerial(), \
+                            "tried to start a new game while in game "),
+                            'packet' : PacketPokerStart(serial = someoneElseSerial,
+                                                        game_id = gameId),
+                        'err_type' : PACKET_POKER_START },
             'check' : { 'output':
                            "%sattempt to check%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
@@ -1093,6 +1108,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             data = messageOutput.getvalue()
             sys.stdout = sys.__stdout__
             messageOutput.close()
+            print "Got text: " + data
             self.assertEqual(data.find(info['output']) >= 0, True)
 
             found = False
@@ -1106,7 +1122,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test18_badAttempts(self):
         d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
+        d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1967,10 +1983,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                             game_id = gameId))
         count = 0
         for packet in avatar.resetPacketsQueue():
-            print "MYFOUND: "
-            print packet
             if packet.type == PACKET_POKER_ERROR:
-                print "I see this as an error"
                 count += 1
                 self.assertEquals(isBugous, True)
                 self.assertEquals(packet.other_type, PACKET_POKER_PROCESSING_HAND)
@@ -1981,8 +1994,6 @@ class PokerAvatarTestCase(unittest.TestCase):
             if packet.type == PACKET_ACK:
                 count += 1
                 self.assertEquals(isBugous, False)
-                print "ACK IS:"
-                print packet
         self.assertEquals(count, 1)
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -1997,7 +2008,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.processingHand, 0, 103)
         d.addCallback(self.processingHand, 0, 103, True)
         return d
-    # -------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2013,7 +2024,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test46"
+#    loader.methodPrefix = "test18"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
