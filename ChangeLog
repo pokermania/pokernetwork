@@ -7,6 +7,8 @@
 	(PokerAvatarTestCase.test48_seatPackets): Wrote function.
 	(PokerAvatarTestCase.test49_badRebuy): Wrote function.
 	(PokerAvatarTestCase.badBuyRebuyRequest): Wrote function.
+	(PokerAvatarTestCase.test50_chat): Wrote function.
+	(PokerAvatarTestCase.chatItUp): Wrote function.
 
 2008-03-01  Loic Dachary <loic@dachary.org>
 
