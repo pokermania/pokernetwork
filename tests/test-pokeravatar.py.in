@@ -2068,8 +2068,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         sys.stdout = sys.__stdout__
 
         self.assertEqual(data.find("tried to start a new game but is not the owner of the table") >= 0, True)
-
-        
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
         d = self.client_factory[0].established_deferred
@@ -2094,6 +2092,37 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.variousStartPackets, 1, 101)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
+    def badSeatTable(self, (client, packet), id, gameId):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        seatNumber = id + 1
+        def forceFalse(client, serial, seat):
+            return False
+        originalFunction = table.seatPlayer
+        table.seatPlayer = forceFalse
+
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSeat(serial = client.getSerial(),
+                                                seat = seatNumber, game_id = gameId))
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_SEAT:
+                found += 1
+                self.assertEquals(packet.game_id, table.game.id)
+                self.assertEquals(packet.seat, -1)
+                self.assertEquals(packet.serial, client.getSerial())
+        self.assertEquals(found, 1)
+        table.seatPlayer = originalFunction
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test48_seatPackets(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.badSeatTable, 0, 101)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2109,7 +2138,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test47"
+    loader.methodPrefix = "test48"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
