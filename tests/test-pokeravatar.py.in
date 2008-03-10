@@ -2123,6 +2123,44 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.badSeatTable, 0, 101)
         return d
     # ------------------------------------------------------------------------
+    def badBuyRebuyRequest(self, (client, packet), id, gameId):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        def forceFalse(self, amount):
+            return False
+        originalRebuy = table.rebuyPlayerRequest
+        originalBuyin = table.buyInPlayer
+        table.rebuyPlayerRequest = forceFalse
+        table.buyInPlayer = forceFalse
+        for sendPack in (PacketPokerBuyIn(serial = client.getSerial(),
+                                          amount = 10000, game_id = gameId),
+                         PacketPokerRebuy(serial = client.getSerial(),
+                                      amount = 10000, game_id = gameId)):
+            avatar.queuePackets()
+            avatar.handlePacketLogic(sendPack)
+            found = 0
+            for packet in avatar.resetPacketsQueue():
+                found += 1
+                if packet.type == PACKET_POKER_ERROR:
+                    self.assertEquals(packet.other_type, sendPack.type)
+                    self.assertEquals(packet.game_id, gameId)
+                    self.assertEquals(packet.serial, client.getSerial())
+            self.assertEquals(found, 1)
+
+        table.rebuyPlayerRequest = originalRebuy
+        table.buyInPlayer = originalBuyin
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test49_badRebuy(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.badBuyRebuyRequest, 0, 101)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2138,7 +2176,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test48"
+#    loader.methodPrefix = "test49"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
