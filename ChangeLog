@@ -9,6 +9,8 @@
 	(PokerAvatarTestCase.badBuyRebuyRequest): Wrote function.
 	(PokerAvatarTestCase.test50_chat): Wrote function.
 	(PokerAvatarTestCase.chatItUp): Wrote function.
+	(PokerAvatarTestCase.leaveTable): Wrote function.
+	(PokerAvatarTestCase.test51_doLeave): Wrote function.
 
 2008-03-01  Loic Dachary <loic@dachary.org>
 
