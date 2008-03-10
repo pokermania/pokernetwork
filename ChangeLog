@@ -1,3 +1,9 @@
+2008-03-09  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.variousStartPackets): Wrote function.
+	(PokerAvatarTestCase.test47_startPackets): Wrote function.
+
 2008-03-01  Loic Dachary <loic@dachary.org>
 
 	* Release 1.3.0

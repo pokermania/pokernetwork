@@ -2009,6 +2009,91 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.processingHand, 0, 103, True)
         return d
     # ------------------------------------------------------------------------
+    def variousStartPackets(self, (client, packet), id, gameId ):
+        import StringIO
+        avatar = self.service.avatars[id]
+
+        avatar.queuePackets()
+        messageOutput = StringIO.StringIO()
+        sys.stdout = messageOutput
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
+                                                            game_id = gameId))
+        data = messageOutput.getvalue()
+        sys.stdout = sys.__stdout__
+
+        self.assertEqual(data.find("tried to start a new game but is not the owner of the table") >= 0, True)
+
+
+        # Coverage for when the server is shutting down
+
+        avatar.service.shutting_down = True
+
+        avatar.queuePackets()
+        messageOutput = StringIO.StringIO()
+        sys.stdout = messageOutput
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
+                                                            game_id = gameId))
+        data = messageOutput.getvalue()
+        sys.stdout = sys.__stdout__
+
+        self.assertEqual(data.find("server shutting down") >= 0, True)
+
+        avatar.service.shutting_down = False
+
+        table = self.service.getTable(gameId)
+        table.owner = client.getSerial()
+
+        avatar.queuePackets()
+        messageOutput = StringIO.StringIO()
+        sys.stdout = messageOutput
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
+                                                            game_id = gameId))
+        data = messageOutput.getvalue()
+        sys.stdout = sys.__stdout__
+        self.assertEqual(data.find("because game is running") >= 0, True)
+
+        # Coverage for when someone else owns the table
+
+        avatar.service.shutting_down = False
+
+        table = self.service.getTable(gameId)
+        table.owner = client.getSerial() - 3
+
+        avatar.queuePackets()
+        messageOutput = StringIO.StringIO()
+        sys.stdout = messageOutput
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
+                                                            game_id = gameId))
+        data = messageOutput.getvalue()
+        sys.stdout = sys.__stdout__
+
+        self.assertEqual(data.find("tried to start a new game but is not the owner of the table") >= 0, True)
+
+        
+    # ------------------------------------------------------------------------
+    def test47_startPackets(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.readyToPlay, 0, 101)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 101)
+        d2.addCallback(self.buyInTable, 1, 101, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 101)
+        d2.addCallback(self.sitTable, 1, 101)
+        d2.addCallback(self.readyToPlay, 1, 101)
+        d2.addCallback(self.dealTable, 101)
+        d2.addCallback(self.variousStartPackets, 1, 101)
+        return defer.DeferredList((d, d2))
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2024,7 +2109,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test18"
+#    loader.methodPrefix = "test47"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
