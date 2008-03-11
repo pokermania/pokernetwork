@@ -5,6 +5,7 @@
 	Wrote function.
 	(PokerAvatarTestCase.test52_variousPackets): Wrote function.
 
+
 2008-03-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in

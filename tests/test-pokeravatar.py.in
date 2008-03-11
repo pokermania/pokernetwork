@@ -2234,10 +2234,40 @@ class PokerAvatarTestCase(unittest.TestCase):
                           "[PokerGame %d] ERROR: muck: game state muck expected, found null" % gameId,
                           'packet' :
                                   PacketPokerMuckDeny(game_id = gameId,
-                                                        serial = client.getSerial()) },            'wait_blind' : { 'output' : 
+                                                        serial = client.getSerial()) },
+            'wait_blind' : { 'output' : 
                           "[PokerGame %d] ERROR: player %d cannot pay blind while in state null" % (gameId, client.getSerial()),
                           'packet' :
                                   PacketPokerWaitBigBlind(game_id = gameId,
+                                                        serial = client.getSerial()) },
+            'ante' : { 'output' : 
+                          "[PokerGame %d] ERROR: no ante due" % gameId,
+                          'packet' :
+                                  PacketPokerAnte(game_id = gameId, amount = 500,
+                                                        serial = client.getSerial()) },
+            'lookcards' : { 'answer_type' : PACKET_POKER_LOOK_CARDS,
+                          'packet' :
+                                  PacketPokerLookCards(game_id = gameId,
+                                                        serial = client.getSerial()) },
+            'fold' : { 'output' : "ERROR: player %d cannot fold." % client.getSerial(),
+                          'packet' :
+                                  PacketPokerFold(game_id = gameId,
+                                                        serial = client.getSerial()) },
+            'call' : { 'output' : "ERROR: player %d cannot call." % client.getSerial(),
+                          'packet' :
+                                  PacketPokerCall(game_id = gameId,
+                                                        serial = client.getSerial()) },
+            'raise' : { 'output' : "ERROR: player %d cannot raise." % client.getSerial(),
+                          'packet' :
+                                  PacketPokerRaise(game_id = gameId, amount = 0,
+                                                        serial = client.getSerial()) },
+            'check' : { 'output' : "ERROR: player %d cannot check." % client.getSerial(),
+                          'packet' :
+                                  PacketPokerCheck(game_id = gameId,
+                                                        serial = client.getSerial()) },
+            'replay' : { 'output' : "*ERROR* loadHand(%d) expected one row got 0" % client.getSerial(),
+                          'packet' :
+                                  PacketPokerHandReplay(game_id = gameId,
                                                         serial = client.getSerial()) },
             }
         # Next, we loop through all the serial-related bad pack list,
@@ -2254,15 +2284,15 @@ class PokerAvatarTestCase(unittest.TestCase):
             sys.stdout = sys.__stdout__
             messageOutput.close()
             print "Got text: START\n" + data + "\nEND\n"
-            self.assertEqual(data.find(info['output']) >= 0, True)
-
+            if info.has_key('output'):
+                self.assertEqual(data.find(info['output']) >= 0, True)
             found = False
             for packet in avatar.resetPacketsQueue():
                 found = True
-                self.assertEquals(packet.type, info['err_type'])
-                if info.has_key('other_type'):
-                    self.assertEquals(info['other_type'], packet.other_type)
-            self.assertEquals(found, info.has_key('err_type'))
+                self.assertEquals(packet.type, info['answer_type'])
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, client.getSerial())
+            self.assertEquals(found, info.has_key('answer_type'))
         return (client, packet)
     # ------------------------------------------------------------------------
     def test52_variousPackets(self):
@@ -2275,7 +2305,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.autoBlindAnte, 0, 101)
         d.addCallback(self.sitTable, 0, 101)
         d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.variousRequestsWithStringReturnOnly, 0, 101)
+        d.addCallback(self.variousPacketsWithStringOrSinglePacketReturn, 0, 101)
         return d
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -2293,7 +2323,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test52"
+#    loader.methodPrefix = "test52"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
