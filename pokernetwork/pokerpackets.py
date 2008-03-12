@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -1160,6 +1160,35 @@ The answer sent to the client will be the same as the answer
 sent when receiving a PacketPokerTableJoin packet.
 
 Direction: server <=> client
+
+Display information:
+# 10 seats (P01 to P10)
+# a dealer button (D)
+# each player has two chip stacks displayed on the table
+## the chips that are not engaged in the game (M)
+## the chips that were bet during this betting round (B)
+# each player two places for cards
+## up to 5 cards hidden in his hand (H)
+## up to 7 cards on the table in front of him (some up some down) (V)
+# 5 community cards are displayed face up in the middle (C)
+# up to 9 pots are in the middle, each for a player who is allin (P1 to P9)
+# at showdown the winning hands are
+## two hands for high / low variants (colors on H, V or C)
+## as many winning hands per allin player
+{{{
+        HHHHH   HHHHH    HHHHH   HHHHH
+         P09     P10      P01     P02
+       VVVVVVV VVVVVVV  VVVVVVV VVVVVVV
+         B M     B M      B M     B M
+  HHHHH                               HHHHH
+   P08 M B        CCCCC            B M P03
+ VVVVVVV P1 P2 P3 P4 P5 P6 P7 P8 P9  VVVVVVV
+
+         B M     B M      B M     B M D
+       VVVVVVV VVVVVVV   VVVVVVV VVVVVVV
+         P07     P06       P05     P04
+        HHHHH   HHHHH     HHHHH   HHHHH
+}}}
 
 name: symbolic name of the game.
 variant: base name of the variant that must match a poker.<variant>.xml
@@ -3790,6 +3819,10 @@ according to the "value" bit field as follows:
 Context: If the server accepts the request, a PacketAck is
 returned. Otherwise a PacketError is returned with
 other_type set to PACKET_POKER_EXPLAIN.
+
+Note: in order to produce the desired behaviour, the
+PACKET_POKER_EXPLAIN must be sent before starting to
+observe the action at a table (i.e. before sending PACKET_POKER_JOIN). 
 
 value == NONE
   The server assumes the client knows the poker rules, presumably
