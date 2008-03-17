@@ -1,5 +1,7 @@
 2008-03-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* Release 1.3.0
+
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.variousPacketsWithStringOrSinglePacketReturn):
 	Wrote function.
@@ -21,8 +23,6 @@
 	(PokerAvatarTestCase.test51_doLeave): Wrote function.
 
 2008-03-01  Loic Dachary <loic@dachary.org>
-
-	* Release 1.3.0
 
 	* tests/test-pokeravatar.py.in: no need to check the position as it
 	  is 1) redundant with the serial, 2) consistency has been checked
