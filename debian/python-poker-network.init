@@ -67,12 +67,18 @@ serverscript=/usr/lib/python/site-packages/pokernetwork/pokerserver.py
 if ! test -f $serverscript ; then
     serverscript=/usr/share/pycentral/python-poker-network/site-packages/pokernetwork/pokerserver.py
 fi
+if ! test -f $serverscript ; then
+    serverscript=`pycentral pycentraldir python-poker-network`/pokernetwork/pokerserver.py
+fi
 
 botpidfile=/var/run/poker-network-bot.pid
 botlogfile=/var/log/poker-network-bot.log
 botscript=/usr/lib/python/site-packages/pokernetwork/pokerbot.py
 if ! test -f $botscript ; then
     botscript=/usr/share/pycentral/python-poker-network/site-packages/pokernetwork/pokerbot.py
+fi
+if ! test -f $botscript ; then
+    botscript=`pycentral pycentraldir python-poker-network`/pokernetwork/pokerbot.py
 fi
 
 more_args=--no_save
