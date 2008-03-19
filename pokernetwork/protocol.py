@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -174,10 +174,15 @@ class UGAMEProtocol(protocol.Protocol):
             # without compromising the for loop on queues
             #
             queues = self._queues.copy()
+            lags = [0]
             #
             # Process exactly one packet in each queue
             #
             for (id, queue) in queues.iteritems():
+                #
+                # Keep an empty queue if it contains a delay, otherwise get
+                # rid of it.
+                #
                 if len(queue.packets) <= 0:
                     if queue.delay <= now:
                         to_delete.append(id)
@@ -186,7 +191,7 @@ class UGAMEProtocol(protocol.Protocol):
                 # If lagging behind too much, ignore the imposed delay
                 #
                 lag = now - queue.packets[0].time__
-                self._lag = lag
+                lags.append(lag)
                 if queue.delay > now and lag > self._lagmax:
                     if self.factory and self.factory.verbose > 0:
 		        print " => queue %d delay canceled because lag too high" % id
@@ -210,6 +215,10 @@ class UGAMEProtocol(protocol.Protocol):
                 else:
                     if self.factory and self.factory.verbose > 5:
                         print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )
+            #
+            # remember the worst lag
+            #
+            self._lag = max(lags)
             #
             # Remove empty queues for which there is no delay
             #
