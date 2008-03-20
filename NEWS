@@ -1,5 +1,7 @@
 Release 1.4.0
 
+JSONP support + session control for REST API.
+
 Bug fixes.
 
 Release 1.3.0

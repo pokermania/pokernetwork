@@ -1,6 +1,6 @@
 <?php
 //
-// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+// Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2005, 2006 Mekensleep
 //
 // Mekensleep
