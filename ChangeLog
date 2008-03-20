@@ -2,6 +2,14 @@
 
 	* Release 1.4.0
 
+	* database/schema.sql.in: Do not create many tournaments by
+	  default. A sitngo and a regular tournament are enough.
+	* tests/conf/poker.client.xml.in: version 1.4.0
+	* tests/test-webservice.py.in: - twisted-2.5 ports
+	  - normalize "no sessions"
+	  - tests for session=clear session=new on REST API
+	  - tests for jsonp on REST API
+	* COPYING + *: GPLv3+ upgrade
 	* tests/test-pokeravatar.py.in: Only two tournaments by default.
 	* pokernetwork/pokerservice.py: Split the from zope.interface
 	  import to avoid python warnings.
@@ -5415,5 +5423,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2007-12-24/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2008-02-20/p'"
 End:
