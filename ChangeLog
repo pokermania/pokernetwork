@@ -1,6 +1,57 @@
-2008-03-17  Loic Dachary  <loic@pokerdev.pokersource.info>
+2008-03-20  Loic Dachary <loic@dachary.org>
 
 	* Release 1.4.0
+
+	* tests/test-pokeravatar.py.in: Only two tournaments by default.
+	* pokernetwork/pokerservice.py: Split the from zope.interface
+	  import to avoid python warnings.
+	  Fix cookie session comment for clarity.
+	  HTTP based protocols conversion from packets to result are given
+	  the request in argument. To detect the jsonp argument, for
+	  instance.
+	  Implement session clear (forget about the session) and renew
+	  (clear + get another session).
+	* tests/run.in: - load xdebug to enable coverage report of php code
+	  - archive pydb --fntrace --basename pearl
+	* tests/test-pokerservice.py.in: test16 & test17 did not return the
+	  deferred. Therefore the trial twisted test framework assumed the
+	  test was finished and killed the connect. However, because the
+	  reactor was still running, the poker action kept going. And it
+	  eventually did a MySQL request on a DEAD CONNECTION TO MYSQL.
+	  Hence the "InterfacError" which should read : connection to the
+	  server is dead and you're trying to use it anyways.
+
+2008-03-19  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/protocol.py: keep the worst lag instead of keeping
+	  the last lag (non reported bug)
+	* debian/python-poker-network.init: use pycentral to locate scripts
+	  instead of guessing
+
+2008-03-17  Loic Dachary <loic@dachary.org>
+
+	* AUTHORS, ChangeLog, NEWS, conf/poker.bot.xml.in,
+	  conf/poker.client.xml.in, conf/poker.server.xml.in,
+	  debian/changelog, examples/poker.bot.xml,
+	  examples/poker.server-monotone.xml, examples/poker.server.xml,
+	  pokerclient2d/poker2d.xml.in, pokernetwork/__init__.py: bump
+	  version to 1.4.0
+
+2008-03-12  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: table display information
+
+2008-03-11  bkuhn
+
+	* ChangeLog, tests/test-pokeravatar.py.in: r387@hughes: bkuhn |
+	  2008-03-10 21:58:48 -0400
+	  * Improved tests that expect a simple string or single packet in
+	  return.
+	* ChangeLog, tests/test-pokeravatar.py.in: r386@hughes: bkuhn |
+	  2008-03-10 19:44:37 -0400
+	  * Began work on test to cover odds and ends of various packet
+	  types
+	  processed by pokeravatar.handlePacketLogic()
 
 2008-03-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
