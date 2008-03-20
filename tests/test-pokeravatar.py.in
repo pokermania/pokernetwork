@@ -1,7 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1640,7 +1640,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                     assert p.name.find("sitngo") >= 0 or  p.name.find("egular")
                     assert p.name.find("registering") >= 0 or  p.name.find("announced")
                     count += 1
-                self.assertEquals(count, 25)
+                self.assertEquals(count, 2)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test35_tourneys(self):
