@@ -1,7 +1,7 @@
 #
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -38,9 +38,6 @@ import libxml2
 import simplejson
 from traceback import print_exc, format_exc
 
-from MySQLdb.cursors import DictCursor
-from MySQLdb.constants import ER
-
 from OpenSSL import SSL
 
 try:
@@ -57,7 +54,8 @@ from twisted.python.runtime import seconds
 
 try:
     # twisted-2.0
-    from zope.interface import Interface, implements
+    from zope.interface import Interface
+    from zope.interface import implements
 except ImportError:
     # twisted-1.3 forwards compatibility
     def implements(interface):
@@ -74,6 +72,9 @@ except ImportError:
         locals['__implements__'] = interface
 
     from twisted.python.components import Interface
+
+from MySQLdb.cursors import DictCursor
+from MySQLdb.constants import ER
 
 from twisted.python import components
 
@@ -1768,10 +1769,10 @@ def _getRequestCookie(request):
 #
 # Cookie: TWISTED_SESSION=a0bb35083c1ed3bef068d39bd29fad52; Path=/
 #
-# Because this cookie is only sent as an answer to an authentication
-# request, it will not help clients observing the tables. These
-# clients will have to find a way to properly handle the HTTP headers
-# sent by the server.
+# Because this cookie is only sent back in the SERIAL packet following
+# an authentication request, it will not help clients observing the
+# tables. These clients will have to find a way to properly handle the
+# HTTP headers sent by the server.
 #
 # When the client sends a packet to the server using sessions, it must
 # be prepared to receive the backlog of packets accumulated since the
@@ -1870,7 +1871,7 @@ class PokerXML(resource.Resource):
             def renderLater(packet):
                 result_maps = self.packets2maps([packet])
 
-                result_string = self.maps2result(result_maps)
+                result_string = self.maps2result(request, result_maps)
                 request.setHeader("Content-length", str(len(result_string)))
                 request.write(result_string)
                 request.finish()
@@ -1889,7 +1890,7 @@ class PokerXML(resource.Resource):
 
             result_maps = self.packets2maps(result_packets)
 
-            result_string = self.maps2result(result_maps)
+            result_string = self.maps2result(request, result_maps)
             if self.verbose > 2:
                 self.message("result_string " + str(result_string))
             request.setHeader("Content-length", str(len(result_string)))
@@ -1938,7 +1939,7 @@ class PokerXML(resource.Resource):
     def getArguments(self, request):
         pass
 
-    def maps2result(self, maps):
+    def maps2result(self, request, maps):
         pass
 
     @staticmethod
@@ -1976,24 +1977,47 @@ class PokerXMLRPC(PokerXML):
         ( args, functionPath ) = xmlrpclib.loads(request.content.read())
         return PokerXML.fromutf8(args, self.encoding)
 
-    def maps2result(self, maps):
+    def maps2result(self, request, maps):
         return xmlrpclib.dumps((maps, ), methodresponse = 1)
 
 class PokerREST(PokerXML):
 
     def getArguments(self, request):
-        if request.args.get('session', ['no'])[0] == 'yes':
-            session = 'use sessions'
-        else:
-            session = 'no sessions'
+        use_sessions = request.args.get('session', ['no'])[0]
+
+        if use_sessions == 'no':
+            use_sessions = 'no sessions'
+        elif use_sessions == 'yes':
+            use_sessions = 'use sessions'
+        elif use_sessions in ( 'clear', 'new' ):
+            #
+            # Force session expiration.
+            # 
+            # NOTE 1: that request.getSession() will create a session
+            # if no session exists. However, since it is a light
+            # weight operation that will be canceled by
+            # session.expire(), it is ok.
+            #
+            # NOTE 2: the avatar attached to the session will be destroyed
+            # as a side effect, because a callback was attached to the
+            # session expiration.
+            #
+            request.getSession().expire()
+            request.session = None
+            request.cookies = []
+            if use_sessions == 'clear':
+                use_sessions = 'no sessions'
+            elif use_sessions == 'new':
+                use_sessions = 'use sessions'
 
         args = simplejson.loads(request.content.read(), encoding = 'latin-1')
         if hasattr(Packet.JSON, 'decode_objects'):
             args = Packet.JSON.decode_objects(args)
-        return [ session, PokerXML.fromutf8(args, self.encoding) ]
+        return [ use_sessions, PokerXML.fromutf8(args, self.encoding) ]
 
-    def maps2result(self, maps):
-        return Packet.JSON.encode(maps)
+    def maps2result(self, request, maps):
+        jsonp = request.args.get('jsonp', [''])[0]
+        return jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
 
 try:
     import SOAPpy
@@ -2015,7 +2039,7 @@ try:
 
             return PokerXML.fromutf8(SOAPpy.simplify(args), self.encoding)
 
-        def maps2result(self, maps):
+        def maps2result(self, request, maps):
             return SOAPpy.buildSOAP(kw = {'Result': PokerXML.toutf8(maps, self.encoding)},
                                     method = 'returnPacket',
                                     encoding = self.encoding)
