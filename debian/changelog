@@ -2,6 +2,10 @@ poker-network (1.4.0-1) unstable; urgency=low
 
   * upstream sync
 
+  * use pycentral to locate scripts instead of guessing (closes: 471604)
+  
+  * pypoker-eval and poker-engine uploaded to use pycentral new version (closes: 471644)
+  
  -- Loic Dachary (OuoU) <loic@debian.org>  Mon, 17 Mar 2008 23:42:02 +0100
 
 poker-network (1.3.0-1) unstable; urgency=low
