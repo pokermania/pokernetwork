@@ -156,14 +156,13 @@ case "$1" in
 *.php) 
         file=$(basename $1)
         mkdir -p phpunit/$file
-        @PHP@ @PHPUNIT@ --report phpunit/$file $(basename $file .php)
+        @PHP@ -d zend_extension=$(pecl config-get ext_dir)/xdebug.so @PHPUNIT@ --report phpunit/$file $(basename $file .php)
         ;;
 
 
 *.py)   @PYTHON@ -u ${srcdir}/coverage.py -x "$1" ;;
-# Extremely verbose execution traces
-#*.py)   @PYTHON@ -u -m trace --trace "$1" ;;
-#*.py)   @PYTHON@ -u "$1" ;;
+# shows all functions called
+#*.py) pydb --fntrace --basename "$1" ;;
 
 *) 
         echo unknown test $1
