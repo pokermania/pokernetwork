@@ -328,6 +328,7 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
         self.rest_cookies = None
         
     def query(self, use_sessions, packet, jsonp = None):
+        session_name = None
         if use_sessions == 'use sessions':
             session = 'yes'
         elif use_sessions == 'no sessions':
@@ -336,14 +337,24 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
             session = 'clear'
         elif use_sessions == 'new sessions':
             session = 'new'
+        else:
+            session_name = use_sessions
+            session = session_name
         url = 'http://127.0.0.1:' + str(self.port) + '/REST?session=' + session
         if jsonp:
             url += '&jsonp=' + jsonp
-        postdata = Packet.JSON.encode(packet)
+            url += '&packet=' + urllib.quote(Packet.JSON.encode(packet))
+            postdata = None
+        else:
+            postdata = Packet.JSON.encode(packet)
         scheme, host, port, path = client._parse(url)
         headers = {}
         if self.rest_cookies:
-            headers['Cookie'] = "TWISTED_SESSION=" + self.rest_cookies['TWISTED_SESSION'] + "; Path=/"
+            if session_name:
+                cookiename = "TWISTED_SESSION_" + session_name
+            else:
+                cookiename = "TWISTED_SESSION"
+            headers['Cookie'] = cookiename + "=" + self.rest_cookies['TWISTED_SESSION'] + "; Path=/"
         else:
             headers['Cookie'] = None
         factory = client.HTTPClientFactory(url, postdata = postdata, headers = headers)
@@ -354,7 +365,7 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
             if jsonp:
                 return args[0] # jsonp is a JS contruct and cannot be JSON decoded
             else:
-                json = args[0][1:-1] # strip surrounding parenthesis
+                json = args[0]
                 return pokerservice.PokerXML.fromutf8(simplejson.JSONDecoder().decode(json), pokerservice.PokerXML.encoding)
         factory.deferred.addCallback(json_decode)
         return factory.deferred
@@ -402,6 +413,22 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
         d1.addCallback(session_set)
         return d1
 
+    def testREST04_post(self):
+        self.service.startService()
+        d1 = self.query('use sessions', { 'type': 'PacketPing' })
+        def session_set(json):
+            self.assertEquals([], json);
+        d1.addCallback(session_set)
+        return d1    
+
+    def testREST05_session_name(self):
+        self.service.startService()
+        d1 = self.query('SESSION_NAME', { 'type': 'PacketPing' })
+        def session_name(json):
+            self.assertIn('SESSION_NAME', str(self.rest_cookies))
+        d1.addCallback(session_name)
+        return d1    
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -409,7 +436,7 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "testREST03"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     suite.addTest(loader.loadClass(RESTPokerServiceTestCase))

@@ -1987,8 +1987,6 @@ class PokerREST(PokerXML):
 
         if use_sessions == 'no':
             use_sessions = 'no sessions'
-        elif use_sessions == 'yes':
-            use_sessions = 'use sessions'
         elif use_sessions in ( 'clear', 'new' ):
             #
             # Force session expiration.
@@ -2009,15 +2007,27 @@ class PokerREST(PokerXML):
                 use_sessions = 'no sessions'
             elif use_sessions == 'new':
                 use_sessions = 'use sessions'
+        else:
+            if use_sessions != 'yes':
+                request.sitepath = [ use_sessions ]
+            use_sessions = 'use sessions'
 
-        args = simplejson.loads(request.content.read(), encoding = 'latin-1')
+        jsonp = request.args.get('jsonp', [''])[0]
+        if jsonp:
+            data = request.args.get('packet', [''])[0]
+        else:
+            data = request.content.read()
+        args = simplejson.loads(data, encoding = 'latin-1')
         if hasattr(Packet.JSON, 'decode_objects'):
             args = Packet.JSON.decode_objects(args)
         return [ use_sessions, PokerXML.fromutf8(args, self.encoding) ]
 
     def maps2result(self, request, maps):
         jsonp = request.args.get('jsonp', [''])[0]
-        return jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
+        if jsonp:
+            return jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
+        else:
+            return str(Packet.JSON.encode(maps))
 
 try:
     import SOAPpy
