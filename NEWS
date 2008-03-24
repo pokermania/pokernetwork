@@ -1,3 +1,7 @@
+Release 1.5.0
+
+Complete JSONP support + custom session names.
+
 Release 1.4.0
 
 JSONP support + session control for REST API.
