@@ -1,3 +1,16 @@
+2008-03-24  Loic Dachary <loic@dachary.org>
+
+	* Release 1.5.0
+
+	* NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, debian/changelog,
+	  examples/poker.bot.xml, examples/poker.server-monotone.xml,
+	  examples/poker.server.xml, pokerclient2d/poker2d.xml.in,
+	  pokernetwork/__init__.py, tests/conf/poker.client.xml.in: bump to
+	  version 1.5.0
+	* pokernetwork/pokerservice.py, tests/test-webservice.py.in:
+	  implement JSONP and custom session names
+
 2008-03-20  Loic Dachary <loic@dachary.org>
 
 	* Release 1.4.0
