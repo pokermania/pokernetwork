@@ -77,7 +77,7 @@ AM_CONDITIONAL([PHP5_TESTS], [$PHP5_TESTS])
 
 pkgsysconfdir=$sysconfdir/$PACKAGE
 AC_SUBST(pkgsysconfdir, [$pkgsysconfdir])
-pkglibdir=$libdir/$PACKAGE
+pkglibdir=$libexecdir/$PACKAGE
 AC_SUBST(pkglibdir, [$pkglibdir])
 pkgdatadir=$datadir/$PACKAGE
 AC_SUBST(pkgdatadir, [$pkgdatadir])
