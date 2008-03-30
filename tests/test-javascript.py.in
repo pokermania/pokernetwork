@@ -1,0 +1,65 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+sys.path.insert(0, "..")
+
+import unittest
+import simplejson
+from struct import pack, unpack, calcsize
+
+from pokernetwork import pokerclientpackets
+
+class JavaScriptGenerator:
+    def __init__(self, type):
+        self.type = type
+
+    
+class JavaScriptGeneratorTestCase(unittest.TestCase):
+
+    #--------------------------------------------------------------    
+    def test_all(self):
+        result = []
+        for (index, name) in pokerclientpackets.PacketNames.iteritems():
+            result.append(name + ": "  + str(index))
+        print "{ " + ", ".join(result) + " }";
+
+#--------------------------------------------------------------
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(JavaScriptGeneratorTestCase))
+    return suite
+    
+#--------------------------------------------------------------
+def Run(verbose = 2):
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
+#--------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-javascript.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/packets.py' TESTS='coverage-reset test-javascript.py coverage-report' check )"
+# End:
