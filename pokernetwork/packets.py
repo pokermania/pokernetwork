@@ -250,7 +250,7 @@ class Packet:
     def infoDeclare(dictionary, type, base_type, name, index):
         dictionary['PacketNames'][index] = name
         dictionary['PacketFactory'][index] = type
-        dictionary[name] = index
+        dictionary['PACKET_' + name] = index
         type.type = index
         type.__init__ = Packet.infoInit
         type.pack = Packet.infoPack
