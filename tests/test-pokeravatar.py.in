@@ -2337,8 +2337,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                       game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
-            print "MyPACKET: "
-            print packet
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
                 found += 1
                 self.assertEquals(packet.game_id, gameId)
@@ -2358,6 +2356,34 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.tableQuit, 0, 101)
         return d
     # ------------------------------------------------------------------------
+    def joinTableForceFail(self, (client, packet), id, gameId, name, struct):
+        avatar = self.service.avatars[id]
+
+        table = self.service.getTable(gameId)
+        def forceFalse(self, amount):
+            return False
+        originalJoin = table.joinPlayer
+        table.joinPlayer = forceFalse
+
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
+                                                      game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_TABLE:
+                found = True
+                self.assertEquals(packet.id, 0)
+                self.assertEquals(packet.name, "noname")
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test55_tableJoinWhenFails(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTableForceFail, 0, 101, 'Table2', '2-4-limit')
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2373,7 +2399,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test54"
+    loader.methodPrefix = "test55"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
