@@ -3,6 +3,8 @@
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.test53_autoMuck): Wrote function.
 	(PokerAvatarTestCase.autoMuck): Wrote function.
+	(PokerAvatarTestCase.test54_doQuit): Wrote function.
+	(PokerAvatarTestCase.tableQuit): Wrote function.
 
 2008-03-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
