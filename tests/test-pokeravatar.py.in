@@ -2384,6 +2384,28 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.joinTableForceFail, 0, 101, 'Table2', '2-4-limit')
         return d
     # ------------------------------------------------------------------------
+    def handReplayWithoutTable(self, (client, packet), id ):
+        import StringIO
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        messageOutput = StringIO.StringIO()
+        sys.stdout = messageOutput
+
+        avatar.handlePacketLogic(PacketPokerHandReplay(serial= client.getSerial()))
+
+        data = messageOutput.getvalue()
+        sys.stdout = sys.__stdout__
+        self.assertEqual(data.find("PokerService: *ERROR* loadHand(%d) expected one row got 0"
+                                   % client.getSerial()) >= 0, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test56_handReplyNoTable(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.handReplayWithoutTable, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2399,7 +2421,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test55"
+#    loader.methodPrefix = "test56"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

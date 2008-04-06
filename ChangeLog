@@ -7,6 +7,8 @@
 	(PokerAvatarTestCase.tableQuit): Wrote function.
 	(PokerAvatarTestCase.joinTableForceFail): Wrote function.
 	(PokerAvatarTestCase.test55_tableJoinWhenFails): Wrote function.
+	(PokerAvatarTestCase.handReplayWithoutTable): Wrote function.
+	(PokerAvatarTestCase.test56_handReplyNoTable): Wrote function.
 
 2008-03-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
