@@ -2308,6 +2308,27 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.variousPacketsWithStringOrSinglePacketReturn, 0, 101)
         return d
     # ------------------------------------------------------------------------
+    def autoMuck(self, (client, packet), id, gameId, autoMuckValue ):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerAutoMuck(serial= client.getSerial(),
+                                                     game_id = gameId,
+                                                     auto_muck = autoMuckValue))
+        self.assertEquals(autoMuckValue, table.game.getPlayer(client.getSerial()).auto_muck)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test53_autoMuck(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.autoMuck, 0, 101, pokergame.AUTO_MUCK_LOSE)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2323,7 +2344,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test52"
+#    loader.methodPrefix = "test53"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
