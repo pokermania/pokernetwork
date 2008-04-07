@@ -1640,7 +1640,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                     assert p.name.find("sitngo") >= 0 or  p.name.find("egular")
                     assert p.name.find("registering") >= 0 or  p.name.find("announced")
                     count += 1
-                self.assertEquals(count, 2)
+                self.assertEquals(count, 25)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test35_tourneys(self):
@@ -2345,7 +2345,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertEquals(found, 1)
         return (client, packet)
     # ------------------------------------------------------------------------
-    def test54_doQuit(self):
+    def test54_doTableQuit(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2406,6 +2406,58 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.handReplayWithoutTable, 0)
         return d
     # ------------------------------------------------------------------------
+    def fullQuit(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketQuit())
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_PLAYER_LEAVE:
+                found += 1
+                self.assertEquals(packet.serial, client.getSerial())
+        self.assertEquals(found, 1)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test57_doFullQuit(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.fullQuit, 0)
+        return d
+    # ------------------------------------------------------------------------
+    def doLogout(self, (client, packet), id, expectSucceed=True ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketLogout())
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            if expectSucceed:
+                if packet.type == PACKET_POKER_PLAYER_LEAVE:
+                    found += 1
+                    self.assertEquals(packet.serial, client.getSerial())
+        else:
+            for packet in avatar.resetPacketsQueue():
+                if packet.type == PACKET_POKER_PLAYER_LEAVE:
+                    found += 1
+                    self.assertEquals(packet.serial, client.getSerial())
+        self.assertEquals(found, 1)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test58_packetLogoutSucceed(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.doLogout, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2421,7 +2473,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test56"
+#    loader.methodPrefix = "test57"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

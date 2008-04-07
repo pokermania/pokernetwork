@@ -13,6 +13,11 @@
 	test54_doQuit to avoid confusion with test57_doFullQuit.
 	(PokerAvatarTestCase.test57_doFullQuit): Wrote function.
 	(PokerAvatarTestCase.fullQuit): Wrote function.
+	(PokerAvatarTestCase.test58_packetLogoutSucceed): Wrote function.
+	(PokerAvatarTestCase.doLogout): Wrote function.
+	(PokerAvatarTestCase.tourneySelect): Fixed total for expected
+	tourneys.  This should probably be changed -- why do we have so
+	many test-created sitngo's?
 
 2008-03-24  Loic Dachary <loic@dachary.org>
 	* Release 1.5.0
