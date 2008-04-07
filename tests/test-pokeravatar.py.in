@@ -2458,6 +2458,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.doLogout, 0)
         return d
     # ------------------------------------------------------------------------
+    def test59_packetLogoutFailed(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.doLogout, 0, False)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2473,7 +2479,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test57"
+    loader.methodPrefix = "test59"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
