@@ -1,4 +1,4 @@
-2008-03-14  Bradley M. Kuhn  <bkuhn@ebb.org>
+2008-04-06  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.test53_autoMuck): Wrote function.
@@ -13,6 +13,9 @@
 	test54_doQuit to avoid confusion with test57_doFullQuit.
 	(PokerAvatarTestCase.test57_doFullQuit): Wrote function.
 	(PokerAvatarTestCase.fullQuit): Wrote function.
+
+2008-03-24  Loic Dachary <loic@dachary.org>
+	* Release 1.5.0
 
 	* NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in,
 	  conf/poker.server.xml.in, debian/changelog,
