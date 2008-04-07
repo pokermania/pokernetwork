@@ -1804,14 +1804,14 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.tourneyUnregister, 0)
         return d
     # ------------------------------------------------------------------------
-    def handSelectAll(self, (client, packet), id ):
+    def handSelectAll(self, (client, packet), id, whereStr = "" ):
         avatar = self.service.avatars[id]
         # Need more privs to do a HAND_SELECT_ALL
         oldPriv = avatar.user.privilege
         avatar.user.privilege = 32767
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerHandSelectAll(serial = client.getSerial(),
-                                                          string = ""))
+                                                          string = whereStr))
         found = False
         for packet in avatar.resetPacketsQueue():
             print "THIS PACKET"
@@ -2464,6 +2464,14 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.doLogout, 0, False)
         return d
     # ------------------------------------------------------------------------
+    def test60_handSelectAllWithWhere(self):
+        """Test sending hand select all packet."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.handSelectAll, 0, "1 = 1")
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2479,7 +2487,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test59"
+    loader.methodPrefix = "test60"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

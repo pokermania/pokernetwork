@@ -19,6 +19,8 @@
 	tourneys.  This should probably be changed -- why do we have so
 	many test-created sitngo's?
 	(PokerAvatarTestCase.test59_packetLogoutFailed): Wrote function.
+	(PokerAvatarTestCase.test60_handSelectAllWithWhere): Wrote
+	function.
 
 2008-03-24  Loic Dachary <loic@dachary.org>
 	* Release 1.5.0
