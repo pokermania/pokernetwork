@@ -663,14 +663,17 @@ Packet.infoDeclare(globals(), PacketPokerBeginRound, PacketPokerId, "POKER_BEGIN
 
 class PacketPokerCurrentGames(Packet):
     """\
-Semantics: the player is currently connected to the games
-listed in "game_ids", an array of "count" integers.
+Semantics: "game_ids" contains the the list of games to 
+which the client is connected. "count" is the length of
+the "game_ids" list.
 
 Direction: client <=> client
 
-Context: inferred when the client receives a POKER_TABLE packet.
-The list of game ids contains the id of matching the POKER_TABLE packet
-just received. 
+Context: inferred when the client receives a POKER_TABLE packet (for
+instance, a POKER_TABLE packet is sent to the client when a
+POKER_TABLE_JOIN was sent to the server).  The list of game ids
+contains the id matching the POKER_TABLE packet that was just
+received.
 
 Note to applications embedding the poker-network python library:
 When not in the context of a POKER_EXPLAIN server mode,
