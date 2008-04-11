@@ -34,6 +34,7 @@ sys.path.insert(0, "..")
 import simplejson
 import urllib
 import libxml2
+from types import ListType
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
@@ -321,6 +322,11 @@ class XMLRPCPokerServiceTestCase(PokerServiceTestCase):
         return factory.deferred
 
 
+class SOAPPokerServiceTestCase(PokerServiceTestCase):
+
+    def query(self, *args):
+        pass # not implemented
+
 class RESTPokerServiceTestCase(PokerServiceTestCase):
 
     def setUp(self):
@@ -329,18 +335,15 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
         
     def query(self, use_sessions, packet, jsonp = None):
         session_name = None
-        if use_sessions == 'use sessions':
-            session = 'yes'
+        if type(use_sessions) == ListType:
+            session, session_name = use_sessions
         elif use_sessions == 'no sessions':
             session = 'no'
-        elif use_sessions == 'clear sessions':
-            session = 'clear'
-        elif use_sessions == 'new sessions':
-            session = 'new'
-        else:
-            session_name = use_sessions
-            session = session_name
+        elif use_sessions == 'use sessions':
+            session = 'yes'
         url = 'http://127.0.0.1:' + str(self.port) + '/REST?session=' + session
+        if session_name:
+            url += '&name=' + session_name
         if jsonp:
             url += '&jsonp=' + jsonp
             url += '&packet=' + urllib.quote(Packet.JSON.encode(packet))
@@ -375,10 +378,10 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
         d1 = self.query('use sessions', { 'type': 'PacketPing' })
         def session_set(*args):
             self.assertIn('TWISTED', str(self.rest_cookies))
-            self.rest_cookies = None
         d1.addCallback(session_set)
         def clearSession(*args):
-            d2 = self.query('clear sessions', { 'type': 'PacketPing' })
+            d2 = self.query(['clear', None], { 'type': 'PacketPing' })
+            self.rest_cookies = None
             def session_not_set(*args):
                 self.assertNotIn('TWISTED', str(self.rest_cookies))
             d2.addCallback(session_not_set)
@@ -391,18 +394,17 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
         d1 = self.query('use sessions', { 'type': 'PacketPing' })
         def session_set(arg):
             self.assertIn('TWISTED', str(self.rest_cookies))
-            rest_cookies = self.rest_cookies
-            self.rest_cookies = None
-            return rest_cookies
+            return self.rest_cookies
         d1.addCallback(session_set)
-        def clearSession(cookies):
-            d2 = self.query('new sessions', { 'type': 'PacketPing' })
-            def session_not_set(*args):
+        def newSession(cookies):
+            d2 = self.query(['new', None], { 'type': 'PacketPing' })
+            self.rest_cookies = None
+            def session_is_new(*args):
                 self.assertIn('TWISTED', str(self.rest_cookies))
                 self.assertNotEquals(cookies, self.rest_cookies)
-            d2.addCallback(session_not_set)
+            d2.addCallback(session_is_new)
             return d2
-        d1.addCallback(clearSession)
+        d1.addCallback(newSession)
         return d1
 
     def testREST03_jsonp(self):
@@ -423,7 +425,7 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
 
     def testREST05_session_name(self):
         self.service.startService()
-        d1 = self.query('SESSION_NAME', { 'type': 'PacketPing' })
+        d1 = self.query(['yes', 'SESSION_NAME'], { 'type': 'PacketPing' })
         def session_name(json):
             self.assertIn('SESSION_NAME', str(self.rest_cookies))
         d1.addCallback(session_name)
@@ -436,9 +438,9 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "testREST02"
     suite = loader.suiteFactory()
-    suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
+#    suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     suite.addTest(loader.loadClass(RESTPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',

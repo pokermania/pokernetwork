@@ -1984,6 +1984,11 @@ class PokerREST(PokerXML):
 
     def getArguments(self, request):
         use_sessions = request.args.get('session', ['no'])[0]
+        session_name = request.args.get('name', [None])[0]
+        if session_name:
+            request.sitepath = [ session_name ]
+        else:
+            request.sitepath = [ ]
 
         if use_sessions == 'no':
             use_sessions = 'no sessions'
@@ -2007,9 +2012,7 @@ class PokerREST(PokerXML):
                 use_sessions = 'no sessions'
             elif use_sessions == 'new':
                 use_sessions = 'use sessions'
-        else:
-            if use_sessions != 'yes':
-                request.sitepath = [ use_sessions ]
+        elif use_sessions == 'yes':
             use_sessions = 'use sessions'
 
         jsonp = request.args.get('jsonp', [''])[0]
