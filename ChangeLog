@@ -1,3 +1,11 @@
+2008-04-10  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.doLogoutSucceed): Renamed function from
+	doLogout as succeed/fail cases are now split.
+	(PokerAvatarTestCase.doLogoutFail): split out doLogout fail
+	conditions.
+
 2008-04-06  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
