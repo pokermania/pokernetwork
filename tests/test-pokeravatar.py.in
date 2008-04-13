@@ -2476,6 +2476,37 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.handSelectAll, 0, "1 = 1")
         return d
     # ------------------------------------------------------------------------
+    def createTableForceFail(self, (client, packet), id):
+        avatar = self.service.avatars[id]
+
+        def forceFalse(self, amount):
+            return False
+        originalCreate = self.service.createTable
+        self.service.createTable = forceFalse
+
+        avatar.queuePackets()
+        q = avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
+                    name = "A Testing Cash Table", variant = "holdem",
+                    betting_structure = '2-4-limit', player_timeout =  6,
+                    currency_serial = 0))
+        found = False
+        for packet in q:
+            if packet.type == PACKET_POKER_TABLE:
+                found = True
+                self.assertEquals(packet.id, 0)
+                self.assertEquals(packet.seats, 10)
+                self.assertEquals(packet.name, 'noname')
+        self.assertEquals(found, True)
+        self.service.createTable = originalCreate
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test61_tableCreateFails(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.createTableForceFail, 0)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2491,7 +2522,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test59"
+#    loader.methodPrefix = "test61"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
