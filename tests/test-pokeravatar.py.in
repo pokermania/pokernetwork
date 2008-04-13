@@ -2507,6 +2507,40 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.createTableForceFail, 0)
         return d
     # ------------------------------------------------------------------------
+    def autoBlindAnteForceTourney(self, (client, packet), id, gameId ):
+        avatar = self.service.avatars[id]
+
+        table = self.service.getTable(gameId)
+        oldIsTourney = table.game.isTournament
+        def forceTrue():
+            return True
+        table.game.isTournament = forceTrue
+
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerAutoBlindAnte(serial= client.getSerial(),
+                                                        game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            found = True
+        # in tourneys, the packet is ignored
+        self.assertEquals(found, False)
+        table.game.isTournament = oldIsTourney
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test62_ignoreAutoBlindAnteInTourney(self):
+        """Make sure auto blind/ante setting is ignored when the game is a tourney"""
+        # The sequence of how to get yourself seated in a cash game was
+        # taken from the instructions at the top of pokerpackets.py
+        # labelled "How to sit at a cash game table ?"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnteForceTourney, 0, 101)
+        return d
+    # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
         self.assertEquals(avatar.getUrl(), "random")
@@ -2522,7 +2556,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test61"
+#    loader.methodPrefix = "test62"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

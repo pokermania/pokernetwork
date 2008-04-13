@@ -3,6 +3,9 @@
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.test61_tableCreateFails): Wrote function.
 	(PokerAvatarTestCase.createTableForceFail): Wrote function.
+	(PokerAvatarTestCase.test62_ignoreAutoBlindAnteInTourney): Wrote
+	function.
+	(PokerAvatarTestCase.autoBlindAnteForceTourney): Wrote function.
 
 2008-04-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
