@@ -564,7 +564,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             if packet.type == PACKET_POKER_STATS:
                 found = True
                 self.assertEquals(packet.length, 19)
-                self.assertEquals(packet.players, 2)
+                self.assertEquals(packet.players, 3)
                 assert(packet.bytesin > 0)
                 assert(packet.bytesout > 0)
         self.assertEquals(found, True)

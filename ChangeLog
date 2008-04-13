@@ -14,6 +14,8 @@
 	(PokerAvatarTestCase.test63_newObserver): Wrote function.
 	(PokerAvatarTestCase.test64_testTinyFunctions): Renamed function
 	from test99_testTinyFunctions.
+	(PokerAvatarTestCase.statsQuery): Fixed packet.players to be 3,
+	since I now have three players connected, not two.
 
 2008-04-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
