@@ -6,6 +6,14 @@
 	(PokerAvatarTestCase.test62_ignoreAutoBlindAnteInTourney): Wrote
 	function.
 	(PokerAvatarTestCase.autoBlindAnteForceTourney): Wrote function.
+	(PokerAvatarTestCase.joinTable): Indention bug in the testing of
+	"found" variable; should be outside of the "for packet" loop.
+	(PokerAvatarTestCase.setUp): Added a third client; only used for
+	test 63.
+	(PokerAvatarTestCase.joinTableWhenHandRunning): Wrote function.
+	(PokerAvatarTestCase.test63_newObserver): Wrote function.
+	(PokerAvatarTestCase.test64_testTinyFunctions): Renamed function
+	from test99_testTinyFunctions.
 
 2008-04-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
