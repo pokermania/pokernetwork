@@ -102,7 +102,7 @@ class PokerCashierTestCase(unittest.TestCase):
         d = self.cashier.cashIn(packet)
         d.addCallback(lambda result: self.check01_cashIn(packet))
         return d
-
+    # --------------------------------------------------------
     def check01_cashIn(self, packet):
         cursor = self.db.cursor(DictCursor)
 
@@ -169,7 +169,7 @@ class PokerCashierTestCase(unittest.TestCase):
         d = defer.DeferredList((d1, d2, d3), fireOnOneErrback = True)
         d.addCallback(lambda result: self.check02_cashIn())
         return d
-
+    # --------------------------------------------------------
     def check02_cashIn(self):
         cursor = self.db.cursor(DictCursor)
 
@@ -224,7 +224,7 @@ class PokerCashierTestCase(unittest.TestCase):
                                             value = 15,
                                             application_data = 'appdata')
         return self.cashier.cashOut(cashOut_packet)
-        
+    # --------------------------------------------------------
     def check03_cashOut(self, packet):
         #print "check03_cashOut " + str(note)
         cursor = self.db.cursor(DictCursor)
@@ -243,7 +243,7 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor.close()
 
         return packet
-
+    # --------------------------------------------------------
     def cashOutCommit(self, packet):
         return self.cashier.cashOutCommit(PacketPokerCashOutCommit(transaction_id = packet.name))
         
@@ -257,7 +257,6 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor.close()
 
         return count
-
     # --------------------------------------------------------
     def test03_cashOut(self):
         d = self.test01_cashIn()
@@ -267,7 +266,7 @@ class PokerCashierTestCase(unittest.TestCase):
         d.addCallback(self.cashOutCommit)
         d.addCallback(self.check03_cashOutCommit)
         return d
-
+    # --------------------------------------------------------
     def test03_cashOut_failure(self):
         d = self.test01_cashIn()
 
@@ -298,7 +297,7 @@ class PokerCashierTestCase(unittest.TestCase):
         d.addCallback(check_failed)
 
         return d
-
+    # --------------------------------------------------------
     def cashQuery(self, packet):
         result = self.cashier.cashQuery(PacketPokerCashQuery(application_data = 'appdata'))
         self.assertEqual(PacketAck(), result)
@@ -306,7 +305,6 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEqual(PACKET_ERROR, result.type)
         self.assertEqual(PacketPokerCashQuery.DOES_NOT_EXIST, result.code)
         return packet
-        
     # --------------------------------------------------------
     def test04_cashQuery(self):
         d = self.test01_cashIn()
@@ -314,7 +312,6 @@ class PokerCashierTestCase(unittest.TestCase):
         d.addCallback(self.cashOut)
         d.addCallback(self.cashQuery)
         return d
-
     # --------------------------------------------------------
     def test06_cashInMany(self):
         self.value = 100
