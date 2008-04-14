@@ -1,5 +1,9 @@
 2008-04-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokercashier.py.in
+	(PokerCashierTestCase.test08_forcecashInUpdateSafeFail): Wrote function.
+	Added my copyright notice.
+
 	* pokernetwork/pokercashier.py (PokerCashier.cashInUpdateSafe):
 	"message" was not a defined variable when called from the
 	PacketError.  Created message and used it both for error output

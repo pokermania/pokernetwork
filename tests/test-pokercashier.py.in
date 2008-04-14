@@ -1,6 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org> 
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
@@ -363,9 +364,32 @@ class PokerCashierTestCase(unittest.TestCase):
 
         cursor.close()
 
+    # --------------------------------------------------------
     def test07_getCurrencySerial(self):
         self.cashier.parameters['user_create'] = 'no';
+
         self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
+    # --------------------------------------------------------
+    def test08_forcecashInUpdateSafeFail(self):
+        self.value = 100
+        self.url = 'http://fake'
+        p = PacketPokerCashIn(serial = self.user_serial,
+                              url = self.url, currency_serial = 1L,
+                              bserial = 1, name = "%040d" % 1,
+                              value = self.value)
+        p.currency_serial = 1L
+
+        gotError = False
+        try:
+            self.cashier.cashInUpdateSafe("OK",
+                                      "0000000000000000000000000000000000000002",
+                                      p)
+        except PacketError, pe:
+            gotError = True
+            self.assertEquals(pe.code, PacketPokerCashIn.SAFE)
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_IN)
+            self.assertEqual(pe.message.find("INSERT INTO safe SELECT currency_serial, serial, name, value FROM counter") >= 0, True)
+        self.assertEquals(gotError, True)
 
 # --------------------------------------------------------
 def GetTestSuite():
@@ -380,7 +404,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test08"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
