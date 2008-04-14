@@ -136,7 +136,8 @@ class PokerCashier:
 
             for ( sql, rowcount ) in sqls:
                 if cursor.execute(sql) < rowcount:
-                    self.error(sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount))
+                    message = sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount)
+                    self.error(message)
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
