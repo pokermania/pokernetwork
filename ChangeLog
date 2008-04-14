@@ -3,6 +3,7 @@
 	* tests/test-pokercashier.py.in
 	(PokerCashierTestCase.test08_forcecashInUpdateSafeFail): Wrote function.
 	Added my copyright notice.
+	(PokerCashierTestCase.test09_forceCashInUpdateCounter): Wrote function.
 
 	* pokernetwork/pokercashier.py (PokerCashier.cashInUpdateSafe):
 	"message" was not a defined variable when called from the

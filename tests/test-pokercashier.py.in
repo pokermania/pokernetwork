@@ -391,6 +391,33 @@ class PokerCashierTestCase(unittest.TestCase):
             self.assertEqual(pe.message.find("INSERT INTO safe SELECT currency_serial, serial, name, value FROM counter") >= 0, True)
         self.assertEquals(gotError, True)
 
+    # --------------------------------------------------------
+    def test09_forceCashInUpdateCounter(self):
+        self.value = 100
+        self.url = 'http://fake'
+        p = PacketPokerCashIn(serial = self.user_serial,
+                              url = self.url, currency_serial = 1L,
+                              bserial = 1, name = "%040d" % 1,
+                              value = self.value)
+        p.currency_serial = 1L
+
+        cursor = self.db.cursor()
+        cursor.execute("DROP table counter")
+        cursor.close()
+
+        gotError = False
+        try:
+            self.cashier.cashInUpdateCounter(
+                [['http://fake', 2, '0000000000000000000000000000000000000002', 100]],
+                p,
+                [('http://fake', 1, '0000000000000000000000000000000000000001', 100)])
+
+        except Exception, e:
+            self.assertEquals(e[0], 1146)
+            self.assertEquals(e[1], "Table 'pokernetworktest.counter' doesn't exist")
+            gotError = True
+        self.assertEquals(gotError, True)
+
 # --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
@@ -404,7 +431,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test09"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
