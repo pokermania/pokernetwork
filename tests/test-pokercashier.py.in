@@ -417,6 +417,20 @@ class PokerCashierTestCase(unittest.TestCase):
             self.assertEquals(e[1], "Table 'pokernetworktest.counter' doesn't exist")
             gotError = True
         self.assertEquals(gotError, True)
+    # --------------------------------------------------------
+    def test10_foundCounterRowBreakingNote(self):
+        self.value = 100
+        self.url = 'http://fake'
+        p = PacketPokerCashIn(serial = self.user_serial,
+                              url = self.url, currency_serial = 1L,
+                              bserial = 1, name = "%040d" % 1,
+                              value = self.value)
+        p.currency_serial = 1L
+        cursor = self.db.cursor()
+        cursor.close()
+        # This doesn't really test anything yet.  I have to set it up so 
+        # that the transaction_id is already in the counter table....
+        return self.cashier.cashInValidateNote(1L, p)
 
 # --------------------------------------------------------
 def GetTestSuite():
@@ -431,7 +445,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test09"
+#    loader.methodPrefix = "test10"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',

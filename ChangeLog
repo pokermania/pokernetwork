@@ -1,5 +1,8 @@
 2008-04-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokercashier.py.in
+	(PokerCashierTestCase.test10_foundCounterRowBreakingNote): Wrote function.
+
 	* pokernetwork/pokercashier.py (PokerCashier.cashInValidateNote):
 	Added '#pragma: no cover' for lines that hits bug in coverage.py.
 
