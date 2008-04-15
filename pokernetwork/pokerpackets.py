@@ -485,7 +485,7 @@ PACKET_POKER_BET = 56 # 0x38 # %SEQ%
 PacketNames[PACKET_POKER_BET] = "POKER_BET"
 
 class PacketPokerBet(PacketPokerInt):
-    """base class for raise"""
+    """base class for raise. It is not used. To bet use PokerRaise instead."""
 
     type = PACKET_POKER_BET
 
