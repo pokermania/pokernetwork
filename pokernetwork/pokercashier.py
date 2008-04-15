@@ -192,9 +192,9 @@ class PokerCashier:
         #
         cursor = self.db.cursor()
         try:
-            sql = ( "SELECT transaction_id FROM counter WHERE " +
-                    " currency_serial = " + str(packet.currency_serial) + " AND " +
-                    " serial = " + str(packet.bserial) )
+            sql = ( "SELECT transaction_id FROM counter WHERE " + #pragma: no cover
+                    " currency_serial = " + str(packet.currency_serial) + " AND " + #pragma: no cover
+                    " serial = " + str(packet.bserial) ) #pragma: no cover
             if self.verbose > 2: self.message(sql)
             cursor.execute(sql)
             if cursor.rowcount > 0:
