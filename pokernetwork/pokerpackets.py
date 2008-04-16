@@ -3822,7 +3822,8 @@ other_type set to PACKET_POKER_EXPLAIN.
 
 Note: in order to produce the desired behaviour, the
 PACKET_POKER_EXPLAIN must be sent before starting to
-observe the action at a table (i.e. before sending PACKET_POKER_JOIN). 
+observe the action at a table (i.e. before sending PACKET_POKER_JOIN)
+and before any PACKET_POKER_LOGIN is sent.
 
 value == NONE
   The server assumes the client knows the poker rules, presumably
