@@ -744,6 +744,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
         packets.append(packet)
+        packets.append(PacketPokerBuyInLimits(game_id = game.id,
+                                              min = game.buyIn(),
+                                              max = game.maxBuyIn(),
+                                              best = game.bestBuyIn()))
         packets.append(PacketPokerDealer(game_id = game.id, dealer = game.dealer_seat))
         for player in game.playersAll():
             packets.append(PacketPokerPlayerArrive(game_id = game.id,

@@ -696,6 +696,10 @@ class PokerAvatar:
         self.tables[game.id] = table
 
         self.sendPacketVerbose(table.toPacket())
+        self.sendPacketVerbose(PacketPokerBuyInLimits(game_id = game.id,
+                                                      min = game.buyIn(),
+                                                      max = game.maxBuyIn(),
+                                                      best = game.bestBuyIn()))
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
         nochips = 0
         for player in game.serial2player.values():

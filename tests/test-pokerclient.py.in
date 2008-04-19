@@ -380,24 +380,25 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
 
+    def rebuy(self, (client, packet)):
+        client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
+                                               game_id = TABLE1))
+        client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
+                                          game_id = TABLE1))
+        client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
+                                           game_id = TABLE1,
+                                           amount = 200000))
+        client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
+                                           game_id = TABLE1,
+                                           amount = 200000))
+        return client.packetDeferred(True, PACKET_POKER_PLAYER_CHIPS)
+
     def test07_rebuy(self):
         """ test07_rebuy """
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 400000))
-        def rebuy((client, packet),):
-            client.sendPacket(PacketPokerTableJoin(serial = client.getSerial(),
-                                                   game_id = TABLE1))
-            client.sendPacket(PacketPokerSeat(serial = client.getSerial(),
-                                              game_id = TABLE1))
-            client.sendPacket(PacketPokerBuyIn(serial = client.getSerial(),
-                                               game_id = TABLE1,
-                                               amount = 200000))
-            client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
-                                               game_id = TABLE1,
-                                               amount = 200000))
-            return client.packetDeferred(True, PACKET_POKER_PLAYER_CHIPS)
-        d.addCallback(rebuy)
+        d.addCallback(self.rebuy)
         def checkSit((client, packet),):
             self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
             self.assertEqual(0, packet.money)
@@ -900,6 +901,25 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(publishDelay)
         return d
 
+    def test22_resendPackets(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(lambda (client, packet): self.cashIn(client, "ONE", 400000))
+        d.addCallback(self.rebuy)
+        def resendPackets((client, packet),):
+            client.resendPackets(TABLE1)
+            types = {}
+            for packet in client.publish_packets:
+                if packet.type == PACKET_POKER_TABLE:
+                    types[packet.type] = 1
+                elif packet.type == PACKET_POKER_BUY_IN_LIMITS:
+                    types[packet.type] = 1
+
+            self.assertEqual(types[PACKET_POKER_BUY_IN_LIMITS], 1)
+            self.assertEqual(types[PACKET_POKER_TABLE], 1)
+        d.addCallback(resendPackets)
+        return d
+
 
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -979,7 +999,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+    loader.methodPrefix = "test22"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

@@ -3865,6 +3865,32 @@ class PacketPokerStats(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerStats, Packet, "POKER_STATS", 144) # 0x90 # %SEQ%
 
+########################################
+
+class PacketPokerBuyInLimits(Packet):
+    """\
+Semantics: the buy-in boundaries for "game_id" in the range
+["min","max"]. An optimal buy-in is suggested in "best".
+
+Direction: server => client
+
+Context: sent immediately after the PacketPokerTable packet.
+
+min: minimum buy-in in cent.
+max: minimum buy-in in cent.
+best: optimal buy-in in cent.
+game_id: integer uniquely identifying a game.
+    """
+    
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        ('min', 0, 'I'),
+        ('max', 0, 'I'),
+        ('best', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerBuyInLimits, Packet, "POKER_BUY_IN_LIMITS", 145) # 0x91 # %SEQ%
+
 _TYPES = range(50,149)
 
 # Interpreted by emacs
