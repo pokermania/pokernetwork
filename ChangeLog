@@ -1,3 +1,45 @@
+2008-04-19  Loic Dachary <loic@dachary.org>
+
+	* Release 1.5.0
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerclient.py,
+	  pokernetwork/pokerpackets.py, tests/test-pokerclient.py.in: class
+	  PacketPokerBuyInLimits(Packet):
+	  Semantics: the buy-in boundaries for "game_id" in the range
+	  ["min","max"]. An optimal buy-in is suggested in "best".
+	  
+	  Direction: server => client
+	  
+	  Context: sent immediately after the PacketPokerTable packet.
+	  
+	  min: minimum buy-in in cent.
+	  max: minimum buy-in in cent.
+	  best: optimal buy-in in cent.
+	  game_id: integer uniquely identifying a game.
+
+2008-04-16  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: PacketPokerExplain must be sent
+	  before login.
+
+2008-04-15  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: PokerBet is not used, use
+	  PokerRaise instead
+
+2008-04-15  bkuhn
+
+	* ChangeLog, tests/test-pokercashier.py.in: r497@hughes: bkuhn |
+	  2008-04-14 22:11:19 -0400
+	  * Began work on test that expects the transaction to already
+	  exist in
+	  counter table. Not complete yet.
+	* ChangeLog, pokernetwork/pokercashier.py: r496@hughes: bkuhn |
+	  2008-04-14 20:45:20 -0400
+	  * #pragma: no cover is needed on this line in cashInValidateNote
+	  because
+	  it presumably hits a known bug in coverage.py
+
 2008-04-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokercashier.py.in
@@ -68,7 +110,6 @@
 	function.
 
 2008-03-24  Loic Dachary <loic@dachary.org>
-	* Release 1.5.0
 
 	* NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in,
 	  conf/poker.server.xml.in, debian/changelog,
@@ -5520,5 +5561,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2008-02-20/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2008-03-20/p'"
 End:
