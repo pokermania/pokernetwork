@@ -441,7 +441,30 @@ class PokerCashierTestCase(unittest.TestCase):
             return True
         d.addErrback(check_validateNoteFailure)
         return d
-
+    # --------------------------------------------------------
+    def test11_duplicateSafeEntriesForCashInValidateNote(self):
+        self.value = 100
+        self.url = 'http://fake'
+        p = PacketPokerCashIn(serial = self.user_serial,
+                              url = self.url, currency_serial = 1L,
+                              bserial = 1, name = "%040d" % 1,
+                              value = self.value)
+        p.currency_serial = 1L
+        cursor = self.db.cursor()
+        cursor.execute("insert into safe(currency_serial, serial, name, value) values(%d, %d, '%040d', %d)" % (1L, 1, 1, self.value))
+        cursor.execute("insert into safe(currency_serial, serial, name, value) values(%d, %d, '%040d', %d)" % (1L, 2, 1, self.value))
+        cursor.close()
+        gotError = False
+        try:
+            self.cashier.cashInValidateNote(1L, p)
+            self.assertEquals("This line should not be reached", False)
+        except PacketError, pe:
+            gotError = True
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_IN)
+            self.assertEquals(pe.code, PacketPokerCashIn.SAFE)
+            self.assertEqual(pe.message.find("found 2 records instead of 0 or 1") >= 0, True)
+        self.assertEquals(gotError, True)
+        return True
 # --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
@@ -455,7 +478,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test10"
+#    loader.methodPrefix = "test11"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',

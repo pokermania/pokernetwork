@@ -1,5 +1,9 @@
 2008-04-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokercashier.py.in
+	(PokerCashierTestCase.test11_duplicateSafeEntriesForCashInValidateNote):
+	Wroet function.
+
 	* pokernetwork/pokercashier.py (PokerCashier.cashInValidateNote):
 	"message" was not a defined variable when called from the
 	PacketError.  Created message and used it both for error output
