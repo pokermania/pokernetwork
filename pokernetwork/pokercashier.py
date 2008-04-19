@@ -208,7 +208,8 @@ class PokerCashier:
                 if self.verbose > 2: self.message(sql)
                 cursor.execute(sql)
                 if cursor.rowcount not in (0, 1):
-                    self.error(sql + " found " + str(cursor.rowcount) + " records instead of 0 or 1")
+                    message = sql + " found " + str(cursor.rowcount) + " records instead of 0 or 1"
+                    self.error(message)
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
