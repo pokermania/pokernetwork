@@ -27,7 +27,7 @@
 	* pokernetwork/pokerpackets.py: PokerBet is not used, use
 	  PokerRaise instead
 
-2008-04-15  bkuhn
+2008-04-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* ChangeLog, tests/test-pokercashier.py.in: r497@hughes: bkuhn |
 	  2008-04-14 22:11:19 -0400
