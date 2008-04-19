@@ -429,8 +429,6 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor = self.db.cursor()
         cursor.execute("insert into counter(transaction_id, user_serial, currency_serial, serial, name, value) values('foo', %d, %d, %d, '%040d', %d)" % (self.user_serial, 1L, 1, 1, self.value))
         cursor.close()
-        # This doesn't really test anything yet.  I have to set it up so 
-        # that the transaction_id is already in the counter table....
         d = self.cashier.cashInValidateNote(1L, p)
         def check_validateNoteFailure(reason):
             from twisted.python import failure
@@ -443,7 +441,6 @@ class PokerCashierTestCase(unittest.TestCase):
             return True
         d.addErrback(check_validateNoteFailure)
         return d
-#pokernetwork.packets.PacketError: type = ERROR(3) message = INSERT INTO safe SELECT currency_serial, serial, name, value FROM counter        WHERE transaction_id = 'foo' AND              status = 'n'  affected 0 records instead >= 1, code = 3, other_type = POKER_CASH_IN
 
 # --------------------------------------------------------
 def GetTestSuite():
