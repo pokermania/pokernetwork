@@ -234,11 +234,11 @@ class PokerCashier:
         else:
             transaction = ""
 
-        sql = ( "SELECT counter.user_serial, currencies.url, counter.serial, counter.name, counter.value, counter.application_data FROM counter,currencies " +
-                "       WHERE currencies.serial = " + str(currency_serial) + " AND " +
-                "             counter.currency_serial = " + str(currency_serial) + " AND " +
-                transaction +
-                "             counter.status = 'c' " )
+        sql = ( "SELECT counter.user_serial, currencies.url, counter.serial, counter.name, counter.value, counter.application_data FROM counter,currencies " + #pragma: no cover
+                "       WHERE currencies.serial = " + str(currency_serial) + " AND " + #pragma: no cover
+                "             counter.currency_serial = " + str(currency_serial) + " AND " + #pragma: no cover
+                transaction + #pragma: no cover
+                "             counter.status = 'c' " ) #pragma: no cover
         if self.verbose > 2: self.message(sql)
         cursor.execute(sql)
         if cursor.rowcount == 0:
