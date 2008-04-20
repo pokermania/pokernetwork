@@ -1,6 +1,7 @@
 #
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep
 #
@@ -284,7 +285,8 @@ class PokerCashier:
                         "       WHERE user_serial = " + str(packet.serial) + " AND " +
                         "             currency_serial = " + str(currency_serial) )
                 if cursor.execute(sql) != 1:
-                    self.error(sql + " affected " + str(cursor.rowcount) + " records instead of 1 ")
+                    message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
+                    self.error(message)
                     raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                       code = PacketPokerCashOut.SAFE,
                                       message = message)
