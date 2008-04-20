@@ -61,7 +61,6 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 """
 
 class PokerCashierTestCase(unittest.TestCase):
-
     def destroyDb(self):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -483,6 +482,44 @@ class PokerCashierTestCase(unittest.TestCase):
             self.assertEqual(pe.message.find("affected 0 records") >= 0, True)
         self.assertEquals(gotError, True)
         return True
+    # --------------------------------------------------------
+    def test14_cashOutUpdateSafeSecondPartFails(self):
+        self.value = 100
+        self.url = 'http://fake'
+        cursor = self.db.cursor()
+        cursor.execute("insert into safe(currency_serial, serial, name, value) values(%d, %d, '%040d', %d)" % (1L, 1, 1, self.value))
+
+        cursor.execute("insert into counter(transaction_id, user_serial, currency_serial, serial, name, value, status) values(%d, %d, %d, %d, '%040d', %d, '%s')" % (2, 2, 1, 2L, 2, self.value, 'n'))
+        cursor.execute("insert into counter(transaction_id, user_serial, currency_serial, serial, name, value, status) values(%d, %d, %d, %d, '%040d', %d, '%s')" % (1, 1, 1, 1L, 1, self.value, 'c'))
+        cursor.execute("insert into currencies(url, serial) values('%s', %d)" % ('http://fake', 1))
+        cursor.close()
+        self.closuredCount = 0
+        def dummyCashOutCollect(currency_serial, trans_id):
+            self.closuredCount += 1
+            if self.closuredCount == 1:
+                return None
+            else:
+                return PacketPokerCashOut(serial = 5, url = 'http://fake',
+                                          bserial = 5, name = "5", value = 5,
+                                          application_data = "dummy")
+        origCashOutCollect = self.cashier.cashOutCollect
+        self.cashier.cashOutCollect = dummyCashOutCollect
+
+        gotError = False
+        try:
+            self.cashier.cashOutUpdateSafe(None, 1L, 1)
+            self.assertEquals("This line should not be reached", False)
+        except PacketError, pe:
+            gotError = True
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_OUT)
+            self.assertEquals(pe.code, PacketPokerCashOut.SAFE)
+            self.assertEqual(pe.message.find("UPDATE user2money SET amount") >= 0,
+                             True)
+            self.assertEqual(pe.message.find("affected 0 records instead of 1") >= 0,
+                             True)
+        self.assertEquals(gotError, True)
+        self.cashier.cashOutCollect = origCashOutCollect
+        return True
 # --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
@@ -496,7 +533,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test13"
+#    loader.methodPrefix = "test14"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',

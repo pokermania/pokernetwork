@@ -1,5 +1,9 @@
 2008-04-20  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokercashier.py.in
+	(PokerCashierTestCase.test14_cashOutUpdateSafeSecondPartFails):
+	Wrote function.
+
 	* pokernetwork/pokercashier.py (PokerCashier.cashOutUpdateSafe):
 	"message" was not a defined variable when called from the
 	PacketError.  Created message and used it both for error output
