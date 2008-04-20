@@ -1,21 +1,26 @@
+#
+# As of Mon Apr 21 00:31:03 CEST 2008 : probably needs fixing but
+# still is a good outline of the process.
+#
+
 Steps to compile/install poker3d and friends: (all as root)
 
 Download packages to ~/local/poker/packages (wget) 
 
-  http://download.gna.org/pokersource/sources/poker-eval-134.0.tar.gz
-  http://download.gna.org/pokersource/sources/pypoker-eval-134.0.tar.gz
-  http://download.gna.org/pokersource/sources/poker-engine-1.0.25.tar.gz
+  http://download.gna.org/pokersource/sources/poker-eval-*.tar.gz
+  http://download.gna.org/pokersource/sources/pypoker-eval-*.tar.gz
+  http://download.gna.org/pokersource/sources/poker-engine-*.tar.gz
   
-  http://garr.dl.sourceforge.net/sourceforge/mysql-python/MySQL-python-1.2.2.tar.gz
+  http://garr.dl.sourceforge.net/sourceforge/mysql-python/MySQL-python-*.tar.gz
   http://www.zope.org/Products/ZopeInterface/3.3.0/zope.interface-3.3.0.tar.gz
-  http://tmrc.mit.edu/mirror/twisted/Twisted/2.5/Twisted-2.5.0.tar.bz2
+  http://tmrc.mit.edu/mirror/twisted/Twisted/8.0/Twisted-8.0.1.tar.bz2
   
   http://cheeseshop.python.org/packages/source/f/fpconst/fpconst-0.7.2.tar.gz
   http://garr.dl.sourceforge.net/sourceforge/pyxml/PyXML-0.8.4.tar.gz
   http://mesh.dl.sourceforge.net/sourceforge/pywebsvcs/SOAPpy-0.12.0.tar.gz
-  http://heanet.dl.sourceforge.net/sourceforge/pyopenssl/pyOpenSSL-0.6.tar.gz
+  http://heanet.dl.sourceforge.net/sourceforge/pyopenssl/pyOpenSSL-0.7.tar.gz
  
-  http://download.gna.org/pokersource/sources/poker-network-1.0.37.tar.gz
+  http://download.gna.org/pokersource/sources/poker-network-1.5.0.tar.gz
   
 In ~/local/poker
   
@@ -154,22 +159,6 @@ In /usr/local/poker/share/poker-network
 	
 	to match credentials on poker-network database.
 	
-	Apply patch pokerpackets.py.patch to pokernetwork/pokerpackets.py
-
-Index: pokerpackets.py
-===================================================================
---- pokerpackets.py        (revision 3474)
-+++ pokerpackets.py        (working copy)
-@@ -2706,7 +2706,7 @@
-                  self.calcsizestring(self.addr_country) +
-                  self.calcsizestring(self.phone) +
-                  self.calcsizestring(self.gender) +
--                 self.calcsizestring(self.birthdate)
-+                 self.calcsizestring(str(self.birthdate))
-                  )
- 
-     def __str__(self):
-
 Thats it. Start the server. 
 # pokerserver 2>&1 >> /var/log/poker-network.log
 
