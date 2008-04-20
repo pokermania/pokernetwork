@@ -3870,7 +3870,9 @@ Packet.infoDeclare(globals(), PacketPokerStats, Packet, "POKER_STATS", 144) # 0x
 class PacketPokerBuyInLimits(Packet):
     """\
 Semantics: the buy-in boundaries for "game_id" in the range
-["min","max"]. An optimal buy-in is suggested in "best".
+["min","max"]. An optimal buy-in is suggested in "best". A
+player is considered broke unless he has at least "rebuy_min"
+at the table.
 
 Direction: server => client
 
@@ -3879,6 +3881,7 @@ Context: sent immediately after the PacketPokerTable packet.
 min: minimum buy-in in cent.
 max: minimum buy-in in cent.
 best: optimal buy-in in cent.
+rebuy_min: the minimum amount to play a hand.
 game_id: integer uniquely identifying a game.
     """
     
@@ -3887,6 +3890,7 @@ game_id: integer uniquely identifying a game.
         ('min', 0, 'I'),
         ('max', 0, 'I'),
         ('best', 0, 'I'),
+        ('rebuy_min', 0, 'I'),
         )
 
 Packet.infoDeclare(globals(), PacketPokerBuyInLimits, Packet, "POKER_BUY_IN_LIMITS", 145) # 0x91 # %SEQ%

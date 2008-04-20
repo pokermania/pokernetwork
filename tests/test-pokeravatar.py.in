@@ -429,6 +429,10 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(vv.game.max_players, 10)
                     self.assertEquals(vv.game.variant, 'holdem')
                     self.assertEquals(vv.game.betting_structure, struct)
+            elif packet.type == PACKET_POKER_BUY_IN_LIMITS:
+                for key in [ 'best', 'game_id', 'min', 'max' ]:
+                    self.assert_(hasattr(packet, key))
+
         self.assertEquals(found, True)
         return (client, packet)
     # ------------------------------------------------------------------------

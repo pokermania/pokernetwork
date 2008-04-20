@@ -1,8 +1,8 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -700,7 +700,8 @@ class PokerAvatar:
         self.sendPacketVerbose(PacketPokerBuyInLimits(game_id = game.id,
                                                       min = game.buyIn(),
                                                       max = game.maxBuyIn(),
-                                                      best = game.bestBuyIn()))
+                                                      best = game.bestBuyIn(),
+                                                      rebuy_min = game.minMoney()))
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
         nochips = 0
         for player in game.serial2player.values():
