@@ -465,6 +465,11 @@ class PokerCashierTestCase(unittest.TestCase):
             self.assertEqual(pe.message.find("found 2 records instead of 0 or 1") >= 0, True)
         self.assertEquals(gotError, True)
         return True
+    # --------------------------------------------------------
+    def test12_cashOutCollectWithoutTransaction(self):
+        gotError = False
+        self.assertEquals(self.cashier.cashOutCollect(1L, None), None)
+        return True
 # --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
@@ -478,7 +483,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test11"
+#    loader.methodPrefix = "test12"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',

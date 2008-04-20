@@ -1,5 +1,9 @@
 2008-04-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokercashier.py.in
+	(PokerCashierTestCase.test12_cashOutCollectWithoutTransaction):
+	Wrote function.
+
 	* pokernetwork/pokercashier.py (PokerCashier.cashOutCollect):
 	Added #pragma: no cover, since these lines are clearly covered by
 	test03 in tests/test-pokercashier.py.in but hit the known bug in
