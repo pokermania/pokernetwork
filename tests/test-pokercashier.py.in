@@ -470,6 +470,19 @@ class PokerCashierTestCase(unittest.TestCase):
         gotError = False
         self.assertEquals(self.cashier.cashOutCollect(1L, None), None)
         return True
+    # --------------------------------------------------------
+    def test13_cashOutUpdateSafeTest(self):
+        gotError = False
+        try:
+            self.cashier.cashOutUpdateSafe(None, 1, 1)
+            self.assertEquals("This line should not be reached", False)
+        except PacketError, pe:
+            gotError = True
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_OUT)
+            self.assertEquals(pe.code, PacketPokerCashOut.SAFE)
+            self.assertEqual(pe.message.find("affected 0 records") >= 0, True)
+        self.assertEquals(gotError, True)
+        return True
 # --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
@@ -483,7 +496,7 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test12"
+#    loader.methodPrefix = "test13"
     suite = loader.loadClass(PokerCashierTestCase)
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',

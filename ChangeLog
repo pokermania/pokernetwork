@@ -3,6 +3,8 @@
 	* tests/test-pokercashier.py.in
 	(PokerCashierTestCase.test12_cashOutCollectWithoutTransaction):
 	Wrote function.
+	(PokerCashierTestCase.test13_cashOutUpdateSafeTest): Wrote
+	function.
 
 	* pokernetwork/pokercashier.py (PokerCashier.cashOutCollect):
 	Added #pragma: no cover, since these lines are clearly covered by
