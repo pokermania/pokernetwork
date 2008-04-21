@@ -1,5 +1,10 @@
 2008-04-20  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/pokercashier.py (PokerCashier.cashOutUpdateSafe):
+	Added #pragma: no cover, since these lines are clearly covered by
+	test03 in tests/test-pokercashier.py.in but hit the known bug in
+	coverage.py.
+
 	* tests/test-pokercashier.py.in
 	(PokerCashierTestCase.test14_cashOutUpdateSafeSecondPartFails):
 	Wrote function.

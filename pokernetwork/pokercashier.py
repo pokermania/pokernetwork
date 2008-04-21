@@ -281,9 +281,9 @@ class PokerCashier:
                                           message = message)
 
                 packet = self.cashOutCollect(currency_serial, transaction_id)
-                sql = ( "UPDATE user2money SET amount = amount - " + str(packet.value) +
-                        "       WHERE user_serial = " + str(packet.serial) + " AND " +
-                        "             currency_serial = " + str(currency_serial) )
+                sql = ( "UPDATE user2money SET amount = amount - " + str(packet.value) + #pragma: no cover
+                        "       WHERE user_serial = " + str(packet.serial) + " AND " + #pragma: no cover
+                        "             currency_serial = " + str(currency_serial) ) #pragma: no cover
                 if cursor.execute(sql) != 1:
                     message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
                     self.error(message)
