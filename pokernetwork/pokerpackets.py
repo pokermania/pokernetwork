@@ -1672,6 +1672,24 @@ PACKET_POKER_REBUY = 85 # 0x55 # %SEQ%
 PacketNames[PACKET_POKER_REBUY] = "POKER_REBUY"
 
 class PacketPokerRebuy(PacketPokerBuyIn):
+    """\
+Semantics: the player "serial" is willing to participate in
+the game "game_id" with an amount equal to "amount". The server
+will ensure that the "amount" fits the game constraints (i.e.
+player bankroll or betting structure limits).
+
+Direction: server <=  client.
+
+Context: this packet must occur after a successfull PACKET_POKER_BUY_IN
+The minimum/maximum rebuy are determined by the betting structure of
+the game, as specifiede in the PACKET_POKER_TABLE packet. The player
+may rebuy at any moment if he has less than the maximum amount of money
+allowed by the betting structure.
+
+amount: integer specifying the amount to bring to the game.
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+"""
 
     type = PACKET_POKER_REBUY
 
