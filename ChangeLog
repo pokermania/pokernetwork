@@ -1,3 +1,38 @@
+2008-05-01  Loic Dachary <loic@dachary.org>
+
+	* Release 1.5.0
+
+	* Makefile.am, configure.ac, database/1.4.0-1.5.0.sql,
+	  database/pokerdatabase.5.in, database/pokerdatabaseupgrade.8.in,
+	  database/schema.sql.in, pokernetwork/pokercashier.py,
+	  pokernetwork/user.py, tests/setupMysqlVariables,
+	  tests/test-pokercashier.py.in, tests/test-pokerclient.py.in,
+	  tests/test-pokerdatabase.py.in, tests/test-pokertable.py.in: user
+	  name may have up to 50 characters
+	  manual page to explain the database constraints
+	  copyright notices updates
+
+2008-04-30  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: PacketPokerRebuy documentation
+
+2008-04-21  Bradley M. Kuhn <bkuhn@ebb.org>
+
+	* ChangeLog, pokernetwork/pokercashier.py: r530@hughes: bkuhn |
+	  2008-04-20 22:10:18 -0400
+	  * Added pragma: no cover for an sql statement that clearly is
+	  covered
+	  when you step through.
+
+2008-04-20  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerclient.py,
+	  pokernetwork/pokerpackets.py, tests/test-pokeravatar.py.in,
+	  tests/test-pokerclient.py.in: use minMoney to set the minimum
+	  amount to rebuy
+	* HOWTO-install-from-sources: some updates to the
+	  install-from-source instructions
+
 2008-04-20  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/pokercashier.py (PokerCashier.cashOutUpdateSafe):
@@ -40,8 +75,6 @@
 	(PokerCashierTestCase.test10_foundCounterRowBreakingNote): Wrote function.
 
 2008-04-19  Loic Dachary <loic@dachary.org>
-
-	* Release 1.5.0
 
 	* pokernetwork/pokeravatar.py, pokernetwork/pokerclient.py,
 	  pokernetwork/pokerpackets.py, tests/test-pokerclient.py.in: class
