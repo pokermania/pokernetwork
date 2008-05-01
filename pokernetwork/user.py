@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008 Loic Dachary
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -28,7 +29,7 @@ from re import match
 
 from pokernetwork.pokerpackets import PacketPokerSetAccount
 
-NAME_LENGTH_MAX = 20
+NAME_LENGTH_MAX = 50
 NAME_LENGTH_MIN = 5
 
 PASSWORD_LENGTH_MAX = 15

@@ -1,6 +1,6 @@
 #
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -22,9 +22,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-# Authors:
-#  Loic Dachary <loic@gnu.org>
-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.54)
@@ -360,6 +357,7 @@ AC_CONFIG_FILES([
         pokerweb/pages/constants.php.ref
         database/schema.sql
         database/pokerdatabaseupgrade.8
+        database/pokerdatabase.5
         conf/poker.bot.xml
         conf/poker.client.xml
         conf/poker.server.xml

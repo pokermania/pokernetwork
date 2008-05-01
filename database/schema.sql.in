@@ -37,15 +37,25 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  -- number of seconds since 1970, argument to from_unixtime()
   created INT UNSIGNED NOT NULL,
-  name VARCHAR(32),
-  email VARCHAR(128),
+  -- user name matching the regexp ^[a-zA-Z][a-zA-Z0-9_]{5,50}$
+  name VARCHAR(64),
+  -- optional email address matching the regexp .*.@.*\..*$
+  email VARCHAR(128),   
+  -- serial of the users record to which this user is affiliated
   affiliate INT UNSIGNED DEFAULT 0,
+  -- client interpreted URL from which the player avatar can be downloaded
   skin_url VARCHAR(32) DEFAULT "random",
+  -- client interpreted textual description of the player aspect
   skin_outfit TEXT,
+  -- base64 encoded player picture of type skin_image_type
   skin_image TEXT,
+  -- the type of the base64 encoded skin_image field content
   skin_image_type VARCHAR(32) DEFAULT "image/png",
+  -- clear text password matching the regexp ^[a-zA-Z0-9]{5,15}$
   password VARCHAR(32),
+  -- 1 is a regular player, 0 is an observer and cannot play, 2 is admin
   privilege INT DEFAULT 1,
 
   rating INT DEFAULT 1000,

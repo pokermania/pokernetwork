@@ -1,8 +1,8 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -26,8 +26,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Bradley M. Kuhn <bkuhn@ebb.org>
-
+#
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")

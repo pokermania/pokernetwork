@@ -1,28 +1,26 @@
-'''
-''' Copyright (C) 2005, 2006 Mekensleep
-'''
-''' Mekensleep
-''' 24 rue vieille du temple
-''' 75004 Paris
-'''       licensing@mekensleep.com
-'''
-''' This program is free software; you can redistribute it and/or modify
-''' it under the terms of the GNU General Public License as published by
-''' the Free Software Foundation; either version 3 of the License, or
-''' (at your option) any later version.
-'''
-''' This program is distributed in the hope that it will be useful,
-''' but WITHOUT ANY WARRANTY; without even the implied warranty of
-''' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-''' GNU General Public License for more details.
-'''
-''' You should have received a copy of the GNU General Public License
-''' along with this program; if not, write to the Free Software
-''' Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-'''
-''' Authors:
-'''  Loic Dachary <loic@gnu.org>
-'''
+.\"
+.\" Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+.\" Copyright (C) 2005, 2006 Mekensleep
+.\"
+.\" Mekensleep
+.\" 24 rue vieille du temple
+.\" 75004 Paris
+.\"       licensing@mekensleep.com
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+.\"
 .TH pokerdatabaseupgrade 8 local
 .SH NAME
 pokerdatabaseupgrade \- upgrade a poker-network database to match the software version
@@ -32,9 +30,10 @@ pokerdatabaseupgrade [--help] [--dry-run] [--upgrades=directory] [configuration.
 
 .SH DESCRIPTION
 
-If the database is older than the poker-network software version, apply the
-necessary patches to bring it up to date.
+If the database is older than the poker-network software version, run 
+SQL updates scripts to modify it. The version field of the server table is
+updated even if the update scripts do not exist for a specific version.
 
 .SH AUTHORS
 
-Loic Dachary <loic@gnu.org>
+Loic Dachary <loic@dachary.org>

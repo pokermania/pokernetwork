@@ -130,7 +130,8 @@ dist_pokerdb_DATA = \
 	database/1.0.30-1.0.31.sql \
 	database/1.0.31-1.0.32.sql \
 	database/1.0.32-1.0.33.sql \
-	database/1.0.36-1.0.37.sql
+	database/1.0.36-1.0.37.sql \
+	database/1.4.0-1.5.0.sql
 
 pokerupgradesdir=${pkgdatadir}/upgrades
 dist_pokerupgrades_DATA = \
@@ -198,6 +199,7 @@ EXTRA_DIST = \
 	pokernetwork/OLDpokerclientpackets.py \
         database/schema.sql.in \
         database/pokerdatabaseupgrade.8.in \
+        database/pokerdatabase.5.in \
         conf/poker.bot.xml.in \
         conf/poker.client.xml.in \
         conf/poker.server.xml.in \

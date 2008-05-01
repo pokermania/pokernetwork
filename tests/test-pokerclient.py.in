@@ -1001,7 +1001,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test22"
+#    loader.methodPrefix = "test22"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
