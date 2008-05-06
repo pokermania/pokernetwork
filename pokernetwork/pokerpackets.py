@@ -3347,6 +3347,17 @@ the data related to the previous hand.
 
 Direction: server <= client
 
+Context: should be sent by the client immediately after receiving
+the POKER_START packet.
+
+Note: the packet is ignored if the "serial" player is not at the table.
+
+Note: because of a race condition, it will not work as expected
+if the game plays too fast. For instance, if the hand finishes
+before the packet POKER_PROCESSING_HAND is received by the server.
+This will typically happen the first time a player gets a seat at the 
+table.
+
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
