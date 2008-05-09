@@ -2,6 +2,8 @@ Release 1.5.0
 
 Complete JSONP support + custom session names.
 
+User names can have a size up to 50 characters.
+
 New packet : PacketPokerBuyInLimits(Packet):
   Semantics: the buy-in boundaries for "game_id" in the range
   ["min","max"]. An optimal buy-in is suggested in "best".
