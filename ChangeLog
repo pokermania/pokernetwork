@@ -1,6 +1,11 @@
-2008-05-01  Loic Dachary <loic@dachary.org>
+2008-05-06  Loic Dachary <loic@dachary.org>
 
 	* Release 1.5.0
+
+	* pokernetwork/pokerpackets.py: update PacketPokerProcessingHand
+	  documentation
+
+2008-05-01  Loic Dachary <loic@dachary.org>
 
 	* Makefile.am, configure.ac, database/1.4.0-1.5.0.sql,
 	  database/pokerdatabase.5.in, database/pokerdatabaseupgrade.8.in,
