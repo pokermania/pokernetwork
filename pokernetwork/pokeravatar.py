@@ -59,13 +59,14 @@ class PokerAvatar:
         return "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
 
     def setExplain(self, what):
-        if self.tables:
-            self.error("setExplain must be called when not connected to any table")
-            return False
-        
         if what:
-            self.explain = PokerExplain(dirs = self.service.dirs,
-                                        verbose = self.service.verbose)
+            if self.explain == None:
+                if self.tables:
+                    self.error("setExplain must be called when not connected to any table")
+                    return False
+
+                self.explain = PokerExplain(dirs = self.service.dirs,
+                                            verbose = self.service.verbose)
         else:
             self.explain = None
         return True
