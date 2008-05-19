@@ -27,6 +27,9 @@ from twisted.python import runtime
 from twisted.internet import reactor, base
 from pokerengine import pokertournament
 
+#
+# unless otherwise specified, implementation is for twisted versions < 8.0.1
+#
 _seconds_value = time.time()
 def _seconds_reset():
     global _seconds_original
@@ -40,6 +43,7 @@ def _seconds_tick():
     _seconds_value += 0.1
     return _seconds_value
 
+reactor.seconds = _seconds_tick # twisted >= 8.0.1
 base.seconds = _seconds_tick
 #
 # select timeout must return immediately, it makes no sense
