@@ -1,3 +1,7 @@
+Release 1.6.0
+
+Improved REST support.
+
 Release 1.5.0
 
 Complete JSONP support + custom session names.

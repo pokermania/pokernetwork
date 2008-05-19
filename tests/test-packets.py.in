@@ -73,7 +73,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         class TestPacketFieldList(packets.Packet):
             type = 253
 
-            info = packets.Packet.info + ( ('serials', [1L], 'Il'), )
+            info = packets.Packet.info + ( ('serials', [1], 'Il'), )
             
             serials = []
 
@@ -98,7 +98,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
             def __str__(self):
                 return packets.Packet.__str__(self) + " serials = %s" % self.serials
 
-        self.packetCheck(type = TestPacketFieldList, serials = [1L])
+        self.packetCheck(type = TestPacketFieldList, serials = [1])
 
     def defineTestPacket(self):
         d = {}

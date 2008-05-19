@@ -1,3 +1,16 @@
+2008-05-19  Loic Dachary <loic@dachary.org>
+
+	* Release 1.6.0
+
+	* tests/testclock.py: clock must be set in reactor in twisted >=
+	  8.0.1
+	* tests/test-pokeravatar.py.in: test if explain can be sent
+	  multiple times
+	* tests/coverage.py: upgrade from
+	  http://nedbatchelder.com/code/modules/coverage.html
+	* pokernetwork/pokeravatar.py: PACKET_POKER_EXPLAIN can be sent
+	  multiple times
+
 2008-05-06  Loic Dachary <loic@dachary.org>
 
 	* Release 1.5.0
