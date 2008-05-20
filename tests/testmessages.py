@@ -24,42 +24,90 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-import sys
-import StringIO
+import sys, os
 
+classes = []
+
+from pokerui import pokerinteractor
+classes.append(pokerinteractor.PokerInteractor)
+from pokerui import pokerrenderer
+classes.append(pokerrenderer.PokerRenderer)
+from pokernetwork import currencyclient
+classes.append(currencyclient.FakeCurrencyClient)
+from pokernetwork import pokerchildren
+classes.append(pokerchildren.PokerChild)
+from pokernetwork import client
+classes.append(client.UGAMEClientFactory)
+from pokernetwork import protocol
+classes.append(protocol.UGAMEProtocol)
+from pokernetwork import pokerservice
+classes.append(pokerservice.PokerService)
+classes.append(pokerservice.PokerXML)
+classes.append(pokerservice.PokerAuth)
+from pokernetwork import pokerlock
+classes.append(pokerlock.PokerLock)
+from pokernetwork import pokeravatar
+classes.append(pokeravatar.PokerAvatar)
+from pokernetwork import pokerexplain
+classes.append(pokerexplain.PokerExplain)
+from pokernetwork import pokertable
+classes.append(pokertable.PokerTable)
+from pokernetwork import pokercashier
+classes.append(pokercashier.PokerCashier)
+from pokernetwork import pokerdatabase
+classes.append(pokerdatabase.PokerDatabase)
+from pokerengine import pokergame
+classes.append(pokergame.PokerGame)
+from pokerengine import pokertournament
+classes.append(pokertournament.PokerTournament)
+
+#
+# for coverage purpose, make sure all message functions
+# are called at least once
+#
+def call_messages():
+    import StringIO
+    for a_class in classes:
+        stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        class F(a_class):
+            def __init__(self, *args, **kwargs):
+                self._prefix = 'P'
+                self.prefix = 'P'
+                self.id = 1
+                self.name = 'name'
+        F().message('')
+        sys.stdout = stdout
+call_messages()
+
+class2message = {
+    pokergame.PokerGame: lambda self, string: messages_out.append(self.prefix + "[PokerGame " + str(self.id) + "] " + string)
+    }
 messages_out = []
 
 def redirect_messages(a_class):
-    stdout = sys.stdout
-    sys.stdout = StringIO.StringIO()
-    class F(a_class):
-        def __init__(self, *args, **kwargs):
-            self._prefix = 'P'
-            self.prefix = 'P'
-            self.id = 1
-            self.name = 'name'
-    F().message('')
-    sys.stdout = stdout
-    a_class.message = lambda self, string: messages_out.append(string)
+    if not hasattr(a_class, 'orig_message'):
+        a_class.orig_message = [ ]
+    a_class.orig_message.append(a_class.message)
+    a_class.message = class2message.get(a_class, lambda self, string: messages_out.append(string))
     
 def silence_all_messages():
-    from pokernetwork import pokerservice
-    redirect_messages(pokerservice.PokerService)
-    redirect_messages(pokerservice.PokerXML)
-    redirect_messages(pokerservice.PokerAuth)
-    from pokernetwork import pokerlock
-    redirect_messages(pokerlock.PokerLock)
-    from pokernetwork import pokeravatar
-    redirect_messages(pokeravatar.PokerAvatar)
-    from pokernetwork import pokerexplain
-    redirect_messages(pokerexplain.PokerExplain)
-    from pokernetwork import pokertable
-    redirect_messages(pokertable.PokerTable)
-    from pokernetwork import pokercashier
-    redirect_messages(pokercashier.PokerCashier)
-    from pokernetwork import pokerdatabase
-    redirect_messages(pokerdatabase.PokerDatabase)
-    from pokerengine import pokergame
-    redirect_messages(pokergame.PokerGame)
-    from pokerengine import pokertournament
-    redirect_messages(pokertournament.PokerTournament)
+    messages_out = []
+    for a_class in classes:
+        redirect_messages(a_class)
+
+def restore_all_messages():
+    for a_class in classes:
+        a_class.message = a_class.orig_message.pop()
+
+def search_output(what):
+    verbose = int(os.environ.get('VERBOSE_T', '-1'))
+    if verbose > 1:
+        print "search_output: " + what
+    for message in messages_out:
+        if message.find(what) >= 0:
+            return True
+        if verbose > 1:
+            print "\tnot in " + message
+    return False
+
