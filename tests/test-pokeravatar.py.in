@@ -32,17 +32,18 @@ import twisted.internet.base
 from twisted.internet import reactor, defer, error, base
 from twisted.python import failure, runtime
 
-from tests.testmessages import silence_all_messages
-os.environ['VERBOSE_T'] = '0'
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
-
 from pokerengine import pokertournament
 #
 # Must be done before importing pokerclient or pokerclient
 # will have to be patched too.
 #
 from tests import testclock
+
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output
+#os.environ['VERBOSE_T'] = '0'
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
@@ -193,7 +194,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def quit(self, args):
         client = args[0]
-        if self.service.verbose > 0:
+        if verbose > 0:
             print "test-pokerclient: quit client " + str(client.getSerial())
         client.sendPacket(PacketQuit())
         if hasattr(client, "transport"):
@@ -289,7 +290,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         def stringAvatar((client, packet)):
-            print str(self.service.avatars[0])
+            if verbose > 0:
+                print "test05_testStrInterpolation" + str(self.service.avatars[0])
             self.assertEquals(str(self.service.avatars[0]),
                               "PokerAvatar serial = 4, name = user0")
             return (client, packet)
@@ -921,8 +923,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # -------------------------------------------------------------------------
     def requestsWithWrongSerial(self, (client, packet), avid, gameId):
-        import StringIO
-
         avatar = self.service.avatars[avid]
         avatar.queuePackets()
         someoneElseSerial = client.getSerial() + 1
@@ -933,14 +933,14 @@ class PokerAvatarTestCase(unittest.TestCase):
             (someoneElseSerial, client.getSerial())
         ofPlayerByPlayer = " of player %d by player %d" % \
             (someoneElseSerial, client.getSerial())
-        messageStart = "PokerAvatar: "
+        messageStart = ""
         badPacketAttempts = {
             'user_info' : { 'output' : 
-                          "%sattempt to get user info%s\n" % (messageStart, userByUser),
+                          "%sattempt to get user info%s" % (messageStart, userByUser),
                           'packet' :
                               PacketPokerGetUserInfo(serial = someoneElseSerial) },
             'get_personal' : { 'output' :
-                              "%sattempt to get personal info%s\n" % (messageStart, userByUser),
+                              "%sattempt to get personal info%s" % (messageStart, userByUser),
                                 'packet' :
                                     PacketPokerGetPersonalInfo(serial = someoneElseSerial),
                                'err_type': PACKET_AUTH_REQUEST },
@@ -964,7 +964,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                                         firstname = "YOU_HAVE",
                                         lastname = "BEEN_CRACKED", birthday = "2001-01-01") },
             'cash_in' : { 'output' :
-                              "%sattempt to cash in%s\n" % (messageStart, userByUser),
+                              "%sattempt to cash in%s" % (messageStart, userByUser),
                           'packet' : 
                           PacketPokerCashIn(serial = someoneElseSerial, 
                                             name = "YOU_BEEN_CRACKED", value = 1000000,
@@ -972,7 +972,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                           'err_type' : PACKET_POKER_ERROR,
                           'other_type' : PACKET_POKER_CASH_IN },
             'cash_out' : { 'output' :
-                               "%sattempt to cash out%s\n" % (messageStart, userByUser),
+                               "%sattempt to cash out%s" % (messageStart, userByUser),
                            'packet' : 
                            PacketPokerCashOut(serial = someoneElseSerial, 
                                              name = "YOU_BEEN_CRACKED", value = 1000000,
@@ -1137,13 +1137,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         for (key, info) in badPacketAttempts.iteritems():
             avatar.resetPacketsQueue()
             avatar.queuePackets()
-            messageOutput = StringIO.StringIO()
-            sys.stdout = messageOutput
+            silence_all_messages()
             avatar.handlePacketLogic(info['packet'])
-            data = messageOutput.getvalue()
-            sys.stdout = sys.__stdout__
-            messageOutput.close()
-            self.assertEqual(data.find(info['output']) >= 0, True)
+            self.assertEqual(search_output(info['output']), True, info['output'])
+            restore_all_messages()
 
             found = False
             for packet in avatar.resetPacketsQueue():
@@ -1849,8 +1846,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                           string = whereStr))
         found = False
         for packet in avatar.resetPacketsQueue():
-            print "THIS PACKET"
-            print packet
             if packet.type == PACKET_POKER_HAND_LIST:
 #             Unclear what this should be....
 #                self.assertEquals(packet.count, ????)
@@ -2044,18 +2039,15 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # ------------------------------------------------------------------------
     def variousStartPackets(self, (client, packet), id, gameId ):
-        import StringIO
         avatar = self.service.avatars[id]
 
         avatar.queuePackets()
-        messageOutput = StringIO.StringIO()
-        sys.stdout = messageOutput
+        silence_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        data = messageOutput.getvalue()
-        sys.stdout = sys.__stdout__
+        restore_all_messages()
 
-        self.assertEqual(data.find("tried to start a new game but is not the owner of the table") >= 0, True)
+        self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
 
 
         # Coverage for when the server is shutting down
@@ -2063,14 +2055,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         avatar.service.shutting_down = True
 
         avatar.queuePackets()
-        messageOutput = StringIO.StringIO()
-        sys.stdout = messageOutput
+        silence_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        data = messageOutput.getvalue()
-        sys.stdout = sys.__stdout__
 
-        self.assertEqual(data.find("server shutting down") >= 0, True)
+        restore_all_messages()
+        self.assertEqual(search_output("server shutting down"), True)
 
         avatar.service.shutting_down = False
 
@@ -2078,13 +2068,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         table.owner = client.getSerial()
 
         avatar.queuePackets()
-        messageOutput = StringIO.StringIO()
-        sys.stdout = messageOutput
+        silence_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        data = messageOutput.getvalue()
-        sys.stdout = sys.__stdout__
-        self.assertEqual(data.find("because game is running") >= 0, True)
+        restore_all_messages()
+        self.assertEqual(search_output("because game is running"), True)
 
         # Coverage for when someone else owns the table
 
@@ -2094,14 +2082,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         table.owner = client.getSerial() - 3
 
         avatar.queuePackets()
-        messageOutput = StringIO.StringIO()
-        sys.stdout = messageOutput
+        silence_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        data = messageOutput.getvalue()
-        sys.stdout = sys.__stdout__
-
-        self.assertEqual(data.find("tried to start a new game but is not the owner of the table") >= 0, True)
+        restore_all_messages()
+        self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
         d = self.client_factory[0].established_deferred
@@ -2256,8 +2241,6 @@ class PokerAvatarTestCase(unittest.TestCase):
     # requestsWithWrongSerial() above, but in this case, we're using the
     # right serial and the game is just in the wrong state or somesuch.
     def variousPacketsWithStringOrSinglePacketReturn(self, (client, packet), avid, gameId):
-        import StringIO
-
         avatar = self.service.avatars[avid]
         packetTests = {
             'muck_accept' : { 'output' : 
@@ -2312,15 +2295,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         for (key, info) in packetTests.iteritems():
             avatar.resetPacketsQueue()
             avatar.queuePackets()
-            messageOutput = StringIO.StringIO()
-            sys.stdout = messageOutput
+            silence_all_messages()
             avatar.handlePacketLogic(info['packet'])
-            data = messageOutput.getvalue()
-            sys.stdout = sys.__stdout__
-            messageOutput.close()
-            print "Got text: START\n" + data + "\nEND\n"
+            restore_all_messages()
             if info.has_key('output'):
-                self.assertEqual(data.find(info['output']) >= 0, True)
+                self.assertEqual(search_output(info['output']), True, info['output'])
             found = False
             for packet in avatar.resetPacketsQueue():
                 found = True
@@ -2420,18 +2399,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # ------------------------------------------------------------------------
     def handReplayWithoutTable(self, (client, packet), id ):
-        import StringIO
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        messageOutput = StringIO.StringIO()
-        sys.stdout = messageOutput
-
+        silence_all_messages()
         avatar.handlePacketLogic(PacketPokerHandReplay(serial= client.getSerial()))
-
-        data = messageOutput.getvalue()
-        sys.stdout = sys.__stdout__
-        self.assertEqual(data.find("PokerService: *ERROR* loadHand(%d) expected one row got 0"
-                                   % client.getSerial()) >= 0, True)
+        restore_all_messages();
+        self.assertEqual(search_output("*ERROR* loadHand(%d) expected one row got 0" % client.getSerial()), True)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test56_handReplyNoTable(self):
@@ -2662,7 +2635,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test10"
+#    loader.methodPrefix = "test56"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

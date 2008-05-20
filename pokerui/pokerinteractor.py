@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -151,6 +152,12 @@ class PokerInteractor:
         self.changed = True
         self.update()        
 
+    def error(self, string):
+        self.message("ERROR " + string)
+        
+    def message(self, string):
+        print string
+        
     def setUserData(self, userData):
         if self.userData != userData:
             self.userData = userData
@@ -261,9 +268,11 @@ class PokerInteractor:
         
     def update(self):        
         if self.changed:
-            if self.verbose > 3: print self.prefix + " PokerInteractor::update: before " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
+            if self.verbose > 3:
+                self.message(self.prefix + " PokerInteractor::update: before " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData))
             self.state.update(self)
-            if self.verbose > 3: print self.prefix + "                         after  " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData)
+            if self.verbose > 3:
+                self.message(self.prefix + "                         after  " + self.name + ": state " + self.state.name + ", canceled " + str(self.canceled) + ", selected " + str(self.selected) + ", inPosition " + str(self.inPosition) + ", userData " + str(self.userData))
             self.displayCallback(self)
             self.changed = False
             self.state.changed = False

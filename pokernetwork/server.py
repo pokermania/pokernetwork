@@ -23,7 +23,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#  Henry Precheur <henry@precheur.org> (2003)
+#  Henry Precheur <henry@precheur.org> (2004)
 #
 #
 import sys
@@ -66,7 +66,7 @@ class PokerServerProtocol(UGAMEProtocol):
         self.unblock()
         if not hasattr(self, 'transport') or not self.transport:
             if self.factory.verbose:
-                print "server: packets " + str(packets) + " bufferized because the protocol has no usuable transport"
+                self.message("server: packets " + str(packets) + " bufferized because the protocol has no usuable transport")
             self.bufferized_packets.extend(packets)
             return
         while len(packets) > 0:
@@ -119,7 +119,7 @@ class PokerServerProtocol(UGAMEProtocol):
 
     def protocolInvalid(self, client, server):
         if self.factory.verbose:
-                print "client with protocol %s rejected (need %s)" % ( client, server )
+                self.message("client with protocol %s rejected (need %s)" % ( client, server ))
 
     def ping(self):
         if not hasattr(self, "_ping_timer") or not self._ping_timer:
@@ -127,10 +127,10 @@ class PokerServerProtocol(UGAMEProtocol):
 
         if self._ping_timer.active():
             if self.factory.verbose > 6 and hasattr(self, "user") and self.user:
-                print "ping: renew %s/%s" % ( self.user.name, self.user.serial )
+                self.message("ping: renew %s/%s" % ( self.user.name, self.user.serial ))
             self._ping_timer.reset(self._ping_delay)
         else:
             self._ping_timer = None
             if self.factory.verbose and hasattr(self, "user") and self.user:
-                print "ping: timeout %s/%s" % ( self.user.name, self.user.serial )
+                self.message("ping: timeout %s/%s" % ( self.user.name, self.user.serial ))
             self.transport.loseConnection()

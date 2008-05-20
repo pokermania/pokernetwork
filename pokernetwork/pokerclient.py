@@ -154,7 +154,8 @@ class PokerClientFactory(UGAMEClientFactory):
                 self.delays["blind_ante_position"] = self.delays["position"]
         else:
             self.delays = {}
-        if self.verbose > 2: print "PokerClient: delays %s" % self.delays
+        if self.verbose > 2:
+            self.message("PokerClient: delays %s" % self.delays)
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
         self.skin = PokerSkin(settings = self.settings)
         self.protocol = PokerClientProtocol
@@ -257,7 +258,7 @@ class PokerClientFactory(UGAMEClientFactory):
             if not name:
                 name = config.headerGet("/poker/variant/@name")
                 if not name:
-                    print "*CRITICAL* can't find readable name for %s" % file
+                    self.error("*CRITICAL* can't find readable name for %s" % file)
                     name = file
             self.file2name[file] = name
         return self.file2name[file]
@@ -351,7 +352,7 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def upgradeReady(self, target_dir, upgrades_dir):
         if self.verbose >= 0:
-            print "PokerClientFactory::upgradeReady"
+            self.message("PokerClientFactory::upgradeReady")
         self.children.killall()
         reactor.disconnectAll()
         if hasattr(self.display, "underware"):
@@ -390,12 +391,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def setPrefix(self, prefix):
         self._prefix = prefix
         self.explain.setPrefix(prefix)
-        
-    def error(self, string):
-        self.message("ERROR " + string)
-        
-    def message(self, string):
-        print self._prefix + string
         
     def setCurrentGameId(self, game_id):
         if hasattr(self.factory, 'verbose') and self.factory.verbose > 2: self.message("setCurrentGameId(%s)" % game_id)
@@ -459,7 +454,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             values = []
         list = PokerChips(values, chips).tolist()
         if self.factory.verbose > 4:
-            print "normalizeChips: " + str(list) + " " + str(values)
+            self.message("normalizeChips: " + str(list) + " " + str(values))
         return list
             
     def updatePlayerChips(self, game, player):
@@ -522,7 +517,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return packet
         
     def handleUserInfo(self, packet):
-        if self.factory.verbose > 2: print "handleUserInfo: " + str(packet)
+        if self.factory.verbose > 2:
+            self.message("handleUserInfo: " + str(packet))
         self.user_info = packet
 
     def handlePersonalInfo(self, packet):
@@ -550,7 +546,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             # will return us a PokerPlayerInfo for confirmation of the success.
             #
             if url_check != url or outfit_check != outfit:
-                print "*CRITICAL*: PACKET_POKER_PLAYER_INFO: may enter loop packet.url = %s\n url = %s\n url_check = %s\npacket.outfit = %s\n outfit = %s\n outfit_check = %s" % ( packet.url, url, url_check, packet.outfit, outfit, outfit_check )
+                self.error("*CRITICAL*: PACKET_POKER_PLAYER_INFO: may enter loop packet.url = %s\n url = %s\n url_check = %s\npacket.outfit = %s\n outfit = %s\n outfit_check = %s" % ( packet.url, url, url_check, packet.outfit, outfit, outfit_check ))
             else:
                 packet.url = url
                 packet.outfit = outfit
@@ -565,7 +561,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def setPlayerDelay(self, game, serial, value):
         player = game.getPlayer(serial)
         if player == None:
-            print "WARNING setPlayerDelay for a non-existing player %d" % serial
+            self.message("WARNING setPlayerDelay for a non-existing player %d" % serial)
         else:
             player.getUserData()['delay'] = seconds() + value
 
@@ -689,10 +685,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
     
     def connectionLost(self, reason):
         if self.factory.crashing:
-            print "connectionLost: crashing, just return."
+            self.message("connectionLost: crashing, just return.")
             return
         if self.factory.verbose:
-            print "connectionLost: noticed, aborting all tables."
+            self.message("connectionLost: noticed, aborting all tables.")
         self.abortAllTables()
         UGAMEClientProtocol.connectionLost(self, reason)
         
@@ -948,7 +944,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         packet = self.publish_packets[0]
         if not self.established and not self.factory.isConnectionLess(packet):
             if self.factory.verbose > 5:
-                print "publishPacket: skip because connection not established"
+                self.message("publishPacket: skip because connection not established")
             return
         self.publish_packets.pop(0)
         what = 'outbound'

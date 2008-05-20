@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -62,20 +63,20 @@ class CheckClientVersion(PokerRsync):
         self.version_compare = "%03d%03d%03d" % version
         self.version = version
         if self.verbose > 1:
-            print "CheckClientVersion checking version %s against server" % str(self.version)
+            self.message("CheckClientVersion checking version %s against server" % str(self.version))
         self.callback = callback
         self.spawn()
         self.need_upgrade = False
         self.version_matched = False
 
     def line(self, line):
-        if self.verbose > 2: print line
+        if self.verbose > 2: self.message(line)
         result = match(".*(\d+).(\d+).(\d+)$", line)
         if result:
 	    self.version_matched = True
             result = tuple(map(int, result.groups()))
             if self.verbose > 2:
-                print "compare %s against %s" % ( str(result), str(self.version))
+                self.message("compare %s against %s" % ( str(result), str(self.version)))
             version = "%03d%03d%03d" % result
             if version > self.version_compare:
 		self.version_compare = version
@@ -86,7 +87,7 @@ class CheckClientVersion(PokerRsync):
         self.callback(self.need_upgrade, "%d.%d.%d" % self.version)
 
     def failed(self, logs, reason):
-        print "*CRITICAL* CheckClientVersion.failed logs:%s reason:%s" % (logs, reason)
+        self.error("*CRITICAL* CheckClientVersion.failed logs:%s reason:%s" % (logs, reason))
         if self.version_matched:
 	    self.done()
         else:
@@ -106,7 +107,7 @@ class DryrunUpgrade(PokerRsync):
         PokerRsync.spawn(self)
         
     def line(self, line):
-        if self.verbose > 2: print line
+        if self.verbose > 2: self.message(line)
         if match("^FILE:", line):
             self.files_count += 1
             if self.files_total > 0.0:
@@ -134,7 +135,7 @@ class GetPatch(PokerRsync):
         PokerRsync.spawn(self)
         
     def line(self, line):
-        if self.verbose > 2: print line
+        if self.verbose > 2: self.message(line)
         if match("^FILE:", line):
             self.files_count += 1
             if self.files_total > 0.0:
@@ -171,14 +172,14 @@ class Upgrader(dispatch.EventDispatcher):
 
     def checkClientVersionFailedNoNetwork(self, logs, reason):
         self.publishEvent(NO_NETWORK,logs, reason)
-        print "*CRITICAL* checkClientVersionFailedNoNetwork logs:%s reason:%s" % (logs, reason)
+        self.error("*CRITICAL* checkClientVersionFailedNoNetwork logs:%s reason:%s" % (logs, reason))
         
     def checkClientVersionFailedHostDoesNotRespond(self, logs, reason):
         self.publishEvent(HOST_DOES_NOT_RESPOND,logs, reason)
-        print "*CRITICAL* checkClientVersionFailedHostDoesNotRespond logs:%s reason:%s" % (logs, reason)
+        self.error("*CRITICAL* checkClientVersionFailedHostDoesNotRespond logs:%s reason:%s" % (logs, reason))
         
     def checkClientVersion(self, version):
-        if self.verbose > 1: print "Upgrade::checkClientVersion(" + str(version) + ")" 
+        if self.verbose > 1: self.message("Upgrade::checkClientVersion(" + str(version) + ")" )
         self.publishEvent(TICK, 0.0, "Checking for new client version")
         checker = CheckClientVersion(self.config, self.settings, version, self.checkClientVersionDone)
         checker.registerHandler(RSYNC_NO_NETWORK, self.checkClientVersionFailedNoNetwork)
@@ -194,7 +195,7 @@ class Upgrader(dispatch.EventDispatcher):
             self.publishEvent(CLIENT_VERSION_OK)
 
     def getUpgrade(self, version, excludes):
-        if self.verbose >= 1: print "Upgrader::getUpgrade"
+        if self.verbose >= 1: self.message("Upgrader::getUpgrade")
         if platform.system() == "Windows":
             upgrades = "/upgrades"
         else:
@@ -203,7 +204,7 @@ class Upgrader(dispatch.EventDispatcher):
         self.upgradeStage1(version)
 
     def upgradeStage1(self, version):
-        if self.verbose > 1: print "Upgrade::upgrade to version " + version
+        if self.verbose > 1: self.message("Upgrade::upgrade to version " + version)
         stage1 = DryrunUpgrade(self.config, self.settings, version)
         stage1.registerHandler(TICK, lambda ratio, message: self.publishEvent(TICK, ratio, message))
         stage1.registerHandler(DRY_RUN_DONE, lambda files_count: self.upgradeStage2(version, files_count))
@@ -226,5 +227,5 @@ class Upgrader(dispatch.EventDispatcher):
         stage2.spawn()
         
     def upgradeReady(self):
-        if self.verbose > 1: print "Upgrade::upgradeReady"
+        if self.verbose > 1: self.message("Upgrade::upgradeReady")
         self.publishEvent(UPGRADE_READY, self.target, Constants.UPGRADES_DIR)

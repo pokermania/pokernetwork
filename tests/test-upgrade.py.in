@@ -35,6 +35,10 @@ sys.path.insert(0, "..")
 import unittest
 from twisted.trial import runner
 
+from tests.testmessages import silence_all_messages, restore_all_messages, search_output
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokernetwork.pokerclient import PokerClientFactory
 from pokernetwork import dispatch
 
@@ -74,15 +78,11 @@ class CheckClientVersionMockup(CheckClientVersion):
 class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-        self.stdout = sys.stdout
-        import StringIO
-        self.output = StringIO.StringIO()
-        sys.stdout = self.output
+        silence_all_messages()
 
 # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
-        self.output.close()
-        sys.stdout = self.stdout
+        restore_all_messages()
         
 # -----------------------------------------------------------------------------------------------------
     def testCheckClientVersionFailedAndNeedUpgrade(self):
@@ -94,7 +94,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	self.assertEquals(False, self.checker.rsyncFailedCalled)
 	self.assertEquals(True, self.checker.rsyncDoneCalled)
 	self.assertEquals(True, self.checker.needUpgrade)
-	self.assertEquals("*CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason\n", self.output.getvalue())
+	self.assertEquals(search_output("CheckClientVersion.failed logs:dummy log reason:dummy reason"), True)
 
     def testCheckClientVersionFailedAndClientVersionOk(self):
 	self.checker = CheckClientVersionMockup((1, 1, 20))
@@ -104,7 +104,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	self.assertEquals(False, self.checker.rsyncFailedCalled)
 	self.assertEquals(True, self.checker.rsyncDoneCalled)
 	self.assertEquals(False, self.checker.needUpgrade)
-	self.assertEquals("*CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason\n", self.output.getvalue())
+	self.assertEquals(search_output("CheckClientVersion.failed logs:dummy log reason:dummy reason"), True)
 
     def testCheckClientVersionFailedAndNoVersionMatched(self):
 	self.checker = CheckClientVersionMockup((1, 1, 20))
@@ -113,7 +113,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	self.assertEquals(True, self.checker.rsyncFailedCalled)
 	self.assertEquals(False, self.checker.rsyncDoneCalled)
 	self.assertEquals(False, self.checker.needUpgrade)
-	self.assertEquals("*CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason\n", self.output.getvalue())
+	self.assertEquals(search_output("CheckClientVersion.failed logs:dummy log reason:dummy reason"), True)
 
 class PokerSettingsMockupSource:
     def __init__(self, source):

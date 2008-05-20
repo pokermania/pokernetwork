@@ -1093,9 +1093,11 @@ class PokerTable:
     def joinPlayer(self, client, serial):
         game = self.game
         #
-        # Silently do nothing if already joined
+        # Nothing to be done except sending all packets
+        # Useful in disconnected mode to resume a session.
         #
         if self.isJoined(client):
+            client.join(self);
             return True
 
         if len(client.tables) >= self.factory.simultaneous:

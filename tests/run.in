@@ -82,6 +82,13 @@ case "$1" in
 *coverage-reset) @PYTHON@ ${srcdir}/coverage.py -e ;;
 
 *coverage-report) 
+        @echo 
+        @echo "Before commiting a modification to the code, check all lines"
+        @echo "modified or added are covered by the tests."
+        @echo "cd /tmp ; svn co svn+ssh://loic@svn.gna.org/svn/pokersource/trunk/poker-network"
+        @echo "cd poker-network ; autoreconf -fi ; ./configure ; make check"
+        @echo "diff -ru tests/annotated /usr/src/pokersource/poker-network/tests/annotated | grep '^\+!'"
+        @echo 
         output=$( @PYTHON@ ${srcdir}/coverage.py -m -r ${COVERAGE_FILES} )
         rm -fr annotated ; mkdir annotated
         @PYTHON@ ${srcdir}/coverage.py -a -d annotated ${COVERAGE_FILES}

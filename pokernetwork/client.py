@@ -60,11 +60,11 @@ class UGAMEClientProtocol(UGAMEProtocol):
         if self.established != 0:
             self.ping()
             if self.factory.verbose > 2:
-                print "%ssendPacket(%d) %s " % ( self._prefix, self.user.serial, packet )
+                self.message("%ssendPacket(%d) %s " % ( self._prefix, self.user.serial, packet ))
             self.dataWrite(packet.pack())
         else:
             if self.factory.verbose > 2:
-                print "%ssendPacket bufferized %s " % ( self._prefix, packet )
+                self.message("%ssendPacket bufferized %s " % ( self._prefix, packet ))
             self.bufferized_packets.append(packet)
 
     def ping(self):
@@ -75,7 +75,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
             self._ping_timer.reset(self._ping_delay)
         else:
             if self.factory.verbose > 6:
-                print "%ssend ping" % self._prefix
+                self.message("%ssend ping" % self._prefix)
             self.dataWrite(PacketPing().pack())
             self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
         
@@ -100,7 +100,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self.factory.protocol_instance = None
         UGAMEProtocol.connectionLost(self, reason)
         if not reason.check(error.ConnectionDone) and self.factory.verbose > 3:
-            print "UGAMEClient.connectionLost %s" % reason
+            self.message("UGAMEClient.connectionLost %s" % reason)
         d = self.connection_lost_deferred
         self.connection_lost_deferred = None
         d.callback(self)
@@ -114,6 +114,12 @@ class UGAMEClientFactory(protocol.ClientFactory):
         self.verbose = 0
         self.established_deferred = defer.Deferred()
 
+    def error(self, string):
+        self.message("ERROR " + string)
+        
+    def message(self, string):
+        print string
+        
     def buildProtocol(self, addr):
         instance = self.protocol()
         instance.factory = self

@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #
 # Mekensleep
@@ -101,6 +102,12 @@ class PokerChild(dispatch.EventDispatcher):
             else:
                 self.pokerrc = '.'
 
+    def error(self, string):
+        self.message("ERROR " + str(string))
+        
+    def message(self, string):
+        print "PokerChild: " + str(string)
+        
     def kill(self):
         if not self.ready:
             return -1
@@ -112,10 +119,10 @@ class PokerChild(dispatch.EventDispatcher):
                 self.pid = int(fd.read(512))
                 fd.close()
                 if self.verbose:
-                    print "found %s pid %d in %s" % ( self.commandName, self.pid, path )
+                    self.message("found %s pid %d in %s" % ( self.commandName, self.pid, path ))
         else:
             if self.verbose:
-                print "killing " + " ".join(self.commandLine)
+                self.message("killing " + " ".join(self.commandLine))
 
         if self.pid:
             if platform.system() == "Windows":
@@ -123,17 +130,17 @@ class PokerChild(dispatch.EventDispatcher):
                     tokill=self.commandName
                     killProcName(tokill)
                 except:
-                    print "%s terminate()" % ( tokill )
+                    self.message("%s terminate()" % ( tokill ))
             else:
                 try:
                     os.kill(self.pid, 9)
             	    try:
                         os.waitpid(self.pid, 0)
                     except OSError:
-                        print "cannot wait for %s process %d to die : %s" % ( self.commandName, self.pid, sys.exc_value )
+                        self.message("cannot wait for %s process %d to die : %s" % ( self.commandName, self.pid, sys.exc_value ))
 
                 except:
-                    print "%s kill(%d,9) : %s" % ( self.commandName, self.pid, sys.exc_value )
+                    self.message("%s kill(%d,9) : %s" % ( self.commandName, self.pid, sys.exc_value ))
 
         if exists(path):
             os.remove(path)
@@ -148,14 +155,14 @@ class PokerChild(dispatch.EventDispatcher):
         fd.write(str(pid))
         fd.close()
         if self.verbose:
-            print "%s pid %d saved in %s" % ( what, pid, path )
+            self.message("%s pid %d saved in %s" % ( what, pid, path ))
         return pid
     
     def spawn(self):
         if not self.ready:
             return False
         
-        print "%s: %s" % (self.commandName, join(self.commandLine))
+        self.message("%s: %s" % (self.commandName, join(self.commandLine)))
         import signal
         handler = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -163,7 +170,7 @@ class PokerChild(dispatch.EventDispatcher):
             self.commandLine[0] = abspath(self.commandLine[0])
             cwd = os.getcwd()
             if self.verbose:
-                print "spawn in " + self.spawnInDir
+                self.message("spawn in " + self.spawnInDir)
             os.chdir(self.spawnInDir)
         if platform.system() == "Windows":
             commandLine = map(lambda x: "'%s'" % x, self.commandLine)
@@ -215,7 +222,7 @@ class PokerChildBrowser(PokerChild):
         if self.ready:
             self.spawn()
         else:
-            print "PokerChildBrowser: no URL in /settings/web, cannot browse web"
+            self.message("PokerChildBrowser: no URL in /settings/web, cannot browse web")
 
     def configure(self, path):
         if not self.url:
@@ -225,7 +232,7 @@ class PokerChildBrowser(PokerChild):
         self.commandName = split(self.commandLine[0],"/").pop()
         self.pidFile = self.commandName
         if self.verbose:
-            print "PokerChildBrowser: command line " + str(self.commandLine)
+            self.message("PokerChildBrowser: command line " + str(self.commandLine))
         return True
 
     def spawn(self):
@@ -290,7 +297,7 @@ class PokerRsync(PokerChild, ProcessProtocol):
 
     def spawn(self):
         if self.verbose > 1:
-            print "PokerRsync::spawn: " + join(self.rsync)
+            self.message("PokerRsync::spawn: " + join(self.rsync))
         dir = self.settings.headerGet("/settings/rsync/@dir")
         if platform.system() == "Windows":
             self.proc = reactor.spawnProcess(self, self.rsync[0], args = self.rsync[1:], path = dir, win32flags = win32process.DETACHED_PROCESS)
@@ -300,10 +307,10 @@ class PokerRsync(PokerChild, ProcessProtocol):
                                              childFDs = childFDs)
 
     def line(self, string):
-        print "%s" % string
+        self.message("%s" % string)
 
     def errReceived(self, chunk):
-        print "ERROR: PokerRsync " + chunk
+        self.message("ERROR: PokerRsync " + chunk)
         self.errors.append(chunk)
         
     def outReceived(self, chunk):
@@ -338,5 +345,5 @@ class PokerRsync(PokerChild, ProcessProtocol):
         if isinstance(reason.value, error.ProcessDone):
             self.done()
         else:
-            if self.verbose > 2: print "PokerRsync::processEnded: " + str(reason)
+            if self.verbose > 2: self.message("PokerRsync::processEnded: " + str(reason))
             self.failed("".join(self.errors), reason)

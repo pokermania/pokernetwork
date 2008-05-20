@@ -49,7 +49,7 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
         
     #--------------------------------------------------------------    
     def test_all(self):
-        verbose = int(os.environ.get('VERBOSE_T', '3'))
+        verbose = int(os.environ.get('VERBOSE_T', '-1'))
         for type_index in pokerpackets._TYPES:
             if pokerpackets.PacketFactory.has_key(type_index):
                 if verbose > 0:

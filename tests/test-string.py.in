@@ -31,6 +31,10 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokerui.pokerrenderer import PokerRenderer
 from pokerui.pokerrenderer import  LEAVING_DONE, CANCELED, SIT_OUT, LEAVING, LEAVING_CONFIRM, JOINING, JOINING_MY, REBUY, PAY_BLIND_ANTE, PAY_BLIND_ANTE_SEND, MUCK, USER_INFO, HAND_LIST, SEARCHING_MY_CANCEL, SEARCHING_MY, LOBBY, IDLE, OUTFIT, QUIT, CASHIER, QUIT_DONE, TOURNAMENTS, TOURNAMENTS_REGISTER, TOURNAMENTS_UNREGISTER,  SEATING, LOGIN, BUY_IN
 from pokerui.pokerinterface import INTERFACE_YESNO
@@ -50,7 +54,7 @@ class PokerRendererMockup(PokerRenderer):
 			    'event': "emThumbUp"}]
 	self.verbose = 3
 	self.protocol = PokerProtocolMockup()
-        self.message = None
+        self.message_string = None
         self.state = None
         self.state_hands = {'Total':None}
         self.stream_mode = True
@@ -60,7 +64,7 @@ class PokerRendererMockup(PokerRenderer):
         
 
     def showMessage(self, message, callback):
-        self.message = message
+        self.message_string = message
 
     def state2hide(self):
         return True
@@ -81,11 +85,11 @@ class PokerRendererMockup(PokerRenderer):
         pass
 
     def showYesNoBox(self, message):
-        self.message = message
+        self.message_string = message
         pass
  
     def showBlind(self, message, string):
-        self.message = message
+        self.message_string = message
         pass
 
     def showBuyIn(self):
@@ -138,7 +142,7 @@ class PokerInterfaceMockup(PokerInterface):
 	self.callbacks = {}
         self.legend = None
         self.label = None
-        self.message = None
+        self.message_string = None
         self._command = None
         pass
 
@@ -235,39 +239,39 @@ class PokerRendererTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def test_showRank(self):
         self.renderer.showYourRank(100, 5, 10, 10000)
-        self.assertEquals("Tourney 100\n Your rank is 5 on 10\nYou won 100", self.renderer.message)
+        self.assertEquals("Tourney 100\n Your rank is 5 on 10\nYou won 100", self.renderer.message_string)
 
     #------------------------------------------------------------------------------------------------------
     def test_quit(self):
         self.renderer.quit()
-        self.assertEquals("Do you really want to quit ?", self.renderer.message)
+        self.assertEquals("Do you really want to quit ?", self.renderer.message_string)
 
     #------------------------------------------------------------------------------------------------------
     def test_payAnte(self):
         self.renderer.payAnte("game", 10)
-        self.assertEquals("Pay the ante (10) ?", self.renderer.message)
+        self.assertEquals("Pay the ante (10) ?", self.renderer.message_string)
 
     #------------------------------------------------------------------------------------------------------
     def test_payBlind(self):
         self.renderer.payBlind("game", 10, 1, "state")
-        self.assertEquals("Pay the big blind (0.10) + dead (0.01) ?", self.renderer.message)
+        self.assertEquals("Pay the big blind (0.10) + dead (0.01) ?", self.renderer.message_string)
         self.renderer.payBlind("game", 10, -1, "big")
-        self.assertEquals("Pay the big blind (0.10) ?", self.renderer.message)
+        self.assertEquals("Pay the big blind (0.10) ?", self.renderer.message_string)
         self.renderer.payBlind("game", 10, -1, "state")
-        self.assertEquals("Pay the small blind (0.10) ?", self.renderer.message)
+        self.assertEquals("Pay the small blind (0.10) ?", self.renderer.message_string)
 
     #------------------------------------------------------------------------------------------------------
     def test_handleConnection(self):
         self.packet.type = PACKET_POKER_SEAT
         self.packet.seat = 255
         self.renderer._handleConnection("protocol", self.packet)
-        self.assertEquals("This seat is busy", self.renderer.message)
+        self.assertEquals("This seat is busy", self.renderer.message_string)
 
     #------------------------------------------------------------------------------------------------------
     def test_requestBuyIn(self):
 
         self.renderer.requestBuyIn(GameMockup(50,100,100,True))
-        self.assertEquals("You can't bring more money\nto the table", self.renderer.message)
+        self.assertEquals("You can't bring more money\nto the table", self.renderer.message_string)
  
         self.renderer.requestBuyIn(GameMockup(50,100,60,True))
         self.assertEquals("How much do you want to rebuy?", self.renderer.factory.interface.legend)
@@ -282,11 +286,11 @@ class PokerRendererTestCase(unittest.TestCase):
         self.assertEquals("Maximum buy in", self.renderer.factory.interface.label)
 
         self.renderer.requestBuyIn(GameMockup(500,1000,60,False))
-        self.assertEquals("You don't have enough money to play on this table.\nTo get money go in menu 'Lobby' and click 'Cash in'.\n(if you are in play money you might need to win more\nmoney to sit at this table)", self.renderer.message)
+        self.assertEquals("You don't have enough money to play on this table.\nTo get money go in menu 'Lobby' and click 'Cash in'.\n(if you are in play money you might need to win more\nmoney to sit at this table)", self.renderer.message_string)
 
         self.renderer.protocol.user_info = UserInfoMockup(0)
         self.renderer.requestBuyIn(GameMockup(50,1000,0,True))
-        self.assertEquals("You have no money left", self.renderer.message)
+        self.assertEquals("You have no money left", self.renderer.message_string)
 
     #--------------------------------------------------------------------------------------------------------
     def test_handleMenu(self):
@@ -294,45 +298,45 @@ class PokerRendererTestCase(unittest.TestCase):
         confirm = "\nThe game must be restarted for this change to take effect\nDo you want to restart the game now ?"
  
         self.renderer.handleMenu("resolution", "resolution_auto")
-        self.assertEquals("Screen resolution changed"+confirm, self.renderer.message)
+        self.assertEquals("Screen resolution changed"+confirm, self.renderer.message_string)
  
         self.renderer.handleMenu("display", "new res")
-        self.assertEquals("Display changed to new res"+confirm, self.renderer.message)
+        self.assertEquals("Display changed to new res"+confirm, self.renderer.message_string)
 
         self.renderer.handleMenu("fullscreen", None)
-        self.assertEquals("Screen resolution changed"+confirm, self.renderer.message)
+        self.assertEquals("Screen resolution changed"+confirm, self.renderer.message_string)
         self.renderer.handleMenu("graphics", None)
-        self.assertEquals("Graphics quality changed"+confirm, self.renderer.message)
+        self.assertEquals("Graphics quality changed"+confirm, self.renderer.message_string)
 
     #--------------------------------------------------------------------------------------------------------
     def test_showHands(self):
     
         self.renderer.showHands(None, None)
-        self.assertEquals("Your hand history is empty", self.renderer.message)
+        self.assertEquals("Your hand history is empty", self.renderer.message_string)
 
     #--------------------------------------------------------------------------------------------------------
     def test_changeState(self):
  
         self.renderer.changeState(LOGIN, None, None)
-        self.assertEquals("Already logged in", self.renderer.message)
+        self.assertEquals("Already logged in", self.renderer.message_string)
 
         self.renderer.changeState(SEATING, None, None)
-        self.assertEquals("You cannot do that now", self.renderer.message)
+        self.assertEquals("You cannot do that now", self.renderer.message_string)
 
         self.renderer.changeState(LEAVING_CONFIRM, GameMockup(0,0,0,True), 0)
-        self.assertEquals("Do you really want to fold your hand\nand leave the table ?", self.renderer.message)
+        self.assertEquals("Do you really want to fold your hand\nand leave the table ?", self.renderer.message_string)
 
         self.renderer.changeState(LEAVING_CONFIRM, GameMockup(0,0,0,True), -1)
-        self.assertEquals("Do you really want to leave the table ?", self.renderer.message)
+        self.assertEquals("Do you really want to leave the table ?", self.renderer.message_string)
 
         self.renderer.changeState(OUTFIT, None, None)
-        self.assertEquals("You must leave the table to change your outfit", self.renderer.message)
+        self.assertEquals("You must leave the table to change your outfit", self.renderer.message_string)
 
     #---------------------------------------------------------------------------------------------------------
     def test_quit(self):
 
         self.renderer.quit()
-        self.assertEquals("Do you really want to quit ?", self.renderer.message)
+        self.assertEquals("Do you really want to quit ?", self.renderer.message_string)
 
 
 #------------------------------------------------------------------------------------------------------
@@ -355,7 +359,7 @@ class PokerInterfaceTestCase(unittest.TestCase):
     #------------------------------------------------------------------------------------------------------
     def test_updateLobby(self):
         self.interface.updateLobby(1,1,1,1,1,())
-        print self.interface._command
+        #print self.interface._command
         self.assertEquals(('lobby', 'info', 'Players: 1', 'Tables: 1'), self.interface._command)
 
 def GetTestSuite():

@@ -41,16 +41,17 @@ import twisted.internet.base
 from twisted.internet import reactor, defer, error, base
 from twisted.python import failure, runtime
 
-from tests.testmessages import silence_all_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
-
 from pokerengine import pokertournament
 #
 # Must be done before importing pokerclient or pokerclient
 # will have to be patched too.
 #
 from tests import testclock
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
@@ -138,7 +139,6 @@ class PokerClientTestCase(unittest.TestCase):
         # Setup server
         #
         self.service = pokerservice.PokerService(settings)
-        self.service.verbose = 6
         self.service.startService()
         factory = pokerservice.IPokerFactory(self.service)
         self.p = reactor.listenTCP(0, factory,
@@ -194,7 +194,7 @@ class PokerClientTestCase(unittest.TestCase):
 
     def quit(self, args):
         client = args[0]
-        if self.service.verbose > 0:
+        if verbose > 0:
             print "test-pokerclient: quit client " + str(client.getSerial())
         client.sendPacket(PacketQuit())
         if hasattr(client, "transport"):
@@ -236,7 +236,8 @@ class PokerClientTestCase(unittest.TestCase):
         client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
         d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
         def validate((client, packet),):
-            print "check_cashIn " + str(packet)
+            if verbose > 0:
+                print "check_cashIn " + str(packet)
             self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
             self.assertEquals(2, len(packet.money))
             self.assertEquals([1, 2], packet.money.keys())
@@ -284,12 +285,14 @@ class PokerClientTestCase(unittest.TestCase):
         game = client.getGame(packet.game_id)
         player = game.getPlayer(packet.serial)
         if game.canRaise(player.serial):
-            print "(A) ALLIN RAISE"
+            if verbose > 0:
+                print "(A) ALLIN RAISE"
             client.sendPacket(PacketPokerRaise(serial = packet.serial,
                                                game_id = packet.game_id,
                                                amount = player.money))
         else:
-            print "(A) ALLIN CALL"
+            if verbose > 0:
+                print "(A) ALLIN CALL"
             client.sendPacket(PacketPokerCall(serial = packet.serial,
                                               game_id = packet.game_id))
 
@@ -301,18 +304,21 @@ class PokerClientTestCase(unittest.TestCase):
         game = client.getGame(packet.game_id)
         player = game.getPlayer(packet.serial)
         if game.canCheck(player.serial):
-            print "(A) CHECK"
+            if verbose > 0:
+                print "(A) CHECK"
             client.sendPacket(PacketPokerCheck(serial = packet.serial,
                                                game_id = packet.game_id))
         else:
-            print "(A) CALL"
+            if verbose > 0:
+                print "(A) CALL"
             client.sendPacket(PacketPokerCall(serial = packet.serial,
                                               game_id = packet.game_id))
 
         return client.packetDeferred(True, PACKET_POKER_SELF_IN_POSITION)
         
     def win(self, (client, packet), expect = None):
-        print "(A) WIN " + str(packet)
+        if verbose > 0:
+            print "(A) WIN " + str(packet)
         if expect:
             return client.packetDeferred(True, expect)
         else:
@@ -333,14 +339,16 @@ class PokerClientTestCase(unittest.TestCase):
     test04_playHand.timeout = 200
     
     def getUserInfo(self, (client, packet)):
-        print "getUserInfo " + str(packet)
+        if verbose > 0:
+            print "getUserInfo " + str(packet)
         game = client.getGame(packet.game_id)
         self.assertEqual(False, game.isRunning())
         client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
         return client.packetDeferred(True, PACKET_POKER_USER_INFO)
 
     def printUserInfo(self, (client, packet)):
-        print "printUserInfo " + str(packet)
+        if verbose > 0:
+            print "printUserInfo " + str(packet)
         self.assertEqual(PACKET_POKER_USER_INFO, packet.type)
         return (client, packet)
         
@@ -418,7 +426,8 @@ class PokerClientTestCase(unittest.TestCase):
         return d
 
     def processingHand(self, (client, packet),):
-        print "processingHand"
+        if verbose > 0:
+            print "processingHand"
         self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
         client.sendPacket(PacketPokerProcessingHand(serial = client.getSerial(),
                                                     game_id = TABLE1))
@@ -440,7 +449,8 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.processingHand)
             d[index].addCallback(self.allIn)
             def atShowdown((client, packet),):
-                print "atShowdown"
+                if verbose > 0:
+                    print "atShowdown"
                 client.sendPacket(PacketPokerRebuy(serial = client.getSerial(),
                                                    game_id = TABLE1,
                                                    amount = 200000))
@@ -451,7 +461,8 @@ class PokerClientTestCase(unittest.TestCase):
             if index == 1:
                 d[index].addCallback(self.readyToPlay)
             def nextTurn((client, packet),):
-                print "nextTurn"
+                if verbose > 0:
+                    print "nextTurn"
                 return client.packetDeferred(True, PACKET_POKER_START)
             d[index].addCallback(nextTurn)
             #
@@ -461,7 +472,8 @@ class PokerClientTestCase(unittest.TestCase):
             #
             if index == 0:
                 def checkBugousClient((client, packet),):
-                    print "checkBugousClient for %d" % client.getSerial()
+                    if verbose > 0:
+                        print "checkBugousClient for %d" % client.getSerial()
                     table = self.service.tables[0]
                     has_bugous = False
                     for (serial, server_client) in table.serial2client.iteritems():
@@ -527,11 +539,13 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(lambda (client, packet): self.cashOut(client, "ONE", 100))
         d.addCallback(self.cashOutCommit)
         def check_cashOut((client, packet),):
-            print "check_cashOut_zero"
+            if verbose > 0:
+                print "check_cashOut_zero"
             client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
             d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
             def validate((client, packet),):
-                print "check_cashOut " + str(packet)
+                if verbose > 0:
+                    print "check_cashOut " + str(packet)
                 self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
                 self.assertEquals(2, len(packet.money))
                 self.assertEquals([1, 2], packet.money.keys())
@@ -554,11 +568,13 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(lambda (client, packet): self.cashOut(client, "ONE", 50))
         d.addCallback(self.cashOutCommit)
         def check_cashOut((client, packet),):
-            print "check_cashOut"
+            if verbose > 0:
+                print "check_cashOut"
             client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
             d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
             def validate((client, packet),):
-                print "check_cashOut " + str(packet)
+                if verbose > 0:
+                    print "check_cashOut " + str(packet)
                 self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
                 self.assertEquals(2, len(packet.money))
                 self.assertEquals([1, 2], packet.money.keys())
@@ -587,7 +603,8 @@ class PokerClientTestCase(unittest.TestCase):
 
         d.addCallback(cashOutFail)
         def check_cashOutFail((client, packet),):
-            print "check_cashOutFail " + str(packet)
+            if verbose > 0:
+                print "check_cashOutFail " + str(packet)
             self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
             self.assertEquals(2, len(packet.money))
             self.assertEquals([1, 2], packet.money.keys())
@@ -690,7 +707,8 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.register_sitngo2)
             if index == 0:
                 def sitout((client, packet),):
-                    print "(A) SITOUT"
+                    if verbose > 0:
+                        print "(A) SITOUT"
                     self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
                     client.sendPacket(PacketPokerSitOut(serial = packet.serial,
                                                         game_id = packet.game_id))
@@ -700,7 +718,8 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(sitout)
             else:
                 def callNraise((client, packet),):
-                    print "(A) CALLNRAISE"
+                    if verbose > 0:
+                        print "(A) CALLNRAISE"
                     self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
                     game = client.getGame(packet.game_id)
                     player = game.getPlayer(packet.serial)
@@ -734,12 +753,14 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.register_sitngo2)
             if index == 0:
                 def timeout((client, packet),):
-                    print "(A) TIMEOUT"
+                    if verbose > 0:
+                        print "(A) TIMEOUT"
                     self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
                     return client.packetDeferred(True, PACKET_POKER_TIMEOUT_NOTICE)
                 d[index].addCallback(timeout)
                 def sitback((client, packet),):
-                    print "(A) SITBACK"
+                    if verbose > 0:
+                        print "(A) SITBACK"
                     self.assertEqual(PACKET_POKER_TIMEOUT_NOTICE, packet.type)
                     client.sendPacket(PacketPokerSit(serial = packet.serial,
                                                      game_id = packet.game_id))
@@ -747,7 +768,8 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(sitback)
             else:
                 def callNraise((client, packet),):
-                    print "(A) CALLNRAISE"
+                    if verbose > 0:
+                        print "(A) CALLNRAISE"
                     self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
                     game = client.getGame(packet.game_id)
                     player = game.getPlayer(packet.serial)
@@ -772,7 +794,8 @@ class PokerClientTestCase(unittest.TestCase):
             self.assertEqual(client.getSerial(), packet.serial)
             game = client.getGame(packet.game_id)
             player = game.getPlayer(packet.serial)
-            print "(A) ALMOST ALLIN RAISE " + str(packet.serial)
+            if verbose > 0:
+                print "(A) ALMOST ALLIN RAISE " + str(packet.serial)
             client.sendPacket(PacketPokerRaise(serial = packet.serial,
                                                game_id = packet.game_id,
                                                amount = player.money - 50))
@@ -783,7 +806,8 @@ class PokerClientTestCase(unittest.TestCase):
             self.assertEqual(client.getSerial(), packet.serial)
             game = client.getGame(packet.game_id)
             player = game.getPlayer(packet.serial)
-            print "(A) FOLD " + str(packet.serial)
+            if verbose > 0:
+                print "(A) FOLD " + str(packet.serial)
             client.sendPacket(PacketPokerFold(serial = packet.serial,
                                               game_id = packet.game_id))
             return client.packetDeferred(True, expect)
@@ -792,7 +816,8 @@ class PokerClientTestCase(unittest.TestCase):
             self.assertEqual(client.getSerial(), packet.muckable_serials[0])
             game = client.getGame(packet.game_id)
             player = game.getPlayer(packet.serial)
-            print "(A) MUCK " + str(client.getSerial())
+            if verbose > 0:
+                print "(A) MUCK " + str(client.getSerial())
             client.sendPacket(PacketPokerMuckAccept(serial = client.getSerial(),
                                                     game_id = packet.game_id))
             return client.packetDeferred(True, PACKET_POKER_WIN)
@@ -802,7 +827,8 @@ class PokerClientTestCase(unittest.TestCase):
             self.assertEqual(client.getSerial(), packet.serial)
             game = client.getGame(packet.game_id)
             player = game.getPlayer(packet.serial)
-            print "(A) ALLIN CALL " + str(packet.serial)
+            if verbose > 0:
+                print "(A) ALLIN CALL " + str(packet.serial)
             client.sendPacket(PacketPokerCall(serial = packet.serial,
                                               game_id = packet.game_id))
             return client.packetDeferred(True, expect)

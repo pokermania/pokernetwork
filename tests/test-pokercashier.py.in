@@ -235,7 +235,7 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor.execute("SELECT transaction_id, user_serial, currency_serial, name, serial, value, status, application_data FROM counter WHERE status = 'c'")
         self.assertEquals(1, cursor.rowcount)
         counter_row = cursor.fetchone()
-        print "counter_row " + str(counter_row)
+        #print "counter_row " + str(counter_row)
         self.assertEquals(15, counter_row['value'])
         self.assertEquals(packet.name, counter_row['name'])
         self.assertEquals(packet.application_data, counter_row['application_data'])
@@ -248,7 +248,7 @@ class PokerCashierTestCase(unittest.TestCase):
         return self.cashier.cashOutCommit(PacketPokerCashOutCommit(transaction_id = packet.name))
         
     def check03_cashOutCommit(self, count):
-        print "check03_cashOutCommit " + str(count)
+        #print "check03_cashOutCommit " + str(count)
         cursor = self.db.cursor(DictCursor)
 
         cursor.execute("SELECT * FROM counter ORDER BY value")

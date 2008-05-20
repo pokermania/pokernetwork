@@ -67,6 +67,12 @@ class UGAMEProtocol(protocol.Protocol):
         self._ping_delay = 5
         if not hasattr(self, 'factory'): self.factory = None
 
+    def error(self, string):
+        self.message("ERROR " + string)
+        
+    def message(self, string):
+        print self._prefix + string
+        
     def setPingDelay(self, ping_delay):
         self._ping_delay = ping_delay
 
@@ -88,10 +94,10 @@ class UGAMEProtocol(protocol.Protocol):
     def connectionLost(self, reason):
         self.established = 0
         if self.factory and self.factory.verbose > 5:
-            print "connectionLost: reason = " + str(reason)
+            self.message("connectionLost: reason = " + str(reason))
         if not self._protocol_ok:
             if self.factory and self.factory.verbose > 1:
-                print "connectionLost: reason = " + str(reason)
+                self.message("connectionLost: reason = " + str(reason))
             self.protocolInvalid("different", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
         
     def _sendVersion(self):
@@ -125,7 +131,7 @@ class UGAMEProtocol(protocol.Protocol):
             self._packet_len = len(buf)
             self._expected_len = Packet.format_size
             if self.factory and self.factory.verbose > 1:
-                print "protocol established"
+                self.message("protocol established")
             self.protocolEstablished()
             if self._packet_len > 0:
                 self.dataReceived("")
@@ -194,7 +200,7 @@ class UGAMEProtocol(protocol.Protocol):
                 lags.append(lag)
                 if queue.delay > now and lag > self._lagmax:
                     if self.factory and self.factory.verbose > 0:
-		        print " => queue %d delay canceled because lag too high" % id
+		        self.message(" => queue %d delay canceled because lag too high" % id)
                     queue.delay = 0
                 #
                 # If time has come, process one packet
@@ -214,7 +220,7 @@ class UGAMEProtocol(protocol.Protocol):
                         self._queues[id].delay = delay
                 else:
                     if self.factory and self.factory.verbose > 5:
-                        print "wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) )
+                        self.message("wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) ))
             #
             # remember the worst lag
             #
@@ -257,16 +263,16 @@ class UGAMEProtocol(protocol.Protocol):
                         packet = PacketFactory[type.type]()
                         buf = packet.unpack(buf)
                         if self.factory and self.factory.verbose > 4:
-                            print "%s(%d bytes) => %s" % ( self._prefix, type.length, packet )
+                            self.message("%s(%d bytes) => %s" % ( self._prefix, type.length, packet ))
                         if self._poll:
                             self.pushPacket(packet)
                         else:
                             self._handler(packet)
                     else:
                         if self.factory and self.factory.verbose >= 0:                        
-                            print "%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length )
+                            self.message("%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length ))
                         if self.factory and self.factory.verbose > 4:
-                            print "known types are %s " % PacketNames
+                            self.message("known types are %s " % PacketNames)
                         buf = buf[1:]
                     self._expected_len = Packet.format_size
                 else:

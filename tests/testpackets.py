@@ -24,7 +24,7 @@ import unittest
 class PacketsTestBase(unittest.TestCase):
 
     def setUp(self):
-        self.verbose = int(os.environ.get('VERBOSE_T', '3'))
+        self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
         
     @staticmethod
     def polute(packet):

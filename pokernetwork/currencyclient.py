@@ -150,8 +150,11 @@ class FakeCurrencyClient:
         self.check_note_result = True
         self.commit_result = True
         
+    def message(self, string):
+        print "FakeCurrencyClient: " + string
+        
     def breakNote(self, (url, serial, name, value), *values):
-        if Verbose: print "breakNote vaues %s" % str(values)
+        if Verbose: self.message("breakNote vaues %s" % str(values))
         if values: 
             values = map(int, values)
             values.sort()
@@ -181,7 +184,7 @@ class FakeCurrencyClient:
         return d
 
     def mergeNotes(self, *notes):
-        if Verbose: print "mergeNotes"
+        if Verbose: self.message("mergeNotes")
         self.serial += 1
         result = list(notes[0])
         result[1] = self.serial
@@ -194,7 +197,7 @@ class FakeCurrencyClient:
     meltNotes = mergeNotes
 
     def changeNote(self, note):
-        if Verbose: print "changeNote"
+        if Verbose: self.message("changeNote")
         self.serial += 1
         result = note.copy()
         result[1] = self.serial
@@ -204,20 +207,20 @@ class FakeCurrencyClient:
         return d
 
     def _buildNote(self, url, value):
-        if Verbose: print "_buildNote"
+        if Verbose: self.message("_buildNote")
         self.serial += 1
         name = "%040d" % self.serial
         return ( url, self.serial, name, value )
 
     def getNote(self, url, value):
-        if Verbose: print "getNote"
+        if Verbose: self.message("getNote")
         note = self._buildNote(url, value)
         d = defer.Deferred()
         reactor.callLater(0, lambda: d.callback(note))
         return d
 
     def checkNote(self, note):
-        if Verbose: print "checkNote"
+        if Verbose: self.message("checkNote")
         if self.check_note_result:
             result = note
         else:
@@ -227,7 +230,7 @@ class FakeCurrencyClient:
         return d
 
     def commit(self, url, transaction_id):
-        if Verbose: print "commit"
+        if Verbose: self.message("commit")
         if self.commit_result:
             result = "OK"
         else:
