@@ -1,7 +1,39 @@
-2008-05-19  Loic Dachary <loic@dachary.org>
+2008-05-20  Loic Dachary <loic@dachary.org>
 
 	* Release 1.6.0
 
+	* pokernetwork/client.py, pokernetwork/currencyclient.py,
+	  pokernetwork/pokerchildren.py, pokernetwork/pokerclient.py,
+	  pokernetwork/pokertable.py, pokernetwork/protocol.py,
+	  pokernetwork/server.py, pokernetwork/upgrade.py,
+	  pokerui/pokerinteractor.py, pokerui/pokerrenderer.py,
+	  tests/run.in, tests/test-pokeravatar.py.in,
+	  tests/test-pokercashier.py.in, tests/test-pokerchildren.py.in,
+	  tests/test-pokerclient.py.in,
+	  tests/test-pokerclientpackets.py.in,
+	  tests/test-pokerpackets.py.in, tests/test-pokerservice.py.in,
+	  tests/test-quit.py.in, tests/test-string.py.in,
+	  tests/test-upgrade.py.in, tests/testpackets.py: replace print
+	  with calls to self.message. systematic use of the testmessage.py
+	  library to control verbosity. comment on how to figure out if
+	  lines modified are covered by the python tests.
+	* tests/testmessages.py: re-implement all, implement reentrance,
+	  searching the logs. cover more poker-network files.
+	* tests/test-pokertable.py.in: implement the new TableJoin semantic
+	  (re-send the packets). Fix numerous timer & verbosity polution to
+	  reduce the test verbosity and run time.
+	* pokernetwork/pokerpackets.py: document the new TableJoin semantic
+	  (re-send the packets). Fix python-2.5 deprectation warnings.
+	  Cannonicalize packet sequence numbers.
+
+2008-05-19  Loic Dachary <loic@dachary.org>
+
+	* ChangeLog, NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, debian/changelog,
+	  examples/poker.bot.xml, examples/poker.server-monotone.xml,
+	  examples/poker.server.xml, pokerclient2d/poker2d.xml.in,
+	  pokernetwork/__init__.py, tests/conf/poker.client.xml.in,
+	  tests/test-packets.py.in: bump to version 1.6.0
 	* tests/testclock.py: clock must be set in reactor in twisted >=
 	  8.0.1
 	* tests/test-pokeravatar.py.in: test if explain can be sent
