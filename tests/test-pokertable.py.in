@@ -36,7 +36,13 @@ import copy
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
+from tests import testclock
+
+from tests.testmessages import silence_all_messages, redirect_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -151,8 +157,7 @@ class MockService:
             return None
 
     def message(self, message):
-        if self.verbose >= 0:
-            print "MockService " + message
+        print "MockService " + message
         
     def getName(self, serial):
         return "MockServiceName%d" % serial
@@ -266,9 +271,10 @@ class MockService:
         if self.testObject:
             self.testObject.assertEqual(gameId,  self.testObject.table1_value)
 
+if verbose < 0: redirect_messages(MockService)
+
 class MockClient:
     def __init__(self, serial):
-        self.verbose = int(os.environ.get('VERBOSE_T', '-1'))
         self.serial = serial
         self.deferred = None
         self.raise_if_packet = None
@@ -294,8 +300,7 @@ class MockClient:
         return False
 
     def message(self, message):
-        if self.verbose >= 0:
-            print "MockClient " + message
+        print "MockClient " + message
         
     def error(self, message):
         self.message("error " + message)
@@ -361,6 +366,9 @@ class MockClient:
                 self.url = "http://fake"
                 self.outfit = None
         return MockPlayerInfo(self)
+
+if verbose < 0: redirect_messages(MockClient)
+
 # --------------------------------------------------------------------------------
 class MockClientBot(MockClient):
     def getName(self):
@@ -383,6 +391,7 @@ class MockClientWithRemoveTable(MockClient):
 class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def setUp(self, settingsXmlStr=settings_xml):
+        testclock._seconds_reset()        
         global table1ID
         global table2ID
         table1ID = table1ID + 1
@@ -473,10 +482,11 @@ class PokerTableTestCase(unittest.TestCase):
         self.createPlayer(1)
         self.table.processingHand(1)
         self.table.game_delay["delay"] = 2
-        self.table.game_delay["start"] = time.time()
+        self.table.game_delay["start"] = testclock._seconds_value
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
+
     # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
@@ -965,7 +975,7 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.createPlayer(1)
         self.table.processingHand(1)
         self.table.game_delay["delay"] = 2
-        self.table.game_delay["start"] = time.time()
+        self.table.game_delay["start"] = testclock._seconds_value
         self.createPlayer(2)
         self.assertEqual(None, self.table.scheduleAutoDeal())
     # -------------------------------------------------------------------
@@ -1047,12 +1057,24 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
     def test27_buyinFailures(self):
         """This test doesn't matter in this subclass"""
         return True
+    # -------------------------------------------------------------------
+    def test28_joinTwice(self):
+        """Player join a second time : packets sent twice"""
+        player = self.createPlayer(1)
+        self.assertEqual(True, self.table.isJoined(player))
+        def join(table):
+            player.joined = True
+        player.join = join
+        self.assertEqual(True, self.table.joinPlayer(player, player.serial))
+        self.failUnless(player.joined)
+        
 # -------------------------------------------------------------------
 # This class tests the same operations as PokerTableTestCase but for tables that
 #  are transient.  Note the outcome of various operations are quite different
 #  when the table is transient.
 class PokerTableTestCaseTransient(PokerTableTestCase):
     def setUp(self, settingsXmlStr=settings_xml):
+        testclock._seconds_reset()        
         global table1ID
         global table2ID
         table1ID = table1ID + 1
@@ -1108,7 +1130,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.table.game.autoPlayer(1)
         self.createPlayer(2)
         self.table.game.autoPlayer(2)
-        self.table.game_delay["start"] = time.time()
+        self.table.game_delay["start"] = testclock._seconds_value
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
     # -------------------------------------------------------------------
@@ -1116,7 +1138,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.createPlayer(1)
         self.table.processingHand(1)
         self.table.game_delay["delay"] = 2
-        self.table.game_delay["start"] = time.time()
+        self.table.game_delay["start"] = testclock._seconds_value
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
@@ -1127,7 +1149,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.table.game.autoPlayer(1)
         self.createPlayer(2)
         self.table.game.autoPlayer(2)
-        self.table.game_delay["start"] = time.time() - 300
+        self.table.game_delay["start"] = testclock._seconds_value - 300
         self.table.scheduleAutoDeal()
         self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
         return self.clients[2].waitFor(PACKET_POKER_START)
@@ -1210,7 +1232,7 @@ def Run():
     seed(time.time())
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test01"
-    os.environ['VERBOSE_T'] = '4'
+#    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal))
