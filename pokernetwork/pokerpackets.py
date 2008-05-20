@@ -427,7 +427,8 @@ game_id: integer uniquely identifying a game.
         self.serial = kwargs.get("serial", 0) # accepted by constructor but otherwise ignored
 
     def pack(self):
-        return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, self.position)
+        position = self.position == -1 and 255 or self.position
+        return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, position)
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
@@ -1065,7 +1066,9 @@ game_id: integer uniquely identifying a game.
         self.previous_dealer = kwargs.get("previous_dealer", -1)
 
     def pack(self):
-        return Packet.pack(self) + pack(PacketPokerDealer.format, self.game_id, self.dealer, self.previous_dealer)
+        dealer = self.dealer == -1 and 255 or self.dealer
+        previous_dealer = self.previous_dealer == -1 and 255 or self.previous_dealer
+        return Packet.pack(self) + pack(PacketPokerDealer.format, self.game_id, dealer, previous_dealer)
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
@@ -1112,6 +1115,10 @@ PACKET_POKER_STREAM_MODE
 If the player cannot join the table for any reason, the packet
 PacketPokerTable with serial 0 will be sent. It won't be filled with
 any meaningfull information.
+
+If the player has already joined the table, the packets will be sent
+as if the player just joined. In this case the packet will have no
+side effect.
 
 Direction: server <= client
 
@@ -1468,7 +1475,8 @@ game_id: integer uniquely identifying a game.
         PacketPokerId.__init__(self, *args, **kwargs)
 
     def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerSeat.format, self.seat)
+        seat = self.seat == -1 and 255 or self.seat
+        return PacketPokerId.pack(self) + pack(PacketPokerSeat.format, seat)
 
     def unpack(self, block):
         block = PacketPokerId.unpack(self, block)
@@ -3869,7 +3877,7 @@ Direction: server <= client
     NONE = 0x0000
     ALL  = 0xFFFF
 
-Packet.infoDeclare(globals(), PacketPokerExplain, PacketInt, "POKER_EXPLAIN", 142) # 0x8e # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerExplain, PacketInt, "POKER_EXPLAIN", 142) # 142 # 0x8e # %SEQ%
 
 ########################################
 
@@ -3878,7 +3886,7 @@ class PacketPokerStatsQuery(PacketString):
     
     pass #pragma: no cover
     
-Packet.infoDeclare(globals(), PacketPokerStatsQuery, PacketString, "POKER_STATS_QUERY", 143) # 0x8f # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerStatsQuery, PacketString, "POKER_STATS_QUERY", 143) # 143 # 0x8f # %SEQ%
 
 ########################################
 
@@ -3892,7 +3900,7 @@ class PacketPokerStats(Packet):
         ('bytesout', 0, 'I'),
         )
 
-Packet.infoDeclare(globals(), PacketPokerStats, Packet, "POKER_STATS", 144) # 0x90 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerStats, Packet, "POKER_STATS", 144) # 144 # 0x90 # %SEQ%
 
 ########################################
 
@@ -3922,7 +3930,7 @@ game_id: integer uniquely identifying a game.
         ('rebuy_min', 0, 'I'),
         )
 
-Packet.infoDeclare(globals(), PacketPokerBuyInLimits, Packet, "POKER_BUY_IN_LIMITS", 145) # 0x91 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerBuyInLimits, Packet, "POKER_BUY_IN_LIMITS", 145) # 145 # 0x91 # %SEQ%
 
 _TYPES = range(50,149)
 
