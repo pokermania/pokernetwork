@@ -2640,7 +2640,7 @@ players: list of player serials participating in "game_id"
  for each player, a list of two numbers:
      name: name of the player
      chips: integer player chips in cent
-     flag: 0
+     flag: byte 0
     """
 
     format = "!H"
@@ -3156,8 +3156,8 @@ serial: integer uniquely identifying a tourney.
 players: list of player serials participating in "game_id"
  for each player, a list of two numbers:
      name: name of the player
-     chips: -1
-     flag: 0
+     chips: integer -1
+     flag: byte 0
     """
 
     type = PACKET_POKER_TOURNEY_PLAYERS_LIST
