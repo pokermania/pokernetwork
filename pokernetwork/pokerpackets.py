@@ -2637,6 +2637,10 @@ Direction: server => client
 
 game_id: integer uniquely identifying a game.
 players: list of player serials participating in "game_id"
+ for each player, a list of two numbers:
+     name: name of the player
+     chips: integer player chips in cent
+     flag: 0
     """
 
     format = "!H"
@@ -3143,6 +3147,18 @@ PACKET_POKER_TOURNEY_PLAYERS_LIST = 118 # 0x76 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY_PLAYERS_LIST] = "POKER_TOURNEY_PLAYERS_LIST"
 
 class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
+    """
+Semantics: List of players participating in tourney "serial". 
+
+Direction: server => client
+
+serial: integer uniquely identifying a tourney.
+players: list of player serials participating in "game_id"
+ for each player, a list of two numbers:
+     name: name of the player
+     chips: -1
+     flag: 0
+    """
 
     type = PACKET_POKER_TOURNEY_PLAYERS_LIST
 
