@@ -1,7 +1,26 @@
-2008-05-20  Loic Dachary <loic@dachary.org>
+2008-05-23  Loic Dachary <loic@dachary.org>
 
 	* Release 1.6.0
 
+	* pokernetwork/pokeravatar.py: Move PACKET_POKER_TABLE_JOIN
+	  handling before table selection otherwise it is ignored when the
+	  player has already joined the table.
+
+2008-05-22  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: PacketPokerTourneyPlayersList and
+	  PacketPokerPlayersList specify field type
+	* pokernetwork/pokerpackets.py: PacketPokerTourneyPlayersList and
+	  PacketPokerPlayersList documentation fixes
+
+2008-05-21  Loic Dachary <loic@dachary.org>
+
+	* debian/control, debian/control.unstable: poker2d depends on
+	  python-openssl
+
+2008-05-20  Loic Dachary <loic@dachary.org>
+
+	* tests/run.in: not running a makefile, @echo won't do no good
 	* pokernetwork/client.py, pokernetwork/currencyclient.py,
 	  pokernetwork/pokerchildren.py, pokernetwork/pokerclient.py,
 	  pokernetwork/pokertable.py, pokernetwork/protocol.py,
