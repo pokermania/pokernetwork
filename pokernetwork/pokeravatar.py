@@ -385,6 +385,14 @@ class PokerAvatar:
             self.listHands(packet, None)
             return
 
+        elif packet.type == PACKET_POKER_TABLE_JOIN:
+            table = self.service.getTable(packet.game_id)
+            if table:
+                if not table.joinPlayer(self, self.getSerial()):
+                    self.sendPacketVerbose(PacketPokerTable())
+            return
+
+
         table = self.packet2table(packet)
             
         if table:
@@ -566,12 +574,6 @@ class PokerAvatar:
                 table.handReplay(self, packet.serial)
 
             table.update()
-
-        elif packet.type == PACKET_POKER_TABLE_JOIN:
-            table = self.service.getTable(packet.game_id)
-            if table:
-                if not table.joinPlayer(self, self.getSerial()):
-                    self.sendPacketVerbose(PacketPokerTable())
 
         elif not table and packet.type == PACKET_POKER_HAND_REPLAY:
             table = self.createTable(PacketPokerTable())
