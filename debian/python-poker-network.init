@@ -28,8 +28,8 @@
 #
 ### BEGIN INIT INFO
 # Provides:          poker-network
-# Required-Start:    $syslog
-# Required-Stop:     $syslog
+# Required-Start: $local_fs $network mysqld
+# Required-Stop: $local_fs $network mysqld
 # Should-Start:      $local_fs
 # Should-Stop:       $local_fs
 # Default-Start:     2 3 4 5
