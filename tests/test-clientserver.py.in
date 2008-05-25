@@ -166,10 +166,33 @@ class ClientServer(unittest.TestCase):
         d.addCallback(self.exception)
         return d
 
+
+    # -----------------------------------------------------------------------
+    def killThenPing(self, client):
+        self.messageValue = ""
+        def getMessage(str):
+            self.messageValue += str
+        client.message = getMessage
+        def sendLostConnectionPacket(val):
+            client.sendPacket(PacketPing())
+            self.assertEqual(self.messageValue.find("ufferized") >= 0, True)
+            self.assertEqual(len(client.bufferized_packets), 1)
+            self.assertEqual(client.bufferized_packets[0].type, PACKET_PING)
+        d = client.connection_lost_deferred
+        d.addCallback(sendLostConnectionPacket)
+        return d
+
+    def test03_killThenPing(self):
+        "Designed to cover client.py when it tests for established"
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.killThenPing)
+        return d
+    # -----------------------------------------------------------------------
+
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     return runner.TrialRunner(reporter.TextReporter,
