@@ -1,3 +1,9 @@
+2008-05-25  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-clientserver.py.in (ClientServer.killThenPing): Wrote
+	function.
+	(ClientServer.test03_killThenPing): Wrote function.
+
 2008-05-23  Loic Dachary <loic@dachary.org>
 
 	* Release 1.6.0
