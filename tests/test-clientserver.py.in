@@ -166,7 +166,6 @@ class ClientServer(unittest.TestCase):
         d.addCallback(self.exception)
         return d
 
-
     # -----------------------------------------------------------------------
     def killThenPing(self, client):
         self.messageValue = ""
@@ -187,12 +186,37 @@ class ClientServer(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.killThenPing)
         return d
-    # -----------------------------------------------------------------------
 
+    # -----------------------------------------------------------------------
+    def deadServerTransport(self, client):
+        server = self.server_factory.instance
+        saveMyTransport = server.transport
+        server.transport = None
+
+        self.messageValue = ""
+        def getMessage(str):
+            self.messageValue += str
+        server.message = getMessage
+
+        server.sendPackets([PacketPing()])
+        self.assertEquals(len(server.bufferized_packets), 1)
+        self.assertEquals(server.bufferized_packets[0].type, PACKET_PING)
+        self.assertEquals(self.messageValue.find("bufferized") > 0, True)
+        self.assertEquals(self.messageValue.find("no usuable transport") > 0, True)
+
+        server.transport = saveMyTransport
+        return client.connection_lost_deferred
+
+    def test04_deadServerTransport(self):
+        """Covers the case where there is no transport available and the
+        packets must be buffered by the server."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.deadServerTransport)
+        return d
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test04"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     return runner.TrialRunner(reporter.TextReporter,

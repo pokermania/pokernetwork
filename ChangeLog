@@ -3,6 +3,8 @@
 	* tests/test-clientserver.py.in (ClientServer.killThenPing): Wrote
 	function.
 	(ClientServer.test03_killThenPing): Wrote function.
+	(ClientServer.test04_deadServerTransport): Wrote function.
+	(ClientServer.deadServerTransport): Wrote function.
 
 2008-05-23  Loic Dachary <loic@dachary.org>
 
