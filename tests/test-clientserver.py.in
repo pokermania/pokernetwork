@@ -226,6 +226,9 @@ class ClientServer(unittest.TestCase):
         def checkForInvalidProtocol(val):
             print "HI THERE: "
             print self.messageValue
+#          If you comment this in, suddently client with protocol different rejected isn't in there anymore
+#            self.assertEquals(self.messageValue.find("client with protocol different rejected") > 0, True)
+            print "DONE THERE: "
 
         d = client.connection_lost_deferred
         d.addCallback(checkForInvalidProtocol)
