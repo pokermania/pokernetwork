@@ -2,6 +2,7 @@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -213,10 +214,35 @@ class ClientServer(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.deadServerTransport)
         return d
+    # -----------------------------------------------------------------------
+    def forceInvalidProtocol(self, client):
+        server = self.server_factory.instance
+        server._protocol_ok = False
+        self.messageValue = ""
+        def getMessage(str):
+            self.messageValue += str
+        server.message = getMessage
+
+        def checkForInvalidProtocol(val):
+            print "HI THERE: "
+            print self.messageValue
+
+        d = client.connection_lost_deferred
+        d.addCallback(checkForInvalidProtocol)
+
+        return client.connection_lost_deferred
+
+    def test05_forceInvalidProtocol(self):
+        """Covers the case where the server thinks the protocol is invalid."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.forceInvalidProtocol)
+        return d
+    # -----------------------------------------------------------------------
+
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     return runner.TrialRunner(reporter.TextReporter,
