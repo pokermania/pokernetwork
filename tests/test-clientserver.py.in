@@ -32,12 +32,20 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
-from tests.testmessages import silence_all_messages
-verbose = 6
-
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import protocol, reactor
 from twisted.application import service
+
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
+from tests import testclock
+
+from tests.testmessages import silence_all_messages, search_output
+#os.environ['VERBOSE_T'] = '0'
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
 
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
@@ -56,7 +64,8 @@ class FakeAvatar:
         pass
 
     def setProtocol(self, protocol):
-        print "SetProtocol"
+        if verbose > 0:
+            print "SetProtocol"
         self.protocol = protocol
 
     def handlePacket(self, packet):
@@ -78,7 +87,11 @@ class FakeFactory(protocol.ServerFactory):
         pass
     
     def buildProtocol(self, addr):
+        class Transport:
+            def loseConnection(self):
+                pass
         self.instance = pokernetwork.server.PokerServerProtocol()
+        self.instance.transport = Transport()
         self.instance.verbose = 6
         self.instance.exception = None
         self.instance.factory = self
@@ -91,7 +104,8 @@ class ClientServer(unittest.TestCase):
         self.p = reactor.listenTCP(0, self.server_factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
-        print "Listening on 127.0.0.1:" + str(self.port)
+        if verbose > 0:
+            print "Listening on 127.0.0.1:" + str(self.port)
 
     def setUpClient(self, index):
         self.client_factory[index] = pokernetwork.client.UGAMEClientFactory()
@@ -107,7 +121,8 @@ class ClientServer(unittest.TestCase):
         self.client_factory = [None, None]
         self.setUpClient(0)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
-        print "Connecting on 127.0.0.1:" + str(self.port)
+        if verbose > 0:
+            print "Connecting on 127.0.0.1:" + str(self.port)
 
     def cleanSessions(self, arg):
         #
@@ -214,36 +229,14 @@ class ClientServer(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.deadServerTransport)
         return d
-    # -----------------------------------------------------------------------
-    def forceInvalidProtocol(self, client):
-        server = self.server_factory.instance
-        server._protocol_ok = False
-        self.messageValue = ""
-        def getMessage(str):
-            self.messageValue += str
-        server.message = getMessage
 
-        def checkForInvalidProtocol(val):
-            print self.messageValue
-#           FIXME: This test is not really testing until we can comment
-#           this line below back in
+class InvalidProtocol(unittest.TestCase):
 
-#          If you comment this in, suddently "client with protocol
-#          different rejected" isn't in the output anymore.  WTF?  Loic?
-#            self.assertEquals(self.messageValue.find("client with protocol different rejected") > 0, True)
-
-
-        d = client.connection_lost_deferred
-        d.addCallback(checkForInvalidProtocol)
-        return d
-
-    def test05_forceInvalidProtocol(self):
-        """Covers the case where the server thinks the protocol is invalid."""
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.forceInvalidProtocol)
-        return d
-
-    # -----------------------------------------------------------------------
+    def test01_invalidProtocol(self):
+        self.server_factory = FakeFactory()
+        self.server_factory.buildProtocol('addr').dataReceived("invalid protocol\n")
+        if verbose < 0: # can only grep output when output is redirected
+            self.assertEqual(search_output('client with protocol UNKNOWN rejected'), True)
 
 # -----------------------------------------------------------------------------------------------------
 def Run():
@@ -251,6 +244,7 @@ def Run():
 #    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
+    suite.addTest(loader.loadClass(InvalidProtocol))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
