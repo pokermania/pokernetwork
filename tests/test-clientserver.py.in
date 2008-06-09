@@ -26,14 +26,14 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 from tests.testmessages import silence_all_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+verbose = 6
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import protocol, reactor
@@ -224,28 +224,31 @@ class ClientServer(unittest.TestCase):
         server.message = getMessage
 
         def checkForInvalidProtocol(val):
-            print "HI THERE: "
             print self.messageValue
-#          If you comment this in, suddently client with protocol different rejected isn't in there anymore
+#           FIXME: This test is not really testing until we can comment
+#           this line below back in
+
+#          If you comment this in, suddently "client with protocol
+#          different rejected" isn't in the output anymore.  WTF?  Loic?
 #            self.assertEquals(self.messageValue.find("client with protocol different rejected") > 0, True)
-            print "DONE THERE: "
+
 
         d = client.connection_lost_deferred
         d.addCallback(checkForInvalidProtocol)
-
-        return client.connection_lost_deferred
+        return d
 
     def test05_forceInvalidProtocol(self):
         """Covers the case where the server thinks the protocol is invalid."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.forceInvalidProtocol)
         return d
+
     # -----------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     return runner.TrialRunner(reporter.TextReporter,
