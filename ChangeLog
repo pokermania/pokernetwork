@@ -1,3 +1,11 @@
+2008-06-09  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-clientserver.py.in (FakeUser): Created class.
+	(ClientServer.quit): Added test for ping timeout on server when
+	client quits.
+	(InvalidProtocol): Renamed to DummyServerTests
+	(DummyServerTests.test02_pingRenew): Wrote test.
+
 2008-05-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-clientserver.py.in (ClientServer.killThenPing): Wrote

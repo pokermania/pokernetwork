@@ -110,4 +110,3 @@ def search_output(what):
         if verbose > 1:
             print "\tnot in " + message
     return False
-
