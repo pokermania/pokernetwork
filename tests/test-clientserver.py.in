@@ -42,10 +42,10 @@ from twisted.application import service
 #
 from tests import testclock
 
-from tests.testmessages import silence_all_messages, search_output
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, messages_out
 #os.environ['VERBOSE_T'] = '0'
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+#if verbose < 0: silence_all_messages()
 
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
@@ -74,11 +74,16 @@ class FakeAvatar:
             raise Exception, "EXCEPTION TEST"
         return []
 
+class FakeUser():
+    def __init__(self):
+        self.name = "Mr.Fakey"
+        self.serial = -1
+
 class FakeFactory(protocol.ServerFactory):
 
     def __init__(self):
         self.service = FakeService()
-        self.verbose = 6
+        self.verbose = 7
 
     def createAvatar(self):
         return FakeAvatar()
@@ -92,9 +97,10 @@ class FakeFactory(protocol.ServerFactory):
                 pass
         self.instance = pokernetwork.server.PokerServerProtocol()
         self.instance.transport = Transport()
-        self.instance.verbose = 6
+        self.instance.verbose = 7
         self.instance.exception = None
         self.instance.factory = self
+        self.instance.user = FakeUser()
         return self.instance
 
 class ClientServer(unittest.TestCase):
@@ -109,7 +115,7 @@ class ClientServer(unittest.TestCase):
 
     def setUpClient(self, index):
         self.client_factory[index] = pokernetwork.client.UGAMEClientFactory()
-        self.client_factory[index].verbose = 6
+        self.client_factory[index].verbose = 7
         def setUpProtocol(client):
             client._poll_frequency = 0.1
             return client
@@ -147,6 +153,12 @@ class ClientServer(unittest.TestCase):
         client = args[0]
         client.sendPacket(PacketQuit())
         client.transport.loseConnection()
+        server = self.server_factory.instance
+        def serverPingTimeout(val):
+            self.assertEqual(search_output("ping: timeout Mr.Fakey/-1"), True)
+            restore_all_messages()
+        client.connection_lost_deferred.addCallback(serverPingTimeout)
+        silence_all_messages()
         return client.connection_lost_deferred
         
     def ping(self, client):
@@ -219,7 +231,6 @@ class ClientServer(unittest.TestCase):
         self.assertEquals(server.bufferized_packets[0].type, PACKET_PING)
         self.assertEquals(self.messageValue.find("bufferized") > 0, True)
         self.assertEquals(self.messageValue.find("no usuable transport") > 0, True)
-
         server.transport = saveMyTransport
         return client.connection_lost_deferred
 
@@ -234,7 +245,9 @@ class InvalidProtocol(unittest.TestCase):
 
     def test01_invalidProtocol(self):
         self.server_factory = FakeFactory()
+        silence_all_messages()
         self.server_factory.buildProtocol('addr').dataReceived("invalid protocol\n")
+        restore_all_messages()
         if verbose < 0: # can only grep output when output is redirected
             self.assertEqual(search_output('client with protocol UNKNOWN rejected'), True)
 
