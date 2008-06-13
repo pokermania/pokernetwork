@@ -320,8 +320,6 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         else:
             check_url = url
         def validate(result):
-            print "result is:"
-            print result
             if isinstance(result, failure.Failure): raise result
             # I wonder, actually, if FakeCurrencyClient is supposed to
             # return a list of a list as RealCurrencyClient does in this
@@ -334,6 +332,26 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
             self.assertEqual(value, note[3])
             return [result]
         d.addBoth(validate)
+        return d
+    # -----------------------------------------------------------------------------    
+    # Had to ovveride all of test03, for the same reason discussed above, that
+    #  there is another layer of list indirection missing in FakeCurrencyClient.
+    def test03_checkNote(self):
+        d = self.getCommitedNote('http://fake/', 100)
+
+        def checkNote(result):
+            #print "checkNote " + str(result)
+            note_to_check = result
+            d = self.client.checkNote(note_to_check)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                checked_note = result
+                self.assertEqual(note_to_check, checked_note)
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(checkNote)
         return d
 
 # -----------------------------------------------------------------------------
