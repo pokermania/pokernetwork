@@ -1,5 +1,20 @@
 2008-06-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-currencyclient.py.in
+	(FakeCurrencyClientTestCase.test04_changeNote.changeNote): Derived
+	method to handle different behavior in Fake.
+	(FakeCurrencyClientTestCase.test09_getNote_with_id): Derived
+	method as test not needed for Fake
+
+	* tests/testmessages.py (clear_all_messages): Renamed function
+	from clear_messages.
+
+	* tests/test-currencyclient.py.in
+	(FakeCurrencyClientTestCase.test05_mergeNotes): Derived method
+	to handle different behavior in Fake.
+	(FakeCurrencyClientTestCase.test06_meltNotes): Derived method to
+	handle different behavior in Fake.
+
 	* tests/testmessages.py (clear_messages): Wrote function.
 
 2008-06-09  Bradley M. Kuhn  <bkuhn@ebb.org>

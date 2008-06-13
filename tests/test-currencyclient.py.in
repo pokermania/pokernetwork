@@ -43,7 +43,7 @@ twisted.internet.base.DelayedCall.debug = True
 
 from urlparse import urlparse
 
-from tests.testmessages import silence_all_messages
+from tests.testmessages import silence_all_messages, clear_all_messages, search_output
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -353,6 +353,96 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 
         d.addCallback(checkNote)
         return d
+    # -----------------------------------------------------------------------------    
+    def test05_mergeNotes(self):
+        notes = []
+        def addnote(result): 
+            notes.append(result[0])
+            return result
+
+        d1 = self.getCommitedNote('http://fake/', 100)
+        d1.addCallback(addnote)
+
+        d2 = self.getCommitedNote('http://fake/', 100)
+        d2.addCallback(addnote)
+
+        d = defer.DeferredList((d1, d2))
+
+        def mergeNotes(note):
+            self.assertEquals(2, len(notes))
+            d = self.client.mergeNotes(*notes)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual(1, len(result))
+                note = result[0]
+                self.assertEqual("http://fake/", note[0])
+                self.assertEqual(3, note[1])
+                self.assertEqual(40, len(note[2]))
+                self.assertEqual(200, note[3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(mergeNotes)
+        return self.commit(d)
+    # -----------------------------------------------------------------------------    
+    def test06_meltNotes(self):
+        notes = []
+        def addnote(result): 
+            notes.append(result[0])
+            return result
+
+        d1 = self.getCommitedNote('http://fake/', 100)
+        d1.addCallback(addnote)
+
+        d2 = self.getCommitedNote('http://fake/', 500)
+        d2.addCallback(addnote)
+
+        d = defer.DeferredList((d1, d2))
+
+        def meltNotes(note):
+            self.assertEquals(2, len(notes))
+            d = self.client.meltNotes(*notes)
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual(1, len(result))
+                note = result[0]
+                self.assertEqual("http://fake/", note[0])
+                self.assertEqual(3, note[1])
+                self.assertEqual(40, len(note[2]))
+                self.assertEqual(600, note[3])
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(meltNotes)
+        return self.commit(d)
+
+    def test04_changeNote(self):
+        d = self.getCommitedNote('http://fake/', 100)
+        clear_all_messages()
+        def changeNote(result):
+            class FakeNoteToChange:
+                def copy(self):
+                    return [8, 0, '']
+            d = self.client.changeNote(FakeNoteToChange())
+            def validate(result):
+                if isinstance(result, failure.Failure): raise result
+                self.assertEqual(result[0], 8)
+                self.assertEqual(result[1], 2)
+                self.assertEqual(40, len(result[2]))
+                self.assertEquals(search_output("changeNote"), True)
+                return result
+            d.addBoth(validate)
+            return d
+
+        d.addCallback(changeNote)
+        return d
+
+
+    # -----------------------------------------------------------------------------    
+    def test09_getNote_with_id(self):
+        return True
 
 # -----------------------------------------------------------------------------
 def Run():

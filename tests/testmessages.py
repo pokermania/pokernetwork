@@ -111,5 +111,5 @@ def search_output(what):
             print "\tnot in " + message
     return False
 
-def clear_messages():
+def clear_all_messages():
     messages_out = []
