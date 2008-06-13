@@ -5,6 +5,8 @@
 	method to handle different behavior in Fake.
 	(FakeCurrencyClientTestCase.test09_getNote_with_id): Derived
 	method as test not needed for Fake
+	(FakeCurrencyClientTestCase.test07_breakNote.checkOutput): Derived
+	method to check for message output from FakeCurrencyClient. 
 
 	* tests/testmessages.py (clear_all_messages): Renamed function
 	from clear_messages.

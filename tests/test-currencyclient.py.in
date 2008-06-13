@@ -43,7 +43,7 @@ twisted.internet.base.DelayedCall.debug = True
 
 from urlparse import urlparse
 
-from tests.testmessages import silence_all_messages, clear_all_messages, search_output
+from tests.testmessages import silence_all_messages, clear_all_messages, search_output, messages_out, restore_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -439,6 +439,15 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         d.addCallback(changeNote)
         return d
 
+    def test07_breakNote(self):
+        clear_all_messages()
+        d = CurrencyClientTestCase.test07_breakNote(self)
+        def checkOutput(result):
+            self.assertEquals(search_output("breakNote vaues"), True)
+            return True
+            
+        d.addCallback(checkOutput)
+        return d
 
     # -----------------------------------------------------------------------------    
     def test09_getNote_with_id(self):
