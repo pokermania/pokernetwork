@@ -1,3 +1,7 @@
+2008-06-12  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/testmessages.py (clear_messages): Wrote function.
+
 2008-06-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-clientserver.py.in (FakeUser): Created class.
