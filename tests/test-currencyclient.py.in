@@ -302,10 +302,47 @@ EOF
         return d
 
 # -----------------------------------------------------------------------------
+class FakeCurrencyClientTestCase(CurrencyClientTestCase):
+    def setUp(self):
+        currencyclient.Verbose = True
+        currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+        self.destroyDb()
+        self.client = currencyclient.FakeCurrencyClient()
+        # Fake out the value on the starting serial so I can reuse the
+        # tests completely from the previous test class.
+        self.client.serial = 0
+        self.client.getPage = self.getPage
+    # -----------------------------------------------------------------------------    
+    def getNote(self, url, value):
+        d = self.client.getNote(url, value)
+        if "?" in url:
+            check_url = url[:url.index("?")]
+        else:
+            check_url = url
+        def validate(result):
+            print "result is:"
+            print result
+            if isinstance(result, failure.Failure): raise result
+            # I wonder, actually, if FakeCurrencyClient is supposed to
+            # return a list of a list as RealCurrencyClient does in this
+            # instance.  I commented out:
+            # note = result[0]
+            # in favor of:
+            note = result
+            self.assertEqual(check_url, note[0])
+            self.assertEqual(40, len(note[2]))
+            self.assertEqual(value, note[3])
+            return [result]
+        d.addBoth(validate)
+        return d
+
+# -----------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test07"
+    suite = loader.suiteFactory()
     suite = loader.loadClass(CurrencyClientTestCase)
+    suite = loader.loadClass(FakeCurrencyClientTestCase)
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
