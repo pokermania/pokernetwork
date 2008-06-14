@@ -370,7 +370,9 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 
         def mergeNotes(note):
             self.assertEquals(2, len(notes))
+            clear_all_messages()
             d = self.client.mergeNotes(*notes)
+            self.assertEquals(search_output("mergeNotes"), True)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 self.assertEqual(1, len(result))
@@ -421,8 +423,6 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
     def test04_changeNote(self):
         d = self.getCommitedNote('http://fake/', 100)
         clear_all_messages()
-        print "MESSAGES SHOULD BE EMPTY BUT LOOK: "
-        print get_messages()
         def changeNote(result):
             class FakeNoteToChange:
                 def copy(self):
