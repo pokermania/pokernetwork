@@ -43,7 +43,7 @@ twisted.internet.base.DelayedCall.debug = True
 
 from urlparse import urlparse
 
-from tests.testmessages import silence_all_messages, clear_all_messages, search_output, messages_out, restore_all_messages
+from tests.testmessages import silence_all_messages, clear_all_messages, search_output, get_messages, restore_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -422,7 +422,7 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         d = self.getCommitedNote('http://fake/', 100)
         clear_all_messages()
         print "MESSAGES SHOULD BE EMPTY BUT LOOK: "
-        print messages_out
+        print get_messages()
         def changeNote(result):
             class FakeNoteToChange:
                 def copy(self):

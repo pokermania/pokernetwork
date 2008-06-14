@@ -136,3 +136,6 @@ def search_output(what):
 def clear_all_messages():
     global messages_out
     messages_out = []
+
+def get_messages():
+    return messages_out
