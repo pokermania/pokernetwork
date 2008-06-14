@@ -61,6 +61,10 @@ classes.append(pokergame.PokerGame)
 from pokerengine import pokertournament
 classes.append(pokertournament.PokerTournament)
 
+from twisted.internet import defer
+
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+
 #
 # for coverage purpose, make sure all message functions
 # are called at least once
@@ -80,8 +84,27 @@ def call_messages():
         sys.stdout = stdout
 call_messages()
 
+messages_needle = ''
+messages_grep_hit = None
+def grep_output(needle):
+    messages_grep_hit = defer.Deferred()
+    messages_needle = needle
+    return messages_grep_hit
+
+def messages_grep(haystack):
+    if haystack.find(messages_needle):
+        hit = messages_grep_hit
+        messages_grep_hit = None
+        hit.callback(haystack)
+        
+def messages_append(string):
+    if verbose > 3:
+        print "OUTPUT: " + what
+    messages_out.append(string)
+    messages_grep(string)
+
 class2message = {
-    pokergame.PokerGame: lambda self, string: messages_out.append(self.prefix + "[PokerGame " + str(self.id) + "] " + string)
+    pokergame.PokerGame: lambda self, string: messages_append(self.prefix + "[PokerGame " + str(self.id) + "] " + string)
     }
 messages_out = []
 
@@ -89,7 +112,7 @@ def redirect_messages(a_class):
     if not hasattr(a_class, 'orig_message'):
         a_class.orig_message = [ ]
     a_class.orig_message.append(a_class.message)
-    a_class.message = class2message.get(a_class, lambda self, string: messages_out.append(string))
+    a_class.message = class2message.get(a_class, lambda self, string: messages_append(string))
     
 def silence_all_messages():
     messages_out = []
@@ -101,7 +124,6 @@ def restore_all_messages():
         a_class.message = a_class.orig_message.pop()
 
 def search_output(what):
-    verbose = int(os.environ.get('VERBOSE_T', '-1'))
     if verbose > 1:
         print "search_output: " + what
     for message in messages_out:
@@ -112,4 +134,5 @@ def search_output(what):
     return False
 
 def clear_all_messages():
+    global messages_out
     messages_out = []
