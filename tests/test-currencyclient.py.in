@@ -421,6 +421,8 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
     def test04_changeNote(self):
         d = self.getCommitedNote('http://fake/', 100)
         clear_all_messages()
+        print "MESSAGES SHOULD BE EMPTY BUT LOOK: "
+        print messages_out
         def changeNote(result):
             class FakeNoteToChange:
                 def copy(self):
