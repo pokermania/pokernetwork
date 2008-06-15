@@ -257,8 +257,34 @@ class PokerChildrenTestCase(unittest.TestCase):
         d.addCallback(process_kill)
         reactor.callLater(1, lambda: d.callback(True))
         return d
-
-
+    # -----------------------------------------------------------------------------------------------------
+    def test08_brokenKill(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose="6">
+<web browser="sleep">6</web>
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        d = defer.Deferred()
+        def forceRaise(a, b):
+            raise OSError
+        origKill = os.kill
+#        origWaitpid = os.waitpid
+        os.kill = forceRaise
+#        os.waitpid = forceRaise
+        def process_kill(result):
+            clear_all_messages()
+            self.assertNotEqual(-1, process.kill())
+            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("sleep kill"), True)
+            self.assertEquals(search_output(",9) : "), True)
+            os.kill = origKill
+#            os.waitpid = origWaitpid
+            return result
+        d.addCallback(process_kill)
+        reactor.callLater(1, lambda: d.callback(True))
+        return d
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -267,7 +293,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
