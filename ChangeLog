@@ -1,3 +1,9 @@
+2008-06-15  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerchildren.py.in
+	(PokerChildrenTestCase.test06_child_kill_missing_pid.process_kill):
+	Wrote method.
+
 2008-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-currencyclient.py.in

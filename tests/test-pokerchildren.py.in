@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008       Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -39,7 +40,7 @@ from twisted.internet import reactor, defer
 twisted.internet.base.DelayedCall.debug = True
 from twisted.python import failure
 
-from tests.testmessages import silence_all_messages
+from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -201,6 +202,26 @@ class PokerChildrenTestCase(unittest.TestCase):
         self.assertEquals(pokerchildren.RSYNC_NO_NETWORK, event)
         (event, dummy1, dummy2) = process.call_publishEvent[1]
         self.assertEquals(pokerchildren.RSYNC_FAILED, event)
+    # -----------------------------------------------------------------------------------------------------
+    def test06_child_kill_missing_pid(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose="6">
+<web browser="sleep">6</web>
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        d = defer.Deferred()
+        def process_kill(result):
+            process.pid = 0
+            clear_all_messages()
+            self.assertNotEqual(-1, process.kill())
+            self.assertEquals(search_output("found sleep pid"), True)
+            self.assertEquals(search_output("in ./sleep.pid"), True)
+            return result
+        d.addCallback(process_kill)
+        reactor.callLater(1, lambda: d.callback(True))
+        return d
 
 
 # -----------------------------------------------------------------------------------------------------
@@ -211,7 +232,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
