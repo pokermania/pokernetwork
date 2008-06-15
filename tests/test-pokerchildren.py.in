@@ -140,7 +140,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------
     def test03_child_kill(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings verbose=\"""" + os.environ.get('VERBOSE_T', '6') + """" >
+<settings verbose="6" >
 <web browser="sleep">6</web>
 </settings>
 """
@@ -148,7 +148,9 @@ class PokerChildrenTestCase(unittest.TestCase):
         process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
         d = defer.Deferred()
         def process_kill(result):
+            clear_all_messages()
             self.assertNotEqual(-1, process.kill())
+            self.assertEquals(search_output("killing sleep 6"), True)
             return result
         d.addCallback(process_kill)
         reactor.callLater(1, lambda: d.callback(True))
@@ -232,7 +234,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
