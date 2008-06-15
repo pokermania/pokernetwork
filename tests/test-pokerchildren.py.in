@@ -32,6 +32,8 @@ import sys, os, libxml2
 sys.path.insert(0, "@srcdir@/../..")
 sys.path.insert(0, "..")
 
+import platform
+
 from twisted.trial import unittest, runner, reporter
 from twisted.trial import util
 import twisted.internet.base
@@ -224,6 +226,36 @@ class PokerChildrenTestCase(unittest.TestCase):
         d.addCallback(process_kill)
         reactor.callLater(1, lambda: d.callback(True))
         return d
+    # -----------------------------------------------------------------------------------------------------
+    # This test below will do nothing on Windows sytems.  It's designed to
+    # exercise some of the windows code (and produce an error, of course,
+    # since we aren't on Windows.  I haven't used Windows since 1999, so I
+    # have no ability to fix this test properly.  However, I think the the
+    # return True will at least cause this not to fail on Windows.
+    def test07_child_force_windows_system(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose="6">
+<web browser="sleep">6</web>
+</settings>
+"""
+        if platform.system() == "Windows":
+            return True
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        d = defer.Deferred()
+        def process_kill(result):
+            def fakeSystem():
+                return "Windows"
+            platform.system = fakeSystem
+            clear_all_messages()
+            self.assertNotEqual(-1, process.kill())
+            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("sleep terminate()"), True)
+            return result
+        d.addCallback(process_kill)
+        reactor.callLater(1, lambda: d.callback(True))
+        return d
+
 
 
 # -----------------------------------------------------------------------------------------------------
@@ -234,7 +266,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,

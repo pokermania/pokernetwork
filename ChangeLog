@@ -4,7 +4,9 @@
 	(PokerChildrenTestCase.test06_child_kill_missing_pid.process_kill):
 	Wrote method.
 	(PokerChildrenTestCase.test03_child_kill.process_kill): Added
-	search for verbose output
+	search for verbose output.
+	(PokerChildrenTestCase.test07_child_force_windows_system): Wrote
+	method.
 
 2008-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
