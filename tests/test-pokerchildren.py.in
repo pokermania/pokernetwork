@@ -315,7 +315,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-    loader.methodPrefix = "test09"
+#    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
