@@ -246,16 +246,17 @@ class PokerChildrenTestCase(unittest.TestCase):
         def process_kill(result):
             def fakeSystem():
                 return "Windows"
+            origSystem = platform.system
             platform.system = fakeSystem
             clear_all_messages()
             self.assertNotEqual(-1, process.kill())
             self.assertEquals(search_output("killing sleep 6"), True)
             self.assertEquals(search_output("sleep terminate()"), True)
+            platform.system = origSystem
             return result
         d.addCallback(process_kill)
         reactor.callLater(1, lambda: d.callback(True))
         return d
-
 
 
 # -----------------------------------------------------------------------------------------------------
