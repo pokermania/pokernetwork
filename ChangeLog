@@ -5,6 +5,8 @@
 	Added check for mergeNotes in verbose message output.
 	(FakeCurrencyClientTestCase.getNote): Added check for _buildNote
 	and getNote in verbose message output.
+	(FakeCurrencyClientTestCase.test03_checkNote.checkNote): Added
+	check for checkNote in verbose message output.
 
 2008-06-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 

@@ -343,9 +343,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         d = self.getCommitedNote('http://fake/', 100)
 
         def checkNote(result):
-            #print "checkNote " + str(result)
+            clear_all_messages()
             note_to_check = result
             d = self.client.checkNote(note_to_check)
+            self.assertEquals(search_output("checkNote"), True)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 checked_note = result
