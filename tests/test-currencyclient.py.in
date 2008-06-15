@@ -314,7 +314,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         self.client.getPage = self.getPage
     # -----------------------------------------------------------------------------    
     def getNote(self, url, value):
+        clear_all_messages()
         d = self.client.getNote(url, value)
+        self.assertEquals(search_output("_buildNote"), True)
+        self.assertEquals(search_output("getNote"), True)
         if "?" in url:
             check_url = url[:url.index("?")]
         else:

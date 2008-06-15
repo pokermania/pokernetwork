@@ -3,6 +3,8 @@
 	* tests/test-currencyclient.py.in
 	(FakeCurrencyClientTestCase.test05_mergeNotes.mergeNotes.validate):
 	Added check for mergeNotes in verbose message output.
+	(FakeCurrencyClientTestCase.getNote): Added check for _buildNote
+	and getNote in verbose message output.
 
 2008-06-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 
