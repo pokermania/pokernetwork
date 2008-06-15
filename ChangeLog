@@ -7,6 +7,10 @@
 	and getNote in verbose message output.
 	(FakeCurrencyClientTestCase.test03_checkNote.checkNote): Added
 	check for checkNote in verbose message output.
+	(FakeCurrencyClientTestCase.getCommitedNote): Derived method to
+	add search for "commit" output from message printing.
+	(FakeCurrencyClientTestCase.getCommitedNote.checkCommitVerboseOutput):
+	Derived method to check that "commit" output occurs. 
 
 2008-06-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 

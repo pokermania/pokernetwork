@@ -336,6 +336,15 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
             return [result]
         d.addBoth(validate)
         return d
+    # -----------------------------------------------------------------------------
+    def getCommitedNote(self, url, value):
+        clear_all_messages()
+        def checkCommitVerboseOutput(result):
+            self.assertEquals(search_output("commit"), True)
+            return result
+        ret = CurrencyClientTestCase.getCommitedNote(self, url, value)
+        ret.addCallback(checkCommitVerboseOutput)
+        return ret
     # -----------------------------------------------------------------------------    
     # Had to ovveride all of test03, for the same reason discussed above, that
     #  there is another layer of list indirection missing in FakeCurrencyClient.
