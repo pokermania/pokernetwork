@@ -270,9 +270,7 @@ class PokerChildrenTestCase(unittest.TestCase):
         def forceRaise(a, b):
             raise OSError
         origKill = os.kill
-#        origWaitpid = os.waitpid
         os.kill = forceRaise
-#        os.waitpid = forceRaise
         def process_kill(result):
             clear_all_messages()
             self.assertNotEqual(-1, process.kill())
@@ -280,7 +278,31 @@ class PokerChildrenTestCase(unittest.TestCase):
             self.assertEquals(search_output("sleep kill"), True)
             self.assertEquals(search_output(",9) : "), True)
             os.kill = origKill
-#            os.waitpid = origWaitpid
+            return result
+        d.addCallback(process_kill)
+        reactor.callLater(1, lambda: d.callback(True))
+        return d
+    # -----------------------------------------------------------------------------------------------------
+    def test09_brokenWaitPID(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose="6">
+<web browser="sleep">6</web>
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        d = defer.Deferred()
+        def forceRaise(a, b):
+            raise OSError
+        origWaitpid = os.waitpid
+        os.waitpid = forceRaise
+        def process_kill(result):
+            clear_all_messages()
+            self.assertNotEqual(-1, process.kill())
+            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("cannot wait for sleep process"), True)
+            self.assertEquals(search_output("to die : "), True)
+            os.waitpid = origWaitpid
             return result
         d.addCallback(process_kill)
         reactor.callLater(1, lambda: d.callback(True))
@@ -293,7 +315,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,

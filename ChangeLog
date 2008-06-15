@@ -8,6 +8,9 @@
 	(PokerChildrenTestCase.test07_child_force_windows_system): Wrote
 	method.
 	(PokerChildrenTestCase.test08_brokenKill): Wrote method.
+	(PokerChildrenTestCase.test09_brokenWaitPID.process_kill): Wrote
+	method.
+	
 
 2008-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
