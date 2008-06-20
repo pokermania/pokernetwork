@@ -1,3 +1,9 @@
+2008-06-19  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerchildren.py.in
+	(PokerChildrenTestCase.test03_child_kill.process_kill): Added
+	check for command line output.
+
 2008-06-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerchildren.py.in
@@ -10,7 +16,8 @@
 	(PokerChildrenTestCase.test08_brokenKill): Wrote method.
 	(PokerChildrenTestCase.test09_brokenWaitPID.process_kill): Wrote
 	method.
-	
+	(PokerChildrenTestCase.test03_child_kill.process_kill): Added
+	check for savepid() output.
 
 2008-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 

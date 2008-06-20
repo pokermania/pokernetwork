@@ -146,12 +146,15 @@ class PokerChildrenTestCase(unittest.TestCase):
 <web browser="sleep">6</web>
 </settings>
 """
+        clear_all_messages()
         self.setSettings(settings_xml)
         process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
         d = defer.Deferred()
         def process_kill(result):
-            clear_all_messages()
+            self.assertEquals(search_output("PokerChildBrowser: command line ['sleep', '60']"), True)
             self.assertNotEqual(-1, process.kill())
+            self.assertEquals(search_output("sleep pid"), True)
+            self.assertEquals(search_output("saved in ./sleep.pid"), True)
             self.assertEquals(search_output("killing sleep 6"), True)
             return result
         d.addCallback(process_kill)
@@ -315,7 +318,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test09"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
