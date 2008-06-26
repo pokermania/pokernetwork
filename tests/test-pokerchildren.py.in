@@ -143,7 +143,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     def test03_child_kill(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings verbose="6" >
-<web browser="sleep">6</web>
+<web browser="@SLEEP@">6</web>
 </settings>
 """
         clear_all_messages()
@@ -151,11 +151,11 @@ class PokerChildrenTestCase(unittest.TestCase):
         process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
         d = defer.Deferred()
         def process_kill(result):
-            self.assertEquals(search_output("PokerChildBrowser: command line ['sleep', '60']"), True)
+            self.assertEquals(search_output("PokerChildBrowser: command line ['@SLEEP@', '60']"), True)
             self.assertNotEqual(-1, process.kill())
             self.assertEquals(search_output("sleep pid"), True)
             self.assertEquals(search_output("saved in ./sleep.pid"), True)
-            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("killing @SLEEP@ 6"), True)
             return result
         d.addCallback(process_kill)
         reactor.callLater(1, lambda: d.callback(True))
@@ -213,7 +213,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     def test06_child_kill_missing_pid(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings verbose="6">
-<web browser="sleep">6</web>
+<web browser="@SLEEP@">6</web>
 </settings>
 """
         self.setSettings(settings_xml)
@@ -238,7 +238,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     def test07_child_force_windows_system(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings verbose="6">
-<web browser="sleep">6</web>
+<web browser="@SLEEP@">6</web>
 </settings>
 """
         if platform.system() == "Windows":
@@ -253,7 +253,7 @@ class PokerChildrenTestCase(unittest.TestCase):
             platform.system = fakeSystem
             clear_all_messages()
             self.assertNotEqual(-1, process.kill())
-            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("killing @SLEEP@ 6"), True)
             self.assertEquals(search_output("sleep terminate()"), True)
             platform.system = origSystem
             return result
@@ -264,7 +264,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     def test08_brokenKill(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings verbose="6">
-<web browser="sleep">6</web>
+<web browser="@SLEEP@">6</web>
 </settings>
 """
         self.setSettings(settings_xml)
@@ -277,7 +277,7 @@ class PokerChildrenTestCase(unittest.TestCase):
         def process_kill(result):
             clear_all_messages()
             self.assertNotEqual(-1, process.kill())
-            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("killing @SLEEP@ 6"), True)
             self.assertEquals(search_output("sleep kill"), True)
             self.assertEquals(search_output(",9) : "), True)
             os.kill = origKill
@@ -289,7 +289,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     def test09_brokenWaitPID(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings verbose="6">
-<web browser="sleep">6</web>
+<web browser="@SLEEP@">6</web>
 </settings>
 """
         self.setSettings(settings_xml)
@@ -302,7 +302,7 @@ class PokerChildrenTestCase(unittest.TestCase):
         def process_kill(result):
             clear_all_messages()
             self.assertNotEqual(-1, process.kill())
-            self.assertEquals(search_output("killing sleep 6"), True)
+            self.assertEquals(search_output("killing @SLEEP@ 6"), True)
             self.assertEquals(search_output("cannot wait for sleep process"), True)
             self.assertEquals(search_output("to die : "), True)
             os.waitpid = origWaitpid
@@ -315,7 +315,7 @@ class PokerChildrenTestCase(unittest.TestCase):
     def test10_neverReady(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings verbose="6">
-<web browser="sleep"></web>
+<web browser="@SLEEP@"></web>
 </settings>
 """
         self.setSettings(settings_xml)

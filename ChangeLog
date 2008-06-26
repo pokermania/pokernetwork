@@ -1,5 +1,8 @@
 2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerchildren.py.in (PokerChildrenTestCase): Switched
+	to @SLEEP@ throughout.
+
 	* configure.ac: Now checks for touch and sets @TOUCH@.
 
 	* debian/control.unstable (Build-Depends): Added coreutils.
