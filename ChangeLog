@@ -1,3 +1,8 @@
+2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerchildren.py.in
+	(PokerChildrenTestCase.test10_neverReady): Wrote method.
+
 2008-06-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerchildren.py.in
