@@ -1,7 +1,28 @@
 2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* configure.ac: Now checks for touch and sets @TOUCH@.
+
+	* debian/control.unstable (Build-Depends): Added coreutils.
+
+	* debian/control.lenny (Build-Depends): Added coreutils.
+
+	* debian/control.hardy (Build-Depends): Added coreutils.
+
+	* debian/control.gutsy (Build-Depends): Added coretuils.
+
+	* debian/control.feisty (Build-Depends): Added coreutils.
+
+	* debian/control.etch (Build-Depends): Added coreutils.
+
+	* debian/control.edgy (Build-Depends): Added coreutils.
+
+	* debian/control.dapper (Build-Depends): Added coreutils.
+
+	* debian/control (Build-Depends): Added coreutils.
+
 	* tests/test-pokerchildren.py.in
 	(PokerChildrenTestCase.test10_neverReady): Wrote method.
+	(PokerChildrenTestCase.test11_spawnInDir): Wrote method.
 
 2008-06-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 

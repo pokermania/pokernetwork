@@ -40,6 +40,7 @@ POKERNETWORK_AC_PROG_APG(2.2, AC_MSG_ERROR([*** pokernetwork/pokerbotlogic.py re
 
 AC_PATH_PROG(RSYNC, [rsync])
 AC_PATH_PROG(WGET, [wget])
+AC_PATH_PROG(TOUCH, [touch])
 AC_PATH_PROG(MYSQL, [mysql])
 AC_SUBST(MYSQL)
 AC_PATH_PROG(VALGRIND, [valgrind])

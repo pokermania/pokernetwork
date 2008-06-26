@@ -28,7 +28,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 
-import sys, os, libxml2
+import sys, os, libxml2, tempfile, shutil, stat
 sys.path.insert(0, "@srcdir@/../..")
 sys.path.insert(0, "..")
 
@@ -327,6 +327,39 @@ class PokerChildrenTestCase(unittest.TestCase):
         d.addCallback(checkReady)
         reactor.callLater(1, lambda: d.callback(True))
         return d
+    # -----------------------------------------------------------------------------------------------------
+    def test11_spawnInDir(self):
+        tmpdir = tempfile.mkdtemp()
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose="6">
+<web browser="@TOUCH@">I_WAS_HERE_</web>
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        d = defer.Deferred()
+        def checkReady(result):
+            process.spawnInDir  = tmpdir
+            self.assertEquals(search_output("PokerChildBrowser: command line ['@TOUCH@', 'I_WAS_HERE_0']"), True)
+            self.assertEquals(search_output("touch: /usr/bin/touch I_WAS_HERE_0"), True)
+            self.assertEquals(search_output("touch pid"), True)
+            self.assertEquals(search_output("saved in"), True)
+            clear_all_messages()
+            process.spawn()
+            self.assertEquals(search_output("spawn in " + tmpdir), True)
+            self.assertEquals(search_output("touch: /usr/bin/touch I_WAS_HERE_0"), True)
+            self.assertEquals(search_output("touch pid"), True)
+            self.assertEquals(search_output("saved in"), True)
+            # Make sure that it created the file we made with touch in the
+            #  right directory.
+            pathname = os.path.join(tmpdir, "I_WAS_HERE_0")
+            self.assertEquals(stat.S_ISREG(os.stat(pathname)[stat.ST_MODE]), True)
+            # Clean up temp dir
+            shutil.rmtree(tmpdir)
+            return result
+        d.addCallback(checkReady)
+        reactor.callLater(1, lambda: d.callback(True))
+        return d
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -335,7 +368,7 @@ def GetTestedModule():
 def Run():
     util.DEFAULT_TIMEOUT_DURATION = 200
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test10"
+#    loader.methodPrefix = "test11"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerChildrenTestCase))
     return runner.TrialRunner(reporter.TextReporter,
