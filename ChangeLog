@@ -1,3 +1,9 @@
+2008-06-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerchildren.py.in
+	(PokerChildrenTestCase.test01_rsync_ok): Added search for
+	PokerRsync::spawn message.
+
 2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerchildren.py.in (PokerChildrenTestCase): Switched

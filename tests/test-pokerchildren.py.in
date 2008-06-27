@@ -97,8 +97,10 @@ class PokerChildrenTestCase(unittest.TestCase):
         self.setSettings(settings_xml)
         process = pokerchildren.PokerRsync(self.config, self.settings, ('rsync', '@SOURCE@-sub', '@TARGET@-sub'))
         d = defer.Deferred()
+        clear_all_messages()
         process.spawn()
         def rsync_done(result):
+            self.assertEquals(search_output("PokerRsync::spawn: touch rsync source-sub target-sub"), True)
             self.failIf(os.path.exists("test-pokerchildren-dir/rsync"), "rsync exists")
             self.failUnless(os.path.exists("test-pokerchildren-dir/target-sub"), "target-sub")
             self.failUnless(os.path.exists("test-pokerchildren-dir/source-sub"), "source-sub")
