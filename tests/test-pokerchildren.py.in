@@ -207,8 +207,9 @@ class PokerChildrenTestCase(unittest.TestCase):
             def __init__(self):
                 self.value = "test"
         reason = ReasonMockup()
-
+        clear_all_messages()
         process.processEnded(reason)
+        self.assertEquals(search_output("PokerRsync::processEnded: " + str(reason)), True)
         self.assertEquals(2, len(process.call_publishEvent))
         (event, dummy1, dummy2) = process.call_publishEvent[0]
         self.assertEquals(pokerchildren.RSYNC_NO_NETWORK, event)
