@@ -3,6 +3,8 @@
 	* tests/test-pokerchildren.py.in
 	(PokerChildrenTestCase.test01_rsync_ok): Added search for
 	PokerRsync::spawn message.
+	(PokerChildrenTestCase.test04_rsync_fail_host_does_not_respond):
+	Added search for ERROR: PokerRsync message.
 
 2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 

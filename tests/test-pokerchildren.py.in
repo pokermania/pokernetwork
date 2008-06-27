@@ -173,7 +173,10 @@ class PokerChildrenTestCase(unittest.TestCase):
 """
         self.setSettings(settings_xml)
         process = PokerRsyncMockup(self.config, self.settings, ('-avhn ',"dabada"))
-        process.errReceived("rsync: failed to connect to tatawin")
+        clear_all_messages()
+        s = "rsync: failed to connect to tatawin"
+        process.errReceived(s)
+        self.assertEquals(search_output("ERROR: PokerRsync " + s), True)
         d = defer.Deferred()
         class ReasonMockup:
             def __init__(self):
