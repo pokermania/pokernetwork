@@ -7,6 +7,7 @@
 	Added search for ERROR: PokerRsync message.
 	(PokerChildrenTestCase.test05_rsync_fail_no_network): Added search
 	for processEnded message.
+	(PokerChildrenTestCase.test12_testErrorFunction): Wrote method.
 
 2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 

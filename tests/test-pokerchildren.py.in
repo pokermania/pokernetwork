@@ -366,6 +366,21 @@ class PokerChildrenTestCase(unittest.TestCase):
         d.addCallback(checkReady)
         reactor.callLater(1, lambda: d.callback(True))
         return d
+    # -----------------------------------------------------------------------------------------------------
+    def test12_testErrorFunction(self):
+        """The error function isn't actually used, so I test it explicitly"""
+        tmpdir = tempfile.mkdtemp()
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings verbose="6">
+<web browser="@SLEEP@">6</web>
+</settings>
+"""
+        self.setSettings(settings_xml)
+        process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
+        clear_all_messages()
+        process.error("You are never called, except by me")
+        self.assertEquals(search_output("ERROR You are never called, except by me"), True)
+        return True
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
