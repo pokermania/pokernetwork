@@ -104,6 +104,9 @@ class PokerChildrenTestCase(unittest.TestCase):
             self.failIf(os.path.exists("test-pokerchildren-dir/rsync"), "rsync exists")
             self.failUnless(os.path.exists("test-pokerchildren-dir/target-sub"), "target-sub")
             self.failUnless(os.path.exists("test-pokerchildren-dir/source-sub"), "source-sub")
+            clear_all_messages()
+            process.outReceived("here is what we got\ncheck it.\n")
+            self.assertEquals(get_messages(), ['here is what we got', 'check it.'])
             return result
 
         def rsync_failed(logs, reason):
@@ -113,7 +116,6 @@ class PokerChildrenTestCase(unittest.TestCase):
         process.registerHandler(pokerchildren.RSYNC_FAILED, rsync_failed)
         d.addCallback(rsync_done)
         return d
-
     # -----------------------------------------------------------------------------------------------------
     def test02_rsync_fail(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>

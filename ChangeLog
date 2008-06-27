@@ -8,6 +8,8 @@
 	(PokerChildrenTestCase.test05_rsync_fail_no_network): Added search
 	for processEnded message.
 	(PokerChildrenTestCase.test12_testErrorFunction): Wrote method.
+	(PokerChildrenTestCase.test01_rsync_ok.rsync_done): Added test for
+	outReceived().
 
 2008-06-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
