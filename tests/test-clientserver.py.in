@@ -263,6 +263,27 @@ class ClientServer(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.deadServerTransport)
         return d
+    # -----------------------------------------------------------------------
+    def clientConnectionLost(self, client):
+        class ReasonMockUp:
+            def __str__(self):
+                return "you mock me"
+            def check(self, foo):
+                return False
+        silence_all_messages()
+        clear_all_messages()
+        d = client.connectionLost(ReasonMockUp())
+        self.assertEquals(get_messages(), ['connectionLost: reason = you mock me',
+                                           'UGAMEClient.connectionLost you mock me'])
+        self.assertEquals(client._ping_timer, None)
+        self.assertEquals(self.client_factory[0].protocol_instance,  None)
+        return d
+
+    def test05_clientConnectionLost(self):
+        """Covers the case where the client connection is lost"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.clientConnectionLost)
+        return d
 #-------------------------------------------------------------------------------
 
 # DummyServerTests are to cover code on the server that doesn't need a
@@ -288,7 +309,7 @@ class DummyServerTests(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     suite.addTest(loader.loadClass(DummyServerTests))
