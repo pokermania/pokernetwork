@@ -10,6 +10,7 @@
 	(UGAMEProtocolTestCase.testProcessQueues): Added test for queue delay.
 	(UGAMEProtocolTestCase.testHandleData): Added test for output from
 	handleData().
+	(UGAMEProtocolTestCase.testForceError): Wrote method.
 
 2008-06-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 

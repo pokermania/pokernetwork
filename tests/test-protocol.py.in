@@ -366,6 +366,12 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u.established == True
         self.u.dataReceived("packet_2")
 
+    def testForceError(self):
+        """Testing error call"""
+        clear_all_messages()
+        self.u.error("testing this error")
+        self.assertEquals(get_messages(), ["ERROR testing this error"])
+
 #------------------------------------------------------------------------
 
 def GetTestSuite():
