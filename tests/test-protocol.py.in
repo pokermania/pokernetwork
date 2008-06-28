@@ -300,7 +300,11 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u._queues[3].delay = time()+1
         self.u._queues[3].packets.insert( 0, FakePacket(time()+10) )
 
+        clear_all_messages()
         self.u._processQueues()
+        self.assertEquals(len(get_messages()), 2)
+        self.assertEquals(get_messages()[0], ' => queue 1 delay canceled because lag too high')
+        self.assertEquals(get_messages()[1].find('seconds before handling the next packet in queue 3') > 0, True)
 
     # assert ?
     def testTriggerTimer(self):
