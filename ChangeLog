@@ -8,6 +8,8 @@
 	(UGAMEProtocolTestCase.testHandleVersion): Added test for "protocol
 	established" output (and for when it isn't done).
 	(UGAMEProtocolTestCase.testProcessQueues): Added test for queue delay.
+	(UGAMEProtocolTestCase.testHandleData): Added test for output from
+	handleData().
 
 2008-06-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 
