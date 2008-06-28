@@ -31,8 +31,9 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
-from tests.testmessages import silence_all_messages
+from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
+verbose = 5
 if verbose < 0: silence_all_messages()
 
 from pokernetwork import protocol
@@ -155,11 +156,13 @@ class UGAMEProtocolTestCase(unittest.TestCase):
  
     def testConnectionLost(self):
         """Testing ConnectionLost"""
-
+        silence_all_messages()
+        clear_all_messages()
         self.u.established = 1
         self.u.connectionLost("testing")
+        self.assertEquals(search_output("connectionLost: reason = testing"), True)
             
-        assert self.u.established == 0             , "connectionLost error"
+        assert self.u.established == 0
     
     # assert ?
     def testSendVersion(self):
