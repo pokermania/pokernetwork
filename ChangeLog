@@ -5,6 +5,8 @@
 	(ClientServer.test02_pingExpectingPrefix): Wrote method.
 	(ClientServer.test05_clientConnectionLost): Wrote method.
 	(ClientServer.clientConnectionLost.ReasonMockUp): Wrote method.
+	(ClientServer.test06_dummyClientError): Wrote method.
+	(ClientServer.dummyClientError): Wrote method.
 
 	* tests/test-protocol.py.in: Set verbose to 5 so messages are printed.
 	(UGAMEProtocolTestCase.testConnectionLost): Added output search.

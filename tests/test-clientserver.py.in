@@ -284,6 +284,21 @@ class ClientServer(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.clientConnectionLost)
         return d
+    # -----------------------------------------------------------------------
+    def dummyClientError(self, client):
+        silence_all_messages()
+        clear_all_messages()
+        client.error("stupid dummy error test since client never calls")
+        self.assertEquals(get_messages(),
+                          ["ERROR stupid dummy error test since client never calls"])
+        return (client,)
+
+    def test06_dummyClientError(self):
+        """At the time of writing, client.error() is not used internally
+        to client, so this is a call to test its use"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.dummyClientError)
+        return d
 #-------------------------------------------------------------------------------
 
 # DummyServerTests are to cover code on the server that doesn't need a
