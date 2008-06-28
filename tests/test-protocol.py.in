@@ -200,16 +200,26 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         """Testing handleVersion"""
 
         assert self.u._protocol_ok == False        , "_protocol_ok : False expected"
+        # Messages should be empty, protocol is not established
+        clear_all_messages()
         self.u._handleVersion()
+        self.assertEquals(get_messages(), [])
+        
         assert self.u._protocol_ok == False        ,"_protocol_ok change unexpected"
         
         self.u._packet = list('\n')
+        # Messages should be empty, protocol is not established
+        clear_all_messages()
         self.u._handleVersion()
+        self.assertEquals(get_messages(), [])
         assert self.u.transport._loseConnection == True , "loseConnection not called"
 
         self.u.transport = FakeTransport()      # transport re-init
         self.u._packet = list('CGI a.b\n')
+        # Messages should be empty, protocol is not established
+        clear_all_messages()
         self.u._handleVersion()
+        self.assertEquals(get_messages(), [])
         assert self.u.transport._loseConnection == True , "loseConnection not called"
 
         self.u.transport = FakeTransport()      # transport re-init
@@ -217,7 +227,10 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         PROTOCOL_MAJOR = "%03d" % vers.major()
         PROTOCOL_MINOR = "%d%02d" % ( vers.medium(), vers.minor() )
         self.u._packet = list( 'CGI %s.%s \n' % (PROTOCOL_MAJOR, PROTOCOL_MINOR ))
+        clear_all_messages()
         self.u._handleVersion()
+        self.assertEquals(get_messages(), ["protocol established"])
+
         assert self.u._protocol_ok == True ,  "_protocol_ok value unexpected"
 
     def testProtocolEstablished(self):

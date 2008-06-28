@@ -5,6 +5,8 @@
 	(UGAMEProtocolTestCase.setUp): Switched verbosity to 5 so messages
 	are printed.
 	(UGAMEProtocolTestCase.testConnectionLostWithProtocolOk): Wrote method.
+	(UGAMEProtocolTestCase.testHandleVersion): Added test for "protocol
+	established" output (and for when it isn't done).
 
 2008-06-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 
