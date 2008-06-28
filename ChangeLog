@@ -1,5 +1,9 @@
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-clientserver.py.in
+	(ClientServer.pingExpectingPrefix): Wrote method.
+	(ClientServer.test02_pingExpectingPrefix): Wrote method.
+
 	* tests/test-protocol.py.in: Set verbose to 5 so messages are printed.
 	(UGAMEProtocolTestCase.testConnectionLost): Added output search.
 	(UGAMEProtocolTestCase.setUp): Switched verbosity to 5 so messages

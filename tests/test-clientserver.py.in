@@ -42,7 +42,7 @@ from twisted.application import service
 #
 from tests import testclock
 
-from tests.testmessages import restore_all_messages, silence_all_messages, search_output, messages_out
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
 #os.environ['VERBOSE_T'] = '0'
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 #if verbose < 0: silence_all_messages()
@@ -163,12 +163,34 @@ class ClientServer(unittest.TestCase):
         return client.connection_lost_deferred
         
     def ping(self, client):
+        clear_all_messages()
         client.sendPacket(PacketPing())
+        self.assertEquals(get_messages(), ["sendPacket(0) type = PING(5) "])
         return (client,)
+
+    def pingExpectingPrefix(self, client):
+        clear_all_messages()
+        client.sendPacket(PacketPing())
+        self.assertEquals(get_messages(),
+                          ["ATesterPrefix: sendPacket(0) type = PING(5) "])
+        return (client,)
+
+    def setPrefix(self, client):
+        client._prefix = "ATesterPrefix: "
+        return client
 
     def test01_ping(self):
         d = self.client_factory[0].established_deferred
+        silence_all_messages()
         d.addCallback(self.ping)
+        d.addCallback(self.quit)
+        return d
+
+    def test02_pingExpectingPrefix(self):
+        d = self.client_factory[0].established_deferred
+        silence_all_messages()
+        d.addCallback(self.setPrefix)
+        d.addCallback(self.pingExpectingPrefix)
         d.addCallback(self.quit)
         return d
 
