@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008       Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -100,7 +101,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
     def setUp(self):
         self.u = protocol.UGAMEProtocol()
         self.u.transport = FakeTransport()
-        self.u.factory = FakeFactory(int(os.environ.get('VERBOSE_T', 3)))
+        self.u.factory = FakeFactory(int(os.environ.get('VERBOSE_T', 6)))
 
     def testUGAMEProtocolInit(self):
         """Testing class UGAMEProtocol init"""
@@ -161,6 +162,17 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u.established = 1
         self.u.connectionLost("testing")
         self.assertEquals(search_output("connectionLost: reason = testing"), True)
+            
+        assert self.u.established == 0
+
+    def testConnectionLostWithProtocolOk(self):
+        """Testing ConnectionLostWithProtocolOk"""
+        silence_all_messages()
+        clear_all_messages()
+        self.u.established = 1
+        self.u._protocol_ok = True
+        self.u.connectionLost("another")
+        self.assertEquals(search_output("connectionLost: reason = another"), True)
             
         assert self.u.established == 0
     

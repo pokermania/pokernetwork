@@ -2,6 +2,9 @@
 
 	* tests/test-protocol.py.in: Set verbose to 5 so messages are printed.
 	(UGAMEProtocolTestCase.testConnectionLost): Added output search.
+	(UGAMEProtocolTestCase.setUp): Switched verbosity to 5 so messages
+	are printed.
+	(UGAMEProtocolTestCase.testConnectionLostWithProtocolOk): Wrote method.
 
 2008-06-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 
