@@ -1123,14 +1123,16 @@ class PokerClientTestCase(unittest.TestCase):
         return (client, packet)
 
     def test27_playerInfoPacket(self):
-        """Tests operation of PokerClientProtocol.updatePotChips"""
+        """Tests when the url returned by the skin.interpret changes
+        twice inbetween calls."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.changingURLHandlePacketInfo)
         return d
 
     def test28_playerInfoPacket(self):
-        """Tests operation of PokerClientProtocol.updatePotChips"""
+        """Tests when the url returned by the skin.interpret changes
+        three times."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.changingURLHandlePacketInfo, True)
@@ -1165,14 +1167,16 @@ class PokerClientTestCase(unittest.TestCase):
         return (client, packet)
 
     def test29_playerInfoPacketChangingOutfit(self):
-        """Tests operation of PokerClientProtocol.updatePotChips"""
+        """Tests when the outfit returned by the skin.interpret changes
+        twice inbetween calls."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.changingOutfitHandlePacketInfo)
         return d
 
     def test30_playerInfoPacketChangingOutfit(self):
-        """Tests operation of PokerClientProtocol.updatePotChips"""
+        """Tests when the outfit returned by the skin.interpret changes
+        three times."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.changingOutfitHandlePacketInfo, True)
