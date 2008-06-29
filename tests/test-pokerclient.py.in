@@ -2,6 +2,7 @@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -48,9 +49,11 @@ from pokerengine import pokertournament
 #
 from tests import testclock
 
-from tests.testmessages import silence_all_messages
+from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+# Need verbosity of 3 for output tests
+verbose = 3
+silence_all_messages()
 
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
@@ -149,7 +152,11 @@ class PokerClientTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
         settings.header = settings.doc.xpathNewContext()
+        clear_all_messages()
         self.client_factory[index] = pokerclient.PokerClientFactory(settings = settings)
+        self.assertEquals(get_messages(), ["PokerClient: delays {'lag': 60.0, 'end_round_last': 0.0, 'showdown': 0.0, 'blind_ante_position': 0.0, 'position': 0.0, 'begin_round': 0.0, 'end_round': 0.0}"])
+        clear_all_messages()
+
         def setUpProtocol(client):
             client._poll_frequency = 0.1
             return client
@@ -204,7 +211,11 @@ class PokerClientTestCase(unittest.TestCase):
             raise UserWarning, "quit does not have transport %d" % client.getSerial()
         
     def ping(self, client):
+        self.assertEquals(search_output('protocol established') > 0, True)
+        clear_all_messages()
         client.sendPacket(PacketPing())
+        self.assertEquals(get_messages(), ['sendPacket(0) type = PING(5) '])
+        clear_all_messages()
         return (client,)
 
     def test01_ping(self):
@@ -212,6 +223,7 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
+        clear_all_messages()
         return d
 
     def login(self, client, index):
@@ -1027,7 +1039,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test22"
+#    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

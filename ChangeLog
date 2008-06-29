@@ -1,4 +1,12 @@
+2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerclient.py.in (PokerClientTestCase.setUpClient):
+	Added test for delays output from PokerClientFactory.__init__
+
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerclient.py.in (PokerClientTestCase.ping): Added
+	test for various outputs.
 
 	* tests/test-clientserver.py.in
 	(ClientServer.pingExpectingPrefix): Wrote method.
