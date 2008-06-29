@@ -7,6 +7,8 @@
 	(PokerClientTestCase.updatePot): Wrote method.
 	(PokerClientTestCase.test25_updatePotChipsNoSidePots): Wrote method.
 	(PokerClientTestCase.updatePot): Wrote method.
+	(PokerClientTestCase.printUserInfo): Added check for
+	handleUserInfo output.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 

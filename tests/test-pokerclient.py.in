@@ -356,11 +356,13 @@ class PokerClientTestCase(unittest.TestCase):
         game = client.getGame(packet.game_id)
         self.assertEqual(False, game.isRunning())
         client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
+        clear_all_messages()
         return client.packetDeferred(True, PACKET_POKER_USER_INFO)
 
     def printUserInfo(self, (client, packet)):
         if verbose > 0:
             print "printUserInfo " + str(packet)
+        self.assertEquals(search_output("handleUserInfo: type = POKER_USER_INFO(92) serial = %d name = user%d, password = , email = , rating = 1000, affiliate = 0" % (packet.serial, packet.serial - 4)) >= 0, True)
         self.assertEqual(PACKET_POKER_USER_INFO, packet.type)
         return (client, packet)
         
@@ -1170,7 +1172,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test26"
+#    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
