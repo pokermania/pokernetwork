@@ -362,6 +362,7 @@ class PokerClientFactory(UGAMEClientFactory):
         if platform.system() == "Windows":
             os.execv(upgrades_dir + "/upgrade.exe", [ upgrades_dir + "/upgrade.exe", '"' + target_dir + '"', '"' + sys.executable + '"' ])
         else:
+            # FIXME: shouldn't this be an .in file and use @SHELL@ here?
             os.execv("/bin/sh", [ upgrades_dir + "/upgrade", '-x', upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)
 
 ABSOLUTE_LAGMAX = 120

@@ -28,7 +28,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 
-import sys, os, tempfile, shutil
+import sys, os, tempfile, shutil, platform
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
@@ -1006,7 +1006,42 @@ class PokerClientTestCase(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
         clear_all_messages()
         return True
+    # ---------------------------------------------------------------------------
+    # Note: this doesn't test the case when PokerClientFactor.display is
+    "underware" 
+    def test24_upgradeReady(self):
+        def myExecv(cmd, arglist):
+            if platform.system() == "Windows":
+                self.assertEquals(cmd, "/upgrades/upgrade.exe")
+                self.assertEquals(arglist, ['/upgrades/upgrade.exe', '"/target"',
+                                            '"@PYTHON@"'])
+            else:
+                # FIXME: I did the below because the code was written to
+                #        use /bin/sh explicitly but I actually believe
+                #        this should be in @SHELL@
+                self.assertEquals(cmd, "/bin/sh")
+                self.assertEquals(arglist, ['/upgrades/upgrade', '-x',
+                                            '/upgrades/upgrade', '/upgrades',
+                                            '@PYTHON@', './test-pokerclient.py'])
+        execvSave = os.execv
+        os.execv = myExecv
 
+        def forceWindows():
+            return "Windows"
+        def realOS():
+            return "GNU/Linux"
+
+        for systemFunc in [ realOS, forceWindows ]:
+            saveSystem = platform.system
+            platform.system = systemFunc
+            clear_all_messages()
+            self.client_factory[0].upgradeReady("/target", "/upgrades")
+            self.assertEquals(get_messages(), ['PokerClientFactory::upgradeReady'])
+            clear_all_messages()
+            platform.system = saveSystem
+        os.execv = execvSave
+        return True
+# -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
         pokerclient.PokerClientFactory.__init__(self, *args, **kwargs)
@@ -1085,7 +1120,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test23"
+#    loader.methodPrefix = "test24"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
