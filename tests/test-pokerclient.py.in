@@ -352,6 +352,8 @@ class PokerClientTestCase(unittest.TestCase):
         
     def test04_playHand(self):
         """ test04_playHand """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -382,6 +384,8 @@ class PokerClientTestCase(unittest.TestCase):
         
     def test05_userInfo(self):
         """ test05_userInfo """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -468,6 +472,8 @@ class PokerClientTestCase(unittest.TestCase):
 
     def test08_processing_readytoplay(self):
         """ test08_processing_readytoplay """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -685,6 +691,8 @@ class PokerClientTestCase(unittest.TestCase):
     # -----------------------------------------------
     def test15_0_playTourney(self):
         """ Play regular tourney, all players go allin immediately. Simplest case, no tricks. """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -715,6 +723,8 @@ class PokerClientTestCase(unittest.TestCase):
     # -----------------------------------------------
     def test15_1_check_breaks(self, ):
         """ """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.search_sitngo2)
@@ -725,6 +735,8 @@ class PokerClientTestCase(unittest.TestCase):
     # -----------------------------------------------
     def test16_playTourney_sitout_sit(self):
         """ Play regular tourney, one player sits out and sits back immediately afterwards. """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred
@@ -768,6 +780,8 @@ class PokerClientTestCase(unittest.TestCase):
     # -----------------------------------------------
     def test17_playTourney_timeout_sit(self):
         """ Play regular tourney, one player timeouts out and sits back immediately afterwards. """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         self.service.settings.headerSet("/server/delays/@showdown", '20')
         for tourney  in self.service.tourneys.values():
             tourney.player_timeout = 100
@@ -817,6 +831,8 @@ class PokerClientTestCase(unittest.TestCase):
 
     def test18_blindAllIn(self):
         """ test18_blindAllIn """
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: reason = [Failure"
         def raiseAlmostAllIn((client, packet)):
             self.assertEqual(PACKET_POKER_SELF_IN_POSITION, packet.type)
             self.assertEqual(client.getSerial(), packet.serial)
@@ -1006,6 +1022,8 @@ class PokerClientTestCase(unittest.TestCase):
 """ , 'undescribed',
 [ "ERROR *CRITICAL* can't find readable name for undescribed"]) ]
     def test23_checkTranslateToFileName(self):
+        global connectionLostMessage
+        connectionLostMessage = "Shutdown immediately"
         self.tmpdir = tempfile.mkdtemp()
         self.client_factory[0].dirs = [ self.tmpdir ]
 
@@ -1026,6 +1044,8 @@ class PokerClientTestCase(unittest.TestCase):
     # Note: this doesn't test the case when PokerClientFactor.display is
     # "underware" 
     def test24_upgradeReady(self):
+        global connectionLostMessage
+        connectionLostMessage = "Shutdown immediately"
         def myExecv(cmd, arglist):
             if platform.system() == "Windows":
                 self.assertEquals(cmd, "/upgrades/upgrade.exe")
@@ -1307,7 +1327,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
+#    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
