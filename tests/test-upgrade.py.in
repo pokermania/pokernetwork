@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -166,8 +167,12 @@ class UpgraderMockup(upgrade.Upgrader):
         self.call_checkClientVersionFailed = False
         self.call_checkClientVersionFailedHostDoesNotRespond = False
         self.call_checkClientVersionFailedNoNetwork = False
-        self.verbose = 0
+        self.verbose = 6
         upgrade.CheckClientVersion = CheckClientVersionMockup
+
+    # This should only be called for this one thing
+    def message(self, str):
+        assert str == "Upgrade::checkClientVersion((1, 1, 20))"
 
     def checkClientVersion(self, version):
         upgrade.Upgrader.checkClientVersion(self, version)

@@ -1,5 +1,7 @@
 2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-upgrade.py.in (UpgraderMockup.message): Wrote method.
+
 	* tests/test-pokerclient.py.in (PokerClientTestCase.setUpClient):
 	Added test for delays output from PokerClientFactory.__init__
 	(PokerClientTestCase.test23_checkTranslateToFileName): Wrote method.
