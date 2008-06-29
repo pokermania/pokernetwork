@@ -90,7 +90,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
         restore_all_messages()
         
 # -----------------------------------------------------------------------------------------------------
-    def testCheckClientVersionFailedAndNeedUpgrade(self):
+    def test01_CheckClientVersionFailedAndNeedUpgrade(self):
 	self.checker = CheckClientVersionMockup((1, 1, 20))
 	self.checker.line("1.1.19")
 	self.checker.line("1.1.20")
@@ -101,7 +101,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	self.assertEquals(True, self.checker.needUpgrade)
 	self.assertEquals(search_output("CheckClientVersion.failed logs:dummy log reason:dummy reason"), True)
 
-    def testCheckClientVersionFailedAndClientVersionOk(self):
+    def test02_CheckClientVersionFailedAndClientVersionOk(self):
 	self.checker = CheckClientVersionMockup((1, 1, 20))
 	self.checker.line("1.1.19")
 	self.checker.line("1.1.20")
@@ -111,7 +111,7 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
 	self.assertEquals(False, self.checker.needUpgrade)
 	self.assertEquals(search_output("CheckClientVersion.failed logs:dummy log reason:dummy reason"), True)
 
-    def testCheckClientVersionFailedAndNoVersionMatched(self):
+    def test03_CheckClientVersionFailedAndNoVersionMatched(self):
 	self.checker = CheckClientVersionMockup((1, 1, 20))
 	self.checker.line("salut les aminches")
 	self.checker.failed("dummy log", "dummy reason")
@@ -144,13 +144,13 @@ class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
     def tearDown(self):
 	pass
 # -----------------------------------------------------------------------------------------------------
-    def test_CheckClientVersionRemote(self):
+    def test01_CheckClientVersionRemote(self):
 	from pokernetwork.upgrade import CheckClientVersion
 	checkClientVersion = CheckClientVersion(PokerSettingsMockupSource("rsync::poker/update/"), PokerSettingsMockupSource("rsync::foo/bar/"), (0, 0, 0), None)
 	self.assertEquals(False, "--dry-run" in checkClientVersion.rsync)
 	self.assertEquals(False, "--list-only" in checkClientVersion.rsync)
 # -----------------------------------------------------------------------------------------------------
-    def test_CheckClientVersionLocal(self):
+    def test02_CheckClientVersionLocal(self):
 	from pokernetwork.upgrade import CheckClientVersion
 	checkClientVersion = CheckClientVersion(PokerSettingsMockup(), PokerSettingsMockupSource("/usr/share/poker/"), (0, 0, 0), None)
 	self.assertEquals(True, "--dry-run" in checkClientVersion.rsync)
@@ -200,14 +200,14 @@ class UpgraderTestCase(unittest.TestCase):
         pass
         
 # -----------------------------------------------------------------------------------------------------
-    def testCheckClientVersionFailed1(self):
+    def test01_CheckClientVersionFailed1(self):
 	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
         self.upgrade.checkClientVersion((1, 1, 20))
         CheckClientVersionMockup.instance.errors.append("failed to connect to")
         CheckClientVersionMockup.instance.processEnded(ReasonMockup())
 	self.assertEquals(True, self.upgrade.call_failed)
 
-    def testCheckClientVersionFailed2(self):
+    def test02_CheckClientVersionFailed2(self):
 	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
         self.upgrade.checkClientVersion((1, 1, 20))
         CheckClientVersionMockup.instance.errors.append("getaddrinfo")
