@@ -1010,7 +1010,7 @@ class PokerClientTestCase(unittest.TestCase):
         return True
     # ---------------------------------------------------------------------------
     # Note: this doesn't test the case when PokerClientFactor.display is
-    "underware" 
+    # "underware" 
     def test24_upgradeReady(self):
         def myExecv(cmd, arglist):
             if platform.system() == "Windows":
@@ -1093,6 +1093,49 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.updatePotWithSides, { 'pots' : [(10, 20), (40, 50) ]})
         return d
+    # ---------------------------------------------------------------------------
+    def changingURLHandlePacketInfo(self, (client, packet), forceCrash=False):
+        skin = client.factory.getSkin()
+        callCount = 0
+
+        global specialCallCountforURL
+        specialCallCountforURL = 0
+        def misInterpretURLforSkin(url, outfit, force=forceCrash):
+            global specialCallCountforURL
+            specialCallCountforURL += 1
+            if force and specialCallCountforURL > 1:
+                return ("http://thatisthree", outfit)
+            return ("http://thatistwo", outfit)
+        correctInterpret = skin.interpret
+        skin.interpret = misInterpretURLforSkin
+
+        clear_all_messages()
+        client.handlePlayerInfo(PacketPokerPlayerInfo(name = "test",
+                                                  url = "http://thatisone/",
+                                                  outfit = "Stablize",
+                                                  serial = client.getSerial()))
+        if forceCrash:
+            self.assertEquals(get_messages(), 
+                              ['ERROR *CRITICAL*: PACKET_POKER_PLAYER_INFO: may enter loop packet.url = http://thatisone/\n url = http://thatistwo\n url_check = http://thatisthree\npacket.outfit = Stablize\n outfit = Stablize\n outfit_check = Stablize'])
+        else:
+            self.assertEquals(get_messages(), ['sendPacket(4) type = POKER_PLAYER_INFO(87) serial = 4 game_id = 0 name = test, url = http://thatistwo, outfit = Stablize  '])
+
+        skin.interpret = correctInterpret
+        return (client, packet)
+
+    def test27_playerInfoPacket(self):
+        """Tests operation of PokerClientProtocol.updatePotChips"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.changingURLHandlePacketInfo)
+        return d
+
+    def test28_playerInfoPacket(self):
+        """Tests operation of PokerClientProtocol.updatePotChips"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.changingURLHandlePacketInfo, True)
+        return d
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -1172,7 +1215,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test05"
+#     loader.methodPrefix = "test27"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

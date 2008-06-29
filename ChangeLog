@@ -9,6 +9,9 @@
 	(PokerClientTestCase.updatePot): Wrote method.
 	(PokerClientTestCase.printUserInfo): Added check for
 	handleUserInfo output.
+	(PokerClientTestCase.test27_playerInfoPacket): Wrote method.
+	(PokerClientTestCase.changingURLHandlePacketInfo): Wrote method.
+	(PokerClientTestCase.test28_playerInfoPacket): Wrote method.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
