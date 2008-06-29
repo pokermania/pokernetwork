@@ -2,6 +2,7 @@
 
 	* tests/test-pokerclient.py.in (PokerClientTestCase.setUpClient):
 	Added test for delays output from PokerClientFactory.__init__
+	(PokerClientTestCase.test23_checkTranslateToFileName): Wrote method.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
