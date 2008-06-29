@@ -192,11 +192,28 @@ class PokerClientTestCase(unittest.TestCase):
                     p.cancel()
         return arg
 
+    def tearDownClearMessages(arg1, arg2):
+        clear_all_messages()
+        return (arg1, arg2)
+
+    def tearDownCheckforConnectionLostMessage(arg1, arg2):
+        assert search_output('connectionLost: noticed, aborting all tables.') >= 0
+        return (arg1, arg2)
+
+    def tearDownPrintMessages(arg1, arg2):
+        print "MYMESS:"
+        print get_messages()
+        return (arg1, arg2)
+
     def tearDown(self):
         d = self.service.stopService()
+        d.addCallback(self.tearDownClearMessages)
         d.addCallback(lambda x: self.p.stopListening())
+        d.addCallback(self.tearDownCheckforConnectionLostMessage)
 #        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
+        d.addCallback(self.tearDownPrintMessages)
+        
         return d
 
     def quit(self, args):
@@ -1279,7 +1296,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test31"
+#    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

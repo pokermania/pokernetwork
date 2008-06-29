@@ -20,6 +20,9 @@
 	method from changingURLHandlePacketInfo.
 	(PokerClientTestCase.test31_badPlayerObjectSetPlayerDelay): Wrote
 	method.
+	(PokerClientTestCase.tearDownCheckforConnectionLostMessage): Wrote method.
+	(PokerClientTestCase.tearDownClearMessages): Wrote method.
+	(PokerClientTestCase.tearDown): Added calls to the two above in callbacks.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
