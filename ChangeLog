@@ -1,6 +1,8 @@
 2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-upgrade.py.in (UpgraderMockup.message): Wrote method.
+	(PokerSettingsMockupSource.headerGetIn): set verbose return to 6
+	(PokerSettingsMockup.headerGetInt): Set verbose to return 6.
 
 	* tests/test-pokerclient.py.in (PokerClientTestCase.setUpClient):
 	Added test for delays output from PokerClientFactory.__init__
