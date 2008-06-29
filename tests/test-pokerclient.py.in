@@ -1054,12 +1054,12 @@ class PokerClientTestCase(unittest.TestCase):
                 return 0
         g = Game()
         clear_all_messages()
-        atLeastOne = False
+        packetCount = 0
         for p in client.updatePotsChips(g, None):
             self.assertEqual(p.game_id, 1015)
             self.assertEqual(p.type, PACKET_POKER_CHIPS_POT_RESET)
-            atLeastOne = True
-        self.assertEquals(atLeastOne, True)
+            packetCount += 1
+        self.assertEquals(packetCount, 1)
         self.assertEqual(get_messages(), [])
         return (client, packet)
 
@@ -1069,7 +1069,6 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.updatePot)
         return d
-            
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -1149,7 +1148,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test25"
+    loader.methodPrefix = "test25"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
