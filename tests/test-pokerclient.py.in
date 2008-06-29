@@ -166,6 +166,8 @@ class PokerClientTestCase(unittest.TestCase):
 
     # ------------------------------------------------------
     def setUp(self):
+        global connectionLostMessage
+        connectionLostMessage = 'connectionLost: noticed, aborting all tables.'
         testclock._seconds_reset()        
         self.destroyDb()
         self.setUpServer()
@@ -197,22 +199,17 @@ class PokerClientTestCase(unittest.TestCase):
         return (arg1, arg2)
 
     def tearDownCheckforConnectionLostMessage(arg1, arg2):
-        assert search_output('connectionLost: noticed, aborting all tables.') >= 0
-        return (arg1, arg2)
-
-    def tearDownPrintMessages(arg1, arg2):
-        print "MYMESS:"
-        print get_messages()
+        global connectionLostMessage
+        assert search_output(connectionLostMessage) > 0
         return (arg1, arg2)
 
     def tearDown(self):
+        clear_all_messages()
         d = self.service.stopService()
-        d.addCallback(self.tearDownClearMessages)
         d.addCallback(lambda x: self.p.stopListening())
         d.addCallback(self.tearDownCheckforConnectionLostMessage)
 #        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
-        d.addCallback(self.tearDownPrintMessages)
         
         return d
 
@@ -1217,6 +1214,20 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.badPlayerObjectSetPlayerDelay)
         return d
+
+    # ---------------------------------------------------------------------------
+    def setCrashing(self, (client,)):
+        self.client_factory[0].crashing = True
+        global connectionLostMessage
+        connectionLostMessage = "connectionLost: crashing, just return."
+        return (client,)
+        
+    def test32_crashClient(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.ping)
+        d.addCallback(self.setCrashing)
+        return d
+
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -1296,7 +1307,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
+#    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

@@ -23,6 +23,8 @@
 	(PokerClientTestCase.tearDownCheckforConnectionLostMessage): Wrote method.
 	(PokerClientTestCase.tearDownClearMessages): Wrote method.
 	(PokerClientTestCase.tearDown): Added calls to the two above in callbacks.
+	(PokerClientTestCase.setCrashing): Wrote method.
+	(PokerClientTestCase.test32_crashClient): Wrote method.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
