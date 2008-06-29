@@ -125,7 +125,7 @@ class PokerSettingsMockupSource:
 	self.source = source
     def headerGetInt(self, path):
         if path == "/settings/@verbose":
-            return 0
+            return 6
 	return None
     def headerGet(self, path):
 	if path == "/settings/rsync/@source":
