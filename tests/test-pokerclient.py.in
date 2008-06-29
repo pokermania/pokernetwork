@@ -52,7 +52,7 @@ from tests import testclock
 from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 # Need verbosity of 3 for output tests
-verbose = 3
+verbose = 5
 silence_all_messages()
 
 from pokernetwork import dispatch
@@ -1046,12 +1046,6 @@ class PokerClientTestCase(unittest.TestCase):
         class Game:
             def __init__(self):
                 self.id = 1015
-
-            def isRunning(self):
-                return True
-
-            def getSerialInPosition(self):
-                return 0
         g = Game()
         clear_all_messages()
         packetCount = 0
@@ -1068,6 +1062,34 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.updatePot)
+        return d
+    # ---------------------------------------------------------------------------
+    def updatePotWithSides(self, (client, packet), sides):
+        class Game:
+            def __init__(self):
+                self.id = 1020
+            unit = 1
+        g = Game()
+        packetCount = 0
+        clear_all_messages()
+        packetList = client.updatePotsChips(g, sides)
+        self.assertEqual(get_messages(), ['normalizeChips: [1, 10] [1]',
+                                          'normalizeChips: [1, 40] [1]'])
+        self.assertEquals(len(packetList), 2)
+        for ii in [ 0, 1 ]:
+            self.assertEquals(packetList[ii].game_id, 1020)
+            self.assertEquals(packetList[ii].index, ii)
+            self.assertEqual(packetList[ii].type, PACKET_POKER_POT_CHIPS)
+        self.assertEqual(packetList[0].bet, [1, 10])
+        self.assertEqual(packetList[1].bet, [1, 40])
+        print packetList[1].bet
+        return (client, packet)
+
+    def test26_updatePotChipsNoSidePots(self):
+        """Tests operation of PokerClientProtocol.updatePotChips"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.updatePotWithSides, { 'pots' : [(10, 20), (40, 50) ]})
         return d
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
@@ -1148,7 +1170,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test25"
+#    loader.methodPrefix = "test26"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
