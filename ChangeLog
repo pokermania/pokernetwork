@@ -18,6 +18,8 @@
 	Adapated method from test27.
 	(PokerClientTestCase.changingOutfitHandlePacketInfo): Adapted
 	method from changingURLHandlePacketInfo.
+	(PokerClientTestCase.test31_badPlayerObjectSetPlayerDelay): Wrote
+	method.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 

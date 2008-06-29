@@ -1177,6 +1177,25 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.changingOutfitHandlePacketInfo, True)
         return d
+    # ---------------------------------------------------------------------------
+    def badPlayerObjectSetPlayerDelay(self, (client, packet)):
+        class Game:
+            def getPlayer(self, serial):
+                return None
+        g = Game()
+        clear_all_messages()
+        client.setPlayerDelay(g, client.getSerial(), 101873)
+        self.assertEquals(get_messages(), [ "WARNING setPlayerDelay for a non-existing player %d" % client.getSerial() ])
+        clear_all_messages()
+        return (client, packet)
+
+    def test31_badPlayerObjectSetPlayerDelay(self):
+        """Tests the action of setPlayerDelay when the player object
+        returned by game is None"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.badPlayerObjectSetPlayerDelay)
+        return d
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -1256,7 +1275,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test30"
+#    loader.methodPrefix = "test31"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
