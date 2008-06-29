@@ -1096,7 +1096,6 @@ class PokerClientTestCase(unittest.TestCase):
     # ---------------------------------------------------------------------------
     def changingURLHandlePacketInfo(self, (client, packet), forceCrash=False):
         skin = client.factory.getSkin()
-        callCount = 0
 
         global specialCallCountforURL
         specialCallCountforURL = 0
@@ -1135,6 +1134,48 @@ class PokerClientTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.login, 0)
         d.addCallback(self.changingURLHandlePacketInfo, True)
+        return d
+    # ---------------------------------------------------------------------------
+    def changingOutfitHandlePacketInfo(self, (client, packet), forceCrash=False):
+        skin = client.factory.getSkin()
+
+        global specialCallCountforOutfit
+        specialCallCountforOutfit = 0
+        def misInterpretOutfitforSkin(url, outfit, force=forceCrash):
+            global specialCallCountforOutfit
+            specialCallCountforOutfit += 1
+            if force and specialCallCountforOutfit > 1:
+                return (url, "OutfitThree")
+            return (url, "OutfitTwo")
+        correctInterpret = skin.interpret
+        skin.interpret = misInterpretOutfitforSkin
+
+        clear_all_messages()
+        client.handlePlayerInfo(PacketPokerPlayerInfo(name = "test",
+                                                  url = "http://stable/",
+                                                  outfit = "OutfitOne",
+                                                  serial = client.getSerial()))
+        if forceCrash:
+            self.assertEquals(get_messages(), 
+                              ['ERROR *CRITICAL*: PACKET_POKER_PLAYER_INFO: may enter loop packet.url = http://stable/\n url = http://stable/\n url_check = http://stable/\npacket.outfit = OutfitOne\n outfit = OutfitTwo\n outfit_check = OutfitThree'])
+        else:
+            self.assertEquals(get_messages(), ['sendPacket(4) type = POKER_PLAYER_INFO(87) serial = 4 game_id = 0 name = test, url = http://stable/, outfit = OutfitTwo  '])
+
+        skin.interpret = correctInterpret
+        return (client, packet)
+
+    def test29_playerInfoPacketChangingOutfit(self):
+        """Tests operation of PokerClientProtocol.updatePotChips"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.changingOutfitHandlePacketInfo)
+        return d
+
+    def test30_playerInfoPacketChangingOutfit(self):
+        """Tests operation of PokerClientProtocol.updatePotChips"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.changingOutfitHandlePacketInfo, True)
         return d
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
@@ -1215,7 +1256,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#     loader.methodPrefix = "test27"
+#    loader.methodPrefix = "test30"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

@@ -12,6 +12,12 @@
 	(PokerClientTestCase.test27_playerInfoPacket): Wrote method.
 	(PokerClientTestCase.changingURLHandlePacketInfo): Wrote method.
 	(PokerClientTestCase.test28_playerInfoPacket): Wrote method.
+	(PokerClientTestCase.test30_playerInfoPacketChangingOutfit):
+	Adapted method from test28.
+	(PokerClientTestCase.test29_playerInfoPacketChangingOutfit):
+	Adapated method from test27.
+	(PokerClientTestCase.changingOutfitHandlePacketInfo): Adapted
+	method from changingURLHandlePacketInfo.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
