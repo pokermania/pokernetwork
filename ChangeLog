@@ -4,6 +4,8 @@
 	Added test for delays output from PokerClientFactory.__init__
 	(PokerClientTestCase.test23_checkTranslateToFileName): Wrote method.
 	(PokerClientTestCase.test24_upgradeReady): Wrote method.
+	(PokerClientTestCase.updatePot): Wrote method.
+	(PokerClientTestCase.test25_updatePotChipsNoSidePots): Wrote method.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 

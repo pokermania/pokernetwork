@@ -1041,6 +1041,35 @@ class PokerClientTestCase(unittest.TestCase):
             platform.system = saveSystem
         os.execv = execvSave
         return True
+    # ---------------------------------------------------------------------------
+    def updatePot(self, (client, packet)):
+        class Game:
+            def __init__(self):
+                self.id = 1015
+
+            def isRunning(self):
+                return True
+
+            def getSerialInPosition(self):
+                return 0
+        g = Game()
+        clear_all_messages()
+        atLeastOne = False
+        for p in client.updatePotsChips(g, None):
+            self.assertEqual(p.game_id, 1015)
+            self.assertEqual(p.type, PACKET_POKER_CHIPS_POT_RESET)
+            atLeastOne = True
+        self.assertEquals(atLeastOne, True)
+        self.assertEqual(get_messages(), [])
+        return (client, packet)
+
+    def test25_updatePotChipsNoSidePots(self):
+        """Tests operation of PokerClientProtocol.updatePotChips"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.login, 0)
+        d.addCallback(self.updatePot)
+        return d
+            
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -1120,7 +1149,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test24"
+#    loader.methodPrefix = "test25"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
