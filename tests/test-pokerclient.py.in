@@ -52,7 +52,7 @@ from tests import testclock
 from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 # Need verbosity of 3 for output tests
-verbose = 5
+verbose = 6
 silence_all_messages()
 
 from pokernetwork import dispatch
@@ -1248,6 +1248,27 @@ class PokerClientTestCase(unittest.TestCase):
         d.addCallback(self.setCrashing)
         return d
 
+    # ---------------------------------------------------------------------------
+    def publishDeadPacket(self, client):
+        if client.publish_packets == []:
+            client.publish_packets.append(PacketPing())
+        clear_all_messages()
+        client.publishPacket()
+        self.assertEquals(get_messages(), ['publishPacket: skip because connection not established'])
+        return (client,)
+        
+    def setupDeadPacketPublish(self, client):
+        d = client.connection_lost_deferred
+        d.addCallback(self.publishDeadPacket)
+        return (client,)
+
+    def test33_sendPacketAfterLost(self):
+        global connectionLostMessage
+        connectionLostMessage = ""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupDeadPacketPublish)
+        return d
+
 # -------------------------------------------------------------------------------
 class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
     def __init__(self, *args, **kwargs):
@@ -1327,7 +1348,7 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test33"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
 #    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))

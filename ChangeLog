@@ -25,6 +25,9 @@
 	(PokerClientTestCase.tearDown): Added calls to the two above in callbacks.
 	(PokerClientTestCase.setCrashing): Wrote method.
 	(PokerClientTestCase.test32_crashClient): Wrote method.
+	(PokerClientTestCase.publishDeadPacket): Wrote method.
+	(PokerClientTestCase.setupDeadPacketPublish): Wrote method.
+	(PokerClientTestCase.test33_sendPacketAfterLost): Wrote method.
 
 2008-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
