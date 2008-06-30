@@ -250,11 +250,11 @@ class GetPatchUpgradeTest(unittest.TestCase):
         clear_all_messages()
         for l in lineSet:
             self.getpatch.outReceived(l + "\n")
+        self.assertEquals(get_messages(), lineSet)
         def checkDivide(value, dummy):
             self.assertEquals(value, 2/50.0)
         self.getpatch.registerHandler(TICK, checkDivide)
 
-        self.assertEquals(get_messages(), lineSet)
 ######################################################################
 from pokernetwork import upgrade
 
