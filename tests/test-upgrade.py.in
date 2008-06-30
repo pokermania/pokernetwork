@@ -257,8 +257,8 @@ class GetPatchUpgradeTest(unittest.TestCase):
 
 ######################################################################
 from pokernetwork import upgrade
-from pokernetwork.upgrade import NO_NETWORK
-from pokernetwork.pokerchildren import RSYNC_NO_NETWORK
+from pokernetwork.upgrade import NO_NETWORK, HOST_DOES_NOT_RESPOND
+from pokernetwork.pokerchildren import RSYNC_NO_NETWORK, RSYNC_HOST_DOES_NOT_RESPOND
 
 class ReasonMockup:
     def __init__(self):
@@ -310,7 +310,11 @@ class UpgraderTestCase(unittest.TestCase):
     def test03_noNetwork(self):
 	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
         self.upgrade.checkClientVersion((1, 1, 20))
+        global countCalled
+        countCalled = 0
         def receiveNoNetwork(log, reason):
+            global countCalled
+            countCalled += 1
             self.assertEquals(log, "got no network")
             self.assertEquals(reason, "because I said so")
         clear_all_messages()
@@ -318,6 +322,23 @@ class UpgraderTestCase(unittest.TestCase):
         CheckClientVersionMockup.instance.publishEvent(RSYNC_NO_NETWORK,
                                                    "got no network", "because I said so")
         self.assertEquals(get_messages(),['ERROR *CRITICAL* checkClientVersionFailedNoNetwork logs:got no network reason:because I said so'])
+    #----------------------------------------------------------------------
+    def test04_hostNoRespond(self):
+	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        self.upgrade.checkClientVersion((1, 1, 20))
+        global countCalled
+        countCalled = 0
+        def hostNotRespond(log, reason):
+            global countCalled
+            countCalled += 1
+            self.assertEquals(log, "host did not respond")
+            self.assertEquals(reason, "because I said so")
+        clear_all_messages()
+        self.upgrade.registerHandler(HOST_DOES_NOT_RESPOND, hostNotRespond)
+        CheckClientVersionMockup.instance.publishEvent(RSYNC_HOST_DOES_NOT_RESPOND,
+                                                   "host did not respond", "because I said so")
+        self.assertEquals(get_messages(),['ERROR *CRITICAL* checkClientVersionFailedHostDoesNotRespond logs:host did not respond reason:because I said so'])
+        self.assertEquals(countCalled, 1)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
