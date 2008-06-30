@@ -211,6 +211,50 @@ class PokerClientDryrunUpgrade(unittest.TestCase):
         self.assertEquals(get_messages(), lineSet)
         self.assertEquals(self.dryrun.files_count, 2)
         self.assertEquals(self.dryrun.files_total, 20.0)
+##############################################################################
+from pokernetwork.upgrade import GetPatch, TICK
+class GetPatchMockUp(GetPatch):
+    instance = None
+    def __init__(self, config = PokerSettingsMockup(), settings = PokerSettingsMockup(), version = "1.1.20", files_total = 50):
+        GetPatchMockUp.instance = self
+	GetPatch.__init__(self, config, settings, version, files_total)
+ 	self.rsyncFailedCalled = False
+	self.rsyncDoneCalled = False
+	self.needUpgrade = False
+    def spawn(self):
+	pass
+    def configure(self, command):
+	pass
+    def rsyncFailed(self, logs, reason):
+	self.rsyncFailedCalled =  True
+    def rsyncDone(self, need_upgrade, version):
+	self.rsyncDoneCalled = True
+	self.needUpgrade = need_upgrade
+
+class GetPatchUpgradeTest(unittest.TestCase):
+# -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        silence_all_messages()
+
+# -----------------------------------------------------------------------------------------------------
+    def tearDown(self):
+        restore_all_messages()
+        
+# -----------------------------------------------------------------------------------------------------
+    def test01_getPatchLine(self):
+        clear_all_messages()
+	self.getpatch = GetPatchMockUp(50)
+        self.assertEquals(self.getpatch.files_count, 0)
+        self.assertEquals(self.getpatch.files_total, 50)
+        lineSet = [ "20 files to consider", "FILE: /a", "FILE: /b" ]
+        clear_all_messages()
+        for l in lineSet:
+            self.getpatch.outReceived(l + "\n")
+        def checkDivide(value, dummy):
+            self.assertEquals(value, 2/50.0)
+        self.getpatch.registerHandler(TICK, checkDivide)
+
+        self.assertEquals(get_messages(), lineSet)
 ######################################################################
 from pokernetwork import upgrade
 
@@ -279,6 +323,7 @@ def GetTestSuite():
     suite.addTest(unittest.makeSuite(PokerClientUpgradeCheckClientVersion))
     suite.addTest(loader.loadClass(UpgraderTestCase))
     suite.addTest(loader.loadClass(PokerClientDryrunUpgrade))
+    suite.addTest(loader.loadClass(GetPatchUpgradeTest))
     return suite
     
 # -----------------------------------------------------------------------------------------------------

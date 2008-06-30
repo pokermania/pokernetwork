@@ -10,6 +10,11 @@
 	(PokerClientDryrunUpgrade.setUp): Wrote method.
 	(PokerClientDryrunUpgrade.tearDown): Wrote method.
 	(PokerClientDryrunUpgrade.test01_dryRunLineTest): Wrote method.
+	(GetPatchMockUp): Created mock up class.
+	(GetPatchUpgradeTest): Created test set.
+	(GetPatchUpgradeTest.setUp): Wrote method.
+	(GetPatchUpgradeTest.tearDown): Wrote method.
+	(GetPatchUpgradeTest.test01_getPatchLine): Wrote method.
 
 	* tests/testmessages.py: Added import of upgrade to put
 	upgrade.CheckClientVersion on the messages list.
