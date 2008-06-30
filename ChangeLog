@@ -3,6 +3,8 @@
 	* tests/test-upgrade.py.in
 	(PokerClientUpgradeCheckClientVersion.test01_CheckClientVersionRemote):
 	Added check for message() output from CheckClientVersion.__init__
+	(PokerClientUpgradeFailedTestCase.test01_CheckClientVersionFailedAndNeedUpgrade):
+	Added output checks.
 
 	* tests/testmessages.py: Added import of upgrade to put
 	upgrade.CheckClientVersion on the messages list.

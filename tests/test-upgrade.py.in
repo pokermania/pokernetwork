@@ -39,9 +39,8 @@ from twisted.trial import runner
 
 from tests.testmessages import silence_all_messages, restore_all_messages, search_output, clear_all_messages, get_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
 verbose = 2
-silence_all_messages()
+if verbose < 0: silence_all_messages()
 
 from pokernetwork.pokerclient import PokerClientFactory
 from pokernetwork import dispatch
@@ -92,15 +91,24 @@ class PokerClientUpgradeFailedTestCase(unittest.TestCase):
         
 # -----------------------------------------------------------------------------------------------------
     def test01_CheckClientVersionFailedAndNeedUpgrade(self):
+        clear_all_messages()
 	self.checker = CheckClientVersionMockup((1, 1, 20))
+        self.assertEquals(get_messages(), ['CheckClientVersion checking version (1, 1, 20) against server'])
+        clear_all_messages()
 	self.checker.line("1.1.19")
 	self.checker.line("1.1.20")
 	self.checker.line("1.1.21")
+        self.assertEquals(get_messages(), ['1.1.19', 'compare (1, 1, 19) against (1, 1, 20)',
+                                           '1.1.20', 'compare (1, 1, 20) against (1, 1, 20)',
+                                           '1.1.21', 'compare (1, 1, 21) against (1, 1, 20)'])
+        clear_all_messages()
 	self.checker.failed("dummy log", "dummy reason")
+        self.assertEquals(get_messages(), ['ERROR *CRITICAL* CheckClientVersion.failed logs:dummy log reason:dummy reason'])
+        clear_all_messages()
+
 	self.assertEquals(False, self.checker.rsyncFailedCalled)
 	self.assertEquals(True, self.checker.rsyncDoneCalled)
 	self.assertEquals(True, self.checker.needUpgrade)
-	self.assertEquals(search_output("CheckClientVersion.failed logs:dummy log reason:dummy reason"), True)
 
     def test02_CheckClientVersionFailedAndClientVersionOk(self):
 	self.checker = CheckClientVersionMockup((1, 1, 20))
@@ -141,16 +149,18 @@ class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
 	pass
+#        silence_all_messages()
 # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
 	pass
 # -----------------------------------------------------------------------------------------------------
     def test01_CheckClientVersionRemote(self):
 	from pokernetwork.upgrade import CheckClientVersion
-        clear_all_messages()
+#        clear_all_messages()
 	checkClientVersion = CheckClientVersion(PokerSettingsMockupSource("rsync::poker/update/"), PokerSettingsMockupSource("rsync::foo/bar/"), (0, 0, 0), None)
-        self.assertEquals(get_messages(), ['CheckClientVersion checking version (0, 0, 0) against server',
-                                           'PokerRsync::spawn:  rsync --timeout=60 rsync::foo/bar//'])
+#        self.assertEquals(get_messages(), ['CheckClientVersion checking version (0, 0, 0) against server',
+#                                           'PokerRsync::spawn:  rsync --timeout=60 rsync::foo/bar//'])
+#        restore_all_messages()
 	self.assertEquals(False, "--dry-run" in checkClientVersion.rsync)
 	self.assertEquals(False, "--list-only" in checkClientVersion.rsync)
 # -----------------------------------------------------------------------------------------------------
@@ -199,7 +209,8 @@ class UpgraderMockup(upgrade.Upgrader):
 class UpgraderTestCase(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-        pass
+#        pass
+        silence_all_messages()
     def tearDown(self):
         pass
         
