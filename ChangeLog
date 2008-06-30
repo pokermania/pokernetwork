@@ -1,5 +1,7 @@
 2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/upgrade.py (Upgrader.error): Wrote method; it was missing.
+
 	* tests/test-upgrade.py.in
 	(PokerClientUpgradeCheckClientVersion.test01_CheckClientVersionRemote):
 	Added check for message() output from CheckClientVersion.__init__

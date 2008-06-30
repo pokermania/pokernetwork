@@ -167,6 +167,9 @@ class Upgrader(dispatch.EventDispatcher):
         Constants.UPGRADES_DIR = self.target + "/" + self.upgrades
         source = self.settings.headerGet("/settings/rsync/@source")
 
+    def error(self, string):
+        self.message("ERROR " + str(string))
+
     def failed(self, logs, reason):
         self.publishEvent(FAILED, logs, reason)
 
