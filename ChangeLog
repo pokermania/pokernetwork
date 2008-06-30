@@ -2,6 +2,8 @@
 
 	* tests/test-upgrade.py.in (UpgraderTestCase.test03_noNetwork):
 	Wrote method.
+	(UpgraderTestCase.test01_CheckClientVersionFailed1): Added check
+	for output from checkClientVersion()
 
 	* pokernetwork/upgrade.py (Upgrader.message): Wrote method; as
 	support for Upgrader.error

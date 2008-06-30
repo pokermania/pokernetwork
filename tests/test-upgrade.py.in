@@ -291,7 +291,10 @@ class UpgraderTestCase(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def test01_CheckClientVersionFailed1(self):
 	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        clear_all_messages()
         self.upgrade.checkClientVersion((1, 1, 20))
+        self.assertEquals(get_messages(), ['Upgrade::checkClientVersion((1, 1, 20))',
+                                           'CheckClientVersion checking version (1, 1, 20) against server'])
         CheckClientVersionMockup.instance.errors.append("failed to connect to")
         CheckClientVersionMockup.instance.processEnded(ReasonMockup())
 	self.assertEquals(True, self.upgrade.call_failed)
