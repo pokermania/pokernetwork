@@ -148,19 +148,18 @@ class PokerSettingsMockupSource:
 class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-	pass
-#        silence_all_messages()
+        silence_all_messages()
 # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
 	pass
 # -----------------------------------------------------------------------------------------------------
     def test01_CheckClientVersionRemote(self):
 	from pokernetwork.upgrade import CheckClientVersion
-#        clear_all_messages()
+        clear_all_messages()
 	checkClientVersion = CheckClientVersion(PokerSettingsMockupSource("rsync::poker/update/"), PokerSettingsMockupSource("rsync::foo/bar/"), (0, 0, 0), None)
-#        self.assertEquals(get_messages(), ['CheckClientVersion checking version (0, 0, 0) against server',
-#                                           'PokerRsync::spawn:  rsync --timeout=60 rsync::foo/bar//'])
-#        restore_all_messages()
+        self.assertEquals(get_messages(), ['CheckClientVersion checking version (0, 0, 0) against server',
+                                           'PokerRsync::spawn:  rsync --timeout=60 rsync::foo/bar//'])
+        restore_all_messages()
 	self.assertEquals(False, "--dry-run" in checkClientVersion.rsync)
 	self.assertEquals(False, "--list-only" in checkClientVersion.rsync)
 # -----------------------------------------------------------------------------------------------------
@@ -170,8 +169,49 @@ class PokerClientUpgradeCheckClientVersion(unittest.TestCase):
 	self.assertEquals(True, "--dry-run" in checkClientVersion.rsync)
 	self.assertEquals(True, "--list-only" in checkClientVersion.rsync)
 
+##############################################################################
+from pokernetwork.upgrade import DryrunUpgrade
+class DryrunUpgradeMockUp(DryrunUpgrade):
+    instance = None
+    def __init__(self, config = PokerSettingsMockup(), settings = PokerSettingsMockup(), version = "1.1.20"):
+        DryrunUpgradeMockUp.instance = self
+	DryrunUpgrade.__init__(self, config, settings, version)
+ 	self.rsyncFailedCalled = False
+	self.rsyncDoneCalled = False
+	self.needUpgrade = False
+    def spawn(self):
+	pass
+    def configure(self, command):
+	pass
+    def rsyncFailed(self, logs, reason):
+	self.rsyncFailedCalled =  True
+    def rsyncDone(self, need_upgrade, version):
+	self.rsyncDoneCalled = True
+	self.needUpgrade = need_upgrade
 
+class PokerClientDryrunUpgrade(unittest.TestCase):
+# -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        silence_all_messages()
 
+# -----------------------------------------------------------------------------------------------------
+    def tearDown(self):
+        restore_all_messages()
+        
+# -----------------------------------------------------------------------------------------------------
+    def test01_dryRunLineTest(self):
+        clear_all_messages()
+	self.dryrun = DryrunUpgradeMockUp("1.1.20")
+        self.assertEquals(self.dryrun.files_count, 0)
+        self.assertEquals(self.dryrun.files_total, 0.0)
+        lineSet = [ "20 files to consider", "FILE: /a", "FILE: /b" ]
+        clear_all_messages()
+        for l in lineSet:
+            self.dryrun.outReceived(l + "\n")
+        self.assertEquals(get_messages(), lineSet)
+        self.assertEquals(self.dryrun.files_count, 2)
+        self.assertEquals(self.dryrun.files_total, 20.0)
+######################################################################
 from pokernetwork import upgrade
 
 class ReasonMockup:
@@ -238,6 +278,7 @@ def GetTestSuite():
     suite.addTest(unittest.makeSuite(PokerClientUpgradeFailedTestCase))
     suite.addTest(unittest.makeSuite(PokerClientUpgradeCheckClientVersion))
     suite.addTest(loader.loadClass(UpgraderTestCase))
+    suite.addTest(loader.loadClass(PokerClientDryrunUpgrade))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
