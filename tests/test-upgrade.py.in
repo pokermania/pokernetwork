@@ -257,6 +257,8 @@ class GetPatchUpgradeTest(unittest.TestCase):
 
 ######################################################################
 from pokernetwork import upgrade
+from pokernetwork.upgrade import NO_NETWORK
+from pokernetwork.pokerchildren import RSYNC_NO_NETWORK
 
 class ReasonMockup:
     def __init__(self):
@@ -272,24 +274,12 @@ class UpgraderMockup(upgrade.Upgrader):
         self.verbose = 6
         upgrade.CheckClientVersion = CheckClientVersionMockup
 
-    # This should only be called for this one thing
-    def message(self, str):
-        assert str == "Upgrade::checkClientVersion((1, 1, 20))"
-
     def checkClientVersion(self, version):
         upgrade.Upgrader.checkClientVersion(self, version)
         
     def failed(self, logs, reason):
         self.call_failed = True
 
-    def checkClientVersionFailedNoNetwork(self, logs, reason):
-        self.call_checkClientVersionFailedNoNetwork = True
-        
-    def checkClientVersionFailedHostDoesNotRespond(self, logs, reason):
-        self.call_checkClientVersionFailedHostDoesNotRespond = True
-        
-
-    
 class UpgraderTestCase(unittest.TestCase):
 # -----------------------------------------------------------------------------------------------------
     def setUp(self):
@@ -305,7 +295,7 @@ class UpgraderTestCase(unittest.TestCase):
         CheckClientVersionMockup.instance.errors.append("failed to connect to")
         CheckClientVersionMockup.instance.processEnded(ReasonMockup())
 	self.assertEquals(True, self.upgrade.call_failed)
-
+    #----------------------------------------------------------------------
     def test02_CheckClientVersionFailed2(self):
 	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
         self.upgrade.checkClientVersion((1, 1, 20))
@@ -313,6 +303,18 @@ class UpgraderTestCase(unittest.TestCase):
         CheckClientVersionMockup.instance.errors.append("Temporary failure in name resolution")
         CheckClientVersionMockup.instance.processEnded(ReasonMockup())
 	self.assertEquals(True, self.upgrade.call_failed)
+    #----------------------------------------------------------------------
+    def test03_noNetwork(self):
+	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        self.upgrade.checkClientVersion((1, 1, 20))
+        def receiveNoNetwork(log, reason):
+            self.assertEquals(log, "got no network")
+            self.assertEquals(reason, "because I said so")
+        clear_all_messages()
+        self.upgrade.registerHandler(NO_NETWORK, receiveNoNetwork)
+        CheckClientVersionMockup.instance.publishEvent(RSYNC_NO_NETWORK,
+                                                   "got no network", "because I said so")
+        self.assertEquals(get_messages(),['ERROR *CRITICAL* checkClientVersionFailedNoNetwork logs:got no network reason:because I said so'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
