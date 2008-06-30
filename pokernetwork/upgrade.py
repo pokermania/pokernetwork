@@ -170,6 +170,9 @@ class Upgrader(dispatch.EventDispatcher):
     def error(self, string):
         self.message("ERROR " + str(string))
 
+    def message(self, string):
+        print "Upgrade: " + str(string)
+
     def failed(self, logs, reason):
         self.publishEvent(FAILED, logs, reason)
 

@@ -1,5 +1,8 @@
 2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/upgrade.py (Upgrader.message): Wrote method; as
+	support for Upgrader.error
+
 	* pokernetwork/upgrade.py (Upgrader.error): Wrote method; it was missing.
 
 	* tests/test-upgrade.py.in
