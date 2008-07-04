@@ -348,7 +348,6 @@ class UpgraderTestCase(unittest.TestCase):
         self.upgrade.getUpgrade("1.1.20", ("/something",) )
         self.assertEquals(get_messages()[0], 'Upgrader::getUpgrade')
         self.assertEquals(get_messages()[1], 'Upgrade::upgrade to version 1.1.20')
-        print get_messages()
         return True
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
