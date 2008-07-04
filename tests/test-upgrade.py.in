@@ -269,14 +269,15 @@ class UpgraderMockup(upgrade.Upgrader):
         upgrade.Upgrader.__init__(self, *args, **kwargs)
         self.call_failed = False
         self.call_checkClientVersionFailed = False
-        self.call_checkClientVersionFailedHostDoesNotRespond = False
-        self.call_checkClientVersionFailedNoNetwork = False
         self.verbose = 6
         upgrade.CheckClientVersion = CheckClientVersionMockup
 
     def checkClientVersion(self, version):
         upgrade.Upgrader.checkClientVersion(self, version)
-        
+
+    def spawn():
+        pass
+
     def failed(self, logs, reason):
         self.call_failed = True
 
@@ -339,7 +340,16 @@ class UpgraderTestCase(unittest.TestCase):
                                                    "host did not respond", "because I said so")
         self.assertEquals(get_messages(),['ERROR *CRITICAL* checkClientVersionFailedHostDoesNotRespond logs:host did not respond reason:because I said so'])
         self.assertEquals(countCalled, 1)
-
+    #----------------------------------------------------------------------
+    def test05_getUpgrader(self):
+	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        self.upgrade.checkClientVersion((1, 1, 20))
+        clear_all_messages()
+        self.upgrade.getUpgrade("1.1.20", ("/something",) )
+        self.assertEquals(get_messages()[0], 'Upgrader::getUpgrade')
+        self.assertEquals(get_messages()[1], 'Upgrade::upgrade to version 1.1.20')
+        print get_messages()
+        return True
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()

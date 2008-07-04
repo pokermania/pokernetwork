@@ -1,3 +1,8 @@
+2008-07-04  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-upgrade.py.in (UpgraderTestCase.test05_getUpgrader):
+	Wrote method.
+
 2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-upgrade.py.in (UpgraderTestCase.test03_noNetwork):
@@ -5,6 +10,7 @@
 	(UpgraderTestCase.test01_CheckClientVersionFailed1): Added check
 	for output from checkClientVersion()
 	(UpgraderTestCase.test04_hostNoRespond): Wrote method.
+	(UpgraderMockup.spawn): Wrote method.
 
 	* pokernetwork/upgrade.py (Upgrader.message): Wrote method; as
 	support for Upgrader.error
