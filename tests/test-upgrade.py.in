@@ -257,7 +257,7 @@ class GetPatchUpgradeTest(unittest.TestCase):
 
 ######################################################################
 from pokernetwork import upgrade
-from pokernetwork.upgrade import NO_NETWORK, HOST_DOES_NOT_RESPOND
+from pokernetwork.upgrade import NO_NETWORK, HOST_DOES_NOT_RESPOND, UPGRADE_READY
 from pokernetwork.pokerchildren import RSYNC_NO_NETWORK, RSYNC_HOST_DOES_NOT_RESPOND
 
 class ReasonMockup:
@@ -348,6 +348,24 @@ class UpgraderTestCase(unittest.TestCase):
         self.upgrade.getUpgrade("1.1.20", ("/something",) )
         self.assertEquals(get_messages()[0], 'Upgrader::getUpgrade')
         self.assertEquals(get_messages()[1], 'Upgrade::upgrade to version 1.1.20')
+        return True
+    #----------------------------------------------------------------------
+    def test06_upgradeReady(self):
+	self.upgrade = UpgraderMockup(PokerSettingsMockup(), PokerSettingsMockup())
+        self.upgrade.checkClientVersion((1, 1, 20))
+        global countCalled
+        countCalled = 0
+        def checkUpgradeReady(target, dir):
+            global countCalled
+            countCalled += 1
+            self.assertEquals(target, "")
+            self.assertEquals(dir, "/")
+        self.upgrade.registerHandler(UPGRADE_READY, checkUpgradeReady)
+        clear_all_messages()
+        self.upgrade.upgradeReady()
+        self.assertEquals(get_messages(), [ "Upgrade::upgradeReady" ])
+        clear_all_messages()
+        self.assertEquals(countCalled, 1)
         return True
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():

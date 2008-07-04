@@ -2,6 +2,7 @@
 
 	* tests/test-upgrade.py.in (UpgraderTestCase.test05_getUpgrader):
 	Wrote method.
+	(UpgraderTestCase.test06_upgradeReady): Wrote method.
 
 2008-06-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
