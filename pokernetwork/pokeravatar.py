@@ -418,7 +418,7 @@ class PokerAvatar:
                     self.message("attempt to set processing hand for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
 
             elif packet.type == PACKET_POKER_START:
-                if game.isEndOrNull():
+                if not game.isEndOrNull():
                     self.message("player %d tried to start a new game while in game " % self.getSerial())
                     self.sendPacketVerbose(PacketPokerStart(game_id = game.id))
                 elif self.service.shutting_down:
