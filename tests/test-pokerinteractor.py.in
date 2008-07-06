@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -26,6 +27,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #  Johan Euphrosine <johan@mekensleep.com>
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 
 import sys, os
@@ -34,9 +36,9 @@ sys.path.insert(0, "..")
 
 import unittest
 
-from tests.testmessages import silence_all_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
+verbose = 4
+silence_all_messages()
 
 from pokerui.pokerrenderer import PokerInteractors
 from pokernetwork.pokerclientpackets import PACKET_POKER_HIGHEST_BET_INCREASE, PACKET_POKER_FOLD, PACKET_POKER_CHECK, PACKET_POKER_CALL, PACKET_POKER_RAISE
@@ -50,16 +52,26 @@ class PokerInterfaceMockup:
 
 class PokerFactoryMockup:
     def __init__(self):
-	self.verbose = 3
+	self.verbose = 4
 	self.settings = PokerSettingsMockup()
 	self.config = PokerSettingsMockup()
 	self.interface = PokerInterfaceMockup()
+        self.clearMessages()
 
     def packet2game(self, packet):
 	return PokerGameMockup()
 
     def getGame(self, id):
 	return PokerGameMockup()
+
+    def clearMessages(self):
+        self.messages = []
+
+    def message(self, str):
+        self.messages.append(str)
+
+    def getMessages(self):
+        return self.messages
 
 class PokerSettingsMockup:
     def __init__(self):
@@ -152,7 +164,15 @@ class PokerInteractorTestCase(unittest.TestCase):
         
     # -----------------------------------------------------------------------------------------------------    
     def test_highestBetIncreaseCancelCall(self):	
+        clear_all_messages()
 	interactor_set = self.interactors.getOrCreateInteractorSet(0)
+        print "HERE: "
+        self.assertEquals(self.interactors.factory.getMessages(), ['interactor:check default= clicked=',
+                          'interactor:fold default= clicked=', 'interactor:call default= clicked=',
+                                                                   'interactor:raise default= clicked='])
+        self.assertEquals(get_messages(), ['0 PokerInteractor::update: before check: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0                         after  check: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0 PokerInteractor::update: before fold: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0                         after  fold: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0 PokerInteractor::update: before call: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0                         after  call: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0 PokerInteractor::update: before raise: state disabled, canceled 0, selected 0, inPosition 0, userData None', '0                         after  raise: state disabled, canceled 0, selected 0, inPosition 0, userData None'])
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
 	interactors = interactor_set.items
 	interactors['call'].setEnableIfDisabled()
 	interactors['call'].setUserData([0,])
