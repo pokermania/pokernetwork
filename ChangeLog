@@ -1,5 +1,12 @@
 2008-07-05  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerrenderer.py.in (PokerFactoryMockup.getMessages):
+	Wrote method.
+	(PokerFactoryMockup.message): Wrote method.
+	(PokerFactoryMockup.clearMessages): Wrote method.
+	(PokerFactoryMockup.__init__): Added call to clearMessages();
+	Increased verbosity.
+
 	* tests/test-pokerinteractor.py.in
 	(PokerInteractorTestCase.test_highestBetIncreaseCancelCall): Added
 	checks for output.

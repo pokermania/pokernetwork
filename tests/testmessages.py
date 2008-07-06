@@ -103,6 +103,9 @@ def messages_grep(haystack):
 def messages_append(string):
     if verbose > 3:
         print "OUTPUT: " + what
+    if not hasattr(string, '__str__'):
+        raise Exception, "Message comes in as non-stringifiable object" 
+    string = string.__str__()
     messages_out.append(string)
     messages_grep(string)
 
