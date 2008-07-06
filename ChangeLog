@@ -5,6 +5,7 @@
 	in pokeravatar.handlePacketLogic() on PACKET_POKER_START actions fixed.
 	(PokerAvatarTestCase.requestsWithWrongSerial): Adjusted now that bug
 	in pokeravatar.handlePacketLogic() on PACKET_POKER_START actions fixed.
+	(PokerAvatarTestCase): Rewrote tests to again change full coverage.
 
 2008-07-05  Bradley M. Kuhn  <bkuhn@ebb.org>
 
