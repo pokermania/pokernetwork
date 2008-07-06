@@ -1,5 +1,7 @@
 2008-07-06  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/run.in (COVERAGE_100_PERCENT): Added pokeravatar
+
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.variousStartPackets): Adjusted now that bug
 	in pokeravatar.handlePacketLogic() on PACKET_POKER_START actions fixed.
