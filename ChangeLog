@@ -1,5 +1,19 @@
 2008-07-06  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/testmessages.py: Added PokerInteractors to list of classes.
+
+	* pokerui/pokerrenderer.py (PokerInteractors.error): Added method.
+	(PokerInteractors.message): Added method.
+
+	* tests/test-pokerrenderer.py.in (PokerInteractorsTests): Created
+	test suite.
+	(PokerInteractorsTests.MockPokerFactory): Created new mock up class.
+	(PokerInteractorsTests.MockPokerRenderer): Created new mock up class.
+	(PokerInteractorsTests.MockPokerProtocol): Created new mock up class.
+
+	* pokerui/pokerrenderer.py (PokerInteractors._handleConnection):
+	Added else with an error message when packet is not one that is handled.
+
 	* tests/run.in (COVERAGE_100_PERCENT): Added pokeravatar
 
 	* tests/test-pokeravatar.py.in

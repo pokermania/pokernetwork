@@ -125,6 +125,12 @@ class PokerInteractors:
         # reentrant update call workaround
         self.interactorActioned = None
         
+    def error(self, string):
+        self.message("ERROR " + str(string))
+        
+    def message(self, string):
+        print str(string)
+
     def setProtocol(self, protocol):
         self.protocol = protocol
         if protocol:
@@ -170,6 +176,9 @@ class PokerInteractors:
 
         elif packet.type == PACKET_POKER_BET_LIMIT:
             self.handleInteractors(game)
+        else:
+            self.error("PokerInteractors: ignoring packet of unknown type in _handleConnection(): "
+                       + str(packet))
 
     def destroy(self):
         protocol = self.protocol

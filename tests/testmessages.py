@@ -32,6 +32,7 @@ from pokerui import pokerinteractor
 classes.append(pokerinteractor.PokerInteractor)
 from pokerui import pokerrenderer
 classes.append(pokerrenderer.PokerRenderer)
+classes.append(pokerrenderer.PokerInteractors)
 from pokernetwork import currencyclient
 classes.append(currencyclient.FakeCurrencyClient)
 from pokernetwork import pokerchildren
