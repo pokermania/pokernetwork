@@ -8,6 +8,7 @@
 	(PokerFactoryMockup.clearMessages): Wrote method.
 	(PokerFactoryMockup.__init__): Added call to clearMessages.
 	Increased verbosity.
+	(PokerInteractorTestCase.test_errorFake): Wrote method.
 
 2008-07-04  Bradley M. Kuhn  <bkuhn@ebb.org>
 

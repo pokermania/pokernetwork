@@ -166,7 +166,6 @@ class PokerInteractorTestCase(unittest.TestCase):
     def test_highestBetIncreaseCancelCall(self):	
         clear_all_messages()
 	interactor_set = self.interactors.getOrCreateInteractorSet(0)
-        print "HERE: "
         self.assertEquals(self.interactors.factory.getMessages(), ['interactor:check default= clicked=',
                           'interactor:fold default= clicked=', 'interactor:call default= clicked=',
                                                                    'interactor:raise default= clicked='])
@@ -214,6 +213,13 @@ class PokerInteractorTestCase(unittest.TestCase):
 	self.assertEquals('scheduled', interactors['fold'].state.name)
 	self.interactors._handleConnection(PokerProtocolMockup(), PokerPacketMockup(PACKET_POKER_HIGHEST_BET_INCREASE))
 	self.assertEquals('scheduled', interactors['fold'].state.name)
+
+    def test_errorFake(self):	
+        clear_all_messages()
+	interactor_set = self.interactors.getOrCreateInteractorSet(0)
+        clear_all_messages()
+        interactor_set.items['fold'].error("dummy testing")
+        self.assertEquals(get_messages(), ['ERROR dummy testing'])
         
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
