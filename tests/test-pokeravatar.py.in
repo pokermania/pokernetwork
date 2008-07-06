@@ -39,7 +39,7 @@ from pokerengine import pokertournament
 #
 from tests import testclock
 
-from tests.testmessages import restore_all_messages, silence_all_messages, search_output
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
 #os.environ['VERBOSE_T'] = '0'
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
@@ -1118,12 +1118,22 @@ class PokerAvatarTestCase(unittest.TestCase):
 # correct, but I am leaving, and have instead rewritten this test to look
 # for the response given by handlePacketLogic when isEndorNull() is true
 # rather than the "someoneElse" response.
+
+#  The above no longer applies.  Loic fixed the bug today in r4046 that I
+#  am describing above, and I have adjusted the packet test below to work
+#  correctly now.  You will note that it now looks like the rest of the
+#  tests in here (ala "not the owner") --bkuhn, 2008-07-05
+
             'start' : { 'output':
                            "%splayer %d %s" % (messageStart, client.getSerial(), \
-                            "tried to start a new game while in game "),
+                            "tried to start a new game but is not the owner of the table"),
                             'packet' : PacketPokerStart(serial = someoneElseSerial,
                                                         game_id = gameId),
-                        'err_type' : PACKET_POKER_START },
+                        },
+# This used to generate an error packet but does not now, except
+#  table.owner apperas to be zero in this setup so ti falls through to the
+#  bootm else block (see details in pokeravatar.handlePacketLogic()
+#                        'err_type' : PACKET_POKER_START },
             'check' : { 'output':
                            "%sattempt to check%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
@@ -1138,6 +1148,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             avatar.resetPacketsQueue()
             avatar.queuePackets()
             silence_all_messages()
+            clear_all_messages()
             avatar.handlePacketLogic(info['packet'])
             self.assertEqual(search_output(info['output']), True, info['output'])
             restore_all_messages()
@@ -2039,6 +2050,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # ------------------------------------------------------------------------
     def variousStartPackets(self, (client, packet), id, gameId ):
+        # The tests in here changed with r4046, which corrected a bug in
+        # the way PACKET_POKER_START was handled.
         avatar = self.service.avatars[id]
 
         avatar.queuePackets()
@@ -2047,46 +2060,56 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                             game_id = gameId))
         restore_all_messages()
 
-        self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
-
-
+        self.assertEqual(search_output("tried to start a new game while in game "), True)
         # Coverage for when the server is shutting down
 
         avatar.service.shutting_down = True
 
         avatar.queuePackets()
         silence_all_messages()
+        clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
+        self.assertEqual(search_output("Not autodealing because server is shutting down"),
+                         True)
 
-        restore_all_messages()
-        self.assertEqual(search_output("server shutting down"), True)
-
+        # Coverage for the table owner is the player
         avatar.service.shutting_down = False
 
         table = self.service.getTable(gameId)
         table.owner = client.getSerial()
 
+        avatar.resetPacketsQueue()
         avatar.queuePackets()
         silence_all_messages()
+        clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        restore_all_messages()
-        self.assertEqual(search_output("because game is running"), True)
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            found += 1
+            self.assertEquals(packet.type, PACKET_POKER_START)
+            self.assertEquals(packet.game_id, gameId)
+        self.assertEquals(found, 1)
+        # This game start should "succeed" (but later fail due to game running) because 
+        #  the owner of the table is our player.
+        self.assertEqual(search_output("tried to start a new game while in a game"), False)
+        self.assertEqual(search_output("Not autodealing %d because game is running" 
+                                       % gameId), True)
 
-        # Coverage for when someone else owns the table
+        # Following is coverage for when someone else owns the table
 
         avatar.service.shutting_down = False
 
         table = self.service.getTable(gameId)
         table.owner = client.getSerial() - 3
-
         avatar.queuePackets()
         silence_all_messages()
+        clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        restore_all_messages()
-        self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
+        self.assertEqual(search_output("tried to start a new game while in game "), True)
+        self.assertEqual(search_output('Not autodealing %d because game is running' % gameId), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
         d = self.client_factory[0].established_deferred
@@ -2635,7 +2658,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test56"
+#    loader.methodPrefix = "test47"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
