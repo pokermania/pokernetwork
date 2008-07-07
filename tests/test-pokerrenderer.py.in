@@ -225,6 +225,8 @@ class PokerRendererUpdateInterfaceWindowsTestCase(unittest.TestCase):
 	self.assertEquals("show", self.renderer.packets[3].command)
 
 ###############################################################################
+from pokerui import pokerinteractor
+
 class PokerInteractorsTests(unittest.TestCase):
     class MockGame:
         knownGameId = 111
@@ -250,6 +252,7 @@ class PokerInteractorsTests(unittest.TestCase):
             self.clearMessages()
             self.config = PokerInteractorsTests.MockConfig()
             self.settings = PokerInteractorsTests.MockSettings()
+            self.display = None
 
         def clearMessages(self):
             self.messages = []
@@ -311,6 +314,11 @@ class PokerInteractorsTests(unittest.TestCase):
         currentSuite = self
         silence_all_messages()
         clear_all_messages()
+        # Replace the PokerInteractor class with our MockInteractor
+        global SavePokerInteractorClass
+        SavePokerInteractorClass = pokerinteractor.PokerInteractor
+        pokerinteractor.PokerInteractor = PokerInteractorsTests.MockInteractor
+
 	self.interactors = PokerInteractors(PokerInteractorsTests.MockPokerFactory(),
                                             PokerInteractorsTests.MockPokerRenderer())
         self.assertEquals(get_messages(), [], self.interactors.factory.getMessages())
@@ -318,6 +326,9 @@ class PokerInteractorsTests(unittest.TestCase):
         self.interactors.factory.clearMessages()
 	self.interactors.setProtocol(PokerInteractorsTests.MockPokerProtocol())
         self.assertEquals(get_messages(), [], self.interactors.factory.getMessages())
+    # -----------------------------------------------------------------------------------------------------
+    def tearDown(self):
+        pokerinteractor.PokerInteractor = SavePokerInteractorClass
     # -----------------------------------------------------------------------------------------------------
     def test01_handleBadPacket(self):
         clear_all_messages()
@@ -328,7 +339,7 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals(get_messages(), ['ERROR PokerInteractors: ignoring packet of unknown type in _handleConnection(): type = ERROR(53) serial = 0 game_id = 0 message = feed this back to me, code = 0, other_type = ERROR'])
         return True
     # -----------------------------------------------------------------------------------------------------
-    def test02_interactorDisplayNodeUnknownGame(self):
+    def test02_interactorDisplayNode_UnknownGame(self):
         clear_all_messages()
         self.interactors.factory.clearMessages()
         self.interactors.interactorDisplayNode(PokerInteractorsTests.MockInteractor("Unknown Game",
@@ -337,7 +348,7 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
     # -----------------------------------------------------------------------------------------------------
-    def test03_interactorDisplayKnownGameSameState(self):
+    def test03_interactorDisplayNode_KnownGameSameState(self):
         clear_all_messages()
         self.interactors.factory.clearMessages()
         self.interactors.interactorDisplayNode(PokerInteractorsTests.MockInteractor("Known Game",
@@ -346,7 +357,7 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
     # -----------------------------------------------------------------------------------------------------
-    def test04_interactorDisplayKnownGameChangedState(self):
+    def test04_interactorDisplayNode_KnownGameChangedState(self):
         clear_all_messages()
         self.interactors.factory.clearMessages()
         myInteractor =  PokerInteractorsTests.MockInteractor("Known Game",
@@ -371,7 +382,16 @@ class PokerInteractorsTests(unittest.TestCase):
             else:
                 self.fail("Unknown state in renderedPackets: %s" % p.state)
         return True
+    # -----------------------------------------------------------------------------------------------------
+    def test05_interactorsSyncDisplay_NoFactoryDisplay(self):
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
 
+        self.interactors.interactorsSyncDisplay(PokerInteractorsTests.MockGame.knownGameId)
+        
+        # No output is expected, as factory.display is not set
+        self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
+        self.assertEquals(self.interactors.renderer.renderedPackets, [])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()

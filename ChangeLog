@@ -13,6 +13,12 @@
 	Wrote method.
 	(PokerInteractorsTests.test04_interactorDisplayKnownGameChangedState):
 	Wrote method.
+	(PokerInteractorsTests.test05_interactorsSyncDisplay_NoFactoryDisplay):
+	Wrote method.
+	(PokerInteractorsTests.MockPokerFactory.__init__): added
+	self.display initialization.
+	(PokerInteractorsTests.tearDown): Wrote method.
+	(PokerInteractorsTests.setUp): Added override of PokerInteractor.
 
 	* tests/testmessages.py: Added PokerInteractors to list of classes.
 
