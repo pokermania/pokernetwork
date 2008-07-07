@@ -35,6 +35,15 @@
 	countMockInteractorsInstantiated
 	(PokerInteractorsTests.MockInteractor.__init__): Added
 	countMockInteractorsInstantiated
+	(PokerInteractorsTests.helper_interactorSelected): Wrote method.
+	(PokerInteractorsTests.test08_interactorSelected_rightGame_fold):
+	Wrote method.
+	(PokerInteractorsTests.test09_interactorSelected_rightGame_check):
+	Wrote method.
+	(PokerInteractorsTests.test10_interactorSelected_rightGame_raise):
+	Wrote method.
+	(PokerInteractorsTests.test11_interactorSelected_rightGame_call):
+	Wrote method.
 
 	* tests/testmessages.py: Added PokerInteractors to list of classes.
 

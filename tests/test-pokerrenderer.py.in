@@ -447,6 +447,8 @@ class PokerInteractorsTests(unittest.TestCase):
         return True
     # -----------------------------------------------------------------------------------------------------
     def test07_interactorSelected_wrongGame(self):
+        global countMockInteractorsInstantiated
+
         clear_all_messages()
         self.interactors.factory.clearMessages()
 
@@ -457,6 +459,56 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals(get_messages(), [])
 
         self.assertEquals(countMockInteractorsInstantiated, 0)
+    # -----------------------------------------------------------------------------------------------------
+    def helper_interactorSelected(self, type, packet):
+        global countMockInteractorsInstantiated
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        gameId = PokerInteractorsTests.MockGame.knownGameId
+
+        self.interactors.interactorSelected(packet)
+
+        self.assertEquals(countMockInteractorsInstantiated, 4)
+        self.assertEquals(self.interactors.factory.getMessages(), [])
+        self.assertEquals(get_messages(), [])
+
+        interactor = self.interactors.interactors_map[gameId].items[type]
+        self.assertEquals(interactor.select_value, packet)
+        self.assertEquals(interactor.updateCalled, True)
+
+    def test08_interactorSelected_rightGame_fold(self):
+        global countMockInteractorsInstantiated
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        gameId = PokerInteractorsTests.MockGame.knownGameId
+        self.helper_interactorSelected('fold', PacketPokerFold(serial = 0, game_id = gameId))
+
+    def test09_interactorSelected_rightGame_check(self):
+        global countMockInteractorsInstantiated
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        gameId = PokerInteractorsTests.MockGame.knownGameId
+        self.helper_interactorSelected('check', PacketPokerCheck(serial = 0, game_id = gameId))
+
+    def test10_interactorSelected_rightGame_raise(self):
+        global countMockInteractorsInstantiated
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        gameId = PokerInteractorsTests.MockGame.knownGameId
+        self.helper_interactorSelected('raise', PacketPokerRaise(serial = 0, game_id = gameId, amount = 100))
+
+    def test11_interactorSelected_rightGame_call(self):
+        global countMockInteractorsInstantiated
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        gameId = PokerInteractorsTests.MockGame.knownGameId
+        self.helper_interactorSelected('call', PacketPokerCall(serial = 0, game_id = gameId))
+    # -----------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
