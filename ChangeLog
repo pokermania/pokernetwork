@@ -23,6 +23,18 @@
 	the correct number of arguments.
 	(PokerInteractorsTests.test06_interactorsSyncDisplay_displayOn):
 	Wrote method.
+	(PokerInteractorsTests.MockInteractor.select): Wrote method.
+	(PokerInteractorsTests.MockInteractor.update): Wrote method.
+	(PokerInteractorsTests.MockInteractor.resetAllTestValues): Wrote
+	method.
+	(PokerInteractorsTests.MockInteractor.__init__): Switched to use
+	resetAllTestValues()
+	(PokerInteractorsTests.test07_interactorSelected_wrongGame): Wrote
+	method.
+	(PokerInteractorsTests.setUp): Added reset of
+	countMockInteractorsInstantiated
+	(PokerInteractorsTests.MockInteractor.__init__): Added
+	countMockInteractorsInstantiated
 
 	* tests/testmessages.py: Added PokerInteractors to list of classes.
 

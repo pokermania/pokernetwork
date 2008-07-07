@@ -226,6 +226,8 @@ class PokerRendererUpdateInterfaceWindowsTestCase(unittest.TestCase):
 ###############################################################################
 from pokerui import pokerinteractor
 from pokerui import pokerrenderer
+from pokernetwork import pokerpackets
+
 class PokerInteractorsTests(unittest.TestCase):
     class MockGame:
         knownGameId = 111
@@ -274,8 +276,20 @@ class PokerInteractorsTests(unittest.TestCase):
         def __init__(self, myName, action, display, select, nameMap, gameId, verbose = 0, prefix = ""):
             self.game_id = gameId
             self.name = myName
+            self.resetAllTestValues()
+            global countMockInteractorsInstantiated
+            countMockInteractorsInstantiated += 1
+
+        def resetAllTestValues(self):
             self.state = False
             self.selected_value = None
+            self.updateCalled = False
+
+        def select(self, packet):
+            self.select_value = packet
+
+        def update(self):
+            self.updateCalled = True
 
         def stateHasChanged(self):
             return self.state
@@ -309,6 +323,9 @@ class PokerInteractorsTests(unittest.TestCase):
         currentSuite = self
         silence_all_messages()
         clear_all_messages()
+        global countMockInteractorsInstantiated
+        countMockInteractorsInstantiated = 0
+
         # Replace the PokerInteractor class with our MockInteractor
         global SavePokerInteractorClass
         SavePokerInteractorClass = pokerrenderer.PokerInteractor
@@ -428,6 +445,19 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals(counts, {})
 
         return True
+    # -----------------------------------------------------------------------------------------------------
+    def test07_interactorSelected_wrongGame(self):
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        self.interactors.interactorSelected(PacketPokerFold(serial = 0, game_id = 
+                                                            PokerInteractorsTests.MockGame.unknownGameId))
+        # Since we sent an unknown game ide, the interactorSelector should return nothing and no action
+        self.assertEquals(self.interactors.factory.getMessages(), [])
+        self.assertEquals(get_messages(), [])
+
+        self.assertEquals(countMockInteractorsInstantiated, 0)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
