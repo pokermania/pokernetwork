@@ -228,13 +228,29 @@ class PokerRendererUpdateInterfaceWindowsTestCase(unittest.TestCase):
 ###############################################################################
 class PokerInteractorsTests(unittest.TestCase):
     class MockGame:
+        knownGameId = 111
+        unknownGameId = 123
         def __init__(self, id):
             self.id = id
 
+    class MockConfig:
+        def headerGetProperties(self, lookup):
+            print "My config: "
+            print lookup
+            return [ lookup ]
+            
+    class MockSettings:
+        def headerGet(self, lookup):
+            print "My setting: "
+            print lookup
+            return [ lookup ]
+            
     class MockPokerFactory:
         def __init__(self):
             self.verbose = 4
             self.clearMessages()
+            self.config = PokerInteractorsTests.MockConfig()
+            self.settings = PokerInteractorsTests.MockSettings()
 
         def clearMessages(self):
             self.messages = []
@@ -248,13 +264,41 @@ class PokerInteractorsTests(unittest.TestCase):
         def packet2game(self, packet):
             return PokerInteractorsTests.MockGame(packet.game_id)
 
+        def getGame(self, gameId):
+            if gameId == PokerInteractorsTests.MockGame.knownGameId:
+                return PokerInteractorsTests.MockGame(gameId)
+            elif gameId == PokerInteractorsTests.MockGame.unknownGameId:
+                return None
+            else:
+                self.fail("given unknown game id %d " % gameId)
+                return None
+
+    class MockInteractor:
+        def __init__(self, myName, gameId):
+            self.game_id = gameId
+            self.name = myName
+            self.state = False
+
+        def stateHasChanged(self):
+            return self.state
+
     class MockPokerRenderer:
-        pass
+        # Simply keep track of rendered Packets so that we can later assert their arrival (or non-arrival)
+
+        def __init__(self):
+            self.renderedPackets = []
+
+        def render(self,  packet):
+            self.renderedPackets.append(packet)
+
     class MockPokerProtocol:
         def registerHandler(self, boolVal, packetVal, CallbackFunc):
             global currentSuite
             currentSuite.assertEquals(isinstance(boolVal, bool), True)
             currentSuite.assertEquals(isinstance(packetVal, int), True)
+
+        def getCurrentGameId(self):
+            return PokerInteractorsTests.MockGame.knownGameId
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
         global currentSuite
@@ -268,7 +312,7 @@ class PokerInteractorsTests(unittest.TestCase):
         self.interactors.factory.clearMessages()
 	self.interactors.setProtocol(PokerInteractorsTests.MockPokerProtocol())
         self.assertEquals(get_messages(), [], self.interactors.factory.getMessages())
-
+    # -----------------------------------------------------------------------------------------------------
     def test01_handleBadPacket(self):
         clear_all_messages()
         self.interactors.factory.clearMessages()
@@ -277,6 +321,15 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals(self.interactors.factory.getMessages(), ['PokerInteractors::_handleConnection: type = ERROR(53) serial = 0 game_id = 0 message = feed this back to me, code = 0, other_type = ERROR'])
         self.assertEquals(get_messages(), ['ERROR PokerInteractors: ignoring packet of unknown type in _handleConnection(): type = ERROR(53) serial = 0 game_id = 0 message = feed this back to me, code = 0, other_type = ERROR'])
         return True
+    # -----------------------------------------------------------------------------------------------------
+    def test02_interactorDisplayNodeUnknownGame(self):
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+        self.interactors.interactorDisplayNode(PokerInteractorsTests.MockInteractor("Unknown Game",
+                                    PokerInteractorsTests.MockGame.unknownGameId))
+        # No output is expected, as the gameID is unknown so nothing should be returned
+        self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
+        self.assertEquals(self.interactors.renderer.renderedPackets, [])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
