@@ -123,7 +123,6 @@ class PokerRendererTestCase(unittest.TestCase):
 	bestCard_packet = PokerPacketMockup(PACKET_POKER_BEST_CARDS)
         clear_all_messages()
 	self.renderer._handleConnection(PokerProtocolMockup(), bestCard_packet)
-        print get_messages()
         self.assertEquals("best hand", self.renderer._packetRendered.hand)
 
 class PokerFactoryUpdateInterfaceWindowsMockup:
@@ -278,9 +277,16 @@ class PokerInteractorsTests(unittest.TestCase):
             self.game_id = gameId
             self.name = myName
             self.state = False
+            self.selected_value = None
 
         def stateHasChanged(self):
             return self.state
+
+        def getDefault(self):
+            return "MOCK default"
+
+        def getClicked(self):
+            return "MOCK clicked"
 
     class MockPokerRenderer:
         # Simply keep track of rendered Packets so that we can later assert their arrival (or non-arrival)
@@ -339,6 +345,33 @@ class PokerInteractorsTests(unittest.TestCase):
         # No output is expected, as the state will be left the same on the Interactor
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
+    # -----------------------------------------------------------------------------------------------------
+    def test04_interactorDisplayKnownGameChangedState(self):
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+        myInteractor =  PokerInteractorsTests.MockInteractor("Known Game",
+                                    PokerInteractorsTests.MockGame.knownGameId)
+        myInteractor.state = True
+        self.interactors.interactorDisplayNode(myInteractor)
+
+        # Now we get output
+        self.assertEquals(self.interactors.factory.getMessages(),
+                          ['interactor:Known Game default=MOCK default clicked=MOCK clicked']) 
+        self.assertEquals([], get_messages())
+
+        for p in self.interactors.renderer.renderedPackets:
+            self.assertEquals(p.type, PACKET_POKER_DISPLAY_NODE)
+            self.assertEquals(p.name, "Known Game")
+            self.assertEquals(p.selection, None)
+            self.assertEquals(p.game_id, 0)
+            if p.state == "default":
+                self.assertEquals(p.style, "MOCK default")
+            elif p.state == "clicked":
+                self.assertEquals(p.style, "MOCK clicked")
+            else:
+                self.fail("Unknown state in renderedPackets: %s" % p.state)
+        return True
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()

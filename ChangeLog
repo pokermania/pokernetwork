@@ -11,6 +11,8 @@
 	(PokerInteractorsTests.MockSettings): Created mock up.
 	(PokerInteractorsTests.test03_interactorDisplayKnownGameSameState):
 	Wrote method.
+	(PokerInteractorsTests.test04_interactorDisplayKnownGameChangedState):
+	Wrote method.
 
 	* tests/testmessages.py: Added PokerInteractors to list of classes.
 
