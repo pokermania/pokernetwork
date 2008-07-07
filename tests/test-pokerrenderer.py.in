@@ -330,7 +330,15 @@ class PokerInteractorsTests(unittest.TestCase):
         # No output is expected, as the gameID is unknown so nothing should be returned
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
-
+    # -----------------------------------------------------------------------------------------------------
+    def test03_interactorDisplayKnownGameSameState(self):
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+        self.interactors.interactorDisplayNode(PokerInteractorsTests.MockInteractor("Known Game",
+                                    PokerInteractorsTests.MockGame.knownGameId))
+        # No output is expected, as the state will be left the same on the Interactor
+        self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
+        self.assertEquals(self.interactors.renderer.renderedPackets, [])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
