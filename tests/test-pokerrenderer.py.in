@@ -257,6 +257,9 @@ class PokerInteractorsTests(unittest.TestCase):
         def message(self, str):
             self.messages.append(str)
 
+        def error(self, str):
+            self.messages.append("ERROR: " + str)
+
         def getMessages(self):
             return self.messages
 
@@ -509,6 +512,18 @@ class PokerInteractorsTests(unittest.TestCase):
         gameId = PokerInteractorsTests.MockGame.knownGameId
         self.helper_interactorSelected('call', PacketPokerCall(serial = 0, game_id = gameId))
     # -----------------------------------------------------------------------------------------------------
+    def test12_interactorSelected_rightGame_wrongName(self):
+        global countMockInteractorsInstantiated
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+
+        gameId = PokerInteractorsTests.MockGame.knownGameId
+
+        self.interactors.interactorSelected(PacketPokerPosition(serial = 0, game_id = gameId))
+
+        self.assertEquals(countMockInteractorsInstantiated, 0)
+        self.assertEquals(self.interactors.factory.getMessages(), ['ERROR: *CRITICAL* unexpected packet selected: type = POKER_POSITION(54) game_id = 111, position = -1, serial = 0 '])
+        self.assertEquals(get_messages(), [])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():

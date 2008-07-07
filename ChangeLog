@@ -1,5 +1,8 @@
 2008-07-06  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokerui/pokerrenderer.py (PokerInteractors.interactorSelected):
+	Fixed reference to unknown variable "event".
+
 	* tests/test-pokerrenderer.py.in
 	(PokerInteractorsTests.MockConfig): Created mock up.
 	(PokerInteractorsTests.MockPokerRenderer): Wrote method.
@@ -43,6 +46,8 @@
 	(PokerInteractorsTests.test10_interactorSelected_rightGame_raise):
 	Wrote method.
 	(PokerInteractorsTests.test11_interactorSelected_rightGame_call):
+	Wrote method.
+	(PokerInteractorsTests.test12_interactorSelected_rightGame_wrongName):
 	Wrote method.
 
 	* tests/testmessages.py: Added PokerInteractors to list of classes.

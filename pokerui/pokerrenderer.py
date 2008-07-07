@@ -359,7 +359,7 @@ class PokerInteractors:
             elif packet.type == PACKET_POKER_RAISE:
                 name = "raise"
             else:
-                self.factory.error("*CRITICAL* unexpected event %s " % event)
+                self.factory.error("*CRITICAL* unexpected packet selected: %s " % str(packet))
                 return
 
             interactor = self.getOrCreateInteractorSet(packet.game_id).items[name]
