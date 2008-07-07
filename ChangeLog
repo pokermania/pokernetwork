@@ -19,6 +19,10 @@
 	self.display initialization.
 	(PokerInteractorsTests.tearDown): Wrote method.
 	(PokerInteractorsTests.setUp): Added override of PokerInteractor.
+	(PokerInteractorsTests.MockInteractor.__init__): Set init to have
+	the correct number of arguments.
+	(PokerInteractorsTests.test06_interactorsSyncDisplay_displayOn):
+	Wrote method.
 
 	* tests/testmessages.py: Added PokerInteractors to list of classes.
 

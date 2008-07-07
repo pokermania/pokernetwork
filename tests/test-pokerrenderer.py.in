@@ -40,7 +40,6 @@ verbose = int(os.environ.get('VERBOSE_T', '-1'))
 verbose = 4
 silence_all_messages()
 
-from pokerui.pokerrenderer import PokerInteractors
 from pokerui.pokerrenderer import PokerRenderer
 from pokernetwork.pokerclientpackets import *
 
@@ -226,7 +225,7 @@ class PokerRendererUpdateInterfaceWindowsTestCase(unittest.TestCase):
 
 ###############################################################################
 from pokerui import pokerinteractor
-
+from pokerui import pokerrenderer
 class PokerInteractorsTests(unittest.TestCase):
     class MockGame:
         knownGameId = 111
@@ -236,14 +235,10 @@ class PokerInteractorsTests(unittest.TestCase):
 
     class MockConfig:
         def headerGetProperties(self, lookup):
-            print "My config: "
-            print lookup
             return [ lookup ]
             
     class MockSettings:
         def headerGet(self, lookup):
-            print "My setting: "
-            print lookup
             return [ lookup ]
             
     class MockPokerFactory:
@@ -276,7 +271,7 @@ class PokerInteractorsTests(unittest.TestCase):
                 return None
 
     class MockInteractor:
-        def __init__(self, myName, gameId):
+        def __init__(self, myName, action, display, select, nameMap, gameId, verbose = 0, prefix = ""):
             self.game_id = gameId
             self.name = myName
             self.state = False
@@ -316,9 +311,10 @@ class PokerInteractorsTests(unittest.TestCase):
         clear_all_messages()
         # Replace the PokerInteractor class with our MockInteractor
         global SavePokerInteractorClass
-        SavePokerInteractorClass = pokerinteractor.PokerInteractor
-        pokerinteractor.PokerInteractor = PokerInteractorsTests.MockInteractor
-
+        SavePokerInteractorClass = pokerrenderer.PokerInteractor
+        pokerrenderer.PokerInteractor = PokerInteractorsTests.MockInteractor
+        from pokerui.pokerrenderer import PokerInteractors
+        
 	self.interactors = PokerInteractors(PokerInteractorsTests.MockPokerFactory(),
                                             PokerInteractorsTests.MockPokerRenderer())
         self.assertEquals(get_messages(), [], self.interactors.factory.getMessages())
@@ -328,7 +324,8 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals(get_messages(), [], self.interactors.factory.getMessages())
     # -----------------------------------------------------------------------------------------------------
     def tearDown(self):
-        pokerinteractor.PokerInteractor = SavePokerInteractorClass
+        global SavePokerInteractorClass
+        pokerrenderer.PokerInteractor = SavePokerInteractorClass
     # -----------------------------------------------------------------------------------------------------
     def test01_handleBadPacket(self):
         clear_all_messages()
@@ -343,7 +340,7 @@ class PokerInteractorsTests(unittest.TestCase):
         clear_all_messages()
         self.interactors.factory.clearMessages()
         self.interactors.interactorDisplayNode(PokerInteractorsTests.MockInteractor("Unknown Game",
-                                    PokerInteractorsTests.MockGame.unknownGameId))
+                           None, None, None, None, PokerInteractorsTests.MockGame.unknownGameId))
         # No output is expected, as the gameID is unknown so nothing should be returned
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
@@ -352,7 +349,7 @@ class PokerInteractorsTests(unittest.TestCase):
         clear_all_messages()
         self.interactors.factory.clearMessages()
         self.interactors.interactorDisplayNode(PokerInteractorsTests.MockInteractor("Known Game",
-                                    PokerInteractorsTests.MockGame.knownGameId))
+                           None, None, None, None, PokerInteractorsTests.MockGame.unknownGameId))
         # No output is expected, as the state will be left the same on the Interactor
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
@@ -360,8 +357,8 @@ class PokerInteractorsTests(unittest.TestCase):
     def test04_interactorDisplayNode_KnownGameChangedState(self):
         clear_all_messages()
         self.interactors.factory.clearMessages()
-        myInteractor =  PokerInteractorsTests.MockInteractor("Known Game",
-                                    PokerInteractorsTests.MockGame.knownGameId)
+        myInteractor = PokerInteractorsTests.MockInteractor("Known Game",
+                           None, None, None, None, PokerInteractorsTests.MockGame.knownGameId)
         myInteractor.state = True
         self.interactors.interactorDisplayNode(myInteractor)
 
@@ -392,6 +389,45 @@ class PokerInteractorsTests(unittest.TestCase):
         # No output is expected, as factory.display is not set
         self.assertEquals([], self.interactors.factory.getMessages(), get_messages())
         self.assertEquals(self.interactors.renderer.renderedPackets, [])
+        return True
+    # -----------------------------------------------------------------------------------------------------
+    def test06_interactorsSyncDisplay_displayOn(self):
+        clear_all_messages()
+        self.interactors.factory.clearMessages()
+        from pokerui.pokerinteractor import PokerInteractor
+
+        self.interactors.factory.display = True
+
+        self.interactors.interactorsSyncDisplay(PokerInteractorsTests.MockGame.knownGameId)
+        
+        self.assertEquals(self.interactors.factory.getMessages(), ['interactorsSyncDisplay', 'interactor:fold default=MOCK default clicked=MOCK clicked', 'interactor:call default=MOCK default clicked=MOCK clicked', 'interactor:check default=MOCK default clicked=MOCK clicked', 'interactor:raise default=MOCK default clicked=MOCK clicked'])
+        self.assertEquals([], get_messages())
+        counts = { 'default' : 0, 'clicked' : 0, 'fold' : 0, 'check' : 0, 'raise' : 0, 'call' : 0}
+        for p in self.interactors.renderer.renderedPackets:
+            self.assertEquals(p.type, PACKET_POKER_DISPLAY_NODE)
+            self.assertEquals(p.selection, None)
+            self.assertEquals(p.game_id, 0)
+            if p.state == "default":
+                self.assertEquals(p.style, "MOCK default")
+                counts['default'] += 1
+            elif p.state == "clicked":
+                self.assertEquals(p.style, "MOCK clicked")
+                counts['clicked'] += 1
+            else:
+                self.fail("Unknown state in renderedPackets: %s" % p.state)
+
+            counts[p.name] += 1
+
+        for ii in ['default', 'clicked']:
+            self.assertEquals(counts[ii], 4)
+            del counts[ii]
+
+        for ii in ['fold', 'check', 'raise', 'call']:
+            self.assertEquals(counts[ii], 2)
+            del counts[ii]
+        self.assertEquals(counts, {})
+
+        return True
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
