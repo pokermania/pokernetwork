@@ -1,0 +1,180 @@
+# -*- mode: python -*-
+# Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
+# Copyright (C) 2006 Mekensleep
+#
+# Mekensleep
+# 24 rue vieille du temple
+# 75004 Paris
+#       licensing@mekensleep.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#  Pierre-Andre (05/2006)
+#  Loic Dachary <loic@gnu.org>
+#  Johan Euphrosine <proppy@aminche.com>
+#
+
+import sys, os
+sys.path.insert(0, "@top_srcdir@")
+
+import unittest
+import os.path
+import types
+
+from pokernetwork import pokerauth
+from pokernetwork.user import User
+from pokernetwork import pokernetworkconfig
+import libxml2
+
+settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+settings_alternate_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+  <auth script="@srcdir@/test-pokerauth/pokerauth.py" />
+</server>
+"""
+
+class PokerAuthTestCase(unittest.TestCase):
+        
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        pass
+    
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+        pokerauth._get_auth_instance = None
+        
+    # -----------------------------------------------------------------------------------------------------    
+    def test01_Init(self):
+        """Test Poker auth : get_auth_instance"""
+        db = None
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        auth = pokerauth.get_auth_instance(db, settings)
+        
+    # -----------------------------------------------------------------------------------------------------    
+    def test02_AlternatePokerAuth(self):
+        """Test Poker auth : get_auth_instance alternate PokerAuth"""
+        db = None
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_alternate_xml, len(settings_alternate_xml))
+        settings.header = settings.doc.xpathNewContext()
+        auth = pokerauth.get_auth_instance(db, settings)
+        self.failUnless(hasattr(auth, 'gotcha'))
+
+settings_mysql_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+  <auth script="@srcdir@/../pokernetwork/pokerauthmysql.py" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@" db="testpokerauthmysql" table="users"/>
+</server>
+"""
+
+import MySQLdb
+
+class PokerAuthMysqlTestCase(unittest.TestCase):
+        
+    # -----------------------------------------------------------------------------------------------------
+    def setUp(self):
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_mysql_xml, len(settings_mysql_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+
+        self.parameters = self.settings.headerGetProperties("/server/auth")[0]
+        self.auth_db = MySQLdb.connect(host = self.parameters["host"],
+                                  port = int(self.parameters.get("port", '3306')),
+                                  user = self.parameters["user"],
+                                  passwd = self.parameters["password"])
+        self.auth_db.query("CREATE DATABASE %s" % self.parameters["db"])
+        self.auth_db.query("USE %s" % self.parameters["db"])
+        self.auth_db.query("CREATE TABLE %s (username varchar(20), password varchar(20), privilege int)" % self.parameters["table"])
+        self.auth_db.query("INSERT INTO users (username, password, privilege) VALUES ('testuser', 'testpassword', %i)" % User.REGULAR)
+        
+
+    # -----------------------------------------------------------------------------------------------------    
+    def tearDown(self):
+        self.auth_db.query("DROP DATABASE %s" % self.parameters["db"])
+        pokerauth._get_auth_instance = None
+        
+    # -----------------------------------------------------------------------------------------------------    
+    def test01(self):
+        """Test Poker mysql auth : get_auth_instance"""
+        db = None
+        auth = pokerauth.get_auth_instance(db, self.settings)
+        result, message = auth.auth("testuser", "testpassword")
+        self.assertNotEquals(False, result)
+                
+# -----------------------------------------------------------------------------------------------------
+def GetTestSuite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(PokerAuthTestCase))
+    suite.addTest(unittest.makeSuite(PokerAuthMysqlTestCase))
+    return suite
+    
+# -----------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------
+def Run(verbose):
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
+    
+# -----------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    if Run(int(os.environ.get('VERBOSE_T', 2))).wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerauth.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerauth.py' TESTS='coverage-reset test-pokerauth.py coverage-report' check )"
+# End:
