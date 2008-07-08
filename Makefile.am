@@ -63,7 +63,8 @@ nobase_dist_pkgdata_DATA = \
 	upgrades/poker.server/1.0.13-1.0.14.xsl \
 	upgrades/poker.server/1.0.14-1.0.15.xsl \
 	upgrades/poker.server/1.0.30-1.0.31.xsl \
-	upgrades/poker.server/1.0.31-1.0.32.xsl
+	upgrades/poker.server/1.0.31-1.0.32.xsl \
+	upgrades/poker.server/1.6.0-1.7.0.xsl
 
 pokernetworkdir = ${pythondir}/pokernetwork
 pokernetwork_PYTHON = \
@@ -87,6 +88,8 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerpackets.py \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerservice.py \
+	pokernetwork/pokerauth.py \
+	pokernetwork/pokerauthmysql.py \
 	pokernetwork/pokertable.py \
 	pokernetwork/protocol.py \
 	pokernetwork/proxy.py \

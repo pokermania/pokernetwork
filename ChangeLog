@@ -1,3 +1,12 @@
+2008-07-07  Johan Euphrosine  <proppy@aminche.com>
+
+	* pokernetwork/pokerauth.py (get_auth_instance):
+	Add authentification modularity.
+	* pokernetwork/pokerauthmysql.py:
+	Add authenfification module based on a foreign mysql database.
+	* tests/test-pokerauth.py.in:
+	Add tests for authentification modules lookup.
+
 2008-07-06  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokerui/pokerrenderer.py (PokerInteractors.interactorSelected):

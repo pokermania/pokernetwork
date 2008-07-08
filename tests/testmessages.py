@@ -44,7 +44,8 @@ classes.append(protocol.UGAMEProtocol)
 from pokernetwork import pokerservice
 classes.append(pokerservice.PokerService)
 classes.append(pokerservice.PokerXML)
-classes.append(pokerservice.PokerAuth)
+from pokernetwork import pokerauth
+classes.append(pokerauth.PokerAuth)
 from pokernetwork import pokerlock
 classes.append(pokerlock.PokerLock)
 from pokernetwork import pokeravatar

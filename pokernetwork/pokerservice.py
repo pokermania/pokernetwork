@@ -91,6 +91,7 @@ from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
+from pokerauth import get_auth_instance
 
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
@@ -163,7 +164,7 @@ class PokerService(service.Service):
         self.cleanUp(temporary_users = self.settings.headerGet("/server/users/@temporary"))
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
-        self.poker_auth = PokerAuth(self.db, self.settings)
+        self.poker_auth = get_auth_instance(self.db, self.settings)
         self.dirs = split(self.settings.headerGet("/server/path"))
         self.serial2client = {}
         self.avatars = []
@@ -1634,83 +1635,6 @@ class PokerService(service.Service):
         self.cancelTimer('messages')
         delay = int(self.delays.get('messages', 60))
         self.timer['messages'] = reactor.callLater(delay, self.messageCheck)
-
-class PokerAuth:
-
-    def __init__(self, db, settings):
-        self.db = db
-        self.type2auth = {}
-        self.verbose = settings.headerGetInt("/server/@verbose")
-        self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
-        currency = settings.headerGetProperties("/server/currency")
-        if len(currency) > 0:
-            self.currency = currency[0]
-        else:
-            self.currency = None
-
-    def message(self, string):
-        print "PokerAuth: " + string
-
-    def error(self, string):
-        self.message("*ERROR* " + string)
-            
-    def SetLevel(self, type, level):
-        self.type2auth[type] = level
-
-    def GetLevel(self, type):
-        return self.type2auth.has_key(type) and self.type2auth[type]
-
-    def auth(self, name, password):
-        cursor = self.db.cursor()
-        cursor.execute("SELECT serial, password, privilege FROM users "
-                       "WHERE name = '%s'" % name)
-        numrows = int(cursor.rowcount)
-        serial = 0
-        privilege = User.REGULAR
-        if numrows <= 0:
-            if self.auto_create_account:
-                if self.verbose > 1:
-                    self.message("user %s does not exist, create it" % name)
-                serial = self.userCreate(name, password)
-                cursor.close()
-            else:
-                if self.verbose > 1:
-                    self.message("user %s does not exist" % name)
-                cursor.close()
-                return ( False, "Invalid login or password" )
-        elif numrows > 1:
-            self.error("more than one row for %s" % name)
-            cursor.close()
-            return ( False, "Invalid login or password" )
-        else:
-            (serial, password_sql, privilege) = cursor.fetchone()
-            cursor.close()
-            if password_sql != password:
-                self.message("password mismatch for %s" % name)
-                return ( False, "Invalid login or password" )
-
-        return ( (serial, name, privilege), None )
-
-    def userCreate(self, name, password):
-        if self.verbose:
-            self.message("creating user %s" % name)
-        cursor = self.db.cursor()
-        cursor.execute("INSERT INTO users (created, name, password) values (%d, '%s', '%s')" %
-                       (seconds(), name, password))
-        #
-        # Accomodate for MySQLdb versions < 1.1
-        #
-        if hasattr(cursor, "lastrowid"):
-            serial = cursor.lastrowid
-        else:
-            serial = cursor.insert_id()
-        if self.verbose:
-            self.message("create user with serial %s" % serial)
-        cursor.execute("INSERT INTO users_private (serial) values ('%d')" % serial)
-        if self.currency:
-            cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.currency['serial'], self.currency['amount']))
-        cursor.close()
-        return int(serial)
 
 if HAS_OPENSSL:
     class SSLContextFactory:
