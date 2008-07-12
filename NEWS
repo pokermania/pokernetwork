@@ -1,3 +1,9 @@
+Release 1.7.0
+
+Add test coverage.
+
+Implement authentication plugin infrastructure and example.
+
 Release 1.6.0
 
 Improved REST support.

@@ -1,5 +1,7 @@
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 
+	* Release 1.7.0
+
 	* pokernetwork/pokerauth.py (get_auth_instance):
 	Add authentification modularity.
 	* pokernetwork/pokerauthmysql.py:
