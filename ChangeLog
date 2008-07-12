@@ -4,6 +4,11 @@
 	test class and essential Mock subclasses.
 	(PokerRendererTests.setUp): Wrote method.
 	(PokerRendererTests): Wrote method.
+	(PokerRendererTests.MockPokerFactory.__init__): Added remember variable.
+	(PokerRendererTests.MockInterface): Created mock up.
+	(PokerRendererTests.MockPokerProtocol): Created mock up.
+	(PokerRendererTests.MockUser): Created mock up.
+	(PokerRendererTests.test03_interfaceReadyWithProtocol): Wrote method.
 
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 

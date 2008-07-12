@@ -531,6 +531,8 @@ class PokerInteractorsTests(unittest.TestCase):
 # can, not the class being tested itself.  I understand the reasons for
 # it; it's just not my style, I guess. :)
 
+from pokerui.pokerinterface import PokerInterface
+
 class PokerRendererTests(unittest.TestCase):
     class MockConfig:
         def headerGet(self, lookup):
@@ -557,11 +559,47 @@ class PokerRendererTests(unittest.TestCase):
 
     class MockPokerFactory:
         def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False):
+            self.name = "MockUp"
+            self.password = "you_mock_me,sir"
             self.verbose = 4
+            self.remember = True
+            self.display = None
             self.config = PokerRendererTests.MockConfig()
             self.settings = PokerRendererTests.MockSettings(doBreakTourney = breakTourneyConfig, 
                                                             doBreakLobby = breakLobbyConfig)
+            self.interface = PokerRendererTests.MockInterface()
 
+    class MockUser:
+        def __init__(self, isLoggedInVal = False):
+            self.isLoggedIn = isLoggedInVal
+        def isLogged(self):
+            return self.isLoggedIn
+
+    class MockPokerProtocol:
+        def __init__(self, setUserLoggedIn = False):
+            self.user = PokerRendererTests.MockUser(setUserLoggedIn)
+
+        def registerHandler(self, strVal, packetVal, CallbackFunc):
+            pass
+
+        def registerLagmax(self, lagmaxFunc):
+            pass
+
+    class MockInterface(PokerInterface):
+        def __init__(self):
+            self.verbose = 5
+            PokerInterface.__init__(self)
+
+        def showMenu(self):
+            pass
+        def updateMenu(self, settings):
+            pass
+        def requestLogin(self, user, password, remember):
+            global currentSuite
+            currentSuite.assertEquals(user, 'MockUp')
+            currentSuite.assertEquals(password, 'you_mock_me,sir')
+            currentSuite.assertEquals(remember, 1)
+        
     def setUp(self):
         global currentSuite
         currentSuite = self
@@ -596,6 +634,20 @@ class PokerRendererTests(unittest.TestCase):
             self.assertEquals(te.__str__(), "'NoneType' object does not support item assignment")
         self.assertEquals(itFailed, True)
         self.assertEquals(get_messages(), ['ERROR *CRITICAL*: missing /settings/lobby'])
+    # -----------------------------------------------------------------------------------------------------
+    def test02_interfaceReadyNoProtocol(self):
+        clear_all_messages()
+        self.renderer.interfaceReady(PokerRendererTests.MockInterface())
+        self.assertEquals(get_messages(), ['connection not established, will ask password later'])
+    # -----------------------------------------------------------------------------------------------------
+    def test03_interfaceReadyWithProtocol(self):
+        clear_all_messages()
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol())
+        self.renderer.interfaceReady(PokerRendererTests.MockInterface())
+        m = get_messages()
+        self.assertEquals(len(m), 2)
+        self.assertEquals(m[0], 'connection ready, ask for password')
+        self.assertEquals(m[1].find('changeState idle => login (args =') >= 0, True)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
