@@ -587,6 +587,16 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(itFailed, True)
         self.assertEquals(get_messages(), ['ERROR *CRITICAL*: missing /settings/tournaments'])
 
+        clear_all_messages()
+        itFailed = False
+        try:
+            myRenderer = PokerRenderer(PokerRendererTests.MockPokerFactory(breakLobbyConfig = True))
+        except TypeError, te:
+            itFailed = True
+            self.assertEquals(te.__str__(), "'NoneType' object does not support item assignment")
+        self.assertEquals(itFailed, True)
+        self.assertEquals(get_messages(), ['ERROR *CRITICAL*: missing /settings/lobby'])
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
