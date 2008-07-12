@@ -1,3 +1,10 @@
+2008-07-12  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerrenderer.py.in (PokerRendererTests): Created
+	test class and essential Mock subclasses.
+	(PokerRendererTests.setUp): Wrote method.
+	(PokerRendererTests): Wrote method.
+
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 
 	* Release 1.7.0

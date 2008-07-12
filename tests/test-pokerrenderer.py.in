@@ -524,6 +524,68 @@ class PokerInteractorsTests(unittest.TestCase):
         self.assertEquals(countMockInteractorsInstantiated, 0)
         self.assertEquals(self.interactors.factory.getMessages(), ['ERROR: *CRITICAL* unexpected packet selected: type = POKER_POSITION(54) game_id = 111, position = -1, serial = 0 '])
         self.assertEquals(get_messages(), [])
+###############################################################################
+# I wrote the new test class below, PokerRendererTests, even though there
+# were some test cases above already.  I didn't like how the mock up was
+# structured; I prefer to mock up only the classes that it depends on if I
+# can, not the class being tested itself.  I understand the reasons for
+# it; it's just not my style, I guess. :)
+
+class PokerRendererTests(unittest.TestCase):
+    class MockConfig:
+        def headerGet(self, lookup):
+            return None
+        def headerGetProperties(self, lookup):
+            return None
+            
+    class MockSettings:
+        def __init__(self, doBreakTourney = False, doBreakLobby = False):
+            self.breakTourney = doBreakTourney
+            self.breakLobby = doBreakLobby
+        def headerGetProperties(self, lookup):
+            if lookup == "/settings/tournaments":
+                if self.breakTourney:
+                    return None
+                else:
+                    return [ { 'currency_serial' : 0 } ]
+            elif lookup == '/settings/lobby':
+                if self.breakLobby:
+                    return None
+                else:
+                    return [ { 'currency_serial' : 0 } ]
+            return None
+
+    class MockPokerFactory:
+        def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False):
+            self.verbose = 4
+            self.config = PokerRendererTests.MockConfig()
+            self.settings = PokerRendererTests.MockSettings(doBreakTourney = breakTourneyConfig, 
+                                                            doBreakLobby = breakLobbyConfig)
+
+    def setUp(self):
+        global currentSuite
+        currentSuite = self
+        silence_all_messages()
+        clear_all_messages()
+	self.renderer = PokerRenderer(PokerRendererTests.MockPokerFactory())
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+    def tearDown(self):
+        pass
+    # -----------------------------------------------------------------------------------------------------
+    def test01_testInitBadSettings(self):
+        # This is to test various critical warnings in the PokerRenderer.__init__().  All the stuff
+        # in the Settings, Config, and Factor mock ups regarding "broken" have to do with this
+
+        clear_all_messages()
+        itFailed = False
+        try:
+            myRenderer = PokerRenderer(PokerRendererTests.MockPokerFactory(breakTourneyConfig = True))
+        except TypeError, te:
+            itFailed = True
+            self.assertEquals(te.__str__(), "'NoneType' object does not support item assignment")
+        self.assertEquals(itFailed, True)
+        self.assertEquals(get_messages(), ['ERROR *CRITICAL*: missing /settings/tournaments'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
@@ -531,6 +593,7 @@ def GetTestSuite():
     suite.addTest(unittest.makeSuite(PokerRendererTestCase))
     suite.addTest(unittest.makeSuite(PokerRendererUpdateInterfaceWindowsTestCase))
     suite.addTest(unittest.makeSuite(PokerInteractorsTests))
+    suite.addTest(unittest.makeSuite(PokerRendererTests))
     return suite
     
 # -----------------------------------------------------------------------------------------------------
