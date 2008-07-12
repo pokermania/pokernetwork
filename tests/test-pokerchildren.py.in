@@ -28,7 +28,7 @@
 #  Loic Dachary <loic@gnu.org>
 #
 
-import sys, os, libxml2, tempfile, shutil, stat
+import time, sys, os, libxml2, tempfile, shutil, stat
 sys.path.insert(0, "@srcdir@/../..")
 sys.path.insert(0, "..")
 
@@ -345,29 +345,20 @@ class PokerChildrenTestCase(unittest.TestCase):
 """
         self.setSettings(settings_xml)
         process = pokerchildren.PokerChildBrowser(self.config, self.settings, '0')
-        d = defer.Deferred()
-        def checkReady(result):
-            process.spawnInDir  = tmpdir
-            self.assertEquals(search_output("PokerChildBrowser: command line ['@TOUCH@', 'I_WAS_HERE_0']"), True)
-            self.assertEquals(search_output("touch: /usr/bin/touch I_WAS_HERE_0"), True)
-            self.assertEquals(search_output("touch pid"), True)
-            self.assertEquals(search_output("saved in"), True)
-            clear_all_messages()
-            process.spawn()
-            self.assertEquals(search_output("spawn in " + tmpdir), True)
-            self.assertEquals(search_output("touch: /usr/bin/touch I_WAS_HERE_0"), True)
-            self.assertEquals(search_output("touch pid"), True)
-            self.assertEquals(search_output("saved in"), True)
-            # Make sure that it created the file we made with touch in the
-            #  right directory.
-            pathname = os.path.join(tmpdir, "I_WAS_HERE_0")
-            self.assertEquals(stat.S_ISREG(os.stat(pathname)[stat.ST_MODE]), True)
-            # Clean up temp dir
-            shutil.rmtree(tmpdir)
-            return result
-        d.addCallback(checkReady)
-        reactor.callLater(1, lambda: d.callback(True))
-        return d
+        process.spawnInDir  = tmpdir
+        process.spawn()
+        os.waitpid(process.pid, 0)
+        self.assertEquals(search_output("spawn in " + tmpdir), True)
+        self.assertEquals(search_output("touch: @TOUCH@ I_WAS_HERE_0"), True)
+        self.assertEquals(search_output("touch pid"), True)
+        self.assertEquals(search_output("saved in"), True)
+        # Make sure that it created the file we made with touch in the
+        #  right directory.
+        pathname = os.path.join(tmpdir, "I_WAS_HERE_0")
+        self.assertEquals(stat.S_ISREG(os.stat(pathname)[stat.ST_MODE]), True)
+        # Clean up temp dir
+        shutil.rmtree(tmpdir)
+
     # -----------------------------------------------------------------------------------------------------
     def test12_testErrorFunction(self):
         """The error function isn't actually used, so I test it explicitly"""
