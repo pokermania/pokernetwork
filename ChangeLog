@@ -9,6 +9,7 @@
 	(PokerRendererTests.MockPokerProtocol): Created mock up.
 	(PokerRendererTests.MockUser): Created mock up.
 	(PokerRendererTests.test03_interfaceReadyWithProtocol): Wrote method.
+	(PokerRendererTests.test04_handleMenuQuit): Wrote method.
 
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 

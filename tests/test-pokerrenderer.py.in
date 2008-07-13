@@ -648,6 +648,19 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(len(m), 2)
         self.assertEquals(m[0], 'connection ready, ask for password')
         self.assertEquals(m[1].find('changeState idle => login (args =') >= 0, True)
+    # -----------------------------------------------------------------------------------------------------
+    def test04_handleMenuQuit(self):
+        clear_all_messages()
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol())
+        self.renderer.interfaceReady(PokerRendererTests.MockInterface())
+        m = get_messages()
+        self.assertEquals(len(m), 2)
+        self.assertEquals(m[0], 'connection ready, ask for password')
+        self.assertEquals(m[1].find('changeState idle => login (args =') >= 0, True)
+        clear_all_messages()
+        self.renderer.handleMenu("quit", None)
+        self.assertEquals(get_messages(), ['pythonEvent QUIT None',
+                                           'changeState login => quit (args = (), kwargs = {})'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
