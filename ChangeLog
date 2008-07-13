@@ -1,8 +1,35 @@
+2008-07-13  Loic Dachary <loic@dachary.org>
+
+	* Release 1.7.0
+
+	* tests/Makefile.am: add test-pokerauth/pokerauth.py to the
+	  distribution
+	* pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py,
+	  tests/test-pokerservice.py.in: MySQLdb python module return the
+	  date field (birthdate) as a date object instead of the expected
+	  string. It is converted to string for serialization in the
+	  packets.
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, examples/poker.bot.xml,
+	  examples/poker.server-monotone.xml, examples/poker.server.xml,
+	  pokerclient2d/poker2d.xml.in, tests/conf/poker.client.xml.in:
+	  update version fields to 1.7.0
+
 2008-07-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerrenderer.py.in
 	(PokerRendererTests.test11_handleSerial): Wrote test.
 	(PokerRendererTests.test12_handleConnectionBadStates): Wrote test.
+
+2008-07-12  Loic Dachary <loic@dachary.org>
+
+	* ChangeLog, NEWS, debian/changelog, debian/control,
+	  debian/control.hardy, debian/control.unstable,
+	  pokernetwork/__init__.py: bump version to 1.7.0 and acknowledge
+	  Peter Eisentraut's NMU
+
+	* tests/test-pokerchildren.py.in: use @TOUCH@ where appropriate
+	  use waitpid instead of callLater timer
 
 2008-07-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -30,8 +57,6 @@
 	(PokerRendererTests.test10_updateCashier): Wrote method.
 
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
-
-	* Release 1.7.0
 
 	* pokernetwork/pokerauth.py (get_auth_instance):
 	Add authentification modularity.
@@ -133,6 +158,11 @@
 	(PokerFactoryMockup.__init__): Added call to clearMessages.
 	Increased verbosity.
 	(PokerInteractorTestCase.test_errorFake): Wrote method.
+
+2008-07-05  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py: inverted condition to accept
+	  POKER_START rejected valid requests
 
 2008-07-04  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -294,6 +324,13 @@
 	(PokerChildrenTestCase.test03_child_kill.process_kill): Added
 	check for savepid() output.
 
+2008-06-14  Loic Dachary <loic@dachary.org>
+
+	* tests/test-currencyclient.py.in, tests/testmessages.py: add
+	  get_messages function to avoid confusion when importing the
+	  variable
+	* tests/testmessages.py: must be global or local variable is set
+
 2008-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-currencyclient.py.in
@@ -328,6 +365,14 @@
 	handle different behavior in Fake.
 
 	* tests/testmessages.py (clear_messages): Wrote function.
+
+2008-06-09  Loic Dachary <loic@dachary.org>
+
+	* tests/test-clientserver.py.in: move the invalid protocol test to
+	  a dedicated test class. It is much easier to implement without
+	  running actual clients or evening listening to the port, because
+	  the error condition can be triggered by sending a few invalid
+	  bytes.
 
 2008-06-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
