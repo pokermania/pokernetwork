@@ -19,6 +19,7 @@
 	(PokerRendererTests.MockPlayer): Created mock up.
 	(PokerRendererTests.test06_sitOutButWithGameBadPlayer): Wrote test.
 	(PokerRendererTests.test07_chatFormatMessage): Wrote method.
+	(PokerRendererTests.test08_chatLineNoGame): Wrote method.
 
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 

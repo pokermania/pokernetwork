@@ -597,10 +597,11 @@ class PokerRendererTests(unittest.TestCase):
             return self.isLoggedIn
 
     class MockPokerProtocol:
-        def __init__(self, setUserLoggedIn = False):
+        def __init__(self, setUserLoggedIn = False, validGameId = True):
             self.user = PokerRendererTests.MockUser(setUserLoggedIn)
             self.serialValue = -1
             self.packetList = []
+            self.validGame = validGameId
 
         def registerHandler(self, strVal, packetVal, CallbackFunc):
             pass
@@ -611,7 +612,10 @@ class PokerRendererTests(unittest.TestCase):
             return self.serialValue
 
         def getCurrentGameId(self):
-            return 2344
+            if self.validGame:
+                return 2344
+            else:
+                return None
 
         def schedulePacket(self, pack):
             self.packetList.append(pack)
@@ -735,6 +739,14 @@ class PokerRendererTests(unittest.TestCase):
             self.assertEquals(pack.serial, 0)
             self.assertEquals(pack.game_id, 0)
             self.assertEquals(pack.word, 'emThumbUp')
+    # -----------------------------------------------------------------------------------------------------
+    def test08_chatLineNoGame(self):
+        clear_all_messages()
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol(validGameId = False))
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        self.renderer.chatLine("testing line")
+        self.assertEquals(get_messages(), ["WARNING chatLine() while no current game active"])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
