@@ -1,5 +1,9 @@
 2008-07-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerrenderer.py.in
+	(PokerRendererTests.test14_packetSelfInPositionHandleConnection):
+	Wrote method.
+
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.
 
