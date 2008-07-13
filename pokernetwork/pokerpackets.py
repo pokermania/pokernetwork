@@ -1462,6 +1462,7 @@ seat: a seat number in the interval [0,9] or 255 for an invalid seat.
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
+    ROLE_PLAY = 1
 
     type = PACKET_POKER_SEAT
 
