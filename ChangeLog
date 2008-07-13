@@ -17,6 +17,8 @@
 	gameIsRunning parameter.
 	(PokerRendererTests.test17_maybeStartLookCardsNoGameRunning):
 	Wrote method.
+	(PokerRendererTests.test18_scheduleLookCardsNoGameRunning): Wrote
+	method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.
