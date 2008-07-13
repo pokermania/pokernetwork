@@ -538,7 +538,10 @@ class PokerRendererTests(unittest.TestCase):
         def headerGet(self, lookup):
             return None
         def headerGetProperties(self, lookup):
-            return None
+            if lookup == "/sequence/chatwords/word":
+                return []
+            else:
+                return None
             
     class MockSettings:
         def __init__(self, doBreakTourney = False, doBreakLobby = False):
@@ -578,6 +581,8 @@ class PokerRendererTests(unittest.TestCase):
                                                             doBreakLobby = breakLobbyConfig)
             self.interface = PokerRendererTests.MockInterface()
             self.noGame = noGameObject
+            self.chat_config = { 'max_chars' : 60, 'line_length' : 20 }
+            self.packetList = []
 
         def getGame(self,gameId):
             if self.noGame:
@@ -595,6 +600,7 @@ class PokerRendererTests(unittest.TestCase):
         def __init__(self, setUserLoggedIn = False):
             self.user = PokerRendererTests.MockUser(setUserLoggedIn)
             self.serialValue = -1
+            self.packetList = []
 
         def registerHandler(self, strVal, packetVal, CallbackFunc):
             pass
@@ -606,6 +612,10 @@ class PokerRendererTests(unittest.TestCase):
 
         def getCurrentGameId(self):
             return 2344
+
+        def schedulePacket(self, pack):
+            self.packetList.append(pack)
+
 
     class MockInterface(PokerInterface):
         def __init__(self):
@@ -698,12 +708,33 @@ class PokerRendererTests(unittest.TestCase):
     def test06_sitOutButWithGameBadPlayer(self):
         # By default, proto returns a bad game id of -1
         clear_all_messages()
-        proto = PokerRendererTests.MockPokerProtocol()
-        self.renderer.setProtocol(proto)
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol())
         self.assertEquals(get_messages(), [])
         clear_all_messages()
         self.renderer.sitOut(False)
         self.assertEquals(get_messages(), ['WARNING sitOut() for a non existing me-serial -1'])
+    # -----------------------------------------------------------------------------------------------------
+    def test07_chatFormatMessage(self):
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+   
+        clear_all_messages()
+        self.renderer.chat_words = [{'in': "nh",
+			    'out': "nice hand",
+			    'event': "emThumbUp"}]
+        proto.packetList = []
+        self.renderer.chatFormatMessage(PacketPokerChat(message = "welcome. nh ."))
+        self.assertEquals(get_messages(), ["[{'out': 'nice hand', 'event': 'emThumbUp', 'in': 'nh'}]", 'chat word (nh) not found', 'chat word (nh) found => sending (emThumbUp) event', 'render schedulePacket POKER_CHAT_WORD  type = 203 length = 22 serial = 0 cookie =  game_id = 0 word = emThumbUp', 'chat word (nh) not found'])
+        cnt = 0
+        for pack in proto.packetList:
+            cnt += 1
+            self.assertEquals(pack.type, PACKET_POKER_CHAT_WORD)
+            self.assertEquals(pack.length, 22)
+            self.assertEquals(pack.serial, 0)
+            self.assertEquals(pack.game_id, 0)
+            self.assertEquals(pack.word, 'emThumbUp')
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
