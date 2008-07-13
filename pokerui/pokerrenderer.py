@@ -1109,7 +1109,7 @@ class PokerRenderer:
                 if packet.url != self.factory.getUrl():
                     self.error("*CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server url is %s, local url is %s " % ( packet.url, self.factory.getUrl() ))
                 if packet.outfit != self.factory.getOutfit():
-                    self.error("*CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server outfit is %s, local outfit is %s " % ( packet.url, self.factory.getUrl() ))
+                    self.error("*CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server outfit is %s, local outfit is %s " % ( packet.outfit, self.factory.getOutfit() ))
                 self.sitActionsUpdate()
             ( packet.url, packet.outfit ) = self.factory.getSkin().interpret(packet.url, packet.outfit)
             self.render(packet)
