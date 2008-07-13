@@ -561,15 +561,24 @@ class PokerRendererTests(unittest.TestCase):
             return None
 
     class MockPlayer:
-        pass
+        def __init__(self):
+            self.wait_for = self.sit_requested = self.auto = None
+            self.sit_out_next_turn = self.sit_out = self.auto_blind_ante = None
     class MockGame:
+        def isTournament(self): return False
+
         def getPlayer(self, id):
             if id == -1:
                 return None
             else:
                 return PokerRendererTests.MockPlayer()
 
+    class MockSkin:
+        def interpret(self, url, outfit):
+            return (url, outfit)
+
     class MockPokerFactory:
+
         def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False, noGameObject = False):
             self.name = "MockUp"
             self.password = "you_mock_me,sir"
@@ -583,6 +592,17 @@ class PokerRendererTests(unittest.TestCase):
             self.noGame = noGameObject
             self.chat_config = { 'max_chars' : 60, 'line_length' : 20 }
             self.packetList = []
+            self.urlValue = None
+            self.outfitValue = None
+
+        def getSkin(self):
+            return PokerRendererTests.MockSkin()
+
+        def getUrl(self):
+            return self.urlValue
+
+        def getOutfit(self):
+            return self.outfitValue
 
         def getGame(self,gameId):
             if self.noGame:
@@ -650,6 +670,33 @@ class PokerRendererTests(unittest.TestCase):
             currentSuite.assertEquals(val, 'Mock Up\n\n\n  \n')
             for ii in kwargs:
                 currentSuite.assertEquals(ii, '0C')
+
+    class MockDisplay:
+        def __init__(self, pack = None):
+            self.expectPackets = [ ]
+            if pack: self.expectPackets.append(pack)
+            self.calledCount = 0
+
+        def _addExpectedPacket(self, packet):
+            self.expectPackets.append(packet)
+        def render(self, packet):
+            global currentSuite
+            newList = []
+            for p in self.expectPackets:
+                dd = pack.__dict__
+                for (kk, vv) in p.__dict__.iteritems():
+                    if dd.has_key(kk) and dd[kk] == vv:
+                        del dd[kk]
+                    else:
+                        break
+                if dd == {}:
+                    found = True
+                else:
+                    newList.append(p)
+                    break
+                currentSuite.assertEquals(found, True)
+                self.expectPackets = newList
+                self.calledCount += 1
         
     def setUp(self):
         global currentSuite
@@ -786,18 +833,10 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), [])
         clear_all_messages()
         p = PacketSerial(serial = 123)
-        global isCalled
-        isCalled = False
-        class MockDisplay:
-            def render(self, packet):
-                global currentSuite
-                global isCalled
-                currentSuite.assertEquals(packet, p)
-                isCalled = True
-        self.renderer.factory.display = MockDisplay()
+        self.renderer.factory.display = PokerRendererTests.MockDisplay()
         self.renderer.handleSerial(p)
         self.assertEquals(get_messages(), ['handleSerial: we now have serial 123'])
-        self.assertEquals(isCalled, True)
+        self.assertEquals(self.renderer.factory.display.calledCount, 0)
     # -----------------------------------------------------------------------------------------------------
     def test12_handleConnectionVariousMessages(self):
         clear_all_messages()
@@ -827,6 +866,36 @@ class PokerRendererTests(unittest.TestCase):
         # Note, this gets printted twice, once from the PACKET_MESSAGE string in _handleConnection
         #   and then again by PokerRenderer.showMessage()
         self.assertEquals(get_messages(), ['PACKET_MESSAGE : Hello there!', 'Hello there!'])
+    # -----------------------------------------------------------------------------------------------------
+    def test13_packetPlayerArriveInHandleConnection(self):
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        # When serial is not ours, we expect no output, and no render call
+        self.renderer.factory.display = PokerRendererTests.MockDisplay()
+        proto.serialValue = 22
+        self.renderer._handleConnection(proto, PacketPokerPlayerArrive(serial = 7))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.renderer.factory.display.calledCount, 0)
+
+        # When serial is ours but the URL doesn't match, we expect critical error,
+        # but render gets called anyway
+        clear_all_messages()
+        proto.serialValue = 22
+        self.renderer.factory.urlValue = "http://here"
+        self.renderer.factory.outfitValue = "clothed"
+        p = PacketPokerPlayerArrive(serial = 22, url = "http://somewhereelse", outfit = 'naked')
+        self.renderer.factory.display = PokerRendererTests.MockDisplay(p)
+        self.renderer.factory.display._addExpectedPacket(PacketPokerInterfaceCommand(window = "sit_actions_window", command = "show"))
+        self.renderer._handleConnection(proto, p)
+        self.assertEquals(self.renderer.factory.display.calledCount, 2)
+        m = get_messages()
+        self.assertEquals(len(m), 3)
+        self.assertEquals(m[0], 'ERROR *CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server url is http://somewhereelse, local url is http://here ')
+        self.assertEquals(m[1], 'ERROR *CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server outfit is naked, local outfit is clothed ')
+        self.assertEquals(m[2].find('sitActionsUpdate: <__main__.MockPlayer instance at') == 0, True)
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():

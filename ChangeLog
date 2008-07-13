@@ -1,3 +1,19 @@
+2008-07-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
+	error message for bad outfit should print outfits, not urls.
+
+	* tests/test-pokerrenderer.py.in
+	(PokerRendererTests.test13_packetPlayerArriveInHandleConnection):
+	Wrote method.
+	(PokerRendererTests.MockPokerFactory.getUrl): Wrote method.
+	(PokerRendererTests.MockPokerFactory.getOutfit): Wrote method.
+	(PokerRendererTests.MockDisplay): Made a generalized mockup for
+	all tests.
+	(PokerRendererTests.MockPokerFactory.getSkin): Wrote method.
+	(PokerRendererTests.MockGame.isTournament): Wrote method.
+	(PokerRendererTests.MockPlayer.__init__): Wrote method.
+
 2008-07-13  Loic Dachary <loic@dachary.org>
 
 	* Release 1.7.0
