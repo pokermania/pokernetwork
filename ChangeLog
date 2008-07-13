@@ -10,6 +10,11 @@
 	(PokerRendererTests.MockUser): Created mock up.
 	(PokerRendererTests.test03_interfaceReadyWithProtocol): Wrote method.
 	(PokerRendererTests.test04_handleMenuQuit): Wrote method.
+	(PokerRendererTests.MockGame): Wrote mock up.
+	(PokerRendererTests.MockPokerFactory.getGame): Wrote method.
+	(PokerRendererTests.MockPokerProtocol.getSerial): Wrote method.
+	(PokerRendererTests.MockPokerProtocol.getCurrentGameId): Wrote method.
+	(PokerRendererTests.test05_sitOutButNoGame): Wrote method.
 
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 

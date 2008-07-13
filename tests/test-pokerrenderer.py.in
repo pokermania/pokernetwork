@@ -557,8 +557,12 @@ class PokerRendererTests(unittest.TestCase):
                     return [ { 'currency_serial' : 0 } ]
             return None
 
+    class MockGame:
+        def __init__(self, id):
+            self.id = id
+
     class MockPokerFactory:
-        def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False):
+        def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False, noGameObject = False):
             self.name = "MockUp"
             self.password = "you_mock_me,sir"
             self.verbose = 4
@@ -568,6 +572,13 @@ class PokerRendererTests(unittest.TestCase):
             self.settings = PokerRendererTests.MockSettings(doBreakTourney = breakTourneyConfig, 
                                                             doBreakLobby = breakLobbyConfig)
             self.interface = PokerRendererTests.MockInterface()
+            self.noGame = noGameObject
+
+        def getGame(self,gameId):
+            if self.noGame:
+                return None
+            else:
+                return PokerRendererTests.MockGame()
 
     class MockUser:
         def __init__(self, isLoggedInVal = False):
@@ -584,6 +595,10 @@ class PokerRendererTests(unittest.TestCase):
 
         def registerLagmax(self, lagmaxFunc):
             pass
+        def getSerial(self):
+            return 110101
+        def getCurrentGameId(self):
+            return 2344
 
     class MockInterface(PokerInterface):
         def __init__(self):
@@ -661,6 +676,17 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.handleMenu("quit", None)
         self.assertEquals(get_messages(), ['pythonEvent QUIT None',
                                            'changeState login => quit (args = (), kwargs = {})'])
+    # -----------------------------------------------------------------------------------------------------
+    def test05_sitOutButNoGame(self):
+        clear_all_messages()
+        myRenderer = PokerRenderer(PokerRendererTests.MockPokerFactory(noGameObject = True))
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        myRenderer.setProtocol(PokerRendererTests.MockPokerProtocol())
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        myRenderer.sitOut(False)
+        self.assertEquals(get_messages(), ['WARNING sitOut() when no current game active'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
