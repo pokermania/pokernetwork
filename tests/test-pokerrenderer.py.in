@@ -566,6 +566,9 @@ class PokerRendererTests(unittest.TestCase):
             self.sit_out_next_turn = self.sit_out = self.auto_blind_ante = None
 
     class MockGame:
+        def __init__(self, makeItRun = False):
+            self.runningFlag = makeItRun
+
         def isTournament(self): return False
 
         def getPlayer(self, id):
@@ -573,6 +576,8 @@ class PokerRendererTests(unittest.TestCase):
                 return None
             else:
                 return PokerRendererTests.MockPlayer()
+        def isRunning(self):
+            return self.runningFlag
 
     class MockSkin:
         def interpret(self, url, outfit):
@@ -580,7 +585,8 @@ class PokerRendererTests(unittest.TestCase):
 
     class MockPokerFactory:
 
-        def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False, noGameObject = False):
+        def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False, noGameObject = False,
+                     makeGameRun = False):
             self.name = "MockUp"
             self.password = "you_mock_me,sir"
             self.verbose = 4
@@ -591,6 +597,7 @@ class PokerRendererTests(unittest.TestCase):
                                                             doBreakLobby = breakLobbyConfig)
             self.interface = PokerRendererTests.MockInterface()
             self.noGame = noGameObject
+            self.gameIsRunning = makeGameRun
             self.chat_config = { 'max_chars' : 60, 'line_length' : 20 }
             self.packetList = []
             self.urlValue = None
@@ -609,7 +616,9 @@ class PokerRendererTests(unittest.TestCase):
             if self.noGame:
                 return None
             else:
-                return PokerRendererTests.MockGame()
+                global currentSuite
+                currentSuite.assertEquals(gameId, 2344)
+                return PokerRendererTests.MockGame(makeItRun = self.gameIsRunning)
         def packet2game(self, packet):
             if self.noGame:
                 return None
@@ -992,6 +1001,19 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ["updateLagmax: %d" % proto.lag])
         self.assertEquals(proto._lagmax, proto.lag, 777)
 
+    # -----------------------------------------------------------------------------------------------------
+    def test17_maybeStartLookCardsNoGameRunning(self):
+        """There should be output about game not running, and no packets
+        scheduled by maybeStartLookCards when the game is not running (by
+        default, game is not running in our Mock Up"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        self.renderer.maybeStartLookCards()
+        self.assertEquals(get_messages(), ["ignoring look card the game is not running"])
+        self.assertEquals(proto.packetList, [])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
