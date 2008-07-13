@@ -15,6 +15,9 @@
 	(PokerRendererTests.MockPokerProtocol.getSerial): Wrote method.
 	(PokerRendererTests.MockPokerProtocol.getCurrentGameId): Wrote method.
 	(PokerRendererTests.test05_sitOutButNoGame): Wrote method.
+	(PokerRendererTests.MockGame): Wrote method.
+	(PokerRendererTests.MockPlayer): Created mock up.
+	(PokerRendererTests.test06_sitOutButWithGameBadPlayer): Wrote test.
 
 2008-07-07  Johan Euphrosine  <proppy@aminche.com>
 

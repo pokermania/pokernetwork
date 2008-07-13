@@ -557,9 +557,14 @@ class PokerRendererTests(unittest.TestCase):
                     return [ { 'currency_serial' : 0 } ]
             return None
 
+    class MockPlayer:
+        pass
     class MockGame:
-        def __init__(self, id):
-            self.id = id
+        def getPlayer(self, id):
+            if id == -1:
+                return None
+            else:
+                return PokerRendererTests.MockPlayer()
 
     class MockPokerFactory:
         def __init__(self, breakTourneyConfig = False, breakLobbyConfig = False, noGameObject = False):
@@ -589,6 +594,7 @@ class PokerRendererTests(unittest.TestCase):
     class MockPokerProtocol:
         def __init__(self, setUserLoggedIn = False):
             self.user = PokerRendererTests.MockUser(setUserLoggedIn)
+            self.serialValue = -1
 
         def registerHandler(self, strVal, packetVal, CallbackFunc):
             pass
@@ -596,7 +602,8 @@ class PokerRendererTests(unittest.TestCase):
         def registerLagmax(self, lagmaxFunc):
             pass
         def getSerial(self):
-            return 110101
+            return self.serialValue
+
         def getCurrentGameId(self):
             return 2344
 
@@ -687,6 +694,16 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         myRenderer.sitOut(False)
         self.assertEquals(get_messages(), ['WARNING sitOut() when no current game active'])
+    # -----------------------------------------------------------------------------------------------------
+    def test06_sitOutButWithGameBadPlayer(self):
+        # By default, proto returns a bad game id of -1
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        self.renderer.sitOut(False)
+        self.assertEquals(get_messages(), ['WARNING sitOut() for a non existing me-serial -1'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
