@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" simultaneous="4" verbose="0" chat="yes" poker_network_version="1.6.0">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" simultaneous="4" verbose="0" chat="yes" poker_network_version="1.7.0">
 
   <delays autodeal_tournament_min="15" autodeal="18" autodeal_max="120" autodeal_check="15" round="12" position="60" showdown="30" finish="18" messages="60" breaks_check="30"/>
   
@@ -48,7 +48,9 @@
   <table name="Mosolor" variant="holdem" betting_structure="50-100-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
   <table name="Cayrryns" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
 
-  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383"/>
+  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383"/><!--
+    <auth script="/usr/local/share/poker-network/pokerauth.py"/>
+    -->
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <!-- <currency serial="1" amount="500000"> -->
