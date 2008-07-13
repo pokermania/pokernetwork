@@ -23,6 +23,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 #  Cedric Pinson <cpinson@freesheep.org>
 
 from twisted.internet import reactor
