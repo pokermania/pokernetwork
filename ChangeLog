@@ -1,3 +1,8 @@
+2008-07-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerrenderer.py.in
+	(PokerRendererTests.test11_handleSerial): Wrote test.
+
 2008-07-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerrenderer.py.in (PokerRendererTests): Created

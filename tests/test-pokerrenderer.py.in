@@ -778,6 +778,25 @@ class PokerRendererTests(unittest.TestCase):
                                                             firstname = "Mock", lastname = "Up"))
         self.assertEquals(get_messages(), ['updateCashier'])
 
+    # -----------------------------------------------------------------------------------------------------
+    def test11_handleSerial(self):
+        clear_all_messages()
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol())
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        p = PacketSerial(serial = 123)
+        global isCalled
+        isCalled = False
+        class MockDisplay:
+            def render(self, packet):
+                global currentSuite
+                global isCalled
+                currentSuite.assertEquals(packet, p)
+                isCalled = True
+        self.renderer.factory.display = MockDisplay()
+        self.renderer.handleSerial(p)
+        self.assertEquals(get_messages(), ['handleSerial: we now have serial 123'])
+        self.assertEquals(isCalled, True)
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
