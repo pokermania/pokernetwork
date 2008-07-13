@@ -589,6 +589,8 @@ class PokerRendererTests(unittest.TestCase):
                 return None
             else:
                 return PokerRendererTests.MockGame()
+        def packet2game(self, packet):
+            return PokerRendererTests.MockGame()
 
     class MockUser:
         def __init__(self, isLoggedInVal = False):
@@ -777,7 +779,6 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.updateCashier(PacketPokerPersonalInfo(money = {}, email = 'mock@example.org',
                                                             firstname = "Mock", lastname = "Up"))
         self.assertEquals(get_messages(), ['updateCashier'])
-
     # -----------------------------------------------------------------------------------------------------
     def test11_handleSerial(self):
         clear_all_messages()
@@ -797,6 +798,17 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.handleSerial(p)
         self.assertEquals(get_messages(), ['handleSerial: we now have serial 123'])
         self.assertEquals(isCalled, True)
+    # -----------------------------------------------------------------------------------------------------
+    def test12_handleConnectionHandListBadState(self):
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        self.renderer._handleConnection(proto, PacketPokerHandList(hands = []))
+        self.assertEquals(get_messages(),
+                          ['ERROR *CRITICAL* handleGame: unexpected state for POKER_HAND_LIST idle'])
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
