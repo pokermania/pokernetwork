@@ -3,6 +3,14 @@
 	* tests/test-pokerrenderer.py.in
 	(PokerRendererTests.test14_packetSelfInPositionHandleConnection):
 	Wrote method.
+	(PokerRendererTests.MockPokerProtocol.registerLagmax): saved func
+	value for later test.
+	(PokerRendererTests.MockPokerFactory.packet2game): Added support
+	for noGame setting.
+	(PokerRendererTests.test16_checkUpdateLagMaxWithValidGameObject):
+	Wrote method.
+	(PokerRendererTests.test15_checkUpdateLagMaxWithoutGameObject):
+	Wrote method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.

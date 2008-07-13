@@ -564,6 +564,7 @@ class PokerRendererTests(unittest.TestCase):
         def __init__(self):
             self.wait_for = self.sit_requested = self.auto = None
             self.sit_out_next_turn = self.sit_out = self.auto_blind_ante = None
+
     class MockGame:
         def isTournament(self): return False
 
@@ -610,7 +611,10 @@ class PokerRendererTests(unittest.TestCase):
             else:
                 return PokerRendererTests.MockGame()
         def packet2game(self, packet):
-            return PokerRendererTests.MockGame()
+            if self.noGame:
+                return None
+            else:
+                return PokerRendererTests.MockGame()
 
     class MockUser:
         def __init__(self, isLoggedInVal = False):
@@ -624,12 +628,14 @@ class PokerRendererTests(unittest.TestCase):
             self.serialValue = -1
             self.packetList = []
             self.validGame = validGameId
+            self.doLagmax = None
 
         def registerHandler(self, strVal, packetVal, CallbackFunc):
             pass
 
         def registerLagmax(self, lagmaxFunc):
-            pass
+            self.doLagmax = lagmaxFunc
+
         def getSerial(self):
             return self.serialValue
 
@@ -910,6 +916,82 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer._handleConnection(proto, p)
         self.assertEquals(self.renderer.factory.display.calledCount, 1)
         self.assertEquals(get_messages(), ['resetLagmax: 120'])
+    # -----------------------------------------------------------------------------------------------------
+    def test15_checkUpdateLagMaxWithoutGameObject(self):
+        clear_all_messages()
+        myRenderer = PokerRenderer(PokerRendererTests.MockPokerFactory(noGameObject = True))
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        myRenderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+        # proto.doLagmax should be ste to PokerRenderer.updateLagmax() after init above
+
+        # Even if we send the right kind of packet with the right serial,
+        # we expect no action because we have no game object
+
+        proto.serialValue = 1799
+        proto._lagmax = 555
+        proto.lag = 777
+        clear_all_messages()
+        proto.doLagmax(PacketPokerStart(game_id = 5, serial = proto.serialValue))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(proto._lagmax, 555)
+    # -----------------------------------------------------------------------------------------------------
+    def test16_checkUpdateLagMaxWithValidGameObject(self):
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+        # proto.doLagmax should be ste to PokerRenderer.updateLagmax() after init above
+
+        # First, try with both expected packet types, but bad serials
+
+        # Position packet, but wrong serial
+        proto.serialValue = 1799
+        proto._lagmax = 555
+        proto.lag = 777
+        clear_all_messages()
+        proto.doLagmax(PacketPokerPosition(game_id = 5, serial = 7835))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(proto._lagmax, 555)
+
+        # Start packet, but wrong serial.  This should get the expected output, since we act
+        # to updateLagmax regardless of whose serial is in the POKER_START packet
+        proto.serialValue = 1799
+        proto._lagmax = 555
+        proto.lag = 777
+        clear_all_messages()
+        proto.doLagmax(PacketPokerStart(game_id = 5, serial = 7835))
+        self.assertEquals(get_messages(), ["updateLagmax: %d" % proto.lag])
+        self.assertEquals(proto._lagmax, proto.lag, 777)
+
+        # Now, a strange packet type but the  right serial should also yield no results.
+        proto.serialValue = 1799
+        proto._lagmax = 555
+        proto.lag = 777
+        clear_all_messages()
+        proto.doLagmax(PacketPokerFold(game_id = 5, serial = proto.serialValue))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(proto._lagmax, 555)
+
+        # Now, a both good packet type, with the right serial, should yield the expected results
+        proto.serialValue = 1799
+        proto._lagmax = 555
+        proto.lag = 777
+        clear_all_messages()
+        proto.doLagmax(PacketPokerStart(game_id = 5, serial = proto.serialValue))
+        self.assertEquals(get_messages(), ["updateLagmax: %d" % proto.lag])
+        self.assertEquals(proto._lagmax, proto.lag, 777)
+
+        proto.serialValue = 1799
+        proto._lagmax = 555
+        proto.lag = 777
+        clear_all_messages()
+        proto.doLagmax(PacketPokerPosition(game_id = 5, serial = proto.serialValue))
+        self.assertEquals(get_messages(), ["updateLagmax: %d" % proto.lag])
+        self.assertEquals(proto._lagmax, proto.lag, 777)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
