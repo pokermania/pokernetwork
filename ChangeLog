@@ -2,8 +2,7 @@
 
 	* tests/test-pokerrenderer.py.in
 	(PokerRendererTests.test11_handleSerial): Wrote test.
-	(PokerRendererTests.test12_handleConnectionHandListBadState):
-	Wrote test.
+	(PokerRendererTests.test12_handleConnectionBadStates): Wrote test.
 
 2008-07-12  Bradley M. Kuhn  <bkuhn@ebb.org>
 

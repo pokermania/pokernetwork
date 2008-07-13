@@ -799,7 +799,7 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ['handleSerial: we now have serial 123'])
         self.assertEquals(isCalled, True)
     # -----------------------------------------------------------------------------------------------------
-    def test12_handleConnectionHandListBadState(self):
+    def test12_handleConnectionBadStates(self):
         clear_all_messages()
         proto = PokerRendererTests.MockPokerProtocol()
         self.renderer.setProtocol(proto)
@@ -808,6 +808,17 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer._handleConnection(proto, PacketPokerHandList(hands = []))
         self.assertEquals(get_messages(),
                           ['ERROR *CRITICAL* handleGame: unexpected state for POKER_HAND_LIST idle'])
+        clear_all_messages()
+        self.renderer._handleConnection(proto, PacketPokerHandHistory(history = []))
+        self.assertEquals(get_messages(),
+                          ['ERROR *CRITICAL* handleGame: unexpected state for POKER_HAND_HISTORY idle'])
+        clear_all_messages()
+        self.renderer._handleConnection(proto, PacketPokerTableList(packets = []))
+        self.assertEquals(get_messages(),
+                          ['ERROR *CRITICAL* handleGame: unexpected state for TABLE_LIST: idle'])
+        clear_all_messages()
+        self.renderer._handleConnection(proto, PacketError(other_type = PACKET_PING))
+        self.assertEquals(get_messages(), ['ERROR *CRITICAL*: unexpected error'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
