@@ -664,6 +664,7 @@ class PokerRendererTests(unittest.TestCase):
         def __init__(self):
             self.verbose = 5
             PokerInterface.__init__(self)
+            self.calledCount_sitActionsToggleSitOut = 0
 
         def showMenu(self):
             pass
@@ -685,6 +686,8 @@ class PokerRendererTests(unittest.TestCase):
             currentSuite.assertEquals(val, 'Mock Up\n\n\n  \n')
             for ii in kwargs:
                 currentSuite.assertEquals(ii, '0C')
+        def sitActionsToggleSitOut(self):
+            self.calledCount_sitActionsToggleSitOut += 1
 
     class MockDisplay:
         def __init__(self, pack = None):
@@ -718,7 +721,8 @@ class PokerRendererTests(unittest.TestCase):
         currentSuite = self
         silence_all_messages()
         clear_all_messages()
-	self.renderer = PokerRenderer(PokerRendererTests.MockPokerFactory())
+        self.factory = PokerRendererTests.MockPokerFactory()
+	self.renderer = PokerRenderer(self.factory)
         self.assertEquals(get_messages(), [])
         clear_all_messages()
     def tearDown(self):
@@ -848,10 +852,10 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), [])
         clear_all_messages()
         p = PacketSerial(serial = 123)
-        self.renderer.factory.display = PokerRendererTests.MockDisplay()
+        self.factory.display = PokerRendererTests.MockDisplay()
         self.renderer.handleSerial(p)
         self.assertEquals(get_messages(), ['handleSerial: we now have serial 123'])
-        self.assertEquals(self.renderer.factory.display.calledCount, 0)
+        self.assertEquals(self.factory.display.calledCount, 0)
     # -----------------------------------------------------------------------------------------------------
     def test12_handleConnectionVariousMessages(self):
         clear_all_messages()
@@ -889,23 +893,23 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), [])
         clear_all_messages()
         # When serial is not ours, we expect no output, and no render call
-        self.renderer.factory.display = PokerRendererTests.MockDisplay()
+        self.factory.display = PokerRendererTests.MockDisplay()
         proto.serialValue = 22
         self.renderer._handleConnection(proto, PacketPokerPlayerArrive(serial = 7))
         self.assertEquals(get_messages(), [])
-        self.assertEquals(self.renderer.factory.display.calledCount, 0)
+        self.assertEquals(self.factory.display.calledCount, 0)
 
         # When serial is ours but the URL doesn't match, we expect critical error,
         # but render gets called anyway
         clear_all_messages()
         proto.serialValue = 22
-        self.renderer.factory.urlValue = "http://here"
-        self.renderer.factory.outfitValue = "clothed"
+        self.factory.urlValue = "http://here"
+        self.factory.outfitValue = "clothed"
         p = PacketPokerPlayerArrive(serial = 22, url = "http://somewhereelse", outfit = 'naked')
-        self.renderer.factory.display = PokerRendererTests.MockDisplay(p)
-        self.renderer.factory.display._addExpectedPacket(PacketPokerInterfaceCommand(window = "sit_actions_window", command = "show"))
+        self.factory.display = PokerRendererTests.MockDisplay(p)
+        self.factory.display._addExpectedPacket(PacketPokerInterfaceCommand(window = "sit_actions_window", command = "show"))
         self.renderer._handleConnection(proto, p)
-        self.assertEquals(self.renderer.factory.display.calledCount, 2)
+        self.assertEquals(self.factory.display.calledCount, 2)
         m = get_messages()
         self.assertEquals(len(m), 3)
         self.assertEquals(m[0], 'ERROR *CRITICAL*: PACKET_POKER_PLAYER_ARRIVE: server url is http://somewhereelse, local url is http://here ')
@@ -921,9 +925,9 @@ class PokerRendererTests(unittest.TestCase):
         # We expect a PacketPokerSelfInPosition to call resetLagmax
         clear_all_messages()
         p = PacketPokerSelfInPosition()
-        self.renderer.factory.display = PokerRendererTests.MockDisplay(p)
+        self.factory.display = PokerRendererTests.MockDisplay(p)
         self.renderer._handleConnection(proto, p)
-        self.assertEquals(self.renderer.factory.display.calledCount, 1)
+        self.assertEquals(self.factory.display.calledCount, 1)
         self.assertEquals(get_messages(), ['resetLagmax: 120'])
     # -----------------------------------------------------------------------------------------------------
     def test15_checkUpdateLagMaxWithoutGameObject(self):
@@ -1028,6 +1032,20 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.scheduleLookCardsAfterInteractionAnimation()
         self.assertEquals(get_messages(), ["ignoring look card the game is not running"])
         self.assertEquals(proto.packetList, [])
+    # -----------------------------------------------------------------------------------------------------
+    def test19_clickSitOutCoverage(self):
+        """This test covers completely the clickSitOut() method in
+        PokerRenderer.  Note the MockUp needs an
+        interface.sitActionsToggleSitOut() method."""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        self.assertEquals(self.renderer.clickSitOut(), True)
+        self.assertEquals(get_messages(), ["clickSitOut python"])
+        self.assertEquals(proto.packetList, [])
+        self.assertEquals(self.factory.interface.calledCount_sitActionsToggleSitOut, 1)
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
