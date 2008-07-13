@@ -635,6 +635,10 @@ class PokerRendererTests(unittest.TestCase):
             currentSuite.assertEquals(user, 'MockUp')
             currentSuite.assertEquals(password, 'you_mock_me,sir')
             currentSuite.assertEquals(remember, 1)
+
+        def messageBox(self, message):
+            global currentSuite
+            currentSuite.assertEquals(isinstance(message, str), True)
         
     def setUp(self):
         global currentSuite
@@ -747,6 +751,14 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         self.renderer.chatLine("testing line")
         self.assertEquals(get_messages(), ["WARNING chatLine() while no current game active"])
+    # -----------------------------------------------------------------------------------------------------
+    def test09_showMessageNoCallback(self):
+        clear_all_messages()
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol(validGameId = False))
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        self.renderer.showMessage("1 2 1 2 this is just a test.", None)
+        self.assertEquals(get_messages(), ["1 2 1 2 this is just a test."])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
