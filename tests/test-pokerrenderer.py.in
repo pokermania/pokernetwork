@@ -620,7 +620,9 @@ class PokerRendererTests(unittest.TestCase):
         def schedulePacket(self, pack):
             self.packetList.append(pack)
 
-
+        def getName(self):
+            return "Mock Name"
+                
     class MockInterface(PokerInterface):
         def __init__(self):
             self.verbose = 5
@@ -639,6 +641,13 @@ class PokerRendererTests(unittest.TestCase):
         def messageBox(self, message):
             global currentSuite
             currentSuite.assertEquals(isinstance(message, str), True)
+        def updateCashier(self, name, email, val, *kwargs):
+            global currentSuite
+            currentSuite.assertEquals(name, "Mock Name")
+            currentSuite.assertEquals(email, "mock@example.org")
+            currentSuite.assertEquals(val, 'Mock Up\n\n\n  \n')
+            for ii in kwargs:
+                currentSuite.assertEquals(ii, '0C')
         
     def setUp(self):
         global currentSuite
@@ -759,6 +768,15 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         self.renderer.showMessage("1 2 1 2 this is just a test.", None)
         self.assertEquals(get_messages(), ["1 2 1 2 this is just a test."])
+    # -----------------------------------------------------------------------------------------------------
+    def test10_updateCashier(self):
+        clear_all_messages()
+        self.renderer.setProtocol(PokerRendererTests.MockPokerProtocol())
+        self.assertEquals(get_messages(), [])
+        clear_all_messages()
+        self.renderer.updateCashier(PacketPokerPersonalInfo(money = {}, email = 'mock@example.org',
+                                                            firstname = "Mock", lastname = "Up"))
+        self.assertEquals(get_messages(), ['updateCashier'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
