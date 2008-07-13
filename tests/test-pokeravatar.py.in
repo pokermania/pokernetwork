@@ -214,12 +214,17 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
+    def sendRolePlay(self, (client, packet)):
+        client.sendPacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerSetRole.PLAY))
+        return client.packetDeferred(True, PACKET_POKER_ROLES)
+
+    # -------------------------------------------------------------------------
     def sendExplain(self, client):
         client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         return client.packetDeferred(True, PACKET_ACK)
     # -------------------------------------------------------------------------
     def setupCallbackChain(self, client):
-        return ((client, None))
+        return (client, None)
     # -------------------------------------------------------------------------
     def explain(self, (client, packet)):
         avatar = self.service.avatars[0]
@@ -477,6 +482,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Tests table joining table and sitting down."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -503,6 +509,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         connected to to table."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -515,6 +522,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Tests to be sure setting explain twice succeeds if already set."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -577,6 +585,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Tests to be sure once sat down, the user can buy into the game"""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -851,6 +860,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -860,6 +870,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 101)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
@@ -894,6 +905,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         after being at a table."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1165,6 +1177,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test18_badAttempts(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1195,6 +1208,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Test to cover the condition where the buyIn fails"""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 100, 'Table1', '100-200-no-limit')
         d.addCallback(self.seatTable, 0, 100)
@@ -1224,6 +1238,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Test to cover a player turning off their autoBlindAnte Setting"""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1253,6 +1268,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1287,6 +1303,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1317,6 +1334,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1326,6 +1344,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 101)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
@@ -1784,6 +1803,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Test for listing players in at a table."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1793,6 +1813,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 101)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
@@ -1899,6 +1920,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Test for hand history packet."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1942,6 +1964,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -1950,6 +1973,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 101)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
@@ -1993,6 +2017,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 103, 'Table4', 'ante-1-2-limit')
         d.addCallback(self.seatTable, 0, 103)
@@ -2001,6 +2026,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 103)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 103, 'Table4', 'ante-1-2-limit')
         d2.addCallback(self.seatTable, 1, 103)
@@ -2040,6 +2066,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test46_processingHand(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 103, 'Table4', 'ante-1-2-limit')
         d.addCallback(self.seatTable, 0, 103)
@@ -2163,6 +2190,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test47_startPackets(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2172,6 +2200,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 101)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
@@ -2209,9 +2238,36 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test48_seatPackets(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.badSeatTable, 0, 101)
+        return d
+
+    def seatTableNoRole(self, (client, packet), id, gameId):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        seatNumber = id + 1
+
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSeat(serial = client.getSerial(),
+                                                seat = seatNumber, game_id = gameId))
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_ERROR:
+                found += 1
+                self.assertEquals(packet.game_id, table.game.id)
+                self.assertEquals(packet.other_type, PACKET_POKER_SEAT)
+                self.assertEquals(packet.code, PacketPokerSeat.ROLE_PLAY)
+        self.assertEquals(found, 1)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test48_1_seatPacketNoRole(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTableNoRole, 0, 101)
         return d
     # ------------------------------------------------------------------------
     def badBuyRebuyRequest(self, (client, packet), id, gameId):
@@ -2245,6 +2301,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test49_badRebuy(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2270,6 +2327,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test50_chat(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2298,6 +2356,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test51_doLeave(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2384,6 +2443,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test52_variousPackets(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2407,6 +2467,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test53_autoMuck(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2434,6 +2495,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test54_doTableQuit(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2501,6 +2563,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test57_doFullQuit(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2534,6 +2597,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test58_packetLogoutSucceed(self):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2614,6 +2678,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2670,6 +2735,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # the third client.
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 101)
@@ -2678,6 +2744,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.readyToPlay, 0, 101)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
         d2.addCallback(self.seatTable, 1, 101)
@@ -2688,6 +2755,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.dealTable, 101)
         d3 = self.client_factory[2].established_deferred
         d3.addCallback(self.setupCallbackChain)
+        d3.addCallback(self.sendRolePlay)
         d3.addCallback(self.login, 2)
         d3.addCallback(self.joinTableWhenHandRunning, 2, 101, 'Table2', '2-4-limit')
         return defer.DeferredList((d, d2))
