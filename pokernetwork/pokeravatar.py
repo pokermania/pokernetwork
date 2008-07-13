@@ -433,7 +433,13 @@ class PokerAvatar:
                     self.message("player %d tried to start a new game but is not the owner of the table" % self.getSerial())
 
             elif packet.type == PACKET_POKER_SEAT:
-                if ( self.getSerial() == packet.serial or
+                if PacketPokerRoles.PLAY not in self.roles:
+                    self.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                                                            serial = packet.serial,
+                                                            code = PacketPokerSeat.ROLE_PLAY,
+                                                            message = "PACKET_POKER_ROLES must set the role to PLAY before chosing a seat",
+                                                            other_type = PACKET_POKER_SEAT))
+                elif ( self.getSerial() == packet.serial or
                      self.getSerial() == table.owner ):
                     if not table.seatPlayer(self, packet.serial, packet.seat):
                         packet.seat = -1
@@ -688,8 +694,9 @@ class PokerAvatar:
             "variant": packet.variant,
             "betting_structure": packet.betting_structure,
             "player_timeout": packet.player_timeout,
+            "muck_timeout": packet.muck_timeout,
             "currency_serial": packet.currency_serial,
-            "transient": True })
+            "skin": packet.skin })
         if not table:
             self.sendPacket(PacketPokerTable())
         return table            
