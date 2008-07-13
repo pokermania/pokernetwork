@@ -628,8 +628,10 @@ Direction: server => client
 
 message: human readable reason for the authentication failure
 code: machine readable code matching the human readable message
+      the list of which can be found in the PacketPokerSetAccount
+      packet definition
 other_type: the type of the packet that triggered the authentication
-            error.
+            error, i.e. PACKET_LOGIN
     """
 
     type = PACKET_AUTH_REFUSED
