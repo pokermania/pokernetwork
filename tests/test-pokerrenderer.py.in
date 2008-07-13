@@ -799,7 +799,7 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ['handleSerial: we now have serial 123'])
         self.assertEquals(isCalled, True)
     # -----------------------------------------------------------------------------------------------------
-    def test12_handleConnectionBadStates(self):
+    def test12_handleConnectionVariousMessages(self):
         clear_all_messages()
         proto = PokerRendererTests.MockPokerProtocol()
         self.renderer.setProtocol(proto)
@@ -819,6 +819,14 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         self.renderer._handleConnection(proto, PacketError(other_type = PACKET_PING))
         self.assertEquals(get_messages(), ['ERROR *CRITICAL*: unexpected error'])
+        clear_all_messages()
+        self.renderer._handleConnection(proto, PacketAuthOk())
+        self.assertEquals(get_messages(), ["login accepted"])
+        clear_all_messages()
+        self.renderer._handleConnection(proto, PacketMessage(string = "Hello there!"))
+        # Note, this gets printted twice, once from the PACKET_MESSAGE string in _handleConnection
+        #   and then again by PokerRenderer.showMessage()
+        self.assertEquals(get_messages(), ['PACKET_MESSAGE : Hello there!', 'Hello there!'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
