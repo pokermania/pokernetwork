@@ -2772,7 +2772,7 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
         self.addr_country = kwargs.get("addr_country", "")
         self.phone = kwargs.get("phone", "")
         self.gender = kwargs.get("gender", "")
-        self.birthdate = kwargs.get("birthdate", "")
+        self.birthdate = str(kwargs.get("birthdate", ""))
         PacketPokerUserInfo.__init__(self, *args, **kwargs)
 
     def pack(self):

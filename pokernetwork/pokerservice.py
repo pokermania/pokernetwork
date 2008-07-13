@@ -1113,6 +1113,7 @@ class PokerService(service.Service):
         cursor.close()
         if not packet.gender: packet.gender = ''
         if not packet.birthdate: packet.birthdate = ''
+        packet.birthdate = str(packet.birthdate)
         return packet
 
     def setPersonalInfo(self, personal_info):
