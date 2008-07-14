@@ -1057,6 +1057,18 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         self.renderer.handleMenu("NEVER HEARD OF YOU", "muck")
         self.assertEquals(get_messages(), ['ERROR *CRITICAL* handleMenu unknown name NEVER HEARD OF YOU'])
+    # -----------------------------------------------------------------------------------------------------
+    def test21_handleLobbyUnknownAction(self):
+        """Test for handleLobby given an action it doesn't know"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.renderer.handleLobby(("NEVER SEEN THIS ACTION BEFORE", "foo"))
+        self.assertEquals(get_messages(), ["handleLobby: ('NEVER SEEN THIS ACTION BEFORE', 'foo')",
+                         'ERROR *CRITICAL*: handleLobby: unknown action NEVER SEEN THIS ACTION BEFORE'])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()

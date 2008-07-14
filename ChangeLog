@@ -21,6 +21,7 @@
 	method.
 	(PokerRendererTests.test19_clickSitOutCoverage): Wrote method.
 	(PokerRendererTests.test20_handleMenuUnknownName): Wrote method.
+	(PokerRendererTests.test21_handleLobbyUnknownAction): Wrote method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.
