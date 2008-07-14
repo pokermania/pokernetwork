@@ -1046,6 +1046,17 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ["clickSitOut python"])
         self.assertEquals(proto.packetList, [])
         self.assertEquals(self.factory.interface.calledCount_sitActionsToggleSitOut, 1)
+    # -----------------------------------------------------------------------------------------------------
+    def test20_handleMenuUnknownName(self):
+        """Test for handle menu given a name it does not know"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.renderer.handleMenu("NEVER HEARD OF YOU", "muck")
+        self.assertEquals(get_messages(), ['ERROR *CRITICAL* handleMenu unknown name NEVER HEARD OF YOU'])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
