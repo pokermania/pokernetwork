@@ -1020,7 +1020,8 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(proto.packetList, [])
     # -----------------------------------------------------------------------------------------------------
     def test18_scheduleLookCardsNoGameRunning(self):
-        """This test is very similar to the previous one.  There should be
+        """scheduleLookCards when no game is running.
+        This test is very similar to the previous one.  There should be
         output about game not running, and no packets scheduled by
         maybeStartLookCards when the game is not running (by default, game
         is not running in our Mock Up"""
@@ -1034,7 +1035,8 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(proto.packetList, [])
     # -----------------------------------------------------------------------------------------------------
     def test19_clickSitOutCoverage(self):
-        """This test covers completely the clickSitOut() method in
+        """clickSitOut full coverage test.
+        This test covers completely the clickSitOut() method in
         PokerRenderer.  Note the MockUp needs an
         interface.sitActionsToggleSitOut() method."""
         clear_all_messages()
@@ -1048,7 +1050,8 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(self.factory.interface.calledCount_sitActionsToggleSitOut, 1)
     # -----------------------------------------------------------------------------------------------------
     def test20_handleMenuUnknownName(self):
-        """Test for handle menu given a name it does not know"""
+        """handleMenu given unknown name.
+        Test for handle menu given a name it does not know"""
         clear_all_messages()
         proto = PokerRendererTests.MockPokerProtocol()
         self.renderer.setProtocol(proto)
@@ -1059,7 +1062,8 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ['ERROR *CRITICAL* handleMenu unknown name NEVER HEARD OF YOU'])
     # -----------------------------------------------------------------------------------------------------
     def test21_handleLobbyUnknownAction(self):
-        """Test for handleLobby given an action it doesn't know"""
+        """handleLoby given an unknown action.
+        Test for handleLobby given an action it doesn't know"""
         clear_all_messages()
         proto = PokerRendererTests.MockPokerProtocol()
         self.renderer.setProtocol(proto)
@@ -1069,6 +1073,25 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.handleLobby(("NEVER SEEN THIS ACTION BEFORE", "foo"))
         self.assertEquals(get_messages(), ["handleLobby: ('NEVER SEEN THIS ACTION BEFORE', 'foo')",
                          'ERROR *CRITICAL*: handleLobby: unknown action NEVER SEEN THIS ACTION BEFORE'])
+    # -----------------------------------------------------------------------------------------------------
+    def test22_currencySerial2NameNotString(self):
+        """currencySerial2Name given a non-string argument.
+        Test for handleLobby given an action it doesn't know"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        caughtError = False
+        try:
+            self.renderer.currencySerial2Name(None)
+        except UserWarning, ue:
+            caughtError = True
+            self.assertEquals(ue[0], 'currencySerial2Name unknown serial None')
+        self.assertEquals(caughtError, True)
+        self.assertEquals(get_messages(), ['currencySerial2Name None'])
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
