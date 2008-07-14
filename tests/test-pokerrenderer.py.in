@@ -599,7 +599,6 @@ class PokerRendererTests(unittest.TestCase):
             self.noGame = noGameObject
             self.gameIsRunning = makeGameRun
             self.chat_config = { 'max_chars' : 60, 'line_length' : 20 }
-            self.packetList = []
             self.urlValue = None
             self.outfitValue = None
 
@@ -635,7 +634,8 @@ class PokerRendererTests(unittest.TestCase):
         def __init__(self, setUserLoggedIn = False, validGameId = True):
             self.user = PokerRendererTests.MockUser(setUserLoggedIn)
             self.serialValue = -1
-            self.packetList = []
+            self.sentPackets = []
+            self.scheduledPackets = []
             self.validGame = validGameId
             self.doLagmax = None
 
@@ -655,10 +655,10 @@ class PokerRendererTests(unittest.TestCase):
                 return None
 
         def schedulePacket(self, pack):
-            self.packetList.append(pack)
+            self.scheduledPackets.append(pack)
 
         def sendPacket(self, pack):
-            self.packetList.append(pack)
+            self.sentPackets.append(pack)
 
         def getName(self):
             return "Mock Name"
@@ -812,11 +812,11 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.chat_words = [{'in': "nh",
 			    'out': "nice hand",
 			    'event': "emThumbUp"}]
-        proto.packetList = []
+        proto.scheduledPackets = []
         self.renderer.chatFormatMessage(PacketPokerChat(message = "welcome. nh ."))
         self.assertEquals(get_messages(), ["[{'out': 'nice hand', 'event': 'emThumbUp', 'in': 'nh'}]", 'chat word (nh) not found', 'chat word (nh) found => sending (emThumbUp) event', 'render schedulePacket POKER_CHAT_WORD  type = 203 length = 22 serial = 0 cookie =  game_id = 0 word = emThumbUp', 'chat word (nh) not found'])
         cnt = 0
-        for pack in proto.packetList:
+        for pack in proto.scheduledPackets:
             cnt += 1
             self.assertEquals(pack.type, PACKET_POKER_CHAT_WORD)
             self.assertEquals(pack.length, 22)
@@ -1010,7 +1010,8 @@ class PokerRendererTests(unittest.TestCase):
 
     # -----------------------------------------------------------------------------------------------------
     def test17_maybeStartLookCardsNoGameRunning(self):
-        """There should be output about game not running, and no packets
+        """maybeStartLookCards() when no game is running.
+        There should be output about game not running, and no packets
         scheduled by maybeStartLookCards when the game is not running (by
         default, game is not running in our Mock Up"""
         clear_all_messages()
@@ -1020,7 +1021,7 @@ class PokerRendererTests(unittest.TestCase):
 
         self.renderer.maybeStartLookCards()
         self.assertEquals(get_messages(), ["ignoring look card the game is not running"])
-        self.assertEquals(proto.packetList, [])
+        self.assertEquals(proto.sentPackets, proto.scheduledPackets, [])
     # -----------------------------------------------------------------------------------------------------
     def test18_scheduleLookCardsNoGameRunning(self):
         """scheduleLookCards when no game is running.
@@ -1035,7 +1036,7 @@ class PokerRendererTests(unittest.TestCase):
 
         self.renderer.scheduleLookCardsAfterInteractionAnimation()
         self.assertEquals(get_messages(), ["ignoring look card the game is not running"])
-        self.assertEquals(proto.packetList, [])
+        self.assertEquals(proto.sentPackets, proto.scheduledPackets, [])
     # -----------------------------------------------------------------------------------------------------
     def test19_clickSitOutCoverage(self):
         """clickSitOut full coverage test.
@@ -1049,7 +1050,7 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         self.assertEquals(self.renderer.clickSitOut(), True)
         self.assertEquals(get_messages(), ["clickSitOut python"])
-        self.assertEquals(proto.packetList, [])
+        self.assertEquals(proto.sentPackets, proto.scheduledPackets, [])
         self.assertEquals(self.factory.interface.calledCount_sitActionsToggleSitOut, 1)
     # -----------------------------------------------------------------------------------------------------
     def test20_handleMenuUnknownName(self):
@@ -1146,8 +1147,8 @@ class PokerRendererTests(unittest.TestCase):
         clear_all_messages()
         self.renderer.handleHands("replay", 3562, 4875)
         self.assertEquals(get_messages(), [])
-        self.assertEquals(len(proto.packetList), 1)
-        p = proto.packetList[0]
+        self.assertEquals(len(proto.scheduledPackets), 1)
+        p = proto.scheduledPackets[0]
         self.assertEquals(p.type, PACKET_POKER_HAND_REPLAY)
         self.assertEquals(p.serial, 3562)
     # -----------------------------------------------------------------------------------------------------
@@ -1173,7 +1174,6 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ['rotateTable: 2344 => 7755'])
         self.assertEquals(calledDummy, True)
         self.renderer.connectTable = saveConnectTable
-
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
