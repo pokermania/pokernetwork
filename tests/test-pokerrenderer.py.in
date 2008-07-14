@@ -1174,6 +1174,21 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(get_messages(), ['rotateTable: 2344 => 7755'])
         self.assertEquals(calledDummy, True)
         self.renderer.connectTable = saveConnectTable
+    # -----------------------------------------------------------------------------------------------------
+    def test28_sendPacketCoverage(self):
+        """sendPacket() full coverage.
+        sendPacket() should print something and pass packet back onto protocol"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.renderer.sendPacket(PacketPing)
+        self.assertEquals(get_messages(), ['render sendPacket pokernetwork.packets.PacketPing'])
+        self.assertEquals(len(proto.sentPackets), 1)
+        self.assertEquals(proto.sentPackets[0].type, PACKET_PING)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
