@@ -28,6 +28,7 @@
 	(PokerRendererTests.test25_handleHandsOutOfState): Wrote test.
 	(PokerRendererTests.test27_rotateTableWithTwo): Wrote method.
 	(PokerRendererTests.test28_sendPacketCoverage): Wrote test.
+	(PokerRendererTests.test29_schedulePacketCoverage): Wrote method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.
