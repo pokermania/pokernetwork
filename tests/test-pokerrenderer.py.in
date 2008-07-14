@@ -657,6 +657,9 @@ class PokerRendererTests(unittest.TestCase):
         def schedulePacket(self, pack):
             self.packetList.append(pack)
 
+        def sendPacket(self, pack):
+            self.packetList.append(pack)
+
         def getName(self):
             return "Mock Name"
                 
@@ -1117,6 +1120,36 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.handleHands("NEVER HEARD OF THIS", "foo", "foo")
         self.assertEquals(get_messages(),
                           ['ERROR *CRITICAL*: selectHands unexpected action NEVER HEARD OF THIS'])
+    # -----------------------------------------------------------------------------------------------------
+    # FIXME: this current fails.  I believe it should pass -- bkuhn
+    def test25_handleHandsOutOfState(self):
+        """handleHands() when not in HAND_LIST state
+        handleHands() expects HAND_LIST state"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.renderer.handleHands("replay", 3562, 4875)
+        self.assertEquals(get_messages(), ["*CRITICAL* selectHand: ignored because not in HAND_LIST state"])
+    # -----------------------------------------------------------------------------------------------------
+    # FIXME: this current fails.  I believe it should pass -- bkuhn
+    def test26_handleHandsReplayHand(self):
+        """handleHands() when you actually replay a hand 
+        handleHands() when in  HAND_LIST state and the hand is replayed"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.renderer.handleHands("replay", 3562, 4875)
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(len(proto.packetList), 1)
+        p = proto.packetList[0]
+        self.assertEquals(p.type, PACKET_POKER_HAND_REPLAY)
+        self.assertEquals(p.serial, 3562)
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
