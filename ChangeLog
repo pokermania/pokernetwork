@@ -31,6 +31,11 @@
 	(PokerRendererTests.test29_schedulePacketCoverage): Wrote method.
 	(PokerRendererTests.test30_getSeatUserNotLoggedInAndInWeirdState):
 	Wrote method.
+	(PokerRendererTests.MockDisplay.setRenderer): Wrot method.
+	(PokerRendererTests.test31_bootstrapFirstTimeInterfaceReady):
+	Wrote method.
+	(PokerRendererTests.test32_bootstrapFristTimeInterfaceNotReady):
+	Wrote method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.

@@ -703,6 +703,11 @@ class PokerRendererTests(unittest.TestCase):
 
         def _addExpectedPacket(self, packet):
             self.expectPackets.append(packet)
+
+        def setRenderer(self, renderer):
+            global currentSuite
+            currentSuite.assertEquals(currentSuite.renderer, renderer)
+
         def render(self, packet):
             global currentSuite
             newList = []
@@ -1224,6 +1229,71 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.getSeat(PacketPokerSeat(game_id = 2344, serial = 7736, seat = 1))
         self.assertEquals(get_messages(), ['getSeat type = POKER_SEAT(79) serial = 7736 game_id = 2344 seat = 1', 'changeState outfit => seating (args = (type = POKER_SEAT(79) serial = 7736 game_id = 2344 seat = 1,), kwargs = {})', 'ERROR *CRITICAL*; should not be here', 'You cannot do that now'])
         self.assertEquals(self.factory.interface.messageBoxes, [_('You cannot do that now')])
+    # -----------------------------------------------------------------------------------------------------
+    def test31_bootstrapFirstTimeInterfaceReady(self):
+        """bootstrap() not at first time when interface ready
+        In this scenario, a PacketBootstrap is sent, calling bootstrap() ,
+        which then finds it is the first time and the interface is ready.
+        This causes the LOGIN changeState() to occur and one packet sent.
+      """
+
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+
+        self.factory.first_time = False
+        self.factory.display = PokerRendererTests.MockDisplay()
+
+        self.renderer._handleConnection(proto, PacketBootstrap())
+
+        m = get_messages()
+        self.assertEquals(len(m), 3)
+        self.assertEquals(m[0].find('render sendPacket type = POKER_SET_ROLE') == 0, True)
+        self.assertEquals(m[1], 'interface ready, ask for password')
+        self.assertEquals(m[2].find('changeState idle => login (args = (<function <lambda> at ') == 0, True)
+
+        self.assertEquals(len(proto.sentPackets), 1)
+        p0 = proto.sentPackets[0]
+        self.assertEquals(p0.type, PACKET_POKER_SET_ROLE)
+        self.assertEquals(p0.roles, PacketPokerRoles.PLAY)
+
+        self.assertEquals(self.factory.display.calledCount, 0)
+
+    # -----------------------------------------------------------------------------------------------------
+    def test32_bootstrapFristTimeInterfaceNotReady(self):
+        """bootstrap() not at first time when interface not ready
+        In this scenario, a PacketBootstrap is sent, calling bootstrap() ,
+        and then the interface isn't ready, so we just get a message and renderer is called.
+      """
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+
+        self.factory.first_time = False
+        self.factory.interface = None
+
+        self.factory.display = PokerRendererTests.MockDisplay()
+
+        self.renderer._handleConnection(proto, PacketBootstrap())
+
+        m = get_messages()
+        self.assertEquals(len(m), 2)
+        self.assertEquals(m[0].find('render sendPacket type = POKER_SET_ROLE') == 0, True)
+        self.assertEquals(m[1], "interface not ready, will ask password later")
+
+        self.assertEquals(len(proto.sentPackets), 1)
+        p0 = proto.sentPackets[0]
+        self.assertEquals(p0.type, PACKET_POKER_SET_ROLE)
+        self.assertEquals(p0.roles, PacketPokerRoles.PLAY)
+
+        self.assertEquals(self.factory.display.calledCount, 0)
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
