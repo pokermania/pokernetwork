@@ -1150,6 +1150,30 @@ class PokerRendererTests(unittest.TestCase):
         p = proto.packetList[0]
         self.assertEquals(p.type, PACKET_POKER_HAND_REPLAY)
         self.assertEquals(p.serial, 3562)
+    # -----------------------------------------------------------------------------------------------------
+    def test27_rotateTableWithTwo(self):
+        """rotateTable() when there are two.
+        roteateTable() when there are two there"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.factory.games = { 7755 : "", 2344 : ""  }
+        global calledDummy
+        calledDummy = False
+        def dummyConnectTable(gameId):
+            self.assertEquals(gameId, 7755)
+            global calledDummy
+            calledDummy = True
+        saveConnectTable = self.renderer.connectTable
+        self.renderer.connectTable = dummyConnectTable
+        self.renderer.rotateTable()
+        self.assertEquals(get_messages(), ['rotateTable: 2344 => 7755'])
+        self.assertEquals(calledDummy, True)
+        self.renderer.connectTable = saveConnectTable
+
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()

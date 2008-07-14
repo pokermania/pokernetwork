@@ -26,6 +26,7 @@
 	(PokerRendererTests.test24_handleHandsUnknownActoin): Wrote test.
 	(PokerRendererTests.test26_handleHandsReplayHand): Wrote test.
 	(PokerRendererTests.test25_handleHandsOutOfState): Wrote test.
+	(PokerRendererTests.test27_rotateTableWithTwo): Wrote method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.
