@@ -668,6 +668,7 @@ class PokerRendererTests(unittest.TestCase):
             self.verbose = 5
             PokerInterface.__init__(self)
             self.calledCount_sitActionsToggleSitOut = 0
+            self.messageBoxes = []
 
         def showMenu(self):
             pass
@@ -682,6 +683,8 @@ class PokerRendererTests(unittest.TestCase):
         def messageBox(self, message):
             global currentSuite
             currentSuite.assertEquals(isinstance(message, str), True)
+            self.messageBoxes.append(message)
+
         def updateCashier(self, name, email, val, *kwargs):
             global currentSuite
             currentSuite.assertEquals(name, "Mock Name")
@@ -1204,7 +1207,23 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(len(proto.scheduledPackets), 1)
         self.assertEquals(proto.sentPackets, [])
         self.assertEquals(proto.scheduledPackets[0].type, PACKET_PING)
+    # -----------------------------------------------------------------------------------------------------
+    def test30_getSeatUserNotLoggedInAndInWeirdState(self):
+        """getSeat() when user not logged in and is in a state where the interface cannot be hidden.
+        In this case, getSeat() should print sometihng and then return state to LOGIN
+        and set callback.  (Note that in our test environment, the user is
+        *not* logged in by default.)"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
 
+        clear_all_messages()
+        self.renderer.state = pokerrenderer.OUTFIT
+        self.factory.interface.messageBoxes = []
+        self.renderer.getSeat(PacketPokerSeat(game_id = 2344, serial = 7736, seat = 1))
+        self.assertEquals(get_messages(), ['getSeat type = POKER_SEAT(79) serial = 7736 game_id = 2344 seat = 1', 'changeState outfit => seating (args = (type = POKER_SEAT(79) serial = 7736 game_id = 2344 seat = 1,), kwargs = {})', 'ERROR *CRITICAL*; should not be here', 'You cannot do that now'])
+        self.assertEquals(self.factory.interface.messageBoxes, [_('You cannot do that now')])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
