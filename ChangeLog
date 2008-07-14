@@ -36,6 +36,7 @@
 	Wrote method.
 	(PokerRendererTests.test32_bootstrapFristTimeInterfaceNotReady):
 	Wrote method.
+	(PokerRendererTests.test33_changeStatePayBlindFromWeird): Wrote method.
 
 	* pokerui/pokerrenderer.py (PokerRenderer._handleConnection):
 	error message for bad outfit should print outfits, not urls.

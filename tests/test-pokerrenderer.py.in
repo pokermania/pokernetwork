@@ -1293,6 +1293,16 @@ class PokerRendererTests(unittest.TestCase):
         self.assertEquals(p0.roles, PacketPokerRoles.PLAY)
 
         self.assertEquals(self.factory.display.calledCount, 0)
+    # -----------------------------------------------------------------------------------------------------
+    def test33_changeStatePayBlindFromWeird(self):
+        """changeState() for PAY_BLIND_ANTE when existing state is weird
+        changeState() gives a critical error going from someOddState => pay_blind_ante"""
+
+        clear_all_messages()
+        self.renderer.state = pokerrenderer.OUTFIT
+        self.renderer.changeState(pokerrenderer.PAY_BLIND_ANTE)
+        self.assertEquals(get_messages(), ['changeState outfit => pay_blind_ante (args = (), kwargs = {})',
+                                           'ERROR *CRITICAL*  unexpected state outfit'])
 
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
