@@ -1091,7 +1091,19 @@ class PokerRendererTests(unittest.TestCase):
             self.assertEquals(ue[0], 'currencySerial2Name unknown serial None')
         self.assertEquals(caughtError, True)
         self.assertEquals(get_messages(), ['currencySerial2Name None'])
+    # -----------------------------------------------------------------------------------------------------
+    def test23_handleTournamentsUnknownAction(self):
+        """handleTournaments given an unknown action.
+        Test for handleTournaments given an action it doesn't know"""
+        clear_all_messages()
+        proto = PokerRendererTests.MockPokerProtocol()
+        self.renderer.setProtocol(proto)
+        self.assertEquals(get_messages(), [])
 
+        clear_all_messages()
+        self.renderer.handleLobby(("NEVER SEEN THIS ACTION BEFORE", "foo"))
+        self.assertEquals(get_messages(), ["handleLobby: ('NEVER SEEN THIS ACTION BEFORE', 'foo')",
+                          'ERROR *CRITICAL*: handleLobby: unknown action NEVER SEEN THIS ACTION BEFORE'])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
