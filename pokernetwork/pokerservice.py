@@ -151,6 +151,11 @@ class PokerService(service.Service):
         self.settings = settings
         self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.delays = settings.headerGetProperties("/server/delays")[0]
+        refill = settings.headerGetProperties("/server/refill")
+        if len(refill) > 0:
+            self.refill = refill[0]
+        else:
+            self.refill = None
         self.db = None
         self.cashier = None
         self.poker_auth = None
@@ -317,7 +322,27 @@ class PokerService(service.Service):
                 if self.verbose:
                     self.message("auth: %s attempt to login more than once with similar roles %s" % ( name, roles.intersection(client.roles) ))
                 return ( False, "Already logged in from somewhere else" )
-        return self.poker_auth.auth(name, password)
+        ( info, reason ) = self.poker_auth.auth(name, password)
+        if info:
+            self.autorefill(info[0])
+        return ( info, reason )
+
+    def autorefill(self, serial):
+        if not self.refill:
+            return
+        user_info = self.getUserInfo(serial)
+        if user_info.money.has_key(int(self.refill['serial'])):
+            money = user_info.money[int(self.refill['serial'])]
+            missing = int(self.refill['amount']) - ( int(money[0]) + int(money[1]) )
+            if missing > 0:
+                refill = int(money[0]) + missing
+            else:
+                refill = 0 
+        else:
+            refill = int(self.refill['amount'])            
+        if refill > 0:
+            self.db.db.query("REPLACE INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.refill['serial'], refill))
+        return refill
 
     def updateTourneysSchedule(self):
         if self.verbose > 3:

@@ -83,6 +83,8 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
+  <refill serial="1" amount="10000000" />
+
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
@@ -136,9 +138,6 @@ class PokerServiceTestCaseBase(unittest.TestCase):
         ( (self.user3_serial, name, privilege), message ) = self.service.auth("user3", "password3", "role1")
 
         for user_number in (self.user1_serial, self.user2_serial, self.user3_serial):
-            if self.default_money > 0:
-                cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 1, %d)" % ( user_number, self.default_money ) )
-                self.assertEqual(1, cursor.rowcount)
             if self.default_money > 0 and user_number == self.user3_serial:
                 cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 2, %d)" % ( user_number, self.default_money ) )
                 self.assertEqual(1, cursor.rowcount)
@@ -213,6 +212,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test04_getUserInfo(self):
         self.service.startService()
+        self.service.refill = None
 
         self.default_money = 0
         self.createUsers()
@@ -560,6 +560,48 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         tourney = self.service.tourneys[4000]
         self.assertEqual([1, 2, 3], tourney.players)
 
+class RefillTestCase(unittest.TestCase):
+
+    def destroyDb(self):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        
+    def setUp(self):
+        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        <server verbose="3">
+        <listen tcp="19480" />
+        <refill serial="1" amount="10000" />
+        <delays />
+        <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+        <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+        <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+        </server>
+        """
+        testclock._seconds_reset()        
+        self.destroyDb()
+        self.service = pokerservice.PokerService(settings_xml)
+
+    def tearDown(self):
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.destroyDb())
+        return d
+
+    def test_refill(self):
+        self.service.startService()
+        refill = 10000
+        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
+        self.assertEquals(0, self.service.autorefill(serial))
+        table_money = 1000
+        table_serial = 200
+        self.service.db.db.query("INSERT INTO user2table VALUES (" + str(serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
+        self.service.db.db.query("INSERT INTO pokertables VALUES (" + str(table_serial) + ", 'foo', 1)")
+        money_left = 100
+        self.service.db.db.query("UPDATE user2money SET amount = " + str(money_left) + " WHERE user_serial = " + str(serial))
+        self.assertEquals(refill - table_money, self.service.autorefill(serial))
+    
 class TimerTestCase(unittest.TestCase):
 
     def test_cancelTimers(self):
@@ -1159,18 +1201,19 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
-    suite.addTest(loader.loadClass(PokerServiceTestCase))
-    suite.addTest(loader.loadClass(TimerTestCase))
-    suite.addTest(loader.loadClass(BreakTestCase))
-    suite.addTest(loader.loadClass(TourneyFinishedTestCase))
-    suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
-    suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
-    suite.addTest(loader.loadClass(TourneyCancelTestCase))
-    suite.addTest(loader.loadClass(ShutdownCheckTestCase))
-    suite.addTest(loader.loadClass(ListHandsTestCase))
-    suite.addTest(loader.loadClass(SetAccountTestCase))
-    suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
-    suite.addTest(loader.loadClass(PokerXMLTestCase))
+#     suite.addTest(loader.loadClass(PokerServiceTestCase))
+    suite.addTest(loader.loadClass(RefillTestCase))
+#     suite.addTest(loader.loadClass(TimerTestCase))
+#     suite.addTest(loader.loadClass(BreakTestCase))
+#     suite.addTest(loader.loadClass(TourneyFinishedTestCase))
+#     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
+#     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+#     suite.addTest(loader.loadClass(TourneyCancelTestCase))
+#     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
+#     suite.addTest(loader.loadClass(ListHandsTestCase))
+#     suite.addTest(loader.loadClass(SetAccountTestCase))
+#     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
+#     suite.addTest(loader.loadClass(PokerXMLTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
