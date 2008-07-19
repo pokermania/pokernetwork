@@ -350,6 +350,7 @@ class PokerAvatar:
 
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             if self.getSerial() == packet.serial:
+                self.service.autorefill(packet.serial)
                 self.service.tourneyRegister(packet)
             else:
                 self.message("attempt to register in tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() ))
@@ -452,6 +453,7 @@ class PokerAvatar:
                 
             elif packet.type == PACKET_POKER_BUY_IN:
                 if self.getSerial() == packet.serial:
+                    self.service.autorefill(packet.serial)
                     if not table.buyInPlayer(self, packet.amount):
                         self.sendPacketVerbose(PacketPokerError(game_id = game.id,
                                                                 serial = packet.serial,
@@ -461,6 +463,7 @@ class PokerAvatar:
 
             elif packet.type == PACKET_POKER_REBUY:
                 if self.getSerial() == packet.serial:
+                    self.service.autorefill(packet.serial)
                     if not table.rebuyPlayerRequest(self, packet.amount):
                         self.sendPacketVerbose(PacketPokerError(game_id = game.id,
                                                                 serial = packet.serial,
@@ -770,9 +773,11 @@ class PokerAvatar:
         self.logout()
 
     def getUserInfo(self, serial):
+        self.service.autorefill(serial)
         self.sendPacketVerbose(self.service.getUserInfo(serial))
 
     def getPersonalInfo(self, serial):
+        self.service.autorefill(serial)
         self.sendPacketVerbose(self.service.getPersonalInfo(serial))
 
     def removePlayer(self, table, serial):
