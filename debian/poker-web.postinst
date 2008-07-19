@@ -77,6 +77,10 @@ if [ "$1" = "configure" ]; then
                 ;;
         esac
 
+        if [ -x "$(which a2ensite)" ] ; then
+	    a2ensite poker-web || true
+        fi
+
         case "$webserver" in
             apache|apache-perl|apache-ssl|apache2)
                 newfile=false
