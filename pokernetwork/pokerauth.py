@@ -40,11 +40,6 @@ class PokerAuth:
         self.type2auth = {}
         self.verbose = settings.headerGetInt("/server/@verbose")
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
-        currency = settings.headerGetProperties("/server/currency")
-        if len(currency) > 0:
-            self.currency = currency[0]
-        else:
-            self.currency = None
 
     def message(self, string):
         print "PokerAuth: " + string
@@ -105,8 +100,6 @@ class PokerAuth:
         if self.verbose:
             self.message("create user with serial %s" % serial)
         cursor.execute("INSERT INTO users_private (serial) values ('%d')" % serial)
-        if self.currency:
-            cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.currency['serial'], self.currency['amount']))
         cursor.close()
         return int(serial)
 
