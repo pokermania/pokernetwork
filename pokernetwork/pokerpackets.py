@@ -3330,6 +3330,8 @@ The user must not be not logged in when this packet is
 sent or undefined results will occur.
 
 Direction: server <= client
+
+roles: string PLAY or EDIT
 """
 
     UNKNOWN_ROLE = 1
