@@ -1,3 +1,22 @@
+2008-07-19  Loic Dachary <loic@dachary.org>
+
+	* Release 1.7.0
+
+	* conf/poker.server.xml.in: currency element is now refill
+	* pokernetwork/pokeravatar.py: call autorefill before handling
+	  packets that may require chips to complete
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  Implement and test the autorefill function.
+	* pokernetwork/pokerauth.py: Remove the autorefill from the auth
+	  module. It does not belong here.
+	* tests/test-pokerrenderer.py.in: comment out tests that fail
+	* pokernetwork/pokerpackets.py: document the role field of the
+	  SetRole packet
+	* debian/poker-web.links, debian/poker-web.postinst: poker-web
+	  apache configuration is linked to the apache directory
+	* conf/poker.server.xml.in: Default is to distribute playmoney to
+	  the newly created user.
+
 2008-07-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerrenderer.py.in
@@ -53,8 +72,6 @@
 	(PokerRendererTests.MockPlayer.__init__): Wrote method.
 
 2008-07-13  Loic Dachary <loic@dachary.org>
-
-	* Release 1.7.0
 
 	* tests/Makefile.am: add test-pokerauth/pokerauth.py to the
 	  distribution
@@ -6151,5 +6168,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2008-03-20/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2008-07-15/p'"
 End:
