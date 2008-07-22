@@ -57,6 +57,8 @@ CREATE TABLE users (
   password VARCHAR(32),
   -- 1 is a regular player, 0 is an observer and cannot play, 2 is admin
   privilege INT DEFAULT 1,
+  -- locale
+  locale VARCHAR(32) DEFAULT "en",
 
   rating INT DEFAULT 1000,
   future_rating FLOAT DEFAULT 1000,
