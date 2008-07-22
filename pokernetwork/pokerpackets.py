@@ -3951,6 +3951,32 @@ game_id: integer uniquely identifying a game.
 
 Packet.infoDeclare(globals(), PacketPokerBuyInLimits, Packet, "POKER_BUY_IN_LIMITS", 145) # 145 # 0x91 # %SEQ%
 
+########################################
+
+class PacketPokerMonitor(Packet):
+    """ """
+    
+    pass #pragma: no cover
+
+Packet.infoDeclare(globals(), PacketPokerMonitor, Packet, "POKER_MONITOR", 146) # 146 # 0x92 # %SEQ%
+
+########################################
+
+class PacketPokerMonitorEvent(Packet):
+    """ """
+
+    HAND	= 1
+    TOURNEY	= 2
+    CURRENCY	= 3
+    
+    info = Packet.info + (
+        ('event', 0, 'I'),
+        ('param1', 0, 'I'),
+        ('param2', 0, 'I')
+        )
+
+Packet.infoDeclare(globals(), PacketPokerMonitorEvent, Packet, "POKER_MONITOR_EVENT", 147) # 147 # 0x93 # %SEQ%
+
 _TYPES = range(50,149)
 
 # Interpreted by emacs

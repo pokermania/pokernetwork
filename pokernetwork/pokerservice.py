@@ -172,6 +172,7 @@ class PokerService(service.Service):
         self.poker_auth = get_auth_instance(self.db, self.settings)
         self.dirs = split(self.settings.headerGet("/server/path"))
         self.serial2client = {}
+        self.monitors = []
         self.avatars = []
         self.tables = []
         self.table_serial = 100
@@ -262,6 +263,17 @@ class PokerService(service.Service):
     def stopFactory(self):
         pass
 
+    def monitor(self, avatar):
+        if avatar not in self.monitors:
+            self.monitors.append(avatar)
+        return PacketAck()
+
+    def databaseEvent(self, **kwargs):
+        event = PacketPokerMonitorEvent(**kwargs)
+        for avatar in self.monitors:
+            if hasattr(avatar, "protocol") and avatar.protocol:
+                avatar.sendPacketVerbose(event)
+
     def stats(self, query):
         cursor = self.db.cursor()
         cursor.execute("SELECT MAX(serial) FROM hands")
@@ -288,6 +300,8 @@ class PokerService(service.Service):
             self.avatars.remove(avatar)
         else:
             self.error("avatar %s is not in the list of known avatars" % str(avatar))
+        if avatar in self.monitors:
+            self.monitors.remove(avatar)
         avatar.connectionLost("Disconnected")
 
     def sessionStart(self, serial, ip):
@@ -342,6 +356,8 @@ class PokerService(service.Service):
             refill = int(self.refill['amount'])            
         if refill > 0:
             self.db.db.query("REPLACE INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.refill['serial'], refill))
+            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = int(self.refill['serial']))
+            
         return refill
 
     def updateTourneysSchedule(self):
@@ -574,8 +590,10 @@ class PokerService(service.Service):
                 if self.verbose > 2:
                     self.message("tourneyFinished: " + sql)
                 cursor.execute(sql)
+            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = tourney.currency_serial)
 
         cursor.close()
+        self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY, param1 = tourney.serial)
         return True
 
     def tourneyGameFilled(self, tourney, game):
@@ -757,6 +775,7 @@ class PokerService(service.Service):
                                                          code = PacketPokerTourneyRegister.SERVER_ERROR,
                                                          message = "Server error"))
                 return False
+            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
         #
         # Register
         #
@@ -816,6 +835,7 @@ class PokerService(service.Service):
                 return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                                    code = PacketPokerTourneyUnregister.SERVER_ERROR,
                                    message = "Server error : user_serial = %d and currency_serial = %d was not in user2money" % ( serial, currency_serial ))
+            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
         #
         # Unregister
         #
@@ -1346,6 +1366,7 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 0 and cursor.rowcount != 2:
             self.error("modified %d rows (expected 0 or 2): %s " % ( cursor.rowcount, sql ))
+        self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
         return withdraw
 
     def seatPlayer(self, serial, table_id, amount):
@@ -1428,6 +1449,7 @@ class PokerService(service.Service):
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             status = False
         cursor.close()
+        self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
         return status
 
     def updatePlayerRake(self, currency_serial, serial, amount):

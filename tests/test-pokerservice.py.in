@@ -144,6 +144,25 @@ class PokerServiceTestCaseBase(unittest.TestCase):
 
         cursor.close()
 
+class MonitorTestCase(PokerServiceTestCaseBase):
+
+    # ----------------------------------------------------------------
+    def test01_monitor(self):
+        self.service.startService()
+        test = self
+        class Avatar:
+            protocol = True
+            def sendPacketVerbose(self, packet):
+                test.assertEquals(PACKET_POKER_MONITOR_EVENT, packet.type)
+                test.assertEquals('event', packet.event)
+                test.assertEquals(1, packet.param1)
+                test.assertEquals(2, packet.param2)
+                self.sent = True
+        avatar = Avatar()
+        self.assertEquals(PACKET_ACK, self.service.monitor(avatar).type)
+        self.service.databaseEvent(event = 'event', param1 = 1, param2 = 2)
+        self.failUnless(avatar.sent)
+
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
@@ -957,6 +976,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.serial = 1
                 
             def prizes(self):
                 return [self.prize_min]
@@ -980,6 +1000,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.serial = 1
                 
             def prizes(self):
                 return [self.prize_min]
@@ -1057,6 +1078,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         class Tournament:
             def __init__(self):
                 self.games = [ Game() ]
+                self.serial = 1
                 
         class Table:
             def scheduleAutoDeal(self):
@@ -1082,6 +1104,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         class Tournament:
             def __init__(self):
                 self.games = [ Game() ]
+                self.serial = 1
                 
         class Table:
             def __init__(self):
@@ -1110,6 +1133,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         class Tournament:
             def __init__(self):
                 self.games = [ Game() ]
+                self.serial = 1
                 
         class Table:
             def __init__(self):
@@ -1138,6 +1162,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 self.state = pokertournament.TOURNAMENT_STATE_RUNNING
                 self.remaining = 0
                 self.games = [ Game() ]
+                self.serial = 1
 
             def remainingBreakSeconds(self):
                 return self.remaining
@@ -1201,19 +1226,20 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
-#     suite.addTest(loader.loadClass(PokerServiceTestCase))
+    suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
-#     suite.addTest(loader.loadClass(TimerTestCase))
-#     suite.addTest(loader.loadClass(BreakTestCase))
-#     suite.addTest(loader.loadClass(TourneyFinishedTestCase))
-#     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
-#     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
-#     suite.addTest(loader.loadClass(TourneyCancelTestCase))
-#     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
-#     suite.addTest(loader.loadClass(ListHandsTestCase))
-#     suite.addTest(loader.loadClass(SetAccountTestCase))
-#     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
-#     suite.addTest(loader.loadClass(PokerXMLTestCase))
+    suite.addTest(loader.loadClass(TimerTestCase))
+    suite.addTest(loader.loadClass(BreakTestCase))
+    suite.addTest(loader.loadClass(TourneyFinishedTestCase))
+    suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
+    suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+    suite.addTest(loader.loadClass(TourneyCancelTestCase))
+    suite.addTest(loader.loadClass(ShutdownCheckTestCase))
+    suite.addTest(loader.loadClass(ListHandsTestCase))
+    suite.addTest(loader.loadClass(SetAccountTestCase))
+    suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
+    suite.addTest(loader.loadClass(PokerXMLTestCase))
+    suite.addTest(loader.loadClass(MonitorTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,

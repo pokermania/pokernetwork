@@ -2773,9 +2773,25 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.tinyFunctions, 0)
         return d
     # ------------------------------------------------------------------------
+    def monitor(self, (client, packet)):
+        avatar = self.service.avatars[0]
+        avatar.queuePackets()
+        self.assertEquals(0, len(self.service.monitors))
+        avatar.handlePacketLogic(PacketPokerMonitor())
+        self.assertEquals(1, len(self.service.monitors))
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test65_monitor(self):
+        """Test monitor request"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.monitor)
+        return d
+    # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test47"
+#    loader.methodPrefix = "test65"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
