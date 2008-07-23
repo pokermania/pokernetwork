@@ -44,7 +44,6 @@ def main():
     except getopt.GetoptError:
         usage()
         sys.exit(2)
-    launcher = False
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
