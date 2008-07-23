@@ -147,7 +147,7 @@ class PokerBotFactory(PokerClientFactory):
                 reactor.callLater(delay, connector.connect)
                 reconnect = True
         else:
-            print "The poker3d server connection to %s was closed" % self.join_info["name"]
+            print "The bot server connection to %s was closed" % self.join_info["name"]
             if not reason.check(error.ConnectionDone):
                 print reason
         if not reconnect:
