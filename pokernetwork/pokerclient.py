@@ -843,6 +843,9 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
     def protocolEstablished(self):
         self.setPingDelay(self.factory.ping_delay)
+        poll_frequency = self.factory.settings.headerGet("/settings/@poll_frequency")
+        if poll_frequency:
+            self._poll_frequency = float(poll_frequency)
         self.user.name = self.factory.name
         self.user.password = self.factory.password
         self._packet2id = self.packet2id
