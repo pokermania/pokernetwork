@@ -154,14 +154,17 @@ class MonitorTestCase(PokerServiceTestCaseBase):
             protocol = True
             def sendPacketVerbose(self, packet):
                 test.assertEquals(PACKET_POKER_MONITOR_EVENT, packet.type)
-                test.assertEquals('event', packet.event)
-                test.assertEquals(1, packet.param1)
-                test.assertEquals(2, packet.param2)
+                test.assertEquals(1, packet.event)
+                test.assertEquals(2, packet.param1)
+                test.assertEquals(3, packet.param2)
                 self.sent = True
         avatar = Avatar()
         self.assertEquals(PACKET_ACK, self.service.monitor(avatar).type)
-        self.service.databaseEvent(event = 'event', param1 = 1, param2 = 2)
+        self.service.databaseEvent(event = 1, param1 = 2, param2 = 3)
         self.failUnless(avatar.sent)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM monitor WHERE event = 1")
+        self.assertEquals(1, cursor.rowcount)
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 

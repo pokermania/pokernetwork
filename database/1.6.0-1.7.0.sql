@@ -7,3 +7,15 @@ ALTER TABLE `users` CHANGE COLUMN `skin_url` `skin_url` VARCHAR(128);
 -- Server side, per user locale
 -- 
 ALTER TABLE `users` ADD COLUMN `locale` VARCHAR(32) DEFAULT "en";
+--
+-- History of monitor events
+--
+CREATE TABLE monitor (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  event TINYINT NOT NULL,
+  param1 BIGINT NOT NULL,
+  param2 BIGINT NOT NULL,
+
+  PRIMARY KEY (serial, created)
+) ENGINE=MyISAM;

@@ -371,6 +371,16 @@ AC_CONFIG_FILES([
         Makefile
         po/Makefile.in
 ])
+AC_CONFIG_FILES([
+        pokerstats/run
+        pokerstats/pokerstats
+], [chmod +x $ac_file])
+AC_CONFIG_FILES([
+        pokerstats/pokerstats.1
+        pokerstats/poker.stats.xml
+        pokerstats/test-stats.py
+        pokerstats/Makefile
+])
 AC_OUTPUT
 
 cat <<!

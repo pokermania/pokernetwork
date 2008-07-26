@@ -473,3 +473,15 @@ CREATE TABLE messages (
 
   PRIMARY KEY (serial, send_date, sent)
 ) ENGINE=InnoDB CHARSET=utf8;
+
+DROP TABLE IF EXISTS monitor;
+
+CREATE TABLE monitor (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  event TINYINT NOT NULL,
+  param1 BIGINT NOT NULL,
+  param2 BIGINT NOT NULL,
+
+  PRIMARY KEY (serial, created)
+) ENGINE=MyISAM;

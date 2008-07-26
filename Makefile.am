@@ -33,7 +33,7 @@ else
   POKER2D_SUBDIRS = 
 endif
 
-SUBDIRS = ${POKER2D_SUBDIRS} pokerweb pokernetwork/munin tests po
+SUBDIRS = ${POKER2D_SUBDIRS} pokerweb pokernetwork/munin tests po pokerstats
 
 pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
