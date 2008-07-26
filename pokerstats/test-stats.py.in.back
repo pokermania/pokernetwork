@@ -1,0 +1,172 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+import sys, os, tempfile, shutil, platform
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+import libxml2
+
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error, base
+from twisted.python import failure, runtime
+
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
+from tests import testclock
+
+from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+silence_all_messages()
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+from pokernetwork import pokerclient
+from pokernetwork.pokerclientpackets import *
+from pokerstats import stats
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+settings_xml_stats = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings ping="15000" verbose="6" delays="true" >
+  <server host="127.0.0.1" port="19480" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+</settings>
+"""
+
+class PokerStatsTestCase(unittest.TestCase):
+
+    def destroyDb(self, arg = None):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUpServer(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        #
+        # Setup server
+        #
+        self.service = pokerservice.PokerService(settings)
+        self.service.startService()
+        factory = pokerservice.IPokerFactory(self.service)
+        self.p = reactor.listenTCP(0, factory,
+                                   interface="127.0.0.1")
+        self.port = self.p.getHost().port
+
+    # ------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()        
+        self.destroyDb()
+        self.setUpServer()
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_stats, len(settings_xml_stats))
+        settings.header = settings.doc.xpathNewContext()
+        self.stats_factory = stats.PokerStatsFactory(settings = settings,
+                                                     server = { 'host': '127.0.0.1',
+                                                                'port': 19480
+                                                                })
+        def setUpProtocol(client):
+            client._poll_frequency = 0.1
+            return client
+        d = self.stats_factory.established_deferred
+        d.addCallback(setUpProtocol)
+        reactor.connectTCP('127.0.0.1', self.port, self.stats_factory)
+        return d
+
+    def cleanSessions(self, arg):
+        #
+        # twisted Session code has leftovers : disable the hanging delayed call warnings
+        # of trial by nuking all what's left.
+        #
+        pending = reactor.getDelayedCalls()
+        if pending:
+            for p in pending:
+                if p.active():
+#                    print "still pending:" + str(p)
+                    p.cancel()
+        return arg
+
+    def tearDown(self):
+        clear_all_messages()
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.p.stopListening())
+        d.addCallback(self.destroyDb)
+        d.addCallback(self.cleanSessions)
+        return d
+
+class ConnectTestCase(PokerStatsTestCase):
+
+    def test01_connect(self):
+        pass
+
+class ApplicationTestCase(unittest.TestCase):
+
+    def test01_no_configuration(self):
+        self.assertEqual(None, stats.configureApplication(['/unlikely']))
+
+    def test02_application(self):
+        a = stats.configureApplication(['../poker.stats.xml'])
+        self.assertEqual(0, a.verbose)
+
+# ------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test33"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(ApplicationTestCase))
+#    suite.addTest(loader.loadClass(ConnectTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# ------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status pokerstats/test-stats.py ) ; ( cd ../pokerstats ; make TESTS='coverage-reset test-stats.py coverage-report' check )"
+# End:
+

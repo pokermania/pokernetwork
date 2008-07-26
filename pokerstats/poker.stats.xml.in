@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="stats.xsd" ping="10" verbose="0" delays="true" poker_network_version="1.7.0">
+
+  <server host="@POKER_SERVER_HOST@" port="19380">
+    <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" port="3306" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@" root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" command="@MYSQL@"/>
+  </server>
+
+  <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" port="3306" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@" root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" command="@MYSQL@"/>
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+</settings>
