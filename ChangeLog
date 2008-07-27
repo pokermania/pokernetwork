@@ -7,6 +7,15 @@
 	(PokerRendererTests.test36_weirdStatusDuringVariousStates):
 	Renamed test.
 
+2008-07-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerrenderer.py.in
+	(PokerRendererTests.test34_blindAnteDoesWhat): Wrote method.
+	(PokerRendererTests.test34_confirmPayBlindBadWhat): Wrote method.
+	(PokerRendererTests.test36_weirdStateinChashier): Wrote method.
+	(PokerRendererTests.test36_weirdStatusDuringVariousStates):
+	Renamed test.
+
 2008-07-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerrenderer.py.in
