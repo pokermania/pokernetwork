@@ -33,7 +33,8 @@ DEB_CONFIGURE_EXTRA_FLAGS += \
 		--with-poker-dbuser=_DBC_DBUSER_ \
 		--with-poker-dbuser-password=_DBC_DBPASS_
 
-DEB_MAKE_CHECK_TARGET = check
+
+DEB_MAKE_CHECK_TARGET = $(if $(findstring nocheck,$(DEB_BUILD_OPTIONS)),,check)
 
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
@@ -55,4 +56,8 @@ DEB_DH_MAKESHLIBS_ARGS_python-poker2d := -n
 binary-install/python-poker2d::
 	-dh_pycentral -ppython-poker2d
 	dh_python -ppython-poker2d
+
+binary-install/python-poker-stats::
+	-dh_pycentral -ppython-poker-stats
+	dh_python -ppython-poker-stats
 
