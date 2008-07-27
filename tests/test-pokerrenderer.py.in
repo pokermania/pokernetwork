@@ -1305,7 +1305,7 @@ class PokerRendererTests(unittest.TestCase):
                                            'ERROR *CRITICAL*  unexpected state outfit'])
 
     # -----------------------------------------------------------------------------------------------------
-    def test34_blindAnteDoesWhat(self):
+    def test34_confirmPayBlindBadWhat(self):
         """changeState() for PAY_BLIND_ANTE with weird what.
         changeState() gives a critical error when there is a correct
         current state but the first argument is not something it expects."""
@@ -1315,6 +1315,16 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.changeState(pokerrenderer.PAY_BLIND_ANTE, "throw-chip-at-dealer")
         self.assertEquals(get_messages(), ["changeState user_info => pay_blind_ante (args = ('throw-chip-at-dealer',), kwargs = {})",
                                            'ERROR *CRITICAL*  unknow what throw-chip-at-dealer'])
+    # -----------------------------------------------------------------------------------------------------
+    def test35_blindAnteSendBadWhat(self):
+        """changeState() for PAY_BLIND_ANTE_SEND with weird what.
+        changeState() gives a critical error when there is a correct
+        current state but the first argument is not something it expects."""
+
+        clear_all_messages()
+        self.renderer.state = pokerrenderer.PAY_BLIND_ANTE
+        self.renderer.changeState(pokerrenderer.PAY_BLIND_ANTE_SEND, "throw-chip-at-dealer")
+        self.assertEquals(get_messages(), ["changeState pay_blind_ante => pay_blind_ante_send (args = ('throw-chip-at-dealer',), kwargs = {})", 'ERROR *CRITICAL*  unknow what throw-chip-at-dealer'])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
