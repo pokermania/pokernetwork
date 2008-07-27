@@ -18,9 +18,9 @@
 MAINTAINERCLEANFILES = \
 	Makefile.in
 
-pkgsysconfdir=@pkgsysconfdir@
+confdir=@pkgdatadir@/conf
 
-pkgsysconf_DATA = poker.stats.xml
+conf_DATA = poker.stats.xml
 
 EXTRA_DIST = \
 	poker.stats.xml.in \
