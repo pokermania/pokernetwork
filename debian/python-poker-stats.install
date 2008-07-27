@@ -1,0 +1,4 @@
+debian/tmp/usr/lib/python???/site-packages/pokerstats
+debian/tmp/usr/bin/pokerstats
+debian/tmp/usr/share/poker-network/conf/poker.stats.xml
+debian/tmp/usr/share/man/man1
