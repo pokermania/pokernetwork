@@ -91,4 +91,4 @@ class PokerStats:
         return True
 
     def pokerMonitorEvent(self, protocol, packet):
-        return True
+        return True #pragma: no cover
