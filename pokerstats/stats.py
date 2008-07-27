@@ -92,7 +92,9 @@ def configureApplication(argv):
     default_path = "/etc/poker-network/poker.stats.xml"
     configuration = argv[-1][-4:] == ".xml" and argv[-1] or default_path
 
-    if not exists(configuration):
+    try:
+        open(configuration, 'r').close()
+    except:
         return None
     
     settings = pokernetworkconfig.Config([''])
