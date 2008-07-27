@@ -102,6 +102,7 @@ def configureApplication(argv):
 application = configureApplication(sys.argv[:])
 
 def run():
+    global application                      #pragma: no cover
     app.startApplication(application, None) #pragma: no cover
     reactor.run()                           #pragma: no cover
 
