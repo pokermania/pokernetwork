@@ -1326,9 +1326,9 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.changeState(pokerrenderer.PAY_BLIND_ANTE_SEND, "throw-chip-at-dealer")
         self.assertEquals(get_messages(), ["changeState pay_blind_ante => pay_blind_ante_send (args = ('throw-chip-at-dealer',), kwargs = {})", 'ERROR *CRITICAL*  unknow what throw-chip-at-dealer'])
     # -----------------------------------------------------------------------------------------------------
-    def test36_weirdStateinChashier(self):
-        """changeState() for CASHIER gets invalid situation.
-        changeState() gives a critical error when neither
+    def test36_weirdStatusDuringVariousStates(self):
+        """changeState() for various states gets invalid situation.
+        changeState() gives a critical error sometimes when neither
         self.protocol.user.isLogged() nor self.canHideInterface() are
         true."""
         clear_all_messages()
@@ -1341,13 +1341,17 @@ class PokerRendererTests(unittest.TestCase):
         canHide = self.renderer.canHideInterface
         self.renderer.canHideInterface = alwaysFalseNoArgs
 
-        self.renderer.changeState(pokerrenderer.CASHIER)
-        self.assertEquals(get_messages(), ['changeState idle => cashier (args = (), kwargs = {})',
-                                           'ERROR *CRITICAL*; should not be here',
-                                           _('You cannot do that now')])
+        for (tryState, str) in [ (pokerrenderer.CASHIER, "cashier"),
+                                 (pokerrenderer.OUTFIT, "outfit") ]:
+            self.renderer.changeState(pokerrenderer.CASHIER)
+            self.assertEquals(get_messages(), ['changeState idle => cashier (args = (), kwargs = {})',
+                                               'ERROR *CRITICAL*; should not be here',
+                                               _('You cannot do that now')])
+            self.assertEquals(self.factory.interface.messageBoxes, [_('You cannot do that now')])
+            clear_all_messages()
+            self.factory.interface.messageBoxes = []
         proto.user.isLogged = isLogged
         self.renderer.canHideInterface = canHide
-        self.assertEquals(self.factory.interface.messageBoxes, [_('You cannot do that now')])
 # -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
