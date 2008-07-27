@@ -46,6 +46,31 @@ class PokerStats:
                                       passwd = p["password"],
                                       db = p["name"])
 
+    def create(self):
+        self.db.query("DROP TABLE IF EXISTS rank")
+        self.db.query("CREATE TABLE rank (" +
+                      "  user_serial INT UNSIGNED NOT NULL," +
+                      "  currency_serial INT UNSIGNED NOT NULL," +
+                      "  amount BIGINT NOT NULL," +
+                      "  rank INT UNSIGNED NOT NULL," +
+                      "  PRIMARY KEY (user_serial, currency_serial)," +
+                      "  INDEX (currency_serial, amount)," +
+                      "  INDEX (amount)" +
+                      ") ENGINE=MyISAM")
+
+    def populate(self):
+        cursor = self.db.cursor()
+        cursor.execute("SET @rank := 0, @currency_serial := 0, @amount := 0; " +
+                       " INSERT INTO rank " +
+                       "  (user_serial, currency_serial, amount, rank)" +
+                       "  SELECT user_serial, currency_serial, amount, " +
+                       "   GREATEST(" +
+                       "     @rank := if(@currency_serial = currency_serial and @amount = amount, @rank, if(@currency_serial <> currency_serial, 1, @rank + 1))," +
+                       "     least(0, @amount := amount)," +
+                       "     least(0, @currency_serial := currency_serial)) AS rank " +
+                       "   FROM user2money ORDER BY currency_serial DESC, amount DESC")
+        cursor.close()
+        
     def bootstrap(self, protocol, packet):
         if self.state != PokerStats.BOOTSTRAP:
             self.factory.error("unexpected state %s instead of %s" % ( self.state, PokerStats.MONITOR ))
@@ -57,6 +82,8 @@ class PokerStats:
         
     def ack(self, protocol, packet):
         if self.state == PokerStats.MONITOR:
+            self.create()
+            self.populate()
             self.setState(PokerStats.IDLE)
         else:
             self.factory.error("unexpected state %s instead of %s" % ( self.state, PokerStats.MONITOR ))

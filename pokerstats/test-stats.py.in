@@ -41,6 +41,7 @@ silence_all_messages()
 
 twisted.internet.base.DelayedCall.debug = True
 
+from pokernetwork import pokerdatabase
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
@@ -73,13 +74,32 @@ settings_xml_stats = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </settings>
 """
 
-class PokerStatsTestCase(unittest.TestCase):
+class StatsClientBase(unittest.TestCase):
 
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    # ------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_stats, len(settings_xml_stats))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings_stats = settings
+        self.destroyDb()
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        self.db = pokerdatabase.PokerDatabase(settings)
+
+    def tearDown(self):
+        clear_all_messages()
+        self.destroyDb()
+
+class PokerStatsTestBase(StatsClientBase):
 
     def setUpServer(self):
         settings = pokernetworkconfig.Config([])
@@ -96,12 +116,7 @@ class PokerStatsTestCase(unittest.TestCase):
 
     # ------------------------------------------------------
     def setUp(self):
-        testclock._seconds_reset()
-        settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_stats, len(settings_xml_stats))
-        settings.header = settings.doc.xpathNewContext()
-        self.settings_stats = settings
-        self.destroyDb()
+        StatsClientBase.setUp(self)
         self.setUpServer()
 
     def cleanSessions(self, arg):
@@ -118,14 +133,13 @@ class PokerStatsTestCase(unittest.TestCase):
         return arg
 
     def tearDown(self):
-        clear_all_messages()
         d = self.service.stopService()
         d.addCallback(lambda x: self.p.stopListening())
-        d.addCallback(self.destroyDb)
+        d.addCallback(lambda x: StatsClientBase.tearDown(self))
         d.addCallback(self.cleanSessions)
         return d
 
-class ConnectTestCase(PokerStatsTestCase):
+class ConnectTestCase(PokerStatsTestBase):
 
     def test01_connect(self):
         app.startApplication(stats.newApplication(self.settings_stats), None)
@@ -155,7 +169,7 @@ class ApplicationTestCase(unittest.TestCase):
         a = stats.configureApplication(['../poker.stats.xml'])
         self.assertEqual(1, len(service.IServiceCollection(a).services))
 
-class LogicTestCase(unittest.TestCase):
+class LogicTestCase(StatsClientBase):
 
     class Factory:
         def error(self, str):
@@ -173,7 +187,29 @@ class LogicTestCase(unittest.TestCase):
         s.state = stats.PokerStats.IDLE
         self.assertEqual(False, s.ack(None, None))
 
-class RealTestCase(PokerStatsTestCase):
+    def test03_populate(self):
+        factory = LogicTestCase.Factory()
+        factory.settings = self.settings_stats
+        factory.server = 1
+        self.db.db.query("INSERT user2money (user_serial, currency_serial, amount)" +
+                         " VALUES " +
+                         " ( 5, 10, 200), " +
+                         " ( 6, 10, 100), " +
+                         " ( 7, 20, 300)  "
+                         )
+        s = stats.PokerStats(factory = factory, connect = False)
+        s.connect()
+        s.create()
+        s.populate()
+        cursor = self.db.cursor()
+        result = cursor.execute("SELECT * FROM rank")
+        self.assertEqual(3, cursor.rowcount)
+        self.assertEqual((7, 20, 300, 1), cursor.fetchone())
+        self.assertEqual((5, 10, 200, 1), cursor.fetchone())
+        self.assertEqual((6, 10, 100, 2), cursor.fetchone())
+        cursor.close()
+
+class RealTestCase(PokerStatsTestBase):
 
     def test01_bootstrap_ack(self):
         factory = stats.PokerStatsFactory(settings = self.settings_stats,
