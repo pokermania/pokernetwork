@@ -1,5 +1,7 @@
 2008-07-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* Release 1.7.0
+
 	* tests/test-pokerrenderer.py.in
 	(PokerRendererTests.test34_blindAnteDoesWhat): Wrote method.
 	(PokerRendererTests.test34_confirmPayBlindBadWhat): Wrote method.
