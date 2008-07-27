@@ -1,6 +1,65 @@
-2008-07-19  Loic Dachary <loic@dachary.org>
+2008-07-27  Loic Dachary <loic@dachary.org>
 
 	* Release 1.7.0
+
+	* pokerstats/Makefile.am, pokerstats/poker.stats.xml.in:
+	  configuration file is managed with dbconfig-common frontend
+	  module
+	* pokerstats/stats.py: application is a global variable
+	* pokerstats/pokerstats.1.in: comments is not '''
+	* debian/rules: running check can be controlled from
+	  DEB_BUILD_OPTION variable.
+	  python-poker-stats requires pycentral support
+	* debian/python-poker-stats.config,
+	  debian/python-poker-stats.install,
+	  debian/python-poker-stats.postinst,
+	  debian/python-poker-stats.postrm,
+	  debian/python-poker-stats.prerm: poker-stats package support
+	  files
+	* debian/python-poker-network.install: list all configuration files
+	  to prevent copying a configuration file from another package
+	* debian/control, debian/control.dapper, debian/control.edgy,
+	  debian/control.etch, debian/control.feisty, debian/control.gutsy,
+	  debian/control.hardy, debian/control.lenny,
+	  debian/control.unstable: source package definition for
+	  poker-stats
+
+2008-07-26  Loic Dachary <loic@dachary.org>
+
+	* Makefile.am, configure.ac, database/1.6.0-1.7.0.sql,
+	  database/schema.sql.in, pokernetwork/pokerservice.py,
+	  tests/run.in, tests/test-pokerservice.py.in: implement the
+	  monitor protocol server side, add pokerstats subdir to the build
+	* pokernetwork/pokerclient.py: poll_frequency overriden by server
+	  attribute, if present
+	* pokerstats/test-stats.py.in.back: remove leftover
+	* pokerstats, pokerstats/Makefile.am, pokerstats/__init__.py,
+	  pokerstats/poker.stats.xml.in, pokerstats/pokerstats.1.in,
+	  pokerstats/pokerstats.in, pokerstats/run.in, pokerstats/stats.py,
+	  pokerstats/statslogic.py, pokerstats/test-stats.py.in,
+	  pokerstats/test-stats.py.in.back: statistics poker client
+
+2008-07-23  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerbot.py: replace poker3d with bot
+	* pokerclient2d/poker2d.in: remove launched variable
+
+2008-07-22  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerpackets.py,
+	  pokernetwork/pokerservice.py, pokernetwork/pokertable.py,
+	  tests/test-pokeravatar.py.in, tests/test-pokerservice.py.in,
+	  tests/test-pokertable.py.in, tests/test-protocol.py.in: Implement
+	  PokerMonitor or PokerMonitorEvent for statistical module
+	  notification
+	* database/schema.sql.in: add locale field to user table
+	* database/1.6.0-1.7.0.sql: add locale field to user table
+
+2008-07-20  Loic Dachary <loic@dachary.org>
+
+	* Makefile.am, database/1.6.0-1.7.0.sql: enlarge the skin_url field
+
+2008-07-19  Loic Dachary <loic@dachary.org>
 
 	* conf/poker.server.xml.in: currency element is now refill
 	* pokernetwork/pokeravatar.py: call autorefill before handling
