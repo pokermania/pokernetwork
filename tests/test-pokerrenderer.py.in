@@ -1350,7 +1350,6 @@ class PokerRendererTests(unittest.TestCase):
                                                'ERROR *CRITICAL*; should not be here',
                                                _('You cannot do that now')])
             self.assertEquals(self.factory.interface.messageBoxes, [_('You cannot do that now')])
-            print get_messages()
             clear_all_messages()
             self.factory.interface.messageBoxes = []
         proto.user.isLogged = isLogged
