@@ -1342,12 +1342,15 @@ class PokerRendererTests(unittest.TestCase):
         self.renderer.canHideInterface = alwaysFalseNoArgs
 
         for (tryState, str) in [ (pokerrenderer.CASHIER, "cashier"),
-                                 (pokerrenderer.OUTFIT, "outfit") ]:
-            self.renderer.changeState(pokerrenderer.CASHIER)
-            self.assertEquals(get_messages(), ['changeState idle => cashier (args = (), kwargs = {})',
+                                 (pokerrenderer.OUTFIT, "outfit"),
+                                 (pokerrenderer.HAND_LIST, "list_hands") ]:
+            self.renderer.changeState(tryState)
+            self.assertEquals(get_messages(), ['changeState idle => %s (args = (), kwargs = {})'
+                                               % str,
                                                'ERROR *CRITICAL*; should not be here',
                                                _('You cannot do that now')])
             self.assertEquals(self.factory.interface.messageBoxes, [_('You cannot do that now')])
+            print get_messages()
             clear_all_messages()
             self.factory.interface.messageBoxes = []
         proto.user.isLogged = isLogged
