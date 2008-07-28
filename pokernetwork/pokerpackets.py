@@ -3977,7 +3977,27 @@ class PacketPokerMonitorEvent(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerMonitorEvent, Packet, "POKER_MONITOR_EVENT", 147) # 147 # 0x93 # %SEQ%
 
-_TYPES = range(50,149)
+########################################
+
+class PacketPokerGetTourneyManager(Packet):
+    """ """
+    
+    info = Packet.info + (
+        ('tourney_serial', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerGetTourneyManager, Packet, "POKER_GET_TOURNEY_MANAGER", 148) # 148 # 0x94 # %SEQ%
+
+########################################
+
+class PacketPokerTourneyManager(Packet):
+    """ """
+    
+    pass #pragma: no cover
+
+Packet.infoDeclare(globals(), PacketPokerTourneyManager, Packet, "POKER_TOURNEY_MANAGER", 149) # 149 # 0x95 # %SEQ%
+
+_TYPES = range(50,169)
 
 # Interpreted by emacs
 # Local Variables:

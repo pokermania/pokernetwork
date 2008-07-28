@@ -352,6 +352,10 @@ class PokerAvatar:
             self.sendPacketVerbose(self.service.tourneyPlayersList(packet.game_id))
             return
 
+        elif packet.type == PACKET_POKER_GET_TOURNEY_MANAGER:
+            self.sendPacketVerbose(self.service.tourneyManager(packet.tourney_serial))
+            return
+
         elif packet.type == PACKET_POKER_TOURNEY_REGISTER:
             if self.getSerial() == packet.serial:
                 self.service.autorefill(packet.serial)

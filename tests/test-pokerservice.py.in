@@ -619,7 +619,7 @@ class RefillTestCase(unittest.TestCase):
         table_money = 1000
         table_serial = 200
         self.service.db.db.query("INSERT INTO user2table VALUES (" + str(serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
-        self.service.db.db.query("INSERT INTO pokertables VALUES (" + str(table_serial) + ", 'foo', 1)")
+        self.service.db.db.query("INSERT INTO pokertables VALUES (" + str(table_serial) + ", 'foo', 1, 0)")
         money_left = 100
         self.service.db.db.query("UPDATE user2money SET amount = " + str(money_left) + " WHERE user_serial = " + str(serial))
         self.assertEquals(refill - table_money, self.service.autorefill(serial))
@@ -733,6 +733,33 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
         self.service.tourneyCancel(Tournament())
         if verbose < 0:
             self.assertTrue(search_output('tourneyCancel:'))
+
+class TourneyManagerTestCase(PokerServiceTestCaseBase):
+
+    def test_ok(self):
+        tourney_serial = 100
+        self.service.startService()
+        self.createUsers()
+        user_serial = self.user1_serial
+        table_serial = 606
+        table_money = 140
+        tourney = pokertournament.PokerTournament(serial = tourney_serial,
+                                                  dirs = ['/etc/poker-engine'])
+        tourney.currency_serial = 1
+        self.service.tourneys[tourney_serial] = tourney
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = tourney_serial))
+        self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
+        self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEqual(({'rank': -1,
+                           'table_serial': 606,
+                           'tourney_serial': 100,
+                           'user_serial': 4},), packet.user2tourney)
+        self.assertEqual(True, packet.tourney.has_key('payouts'))
+        self.assertEqual(tourney_serial, packet.tourney['serial'])
+        self.assertEqual(table_money, packet.user2money[self.user1_serial])
+        Packet.JSON.encode(packet.__dict__)
 
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
@@ -1237,6 +1264,7 @@ def Run():
     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
     suite.addTest(loader.loadClass(TourneyCancelTestCase))
+    suite.addTest(loader.loadClass(TourneyManagerTestCase))
     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
     suite.addTest(loader.loadClass(ListHandsTestCase))
     suite.addTest(loader.loadClass(SetAccountTestCase))

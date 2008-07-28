@@ -32,6 +32,7 @@ from os.path import exists
 from types import *
 from string import split, join
 import os
+import copy
 import operator
 import re
 import libxml2
@@ -686,6 +687,34 @@ class PokerService(service.Service):
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
         cursor.close()
 
+    def tourneyManager(self, tourney_serial):
+        packet = PacketPokerTourneyManager()
+        packet.tourney_serial = tourney_serial
+        if self.tourneys.has_key(tourney_serial):
+            cursor = self.db.cursor(DictCursor)
+            cursor.execute("SELECT user_serial, tourney_serial, table_serial, rank FROM user2tourney WHERE tourney_serial = %d" % tourney_serial)
+            packet.user2tourney = cursor.fetchall()
+            table2serials = {}
+            for row in packet.user2tourney:
+                table_serial = row['table_serial']
+                if table_serial == None:
+                    continue
+                if not table2serials.has_key(table_serial):
+                    table2serials[table_serial] = []
+                table2serials[table_serial].append(row['user_serial'])
+            packet.table2serials = table2serials
+            packet.user2money = {}
+            if len(table2serials) > 0:
+                cursor.execute("SELECT user_serial, money FROM user2table WHERE table_serial IN ( " + ",".join(map(lambda x: str(x), table2serials.keys())) + " )")
+                for row in cursor.fetchall():
+                    packet.user2money[row['user_serial']] = row['money']
+            cursor.close()
+            from pprint import pprint
+            packet.tourney = copy.copy(self.tourneys[tourney_serial].__dict__)
+            for key in [ 'cancel', 'create_game', 'destroy_game', 'game_filled', 'move_player', 'new_state', 'remove_player' ]:
+                del packet.tourney['callback_' + key]
+        return packet
+        
     def tourneyPlayersList(self, tourney_serial):
         if not self.tourneys.has_key(tourney_serial):
             return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
@@ -1611,10 +1640,13 @@ class PokerService(service.Service):
         id = self.table_serial
         table = PokerTable(self, id, description)
         table.owner = owner
+        tourney_serial = 0
+        if description.has_key('tourney'):
+            tourney_serial = description['tourney'].serial
 
         cursor = self.db.cursor()
-        sql = ( "INSERT pokertables ( serial, name, currency_serial ) VALUES "
-                " ( " + str(id) + ", \"" + description["name"] + "\", " + str(description["currency_serial"]) + " ) " )
+        sql = ( "INSERT pokertables ( serial, name, currency_serial, tourney_serial ) VALUES "
+                " ( " + str(id) + ", \"" + description["name"] + "\", " + str(description["currency_serial"]) + ", " + str(tourney_serial) + " ) " )
         if self.verbose > 1:
             self.message("createTable: %s" % sql)
         cursor.execute(sql)
