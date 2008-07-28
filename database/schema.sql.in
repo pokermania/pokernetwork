@@ -157,6 +157,7 @@ CREATE TABLE pokertables (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(32),
   currency_serial INT NOT NULL,
+  tourney_serial INT UNSIGNED DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (serial)
 )  ENGINE=InnoDB CHARSET=utf8;

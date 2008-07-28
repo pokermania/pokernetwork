@@ -19,3 +19,7 @@ CREATE TABLE monitor (
 
   PRIMARY KEY (serial, created)
 ) ENGINE=MyISAM;
+--
+-- A table that belongs to a tourney is marked as such
+--
+ALTER TABLE `pokertables` ADD COLUMN tourney_serial INT UNSIGNED DEFAULT 0 NOT NULL;
