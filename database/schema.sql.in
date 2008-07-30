@@ -478,8 +478,20 @@ CREATE TABLE messages (
 DROP TABLE IF EXISTS monitor;
 
 CREATE TABLE monitor (
+  -- primary key
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  -- creation date
   created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- HAND = 1, TOURNEY = 2, CURRENCY = 3
+  -- HAND : a hand is finished and has been archived in the hands table
+  --        param1 = index in the hands table
+  -- TOURNEY : a tournament is complete and prizes were awarded
+  --        param1 = tourney serial in the tourneys table
+  -- CURRENCY : a the amount of money for a given user changed for a given
+  --            currency
+  --        param1 = user serial in the users table
+  --        param2 = currency serial in the currencies table
+  --
   event TINYINT NOT NULL,
   param1 BIGINT NOT NULL,
   param2 BIGINT NOT NULL,
