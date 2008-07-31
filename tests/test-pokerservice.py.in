@@ -736,30 +736,45 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
 
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
 
-    def test_ok(self):
-        tourney_serial = 100
+    def test_no_rank(self):
         self.service.startService()
         self.createUsers()
         user_serial = self.user1_serial
         table_serial = 606
         table_money = 140
-        tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['/etc/poker-engine'])
-        tourney.currency_serial = 1
-        self.service.tourneys[tourney_serial] = tourney
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.service.spawnTourney(schedule)
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
                                                                 game_id = tourney_serial))
         self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
         self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
         packet = self.service.tourneyManager(tourney_serial)
-        self.assertEqual(({'rank': -1,
-                           'table_serial': 606,
-                           'tourney_serial': 100,
-                           'user_serial': 4},), packet.user2tourney)
-        self.assertEqual(True, packet.tourney.has_key('payouts'))
         self.assertEqual(tourney_serial, packet.tourney['serial'])
-        self.assertEqual(table_money, packet.user2money[self.user1_serial])
-        Packet.JSON.encode(packet.__dict__)
+        self.assertEqual(1, packet.tourney['registered'])
+        self.assertEqual({'4' : {'rank': -1,
+                                 'table_serial': table_serial,
+                                 'name' : 'user1',
+                                 'money': table_money}}, packet.user2properties)
+        print Packet.JSON.encode(packet.__dict__)
+
+    def test_no_money_no_table(self):
+        self.service.startService()
+        self.createUsers()
+        user_serial = self.user1_serial
+        table_serial = 606
+        table_money = 140
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.service.spawnTourney(schedule)
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = tourney_serial))
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEqual(tourney_serial, packet.tourney['serial'])
+        self.assertEqual(1, packet.tourney['registered'])
+        self.assertEqual({'4' : {'rank': -1,
+                                 'table_serial': None,
+                                 'name' : 'user1',
+                                 'money': -1}}, packet.user2properties)
+        print Packet.JSON.encode(packet.__dict__)
 
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 

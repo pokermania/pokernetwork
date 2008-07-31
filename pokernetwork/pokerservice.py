@@ -690,29 +690,44 @@ class PokerService(service.Service):
     def tourneyManager(self, tourney_serial):
         packet = PacketPokerTourneyManager()
         packet.tourney_serial = tourney_serial
-        if self.tourneys.has_key(tourney_serial):
-            cursor = self.db.cursor(DictCursor)
-            cursor.execute("SELECT user_serial, tourney_serial, table_serial, rank FROM user2tourney WHERE tourney_serial = %d" % tourney_serial)
-            packet.user2tourney = cursor.fetchall()
-            table2serials = {}
-            for row in packet.user2tourney:
-                table_serial = row['table_serial']
-                if table_serial == None:
-                    continue
-                if not table2serials.has_key(table_serial):
-                    table2serials[table_serial] = []
-                table2serials[table_serial].append(row['user_serial'])
-            packet.table2serials = table2serials
-            packet.user2money = {}
-            if len(table2serials) > 0:
-                cursor.execute("SELECT user_serial, money FROM user2table WHERE table_serial IN ( " + ",".join(map(lambda x: str(x), table2serials.keys())) + " )")
-                for row in cursor.fetchall():
-                    packet.user2money[row['user_serial']] = row['money']
-            cursor.close()
-            from pprint import pprint
-            packet.tourney = copy.copy(self.tourneys[tourney_serial].__dict__)
-            for key in [ 'cancel', 'create_game', 'destroy_game', 'game_filled', 'move_player', 'new_state', 'remove_player' ]:
-                del packet.tourney['callback_' + key]
+        cursor = self.db.cursor(DictCursor)
+        cursor.execute("SELECT user_serial, table_serial, rank FROM user2tourney WHERE tourney_serial = %d" % tourney_serial)
+        user2tourney = cursor.fetchall()
+
+        table2serials = {}
+        for row in user2tourney:
+            table_serial = row['table_serial']
+            if table_serial == None:
+                continue
+            if not table2serials.has_key(table_serial):
+                table2serials[table_serial] = []
+            table2serials[table_serial].append(row['user_serial'])
+        packet.table2serials = table2serials
+        user2money = {}
+        if len(table2serials) > 0:
+            cursor.execute("SELECT user_serial, money FROM user2table WHERE table_serial IN ( " + ",".join(map(lambda x: str(x), table2serials.keys())) + " )")
+            for row in cursor.fetchall():
+                user2money[row['user_serial']] = row['money']
+                
+        cursor.execute("SELECT user_serial, name FROM user2tourney, users WHERE user2tourney.tourney_serial = " + str(tourney_serial) + " AND user2tourney.user_serial = users.serial")
+        user2name = dict((entry["user_serial"], entry["name"]) for entry in cursor.fetchall())
+
+        cursor.execute("SELECT * FROM tourneys WHERE serial = " + str(tourney_serial));
+        packet.tourney = cursor.fetchone()
+        packet.tourney["registered"] = len(user2tourney)
+
+        cursor.close()
+
+        user2properties = {}
+        for row in user2tourney:
+            user_serial = row["user_serial"]
+            money = user2money.has_key(user_serial) and user2money[user_serial] or -1
+            user2properties[str(user_serial)] = {"name": user2name[user_serial],
+                                                 "money": money,
+                                                 "rank": row["rank"],
+                                                 "table_serial": row["table_serial"]}
+        packet.user2properties = user2properties
+
         return packet
         
     def tourneyPlayersList(self, tourney_serial):
