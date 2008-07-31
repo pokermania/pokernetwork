@@ -2809,9 +2809,36 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.tourneyManager, 0, 1)
         return d
     # ------------------------------------------------------------------------
+    def test67_getPlayerInfoBug(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 101)
+
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 101)
+        d2.addCallback(self.buyInTable, 1, 101, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 101)
+
+        def logout(x):
+            avatar = self.service.avatars[0]
+            avatar.logout()
+            avatar.join(avatar.tables[101])
+        d2.addCallback(logout)
+
+        return defer.DeferredList((d, d2))
+    # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test66"
+#    loader.methodPrefix = "test67"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

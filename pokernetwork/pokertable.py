@@ -134,7 +134,7 @@ class PokerTable:
         return name
 
     def getPlayerInfo(self, serial):
-        if self.serial2client.has_key(serial):
+        if self.serial2client.has_key(serial) and self.serial2client[serial].user.isLogged():
             info = self.serial2client[serial].getPlayerInfo()
         else:
             info = self.factory.getPlayerInfo(serial)
