@@ -278,6 +278,10 @@ class MockService:
 if verbose < 0: redirect_messages(MockService)
 
 class MockClient:
+    class User:
+        def isLogged(self):
+            return True
+        
     def __init__(self, serial):
         self.serial = serial
         self.deferred = None
@@ -285,6 +289,7 @@ class MockClient:
         self.type = None
         self.tables = {}
         self.packets = []
+        self.user = MockClient.User()
 
     def __str__(self):
         return "MockClient of Player%d" % self.serial
