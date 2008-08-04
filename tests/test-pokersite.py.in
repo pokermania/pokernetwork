@@ -54,6 +54,23 @@ class PokerServiceMockup:
       def destroyAvatar(self, avatar):
             pass
 
+class HelpersTestCase(unittest.TestCase):
+
+      def test_args2packets(self):
+            self.assertEqual([PacketPing()], pokersite.args2packets([{'type':'PacketPing'}]))
+            packets = pokersite.args2packets([{'type':'BadPacket'}])
+            self.assertSubstring('Unable to instantiate', packets[0].message)
+            packets = pokersite.args2packets([{'type':'0'}])
+            self.assertSubstring('Invalid type', packets[0].message)
+
+      def test_packets2maps(self):
+            self.assertEqual([{'type': 'PacketPing'}], pokersite.packets2maps([PacketPing()]))
+            self.assertEqual([{'packets': [{'type': 'PacketPing'}], 'type': 'PacketList'}], pokersite.packets2maps([PacketList(packets = [PacketPing()])]))
+            packet = Packet()
+            packet.message = "MESSAGE"
+            packet.what = { 0: 1 }
+            self.assertEqual([{'message': 'MESSAGE', 'type': 'Packet', 'what': {'X0': 1}}], pokersite.packets2maps([packet]))
+
 class MemcacheTestCase(unittest.TestCase):
 
       def test01(self):
@@ -353,11 +370,12 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
-#    suite.addTest(loader.loadClass(PokerResourceTestCase))
-#    suite.addTest(loader.loadClass(SessionTestCase))
-#    suite.addTest(loader.loadClass(RequestTestCase))
-#    suite.addTest(loader.loadClass(PokerSiteTestCase))
+    suite.addTest(loader.loadClass(PokerResourceTestCase))
+    suite.addTest(loader.loadClass(SessionTestCase))
+    suite.addTest(loader.loadClass(RequestTestCase))
+    suite.addTest(loader.loadClass(PokerSiteTestCase))
     suite.addTest(loader.loadClass(MemcacheTestCase))
+    suite.addTest(loader.loadClass(HelpersTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
         tracebackFormat='default',
