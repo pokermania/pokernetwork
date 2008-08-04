@@ -1,0 +1,375 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "..")
+
+import libxml2
+
+from twisted.trial import unittest, runner, reporter
+from twisted.internet import defer
+import twisted.internet.base
+twisted.internet.base.DelayedCall.debug = True
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
+from tests import testclock
+
+from pokernetwork import pokersite
+from pokernetwork import pokernetworkconfig
+from pokernetwork import pokeravatar
+from pokernetwork.pokerpackets import *
+
+class PokerServiceMockup:
+
+      def __init__(self):
+            self.verbose = 6
+
+      def getPlayerInfo(self, serial):
+            return PacketPokerPlayerInfo(serial = serial)
+
+      def createAvatar(self):
+            return pokeravatar.PokerAvatar(self)
+
+      def destroyAvatar(self, avatar):
+            pass
+
+class MemcacheTestCase(unittest.TestCase):
+
+      def test01(self):
+            memcache = pokersite.MemcacheMockup.Client([''])
+            memcache.set('a', 'b')
+            self.assertEqual(None, memcache.get('c'))
+            self.assertEqual('b', memcache.get('a'))
+            self.assertEqual(0, memcache.add('a', 'd'))
+            self.assertEqual(1, memcache.add('f', 'g'))
+            self.assertEqual(0, memcache.replace('z', 'k'))
+            self.assertEqual(1, memcache.replace('f', 'l'))
+            self.assertEqual(0, memcache.delete('r'))
+            self.assertEqual(1, memcache.delete('f'))
+            
+class PokerSiteBase(unittest.TestCase):
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" />
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokersite.memcache = pokersite.MemcacheMockup
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
+      
+class PokerResourceTestCase(PokerSiteBase):
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerResourceTestCase.Transport()
+                  self.site = site
+
+      def test01_render(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            r.requestReceived('GET', '/', '')
+
+            self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+
+      def test02_render_error(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            error_pattern = 'UNLIKELY'
+            def handlePacketLogic(packet):
+                  raise UserWarning, error_pattern
+            r.args = { 'name': [ 'name' ] }
+            r.getSession().avatar.handlePacketLogic = handlePacketLogic
+            r.requestReceived('GET', '/', '')
+            self.assertSubstring(error_pattern, r.transport.getvalue())
+
+      def test03_render_chained(self):
+            """
+            requests that are received while another request is being handled (this
+            may happen if the packet logic returned a deferred) are added to the
+            callback chain
+            """
+            channel = self.Channel(self.site)
+            r1 = pokersite.Request(channel, True)
+            r1.site = r1.channel.site
+            input = '{"type": "PacketPing"}'
+            r1.gotLength(len(input))
+            r1.handleContentChunk(input)
+            d1 = defer.Deferred()
+            r1.args = { 'name': [ 'name' ] }
+            avatar1 = r1.getSession().avatar
+            def handlePacketLogic1(packet):
+                  avatar1.sendPacket(d1)
+            avatar1.handlePacketLogic = handlePacketLogic1
+            r1.requestReceived('GET', '/', '')
+
+            r2 = pokersite.Request(channel, True)
+            r2.site = r2.channel.site
+            input = '{"type": "PacketPing"}'
+            r2.gotLength(len(input))
+            r2.handleContentChunk(input)
+            r2.args = { 'name': [ 'name' ] }
+            avatar2 = r2.getSession().avatar
+            def handlePacketLogic2(packet):
+                  avatar2.sendPacket(PacketPing())
+            r2.getSession().avatar.handlePacketLogic = handlePacketLogic2
+            r2.requestReceived('GET', '/', '')
+
+            self.assertEqual('', r1.transport.getvalue())
+            self.assertEqual('', r2.transport.getvalue())
+            d1.callback(PacketAck())
+            self.assertSubstring('PacketAck', r1.transport.getvalue())
+            self.assertSubstring('PacketPing', r2.transport.getvalue())
+
+      def test04_render_jsonp(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            r.gotLength(0)
+            r.handleContentChunk('')
+            r.requestReceived('GET', '/?jsonp=FUN&packet={"type":"PacketPing"}', '')
+
+            self.assertSubstring('\r\n\r\nFUN([])', r.transport.getvalue())
+
+class SessionTestCase(PokerSiteBase):
+
+      def test01_checkExpired(self):
+            serial = 111
+            uid = 'uid'
+            self.site.memcache.set(uid, serial)
+            self.site.memcache.set(serial, uid)
+            session = self.site.getSession(uid)
+            self.assertEqual(True, session.checkExpired())
+            self.site.memcache.delete(uid)
+            self.site.memcache.delete(serial)
+            self.assertEqual(False, session.checkExpired())
+
+class RequestTestCase(PokerSiteBase):
+
+      def test01_name(self):
+            class Channel:
+                  def __init__(self, site):
+                        self.site = site
+            
+            r = pokersite.Request(Channel(self.site), True)
+            r.site = r.channel.site
+            r.args = { 'name': [ 'name' ] }
+            session = r.getSession()
+            self.assertSubstring('name=', r.cookies[0])
+            session.expire()
+            self.assertEqual(True, session.expired)
+
+class PokerSiteTestCase(PokerSiteBase):
+
+      def test01_init_full(self):
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" />
+"""
+            settings = pokernetworkconfig.Config([])
+            settings.loadFromString(settings_xml)
+            site = pokersite.PokerSite(settings, pokersite.PokerResource)
+            self.assertEqual([ '127.0.0.1:11211' ], site.memcache.addresses)
+            self.assertEqual(60, site.sessionFactory.sessionTimeout)
+            self.assertEqual(10, site.sessionCheckTime)
+
+      def test02_init_default(self):
+            sessionTimeout = pokersite.PokerSite.sessionFactory.sessionTimeout
+            sessionCheckTime = pokersite.PokerSite.sessionCheckTime
+            site = pokersite.PokerSite(self.settings, pokersite.PokerResource)
+            self.assertEqual([ ], site.memcache.addresses)
+            self.assertEqual(sessionTimeout, site.sessionFactory.sessionTimeout)
+            self.assertEqual(sessionCheckTime, site.sessionCheckTime)
+
+      def test03_01_getSession(self):
+            """
+            A session exists in core but not in memcache :
+            the in core session expires
+            """
+            session = self.site.makeSession()
+            self.site.memcache.delete(session.uid)
+            exception = False
+            try:
+                  self.site.getSession(session.uid)
+            except KeyError:
+                  exception = True
+            self.assertEqual(True, exception)
+            self.assertEqual(True, session.expired)
+
+      def test03_02_getSession(self):
+            """
+            A session exists in core and in memcache. The memcache serial
+            is set from the outside.
+            """
+            session = self.site.makeSession()
+            serial = 111
+            self.site.memcache.set(session.uid, serial)
+            self.site.memcache.set(serial, session.uid)
+            self.site.getSession(session.uid)
+            self.assertEquals(serial, session.avatar.getSerial())
+            """
+            Memcache serial changed and becomes inconsistent.
+            """
+            self.site.memcache.set(session.uid, serial + 1)
+            self.site.memcache.set(serial + 1, session.uid)
+            session = self.site.getSession(session.uid)
+            self.assertEquals(serial + 1, session.avatar.getSerial())
+            session.expire()
+
+      def test04_01_updateSession(self):
+            """
+            the session expires after upateSession, unless there are tables
+            """
+            session = self.site.makeSession()
+            session.avatar.tables[1] = 'table'
+            self.site.updateSession(session)
+            self.assertEquals(False, session.expired)
+            session.avatar.tables = []
+            self.site.updateSession(session)
+            self.assertEquals(True, session.expired)
+
+      def test04_02_updateSession(self):
+            """
+            expire the session if the memcache serial changed since the request started
+            """
+            session = self.site.makeSession()
+            self.site.memcache.set(session.uid, 100)
+            self.assertEquals(False, self.site.updateSession(session))
+            self.assertEquals(True, session.expired)
+
+      def test04_03_updateSession(self):
+            """
+            expire the session if the memcache uid for the serial
+            changed since the request started
+            """
+            session = self.site.makeSession()
+            serial = 100
+            self.site.memcache.set(session.uid, serial)
+            session.avatar.user.serial = serial
+            self.site.memcache.set(serial, 'other uid')
+            self.assertEquals(False, self.site.updateSession(session))
+            self.assertEquals(True, session.expired)
+
+      def test04_04_updateSession(self):
+            """
+            memcache serial is 0 and serial is > 0, meaning the user logged in
+            the memcache must be updated accordingly by adding an entry 
+            with the serial as a key
+            """
+            session = self.site.makeSession()
+            serial = 100
+            session.avatar.user.serial = serial
+            self.site.updateSession(session)
+            self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
+            self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
+
+      def test04_05_updateSession(self):
+            """
+            memcache serial is > 0 and serial is == 0, meaning the user logged out
+            the memcache must be updated by killing the entry that had the former
+            serial as a key
+            """
+            session = self.site.makeSession()
+            #
+            # login
+            #
+            serial = 100
+            session.avatar.user.serial = serial
+            session.avatar.tables[1] = 'table'
+            self.site.updateSession(session)
+            self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
+            self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
+            #
+            # logout
+            #
+            session.memcache_serial = serial # would be set by getSession()
+            session.avatar.user.serial = 0
+            self.site.updateSession(session)
+            self.assertEquals(0, int(self.site.memcache.get(session.uid)))
+            self.assertEquals(None, self.site.memcache.get(str(serial)))
+            session.expire()
+
+      def test04_06_updateSession(self):
+            """
+            memcache serial is > 0 and serial is == 0, meaning the user logged out
+            the memcache must be updated by killing the entry that had the former
+            serial as a key
+            """
+            session = self.site.makeSession()
+            #
+            # login
+            #
+            serial = 100
+            session.avatar.user.serial = serial
+            session.avatar.tables[1] = 'table'
+            self.site.updateSession(session)
+            self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
+            self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
+            #
+            # inconsistency
+            #
+            new_serial = 200
+            session.memcache_serial = serial # would be set by getSession()
+            session.avatar.user.serial = new_serial
+            self.site.updateSession(session)
+            self.assertEquals(new_serial, int(self.site.memcache.get(session.uid)))
+            self.assertEquals(session.uid, self.site.memcache.get(str(new_serial)))
+            session.expire()
+
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test17"
+    suite = loader.suiteFactory()
+#    suite.addTest(loader.loadClass(PokerResourceTestCase))
+#    suite.addTest(loader.loadClass(SessionTestCase))
+#    suite.addTest(loader.loadClass(RequestTestCase))
+#    suite.addTest(loader.loadClass(PokerSiteTestCase))
+    suite.addTest(loader.loadClass(MemcacheTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+        tracebackFormat='default',
+        ).run(suite)
+
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokersite.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokersite.py' VERBOSE_T=-1 TESTS='coverage-reset test-pokersite.py coverage-report' check )"
+# End:
