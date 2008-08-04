@@ -19,6 +19,9 @@
 #
 import simplejson
 import re
+from types import DictType
+
+from traceback import format_exc
 
 from twisted.web import server, resource, util, http
 from twisted.internet import defer
