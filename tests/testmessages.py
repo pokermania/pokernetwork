@@ -65,6 +65,8 @@ classes.append(pokertournament.PokerTournament)
 from pokernetwork import upgrade
 classes.append(upgrade.CheckClientVersion)
 classes.append(upgrade.Upgrader)
+from pokernetwork import pokersite
+classes.append(pokersite.PokerResource)
 
 from twisted.internet import defer
 
