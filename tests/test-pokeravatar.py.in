@@ -24,7 +24,7 @@ sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 import libxml2
-
+from types import *
 import socket
 import time
 from twisted.trial import unittest, runner, reporter
@@ -2835,10 +2835,51 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(logout)
 
         return defer.DeferredList((d, d2))
+
+    # ------------------------------------------------------------------------
+    def test68_handlePacketDefer(self):
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        def handlePacketDefer(x):
+            avatar = self.service.avatars[0]
+            #
+            # returns nothing
+            #
+            r = avatar.handlePacketDefer(PacketPing())
+            self.assertEqual([], r)
+            #
+            # returns a deferred that returns a packet
+            #
+            d1 = defer.Deferred()
+            def returnDefer1(packet):
+                avatar.sendPacket(d1)
+            avatar.handlePacketLogic = returnDefer1
+            r = avatar.handlePacketDefer(PacketPing())
+            self.assertEquals(True, isinstance(r, defer.Deferred))
+            def checkDefer(packets):
+                self.assertEquals(type(packets), ListType)
+                self.assertEquals(PACKET_PING, packets[0].type)
+            d1.addCallback(checkDefer)
+            d1.callback(PacketPing())
+            #
+            # returns a list of packets
+            #
+            d2 = defer.Deferred()
+            def returnDefer2(packet):
+                avatar.sendPacket(d2)
+            avatar.handlePacketLogic = returnDefer2
+            r = avatar.handlePacketDefer(PacketPing())
+            self.assertEquals(True, isinstance(r, defer.Deferred))
+            d2.addCallback(checkDefer)
+            d2.callback([PacketPing()])
+        d.addCallback(handlePacketDefer)
+        return d
+    
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test67"
+#    loader.methodPrefix = "test68"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
