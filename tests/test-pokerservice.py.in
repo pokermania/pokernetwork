@@ -28,7 +28,7 @@
 #  Cedric Pinson <cpinson@freesheep.org>
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 from string import split

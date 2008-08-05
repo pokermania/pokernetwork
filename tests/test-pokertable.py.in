@@ -19,7 +19,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 import libxml2

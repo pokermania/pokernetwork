@@ -29,7 +29,7 @@
 #
 
 import time, sys, os, libxml2, tempfile, shutil, stat
-sys.path.insert(0, "@srcdir@/../..")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 import platform
