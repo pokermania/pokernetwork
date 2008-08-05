@@ -26,7 +26,7 @@ from traceback import format_exc
 from twisted.web import server, resource, util, http
 from twisted.internet import defer
 
-from pokernetwork.packets import *
+from pokernetwork.pokerpackets import *
 
 def packets2maps(packets):
     maps = []
