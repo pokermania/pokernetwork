@@ -80,7 +80,6 @@ TESTS = coverage-reset \
 	test-pokerbotlogic.py \
 	test-pokerdatabase.py \
 	test-pokerservice.py \
-	test-pokersite.py \
 	test-pokerauth.py \
 	test-pokertable.py \
 	test-pokerchildren.py \
@@ -102,6 +101,7 @@ TESTS = coverage-reset \
 	test-svg2gtk.py \
 	test-gamewindow.py \
 	test-poker2d.py \
+	test-pokersite.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
