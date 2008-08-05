@@ -57,6 +57,7 @@ from twisted.web import resource,server
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerService, IPokerFactory, SSLContextFactory
+from pokernetwork.pokersite import PokerSite
 
 def makeApplication(argv):
     default_path = "/etc/poker-network" + sys.version[:3] + "/poker.server.xml"
@@ -87,7 +88,7 @@ def makeApplication(argv):
             internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
                            ).setServiceParent(serviceCollection)
 
-    site = server.Site(resource.IResource(poker_service))
+    site = PokerSite(settings, resource.IResource(poker_service))
 
     #
     # HTTP (with or without SLL) that implements XML-RPC and SOAP
