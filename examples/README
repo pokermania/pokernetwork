@@ -1,0 +1,10 @@
+#
+# prints the number of PacketPing requests handled within 1 minute
+#                                                     
+expr $(timeout 60 bash -c 'while : ; do curl --data "{\"type\":\"PacketPing\"}" http://localhost:19382/POKER_REST ; done' 2>/dev/null > /tmp/$$ ; wc -c < /tmp/$$) / 2
+#
+# prints the number of PacketPokerGetPlayerInfo request handled in 1 minute
+#
+python memcache-client 4 SESSION
+python memcache-client SESSION 4
+timeout 60 bash -c 'while : ; do curl --cookie TWISTED_SESSION="SESSION; Path=/" --data "{\"type\":\"PacketPokerGetPlayerInfo\"}" http://localhost:19382/POKER_REST; echo ; done' 2>/dev/null > /tmp/$$ ; wc -l < /tmp/$$
