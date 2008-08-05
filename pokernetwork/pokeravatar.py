@@ -34,6 +34,8 @@ import sets
 
 from twisted.internet import defer
 
+from types import *
+
 from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
 from pokernetwork.pokerpackets import *
@@ -86,6 +88,15 @@ class PokerAvatar:
     def isAuthorized(self, type):
         return self.user.hasPrivilege(self.service.poker_auth.GetLevel(type))
 
+    def relogin(self, serial):
+        player_info = self.service.getPlayerInfo(serial)
+        self.user.serial = serial
+        self.user.name = player_info.name
+        self.user.privilege = User.REGULAR
+        self.user.url = player_info.url
+        self.user.outfit = player_info.outfit
+        self.loginTableUpdates(serial)
+    
     def login(self, info):
         (serial, name, privilege) = info
         self.user.serial = serial
@@ -103,6 +114,9 @@ class PokerAvatar:
             self.message("user %s/%d logged in" % ( self.user.name, self.user.serial ))
         if self.protocol:
             self.has_session = self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
+        self.loginTableUpdates(serial)
+
+    def loginTableUpdates(self, serial):
         #
         # Send player updates if it turns out that the player was already
         # seated at a known table.
@@ -207,12 +221,31 @@ class PokerAvatar:
         else:
             return False
 
+    def handlePacketDefer(self, packet):
+        self.queuePackets()
+        self.handlePacketLogic(packet)
+        packets = self.resetPacketsQueue()
+        if len(packets) == 1 and isinstance(packets[0], defer.Deferred):
+            d = packets[0]
+            #
+            # turn the return value into an List if it is not
+            #
+            def packetList(result):
+                if type(result) == ListType:
+                    return result
+                else:
+                    return [ result ]
+            d.addCallback(packetList)
+            return d
+        else:
+            return packets
+
     def handlePacket(self, packet):
         self.queuePackets()
         self.handlePacketLogic(packet)
         self.noqueuePackets()
         return self.resetPacketsQueue()
-        
+
     def handlePacketLogic(self, packet):
         if self.service.verbose > 2 and packet.type != PACKET_PING:
             self.message("handlePacketLogic(%d): " % self.getSerial() + str(packet))
@@ -232,13 +265,13 @@ class PokerAvatar:
             self.sendPacketVerbose(self.service.monitor(self))
             return
         
+        if packet.type == PACKET_PING:
+            return
+        
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
             return
 
-        if packet.type == PACKET_PING:
-            return
-        
         if packet.type == PACKET_LOGIN:
             if self.isLogged():
                 self.sendPacketVerbose(PacketError(other_type = PACKET_LOGIN,
