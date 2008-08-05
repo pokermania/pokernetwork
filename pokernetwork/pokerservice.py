@@ -37,7 +37,7 @@ import operator
 import re
 import libxml2
 import simplejson
-from traceback import print_exc, format_exc
+from traceback import print_exc
 
 from OpenSSL import SSL
 
@@ -87,6 +87,7 @@ from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
+from pokernetwork.pokersite import PokerResource, packets2maps, args2packets
 from pokernetwork.pokertable import PokerTable
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -1756,6 +1757,7 @@ class PokerTree(resource.Resource):
         self.service = service
         self.putChild("RPC2", PokerXMLRPC(self.service))
         self.putChild("REST", PokerREST(self.service))
+        self.putChild("POKER_REST", PokerResource(self.service))
         try:
             self.putChild("SOAP", PokerSOAP(self.service))
         except:
@@ -1763,7 +1765,7 @@ class PokerTree(resource.Resource):
         self.putChild("", self)
 
     def render_GET(self, request):
-        return "Use /RPC2 or /SOAP or /REST"
+        return "Use /RPC2 or /SOAP or /REST or /POKER_REST"
 
 components.registerAdapter(PokerTree, IPokerService, resource.IResource)
 
@@ -1864,7 +1866,7 @@ class PokerXML(resource.Resource):
 
         logout = False
         result_packets = []
-        for packet in self.args2packets(args):
+        for packet in args2packets(args):
             if isinstance(packet, PacketError):
                 result_packets.append(packet)
                 break
@@ -1889,7 +1891,7 @@ class PokerXML(resource.Resource):
         #
         if len(result_packets) == 1 and isinstance(result_packets[0], defer.Deferred):
             def renderLater(packet):
-                result_maps = self.packets2maps([packet])
+                result_maps = packets2maps([packet])
 
                 result_string = self.maps2result(request, result_maps)
                 request.setHeader("Content-length", str(len(result_string)))
@@ -1908,53 +1910,13 @@ class PokerXML(resource.Resource):
                 else:
                     avatar.queuePackets()
 
-            result_maps = self.packets2maps(result_packets)
+            result_maps = packets2maps(result_packets)
 
             result_string = self.maps2result(request, result_maps)
             if self.verbose > 2:
                 self.message("result_string " + str(result_string))
             request.setHeader("Content-length", str(len(result_string)))
             return result_string
-
-    def args2packets(self, args):
-        packets = []
-        for arg in args:
-            if re.match("^[a-zA-Z]+$", arg['type']):
-                try:
-                    fun_args = len(arg) > 1 and '(**arg)' or '()'
-                    packets.append(eval(arg['type'] + fun_args))
-                except:
-                    packets.append(PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc() )))
-            else:
-                packets.append(PacketError(message = "Invalid type name %s" % arg['type']))
-        return packets
-
-    def packets2maps(self, packets):
-        maps = []
-        for packet in packets:
-            attributes = packet.__dict__.copy()
-            if isinstance(packet, PacketList):
-                attributes['packets'] = self.packets2maps(attributes['packets'])
-            if 'message' in dir(packet):
-                attributes['message'] = getattr(packet, 'message')
-            #
-            # It is forbiden to set a map key to a numeric (native
-            # numeric or string made of digits). Taint the map entries
-            # that are numeric and hope the client will figure it out.
-            #
-	    for (key, value) in packet.__dict__.iteritems():
-		if type(value) == DictType:
-			for ( subkey, subvalue ) in value.items():
-				del value[subkey]
-				new_subkey = str(subkey)
-				if new_subkey.isdigit():
-					new_subkey = "X" + new_subkey
-				if self.verbose > 2:
-                                    self.message("replace key " + new_subkey)
-				value[new_subkey] = subvalue
-            attributes['type'] = packet.__class__.__name__
-            maps.append(attributes)
-        return maps
 
     def getArguments(self, request):
         pass
