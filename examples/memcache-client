@@ -1,0 +1,9 @@
+import sys
+import memcache 
+
+m = memcache.Client(['localhost:11211'], debug = 1)
+if len(sys.argv) > 2:
+   m.set(sys.argv[1], sys.argv[2])
+else:
+   print m.get(sys.argv[1])
+
