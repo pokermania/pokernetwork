@@ -88,6 +88,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerpackets.py \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerservice.py \
+	pokernetwork/pokersite.py \
 	pokernetwork/pokerauth.py \
 	pokernetwork/pokerauthmysql.py \
 	pokernetwork/pokertable.py \
@@ -169,6 +170,7 @@ EXTRA_DIST = \
 	config/signed.m4 \
 	config/codeset.m4 \
 	config/printf-posix.m4 \
+	examples/README \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \

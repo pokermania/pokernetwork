@@ -12,7 +12,7 @@ Architecture: all
 Suggests: mysql-server, munin-node
 Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.2.0), python-twisted, python-mysqldb, python-soappy, python-pyopenssl, python-simplejson, libjson-perl, dbconfig-common, mysql-client, apg, rsync
+Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.2.0), python-twisted, python-mysqldb, python-soappy, python-pyopenssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
