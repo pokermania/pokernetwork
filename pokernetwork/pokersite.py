@@ -110,7 +110,7 @@ except:
 class Request(server.Request):
 
     def getSession(self):
-        self.sitepath = self.args.get('name', [''])
+        self.sitepath = self.args.get('name', [])
         return server.Request.getSession(self)
 
 class Session(server.Session):
