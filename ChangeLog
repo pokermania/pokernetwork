@@ -1,6 +1,123 @@
-2008-07-27  Loic Dachary <loic@dachary.org>
+2008-08-05  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* tests/test-pokerchildren.py.in, tests/test-pokergameclient.py.in,
+	  tests/test-pokerservice.py.in, tests/test-pokersite.py.in,
+	  tests/test-pokertable.py.in: extra .. at the end of the insert
+	  included the wrong files when doing a make distcheck. as a result
+	  some files were listed twice under the same name but not the same
+	  path, hence confusing the coverage report a great deal
+	* tests/Makefile.am: pokersite to the end so that the coverage file
+	  is not overriden
+	* Makefile.am, configure.ac, debian/control, debian/control.lenny,
+	  debian/control.unstable, tests/Makefile.am, tests/run.in: Add new
+	  pokersite related files for distribution and dependencies
+	* tests/test-pokerservice.py.in: Remove useless tests because code
+	  migrated to another file.
+	* tests/testmessages.py: suppress messages for
+	  classes.append(pokersite.PokerResource)
+	* tests/test-pokeravatar.py.in: add test68_handlePacketDefer
+	* pokernetwork/pokeravatar.py: Add the relogin function that
+	  simulates the actions taken when a user logs in. Used in the
+	  context of a client that resumes from a session cookie.
+	  Create the function loginTableUpdates to share between login and
+	  relogin.
+	  Add the handlePacketDefer function that is essentially the same
+	  as the handlePacket function except it returns a value that is
+	  friendly to the maybeDeferred twisted function.
+	  Move the PING packet handling up so that it can be used even with
+	  avatar for which the auth fields are incomplete.
+	* pokernetwork/pokerserver.py: HTTP services use PokerSite instead
+	  of the default server.Site
+	* pokernetwork/pokerservice.py: Add the /POKER_REST service,
+	  supporting memcache stored session cookies
+	  Migrate the args2packets and packets2maps functions to the
+	  pokersite file
+	* conf/poker.server.xml.in: Add memcached="127.0.0.1:11211"
+	  session_timeout="60" session_check="10" that are the defaults for
+	  the /POKER_REST interface
+	* pokernetwork/pokersite.py: the sitepath default is [] not ['']
+	* pokernetwork/pokersite.py: import pokerpackets to enable
+	  instantiation of more packets
+	* examples/memcache-client: simple minded memcache client to
+	  simulate session creation
+	* examples/README: sample commands to run tests against a server
+
+2008-08-04  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokersite.py.in: Add test cases for helpers imported
+	  from pokerservice.py
+	* pokernetwork/pokersite.py: Add missing imports
+	* pokernetwork/pokersite.py: new pokersite classes that specialize
+	  in memcache helped session handling
+	* tests/test-pokersite.py.in: test for new pokersite classes that
+	  specialize in memcache helped session handling
+
+2008-07-31  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokertable.py.in: Add User mockup to account for the
+	  additional test in pokertable getUserInfo
+	* pokernetwork/pokertable.py, tests/test-pokeravatar.py.in: do not
+	  try to lookup in core user information after the user is logged
+	  out
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: fix
+	  implementation of the tournament manager
+
+2008-07-30  Loic Dachary <loic@dachary.org>
+
+	* database/schema.sql.in: monitor table documentation
+
+2008-07-29  Bradley M. Kuhn <bkuhn@ebb.org>
+
+	* ChangeLog: * Restored changelog that I clobbered
+
+2008-07-28  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerpackets.py,
+	  pokernetwork/pokerservice.py, tests/test-pokeravatar.py.in,
+	  tests/test-pokerservice.py.in, tests/test-protocol.py.in:
+	  implement the TourneyManager packet
+	  increase the maximum number of packets in the pokerpackets pool
+	  from 149 to 169
+	* database/1.6.0-1.7.0.sql, database/schema.sql.in: tourney_serial
+	  is included in the pokertable record, if provided
+
+2008-07-27  Loic Dachary <loic@dachary.org>
+
+	* pokerstats/statslogic.py: 100% coverage
+	* ChangeLog: add release
+	* pokerstats/statslogic.py, pokerstats/test-stats.py.in: implement
+	  ranking algorithm
+
+2008-07-27  Bradley M. Kuhn <bkuhn@ebb.org>
+
+	* ChangeLog: r910@hughes: bkuhn | 2008-07-27 11:57:10 -0700
+	  # Re added back some ChangeLog entries that I ditched during a
+	  merge
+	* tests/test-pokerrenderer.py.in: r874@hughes: bkuhn | 2008-07-18
+	  16:28:07 -0700
+	  # Removed unnecessary get_messages()
+	* tests/test-pokerrenderer.py.in: r873@hughes: bkuhn | 2008-07-18
+	  16:26:52 -0700
+	  * Finished implementing multitest
+	* ChangeLog, tests/test-pokerrenderer.py.in: r872@hughes: bkuhn |
+	  2008-07-18 16:24:51 -0700
+	  * Added outfit to test
+	* ChangeLog, tests/test-pokerrenderer.py.in: r871@hughes: bkuhn |
+	  2008-07-18 16:18:01 -0700
+	  * changeState() gives a critical error when neither
+	  self.protocol.user.isLogged() nor self.canHideInterface() are
+	  true.
+	* ChangeLog, tests/test-pokerrenderer.py.in: r870@hughes: bkuhn |
+	  2008-07-18 16:08:26 -0700
+	  * Wrote test for weird whta on PAY_BLIND_ANTE_SEND
+	* ChangeLog, tests/test-pokerrenderer.py.in: r869@hughes: bkuhn |
+	  2008-07-18 16:02:39 -0700
+	  * Added test when strange "what" is given to PAY_ANTE_BLIND in
+	  changeState()
+
+2008-07-27  Loic Dachary <loic@dachary.org>
 
 	* pokerstats/Makefile.am, pokerstats/poker.stats.xml.in:
 	  configuration file is managed with dbconfig-common frontend
