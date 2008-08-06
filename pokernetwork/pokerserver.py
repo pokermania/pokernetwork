@@ -32,6 +32,7 @@ import sys
 sys.path.insert(0, ".")
 sys.path.insert(0, "..")
 
+import platform
 from os.path import exists
 from types import *
 
@@ -47,11 +48,12 @@ except:
 
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
-if not sys.modules.has_key('twisted.internet.reactor'):
-    print "installing poll reactor"
-    pollreactor.install()
-else:
-    print "poll reactor already installed"
+if platform.system() != "Windows":
+        if not sys.modules.has_key('twisted.internet.reactor'):
+                print "installing poll reactor"
+                pollreactor.install()
+        else:
+                print "poll reactor already installed"
 from twisted.internet import reactor
 from twisted.web import resource,server
 
