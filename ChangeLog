@@ -1,6 +1,15 @@
-2008-08-05  Loic Dachary <loic@dachary.org>
+2008-08-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* conf/poker.server.xml.in, pokernetwork/pokerserver.py,
+	  pokernetwork/pokerservice.py: The server.Site derivative is bound
+	  to a new port to ensure backward compatibility
+	* Makefile.am: 2ct memcache client
+	* NEWS: *** empty log message ***
+	* ChangeLog: *** empty log message ***
+
+2008-08-05  Loic Dachary <loic@dachary.org>
 
 	* tests/test-pokerchildren.py.in, tests/test-pokergameclient.py.in,
 	  tests/test-pokerservice.py.in, tests/test-pokersite.py.in,
