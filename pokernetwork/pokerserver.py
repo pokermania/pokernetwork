@@ -103,7 +103,7 @@ def makeApplication(argv):
             internet.SSLServer(rest_ssl_port, rest_site, SSLContextFactory(settings)
                                ).setServiceParent(serviceCollection)
 
-    http_site = server.Site(settings, PokerTree(poker_service))
+    http_site = server.Site(PokerTree(poker_service))
 
     #
     # HTTP (with or without SLL) that implements XML-RPC and SOAP
