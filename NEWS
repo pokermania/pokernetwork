@@ -1,5 +1,7 @@
 Release 1.7.0
 
+Proxy server with authentication capabilities.
+
 Add test coverage.
 
 Implement authentication plugin infrastructure and example.
