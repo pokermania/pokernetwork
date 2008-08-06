@@ -171,6 +171,7 @@ EXTRA_DIST = \
 	config/codeset.m4 \
 	config/printf-posix.m4 \
 	examples/README \
+	examples/memcache-client \
 	examples/poker.bot.xml \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \
