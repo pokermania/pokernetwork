@@ -95,12 +95,12 @@ def makeApplication(argv):
     #
     rest_port = settings.headerGetInt("/server/listen/@rest")
     if rest_port:
-            internet.TCPServer(rest_port, site
+            internet.TCPServer(rest_port, rest_site
                                ).setServiceParent(serviceCollection)
 
     rest_ssl_port = settings.headerGetInt("/server/listen/@rest_ssl")
     if HAS_OPENSSL and rest_ssl_port:
-            internet.SSLServer(rest_ssl_port, site, SSLContextFactory(settings)
+            internet.SSLServer(rest_ssl_port, rest_site, SSLContextFactory(settings)
                                ).setServiceParent(serviceCollection)
 
     http_site = server.Site(settings, PokerTree(poker_service))
@@ -110,12 +110,12 @@ def makeApplication(argv):
     #
     http_port = settings.headerGetInt("/server/listen/@http")
     if http_port:
-            internet.TCPServer(http_port, site
+            internet.TCPServer(http_port, http_site
                                ).setServiceParent(serviceCollection)
 
     http_ssl_port = settings.headerGetInt("/server/listen/@http_ssl")
     if HAS_OPENSSL and http_ssl_port:
-            internet.SSLServer(http_ssl_port, site, SSLContextFactory(settings)
+            internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)
                                ).setServiceParent(serviceCollection)
     return application
         
