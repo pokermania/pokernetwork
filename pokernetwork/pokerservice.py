@@ -1757,7 +1757,6 @@ class PokerTree(resource.Resource):
         self.service = service
         self.putChild("RPC2", PokerXMLRPC(self.service))
         self.putChild("REST", PokerREST(self.service))
-        self.putChild("POKER_REST", PokerResource(self.service))
         try:
             self.putChild("SOAP", PokerSOAP(self.service))
         except:
@@ -1765,9 +1764,20 @@ class PokerTree(resource.Resource):
         self.putChild("", self)
 
     def render_GET(self, request):
-        return "Use /RPC2 or /SOAP or /REST or /POKER_REST"
+        return "Use /RPC2 or /SOAP or /REST"
 
 components.registerAdapter(PokerTree, IPokerService, resource.IResource)
+
+class PokerRestTree(resource.Resource):
+
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.putChild("POKER_REST", PokerResource(self.service))
+        self.putChild("", self)
+
+    def render_GET(self, request):
+        return "Use /POKER_REST"
 
 def _getRequestCookie(request):
     if request.cookies:

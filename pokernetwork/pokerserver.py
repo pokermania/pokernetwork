@@ -56,7 +56,7 @@ from twisted.internet import reactor
 from twisted.web import resource,server
 
 from pokernetwork.pokernetworkconfig import Config
-from pokernetwork.pokerservice import PokerService, IPokerFactory, SSLContextFactory
+from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory, SSLContextFactory
 from pokernetwork.pokersite import PokerSite
 
 def makeApplication(argv):
@@ -88,7 +88,22 @@ def makeApplication(argv):
             internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
                            ).setServiceParent(serviceCollection)
 
-    site = PokerSite(settings, resource.IResource(poker_service))
+    rest_site = PokerSite(settings, PokerRestTree(poker_service))
+
+    #
+    # HTTP (with or without SLL) that implements REST
+    #
+    rest_port = settings.headerGetInt("/server/listen/@rest")
+    if rest_port:
+            internet.TCPServer(rest_port, site
+                               ).setServiceParent(serviceCollection)
+
+    rest_ssl_port = settings.headerGetInt("/server/listen/@rest_ssl")
+    if HAS_OPENSSL and rest_ssl_port:
+            internet.SSLServer(rest_ssl_port, site, SSLContextFactory(settings)
+                               ).setServiceParent(serviceCollection)
+
+    http_site = server.Site(settings, PokerTree(poker_service))
 
     #
     # HTTP (with or without SLL) that implements XML-RPC and SOAP

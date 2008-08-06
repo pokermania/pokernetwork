@@ -48,7 +48,7 @@
   <table name="Mosolor" variant="holdem" betting_structure="50-100-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
   <table name="Cayrryns" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
 
-  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383"/><!--
+  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383" rest="19384" rest_ssl="19385" /><!--
     <auth script="/usr/local/share/poker-network/pokerauth.py"/>
     -->
 
