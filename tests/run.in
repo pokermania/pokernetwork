@@ -68,7 +68,6 @@ DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/poker{network,ui,client2d}/*.py)
 COVERAGE_100_PERCENT="
 ../pokerclient2d/__init__
 ../pokernetwork/__init__
-../pokernetwork/nullfilter
 ../pokernetwork/pokerexplain
 ../pokernetwork/pokergameclient
 ../pokernetwork/pokernetworkconfig
