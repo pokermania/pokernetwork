@@ -716,6 +716,9 @@ class PokerService(service.Service):
         cursor.execute("SELECT * FROM tourneys WHERE serial = " + str(tourney_serial));
         packet.tourney = cursor.fetchone()
         packet.tourney["registered"] = len(user2tourney)
+        packet.tourney["rank2prize"] = None
+        if self.tourneys.has_key(tourney_serial):
+            packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizes()
 
         cursor.close()
 

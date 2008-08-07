@@ -748,8 +748,10 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                                                 game_id = tourney_serial))
         self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
         self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
+        self.service.tourneys[tourney_serial].can_register = False
         packet = self.service.tourneyManager(tourney_serial)
-        self.assertEqual(tourney_serial, packet.tourney['serial'])
+        self.assertEqual(tourney_serial, packet.tourney['serial'])        
+        self.assertNotEqual(None, packet.tourney['rank2prize'])
         self.assertEqual(1, packet.tourney['registered'])
         self.assertEqual({'4' : {'rank': -1,
                                  'table_serial': table_serial,
