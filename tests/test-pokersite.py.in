@@ -182,6 +182,44 @@ class PokerResourceTestCase(PokerSiteBase):
 
             self.assertSubstring('\r\n\r\nFUN([])', r.transport.getvalue())
 
+class FilterTestCase(unittest.TestCase):
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" >
+<rest_filter>../@srcdir@/testfilter.py</rest_filter>
+<rest_filter>../@srcdir@/../pokernetwork/nullfilter.py</rest_filter>
+</server>
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokersite.memcache = pokersite.MemcacheMockup
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerResourceTestCase.Transport()
+                  self.site = site
+
+      def test01_render(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            r.requestReceived('GET', '/', '')
+            
+            self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+            self.assertEqual(True, hasattr(r, "HERE"))
+
 class SessionTestCase(PokerSiteBase):
 
       def test01_checkExpired(self):
@@ -370,6 +408,7 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(FilterTestCase))
     suite.addTest(loader.loadClass(PokerResourceTestCase))
     suite.addTest(loader.loadClass(SessionTestCase))
     suite.addTest(loader.loadClass(RequestTestCase))

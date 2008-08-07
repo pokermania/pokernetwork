@@ -19,12 +19,14 @@
 #
 import simplejson
 import re
+import imp
 from types import DictType
 
 from traceback import format_exc
 
 from twisted.web import server, resource, util, http
 from twisted.internet import defer
+from twisted.python import log
 
 from pokernetwork.pokerpackets import *
 
@@ -171,20 +173,10 @@ class PokerResource(resource.Resource):
             args = Packet.JSON.decode_objects(args)
         packet = args2packets([args])[0]
 
-        if self.deferred.called:
-            #
-            # If there is not pending requests, the current request
-            # becomes the first of a chain on which other requests will
-            # be added if they are received before the current request
-            # completes.
-            #
-            self.deferred = self.deferRender(request, jsonp, packet)
-        else:
-            #
-            # If there are pending requests, postpone the current request
-            # until all requests are processed.
-            #
-            self.deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
+        if request.site.pipes:
+            request.site.pipe(self.deferred, request, packet)
+        
+        self.deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
         return server.NOT_DONE_YET
 
     def deferRender(self, request, jsonp, packet):
@@ -237,6 +229,15 @@ class PokerSite(server.Site):
             self.memcache = memcache.Client([memcache_address])
         else:
             self.memcache = MemcacheMockup.Client([])
+        self.pipes = []
+        for path in settings.header.xpathEval("/server/rest_filter"):
+            module = imp.load_source("poker_pipe", path.content)
+            self.pipes.append(getattr(module, "rest_filter"))
+
+    def pipe(self, d, request, packet):
+        if self.pipes:
+            for pipe in self.pipes:
+                d.addCallback(lambda x: defer.maybeDeferred(pipe, self, request, packet))
 
     def updateSession(self, session):
         #

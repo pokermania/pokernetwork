@@ -48,10 +48,11 @@
   <table name="Mosolor" variant="holdem" betting_structure="50-100-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
   <table name="Cayrryns" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
 
-  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383" rest="19384" rest_ssl="19385" /><!--
-    <auth script="/usr/local/share/poker-network/pokerauth.py"/>
-    -->
+  <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383" rest="19384" rest_ssl="19385" />
 
+  <!-- <auth script="/usr/local/share/poker-network/pokerauth.py"/> -->
+
+  <!-- <rest_filter>/usr/share/pyshared/pokernetwork/nullfilter.py</rest_filter> -->
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <refill serial="1" amount="5000000" />
   <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" port="3306" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@" root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" schema="@POKER_NETWORK_PKGDATADIR@/schema.sql" command="@MYSQL@"/>

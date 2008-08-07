@@ -72,6 +72,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/client.py \
 	pokernetwork/currencyclient.py \
 	pokernetwork/dispatch.py \
+	pokernetwork/nullfilter.py \
 	pokernetwork/packets.py \
 	pokernetwork/pokeravatar.py \
 	pokernetwork/pokerbot.py \
