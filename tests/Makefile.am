@@ -42,6 +42,7 @@ EXTRA_DIST = \
 	test-pokerauth/pokerauth.py \
 	coverage.py \
 	testfilter.py \
+	testerrorfilter.py \
 	test-poker-interface.py \
 	testpackets.py \
 	testmessages.py \

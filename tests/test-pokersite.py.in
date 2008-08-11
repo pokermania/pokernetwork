@@ -26,6 +26,7 @@ import libxml2
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer
+from twisted.python import failure
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
 
@@ -56,6 +57,10 @@ class PokerServiceMockup:
 
 class HelpersTestCase(unittest.TestCase):
 
+      def test_fromutf8(self):
+            self.assertEqual(['b', {'a': 'c'}, ('d',), 1], pokersite.fromutf8([u'b', {u'a': u'c'}, (u'd',), 1]))
+            self.assertEqual([u'b', {u'a': u'c'}, (u'd',), 1], pokersite.toutf8(['b', {'a': 'c'}, ('d',), 1]))
+                             
       def test_args2packets(self):
             self.assertEqual([PacketPing()], pokersite.args2packets([{'type':'PacketPing'}]))
             packets = pokersite.args2packets([{'type':'BadPacket'}])
@@ -117,10 +122,15 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+                  self.failIfSubstring('Expire', r.transport.getvalue())
+                  self.assertEqual(0, len(r.cookies))
+            d.addCallback(finish)
             r.requestReceived('GET', '/', '')
-
-            self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
-
+            return d
+      
       def test02_render_error(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
@@ -182,6 +192,21 @@ class PokerResourceTestCase(PokerSiteBase):
 
             self.assertSubstring('\r\n\r\nFUN([])', r.transport.getvalue())
 
+      def test05_render_expire_cookie(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            r.received_cookies['TWISTED_SESSION'] = 'session'
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+                  self.assertSubstring('Expire', r.transport.getvalue())
+            d.addCallback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
+
 class FilterTestCase(unittest.TestCase):
 
       def setUp(self):
@@ -219,6 +244,48 @@ class FilterTestCase(unittest.TestCase):
             
             self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
             self.assertEqual(True, hasattr(r, "HERE"))
+
+class FilterErrorTestCase(unittest.TestCase):
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" >
+<rest_filter>../@srcdir@/testerrorfilter.py</rest_filter>
+</server>
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokersite.memcache = pokersite.MemcacheMockup
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerResourceTestCase.Transport()
+                  self.site = site
+
+      def test01_render(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            
+            d = r.notifyFinish()
+            def finish(reason):
+                  self.assertSubstring('UNLIKELY', r.transport.getvalue())
+                  self.assertEqual(True, isinstance(reason, failure.Failure))
+                  return True
+            d.addBoth(finish)
+            r.requestReceived('GET', '/', '')
+            return d
 
 class SessionTestCase(PokerSiteBase):
 
@@ -408,6 +475,7 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test17"
     suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(FilterErrorTestCase))
     suite.addTest(loader.loadClass(FilterTestCase))
     suite.addTest(loader.loadClass(PokerResourceTestCase))
     suite.addTest(loader.loadClass(SessionTestCase))
