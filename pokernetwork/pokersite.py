@@ -20,7 +20,8 @@
 import simplejson
 import re
 import imp
-from types import DictType
+import time
+from types import *
 
 from traceback import format_exc
 
@@ -29,6 +30,30 @@ from twisted.internet import defer
 from twisted.python import log
 
 from pokernetwork.pokerpackets import *
+
+def fromutf8(tree, encoding = 'ISO-8859-1'):
+    return __walk(tree, lambda x: x.encode(encoding))
+
+def toutf8(tree, encoding = 'ISO-8859-1'):
+    return __walk(tree, lambda x: unicode(x, encoding))
+
+def __walk(tree, convert):
+    if type(tree) is TupleType or type(tree) is ListType:
+        result = map(lambda x: __walk(x, convert), tree)
+        if type(tree) is TupleType:
+            return tuple(result)
+        else:
+            return result
+    elif type(tree) is DictionaryType:
+        new_tree = {}
+        for (key, value) in tree.iteritems():
+            converted_key = convert(str(key))
+            new_tree[converted_key] = __walk(value, convert)
+        return new_tree
+    elif ( type(tree) is UnicodeType or type(tree) is StringType ):
+        return convert(tree)
+    else:
+        return tree
 
 def packets2maps(packets):
     maps = []
@@ -171,12 +196,23 @@ class PokerResource(resource.Resource):
         args = simplejson.loads(data, encoding = 'UTF-8')
         if hasattr(Packet.JSON, 'decode_objects'): # backward compatibility
             args = Packet.JSON.decode_objects(args)
+        args = fromutf8(args)
         packet = args2packets([args])[0]
 
         if request.site.pipes:
             request.site.pipe(self.deferred, request, packet)
-        
-        self.deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
+
+        def pipesFailed(reason):
+            body = reason.getTraceback()
+            request.setResponseCode(http.INTERNAL_SERVER_ERROR)
+            request.setHeader('content-type',"text/html")
+            request.setHeader('content-length', str(len(body)))
+            request.write(body)
+            request.connectionLost(reason)
+            return reason
+
+        self.deferred.addCallbacks(lambda result: self.deferRender(request, jsonp, packet),
+                                   pipesFailed)
         return server.NOT_DONE_YET
 
     def deferRender(self, request, jsonp, packet):
@@ -187,6 +223,20 @@ class PokerResource(resource.Resource):
             # update the session information if the avatar changed
             #
             session.site.updateSession(session)
+            #
+            # If the session expired and a session cookie was sent by the
+            # client, expire the session cookie by setting its expiration date
+            # in the past.
+            #
+            cookiename = "_".join(['TWISTED_SESSION'] + request.sitepath)
+            sessionCookie = request.getCookie(cookiename)
+            if session.expired:
+                request.cookies = []
+                if sessionCookie:
+                    request.addCookie(cookiename,
+                                      sessionCookie,
+                                      expires = time.asctime(time.localtime(time.time() - 3600)) + ' UTC',
+                                      path = '/')
             #
             # Format answer
             #
@@ -199,8 +249,7 @@ class PokerResource(resource.Resource):
             request.setHeader("Content-type", 'text/plain; charset="UTF-8"')
             request.write(result_string)
             request.finish()
-            return
-        d.addCallback(render)
+            return True
         def processingFailed(reason):
             session.expire()
             body = reason.getTraceback()
@@ -208,7 +257,9 @@ class PokerResource(resource.Resource):
             request.setHeader('content-type',"text/html")
             request.setHeader('content-length', str(len(body)))
             request.write(body)
-        d.addErrback(processingFailed)
+            request.connectionLost(reason)
+            return True
+        d.addCallbacks(render, processingFailed)
         return d
         
 class PokerSite(server.Site):

@@ -87,7 +87,7 @@ from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokersite import PokerResource, packets2maps, args2packets
+from pokernetwork.pokersite import PokerResource, packets2maps, args2packets, fromutf8, toutf8
 from pokernetwork.pokertable import PokerTable
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -1937,40 +1937,13 @@ class PokerXML(resource.Resource):
     def maps2result(self, request, maps):
         pass
 
-    @staticmethod
-    def fromutf8(tree, encoding):
-        return PokerXML.walk(tree, lambda x: x.encode(encoding))
-
-    @staticmethod
-    def toutf8(tree, encoding):
-        return PokerXML.walk(tree, lambda x: unicode(x, encoding))
-
-    @staticmethod
-    def walk(tree, convert):
-        if type(tree) is TupleType or type(tree) is ListType:
-            result = map(lambda x: PokerXML.walk(x, convert), tree)
-            if type(tree) is TupleType:
-                return tuple(result)
-            else:
-                return result
-        elif type(tree) is DictionaryType:
-            new_tree = {}
-            for (key, value) in tree.iteritems():
-                converted_key = convert(str(key))
-                new_tree[converted_key] = PokerXML.walk(value, convert)
-            return new_tree
-        elif ( type(tree) is UnicodeType or type(tree) is StringType ):
-            return convert(tree)
-        else:
-            return tree
-
 import xmlrpclib
 
 class PokerXMLRPC(PokerXML):
 
     def getArguments(self, request):
         ( args, functionPath ) = xmlrpclib.loads(request.content.read())
-        return PokerXML.fromutf8(args, self.encoding)
+        return fromutf8(args, self.encoding)
 
     def maps2result(self, request, maps):
         return xmlrpclib.dumps((maps, ), methodresponse = 1)
@@ -2018,7 +1991,7 @@ class PokerREST(PokerXML):
         args = simplejson.loads(data, encoding = 'latin-1')
         if hasattr(Packet.JSON, 'decode_objects'):
             args = Packet.JSON.decode_objects(args)
-        return [ use_sessions, PokerXML.fromutf8(args, self.encoding) ]
+        return [ use_sessions, fromutf8(args, self.encoding) ]
 
     def maps2result(self, request, maps):
         jsonp = request.args.get('jsonp', [''])[0]
@@ -2045,10 +2018,10 @@ try:
             if callable(kwargs):
                 kwargs = kwargs()
 
-            return PokerXML.fromutf8(SOAPpy.simplify(args), self.encoding)
+            return fromutf8(SOAPpy.simplify(args), self.encoding)
 
         def maps2result(self, request, maps):
-            return SOAPpy.buildSOAP(kw = {'Result': PokerXML.toutf8(maps, self.encoding)},
+            return SOAPpy.buildSOAP(kw = {'Result': toutf8(maps, self.encoding)},
                                     method = 'returnPacket',
                                     encoding = self.encoding)
 except:
