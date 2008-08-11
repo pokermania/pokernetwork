@@ -235,7 +235,7 @@ class PokerResource(resource.Resource):
                 if sessionCookie:
                     request.addCookie(cookiename,
                                       sessionCookie,
-                                      expires = time.asctime(time.localtime(time.time() - 3600)) + ' UTC',
+                                      expires = time.asctime(time.gmtime(time.time() - 3600)) + ' UTC',
                                       path = '/')
             #
             # Format answer
