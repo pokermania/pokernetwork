@@ -1,6 +1,30 @@
-2008-08-06  Loic Dachary <loic@dachary.org>
+2008-08-11  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* pokernetwork/pokersite.py: use gmtime instead of localtime
+	* tests/Makefile.am, tests/test-pokersite.py.in,
+	  tests/testerrorfilter.py: tests when rest filters throw an
+	  exception (involve using the notify mechanism of server.request)
+	  test that cookie is cleared when the session expires
+	* tests/test-webservice.py.in: the utf8 converter helpers (for
+	  SOAP/XMLRPC/REST) moved from pokerservice to pokersite
+	* pokernetwork/pokerservice.py, pokernetwork/pokersite.py: move the
+	  utf8 converter helpers (for SOAP/XMLRPC/REST) from pokerservice
+	  to pokersite
+
+2008-08-07  Loic Dachary <loic@dachary.org>
+
+	* tests/run.in: nullfilter cannot be listed as 100% coverage
+	  because imp.load_source tries multiple path and the coverage
+	  report is confused
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: fill
+	  the tourney manager packet with prizes when available
+	* Makefile.am, conf/poker.server.xml.in, pokernetwork/pokersite.py,
+	  tests/Makefile.am, tests/run.in, tests/test-pokersite.py.in:
+	  plugin system for REST session module
+
+2008-08-06  Loic Dachary <loic@dachary.org>
 
 	* conf/poker.server.xml.in, pokernetwork/pokerserver.py,
 	  pokernetwork/pokerservice.py: The server.Site derivative is bound
