@@ -54,6 +54,7 @@ if verbose < 0: silence_all_messages()
 
 from pokernetwork import pokerservice, pokernetworkconfig, user
 from pokernetwork import currencyclient
+from pokernetwork import pokersite
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerclientpackets import *
 
@@ -369,7 +370,7 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
                 return args[0] # jsonp is a JS contruct and cannot be JSON decoded
             else:
                 json = args[0]
-                return pokerservice.PokerXML.fromutf8(simplejson.JSONDecoder().decode(json), pokerservice.PokerXML.encoding)
+                return pokersite.fromutf8(simplejson.JSONDecoder().decode(json), pokerservice.PokerXML.encoding)
         factory.deferred.addCallback(json_decode)
         return factory.deferred
 
