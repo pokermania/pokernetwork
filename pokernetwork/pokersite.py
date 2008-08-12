@@ -231,12 +231,21 @@ class PokerResource(resource.Resource):
             cookiename = "_".join(['TWISTED_SESSION'] + request.sitepath)
             sessionCookie = request.getCookie(cookiename)
             if session.expired:
-                request.cookies = []
-                if sessionCookie:
-                    request.addCookie(cookiename,
-                                      sessionCookie,
-                                      expires = time.asctime(time.gmtime(time.time() - 3600)) + ' UTC',
-                                      path = '/')
+                if not session.isLogged:
+                    #
+                    # If the user is not logged in and the session expired,
+                    # the cookie must not be set.
+                    #
+                    request.cookies = []
+                    if sessionCookie:
+                        #
+                        # If the cookie was already set but the user is not logged
+                        # in and the session expired, it must be removed.
+                        #
+                        request.addCookie(cookiename,
+                                          sessionCookie,
+                                          expires = time.asctime(time.gmtime(time.time() - 3600)) + ' UTC',
+                                          path = '/')
             #
             # Format answer
             #
@@ -290,6 +299,13 @@ class PokerSite(server.Site):
             for pipe in self.pipes:
                 d.addCallback(lambda x: defer.maybeDeferred(pipe, self, request, packet))
 
+    #
+    # prevent calling the startFactory method of site.Server
+    # to disable loging.
+    #
+    def startFactory(self): 
+        pass
+        
     def updateSession(self, session):
         #
         # assert the session informations were not changed in memcache
@@ -323,6 +339,7 @@ class PokerSite(server.Site):
                 self.memcache.delete(str(session.memcache_serial))
                 self.memcache.add(str(serial), session.uid)
                 self.memcache.replace(session.uid, str(serial))
+        session.isLogged = session.avatar.isLogged()
         if len(session.avatar.tables) == 0:
             session.expire()
         return True

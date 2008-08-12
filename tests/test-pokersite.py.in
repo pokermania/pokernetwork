@@ -207,6 +207,25 @@ class PokerResourceTestCase(PokerSiteBase):
             r.requestReceived('GET', '/', '')
             return d
 
+      def test06_render_expire_logged(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            session = 'session'
+            serial = '5'
+            r.received_cookies['TWISTED_SESSION'] = session
+            r.site.memcache.set(session, serial)
+            r.site.memcache.set(serial, session)
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+                  self.failIfSubstring('Expire', r.transport.getvalue())
+            d.addCallback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
+
 class FilterTestCase(unittest.TestCase):
 
       def setUp(self):
@@ -470,6 +489,10 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(new_serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(new_serial)))
             session.expire()
+
+      def test05_startFactory(self):
+            self.site.startFactory()
+            self.assertEqual(False, hasattr(self.site, "logFile"))
 
 def Run():
     loader = runner.TestLoader()
