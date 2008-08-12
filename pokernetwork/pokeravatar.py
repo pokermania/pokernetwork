@@ -96,6 +96,8 @@ class PokerAvatar:
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
         self.roles.add(PacketPokerRoles.PLAY)
+        assert self.service.serial2client.has_key(serial) == False
+        self.service.serial2client[serial] = self
         self.loginTableUpdates(serial)
     
     def login(self, info):
