@@ -45,6 +45,7 @@ class PokerServiceMockup:
 
       def __init__(self):
             self.verbose = 6
+            self.serial2client = {}
 
       def getPlayerInfo(self, serial):
             return PacketPokerPlayerInfo(serial = serial)
