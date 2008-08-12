@@ -313,6 +313,7 @@ class PokerSite(server.Site):
         if ( ( self.memcache.get(session.uid) != str(session.memcache_serial) ) or
              ( session.memcache_serial > 0 and
                self.memcache.get(str(session.memcache_serial)) != session.uid )):
+            session.isLogged = False
             session.expire()
             return False
 
