@@ -381,6 +381,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.memcache.set(serial, session.uid)
             self.site.getSession(session.uid)
             self.assertEquals(serial, session.avatar.getSerial())
+            self.assertEquals(True, PacketPokerRoles.PLAY in session.avatar.roles)
             """
             Memcache serial changed and becomes inconsistent.
             """

@@ -95,6 +95,7 @@ class PokerAvatar:
         self.user.privilege = User.REGULAR
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
+        self.roles.add(PacketPokerRoles.PLAY)
         self.loginTableUpdates(serial)
     
     def login(self, info):
