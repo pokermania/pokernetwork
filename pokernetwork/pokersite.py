@@ -209,7 +209,7 @@ class PokerResource(resource.Resource):
             request.setHeader('content-length', str(len(body)))
             request.write(body)
             request.connectionLost(reason)
-            return reason
+            return True
 
         self.deferred.addCallbacks(lambda result: self.deferRender(request, jsonp, packet),
                                    pipesFailed)
