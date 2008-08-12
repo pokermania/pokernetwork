@@ -2,6 +2,21 @@
 
  	* Release 1.7.0
 
+	* tests/test-pokersite.py.in: the service mockup needs
+	  serial2client for relogin
+	* pokernetwork/pokeravatar.py: login with role play implies
+	  registering the avatar in serial2client
+	* pokernetwork/pokersite.py: pipesFailed must return True instead
+	  of Failure, otherwise the deferred chain never goes back to
+	  processing callbacks: it always calls pipeFailed on each request,
+	  with the same error.
+	* pokernetwork/pokerservice.py: set monitors before cleanup as it
+	  may be required when a player leaves
+	* pokernetwork/pokeravatar.py, tests/test-pokersite.py.in: when an
+	  avatar is logged in with the relogin function, the role must be
+	  set to PLAY
+	* pokernetwork/pokersite.py: always ste isLogged
+	* ChangeLog: *** empty log message ***
 	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: discard
 	  session only if not logged in
 
