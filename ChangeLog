@@ -1,6 +1,11 @@
-2008-08-11  Loic Dachary <loic@dachary.org>
+2008-08-12  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: discard
+	  session only if not logged in
+
+2008-08-11  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokersite.py: use gmtime instead of localtime
 	* tests/Makefile.am, tests/test-pokersite.py.in,
