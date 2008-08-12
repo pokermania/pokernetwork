@@ -166,6 +166,7 @@ class PokerService(service.Service):
         self.shutdown_deferred = None
 
     def startService(self):
+        self.monitors = []
         self.db = PokerDatabase(self.settings)
         self.cleanupCrashedTables()
         self.cleanUp(temporary_users = self.settings.headerGet("/server/users/@temporary"))
@@ -174,7 +175,6 @@ class PokerService(service.Service):
         self.poker_auth = get_auth_instance(self.db, self.settings)
         self.dirs = split(self.settings.headerGet("/server/path"))
         self.serial2client = {}
-        self.monitors = []
         self.avatars = []
         self.tables = []
         self.table_serial = 100
