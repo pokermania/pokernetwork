@@ -21,6 +21,7 @@ import simplejson
 import re
 import imp
 import time
+import base64
 from types import *
 
 from traceback import format_exc
@@ -270,7 +271,93 @@ class PokerResource(resource.Resource):
             return True
         d.addCallbacks(render, processingFailed)
         return d
-        
+
+class PokerImageUpload(resource.Resource):
+
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.verbose = service.verbose
+        self.deferred = defer.succeed(None)
+        self.isLeaf = True
+
+    def message(self, string):
+        print "PokerImageUpload: " + string
+
+#    def error(self, string):
+#        self.message("*ERROR* " + string)
+
+    def render(self, request):
+        if self.verbose > 3:
+            self.message("render " + request.content.read())
+        request.content.seek(0, 0)
+        data = request.args['filename'][0]        
+        self.deferred.addCallback(lambda result: self.deferRender(request, data))
+        return server.NOT_DONE_YET
+
+    def deferRender(self, request, data):
+        session = request.getSession()
+        if session.avatar.isLogged():
+            serial = request.getSession().avatar.getSerial()
+            packet = PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial)
+            self.service.setPlayerImage(packet)
+            result_string = 'image uploaded'
+            request.setHeader("Content-length", str(len(result_string)))
+            request.setHeader("Content-type", 'text/plain; charset="UTF-8"')
+            request.write(result_string)
+            request.finish()
+            return
+        else:
+            session.expire()
+            body = 'not logged'
+            request.setResponseCode(http.UNAUTHORIZED)
+            request.setHeader('content-type',"text/html")
+            request.setHeader('content-length', str(len(body)))
+            request.write(body)
+            request.finish()
+            return
+
+class PokerAvatarResource(resource.Resource):
+
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.verbose = service.verbose
+        self.deferred = defer.succeed(None)
+        self.isLeaf = True
+
+    def message(self, string):
+        print "PokerAvatarResource: " + string
+
+#    def error(self, string):
+#        self.message("*ERROR* " + string)
+
+    def render(self, request):
+        if self.verbose > 3:
+            self.message("render " + request.content.read())
+        request.content.seek(0, 0)
+        serial = int(request.path.split('/')[-1])
+        self.deferred.addCallback(lambda result: self.deferRender(request, serial))
+        return server.NOT_DONE_YET
+
+    def deferRender(self, request, serial):
+        packet  = self.service.getPlayerImage(serial)
+        if len(packet.image):
+            result_string = base64.b64decode(packet.image)
+            request.setHeader("Content-length", str(len(result_string)))
+            request.setHeader("Content-type", packet.image_type)
+            request.write(result_string)
+            request.finish()
+            return
+        else:
+            body = 'not found'
+            request.setResponseCode(http.NOT_FOUND)
+            request.setHeader('content-type',"text/html")
+            request.setHeader('content-length', str(len(body)))
+            request.write(body)
+            request.finish()
+            return
+
 class PokerSite(server.Site):
 
     requestFactory = Request

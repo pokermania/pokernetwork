@@ -87,7 +87,7 @@ from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokersite import PokerResource, packets2maps, args2packets, fromutf8, toutf8
+from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8
 from pokernetwork.pokertable import PokerTable
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -1777,6 +1777,8 @@ class PokerRestTree(resource.Resource):
         resource.Resource.__init__(self)
         self.service = service
         self.putChild("POKER_REST", PokerResource(self.service))
+        self.putChild("UPLOAD", PokerImageUpload(self.service))
+        self.putChild("AVATAR", PokerAvatarResource(self.service))
         self.putChild("", self)
 
     def render_GET(self, request):

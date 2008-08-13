@@ -23,6 +23,8 @@ sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 import libxml2
+import base64
+import cgi
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer
@@ -55,6 +57,14 @@ class PokerServiceMockup:
 
       def destroyAvatar(self, avatar):
             pass
+
+      player_image = None
+      def setPlayerImage(self, player_image):
+            self.player_image = player_image      
+      player_serial = None
+      def getPlayerImage(self, serial):
+            self.player_serial = serial
+            return self.player_image
 
 class HelpersTestCase(unittest.TestCase):
 
@@ -226,6 +236,130 @@ class PokerResourceTestCase(PokerSiteBase):
             d.addCallback(finish)
             r.requestReceived('GET', '/', '')
             return d
+
+class PokerImageUploadTestCase(unittest.TestCase):
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerImageUploadTestCase.Transport()
+                  self.site = site
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" />
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokersite.memcache = pokersite.MemcacheMockup
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerImageUpload(self.service))
+            self.image_data = "image data"
+            def parse_multipart_mockup(content, dict):
+                  return {'filename':[self.image_data]}
+            self.cgi_parse_multipart = cgi.parse_multipart
+            cgi.parse_multipart = parse_multipart_mockup
+            
+      def tearDown(self):
+            cgi.parse_multipart = self.cgi_parse_multipart
+
+      def test01_render(self):            
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            
+            r.args = {}
+            session = self.site.makeSession()
+            r.session = session
+            self.assertNotEquals(None, r.getSession().avatar);
+            user_serial = 111
+            r.getSession().avatar.user.serial = user_serial
+            self.assertEquals(True, r.getSession().avatar.isLogged());
+
+            image_data = "image data"
+            r.received_headers['content-type'] = 'multipart/form-data'
+            input = ''
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            import cgi
+            def parse_multipart_mockup(content, dict):
+                  return {'filename':[image_data]}
+            cgi.parse_multipart = parse_multipart_mockup
+            r.requestReceived('POST', '/', '')
+            self.assertSubstring('image uploaded', r.transport.getvalue())
+            self.assertEquals(base64.b64encode(self.image_data),
+                              self.service.player_image.image)
+            session.expire()
+
+      def test02_unauthorized(self):            
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            
+            r.args = {}
+            session = self.site.makeSession()
+            r.session = session
+            self.assertNotEquals(None, r.getSession().avatar);
+            self.assertEquals(False, r.getSession().avatar.isLogged());
+
+            r.received_headers['content-type'] = 'multipart/form-data'
+            input = ''
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            r.requestReceived('POST', '/', '')
+            self.assertSubstring('not logged', r.transport.getvalue())
+            self.assertEquals(None, self.service.player_image)
+
+class PokerAvatarResourceTestCase(unittest.TestCase):
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerImageUploadTestCase.Transport()
+                  self.site = site
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" />
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokersite.memcache = pokersite.MemcacheMockup
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerAvatarResource(self.service))
+
+      def test01_render(self):
+            data = 'image data'
+            serial = 64
+            self.service.setPlayerImage(PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial))
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            r.gotLength(0)
+            r.handleContentChunk('')
+            r.requestReceived('GET', '/%i' % serial, '')
+            self.assertSubstring('\r\n\r\n%s' % data, r.transport.getvalue())
+            self.assertEquals(serial, self.service.player_serial)
+
+      def test02_render_error(self):
+            serial = 100
+            self.service.setPlayerImage(PacketPokerPlayerImage(image = '', serial = serial))
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            r.gotLength(0)
+            r.handleContentChunk('')
+            r.requestReceived('GET', '/%i' % serial, '')
+            self.assertSubstring('not found', r.transport.getvalue())
+            self.assertEquals(serial, self.service.player_serial)
 
 class FilterTestCase(unittest.TestCase):
 
@@ -503,6 +637,8 @@ def Run():
     suite.addTest(loader.loadClass(FilterErrorTestCase))
     suite.addTest(loader.loadClass(FilterTestCase))
     suite.addTest(loader.loadClass(PokerResourceTestCase))
+    suite.addTest(loader.loadClass(PokerImageUploadTestCase))
+    suite.addTest(loader.loadClass(PokerAvatarResourceTestCase))
     suite.addTest(loader.loadClass(SessionTestCase))
     suite.addTest(loader.loadClass(RequestTestCase))
     suite.addTest(loader.loadClass(PokerSiteTestCase))
