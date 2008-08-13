@@ -1,6 +1,13 @@
-2008-08-12  Loic Dachary <loic@dachary.org>
+2008-08-13  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* pokernetwork/pokerservice.py, pokernetwork/pokersite.py,
+	  tests/test-pokersite.py.in, tests/testmessages.py: upload and
+	  download the avatar with /UPLOAD and /AVATAR resource
+	  (proppy@aminche.com)
+
+2008-08-12  Loic Dachary <loic@dachary.org>
 
 	* tests/test-pokersite.py.in: the service mockup needs
 	  serial2client for relogin
