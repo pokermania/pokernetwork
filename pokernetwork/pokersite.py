@@ -147,6 +147,7 @@ class Session(server.Session):
         server.Session.__init__(self, site, uid)
         self.avatar = site.resource.service.createAvatar()
         self.avatar.queuePackets()
+        self.avatar.setExplain(PacketPokerExplain.ALL)
         self.expired = False
 
     def expire(self):

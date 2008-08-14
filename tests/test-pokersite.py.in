@@ -48,6 +48,7 @@ class PokerServiceMockup:
       def __init__(self):
             self.verbose = 6
             self.serial2client = {}
+            self.dirs = []
 
       def getPlayerInfo(self, serial):
             return PacketPokerPlayerInfo(serial = serial)
@@ -516,6 +517,8 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.memcache.set(serial, session.uid)
             self.site.getSession(session.uid)
             self.assertEquals(serial, session.avatar.getSerial())
+            self.assertNotEquals(None, session.avatar.explain)
+            self.assertEquals(serial, session.avatar.explain.serial)
             self.assertEquals(True, PacketPokerRoles.PLAY in session.avatar.roles)
             """
             Memcache serial changed and becomes inconsistent.
