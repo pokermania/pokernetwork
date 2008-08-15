@@ -213,8 +213,8 @@ class PokerResource(resource.Resource):
             request.connectionLost(reason)
             return True
 
-        self.deferred.addCallbacks(lambda result: self.deferRender(request, jsonp, packet),
-                                   pipesFailed)
+        self.deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
+        self.deferred.addErrback(pipesFailed)
         return server.NOT_DONE_YET
 
     def deferRender(self, request, jsonp, packet):
@@ -412,7 +412,16 @@ class PokerSite(server.Site):
                 # if the user is now logged in, bind the serial to the session
                 #
                 self.memcache.replace(session.uid, str(serial))
-                self.memcache.add(str(serial), session.uid)
+                #
+                # 'set' is used instead of 'add' because the latest session wins,
+                # even if the previous is still active. When a session is
+                # properly closed, the serial memecache entry is discarded.
+                # But if the session is not closed, there is a spurious
+                # serial entry referencing the old session. When a request
+                # arrives with the old session uid (check getSession #xref1) it will
+                # trigger an error and do nothing.
+                #
+                self.memcache.set(str(serial), session.uid)
         else:
             if serial == 0:
                 #
@@ -444,7 +453,12 @@ class PokerSite(server.Site):
                 self.sessions[uid].expire()
         else:
             #
-            # Safeguard against memcache inconsistency
+            # #xref1
+            # Safeguard against memcache inconsistency.
+            # This happens when another session took over the serial (setting
+            # a new session uid in this serial memcache entry). The policy is
+            # that the newest session wins and the previous session must not
+            # get any requests. 
             #
             if int(memcache_serial) > 0:
                 assert uid == self.memcache.get(memcache_serial)
