@@ -682,6 +682,7 @@ class PokerSiteTestCase(PokerSiteBase):
             d = r.notifyFinish()
             def finish(result):
                   self.assertSubstring('AssertionError', str(result.getTraceback()))
+                  self.assertSubstring('Expires', r.cookies[0])
                   return True
             d.addErrback(finish)
             r.requestReceived('GET', '/', '')

@@ -141,6 +141,22 @@ class Request(server.Request):
         self.sitepath = self.args.get('name', [])
         return server.Request.getSession(self)
 
+    def cookieName(self):
+        return "_".join(['TWISTED_SESSION'] + self.sitepath)
+
+    def getSessionCookie(self):
+        return self.getCookie(self.cookieName())
+
+    def expireSessionCookie(self):
+        cookiename = self.cookieName()
+        sessionCookie = self.getCookie(cookiename)
+        if sessionCookie:
+            self.addCookie(cookiename,
+                           sessionCookie,
+                           expires = time.asctime(time.gmtime(time.time() - 3600)) + ' UTC',
+                           path = '/')
+        
+
 class Session(server.Session):
 
     def __init__(self, site, uid):
@@ -212,6 +228,7 @@ class PokerResource(resource.Resource):
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-type',"text/html")
             request.setHeader('content-length', str(len(body)))
+            request.expireSessionCookie()
             request.write(body)
             request.connectionLost(reason)
             return True
@@ -233,8 +250,7 @@ class PokerResource(resource.Resource):
             # client, expire the session cookie by setting its expiration date
             # in the past.
             #
-            cookiename = "_".join(['TWISTED_SESSION'] + request.sitepath)
-            sessionCookie = request.getCookie(cookiename)
+            sessionCookie = request.getSessionCookie()
             if session.expired:
                 if not session.isLogged:
                     #
@@ -242,15 +258,11 @@ class PokerResource(resource.Resource):
                     # the cookie must not be set.
                     #
                     request.cookies = []
-                    if sessionCookie:
-                        #
-                        # If the cookie was already set but the user is not logged
-                        # in and the session expired, it must be removed.
-                        #
-                        request.addCookie(cookiename,
-                                          sessionCookie,
-                                          expires = time.asctime(time.gmtime(time.time() - 3600)) + ' UTC',
-                                          path = '/')
+                    #
+                    # If the cookie was already set but the user is not logged
+                    # in and the session expired, it must be removed.
+                    #
+                    request.expireSessionCookie()
             #
             # Format answer
             #
