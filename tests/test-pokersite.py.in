@@ -529,6 +529,23 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(serial + 1, session.avatar.getSerial())
             session.expire()
 
+      def test03_03_getSession(self):
+            """
+            If the serial in memcache is associated to a session name
+            that does not match the in core session name, abort.
+            """
+            session = self.site.makeSession()
+            serial = 111
+            self.site.memcache.set(session.uid, serial)
+            self.site.memcache.set(serial, 'fakesession')
+            exception = False
+            try: 
+                  self.site.getSession(session.uid)
+            except AssertionError:
+                  exception = True
+            self.assertEquals(True, exception)
+            session.expire()
+
       def test04_01_updateSession(self):
             """
             the session expires after upateSession, unless there are tables
@@ -632,6 +649,41 @@ class PokerSiteTestCase(PokerSiteBase):
       def test05_startFactory(self):
             self.site.startFactory()
             self.assertEqual(False, hasattr(self.site, "logFile"))
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerResourceTestCase.Transport()
+                  self.site = site
+
+      def test06_getSession_assert(self):
+            """
+            An inconsistency in the memcache invalidates the session and an assert
+            kills the request. When this happens, the assert must be caught and
+            returned as a server error to the client.
+            """
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            session = 'session'
+            serial = '5'
+            r.received_cookies['TWISTED_SESSION'] = session
+            r.site.memcache.set(session, serial)
+            r.site.memcache.set(serial, 'yerk')
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('AssertionError', str(result.getTraceback()))
+                  return True
+            d.addErrback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
 
 def Run():
     loader = runner.TestLoader()
