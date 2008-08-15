@@ -451,6 +451,8 @@ class SessionTestCase(PokerSiteBase):
             self.site.memcache.set(serial, uid)
             session = self.site.getSession(uid)
             self.assertEqual(True, session.checkExpired())
+            self.site.memcache.set(serial, 'wrongsession')
+            self.assertEqual(None, session.checkExpired())
             self.site.memcache.delete(uid)
             self.site.memcache.delete(serial)
             self.assertEqual(False, session.checkExpired())

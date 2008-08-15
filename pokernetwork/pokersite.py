@@ -168,6 +168,9 @@ class Session(server.Session):
             self.site.getSession(self.uid)
             server.Session.checkExpired(self)
             return True
+        except AssertionError:
+            self.expire()
+            return None
         except KeyError:
             return False
         
