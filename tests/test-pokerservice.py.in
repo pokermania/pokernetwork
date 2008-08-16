@@ -757,7 +757,6 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                  'table_serial': table_serial,
                                  'name' : 'user1',
                                  'money': table_money}}, packet.user2properties)
-        print Packet.JSON.encode(packet.__dict__)
 
     def test_no_money_no_table(self):
         self.service.startService()
@@ -776,7 +775,6 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                  'table_serial': None,
                                  'name' : 'user1',
                                  'money': -1}}, packet.user2properties)
-        print Packet.JSON.encode(packet.__dict__)
 
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
