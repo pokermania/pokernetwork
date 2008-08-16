@@ -1,6 +1,41 @@
-2008-08-13  Loic Dachary <loic@dachary.org>
+2008-08-16  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* tests/test-pokerservice.py.in: get rid of extra verbosity
+	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py: The role
+	  is set when creating the avatar, always. Not just when relogin
+
+2008-08-15  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: move
+	  cookie expiration functions to the Request subclass
+	  when an error is caught, the session cookie is expired if found
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: the
+	  checkExpire timer silently expires the session if an assert
+	  fails. typically happens when a session becomes invalid because
+	  another for the same user was started
+	* tests/test-pokersite.py.in: test the memcache inconsistency
+	  assert and catch of the corresponding error in the context
+	* pokernetwork/pokersite.py: A use addCallback and then addErrback
+	  instead of callbacks otherwise
+	  a traceback in the callback will *not* be reported by the errback
+	  B 'set' is used instead of 'add' because the latest session wins,
+	  even if the previous is still active. When a session is
+	  properly closed, the serial memecache entry is discarded.
+	  But if the session is not closed, there is a spurious
+	  serial entry referencing the old session. When a request
+	  arrives with the old session uid (check getSession #xref1) it
+	  will
+	  trigger an error and do nothing.
+
+2008-08-14  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py,
+	  tests/test-pokersite.py.in: always set explain mode when using
+	  /POKER_REST
+
+2008-08-13  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerservice.py, pokernetwork/pokersite.py,
 	  tests/test-pokersite.py.in, tests/testmessages.py: upload and
