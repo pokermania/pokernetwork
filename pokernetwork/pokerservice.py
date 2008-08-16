@@ -152,6 +152,12 @@ class PokerService(service.Service):
             settings = settings_object
         self.settings = settings
         self.verbose = self.settings.headerGetInt("/server/@verbose")
+        self.max_joined = self.settings.headerGetInt("/server/@max_joined")
+        if self.max_joined <= 0:
+            # dachary picked this maximum as a default on 2008-04-16
+            # <dachary> because the last stress test show 4000 is the upper limit
+            # <dachary> http://pokersource.info/stress-test/2007-08/
+            self.max_joined = 4000
         self.delays = settings.headerGetProperties("/server/delays")[0]
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:

@@ -75,7 +75,7 @@ from pokerengine import pokertournament
 pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -168,6 +168,29 @@ class MonitorTestCase(PokerServiceTestCaseBase):
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
+    # ----------------------------------------------------------------
+    def test00_configValues(self):
+        defaultMaxJoinedXml = settings_xml
+        defaultMaxJoinedXml.replace('max_joined="1000"', "")
+        for settings_data in (settings_xml, defaultMaxJoinedXml):
+            settings = pokernetworkconfig.Config([])
+            settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
+            settings.header = settings.doc.xpathNewContext()
+            self.service = pokerservice.PokerService(settings)
+
+            for (key, value) in ( ('position', '60'), ('autodeal', '18'),
+                                  ('showdown', '30'), ('round', '12'), ('finish', '18')):
+                self.assertEquals(self.service.delays[key], value)
+            for (key, value) in ( ('serial', '1'), ('amount', '10000000')):
+                self.assertEquals(self.service.refill[key], value)
+
+            self.assertEquals(self.service.verbose, 6)
+
+            if settings_data == defaultMaxJoinedXml:
+                self.assertEquals(self.service.max_joined, 1000)
+            else:
+                self.assertEquals(self.service.max_joined, 4000)
+        
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1255,7 +1278,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test17"
+#    loader.methodPrefix = "test00"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
