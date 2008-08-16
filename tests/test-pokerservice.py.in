@@ -187,10 +187,23 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.verbose, 6)
 
             if settings_data == defaultMaxJoinedXml:
-                self.assertEquals(self.service.max_joined, 1000)
+                self.assertEquals(self.service.joined_max, 1000)
             else:
-                self.assertEquals(self.service.max_joined, 4000)
-        
+                self.assertEquals(self.service.joined_max, 4000)
+
+            startedOnlyVars = [ ('joined_count', 0),
+                                ('tables', 2), ('table_serial', 100),
+                                ('shutting_down', False), ('avatars', []),
+                                ('serial2client', {}), ('simultaneous', 4),
+                                ('monitors', []) ]
+            for (instanceVar, val) in startedOnlyVars:
+                self.assertEquals(self.service.__dict__.has_key(instanceVar), False)
+            self.service.startService()
+            for (instanceVar, val) in startedOnlyVars:
+                self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
+                if instanceVar == "tables":
+                    self.assertEquals(len(self.service.__dict__[instanceVar]), val)
+            self.service.stopService()
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -604,6 +617,18 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.cleanupTourneys()
         tourney = self.service.tourneys[4000]
         self.assertEqual([1, 2, 3], tourney.players)
+    # ----------------------------------------------------------------
+    def test19_testJoinCounter(self):
+        expectedMax = 1000
+        val = 0
+        self.service.startService()
+        while val < expectedMax + 100:
+            self.assertEquals(self.service.joinedCountIncrease(5), val+5)
+            self.assertEquals(self.service.joinedCountDecrease(4), val+1)
+            val += 1
+            self.assertEquals(self.service.joinedCountReachedMax(),
+                              val >= expectedMax)
+        self.service.stopService()
 
 class RefillTestCase(unittest.TestCase):
 
@@ -1278,7 +1303,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test00"
+#    loader.methodPrefix = "test19"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

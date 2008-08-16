@@ -1,5 +1,16 @@
 2008-08-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test00_configValues): Added tests for
+	instance variables that only exist at startService.
+	(PokerServiceTestCase.test19_testJoinCounter): Wrote test.
+
+	* pokernetwork/pokerservice.py (PokerService.__init__): renamed
+	instance variable from max_joined to joined_max
+	(PokerService.joinedCountDecrease): Wrote method.
+	(PokerService.joinedCountIncrease): Wrote method.
+	(PokerService.joinedCountReachedMax): Wrote method.
+
 	* pokernetwork/pokerservice.py (PokerService.__init__): Added
 	max_joined instance variable from the /server/@max_joined setting.
 

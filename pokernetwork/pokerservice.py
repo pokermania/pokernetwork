@@ -152,12 +152,12 @@ class PokerService(service.Service):
             settings = settings_object
         self.settings = settings
         self.verbose = self.settings.headerGetInt("/server/@verbose")
-        self.max_joined = self.settings.headerGetInt("/server/@max_joined")
-        if self.max_joined <= 0:
+        self.joined_max = self.settings.headerGetInt("/server/@max_joined")
+        if self.joined_max <= 0:
             # dachary picked this maximum as a default on 2008-04-16
             # <dachary> because the last stress test show 4000 is the upper limit
             # <dachary> http://pokersource.info/stress-test/2007-08/
-            self.max_joined = 4000
+            self.joined_max = 4000
         self.delays = settings.headerGetProperties("/server/delays")[0]
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
@@ -183,6 +183,7 @@ class PokerService(service.Service):
         self.serial2client = {}
         self.avatars = []
         self.tables = []
+        self.joined_count = 0
         self.table_serial = 100
         self.shutting_down = False
         self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
@@ -233,6 +234,23 @@ class PokerService(service.Service):
         for key in self.timer.keys():
             if what in key:
                 self.cancelTimer(key)
+
+    def joinedCountReachedMax(self):
+        """Returns True iff. the number of joins to tables has exceeded
+        the maximum allowed by the server configuration"""
+        return self.joined_count >= self.joined_max
+
+    def joinedCountIncrease(self, num = 1):
+        """Increases the number of currently joins to tables by num, which
+        defaults to 1."""
+        self.joined_count += num
+        return self.joined_count
+
+    def joinedCountDecrease(self, num = 1):
+        """Decreases the number of currently joins to tables by num, which
+        defaults to 1."""
+        self.joined_count -= num
+        return self.joined_count
 
     def shutdown(self):
         self.shutting_down = True
