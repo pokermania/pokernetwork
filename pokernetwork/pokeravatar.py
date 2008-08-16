@@ -97,7 +97,6 @@ class PokerAvatar:
         self.user.outfit = player_info.outfit
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
-        self.roles.add(PacketPokerRoles.PLAY)
         assert self.service.serial2client.has_key(serial) == False
         self.service.serial2client[serial] = self
         self.loginTableUpdates(serial)
