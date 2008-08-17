@@ -128,6 +128,21 @@ class PokerAuthTestCase(unittest.TestCase):
         auth.auth('joe_schmoe', 'foo')
         self.assertEquals(get_messages(), ['user joe_schmoe does not exist, create it',
                                        'creating user joe_schmoe', 'create user with serial 4'])
+    # -----------------------------------------------------------------------------------------------------    
+    def test04_authWithoutAutoCreate(self):
+        """Test Poker auth : Try basic auth with autocreate off"""
+        db = self.db
+        settings = pokernetworkconfig.Config([])
+        noautocreate_xml = settings_xml.replace('<server ', '<server auto_create_account="no" ')
+        settings.doc = libxml2.parseMemory(noautocreate_xml, len(noautocreate_xml))
+        settings.header = settings.doc.xpathNewContext()
+        auth = pokerauth.get_auth_instance(db, settings)
+
+        clear_all_messages()
+
+        auth.auth('john_smith', 'blah')
+        self.assertEquals(get_messages(), ['user john_smith does not exist'])
+
 
 # -----------------------------------------------------------------------------------------------------    
 settings_mysql_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>

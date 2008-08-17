@@ -1,6 +1,9 @@
 2008-08-17  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerauth.py.in
+	(PokerAuthTestCase.test04_authWithoutAutoCreate): Wrote method.
+
+	* tests/test-pokerauth.py.in
 	(PokerAuthTestCase.test03_authWithAutoCreate): Wrote test.
 
 2008-08-16  Bradley M. Kuhn  <bkuhn@ebb.org>
