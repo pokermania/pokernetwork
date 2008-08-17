@@ -5,6 +5,8 @@
 	(PokerTableTestCaseTransient.test28_tooManyPlayers): Wrote test.
 	(PokerTableTestCase.test29_leavingDoesNotDecreaseCount): Wrote test.
 	(PokerTableTestCase.test30_justEnoughPlayers): Wrote test.
+	(PokerTableTestCase.test16_autoMuckTimeoutPolicy): Added test on
+	bet mismatch output.
 
 	* pokernetwork/pokertable.py (PokerTable.joinPlayer): Added test
 	for exceeding of maximum join.  Added joinedCountIncrease() call.

@@ -750,7 +750,9 @@ class PokerTableTestCase(unittest.TestCase):
             self.assertEqual(packet.game_id, self.table1_value)
         expectPlayerAutoFold.addCallback(checkReturnPacket)
 
+        clear_all_messages()
         self.table.update()
+        self.assertEquals(get_messages(), ['*ERROR* table %d bet mismatch 0 in memory versus 500 in database' % self.table.game.id, 'AutodealCheck scheduled in 0.000000 seconds'])
 
         return expectPlayerAutoFold
     # -------------------------------------------------------------------
@@ -877,6 +879,7 @@ class PokerTableTestCase(unittest.TestCase):
             self.table.readyToPlay(ii)
         self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(randint(777, 8975))
+        clear_all_messages()
         self.table.update()
         
         return player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
