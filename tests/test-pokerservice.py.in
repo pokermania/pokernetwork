@@ -353,18 +353,30 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
 
     class ClientMockup:
-        def __init__(self):
+        def __init__(self, serial):
+            self.serial = serial
             self.packet_end_tournament = None
             self.packets = []
-            self.isJoined = False
+            self.tables = {}
+            self.joinedTables = []
+
         def sendPacketVerbose(self, packet):
             # packet_end_tournament was an expected field by some tests
             # when I got here so I left it as is but added my own packet
             # list for my own tests.
             self.packet_end_tournament = packet
             self.packets.append(packet)
-        def join(self):
-            self.isJoined = True
+
+        def join(self, table):
+            self.joinedTables.append(table)
+            self.tables[table.game.id] = table
+
+        def getSerial(self):
+            return self.serial
+
+        def sendPacket(self, packet):
+            self.packets.append(packet)
+
 
     class TableMockup:
         def __init__(self):
@@ -397,7 +409,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             return table
 
         tourney = self.TourneyMockup()
-        self.service.client = self.ClientMockup()
+        self.service.client = self.ClientMockup(self.user1_serial)
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
         self.assertEquals(self.service.client.packet_end_tournament == None, True)
@@ -413,7 +425,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         tourney = self.TourneyMockup()
         tourney.players = [2, self.user1_serial, 10]
-        client = self.ClientMockup()
+        client = self.ClientMockup(self.user1_serial)
         self.service.serial2client[self.user1_serial] = client
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
@@ -434,7 +446,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         tourney = self.TourneyMockup()
         tourney.rank = 2
-        client = self.ClientMockup()
+        client = self.ClientMockup(self.user1_serial)
         self.service.serial2client[self.user1_serial] = client
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
@@ -534,14 +546,38 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
 
+        client1 = self.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
+
         (heads_up,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
+        clear_all_messages()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
                                                                 game_id = heads_up.serial))
+        self.assertEquals(get_messages(), ['tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = %d AND        currency_serial = 1 AND        amount >= 300000' % self.user1_serial,
+'tourneyRegister: INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, 1)' % self.user1_serial])
+        clear_all_messages()
+        self.assertEquals(len(client1.packets), 1)
+        self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(client1.packets[0].serial, self.user1_serial)
+        self.assertEquals(client1.packets[0].game_id, heads_up.serial)
+        client1.packets = []
+        self.assertEquals(self.service.joined_count, 0)
+
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user2_serial,
                                                                 game_id = heads_up.serial))
                                      
         d = defer.Deferred()
         def checkTourneys(status):
+            # joined_count should now be one, as the tourneyGameFilled() should
+            # have been called, and we only had one client connected.
+            self.assertEquals(self.service.joined_count, 1)
+            self.assertEquals(len(client1.packets), 14)
+            for p in client1.packets:
+                self.assertEquals(p.game_id, self.service.tables[2].game.id)
+            self.assertEquals(len(client1.tables), 1)
+            self.assertEquals(client1.tables.has_key(self.service.tables[2].game.id), True)
+            self.assertEquals(client1.tables[self.service.tables[2].game.id], self.service.tables[2])
+
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
             game = heads_up.games[0]
             in_position = game.getSerialInPosition()
@@ -797,10 +833,12 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
     class ClientMockup:
         def __init__(self, serial):
             self.serial = serial
-            self.isJoined = False
+            self.tableJoined = None
             self.packets = []
-        def join(self):
-            self.isJoined = True
+
+        def join(self, table):
+            self.tableJoined = table
+
         def sendPacketVerbose(self, packet):
             self.packets.append(packet)
 
@@ -825,7 +863,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEquals(client1.packets[0].serial, self.user1_serial)
         self.assertEquals(client1.packets[0].game_id, tourney_serial)
         client1.packets = []
-        self.assertEquals(client1.isJoined, False)
+        self.assertEquals(client1.tableJoined, None)
         self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
         self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
         self.service.tourneys[tourney_serial].can_register = False
@@ -1337,7 +1375,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
+#    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

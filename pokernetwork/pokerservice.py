@@ -641,6 +641,10 @@ class PokerService(service.Service):
             self.seatPlayer(serial, game.id, game.buyIn())
 
             if client:
+                # First, force a count increase, since this player will
+                # now be at the table, but table.joinPlayer() was never
+                # called (which is where the increase usually happens).
+                self.joinedCountIncrease()
                 client.join(table)
             sql = "update user2tourney set table_serial = %d where user_serial = %d and tourney_serial = %d" % ( game.id, serial, tourney.serial )
             if self.verbose > 4:
