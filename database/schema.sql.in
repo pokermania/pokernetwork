@@ -155,7 +155,7 @@ DROP TABLE IF EXISTS pokertables;
 
 CREATE TABLE pokertables (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name VARCHAR(32),
+  name VARCHAR(255) NOT NULL UNIQUE,
   currency_serial INT NOT NULL,
   tourney_serial INT UNSIGNED DEFAULT 0 NOT NULL,
 
