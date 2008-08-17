@@ -37,19 +37,14 @@
 	  constraint
 	* database/1.6.0-1.7.0.sql: Larger field for table name and unique
 	  constraint
-	* conf/poker.server.xml.in: max default is 1000
-	* pokernetwork/pokerservice.py: table serial is extracted from the
-	  MySQL database instead of the in-core counter
-	* tests/test-pokerservice.py.in: Table numbers changed from 100 to
-	  1, 101 to 2 etc
-	* tests/test-pokerclient.py.in: Table numbers changed from 100 to
-	  1, 101 to 2 etc
-	* tests/test-pokeravatar.py.in: Table numbers changed from 100 to
-	  1, 101 to 2 etc
-	* database/schema.sql.in: Larger field for table name and unique
-	  constraint
-	* database/1.6.0-1.7.0.sql: Larger field for table name and unique
-	  constraint
+
+2008-08-17  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerauth.py.in
+	(PokerAuthTestCase.test04_authWithoutAutoCreate): Wrote method.
+
+	* tests/test-pokerauth.py.in
+	(PokerAuthTestCase.test03_authWithAutoCreate): Wrote test.
 
 2008-08-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -86,6 +81,8 @@
 	(MonitorTestCase.test00_configValues): Wrote test.
 
 2008-08-16  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
 
 	* tests/test-pokerservice.py.in: get rid of extra verbosity
 	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py: The role
