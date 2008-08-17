@@ -111,10 +111,6 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </settings>
 """
 
-TABLE1 = 100
-TABLE2 = 101
-TABLE3 = 102
-
 class PokerAvatarTestCase(unittest.TestCase):
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
@@ -446,7 +442,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
@@ -484,8 +480,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -511,8 +507,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.forceExplain, 0)
         d.addCallback(self.quit)
         return d
@@ -524,8 +520,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
         def explainAgain((client, packet), id):
             avatar = self.service.avatars[id]
             table = self.service.getTable(101)
@@ -587,9 +583,9 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -862,26 +858,26 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
         # Note: this avatar does not autopost, and doBlindPost handles it.
-        d2.addCallback(self.sitTable, 1, 101)
-        d2.addCallback(self.readyToPlay, 1, 101)
-        d2.addCallback(self.dealTable, 101)
-        d2.addCallback(self.beginHandSetup, 101)
-        d2.addCallback(self.doBlindPost, 1, 101)
-        d2.addCallback(self.startHandAndReceiveCards, 101)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+        d2.addCallback(self.dealTable, 2)
+        d2.addCallback(self.beginHandSetup, 2)
+        d2.addCallback(self.doBlindPost, 1, 2)
+        d2.addCallback(self.startHandAndReceiveCards, 2)
         return defer.DeferredList((d, d2))
     # -------------------------------------------------------------------------
     def sendExplainTooLate(self, (client, packet)):
@@ -907,11 +903,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.sendExplainTooLate)
         return d
     # -------------------------------------------------------------------------
@@ -920,7 +916,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPing())
         avatar.handlePacketLogic(PacketPokerTourneyRegister(serial = client.getSerial(),
-                                                            game_id = 102))
+                                                            game_id = 3))
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_AUTH_REQUEST:
@@ -1179,12 +1175,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.requestsWithWrongSerial, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.requestsWithWrongSerial, 0, 2)
         return d
     # -------------------------------------------------------------------------
     def badBuyIn(self, (client, packet), id, gameId, myAmount):
@@ -1210,14 +1206,14 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 100, 'Table1', '100-200-no-limit')
-        d.addCallback(self.seatTable, 0, 100)
+        d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200-no-limit')
+        d.addCallback(self.seatTable, 0, 1)
 
         # Note: this only "works" (i.e., fails properly) if you have a
         # currency serial that is valid, because of this line in
         # pokerservice.py's buyInPlayer
         #     if not currency_serial: return amount
-        d.addCallback(self.badBuyIn, 0, 100, 1)
+        d.addCallback(self.badBuyIn, 0, 1, 1)
         return d
     # ------------------------------------------------------------------------
     def noAutoBlindAnte(self, (client, packet), id, gameId ):
@@ -1240,11 +1236,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.noAutoBlindAnte, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.noAutoBlindAnte, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def sitOut(self, (client, packet), id, gameId ):
@@ -1270,13 +1266,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.sitOut, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d.addCallback(self.sitOut, 0, 2)
         return d
     # -------------------------------------------------------------------------
     def sitOutClosedGame(self, (client, packet), id, gameId ):
@@ -1305,13 +1301,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.sitOutClosedGame, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d.addCallback(self.sitOutClosedGame, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def doBlindPostAndHaveOtherGuyWaitForCardsAndQuit(self, (client, packet), id, gameId):
@@ -1336,24 +1332,24 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d2.addCallback(self.sitTable, 1, 101)
-        d2.addCallback(self.readyToPlay, 1, 101)
-        d2.addCallback(self.dealTable, 101)
-        d2.addCallback(self.beginHandSetup, 101)
-        d2.addCallback(self.doBlindPostAndHaveOtherGuyWaitForCardsAndQuit, 1, 101)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+        d2.addCallback(self.dealTable, 2)
+        d2.addCallback(self.beginHandSetup, 2)
+        d2.addCallback(self.doBlindPostAndHaveOtherGuyWaitForCardsAndQuit, 1, 2)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
     def getPersonalInfo(self, (client, packet), id ):
@@ -1455,19 +1451,19 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(p.waiting, 0)
                     self.assertEquals(p.skin,  "default")
                     self.assertEquals(p.variant, "holdem")
-                    if (p.id == 100):
+                    if (p.id == 1):
                         self.assertEquals(p.name, "Table1")
                         self.assertEquals(p.betting_structure, "100-200-no-limit")
                         self.assertEquals(p.seats, 10)
                         self.assertEquals(p.player_timeout, 60)
                         self.assertEquals(p.currency_serial, 1)
-                    elif (p.id == 101):
+                    elif (p.id == 2):
                         self.assertEquals(p.name, "Table2")
                         self.assertEquals(p.betting_structure, "2-4-limit")
                         self.assertEquals(p.player_timeout, 60)
                         self.assertEquals(p.muck_timeout, 5)
                         self.assertEquals(p.currency_serial, 0)
-                    elif (p.id == 102):
+                    elif (p.id == 3):
                         self.assertEquals(p.name, "Table3")
                         self.assertEquals(p.betting_structure, "test18pokerclient")
                         self.assertEquals(p.player_timeout, 600)
@@ -1805,22 +1801,22 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d2.addCallback(self.sitTable, 1, 101)
-        d2.addCallback(self.readyToPlay, 1, 101)
-        d2.addCallback(self.listPlayers, 1, 101)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+        d2.addCallback(self.listPlayers, 1, 2)
         return defer.DeferredList((d, d2))
         return d
     # ------------------------------------------------------------------------
@@ -1908,7 +1904,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             if packet.type == PACKET_POKER_ERROR:
                 found = True
                 self.assertEquals(packet.serial, client.getSerial())
-                self.assertEquals(packet.game_id, 101)
+                self.assertEquals(packet.game_id, 2)
                 self.assertEquals(packet.message, "Hand %d was not found in history of player %d"
                                   % (packet.game_id, client.getSerial()))
                 self.assertEquals(packet.other_type, PACKET_POKER_HAND_HISTORY)
@@ -1922,13 +1918,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.handHistory, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d.addCallback(self.handHistory, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def loseConnection(self, (client, packet), gameId):
@@ -1966,23 +1962,23 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 101)
-        d2.addCallback(self.sitTable, 1, 101)
-        d2.addCallback(self.readyToPlay, 1, 101)
-        d2.addCallback(self.dealTable, 101)
-        d2.addCallback(self.loseConnection, 101)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 2)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+        d2.addCallback(self.dealTable, 2)
+        d2.addCallback(self.loseConnection, 2)
         return defer.DeferredList((d, d2))
 
     # ------------------------------------------------------------------------
@@ -2019,23 +2015,23 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 103, 'Table4', 'ante-1-2-limit')
-        d.addCallback(self.seatTable, 0, 103)
-        d.addCallback(self.buyInTable, 0, 103, 1000)
-        d.addCallback(self.sitTable, 0, 103)
-        d.addCallback(self.readyToPlay, 0, 103)
+        d.addCallback(self.joinTable, 0, 4, 'Table4', 'ante-1-2-limit')
+        d.addCallback(self.seatTable, 0, 4)
+        d.addCallback(self.buyInTable, 0, 4, 1000)
+        d.addCallback(self.sitTable, 0, 4)
+        d.addCallback(self.readyToPlay, 0, 4)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 103, 'Table4', 'ante-1-2-limit')
-        d2.addCallback(self.seatTable, 1, 103)
-        d2.addCallback(self.buyInTable, 1, 103, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 103)
-        d2.addCallback(self.sitTable, 1, 103)
-        d2.addCallback(self.readyToPlay, 1, 103)
-        d2.addCallback(self.dealTable, 103)
-        d2.addCallback(self.loseConnectionAnte, 103)
+        d2.addCallback(self.joinTable, 1, 4, 'Table4', 'ante-1-2-limit')
+        d2.addCallback(self.seatTable, 1, 4)
+        d2.addCallback(self.buyInTable, 1, 4, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 4)
+        d2.addCallback(self.sitTable, 1, 4)
+        d2.addCallback(self.readyToPlay, 1, 4)
+        d2.addCallback(self.dealTable, 4)
+        d2.addCallback(self.loseConnectionAnte, 4)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
     def processingHand(self, (client, packet), id, gameId, isBugous=False ):
@@ -2054,7 +2050,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(isBugous, True)
                 self.assertEquals(packet.other_type, PACKET_POKER_PROCESSING_HAND)
                 self.assertEquals(packet.serial, client.getSerial())
-                self.assertEquals(packet.game_id, 103)
+                self.assertEquals(packet.game_id, 4)
                 self.assertEquals(packet.message, "no message")
                 self.assertEquals(packet.code, 0)
             if packet.type == PACKET_ACK:
@@ -2068,12 +2064,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 103, 'Table4', 'ante-1-2-limit')
-        d.addCallback(self.seatTable, 0, 103)
-        d.addCallback(self.buyInTable, 0, 103, 1000)
-        d.addCallback(self.sitTable, 0, 103)
-        d.addCallback(self.processingHand, 0, 103)
-        d.addCallback(self.processingHand, 0, 103, True)
+        d.addCallback(self.joinTable, 0, 4, 'Table4', 'ante-1-2-limit')
+        d.addCallback(self.seatTable, 0, 4)
+        d.addCallback(self.buyInTable, 0, 4, 1000)
+        d.addCallback(self.sitTable, 0, 4)
+        d.addCallback(self.processingHand, 0, 4)
+        d.addCallback(self.processingHand, 0, 4, True)
         return d
     # ------------------------------------------------------------------------
     def variousStartPackets(self, (client, packet), id, gameId ):
@@ -2192,24 +2188,24 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 101)
-        d2.addCallback(self.sitTable, 1, 101)
-        d2.addCallback(self.readyToPlay, 1, 101)
-#        d2.addCallback(self.dealTable, 101)
-        d2.addCallback(self.variousStartPackets, 1, 101)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 2)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+#        d2.addCallback(self.dealTable, 2)
+        d2.addCallback(self.variousStartPackets, 1, 2)
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
     def badSeatTable(self, (client, packet), id, gameId):
@@ -2240,8 +2236,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.badSeatTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.badSeatTable, 0, 2)
         return d
 
     def seatTableNoRole(self, (client, packet), id, gameId):
@@ -2266,8 +2262,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTableNoRole, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTableNoRole, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def badBuyRebuyRequest(self, (client, packet), id, gameId):
@@ -2303,10 +2299,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.badBuyRebuyRequest, 0, 101)
-        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.badBuyRebuyRequest, 0, 2)
+        d.addCallback(self.autoBlindAnte, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def chatItUp(self, (client, packet), id, gameId, myMessage):
@@ -2329,13 +2325,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.chatItUp, 0, 101, "I drink your milkshake!")
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d.addCallback(self.chatItUp, 0, 2, "I drink your milkshake!")
         return d
     # ------------------------------------------------------------------------
     def leaveTable(self, (client, packet), id, gameId):
@@ -2358,13 +2354,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.leaveTable, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d.addCallback(self.leaveTable, 0, 2)
         return d
     # ------------------------------------------------------------------------
     # This test handles various requests that expect some sort of string
@@ -2445,13 +2441,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
-        d.addCallback(self.variousPacketsWithStringOrSinglePacketReturn, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d.addCallback(self.variousPacketsWithStringOrSinglePacketReturn, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def autoMuck(self, (client, packet), id, gameId, autoMuckValue ):
@@ -2469,11 +2465,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.autoMuck, 0, 101, pokergame.AUTO_MUCK_LOSE)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.autoMuck, 0, 2, pokergame.AUTO_MUCK_LOSE)
         return d
     # ------------------------------------------------------------------------
     def tableQuit(self, (client, packet), id, gameId ):
@@ -2497,11 +2493,11 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
-        d.addCallback(self.tableQuit, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.tableQuit, 0, 2)
         return d
     # ------------------------------------------------------------------------
     def joinTableForceFail(self, (client, packet), id, gameId, name, struct):
@@ -2529,7 +2525,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTableForceFail, 0, 101, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTableForceFail, 0, 2, 'Table2', '2-4-limit')
         return d
     # ------------------------------------------------------------------------
     def handReplayWithoutTable(self, (client, packet), id ):
@@ -2565,10 +2561,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.fullQuit, 0)
         return d
     # ------------------------------------------------------------------------
@@ -2599,10 +2595,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.doLogoutSucceed, 0)
         return d
     # ------------------------------------------------------------------------
@@ -2680,10 +2676,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnteForceTourney, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnteForceTourney, 0, 2)
         return d
     # -------------------------------------------------------------------------
     def joinTableWhenHandRunning(self, (client, packet), id, gameId, name, struct):
@@ -2737,27 +2733,27 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.sitTable, 0, 101)
-        d.addCallback(self.readyToPlay, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 101)
-        d2.addCallback(self.sitTable, 1, 101)
-        d2.addCallback(self.readyToPlay, 1, 101)
-        d2.addCallback(self.dealTable, 101)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 2)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+        d2.addCallback(self.dealTable, 2)
         d3 = self.client_factory[2].established_deferred
         d3.addCallback(self.setupCallbackChain)
         d3.addCallback(self.sendRolePlay)
         d3.addCallback(self.login, 2)
-        d3.addCallback(self.joinTableWhenHandRunning, 2, 101, 'Table2', '2-4-limit')
+        d3.addCallback(self.joinTableWhenHandRunning, 2, 2, 'Table2', '2-4-limit')
         return defer.DeferredList((d, d2))
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -2814,24 +2810,24 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 101, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 101)
-        d.addCallback(self.buyInTable, 0, 101, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 101)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
 
         d2 = self.client_factory[1].established_deferred
         d2.addCallback(self.setupCallbackChain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 101, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 101)
-        d2.addCallback(self.buyInTable, 1, 101, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 101)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.autoBlindAnte, 1, 2)
 
         def logout(x):
             avatar = self.service.avatars[0]
             avatar.logout()
-            avatar.join(avatar.tables[101])
+            avatar.join(avatar.tables[2])
         d2.addCallback(logout)
 
         return defer.DeferredList((d, d2))
