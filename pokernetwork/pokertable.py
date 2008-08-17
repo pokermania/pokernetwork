@@ -1102,16 +1102,31 @@ class PokerTable:
             client.join(self);
             return True
 
+        # Next, test to see if we have reached the server-wide maximum for
+        # seated/observing players.
+        if not self.game.isSeated(client.getSerial()) and self.factory.joinedCountReachedMax():
+            self.error("joinPlayer: %d cannot join game %d because the server is full" %
+                       (serial, game.id))
+            client.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                                                      serial = serial,
+                                                      other_type = PACKET_POKER_TABLE_JOIN,
+                                                      code = PacketPokerTableJoin.FULL,
+                                                      message = "This server has too many seated players and observers."))
+            return False
+
+        # Next, test to see if joining this table will cause the client to
+        # exceed the maximum permitted by the server.
         if len(client.tables) >= self.factory.simultaneous:
             if self.factory.verbose:
                 self.error("joinPlayer: %d seated at %d tables (max %d)" % ( serial, len(client.tables), self.factory.simultaneous ))
             return False
-        
+
         #
         # Player is now an observer, unless he is seated
         # at the table.
         #
         client.join(self)
+        self.factory.joinedCountIncrease()
         if not self.game.isSeated(client.getSerial()):
             self.observers.append(client)
         else:
@@ -1214,6 +1229,7 @@ class PokerTable:
         return client.sitPlayer(self, serial)
         
     def destroyPlayer(self, client, serial):
+        self.factory.joinedCountDecrease()
         if client in self.observers:
             self.observers.remove(client)
         else:

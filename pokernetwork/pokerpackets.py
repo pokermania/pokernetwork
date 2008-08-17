@@ -1116,6 +1116,11 @@ If the player cannot join the table for any reason, the packet
 PacketPokerTable with serial 0 will be sent. It won't be filled with
 any meaningfull information.
 
+If the reason that the player was unable to join is specifically that the
+server has reached the maximum number of joined players, in addition to
+the empty PacketPokerTable sent above, the client will also receive a
+PacketPokerError with the code of PacketPokerTableJoin.FULL.
+
 If the player has already joined the table, the packets will be sent
 as if the player just joined. In this case the packet will have no
 side effect.
@@ -1126,6 +1131,7 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
+    FULL = 1
     type = PACKET_POKER_TABLE_JOIN
 
 PacketFactory[PACKET_POKER_TABLE_JOIN] = PacketPokerTableJoin

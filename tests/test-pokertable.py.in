@@ -42,7 +42,7 @@ twisted.internet.base.DelayedCall.debug = True
 #
 from tests import testclock
 
-from tests.testmessages import silence_all_messages, redirect_messages
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages, redirect_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -146,6 +146,26 @@ class MockService:
         self.table1 = None
         self.table2 = None
         self.testObject = None
+        self.joined_count = 0
+        self.joined_max = 1000
+
+    # Just copied these joinedCount functions from the real service.
+    def joinedCountReachedMax(self):
+        """Returns True iff. the number of joins to tables has exceeded
+        the maximum allowed by the server configuration"""
+        return self.joined_count >= self.joined_max
+
+    def joinedCountIncrease(self, num = 1):
+        """Increases the number of currently joins to tables by num, which
+        defaults to 1."""
+        self.joined_count += num
+        return self.joined_count
+
+    def joinedCountDecrease(self, num = 1):
+        """Decreases the number of currently joins to tables by num, which
+        defaults to 1."""
+        self.joined_count -= num
+        return self.joined_count
 
     def getTable(self, gameId):
         if gameId == self.table1.game.id:
@@ -858,6 +878,7 @@ class PokerTableTestCase(unittest.TestCase):
         self.service.testObject = self
         self.table.game.turn_history = self.service.loadHand(randint(777, 8975))
         self.table.update()
+        
         return player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
     # -------------------------------------------------------------------
     def test22_possibleObserverLoggedIn(self):
@@ -936,6 +957,136 @@ class PokerTableTestCase(unittest.TestCase):
         self.table.game.getPlayer(1).money = 50
         self.table.game.rebuy = lambda a, b: False
         self.assertEqual(False, self.table.rebuyPlayerRequest(p1, 0))
+    # -------------------------------------------------------------------
+    def checkFailedJoinDueToMax(self, player):
+        self.assertEqual(False, self.table.isJoined(player))
+        self.assertEquals(get_messages(), ['*ERROR* joinPlayer: %d cannot join game %d because the server is full' % (player.serial, self.table.game.id), 'sendPacket: type = ERROR(53) serial = %d game_id = %d message = This server has too many seated players and observers., code = 1, other_type = POKER_TABLE_JOIN' % (player.serial, self.table.game.id)])
+        self.assertEquals(len(player.packets), 1)
+        p = player.packets[0]
+        self.assertEquals(p.type, PACKET_POKER_ERROR)
+        self.assertEquals(p.serial, player.serial)
+        self.assertEquals(p.game_id, self.table.game.id)
+        self.assertEquals(p.message, "This server has too many seated players and observers.")
+        self.assertEquals(p.code, PacketPokerTableJoin.FULL)
+        self.assertEquals(p.other_type, PACKET_POKER_TABLE_JOIN)
+        player.packets = []
+    # -------------------------------------------------------------------
+    def doJoinAndFailDueToMax(self, player):
+        """Helper method used to check to for a join failed due to the
+        maximum value."""
+        clear_all_messages()
+        self.table.joinPlayer(player, player.serial)
+        self.checkFailedJoinDueToMax(player)
+    # -------------------------------------------------------------------
+    def test28_tooManyPlayers(self):
+        """Generate so many players, trying to join tables, such that we
+        get too many.  To force this to happen, we decrease the number of
+        permitted players to be very low."""
+        clear_all_messages()
+        self.table.factory.joined_max = 3
+        self.assertEquals(self.table.factory.joined_count, 0)
+        players = {}
+        for ii in [ 1, 2, 3, 4 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = False)
+            self.assertEquals(self.table.factory.joined_count, 0)
+
+        for ii in [ 1, 2, 3 ]:
+            self.table.joinPlayer(players[ii], players[ii].serial)
+            self.assertEqual(True, self.table.isJoined(players[ii]))
+            self.assertEqual(players[ii].packets, [])
+            self.assertEquals(self.table.factory.joined_count, ii)
+        self.assertEquals(get_messages(), [])
+        self.doJoinAndFailDueToMax(players[4])
+        self.assertEquals(self.table.factory.joined_count, 3)
+    # -------------------------------------------------------------------
+    def test29_leavingDoesNotDecreaseCount(self):
+        """Players who leave do not actually cease being observers, and
+        therefore do not decrease max join count"""
+        clear_all_messages()
+        self.table.factory.joined_max = 3
+        self.assertEquals(self.table.factory.joined_count, 0)
+        players = {}
+        for ii in [ 1, 2, 3, 4 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = False)
+            self.assertEquals(self.table.factory.joined_count, 0)
+
+        for ii in [ 1, 2, 3 ]:
+            self.table.joinPlayer(players[ii], players[ii].serial)
+            self.assertEqual(True, self.table.isJoined(players[ii]))
+            self.assertEqual(players[ii].packets, [])
+            self.assertEquals(self.table.factory.joined_count, ii)
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+
+        self.doJoinAndFailDueToMax(players[4])
+        self.assertEquals(self.table.factory.joined_count, 3)
+    # -------------------------------------------------------------------
+    def test30_justEnoughPlayers(self):
+        """Tests situation where players truely are gone from the table
+        and are no longer observers either, thus allowing more players to
+        be conntected."""
+        clear_all_messages()
+        self.table.factory.joined_max = 3
+        self.assertEquals(self.table.factory.joined_count, 0)
+        players = {}
+        for ii in [ 1, 2, 3 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = True)
+            self.assertEqual(True, self.table.isJoined(players[ii]))
+            self.assertEqual(players[ii].packets, [])
+            self.assertEquals(self.table.factory.joined_count, ii)
+        self.assertEquals(get_messages(), [ x % ('[Server][PokerGame %d] ' % self.table.game.id)
+                                            for x in [ '%splayer 1 get seat 1',
+                                                       '%splayer 2 get seat 6',
+                                                       '%splayer 3 get seat 3']])
+        clear_all_messages()
+
+        for ii in [ 4, 5, 6 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = False)
+            self.assertEquals(self.table.factory.joined_count, 3)
+        self.assertEquals(get_messages(), [])
+
+        # leavePlayer turns an actual player into an observer, so they are still
+        #  connected.  player 4 should still be unable to join.
+        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+        self.assertEquals(self.table.factory.joined_count, 3)
+        self.doJoinAndFailDueToMax(players[4])
+        self.assertEquals(self.table.factory.joined_count, 3)
+        clear_all_messages()
+
+        self.assertEquals(True, self.table.quitPlayer(players[2], 2))
+        search_output('[Server][PokerGame %d] removing player %d from game'
+                      % (self.table.game.id, players[2].serial))
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 2)
+
+        self.table.joinPlayer(players[4], players[4].serial)
+        self.assertEqual(True, self.table.isJoined(players[4]))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.assertEquals(None, self.table.kickPlayer(players[3].serial))
+        search_output('[Server][PokerGame %d] removing player %d from game'
+                      % (self.table.game.id, players[3].serial))
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.doJoinAndFailDueToMax(players[5])
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.assertEquals(True, self.table.disconnectPlayer(players[3], 3))
+        search_output('[Server][PokerGame %d] removing player %d from game'
+                      % (self.table.game.id, players[3].serial))
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 2)
+
+        self.table.joinPlayer(players[5], players[5].serial)
+        self.assertEqual(True, self.table.isJoined(players[5]))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.doJoinAndFailDueToMax(players[6])
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 3)
     # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
@@ -1236,11 +1387,123 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
     def test27_buyinFailures(self):
         """This test doesn't matter in this subclass"""
         return True
+    # -------------------------------------------------------------------
+    def test28_tooManyPlayers(self):
+        """Generate so many players, trying to join tables, such that we
+        get too many.  To force this to happen, we decrease the number of
+        permitted players to be very low.  Note that for transient tables,
+        immediate joins are forced, and therefore we get the error
+        immediately upon getting ready to play"""
+        clear_all_messages()
+        self.table.factory.joined_max = 3
+        self.assertEquals(self.table.factory.joined_count, 0)
+        players = {}
+        for ii in [ 1, 2, 3 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = False)
+            self.assertEqual(True, self.table.isJoined(players[ii]))
+            self.assertEquals(self.table.factory.joined_count, ii)
+        self.assertEquals(self.table.factory.joined_count, 3)
+        clear_all_messages()
+        players[4] = self.createPlayer(4, getReadyToPlay = False)
+        self.checkFailedJoinDueToMax(players[4])
+        self.assertEquals(self.table.factory.joined_count, 3)
+    # -------------------------------------------------------------------
+    def test29_leavingDoesNotDecreaseCount(self):
+        """Players who leave do not actually cease being observers, and
+        therefore do not decrease max join count.  Note this works
+        differently with transient tables because the seating is
+        automatic."""
+        clear_all_messages()
+        self.table.factory.joined_max = 3
+        self.assertEquals(self.table.factory.joined_count, 0)
+        players = {}
+        for ii in [ 1, 2, 3 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = False)
+            self.assertEqual(True, self.table.isJoined(players[ii]))
+            self.assertEquals(self.table.factory.joined_count, ii)
+
+        self.assertEquals(self.table.factory.joined_count, 3)
+        
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+
+        clear_all_messages()  # Ignore any messages from leave
+        players[4] = self.createPlayer(4, getReadyToPlay = False)
+        self.checkFailedJoinDueToMax(players[4])
+
+        self.assertEquals(self.table.factory.joined_count, 3)
+    # -------------------------------------------------------------------
+    def test30_justEnoughPlayers(self):
+        """Tests situation where players truely are gone from the table
+        and are no longer observers either, thus allowing more players to
+        be conntected.  With transient tables, this automatically tries to
+        seat them."""
+        clear_all_messages()
+        self.table.factory.joined_max = 3
+        players = {}
+        for ii in [ 1, 2, 3 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = True)
+            self.assertEqual(True, self.table.isJoined(players[ii]))
+            self.assertEqual(players[ii].packets, [])
+            self.assertEquals(self.table.factory.joined_count, ii)
+        self.assertEquals(get_messages(), [ x % ('[Server][PokerGame %d] ' % self.table.game.id)
+                                            for x in [ '%splayer 1 get seat 1',
+                                                       '%splayer 2 get seat 6',
+                                                       '%splayer 3 get seat 3']])
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        for ii in [ 4, 5, 6 ]:
+            players[ii] = self.createPlayer(ii, getReadyToPlay = False)
+            self.checkFailedJoinDueToMax(players[ii])
+            clear_all_messages()
+            self.assertEquals(self.table.factory.joined_count, 3)
+
+        # leavePlayer turns an actual player into an observer, so they are still
+        #  connected.  player 4 should still be unable to join.
+        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+        self.doJoinAndFailDueToMax(players[4])
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.assertEquals(True, self.table.quitPlayer(players[2], 2))
+        search_output('[Server][PokerGame %d] removing player %d from game'
+                      % (self.table.game.id, players[2].serial))
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 2)
+        self.table.joinPlayer(players[4], players[4].serial)
+        self.assertEqual(True, self.table.isJoined(players[4]))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.assertEquals(None, self.table.kickPlayer(players[3].serial))
+        search_output('[Server][PokerGame %d] removing player %d from game'
+                      % (self.table.game.id, players[3].serial))
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.doJoinAndFailDueToMax(players[5])
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.assertEquals(True, self.table.disconnectPlayer(players[3], 3))
+        search_output('[Server][PokerGame %d] removing player %d from game'
+                      % (self.table.game.id, players[3].serial))
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 2)
+
+        self.table.joinPlayer(players[5], players[5].serial)
+        self.assertEqual(True, self.table.isJoined(players[5]))
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.table.factory.joined_count, 3)
+
+        self.doJoinAndFailDueToMax(players[6])
+        clear_all_messages()
+        self.assertEquals(self.table.factory.joined_count, 3)
 # -------------------------------------------------------------------
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
+#    loader.methodPrefix = "test30"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

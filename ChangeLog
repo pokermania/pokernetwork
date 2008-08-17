@@ -1,5 +1,18 @@
 2008-08-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokertable.py.in
+	(PokerTableTestCase.test28_tooManyPlayers): Wrote test.
+	(PokerTableTestCaseTransient.test28_tooManyPlayers): Wrote test.
+	(PokerTableTestCase.test29_leavingDoesNotDecreaseCount): Wrote test.
+	(PokerTableTestCase.test30_justEnoughPlayers): Wrote test.
+
+	* pokernetwork/pokertable.py (PokerTable.joinPlayer): Added test
+	for exceeding of maximum join.  Added joinedCountIncrease() call.
+	(PokerTable.destroyPlayer): Added  joinedCountDecrease() call.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTableJoin): Added FULL
+	code and documentation on it.
+
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test00_configValues): Added tests for
 	instance variables that only exist at startService.
