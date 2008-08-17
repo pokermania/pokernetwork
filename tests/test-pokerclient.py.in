@@ -122,9 +122,9 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </settings>
 """
 
-TABLE1 = 100
-TABLE2 = 101
-TABLE3 = 102
+TABLE1 = 1
+TABLE2 = 2
+TABLE3 = 3
 
 class PokerClientTestCase(unittest.TestCase):
 
@@ -262,8 +262,6 @@ class PokerClientTestCase(unittest.TestCase):
         client.sendPacket(PacketPokerGetUserInfo(serial = client.getSerial()))
         d = client.packetDeferred(True, PACKET_POKER_USER_INFO)
         def validate((client, packet),):
-            if verbose > 0:
-                print "check_cashIn " + str(packet)
             self.assertEquals(PACKET_POKER_USER_INFO, packet.type)
             self.assertEquals(2, len(packet.money))
             self.assertEquals([1, 2], packet.money.keys())
