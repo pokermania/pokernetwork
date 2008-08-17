@@ -185,7 +185,7 @@ class PokerService(service.Service):
         self.avatars = []
         self.tables = []
         self.joined_count = 0
-        self.table_serial = 100
+        self.tourney_table_serial = 1
         self.shutting_down = False
         self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
         self._ping_delay = self.settings.headerGetInt("/server/@ping")
@@ -652,7 +652,7 @@ class PokerService(service.Service):
         table.update()
 
     def tourneyCreateTable(self, tourney):
-        table = self.createTable(0, { 'name': tourney.name + str(self.table_serial),
+        table = self.createTable(0, { 'name': tourney.name + str(self.tourney_table_serial),
                                       'variant': tourney.variant,
                                       'betting_structure': tourney.betting_structure,
                                       'seats': tourney.seats_per_game,
@@ -661,8 +661,8 @@ class PokerService(service.Service):
                                       'transient': True,
                                       'tourney': tourney,
                                       })
+        self.tourney_table_serial += 1
         table.timeout_policy = "fold"
-        self.table_serial += 1
         return table.game
 
     def tourneyDestroyGame(self, tourney, game):
@@ -1674,32 +1674,32 @@ class PokerService(service.Service):
         return False
 
     def createTable(self, owner, description):
-        #
-        # Do not create two tables by the same name
-        #
-        if filter(lambda table: table.game.name == description["name"], self.tables):
-            self.error("will not create two tables by the same name %s" % description["name"])
-            return False
 
-        id = self.table_serial
-        table = PokerTable(self, id, description)
-        table.owner = owner
         tourney_serial = 0
         if description.has_key('tourney'):
             tourney_serial = description['tourney'].serial
 
         cursor = self.db.cursor()
-        sql = ( "INSERT pokertables ( serial, name, currency_serial, tourney_serial ) VALUES "
-                " ( " + str(id) + ", \"" + description["name"] + "\", " + str(description["currency_serial"]) + ", " + str(tourney_serial) + " ) " )
+        sql = ( "INSERT pokertables ( name, currency_serial, tourney_serial ) VALUES "
+                " ( \"" + description["name"] + "\", " + str(description["currency_serial"]) + ", " + str(tourney_serial) + " ) " )
         if self.verbose > 1:
             self.message("createTable: %s" % sql)
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+        #
+        # Accomodate for MySQLdb versions < 1.1
+        #
+        if hasattr(cursor, "lastrowid"):
+            id = cursor.lastrowid
+        else:
+            id = cursor.insert_id()
         cursor.close()
 
+        table = PokerTable(self, id, description)
+        table.owner = owner
+
         self.tables.append(table)
-        self.table_serial += 1
 
         if self.verbose:
             self.message("table created : %s" % table.game.name)
