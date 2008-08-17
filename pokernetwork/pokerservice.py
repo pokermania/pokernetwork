@@ -1687,9 +1687,6 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
-        #
-        # Accomodate for MySQLdb versions < 1.1
-        #
         if hasattr(cursor, "lastrowid"):
             id = cursor.lastrowid
         else:
