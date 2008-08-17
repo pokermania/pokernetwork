@@ -23,3 +23,7 @@ CREATE TABLE monitor (
 -- A table that belongs to a tourney is marked as such
 --
 ALTER TABLE `pokertables` ADD COLUMN tourney_serial INT UNSIGNED DEFAULT 0 NOT NULL;
+--
+-- Larger field for table name and unique constraint
+--
+ALTER TABLE `pokertables` CHANGE COLUMN `name` `name` VARCHAR(255) NOT NULL UNIQUE;
