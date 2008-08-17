@@ -1,4 +1,5 @@
 # -*- mode: python -*-
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2006 Mekensleep
 #
@@ -34,13 +35,19 @@ import unittest
 import os.path
 import types
 
+from tests.testmessages import silence_all_messages, clear_all_messages, get_messages
+silence_all_messages()
+
 from pokernetwork import pokerauth
 from pokernetwork.user import User
 from pokernetwork import pokernetworkconfig
+from pokernetwork.pokerdatabase import PokerDatabase
 import libxml2
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../database/schema.sql" command="@MYSQL@" />
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -49,8 +56,6 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
@@ -66,8 +71,6 @@ settings_alternate_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
   <auth script="@srcdir@/test-pokerauth/pokerauth.py" />
@@ -77,9 +80,19 @@ settings_alternate_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 class PokerAuthTestCase(unittest.TestCase):
         
     # -----------------------------------------------------------------------------------------------------
+    def destroyDb(self):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        
+    # --------------------------------------------------------
     def setUp(self):
-        pass
-    
+        self.destroyDb()
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+        self.db = PokerDatabase(self.settings)
     # -----------------------------------------------------------------------------------------------------    
     def tearDown(self):
         pokerauth._get_auth_instance = None
@@ -102,7 +115,21 @@ class PokerAuthTestCase(unittest.TestCase):
         settings.header = settings.doc.xpathNewContext()
         auth = pokerauth.get_auth_instance(db, settings)
         self.failUnless(hasattr(auth, 'gotcha'))
+    # -----------------------------------------------------------------------------------------------------    
+    def test03_authWithAutoCreate(self):
+        """Test Poker auth : Try basic auth with autocreate on"""
+        db = self.db
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        auth = pokerauth.get_auth_instance(db, settings)
 
+        clear_all_messages()
+        auth.auth('joe_schmoe', 'foo')
+        self.assertEquals(get_messages(), ['user joe_schmoe does not exist, create it',
+                                       'creating user joe_schmoe', 'create user with serial 4'])
+
+# -----------------------------------------------------------------------------------------------------    
 settings_mysql_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
