@@ -1,3 +1,25 @@
+2008-08-17  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(TourneyManagerTestCase.test01_no_rank): Renamed test, added a few
+	tests for output.  Added client mock-up.
+	(PokerServiceTestCase.ClientMockup.sendPacketVerbose): Added
+	packet list.
+	(PokerServiceTestCase.ClientMockup.join): Wrote method.
+	(PokerServiceTestCase.ClientMockup.sendPacket): Wrote method.
+	(PokerServiceTestCase.ClientMockup.getSerial): Wrote method.
+	(PokerServiceTestCase.test15_runTourney): Added various additional
+	testing data related to having a client instantiated.
+	(PokerServiceTestCase.test09_endOfTournamentsNotInPlayers): Added
+	arg to ClientMockup() instantiate.
+	(PokerServiceTestCase.test10_endOfTournamentsNoPrize): Added
+	arg to ClientMockup() instantiate.
+	(PokerServiceTestCase.test11_endOfTournamentsPrize): Added
+	arg to ClientMockup() instantiate.
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyGameFilled):
+	Added call to joinedCountIncrease() when client is connected.
+
 2008-08-17  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
@@ -15,47 +37,19 @@
 	  constraint
 	* database/1.6.0-1.7.0.sql: Larger field for table name and unique
 	  constraint
-
-2008-08-17  Bradley M. Kuhn <bkuhn@ebb.org>
-
-	* tests/test-pokerauth.py.in: r996@hughes: bkuhn | 2008-08-17
-	  10:25:28 -0400
-	  # added note to remember to check db
-	* ChangeLog, tests/test-pokerauth.py.in: r995@hughes: bkuhn |
-	  2008-08-17 10:24:53 -0400
-	  * Added test to cover user not found with autocreate off
-	* ChangeLog, tests/test-pokerauth.py.in: r993@hughes: bkuhn |
-	  2008-08-17 09:12:50 -0400
-	  * Added simple test for internal auth fallback with auto-auth
-	* pokernetwork/pokertable.py: r990@hughes: bkuhn | 2008-08-16
-	  22:18:24 -0400
-	  # Forgot to add copyright notice in last commit
-	* ChangeLog, tests/test-pokertable.py.in: r989@hughes: bkuhn |
-	  2008-08-16 21:46:26 -0400
-	  # Added small test for error output after update on test16
-	* ChangeLog, pokernetwork/pokerpackets.py,
-	  pokernetwork/pokertable.py, tests/test-pokertable.py.in:
-	  r986@hughes: bkuhn | 2008-08-16 21:27:02 -0400
-	  * Various changes to implement the maximum observers/players
-	  server-wide. The primary counter is kept in pokerservice.py. We
-	  have
-	  added calls to increment and decrement the counter and test its
-	  value.
-	  The calls are made now from joinPlayer() and destroyPlayer().
-	  
-	  A note is worth making about transient tables. I am unclear if
-	  transient table joins should ever be refused. IIRC, transient
-	  tables
-	  are used only for tournaments. If someone has a seat at a
-	  tournament,
-	  should we not always let them sit down? And, what about observers
-	  of
-	  tournaments? It is also not clear to me that transient tables can
-	  be
-	  observed?
-	* pokernetwork/pokerservice.py: r985@hughes: bkuhn | 2008-08-16
-	  19:07:38 -0400
-	  # Added copyright notice.
+	* conf/poker.server.xml.in: max default is 1000
+	* pokernetwork/pokerservice.py: table serial is extracted from the
+	  MySQL database instead of the in-core counter
+	* tests/test-pokerservice.py.in: Table numbers changed from 100 to
+	  1, 101 to 2 etc
+	* tests/test-pokerclient.py.in: Table numbers changed from 100 to
+	  1, 101 to 2 etc
+	* tests/test-pokeravatar.py.in: Table numbers changed from 100 to
+	  1, 101 to 2 etc
+	* database/schema.sql.in: Larger field for table name and unique
+	  constraint
+	* database/1.6.0-1.7.0.sql: Larger field for table name and unique
+	  constraint
 
 2008-08-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 

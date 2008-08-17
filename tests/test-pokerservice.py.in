@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep
 #
 # Mekensleep
@@ -46,9 +47,9 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages, search_output
+from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+silence_all_messages()
 
 from pokerengine import pokertournament, pokergame
 from pokernetwork import pokerservice, pokernetworkconfig, user
@@ -354,9 +355,17 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     class ClientMockup:
         def __init__(self):
             self.packet_end_tournament = None
+            self.packets = []
+            self.isJoined = False
         def sendPacketVerbose(self, packet):
+            # packet_end_tournament was an expected field by some tests
+            # when I got here so I left it as is but added my own packet
+            # list for my own tests.
             self.packet_end_tournament = packet
-            
+            self.packets.append(packet)
+        def join(self):
+            self.isJoined = True
+
     class TableMockup:
         def __init__(self):
             self.serial = None
@@ -785,20 +794,44 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
 
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
 
-    def test_no_rank(self):
+    class ClientMockup:
+        def __init__(self, serial):
+            self.serial = serial
+            self.isJoined = False
+            self.packets = []
+        def join(self):
+            self.isJoined = True
+        def sendPacketVerbose(self, packet):
+            self.packets.append(packet)
+
+    def test01_no_rank(self):
         self.service.startService()
+        self.service.verbose = 6
         self.createUsers()
         user_serial = self.user1_serial
         table_serial = 606
         table_money = 140
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        # One client (user1) has a Client logged in
+        client1 = TourneyManagerTestCase.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
         self.service.spawnTourney(schedule)
+        clear_all_messages()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
                                                                 game_id = tourney_serial))
+        self.assertEquals(get_messages(), ['tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND        currency_serial = 1 AND        amount >= 300000', 'tourneyRegister: INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (4, 1)'])
+        self.assertEquals(len(client1.packets), 1)
+        self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(client1.packets[0].serial, self.user1_serial)
+        self.assertEquals(client1.packets[0].game_id, tourney_serial)
+        client1.packets = []
+        self.assertEquals(client1.isJoined, False)
         self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
         self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
         self.service.tourneys[tourney_serial].can_register = False
+        clear_all_messages()
         packet = self.service.tourneyManager(tourney_serial)
+        self.assertEquals(get_messages(), [])
         self.assertEqual(tourney_serial, packet.tourney['serial'])        
         self.assertNotEqual(None, packet.tourney['rank2prize'])
         self.assertEqual(1, packet.tourney['registered'])
@@ -1304,7 +1337,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
