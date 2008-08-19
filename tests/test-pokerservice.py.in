@@ -186,7 +186,6 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test02_currency(self):
         self.service.startService()
-        db = self.service.db
         tables = self.service.listTables('50', 0)
         self.assertEqual(0, len(tables))
         currency_serial = '1'
@@ -196,7 +195,6 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test03_currency_and_variant(self):
         self.service.startService()
-        db = self.service.db
         tables = self.service.listTables('1\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('1\tholdem', 0)
@@ -205,7 +203,6 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test04_variant(self):
         self.service.startService()
-        db = self.service.db
         tables = self.service.listTables('\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('\tholdem', 0)
@@ -214,7 +211,6 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test05_all(self):
         self.service.startService()
-        db = self.service.db
         tables = self.service.listTables('', 0)
         self.assertEqual(2, len(tables))
         tables = self.service.listTables('all', 0)
@@ -223,12 +219,46 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test06_name(self):
         self.service.startService()
-        db = self.service.db
         tables = self.service.listTables('fakename', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('Table1', 0)
         self.assertEqual(1, len(tables))
 
+class TourneySelectTestCase(PokerServiceTestCaseBase):
+
+    def test00_all(self):
+        self.service.startService()
+        tourneys = self.service.tourneySelect('')
+        self.assertEqual(2, len(tourneys))
+        self.assertEqual('sitngo2', tourneys[0]['name'])
+        self.assertEqual('regular1', tourneys[1]['name'])
+    
+    def test01_sit_n_go(self):
+        self.service.startService()
+        tourneys = self.service.tourneySelect('\tsit_n_go')
+        self.assertEqual(1, len(tourneys))
+        self.assertEqual('sitngo2', tourneys[0]['name'])
+    
+    def test02_regular(self):
+        self.service.startService()
+        tourneys = self.service.tourneySelect('\tregular')
+        self.assertEqual(1, len(tourneys))
+        self.assertEqual('regular1', tourneys[0]['name'])
+    
+    def test02_currency_serial(self):
+        self.service.startService()
+        tourneys = self.service.tourneySelect('1\tregular')
+        self.assertEqual(1, len(tourneys))
+        self.assertEqual('regular1', tourneys[0]['name'])
+        tourneys = self.service.tourneySelect('44\tregular')
+        self.assertEqual(0, len(tourneys))
+    
+    def test03_name(self):
+        self.service.startService()
+        tourneys = self.service.tourneySelect('regular1')
+        self.assertEqual(1, len(tourneys))
+        self.assertEqual('regular1', tourneys[0]['name'])
+    
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
@@ -1454,6 +1484,7 @@ def Run():
     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
     suite.addTest(loader.loadClass(MonitorTestCase))
     suite.addTest(loader.loadClass(ListTablesTestCase))
+    suite.addTest(loader.loadClass(TourneySelectTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
