@@ -262,41 +262,41 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def test00_configValues(self):
-        defaultMaxJoinedXml = settings_xml
-        defaultMaxJoinedXml.replace('max_joined="1000"', "")
-        for settings_data in (settings_xml, defaultMaxJoinedXml):
-            settings = pokernetworkconfig.Config([])
-            settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
-            settings.header = settings.doc.xpathNewContext()
-            self.service = pokerservice.PokerService(settings)
+    def configValues(self, settings_data, joined_max):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
 
-            for (key, value) in ( ('position', '60'), ('autodeal', '18'),
-                                  ('showdown', '30'), ('round', '12'), ('finish', '18')):
-                self.assertEquals(self.service.delays[key], value)
-            for (key, value) in ( ('serial', '1'), ('amount', '10000000')):
-                self.assertEquals(self.service.refill[key], value)
+        for (key, value) in ( ('position', '60'), ('autodeal', '18'),
+                              ('showdown', '30'), ('round', '12'), ('finish', '18')):
+            self.assertEquals(self.service.delays[key], value)
+        for (key, value) in ( ('serial', '1'), ('amount', '10000000')):
+            self.assertEquals(self.service.refill[key], value)
 
-            self.assertEquals(self.service.verbose, 6)
+        self.assertEquals(self.service.verbose, 6)
 
-            if settings_data == defaultMaxJoinedXml:
-                self.assertEquals(self.service.joined_max, 1000)
-            else:
-                self.assertEquals(self.service.joined_max, 4000)
+        self.assertEquals(joined_max, self.service.joined_max)
 
-            startedOnlyVars = [ ('joined_count', 0),
-                                ('tables', 2), ('tourney_table_serial', 1),
-                                ('shutting_down', False), ('avatars', []),
-                                ('serial2client', {}), ('simultaneous', 4),
-                                ('monitors', []) ]
-            for (instanceVar, val) in startedOnlyVars:
-                self.assertEquals(self.service.__dict__.has_key(instanceVar), False)
-            self.service.startService()
-            for (instanceVar, val) in startedOnlyVars:
-                self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
-                if instanceVar == "tables":
-                    self.assertEquals(len(self.service.__dict__[instanceVar]), val)
-            self.service.stopService()
+        startedOnlyVars = [ ('joined_count', 0),
+                            ('tables', 2), ('tourney_table_serial', 1),
+                            ('shutting_down', False), ('avatars', []),
+                            ('serial2client', {}), ('simultaneous', 4),
+                            ('monitors', []) ]
+        for (instanceVar, val) in startedOnlyVars:
+            self.assertEquals(self.service.__dict__.has_key(instanceVar), False)
+        self.service.startService()
+        for (instanceVar, val) in startedOnlyVars:
+            self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
+            if instanceVar == "tables":
+                self.assertEquals(len(self.service.__dict__[instanceVar]), val)
+        
+    def test00_1_configValues(self):
+        self.configValues(settings_xml, 1000)
+
+    def test00_2_configValues(self):
+        self.configValues(settings_xml.replace('max_joined="1000"', ""), 4000)
+
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1302,6 +1302,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         def notok(tourney):
             self.failIf(1)
 
+        db = self.service.db
         self.service.db = Database()
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = notok
@@ -1325,6 +1326,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
         self.service.tourneyDeal = notok
         self.service.tourneyBreakResume = notok
+        self.service.db = db
         
     def test_tourneyDeal(self):
         class Game:
@@ -1467,7 +1469,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test00_"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
