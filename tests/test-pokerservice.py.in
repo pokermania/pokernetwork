@@ -75,6 +75,10 @@ class ConstantPlayerShuffler:
 from pokerengine import pokertournament
 pokertournament.shuffler = ConstantPlayerShuffler()
 
+TABLE1 = 1
+TABLE2 = 2
+TABLE3 = 3
+
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
@@ -166,6 +170,64 @@ class MonitorTestCase(PokerServiceTestCaseBase):
         cursor = self.db.cursor()
         cursor.execute("SELECT COUNT(*) FROM monitor WHERE event = 1")
         self.assertEquals(1, cursor.rowcount)
+
+class ListTablesTestCase(PokerServiceTestCaseBase):
+
+    # ----------------------------------------------------------------
+    def test01_my(self):
+        self.service.startService()
+        db = self.service.db
+        serial = 44
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE1))
+        tables = self.service.listTables('my', serial)
+        self.assertEqual(1, len(tables))
+        self.assertEqual(tables[0]['serial'], TABLE1)
+
+    # ----------------------------------------------------------------
+    def test02_currency(self):
+        self.service.startService()
+        db = self.service.db
+        tables = self.service.listTables('50', 0)
+        self.assertEqual(0, len(tables))
+        currency_serial = '1'
+        tables = self.service.listTables(currency_serial, 0)
+        self.assertEqual(2, len(tables))
+
+    # ----------------------------------------------------------------
+    def test03_currency_and_variant(self):
+        self.service.startService()
+        db = self.service.db
+        tables = self.service.listTables('1\tfakevariant', 0)
+        self.assertEqual(0, len(tables))
+        tables = self.service.listTables('1\tholdem', 0)
+        self.assertEqual(2, len(tables))
+
+    # ----------------------------------------------------------------
+    def test04_variant(self):
+        self.service.startService()
+        db = self.service.db
+        tables = self.service.listTables('\tfakevariant', 0)
+        self.assertEqual(0, len(tables))
+        tables = self.service.listTables('\tholdem', 0)
+        self.assertEqual(2, len(tables))
+
+    # ----------------------------------------------------------------
+    def test05_all(self):
+        self.service.startService()
+        db = self.service.db
+        tables = self.service.listTables('', 0)
+        self.assertEqual(2, len(tables))
+        tables = self.service.listTables('all', 0)
+        self.assertEqual(2, len(tables))
+
+    # ----------------------------------------------------------------
+    def test06_name(self):
+        self.service.startService()
+        db = self.service.db
+        tables = self.service.listTables('fakename', 0)
+        self.assertEqual(0, len(tables))
+        tables = self.service.listTables('Table1', 0)
+        self.assertEqual(1, len(tables))
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
@@ -713,7 +775,7 @@ class RefillTestCase(unittest.TestCase):
         table_money = 1000
         table_serial = 200
         self.service.db.db.query("INSERT INTO user2table VALUES (" + str(serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
-        self.service.db.db.query("INSERT INTO pokertables VALUES (" + str(table_serial) + ", 'foo', 1, 0)")
+        self.service.db.db.query("INSERT INTO pokertables (serial, name, currency_serial, tourney_serial) VALUES (" + str(table_serial) + ", 'foo', 1, 0)")
         money_left = 100
         self.service.db.db.query("UPDATE user2money SET amount = " + str(money_left) + " WHERE user_serial = " + str(serial))
         self.assertEquals(refill - table_money, self.service.autorefill(serial))
@@ -1391,6 +1453,7 @@ def Run():
     suite.addTest(loader.loadClass(SetAccountTestCase))
     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
     suite.addTest(loader.loadClass(MonitorTestCase))
+    suite.addTest(loader.loadClass(ListTablesTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
