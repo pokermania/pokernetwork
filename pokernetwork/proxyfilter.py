@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-from twisted.internet import defer, protocol, reactor
+from twisted.internet import defer, protocol, reactor, error
 from twisted.web import http
 
 from pokernetwork.pokerpackets import PacketPokerTableJoin
@@ -93,10 +93,13 @@ class ProxyClientFactory(protocol.ClientFactory):
 
 
     def clientConnectionFailed(self, connector, reason):
-        self.deferred.errback(reason)
+        if not self.deferred.called:
+            self.deferred.errback(reason)
 
     def clientConnectionLost(self, connector, reason):
-        self.deferred.callback(reason)
+        if not reason.check(error.ConnectionDone):
+            if not self.deferred.called:
+                self.deferred.callback(reason)
         
 #
 # return a value if all actions were complete
@@ -106,6 +109,7 @@ def rest_filter(site, request, packet):
     resthost = service.packet2resthost(packet)
     if resthost:
         ( host, port, path ) = resthost
+        request.content.seek(0, 0)
         clientFactory = ProxyClientFactory(
             request.method, path, request.clientproto,
             request.getAllHeaders(), request.content.read(), request)
