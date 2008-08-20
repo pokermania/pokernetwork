@@ -22,6 +22,8 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
+import simplejson
+
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer, reactor
 from twisted.application import internet
@@ -65,6 +67,8 @@ settings_xml_proxy = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
+  <rest_filter>../@srcdir@/../pokernetwork/proxyfilter.py</rest_filter>
+
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
@@ -86,7 +90,7 @@ class ProxyTestCase(unittest.TestCase):
             settings.loadFromString(settings_xml_server)
             self.server_service = pokerservice.PokerService(settings)
             self.server_service.startService()
-            self.server_port = reactor.listenTCP(19481, pokerservice.IPokerFactory(self.server_service), interface="127.0.0.1")
+            self.server_port = reactor.listenTCP(19481, pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service)), interface="127.0.0.1")
             
       def setUpProxy(self):
             settings = pokernetworkconfig.Config([])
@@ -121,12 +125,39 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(self.destroyDb)
             return d
       
-      def test01_ping(self):
+      def test01_ping_server(self):
             d = client.getPage("http://127.0.0.1:19480/POKER_REST",
                                postdata = '{"type": "PacketPing"}')
             def checkPing(result):
                   self.assertEqual('[]', str(result))
             d.addCallback(checkPing)
+            return d
+
+      def test02_ping_proxy(self):
+            d = client.getPage("http://127.0.0.1:19481/POKER_REST",
+                               postdata = '{"type": "PacketPing"}')
+            def checkPing(result):
+                  self.assertEqual('[]', str(result))
+            d.addCallback(checkPing)
+            return d
+
+      def test03_listTables(self):
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST",
+                               postdata = '{"type":"PacketPokerTableSelect"}')
+            def checkTables(result):
+                  packets = simplejson.JSONDecoder().decode(result)
+                  self.assertEqual('PacketPokerTableList', packets[0]['type'])
+                  tables = packets[0]['packets']
+                  self.assertEqual('Table1', tables[0]['name'])
+            d.addCallback(checkTables)
+            return d
+
+      def test04_tableJoin(self):
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
+            def checkTable(result):
+                  self.assertEqual('[]', str(result))
+            d.addCallback(checkTable)
             return d
 
 def Run():
