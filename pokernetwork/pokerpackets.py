@@ -1222,7 +1222,7 @@ waiting: the number of players in the waiting list.
 player_timeout: the number of seconds after which a player in position is forced to
          play (by folding).
 muck_timeout: the number of seconds after which a player is forced to muck.
-currency: int currency id
+currency_serial: int currency id
 skin: name of the level model to use
 """
 
