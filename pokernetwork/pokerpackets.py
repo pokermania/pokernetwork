@@ -4003,6 +4003,18 @@ class PacketPokerTourneyManager(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerTourneyManager, Packet, "POKER_TOURNEY_MANAGER", 149) # 149 # 0x95 # %SEQ%
 
+########################################
+
+class PacketPokerPoll(Packet):
+    """ """
+    
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        ('tourney_serial', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerPoll, Packet, "POKER_POLL", 150) # 150 # 0x96 # %SEQ%
+
 _TYPES = range(50,169)
 
 # Interpreted by emacs
