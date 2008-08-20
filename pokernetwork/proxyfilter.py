@@ -106,7 +106,7 @@ def rest_filter(site, request, packet):
     resthost = service.packet2resthost(packet)
     if resthost:
         ( host, port, path ) = resthost
-        clientFactory = proxy.ProxyClientFactory(
+        clientFactory = ProxyClientFactory(
             request.method, path, request.clientproto,
             request.getAllHeaders(), request.content.read(), request)
         local_reactor.connectTCP(host, int(port), clientFactory)
