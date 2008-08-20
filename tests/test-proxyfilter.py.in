@@ -155,7 +155,7 @@ class ProxyTestCase(unittest.TestCase):
             return d
 
       def test04_tableJoin(self):
-            d = client.getPage("http://127.0.0.1:19481/POKER_REST",
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST",
                                postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
             def checkTable(result):
                   packets = simplejson.JSONDecoder().decode(result)
@@ -166,7 +166,7 @@ class ProxyTestCase(unittest.TestCase):
 
 def Run():
       loader = runner.TestLoader()
-      loader.methodPrefix = "test04"
+#      loader.methodPrefix = "test04"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       return runner.TrialRunner(
