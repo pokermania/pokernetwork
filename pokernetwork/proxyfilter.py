@@ -48,30 +48,17 @@ class ProxyClient(http.HTTPClient):
 
 
     def handleStatus(self, version, code, message):
-        if message:
-            # Add a whitespace to message, this allows empty messages
-            # transparently
-            message = " %s" % (message,)
-        self.father.transport.write("%s %s%s\r\n" % (version, code, message))
+        self.father.setResponseCode(code, message)
 
 
     def handleHeader(self, key, value):
-        self.father.transport.write("%s: %s\r\n" % (key, value))
+        self.father.setHeader(key, value)
 
-
-    def handleEndHeaders(self):
-        self.father.transport.write("\r\n")
-
-
-    def handleResponsePart(self, buffer):
-        self.father.transport.write(buffer)
-
-
-    def handleResponseEnd(self):
-        self.transport.loseConnection()
-        self.father.channel.transport.loseConnection()
-
-
+    def handleResponse(self, buffer):
+        self.father.write(buffer)
+        
+    def connectionLost(self, reason):
+        self.father.finish()
 
 class ProxyClientFactory(protocol.ClientFactory):
 
@@ -97,9 +84,11 @@ class ProxyClientFactory(protocol.ClientFactory):
             self.deferred.errback(reason)
 
     def clientConnectionLost(self, connector, reason):
-        if not reason.check(error.ConnectionDone):
-            if not self.deferred.called:
-                self.deferred.callback(reason)
+        if not self.deferred.called:
+            if reason.check(error.ConnectionDone):
+                self.deferred.callback(True)
+            else:
+                self.deferred.errback(reason)
         
 #
 # return a value if all actions were complete
