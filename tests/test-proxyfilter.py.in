@@ -128,6 +128,9 @@ class ProxyTestCase(unittest.TestCase):
             return d
       
       def test01_ping_server(self):
+            """
+            Ping to the proxy.
+            """
             d = client.getPage("http://127.0.0.1:19480/POKER_REST",
                                postdata = '{"type": "PacketPing"}')
             def checkPing(result):
@@ -136,6 +139,9 @@ class ProxyTestCase(unittest.TestCase):
             return d
 
       def test02_ping_proxy(self):
+            """
+            Ping to the server.
+            """
             d = client.getPage("http://127.0.0.1:19481/POKER_REST",
                                postdata = '{"type": "PacketPing"}')
             def checkPing(result):
@@ -144,6 +150,10 @@ class ProxyTestCase(unittest.TestCase):
             return d
 
       def test03_listTables(self):
+            """
+            Select all tables. The list obtained from the proxy contains the tables
+            created by the server.
+            """
             d = client.getPage("http://127.0.0.1:19480/POKER_REST",
                                postdata = '{"type":"PacketPokerTableSelect"}')
             def checkTables(result):
@@ -155,6 +165,9 @@ class ProxyTestCase(unittest.TestCase):
             return d
 
       def test04_tableJoin(self):
+            """
+            Join a table thru a proxy.
+            """
             d = client.getPage("http://127.0.0.1:19480/POKER_REST",
                                postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
             def checkTable(result):
@@ -164,9 +177,23 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(checkTable)
             return d
 
+      def test05_connectionrefused(self):
+            """
+            Create a route that leads to a non-existent server.
+            """
+            db = self.proxy_service.db
+            db.db.query("INSERT INTO route VALUES (6, 0, 0, 60)")
+            db.db.query("INSERT INTO resthost VALUES (60, 'fake', '127.0.0.1', 6666, '/fail')")
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":6}')
+            def checkTable(result):
+                  self.assertSubstring('Connection was refused by other side', result.value.response)
+            d.addBoth(checkTable)
+            return d
+
 def Run():
       loader = runner.TestLoader()
-#      loader.methodPrefix = "test04"
+#      loader.methodPrefix = "test05"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       return runner.TrialRunner(
@@ -182,5 +209,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-proxyfilter.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokersite.py ../pokernetwork/proxyfilter.py' VERBOSE_T=-1 TESTS='coverage-reset test-proxyfilter.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-proxyfilter.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/proxyfilter.py' VERBOSE_T=-1 TESTS='coverage-reset test-proxyfilter.py coverage-report' check )"
 # End:
