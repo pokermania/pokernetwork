@@ -52,6 +52,7 @@ class PokerAvatar:
         self.tables = {}
         self.user = User()
         self._packets_queue = []
+        self.tourneys = []
         self.setExplain(0)
         self.has_session = False
         self.bugous_processing_hand = False
@@ -99,6 +100,7 @@ class PokerAvatar:
             self.explain.handleSerial(PacketSerial(serial = serial))
         assert self.service.serial2client.has_key(serial) == False
         self.service.serial2client[serial] = self
+        self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)
     
     def login(self, info):
@@ -118,7 +120,12 @@ class PokerAvatar:
             self.message("user %s/%d logged in" % ( self.user.name, self.user.serial ))
         if self.protocol:
             self.has_session = self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
+        self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)
+
+    def tourneyUpdates(self, serial):
+        places = self.service.getPlayerPlaces(serial)
+        self.tourneys = places.tourneys
 
     def loginTableUpdates(self, serial):
         #
@@ -272,6 +279,9 @@ class PokerAvatar:
         if packet.type == PACKET_PING:
             return
         
+        if packet.type == PACKET_POKER_POLL:
+            return
+        
         if not self.isAuthorized(packet.type):
             self.sendPacketVerbose(PacketAuthRequest())
             return
@@ -283,6 +293,10 @@ class PokerAvatar:
                                                    message = "already logged in"))
             else:
                 self.auth(packet)
+            return
+
+        if packet.type == PACKET_POKER_GET_PLAYER_PLACES:
+            self.sendPacketVerbose(self.service.getPlayerPlaces(packet.serial))
             return
 
         if packet.type == PACKET_POKER_GET_PLAYER_INFO:
@@ -397,6 +411,7 @@ class PokerAvatar:
             if self.getSerial() == packet.serial:
                 self.service.autorefill(packet.serial)
                 self.service.tourneyRegister(packet)
+                self.tourneyUpdates(packet.serial)
             else:
                 self.message("attempt to register in tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() ))
             return
@@ -404,6 +419,7 @@ class PokerAvatar:
         elif packet.type == PACKET_POKER_TOURNEY_UNREGISTER:
             if self.getSerial() == packet.serial:
                 self.sendPacketVerbose(self.service.tourneyUnregister(packet))
+                self.tourneyUpdates(packet.serial)
             else:
                 self.message("attempt to unregister from tournament %d for player %d by player %d" % ( packet.game_id, packet.serial, self.getSerial() ))
             return
@@ -697,7 +713,24 @@ class PokerAvatar:
     def listTables(self, packet):
         packets = []
         for table in self.service.listTables(packet.string, self.getSerial()):
-            packets.append(table.toPacket())
+            packet = PacketPokerTable(id = int(table['serial']),
+                                      name = table['name'],
+                                      variant = table['variant'],
+                                      betting_structure = table['betting_structure'],
+                                      seats = int(table['seats']),
+                                      players = int(table['players']),
+                                      hands_per_hour = int(table['hands_per_hour']),
+                                      average_pot = int(table['average_pot']),
+                                      percent_flop = int(table['percent_flop']),
+                                      player_timeout = int(table['player_timeout']),
+                                      muck_timeout = int(table['muck_timeout']),
+                                      observers = int(table['observers']),
+                                      waiting = int(table['waiting']),
+                                      skin = table['skin'],
+                                      currency_serial = int(table['currency_serial']),
+                                      )
+            packet.tourney_serial = int(table['tourney_serial'])
+            packets.append(packet)
         ( players, tables ) = self.service.statsTables()
         self.sendPacketVerbose(PacketPokerTableList(players = players,
                                                     tables = tables,
