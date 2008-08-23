@@ -225,13 +225,25 @@ class PokerResource(resource.Resource):
             request.site.pipe(self.deferred, request, packet)
 
         def pipesFailed(reason):
-            body = reason.getTraceback()
-            request.setResponseCode(http.INTERNAL_SERVER_ERROR)
-            request.setHeader('content-type',"text/html")
-            request.setHeader('content-length', str(len(body)))
-            request.expireSessionCookie()
-            request.write(body)
-            request.connectionLost(reason)
+            #
+            # Report only if the request has not been finished already.
+            # It is the responsibility of each filter to handle errors
+            # either by passing them on the errback chain or by filling
+            # the request with a proper report.
+            #
+            if not request.finished:
+                body = reason.getTraceback()
+                request.setResponseCode(http.INTERNAL_SERVER_ERROR)
+                request.setHeader('content-type',"text/html")
+                request.setHeader('content-length', str(len(body)))
+                request.expireSessionCookie()
+                request.write(body)
+                request.connectionLost(reason)
+            #
+            # Return a value that is not a Failure so that the next
+            # incoming request is accepted (otherwise the server keeps
+            # returning error on every request)
+            #
             return True
 
         self.deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
@@ -239,6 +251,11 @@ class PokerResource(resource.Resource):
         return server.NOT_DONE_YET
 
     def deferRender(self, request, jsonp, packet):
+        if request.finished:
+            #
+            # For instance : the request was reverse-proxied to a server.
+            #
+            return True
         session = request.getSession()
         d = defer.maybeDeferred(session.avatar.handlePacketDefer, packet)
         def render(packets):
@@ -272,8 +289,8 @@ class PokerResource(resource.Resource):
                 result_string = jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
             else:
                 result_string = str(Packet.JSON.encode(maps))
-            request.setHeader("Content-length", str(len(result_string)))
-            request.setHeader("Content-type", 'text/plain; charset="UTF-8"')
+            request.setHeader("content-length", str(len(result_string)))
+            request.setHeader("content-type", 'text/plain; charset="UTF-8"')
             request.write(result_string)
             request.finish()
             return True
@@ -281,8 +298,8 @@ class PokerResource(resource.Resource):
             session.expire()
             body = reason.getTraceback()
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
-            request.setHeader('content-type',"text/html")
             request.setHeader('content-length', str(len(body)))
+            request.setHeader('content-type',"text/html")
             request.write(body)
             request.connectionLost(reason)
             return True
@@ -410,6 +427,10 @@ class PokerSite(server.Site):
     def startFactory(self): 
         pass
         
+    def stopFactory(self): 
+        for key in self.sessions.keys():
+            self.sessions[key].expire()
+        
     def updateSession(self, session):
         #
         # assert the session informations were not changed in memcache
@@ -454,7 +475,7 @@ class PokerSite(server.Site):
                 self.memcache.add(str(serial), session.uid)
                 self.memcache.replace(session.uid, str(serial))
         session.isLogged = session.avatar.isLogged()
-        if len(session.avatar.tables) == 0:
+        if len(session.avatar.tables) <= 0 and len(session.avatar.tourneys) <= 0:
             session.expire()
         return True
 
