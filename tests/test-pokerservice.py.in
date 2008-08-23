@@ -128,7 +128,7 @@ class PokerServiceTestCaseBase(unittest.TestCase):
     # ----------------------------------------------------------------
     def tearDown(self):
         d = self.service.stopService()
-#        d.addCallback(lambda x: self.destroyDb())
+        d.addCallback(lambda x: self.destroyDb())
         return d
 
     # ----------------------------------------------------------------
@@ -258,6 +258,116 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
         tourneys = self.service.tourneySelect('regular1')
         self.assertEqual(1, len(tourneys))
         self.assertEqual('regular1', tourneys[0]['name'])
+    
+class PlayerPlacesTestCase(PokerServiceTestCaseBase):
+
+    def test00_not_anywhere(self):
+        self.service.startService()
+        serial = 888
+        places = self.service.getPlayerPlaces(serial)
+        self.assertEqual(0, len(places.tables))
+        self.assertEqual(0, len(places.tourneys))
+        self.assertEqual(serial, places.serial)
+
+    def test01_tables_and_tourneys(self):
+        self.service.startService()
+        db = self.service.db
+        serial = 888
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE1))
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE2))
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE3))
+        tourney_serial = 999
+        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial))
+        places = self.service.getPlayerPlaces(serial)
+        self.assertEqual([TABLE1, TABLE2, TABLE3], places.tables)
+        self.assertEqual([tourney_serial], places.tourneys)
+        self.assertEqual(serial, places.serial)
+    
+class ResthostTestCase(unittest.TestCase):
+
+    def destroyDb(self):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUp(self):
+        self.destroyDb()
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <resthost host="HOST" port="7777" path="/PATH" />
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+        settings = pokernetworkconfig.Config([])
+        settings.loadFromString(xml)
+        self.service = pokerservice.PokerService(settings)
+
+    def tearDown(self):
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.destroyDb())
+        return d
+        
+    def test00_init(self):
+        """ setupResthost twice with the same information gives the same serial """
+        self.service.startService()
+        self.assertEqual(1, self.service.resthost_serial)
+        self.service.resthost_serial = 0
+        self.service.setupResthost()
+        self.assertEqual(1, self.service.resthost_serial)
+
+    def test01_packet2resthost(self):
+        self.service.startService()
+        #
+        # ping is never routed
+        #
+        resthost = self.service.packet2resthost(PacketPing())
+        self.assertEqual(None, resthost)
+        #
+        # poll (or any packet with a valid game_id) is routed
+        #
+        resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 1))
+        self.assertEqual('HOST', resthost[0])
+        #
+        # poll to an unknown game_id is not routed
+        #
+        resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 888))
+        self.assertEqual(None, resthost)
+        #
+        # poll is routed
+        #
+        db = self.service.db
+        db.db.query("INSERT INTO route VALUES (0, 484, 1, 1)")
+        resthost = self.service.packet2resthost(PacketPokerPoll(tourney_serial = 484))
+        self.assertEqual('HOST', resthost[0])
+        #
+        # poll to an unknown tourney_serial is not routed
+        #
+        resthost = self.service.packet2resthost(PacketPokerPoll(tourney_serial = 999))
+        self.assertEqual(None, resthost)
+        #
+        # PACKET_POKER_TOURNEY_REGISTER
+        #
+        resthost = self.service.packet2resthost(PacketPokerTourneyRegister(game_id = 484))
+        self.assertEqual('HOST', resthost[0])
+        #
+        # packet with a game_id
+        #
+        resthost = self.service.packet2resthost(PacketPokerCall(game_id = 1))
+        self.assertEqual('HOST', resthost[0])        
     
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
@@ -1487,6 +1597,8 @@ def Run():
     suite.addTest(loader.loadClass(MonitorTestCase))
     suite.addTest(loader.loadClass(ListTablesTestCase))
     suite.addTest(loader.loadClass(TourneySelectTestCase))
+    suite.addTest(loader.loadClass(PlayerPlacesTestCase))
+    suite.addTest(loader.loadClass(ResthostTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
