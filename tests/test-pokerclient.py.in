@@ -51,8 +51,6 @@ from tests import testclock
 
 from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-# Need verbosity of 3 for output tests
-verbose = 6
 silence_all_messages()
 
 from pokernetwork import dispatch
@@ -1346,10 +1344,10 @@ class SettingMockup:
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test33"
+#    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
-#    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
+    suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
