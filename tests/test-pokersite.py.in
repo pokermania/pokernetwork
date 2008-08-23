@@ -118,7 +118,10 @@ class PokerSiteBase(unittest.TestCase):
             pokersite.memcache = pokersite.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
-      
+
+      def tearDown(self):
+            self.site.stopFactory()
+
 class PokerResourceTestCase(PokerSiteBase):
 
       class Transport:
@@ -446,6 +449,47 @@ class FilterErrorTestCase(unittest.TestCase):
             r.requestReceived('GET', '/', '')
             return d
 
+class FilterFinishTestCase(unittest.TestCase):
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" >
+<rest_filter>../@srcdir@/finishedfilter.py</rest_filter>
+</server>
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokersite.memcache = pokersite.MemcacheMockup
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerResourceTestCase.Transport()
+                  self.site = site
+
+      def test01_render(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            
+            d = r.notifyFinish()
+            def finish(reason):
+                  self.assertSubstring('FINISHED', r.transport.getvalue())
+                  return True
+            d.addCallback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
+
 class SessionTestCase(PokerSiteBase):
 
       def test01_checkExpired(self):
@@ -533,7 +577,6 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.memcache.set(serial + 1, session.uid)
             session = self.site.getSession(session.uid)
             self.assertEquals(serial + 1, session.avatar.getSerial())
-            session.expire()
 
       def test03_03_getSession(self):
             """
@@ -550,7 +593,6 @@ class PokerSiteTestCase(PokerSiteBase):
             except AssertionError:
                   exception = True
             self.assertEquals(True, exception)
-            session.expire()
 
       def test04_01_updateSession(self):
             """
@@ -623,7 +665,6 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(0, int(self.site.memcache.get(session.uid)))
             self.assertEquals(None, self.site.memcache.get(str(serial)))
-            session.expire()
 
       def test04_06_updateSession(self):
             """
@@ -650,7 +691,6 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(new_serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(new_serial)))
-            session.expire()
 
       def test05_startFactory(self):
             self.site.startFactory()
@@ -698,6 +738,7 @@ def Run():
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(FilterErrorTestCase))
     suite.addTest(loader.loadClass(FilterTestCase))
+    suite.addTest(loader.loadClass(FilterFinishTestCase))
     suite.addTest(loader.loadClass(PokerResourceTestCase))
     suite.addTest(loader.loadClass(PokerImageUploadTestCase))
     suite.addTest(loader.loadClass(PokerAvatarResourceTestCase))
