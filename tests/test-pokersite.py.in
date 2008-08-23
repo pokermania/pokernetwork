@@ -59,9 +59,13 @@ class PokerServiceMockup:
       def destroyAvatar(self, avatar):
             pass
 
+      def getPlayerPlaces(self, serial):
+            return PacketPokerPlayerPlaces(serial = serial)
+      
       player_image = None
       def setPlayerImage(self, player_image):
             self.player_image = player_image      
+
       player_serial = None
       def getPlayerImage(self, serial):
             self.player_serial = serial
