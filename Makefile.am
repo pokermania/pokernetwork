@@ -95,6 +95,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokertable.py \
 	pokernetwork/protocol.py \
 	pokernetwork/proxy.py \
+	pokernetwork/proxyfilter.py \
 	pokernetwork/server.py \
 	pokernetwork/upgrade.py \
 	pokernetwork/user.py \
