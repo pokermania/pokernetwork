@@ -194,3 +194,6 @@ class PokerDatabase:
     def cursor(self, *args, **kwargs):
         return self.db.cursor(*args, **kwargs)
 
+    def literal(self, args):
+        return self.db.literal(args)
+
