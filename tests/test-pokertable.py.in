@@ -229,6 +229,12 @@ class MockService:
     def destroyTable(self, x):
         pass
 
+    def eventTable(self, table):
+        pass
+
+    def updateTableStats(self, game, observers, waiting):
+        pass
+    
     def loadHand(self, handId):
         # Only ever return the one hand; the only one this mock game ever had...
         #  ... but only if they give a positive integer as a handId.
