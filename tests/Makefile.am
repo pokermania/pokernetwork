@@ -104,6 +104,7 @@ TESTS = coverage-reset \
 	test-gamewindow.py \
 	test-poker2d.py \
 	test-pokersite.py \
+	test-proxyfilter.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
