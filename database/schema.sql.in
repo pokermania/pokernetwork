@@ -155,11 +155,27 @@ DROP TABLE IF EXISTS pokertables;
 
 CREATE TABLE pokertables (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL UNIQUE,
+  resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
+  seats TINYINT DEFAULT 10,
+  average_pot INT UNSIGNED DEFAULT 0,
+  hands_per_hour INT UNSIGNED DEFAULT 0,
+  percent_flop TINYINT DEFAULT 0,
+  players TINYINT DEFAULT 0,
+  observers INT UNSIGNED DEFAULT 0,
+  waiting TINYINT DEFAULT 0,
+  player_timeout INT UNSIGNED DEFAULT 60,
+  muck_timeout INT UNSIGNED DEFAULT 5,
   currency_serial INT NOT NULL,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  variant VARCHAR(255) NOT NULL,
+  betting_structure VARCHAR(255) NOT NULL,
+  skin VARCHAR(255) DEFAULT "default" NOT NULL,
   tourney_serial INT UNSIGNED DEFAULT 0 NOT NULL,
 
-  PRIMARY KEY (serial)
+  PRIMARY KEY (serial),
+  KEY (name),
+  KEY (variant),
+  KEY (resthost_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS hands;
@@ -208,6 +224,7 @@ DROP TABLE IF EXISTS tourneys_schedule;
 
 CREATE TABLE tourneys_schedule (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
   name VARCHAR(32),
   -- Description that will be shown in tournament lists
   description_short VARCHAR(64),
@@ -357,6 +374,7 @@ DROP TABLE IF EXISTS tourneys;
 
 CREATE TABLE tourneys (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
   name VARCHAR(32),
   description_short VARCHAR(64),
   description_long TEXT,
@@ -387,8 +405,8 @@ CREATE TABLE tourneys (
   rebuy_count INT DEFAULT 0,
 
   PRIMARY KEY (serial),
-  KEY tourneys_start_time_index (start_time)
-
+  KEY tourneys_start_time_index (start_time),
+  KEY (state)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS user2tourney;
@@ -399,7 +417,8 @@ CREATE TABLE user2tourney (
   table_serial INT,
   rank INT DEFAULT -1,
 
-  PRIMARY KEY (user_serial, tourney_serial)
+  PRIMARY KEY (user_serial, tourney_serial),
+  KEY (rank)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 --
@@ -498,3 +517,40 @@ CREATE TABLE monitor (
 
   PRIMARY KEY (serial, created)
 ) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS resthost;
+
+CREATE TABLE resthost (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(255),
+  host VARCHAR(255),
+  port INT UNSIGNED,
+  path VARCHAR(255),
+
+  PRIMARY KEY (serial)
+) ENGINE=MEMORY;
+
+DROP TABLE IF EXISTS route;
+
+CREATE TABLE route (
+  table_serial INT UNSIGNED,
+  tourney_serial INT UNSIGNED,
+  modified INT UNSIGNED,
+  resthost_serial INT UNSIGNED,
+  
+  PRIMARY KEY (table_serial, tourney_serial),
+  KEY (table_serial),
+  KEY (tourney_serial),
+  KEY (modified),
+  KEY (resthost_serial)
+) ENGINE=MEMORY;
+
+-- CREATE TABLE lastpoll (
+--   session CHAR(32) NOT NULL,
+--   user_serial INT UNSIGNED NOT NULL,
+--   table_serial INT UNSIGNED,
+--   tourney_serial INT UNSIGNED,
+--   polled INT UNSIGNED,
+  
+--   PRIMARY KEY (session, user_serial, table_serial, tourney_serial)
+-- ) ENGINE=MEMORY;
