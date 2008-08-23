@@ -2873,9 +2873,48 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     
     # ------------------------------------------------------------------------
+    def getPlayerPlaces(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerPlaces(serial= client.getSerial()))
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(1, len(packets))
+        packet = packets[0]
+        self.assertEquals(PACKET_POKER_PLAYER_PLACES, packet.type)
+        self.assertEquals([], packet.tables)
+        return (client, packet)
+    
+    # ------------------------------------------------------------------------
+    def test69_getPlayerPlaces(self):
+        """Test lookup of where the player is playing."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.getPlayerPlaces, 0)
+        return d
+
+    # ------------------------------------------------------------------------
+    def poll(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerPoll())
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(0, len(packets))
+        return (client, packet)
+    
+    # ------------------------------------------------------------------------
+    def test70_poll(self):
+        """Test poll packet."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.poll, 0)
+        return d
+
+    # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test68"
+#    loader.methodPrefix = "test70"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
