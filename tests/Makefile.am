@@ -43,6 +43,7 @@ EXTRA_DIST = \
 	coverage.py \
 	testfilter.py \
 	testerrorfilter.py \
+	finishedfilter.py \
 	test-poker-interface.py \
 	testpackets.py \
 	testmessages.py \
