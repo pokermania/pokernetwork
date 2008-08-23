@@ -237,6 +237,8 @@ class PokerTable:
             for client in self.observers:
                 client.sendPacket(self.private2public(packet, 0))
 
+        self.factory.eventTable(self)
+
     def private2public(self, packet, serial):
         game = self.game
         #
@@ -516,6 +518,7 @@ class PokerTable:
             elif type == "finish":
                 (type, hand_serial) = event
                 self.factory.saveHand(self.compressedHistory(game.historyGet()), hand_serial)
+                self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 transient = self.transient and 1 or 0
                 self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
             
