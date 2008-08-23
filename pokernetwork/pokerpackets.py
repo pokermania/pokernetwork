@@ -4015,6 +4015,30 @@ class PacketPokerPoll(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerPoll, Packet, "POKER_POLL", 150) # 150 # 0x96 # %SEQ%
 
+########################################
+
+class PacketPokerGetPlayerPlaces(Packet):
+    """ """
+    
+    info = Packet.info + (
+        ('serial', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerGetPlayerPlaces, Packet, "POKER_GET_PLAYER_PLACES", 151) # 151 # 0x97 # %SEQ%
+
+########################################
+
+class PacketPokerPlayerPlaces(Packet):
+    """ """
+    
+    info = Packet.info + (
+        ('serial', 0, 'I'),
+        ('tables', [], 'Il'),
+        ('tourneys', [], 'Il'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerPlayerPlaces, Packet, "POKER_PLAYER_PLACES", 152) # 152 # 0x98 # %SEQ%
+
 _TYPES = range(50,169)
 
 # Interpreted by emacs
