@@ -1,3 +1,147 @@
+2008-08-23  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
+
+	* tests/testmessages.py: fix broken verbose mode (using what
+	  variable instead of string variable)
+	* tests/test-protocol.py.in: add GetPlaces packets
+	* tests/test-pokertable.py.in: mockup eventTable and
+	  updateTableStats
+	* tests/test-pokersite.py.in: mockup getPlayerPlaces
+	* tests/test-pokerservice.py.in: . destroy db on teardown (was
+	  commented out)
+	  . implement PlayerPlacesTestCase to test GetPlaces
+	  . implement ResthostTestCase to test all functions related to the
+	  update of the resthost table
+	* tests/test-pokerclient.py.in: . do not force verbosity to 6
+	  . run PokerClientFactoryTestCase (previously commented out by
+	  accident)
+	* tests/test-pokeravatar.py.in: add test70_poll and
+	  test69_getPlayerPlaces
+	* tests/Makefile.am: add test-proxyfilter.py to the list of tests
+	* pokernetwork/pokertable.py: . the eventTable of PokerService is
+	  notified whenever a packet is sent to the players so that the
+	  last modified date of the routes are updated
+	  . when a turn finishes, the updateTableStats function of
+	  PokerService is called to update the stats fields of the
+	  pokertables to reflect the new PokerGame values
+	* pokernetwork/pokersite.py: . pipesFailed and deferRender:
+	  Report only if the request has not been finished already.
+	  It is the responsibility of each filter to handle errors
+	  either by passing them on the errback chain or by filling
+	  the request with a proper report.
+	  . stopFactory expires all active sessions
+	  . the session is expired if and only if there are not tourneys
+	  and no tables for this avatar
+	* pokernetwork/pokerservice.py: . startService fills the resthost
+	  table row and keeps the serial
+	  . stopService removes the resthost entry and the corresponding
+	  routes after all tables have been closed
+	  . disconnectAll is made a PokerService function for testing
+	  purposes
+	  . select tourney schedule run by the server by filtering with the
+	  resthost serial
+	  . convey the resthost_serial when creating a tourneys row from a
+	  tourneys_schedule row
+	  . when a tournament finished, remove the route if any
+	  . tourneyStats and tourneSelect use the SQL database instead of
+	  in core datastructure
+	  . eventTable function updates or create the route to a table with
+	  the last modified date
+	  . statsTable and listTables use the SQL database instead of in
+	  core datastructure
+	  . setupResthost function creates an entry for the server in the
+	  resthost table if a <resthost> element is found in the
+	  configuration file
+	  . cleanupResthost destroys all routes and the resthost
+	  . packet2resthost returns the URL to the server to which the
+	  packet given in argument must be routed
+	  . getPlayerPlaces returns the serials of the tourneys and tables
+	  to which a given user is seated or registered
+	  . updateTableStats is called whenever a game turn finishes to
+	  update the corresponding record in the database. It is a new
+	  function that was not necessary when the listTable was
+	  implemented using in core datastructure
+	  . a route to a table is delete from the database when the
+	  destroyTable function is called
+	  . the pokertables row is filled with all the informations
+	  necessary for the PokerTable packet when the table is created
+	  (previously was only the serial and the name)
+	  . the route to a table is added when the table is created
+	  . the cleanupCrashedTables function loops over the tables from
+	  the configuration file instead of deleting and cleaning all
+	  tables
+	* pokernetwork/pokerpackets.py: add GetPlayerPlaces and
+	  PlayerPlaces packets
+	* pokernetwork/pokerdatabase.py: literal helper function for
+	  brievety
+	* pokernetwork/pokeravatar.py: . listTable does not built the list
+	  of packets from in core but from the output of a SQL request
+	  . implement GET_PLAYER_PLACES
+	  . implement POLL
+	  . keep track of all the tourneys to which a user is registered in
+	  the tourneys[] table
+	* database/1.6.0-1.7.0.sql, database/schema.sql.in: . fill the
+	  pokertables table to include all fields needed for the PokerTable
+	  packet
+	  . add resthost_serial to tourneys + tourneys schedule, which is
+	  redundant with the route table but speedup requests
+	  . index the state of a tourney and the rank of user2tourney for
+	  speed
+	  . add the resthost table for each table to get a route serial and
+	  declare the URL to which it can be reached
+	  . add a route table that links table or tourney serials to the
+	  resthost that owns them
+	* configure.ac: add tests/test-proxyfilter.py
+	* conf/poker.server.xml.in: . cleanup='yes' by default removes the
+	  BOTS from the server database at bootstrap, otherwise it is left
+	  untouched
+	  . <resthost> element declares a resthost row in the database and
+	  triggers tourney/tables routes registration
+	  . proxyfilter.py inclusion example as a rest_filter to take
+	  advantage of the route tables
+
+2008-08-21  Loic Dachary <loic@dachary.org>
+
+	* tests/test-proxyfilter.py.in: test connection refused
+	* pokernetwork/proxyfilter.py: . use dedicated request methods
+	  instead of direct transport.write
+	  . discard ConnectionDone error
+
+2008-08-20  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/proxyfilter.py: avoid calling the client deferred
+	  twice
+	  do not return on error if a ConnectionDone is sent to
+	  ConnectionLost
+	  rewind the request to the beginning before feeding it to the
+	  ClientFactory
+	* tests/test-proxyfilter.py.in: use the proxy on 19480
+	* tests/test-proxyfilter.py.in: TableJoin thru proxy
+	* pokernetwork/pokerpackets.py: s/currency/currency_serial/
+	* pokernetwork/pokerpackets.py: PokerPoll for REST polling purposes
+	  (sort of Ping with a game_id and tourney_serial)
+	* pokernetwork/proxyfilter.py: ProxyClientFactor is local (not from
+	  the twisted proxy sample implementation because error handling is
+	  inapropriate)
+	* tests/test-proxyfilter.py.in: finalize proper conditions to run
+	  the proxyfilter code
+	* pokernetwork/proxyfilter.py: poker reverse proxy
+	* tests/test-proxyfilter.py.in: test stub for proxyfilter,
+	  involving a server and a proxy running on 127.0.0.1:19480 and
+	  127.0.0.1:19481 respectively
+
+2008-08-19  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerservice.py.in: test00_config : do not call
+	  stopService from within the tests
+	  test01_auth : restore database for the benefit of the shutdown
+	  process
+	* tests/test-pokerservice.py.in: class to cover all tourneySelect
+	  cases
+	* tests/test-pokerservice.py.in: coverage for the listTables
+	  function
+
 2008-08-17  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
@@ -21,8 +165,6 @@
 	Added call to joinedCountIncrease() when client is connected.
 
 2008-08-17  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* conf/poker.server.xml.in: max default is 1000
 	* pokernetwork/pokerservice.py: table serial is extracted from the
