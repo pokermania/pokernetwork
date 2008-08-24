@@ -1,5 +1,15 @@
 2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokertable.py.in (MockService.getMissedRoundMax):
+	Added method.
+	(MockService.__init__): Added setting of missed_round_max.
+	(PokerTableTestCase.setUp): Added test for proper max_missed_round
+	setting.
+
+	* pokernetwork/pokertable.py
+	(PokerTable.__init__): Added set of self.max_missed_round by
+	checking table override then server default.
+
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test00_3_configValues): Wrote test.
 	(PokerServiceTestCase.configValues): Added arg and check for

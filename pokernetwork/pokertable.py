@@ -26,6 +26,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org> (2008-)
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 
@@ -82,6 +83,12 @@ class PokerTable:
         self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = description.has_key("transient")
         self.tourney = description.get("tourney", None)
+
+        # max_missed_round can be configured on a per table basis, which
+        # overrides the server-wide default
+        self.max_missed_round = description.get("max_missed_round",
+                                                factory.getMissedRoundMax())
+
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
         self.temporaryPlayersPattern = settings.headerGet("/server/users/@temporary")
