@@ -372,7 +372,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max):
+    def configValues(self, settings_data, joined_max, missed_round_max=10):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -387,6 +387,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(self.service.verbose, 6)
 
         self.assertEquals(joined_max, self.service.joined_max)
+        self.assertEquals(missed_round_max, self.service.missed_round_max,
+                          self.service.getMissedRoundMax())
 
         startedOnlyVars = [ ('joined_count', 0),
                             ('tables', 2), ('tourney_table_serial', 1),
@@ -406,6 +408,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     def test00_2_configValues(self):
         self.configValues(settings_xml.replace('max_joined="1000"', ""), 4000)
+
+    def test00_3_configValues(self):
+        self.configValues(settings_xml.replace('max_joined="1000"',
+                                               'max_missed_round="5"'), 4000, 5)
 
     # ----------------------------------------------------------------
     def test01_auth(self):

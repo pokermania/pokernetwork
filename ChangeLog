@@ -1,3 +1,19 @@
+2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test00_3_configValues): Wrote test.
+	(PokerServiceTestCase.configValues): Added arg and check for
+	missed_round_max.
+
+	* pokernetwork/pokerservice.py (PokerService.getMissedRoundMax):
+	Wrote method.
+
+	* conf/poker.server.xml.in: Added max_missed_round setting, for
+	server-wide and table One.
+
+	* pokernetwork/pokerservice.py (PokerService.__init__): Added
+	missed_round_max setting from the /server/@max_missed_round.
+
 2008-08-23  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0

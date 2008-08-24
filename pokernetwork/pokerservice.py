@@ -26,6 +26,7 @@
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org> (2008-)
 #  Henry Precheur <henry@precheur.org> (2004)
 #  Cedric Pinson <cpinson@freesheep.org> (2004-2006)
 
@@ -159,6 +160,30 @@ class PokerService(service.Service):
             # <dachary> because the last stress test show 4000 is the upper limit
             # <dachary> http://pokersource.info/stress-test/2007-08/
             self.joined_max = 4000
+        self.missed_round_max = self.settings.headerGetInt("/server/@max_missed_round")
+        if self.missed_round_max <= 0:
+            # This default for missed_round_max below (for when it is not
+            # set in config file) is completely arbitrary and made up by
+            # bkuhn.  dachary suggested 3 in #pokersource on 2008-08-24,
+            # but bkuhn argued that if someone leaves it out of the config
+            # file, it should be somewhat high since they wouldn't be
+            # expecting a pick-up if they hadn't configed their server to
+            # do it.
+            #
+            # bkuhn also pointed out that there is some arugment for
+            # making the default infinity when it is left out of the
+            # config file.  However, this complicates code to test for,
+            # say, a negative value every time to see if you should ignore
+            # the feature entirely, and it's probably not the case that
+            # the user would ever want to configure a server on purpose to
+            # have infinite sit-out time.
+            #
+            # Note that the config file example defaults this to 5, which
+            # is probably a much more reasonable default.
+            #
+            # Finally, note that this is the server-wide default.  In the
+            # config file, <table> entries can override this.
+            self.missed_round_max = 10
         self.delays = settings.headerGetProperties("/server/delays")[0]
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
@@ -264,6 +289,9 @@ class PokerService(service.Service):
         defaults to 1."""
         self.joined_count -= num
         return self.joined_count
+
+    def getMissedRoundMax(self):
+        return self.missed_round_max
 
     def shutdown(self):
         self.shutting_down = True
