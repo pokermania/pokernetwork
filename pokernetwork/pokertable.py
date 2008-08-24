@@ -655,6 +655,22 @@ class PokerTable:
                     if self.serial2client.has_key(serial):
                         self.seated2observer(self.serial2client[serial])
 
+    def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
+        if self.tourney: return
+        handIsFinished = False
+        # Go through the history backwards, stopping at
+        # self.history_index, since we expect finish to be at the end if
+        # it is there, and we don't want to consider previously reduced
+        # history.
+        for event in historyToSearch[::-1]:
+            if event[0] == "finish":
+                handIsFinished = True
+                break
+        if handIsFinished:
+            for player in self.game.playersAll():
+                if player.getMissedRoundCount() >= self.max_missed_round:
+                    self.kickPlayer(player.serial)
+
     def tourneyEndTurn(self):
         if not self.tourney:
             return
@@ -839,6 +855,7 @@ class PokerTable:
             self.broadcast(packets)
         self.tourneyEndTurn()
         if self.isValid():
+            self.cashGame_kickPlayerSittingOutTooLong(history_tail)
             self.historyReduce()
             self.scheduleAutoDeal()
 

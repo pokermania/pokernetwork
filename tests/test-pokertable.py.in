@@ -44,7 +44,7 @@ from tests import testclock
 
 from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages, redirect_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+silence_all_messages()
 
 from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
@@ -238,13 +238,17 @@ class MockService:
     def updateTableStats(self, game, observers, waiting):
         pass
     
-    def loadHand(self, handId):
+    def loadHand(self, handId, removeList = []):
         # Only ever return the one hand; the only one this mock game ever had...
         #  ... but only if they give a positive integer as a handId.
         if handId <= 0:
             return None
         else:
             l = copy.deepcopy(exampleHand)
+            # Remove anything that this specific test wants to get rid of,
+            # perhaps because it messes with their results.
+            for xx in removeList:
+                l.remove(xx)
             l.insert(0, ('game', 1, handId, 3, time.time(), 'variant','betting_structure', [1, 2], 7, { 1 : 7890, 2 : 1234, 'values' : ''}))
             self.hands[handId] = convertHandHistoryToDict(l)
             return l
@@ -448,7 +452,7 @@ class PokerTableTestCase(unittest.TestCase):
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
                                              'currency_serial': 0,
-                                             'max_missed_round' : 1
+                                             'max_missed_round' : 3
                                              })
         self.table2 = pokertable.PokerTable(self.service, table2ID, 
                                            { 'name': "table2",
@@ -466,7 +470,7 @@ class PokerTableTestCase(unittest.TestCase):
         # overwritten by description in init settings.  note That table1
         # has setting of '1' for that value, but table2 accepts the
         # default above.
-        self.assertEquals(self.table.max_missed_round, 1)
+        self.assertEquals(self.table.max_missed_round, 3)
         self.assertEquals(self.table2.max_missed_round, 5)
 
         self.clients = {}
@@ -532,7 +536,6 @@ class PokerTableTestCase(unittest.TestCase):
         self.createPlayer(2)
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
-
     # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
@@ -1108,6 +1111,50 @@ class PokerTableTestCase(unittest.TestCase):
         clear_all_messages()
         self.assertEquals(self.table.factory.joined_count, 3)
     # -------------------------------------------------------------------
+    def test31_kickPlayerForMissingTooManyBlinds(self):
+        """test31_kickPlayerForMissingTooManyBlinds
+        Players who pass or equal the max_missed_round count are
+        automatically kicked from the table and turned into observers.
+        This happens via the update function's call of
+        cashGame_kickPlayerSittingOutTooLong().  That function searches in
+        the history for a 'finish' event (meaning the hand is done) and
+        then kicks the player afer that.  This test sets up that situatoin
+        and makes sure the player gets kicked."""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+            self.assertEquals(self.service.players.has_key(ii), True)
+
+        self.table.game.serial2player[4].missed_big_blind_count = 1000
+        self.table.game.turn_history = self.service.loadHand(6352,
+                                         [('leave', [(1, 2), (2, 7)])])
+
+        # Table starts with no observers before our update
+
+        self.assertEquals(len(self.table.observers), 0)
+        if self.table.factory.verbose < 2: self.table.factory.verbose = 2
+        clear_all_messages()
+        self.table.update()
+        for msg in ['[Server][PokerGame %d] removing player 4 from game', 'broadcast[1, 2, 3] type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8']:
+            self.assertEquals(search_output(msg % self.table1_value), True)
+
+        for ii in [1, 2, 3, 4]:
+            # Our service's leavePlayer() should have been called for 4,
+            # the rest should still be there
+            self.assertEquals(self.service.players.has_key(ii), ii != 4)
+            foundCount = 0
+            for pp in player[ii].packets:
+                if pp.type == PACKET_POKER_PLAYER_LEAVE:
+                    foundCount += 1
+                    self.assertEquals(pp.serial, 4)
+                    self.assertEquals(pp.game_id, self.table1_value)
+                    self.assertEquals(pp.seat, 8)
+            self.assertEquals(foundCount, 1)
+        # Table should now have one observer, 4
+        self.assertEquals(len(self.table.observers), 1)
+        self.assertEquals(self.table.observers[0].serial, 4)
+        return player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
@@ -1247,7 +1294,11 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         player.join = join
         self.assertEqual(True, self.table.joinPlayer(player, player.serial))
         self.failUnless(player.joined)
-        
+    # -------------------------------------------------------------------
+    def test31_kickPlayerForMissingTooManyBlinds(self):
+        """SKIP THIS TEST IN THIS SUBCLASS
+        """
+        return True
 # -------------------------------------------------------------------
 # This class tests the same operations as PokerTableTestCase but for tables that
 #  are transient.  Note the outcome of various operations are quite different
@@ -1519,11 +1570,16 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.doJoinAndFailDueToMax(players[6])
         clear_all_messages()
         self.assertEquals(self.table.factory.joined_count, 3)
+    # -------------------------------------------------------------------
+    def test31_kickPlayerForMissingTooManyBlinds(self):
+        """SKIP THIS TEST IN THIS SUBCLASS
+        """
+        return True
 # -------------------------------------------------------------------
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test30"
+#    loader.methodPrefix = "test31"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

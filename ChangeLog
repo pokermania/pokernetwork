@@ -1,5 +1,20 @@
 2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokertable.py.in (MockService.loadHand): Added remove
+	list to get rid of exampleHand packets that some tests do not want.
+	(PokerTableTestCase.test31_kickPlayerForMissingTooManyBlinds):
+	Wrote test.
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test31_kickPlayerForMissingTooManyBlinds):
+	Wrote dummy test.
+	(PokerTableTestCaseTransient.test31_kickPlayerForMissingTooManyBlinds):
+	Wrote dummy test.
+
+	* pokernetwork/pokertable.py
+	(PokerTable.cashGame_kickPlayerSittingOutTooLong): Wrote method.
+	(PokerTable.update): Added call to
+	cashGame_kickPlayerSittingOutTooLong(), but only when table is
+	valid.
+
 	* tests/test-pokertable.py.in (MockService.getMissedRoundMax):
 	Added method.
 	(MockService.__init__): Added setting of missed_round_max.
