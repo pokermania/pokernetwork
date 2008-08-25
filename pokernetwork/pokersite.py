@@ -565,7 +565,7 @@ class PokerSite(server.Site):
         self.memcache.delete(uid2last_modified(uid))
 
     def refreshMemcacheCookie(self, uid):
-        self.memcache.set(uid2last_modified(uid), str(seconds()))
+        self.memcache.set(uid2last_modified(uid), str(int(seconds())))
 
     def expireMemcacheCookie(self, uid):
         last_modified = self.memcache.get(uid2last_modified(uid))

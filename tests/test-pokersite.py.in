@@ -642,7 +642,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
-            float(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
+            int(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
             
       def test04_05_updateSession(self):
             """
@@ -660,7 +660,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
-            float(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
+            int(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
             #
             # logout
             #
