@@ -35,6 +35,7 @@ sys.path.insert(0, "..")
 from string import split
 import libxml2
 import random
+import locale
 import sets
 from _mysql_exceptions import IntegrityError
 from pprint import pprint
@@ -81,6 +82,18 @@ TABLE3 = 3
 
 # Note that we use the locale fr_FR.UTF-8 here for testing.  This must be
 # a valid locale on the system!
+
+localLocale = locale.getlocale(locale.LC_ALL)
+FRENCH_LOCALE_MISSING = False
+try:
+    locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+except locale.Error, le:
+    print "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!"
+    FRENCH_LOCALE_MISSING = True
+    
+locale.setlocale(locale.LC_ALL, localLocale)
+
+
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
@@ -416,7 +429,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
         for ii in ('this_locale_does_not_exist', 'en_US.UTF-8'):
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
-        self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
+        if FRENCH_LOCALE_MISSING:
+            print "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!"
+            self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "Aces")
+        else:
+            self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
 
     def test00_1_configValues(self):
         self.configValues(settings_xml, 1000)

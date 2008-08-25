@@ -1,4 +1,9 @@
-2008-08-25  Loic Dachary <loic@dachary.org>
+2008-08-25  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in: Added test to see if locale tests
+	can complete.
+
+2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
  	* Release 1.7.0
 
