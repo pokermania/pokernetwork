@@ -1,5 +1,7 @@
 2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+ 	* Release 1.7.0
+
 	* debian/control.hardy (Build-Depends): Added language-pack-fr,
 	which pokernetwork/test-pokerservice.py.in now depends.
 
@@ -64,8 +66,6 @@
 	missed_round_max setting from the /server/@max_missed_round.
 
 2008-08-23  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* tests/testmessages.py: fix broken verbose mode (using what
 	  variable instead of string variable)
