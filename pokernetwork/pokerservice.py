@@ -246,7 +246,7 @@ class PokerService(service.Service):
             try:
                 locale.setlocale(locale.LC_ALL, localLocale)
             except locale.Error, le:
-                self.error("Unable to restore local locale %s: %s" % (loc, le))
+                self.error('Unable to restore original locale: %s' % le)
 
         for description in self.settings.headerGetProperties("/server/table"):
             self.createTable(0, description)

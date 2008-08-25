@@ -2,6 +2,7 @@
 
 	* tests/test-pokerservice.py.in: Added test to see if locale tests
 	can complete.
+	(PokerServiceTestCase.test00_4_badLocaleObject): Wrote test.
 
 2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 

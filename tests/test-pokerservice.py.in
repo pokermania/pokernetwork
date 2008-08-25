@@ -445,6 +445,31 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.configValues(settings_xml.replace('max_joined="1000"',
                                                'max_missed_round="5"'), 4000, 5)
 
+    def test00_4_badLocaleObject(self):
+        """test00_4_badLocaleObject
+        Check the case where the imported locale object's setlocal
+        function does not work and causes errors in configuration."""
+
+        def badSetLocale(a, b):
+            raise locale.Error("testing bad setlocale")
+
+        myLocale = locale.getlocale(locale.LC_ALL)
+        saveLocale = locale.setlocale
+        locale.setlocale = badSetLocale
+
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
+        clear_all_messages()
+        self.service.startService()
+        self.assertEquals(len(self.service.gettextFuncs), 3)
+        for ii in ('en_US.UTF-8', 'fr_FR.UTF-8', 'this_locale_does_not_exist'):
+            self.assertEquals(search_output('*ERROR* Unable to support locale, "%s", due to locale error: testing bad setlocale' % ii), True)
+            self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
+            self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
+        self.assertEquals(search_output("*ERROR* Unable to restore original locale: testing bad setlocale"), True)
+        locale.setlocale = saveLocale
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1617,7 +1642,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test00_"
+#    loader.methodPrefix = "test00_4"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
