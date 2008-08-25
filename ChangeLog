@@ -1,5 +1,8 @@
 2008-08-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/pokerpackets.py (PacketPokerSetLocale): Created new
+	packet type.
+
 	* tests/test-pokerservice.py.in: Added test to see if locale tests
 	can complete.
 	(PokerServiceTestCase.test00_4_badLocaleObject): Wrote test.

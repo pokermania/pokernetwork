@@ -4039,6 +4039,56 @@ class PacketPokerPlayerPlaces(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerPlayerPlaces, Packet, "POKER_PLAYER_PLACES", 152) # 152 # 0x98 # %SEQ%
 
+########################################
+PACKET_POKER_SET_LOCALE = 153 # 0x99 # %SEQ%
+PacketNames[PACKET_POKER_SET_LOCALE] = "POKER_SET_LOCALE"
+
+class PacketPokerSetLocale(PacketSerial):
+    """\
+
+Semantics: the player "serial" is required to set the "locale" string,
+which must be a locale supported by the server.  If the locale is
+supported by the server, it will be the default locale used for strings
+sent by PokerExplain packets.
+
+Direction: server  <= client
+
+Context: If the locale is supported by the server, a PacketAck is
+returned, and future PokerExplain strings will be localized to the
+requested language.  Otherwise a PacketError is returned with other_type
+set to PACKET_POKER_SET_LOCAL.
+
+locale: string representing fully qualified locale and encoding, such as "fr_FR.UTF-8"
+serial: integer uniquely identifying a player.
+"""
+
+    type = PACKET_POKER_SET_LOCALE
+
+    info = PacketSerial.info + ( ('locale', 'en_US.UTF-8', 's'), )
+
+    locale = "en_US.UTF-8"
+
+    def __init__(self, *args, **kwargs):
+        self.locale = kwargs.get("locale", "en_US.UTF-8")
+        PacketSerial.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketSerial.pack(self) + self.packstring(self.locale)
+
+    def unpack(self, block):
+        block = PacketSerial.unpack(self, block)
+        (block, self.locale) = self.unpackstring(block)
+        return block
+
+    def calcsize(self):
+        return PacketSerial.calcsize(self) + self.calcsizestring(self.locale)
+
+    def __str__(self):
+        return PacketSerial.__str__(self) + " locale = %s" % self.locale
+
+PacketFactory[PACKET_POKER_SET_LOCALE] = PacketPokerSetLocale
+
+
 _TYPES = range(50,169)
 
 # Interpreted by emacs
