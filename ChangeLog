@@ -4,7 +4,7 @@
 	can complete.
 	(PokerServiceTestCase.test00_4_badLocaleObject): Wrote test.
 
-2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
+2008-08-25  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
 
