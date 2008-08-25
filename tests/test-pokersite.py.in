@@ -524,7 +524,7 @@ class PokerSiteTestCase(PokerSiteBase):
 
       def test01_init_full(self):
             settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" />
+<server verbose="6" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="120" />
 """
             settings = pokernetworkconfig.Config([])
             settings.loadFromString(settings_xml)
@@ -532,6 +532,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEqual([ '127.0.0.1:11211' ], site.memcache.addresses)
             self.assertEqual(60, site.sessionFactory.sessionTimeout)
             self.assertEqual(10, site.sessionCheckTime)
+            self.assertEqual(120, site.cookieTimeout)
 
       def test02_init_default(self):
             sessionTimeout = pokersite.PokerSite.sessionFactory.sessionTimeout
@@ -627,6 +628,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.memcache.set(serial, 'other uid')
             self.assertEquals(False, self.site.updateSession(session))
             self.assertEquals(True, session.expired)
+            self.assertEquals(None, self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
 
       def test04_04_updateSession(self):
             """
@@ -640,7 +642,8 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
-
+            float(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
+            
       def test04_05_updateSession(self):
             """
             memcache serial is > 0 and serial is == 0, meaning the user logged out
@@ -657,6 +660,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
+            float(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
             #
             # logout
             #
@@ -665,6 +669,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(0, int(self.site.memcache.get(session.uid)))
             self.assertEquals(None, self.site.memcache.get(str(serial)))
+            self.assertEquals(None, self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
 
       def test04_06_updateSession(self):
             """
@@ -729,6 +734,61 @@ class PokerSiteTestCase(PokerSiteBase):
                   self.assertSubstring('Expires', r.cookies[0])
                   return True
             d.addErrback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
+
+      def test07_memcacheCookie_expired(self):
+            """
+            If a session stored in memcache has not been used for too long (i.e.
+            its last_modified timestamp is greater than a given number of seconds)
+            the session is invalidated.
+            """
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            session = 'session'
+            serial = '5'
+            r.received_cookies['TWISTED_SESSION'] = session
+            r.site.memcache.set(pokersite.uid2last_modified(session), '0')
+            r.site.memcache.set(session, serial)
+            r.site.memcache.set(serial, session)
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('=session', r.cookies[0])
+                  self.assertEquals(None, r.site.memcache.get(session))
+                  self.assertEquals(None, r.site.memcache.get(serial))
+                  self.assertEquals(None, r.site.memcache.get(pokersite.uid2last_modified(session)))
+                  return True
+            d.addCallback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
+
+      def test07_memcacheCookie_expired(self):
+            """
+            If a session stored in memcache has not been used for too long (i.e.
+            its last_modified timestamp is greater than a given number of seconds)
+            the session is invalidated.
+            """
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            session = 'session'
+            serial = '5'
+            r.received_cookies['TWISTED_SESSION'] = session
+            r.site.memcache.set(pokersite.uid2last_modified(session), '0')
+            r.site.memcache.set(session, serial)
+            r.site.memcache.set(serial, session)
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('=session', r.cookies[0])
+                  self.assertEquals(None, r.site.memcache.get(session))
+                  self.assertEquals(None, r.site.memcache.get(serial))
+                  return True
+            d.addCallback(finish)
             r.requestReceived('GET', '/', '')
             return d
 

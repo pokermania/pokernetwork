@@ -29,8 +29,12 @@ from traceback import format_exc
 from twisted.web import server, resource, util, http
 from twisted.internet import defer
 from twisted.python import log
+from twisted.python.runtime import seconds
 
 from pokernetwork.pokerpackets import *
+
+def uid2last_modified(uid):
+    return 'L' + uid
 
 def fromutf8(tree, encoding = 'ISO-8859-1'):
     return __walk(tree, lambda x: x.encode(encoding))
@@ -153,7 +157,7 @@ class Request(server.Request):
         if sessionCookie:
             self.addCookie(cookiename,
                            sessionCookie,
-                           expires = time.asctime(time.gmtime(time.time() - 3600)) + ' UTC',
+                           expires = time.asctime(time.gmtime(seconds() - 3600)) + ' UTC',
                            path = '/')
         
 
@@ -399,6 +403,11 @@ class PokerSite(server.Site):
 
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
+        cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
+        if cookieTimeout > 0:
+            self.cookieTimeout = cookieTimeout
+        else:
+            self.cookieTimeout = 1200
         sessionTimeout = settings.headerGetInt("/server/@session_timeout")
         if sessionTimeout > 0:
             self.sessionFactory.sessionTimeout = sessionTimeout
@@ -466,6 +475,7 @@ class PokerSite(server.Site):
                 #
                 self.memcache.delete(str(session.memcache_serial))
                 self.memcache.replace(session.uid, '0')
+                self.deleteMemcacheCookie(session.uid)
             elif serial != session.memcache_serial:
                 #
                 # if the user changed personality, delete old serial, add new one and
@@ -474,12 +484,17 @@ class PokerSite(server.Site):
                 self.memcache.delete(str(session.memcache_serial))
                 self.memcache.add(str(serial), session.uid)
                 self.memcache.replace(session.uid, str(serial))
+                self.deleteMemcacheCookie(session.uid)
+                
         session.isLogged = session.avatar.isLogged()
+        if session.isLogged:
+            self.refreshMemcacheCookie(session.uid)
         if len(session.avatar.tables) <= 0 and len(session.avatar.tourneys) <= 0:
             session.expire()
         return True
 
     def getSession(self, uid):
+        self.expireMemcacheCookie(uid)
         memcache_serial = self.memcache.get(uid)
         if memcache_serial == None:
             #
@@ -545,3 +560,16 @@ class PokerSite(server.Site):
         session.memcache_serial = 0
         self.memcache.add(uid, str(session.memcache_serial))
         return session
+
+    def deleteMemcacheCookie(self, uid):
+        self.memcache.delete(uid2last_modified(uid))
+
+    def refreshMemcacheCookie(self, uid):
+        self.memcache.set(uid2last_modified(uid), str(seconds()))
+
+    def expireMemcacheCookie(self, uid):
+        last_modified = self.memcache.get(uid2last_modified(uid))
+        if last_modified != None and seconds() - int(last_modified) > self.cookieTimeout:
+            self.memcache.delete(uid2last_modified(uid))
+            self.memcache.delete(self.memcache.get(uid))
+            self.memcache.delete(uid)
