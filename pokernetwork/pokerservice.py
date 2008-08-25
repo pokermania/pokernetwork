@@ -37,6 +37,8 @@ import os
 import copy
 import operator
 import re
+import locale
+import gettext
 import libxml2
 import simplejson
 from traceback import print_exc
@@ -156,7 +158,7 @@ class PokerService(service.Service):
         self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.joined_max = self.settings.headerGetInt("/server/@max_joined")
         if self.joined_max <= 0:
-            # dachary picked this maximum as a default on 2008-04-16
+            # dachary picked this maximum as a default on 2008-08-16
             # <dachary> because the last stress test show 4000 is the upper limit
             # <dachary> http://pokersource.info/stress-test/2007-08/
             self.joined_max = 4000
@@ -219,6 +221,33 @@ class PokerService(service.Service):
         self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
         self._ping_delay = self.settings.headerGetInt("/server/@ping")
         self.chat = self.settings.headerGet("/server/@chat") == "yes"
+
+        # gettextFuncs is a dict that is indexed by full locale strings,
+        # such as fr_FR.UTF-8, and returns a translation function.  If you
+        # wanted to apply it directly, you'd do something like:
+        # but usually, you will do something like this to change your locale on the fly:
+        #   global _
+        #   _ = self.gettextFuncs{'fr_FR.UTF-8'}
+        #   _("Hello!  I am speaking in French now.")
+        #   _ = self.gettextFuncs{'en_US.UTF-8'}
+        #   _("Hello!  I am speaking in US-English now.")
+
+        self.gettextFuncs = {}
+        langsSupported = self.settings.headerGetProperties("/server/language")
+        if (len(langsSupported) > 0):
+            # Note, after calling _lookupTranslationFunc() a bunch of
+            # times, we must restore the *actual* locale being used by the
+            # server itself for strings locally on its machine.  That's
+            # why we save it here.
+            localLocale = locale.getlocale(locale.LC_ALL)
+
+            for lang in langsSupported:
+                self.gettextFuncs[lang['value']] = self._lookupTranslationFunc(lang['value'])
+            try:
+                locale.setlocale(locale.LC_ALL, localLocale)
+            except locale.Error, le:
+                self.error("Unable to restore local locale %s: %s" % (loc, le))
+
         for description in self.settings.headerGetProperties("/server/table"):
             self.createTable(0, description)
         self.cleanupTourneys()
@@ -292,6 +321,26 @@ class PokerService(service.Service):
 
     def getMissedRoundMax(self):
         return self.missed_round_max
+
+    def _lookupTranslationFunc(self, lang):
+        # Start by defaulting to just returning the string...
+        myGetTextFunc = lambda text:text
+        try:
+            locale.setlocale(locale.LC_ALL, lang)
+        except locale.Error, le:
+            self.error('Unable to support locale, "%s", due to locale error: %s'
+                       % (lang, le))
+            return myGetTextFunc
+
+        # I am not completely sure poker-engine should be hardcoded here like this...
+        gettext.bind_textdomain_codeset("poker-engine", lang)
+        gettext.install("poker-engine")
+        try:
+            myGetTextFunc = gettext.translation('poker-engine', languages=[lang]).gettext
+        except IOError, e:
+            self.error("No translation to locale %s in poker-engine; locale ignored: %s"
+                       % (lang, e))
+        return myGetTextFunc
 
     def shutdown(self):
         self.shutting_down = True

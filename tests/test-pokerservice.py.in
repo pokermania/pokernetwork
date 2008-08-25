@@ -79,6 +79,8 @@ TABLE1 = 1
 TABLE2 = 2
 TABLE3 = 3
 
+# Note that we use the locale fr_FR.UTF-8 here for testing.  This must be
+# a valid locale on the system!
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
@@ -87,6 +89,10 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
+
+  <language value="en_US.UTF-8"/>
+  <language value="fr_FR.UTF-8"/>
+  <language value="this_locale_does_not_exist"/>
 
   <refill serial="1" amount="10000000" />
 
@@ -394,15 +400,24 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                             ('tables', 2), ('tourney_table_serial', 1),
                             ('shutting_down', False), ('avatars', []),
                             ('serial2client', {}), ('simultaneous', 4),
-                            ('monitors', []) ]
+                            ('monitors', []), ('gettextFuncs', 3) ]
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), False)
+        clear_all_messages()
         self.service.startService()
+        self.assertEquals(search_output("*ERROR* No translation to locale en_US.UTF-8 in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"), True)
+        self.assertEquals(search_output('*ERROR* Unable to support locale, "this_locale_does_not_exist", due to locale error: unsupported locale setting'), True)
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
             if instanceVar == "tables":
                 self.assertEquals(len(self.service.__dict__[instanceVar]), val)
-        
+
+        for ii in ('this_locale_does_not_exist', 'en_US.UTF-8', 'fr_FR.UTF-8'):
+            self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
+        for ii in ('this_locale_does_not_exist', 'en_US.UTF-8'):
+            self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
+        self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
+
     def test00_1_configValues(self):
         self.configValues(settings_xml, 1000)
 

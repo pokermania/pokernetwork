@@ -1,5 +1,29 @@
 2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* debian/control.hardy (Build-Depends): Added language-pack-fr,
+	which pokernetwork/test-pokerservice.py.in now depends.
+
+	* debian/control.edgy (Build-Depends): Added language-pack-fr,
+	which pokernetwork/test-pokerservice.py.in now depends.
+
+	* debian/control.feisty (Build-Depends): Added language-pack-fr,
+	which pokernetwork/test-pokerservice.py.in now depends.
+
+	* debian/control.dapper (Build-Depends): Added language-pack-fr,
+	which pokernetwork/test-pokerservice.py.in now depends.
+
+	* debian/control.gutsy (Build-Depends): Added language-pack-fr,
+	which pokernetwork/test-pokerservice.py.in now depends.
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.configValues): Added check for locales
+	configuration.
+
+	* pokernetwork/pokerservice.py
+	(PokerService._lookupTranslationFunc): Wrote method.
+	(PokerService.startService): Added needed calls to
+	_lookupTranslationFunc.
+
 	* tests/test-pokertable.py.in (MockService.loadHand): Added remove
 	list to get rid of exampleHand packets that some tests do not want.
 	(PokerTableTestCase.test31_kickPlayerForMissingTooManyBlinds):
