@@ -4040,8 +4040,6 @@ class PacketPokerPlayerPlaces(Packet):
 Packet.infoDeclare(globals(), PacketPokerPlayerPlaces, Packet, "POKER_PLAYER_PLACES", 152) # 152 # 0x98 # %SEQ%
 
 ########################################
-PACKET_POKER_SET_LOCALE = 153 # 0x99 # %SEQ%
-PacketNames[PACKET_POKER_SET_LOCALE] = "POKER_SET_LOCALE"
 
 class PacketPokerSetLocale(PacketSerial):
     """\
@@ -4062,32 +4060,9 @@ locale: string representing fully qualified locale and encoding, such as "fr_FR.
 serial: integer uniquely identifying a player.
 """
 
-    type = PACKET_POKER_SET_LOCALE
-
     info = PacketSerial.info + ( ('locale', 'en_US.UTF-8', 's'), )
 
-    locale = "en_US.UTF-8"
-
-    def __init__(self, *args, **kwargs):
-        self.locale = kwargs.get("locale", "en_US.UTF-8")
-        PacketSerial.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketSerial.pack(self) + self.packstring(self.locale)
-
-    def unpack(self, block):
-        block = PacketSerial.unpack(self, block)
-        (block, self.locale) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketSerial.calcsize(self) + self.calcsizestring(self.locale)
-
-    def __str__(self):
-        return PacketSerial.__str__(self) + " locale = %s" % self.locale
-
-PacketFactory[PACKET_POKER_SET_LOCALE] = PacketPokerSetLocale
-
+Packet.infoDeclare(globals(), PacketPokerSetLocale, PacketSerial, "POKER_SET_LOCALE", 153) # 153 # 0x99 # %SEQ%
 
 _TYPES = range(50,169)
 
