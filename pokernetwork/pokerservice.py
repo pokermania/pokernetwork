@@ -342,6 +342,12 @@ class PokerService(service.Service):
                        % (lang, e))
         return myGetTextFunc
 
+    def locale2translationFunc(self, locale):
+        if self.gettextFuncs.has_key(locale):
+            return self.gettextFuncs[locale]
+        else:
+            return None
+
     def shutdown(self):
         self.shutting_down = True
         self.cancelTimer('checkTourney')

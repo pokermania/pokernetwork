@@ -427,6 +427,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         for ii in ('this_locale_does_not_exist', 'en_US.UTF-8', 'fr_FR.UTF-8'):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
+            self.assertEquals(callable(self.service.locale2translationFunc(ii)), True)
         for ii in ('this_locale_does_not_exist', 'en_US.UTF-8'):
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
         if FRENCH_LOCALE_MISSING:
@@ -434,6 +435,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "Aces")
         else:
             self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
+
+        for ii in ('nothing', 'unknown'):
+            self.assertEquals(self.service.locale2translationFunc(ii), None)
 
     def test00_1_configValues(self):
         self.configValues(settings_xml, 1000)

@@ -1,5 +1,12 @@
 2008-08-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.configValues): Added test coverage for
+	locale2translationFunc.
+
+	* pokernetwork/pokerservice.py
+	(PokerService.locale2translationFunc): Wrote function.
+
 	* pokernetwork/pokerpackets.py (PacketPokerSetLocale): Created new
 	packet type.
 
