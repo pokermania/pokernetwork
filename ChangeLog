@@ -1,6 +1,18 @@
-2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
+2008-08-25  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: last
+	  modification date is better stored as an int
+	* conf/poker.server.xml.in, pokernetwork/pokersite.py,
+	  tests/test-pokersite.py.in: Expire session cookies stored in
+	  memcache after /server/@cookie_timeout seconds. In theory
+	  memcache should be able to provide a way to purge entries older
+	  than N seconds because it keeps the last modification date. But
+	  there is no API to use this information.
+	* ChangeLog: *** empty log message ***
+
+2008-08-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* debian/control.hardy (Build-Depends): Added language-pack-fr,
 	which pokernetwork/test-pokerservice.py.in now depends.
