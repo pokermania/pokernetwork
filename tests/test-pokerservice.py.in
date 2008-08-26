@@ -85,10 +85,11 @@ TABLE3 = 3
 
 localLocale = locale.getlocale(locale.LC_ALL)
 FRENCH_LOCALE_MISSING = False
+MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE! FAIL!  fail!"
 try:
     locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
 except locale.Error, le:
-    print "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!"
+    print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
     FRENCH_LOCALE_MISSING = True
     
 locale.setlocale(locale.LC_ALL, localLocale)
@@ -431,7 +432,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         for ii in ('this_locale_does_not_exist', 'en_US.UTF-8'):
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
         if FRENCH_LOCALE_MISSING:
-            print "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!"
+            print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
             self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "Aces")
         else:
             self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
