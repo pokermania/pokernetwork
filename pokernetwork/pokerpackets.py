@@ -4046,15 +4046,15 @@ class PacketPokerSetLocale(PacketSerial):
 
 Semantics: the player "serial" is required to set the "locale" string,
 which must be a locale supported by the server.  If the locale is
-supported by the server, it will be the default locale used for strings
-sent by PokerExplain packets.
+supported by the server, it will be made the locale used for strings sent
+by PokerExplain packets.
 
 Direction: server  <= client
 
 Context: If the locale is supported by the server, a PacketAck is
 returned, and future PokerExplain strings will be localized to the
 requested language.  Otherwise a PacketError is returned with other_type
-set to PACKET_POKER_SET_LOCAL.
+set to PACKET_POKER_SET_LOCALE.
 
 locale: string representing fully qualified locale and encoding, such as "fr_FR.UTF-8"
 serial: integer uniquely identifying a player.
