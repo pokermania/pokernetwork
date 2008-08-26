@@ -98,6 +98,9 @@ def rest_filter(site, request, packet):
     resthost = service.packet2resthost(packet)
     if resthost:
         ( host, port, path ) = resthost
+        parts = request.uri.split('?', 1)
+        if len(parts) > 1:
+            path += '?' + parts[1]
         request.content.seek(0, 0)
         clientFactory = ProxyClientFactory(
             request.method, path, request.clientproto,
