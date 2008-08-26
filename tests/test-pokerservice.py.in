@@ -81,7 +81,7 @@ TABLE2 = 2
 TABLE3 = 3
 
 # Note that we use the locale fr_FR.UTF-8 here for testing.  This must be
-# a valid locale on the system!
+# a valid locale on the system!  Important tests are skipped otherwise!!!
 
 localLocale = locale.getlocale(locale.LC_ALL)
 FRENCH_LOCALE_MISSING = False
