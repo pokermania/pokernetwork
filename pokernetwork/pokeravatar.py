@@ -47,6 +47,7 @@ class PokerAvatar:
 
     def __init__(self, service):
         self.protocol = None
+        self.localeFunc = None
         self.roles = sets.Set()
         self.service = service
         self.tables = {}
@@ -73,7 +74,11 @@ class PokerAvatar:
         else:
             self.explain = None
         return True
-            
+
+    def setLocale(self, locale):
+        self.localeFunc = self.service.locale2translationFunc(locale)
+        return self.localeFunc
+
     def setProtocol(self, protocol):
         self.protocol = protocol
 
@@ -208,6 +213,34 @@ class PokerAvatar:
         return queue
     
     def sendPacket(self, packet):
+        from pokerengine.pokergame import init_i18n as pokergame_init_i18n
+        # Note on special processing of locales on packet send:
+        #    Ideally, clients would do their own locale work.  However, in
+        #    particular when PokerExplain is in effect, some clients are
+        #    requiring explanation strings coming from the server about
+        #    what is happening in the game.  (Indeed, PokerExplain exists
+        #    for precisely that scenario.)  Thefore, every time we send a
+        #    packet via PokerAvatar, we need to make sure the local in
+        #    poker-engine's pokergame localization is set properly to the
+        #    localization requested by the client (iff. they have
+        #    requested one via PacketPokerSetLocale).  Note that because
+        #    global variables are effectively only file-wide, the _() that
+        #    we create here propagates only as wide as this file.  the
+        #    call to pokergame_init_i18n() is what actually changes the
+        #    _() defined in pokergame.py.
+        #
+        #    It is in some ways overkill to redefine our own _() here,
+        #    particularly because at the time of writing, we don't
+        #    actually have localization strings in the functions in this
+        #    file.  However, should we have them later, we'd obviously
+        #    want those strings to be localized for the client, at least
+        #    during packet sending.
+
+        global _
+        if self.localeFunc:
+            avatarSavedUnder = _
+            _ = self.localeFunc
+            pokergameSavedUnder = pokergame_init_i18n('', self.localeFunc)
 	if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
 	    self.explain.explain(packet)
 	    packets = self.explain.forward_packets
@@ -218,7 +251,17 @@ class PokerAvatar:
         else:
 	    for packet in packets:
                 self.protocol.sendPacket(packet)
+        if self.localeFunc:
+            _ = avatarSavedUnder
+            pokergame_init_i18n('', pokergameSavedUnder)
 
+    # Below, we assign the method queueDeferred() is the same as
+    # sendPacket().  Be careful not to indent the line below; if you
+    # aren't paying attention, you might think it belongs inside the
+    # previous function.  It doesn't. ...  Ok, so I never got over the
+    # "whitespace indentation matters" thing in Python, and I get careless
+    # sometimes, then after I do I proceed to write warning comments that
+    # normal Python programmers probably don't need. :-p -- bkuhn
     queueDeferred = sendPacket
     
     def sendPacketVerbose(self, packet):
@@ -268,6 +311,14 @@ class PokerAvatar:
                 self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_EXPLAIN))
             return
         
+        if packet.type == PACKET_POKER_SET_LOCALE:
+            if self.setLocale(packet.locale):
+                self.sendPacketVerbose(PacketAck())
+            else:
+                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
+                                                        other_type = PACKET_POKER_SET_LOCALE))
+            return
+
         if packet.type == PACKET_POKER_STATS_QUERY:
             self.sendPacketVerbose(self.service.stats(packet.string))
             return

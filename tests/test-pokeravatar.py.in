@@ -23,6 +23,7 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
+import locale
 import libxml2
 from types import *
 import socket
@@ -43,6 +44,21 @@ from tests.testmessages import restore_all_messages, silence_all_messages, searc
 #os.environ['VERBOSE_T'] = '0'
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
+
+# Note that we use the locale fr_FR.UTF-8 here for testing.  This must be
+# a valid locale on the system!  Important tests are skipped otherwise!!!
+
+localLocale = locale.getlocale(locale.LC_ALL)
+MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!  FAIL!  fail!"
+FRENCH_LOCALE_MISSING = False
+try:
+    locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+except locale.Error, le:
+    print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
+    FRENCH_LOCALE_MISSING = True
+    
+locale.setlocale(locale.LC_ALL, localLocale)
+
 
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
@@ -71,6 +87,9 @@ pokertournament.shuffler = ConstantPlayerShuffler()
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <language value="en_US.UTF-8"/>
+  <language value="fr_FR.UTF-8"/>
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="0" />
@@ -148,6 +167,11 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------
     def setUp(self):
         testclock._seconds_reset()        
+
+        self.avatarLocales = {}
+        self.avatarLocales[0] = "default"
+        self.avatarLocales[1] = "default"
+
         self.destroyDb()
         self.setUpServer()
         self.client_factory = [None, None, None]
@@ -537,7 +561,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(explainAgain, 0)
         d.addCallback(self.quit)
         return d
-
     # ------------------------------------------------------------------------
     def loginWithPasswordTooLong(self, (client, packet), index):
         client.sendPacket(PacketLogin(name = 'user%d' % index, password = 'passwordislongerthan15chars'))
@@ -731,6 +754,20 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def startHandAndReceiveCards(self, (client, packet), gameId):
         table = self.service.getTable(gameId)
+
+        lang2strings = { 'default' : [ "Dealer: user1 pays 1 blind\n",
+                                       "Dealer: user0 pays 2 blind\n",
+                                       "Dealer: pre-flop, 2 players\n" ], 
+                         'en_US.UTF-8' : [ "Dealer: user1 pays 1 blind\n",
+                                           "Dealer: user0 pays 2 blind\n",
+                                           "Dealer: pre-flop, 2 players\n" ], 
+                         'fr_FR.UTF-8' : [ "Dealer: user1 paye 1 de blind\n",
+                                           "Dealer: user0 paye 2 de blind\n",
+                                           "Dealer: pre-flop, 2 joueurs\n" ] }
+        if FRENCH_LOCALE_MISSING:
+            print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
+            lang2strings['fr_FR.UTF-8'] = lang2strings['default']
+
         avatar = []
         avatar.append(self.service.avatars[0])
         avatar.append(self.service.avatars[1])
@@ -738,83 +775,75 @@ class PokerAvatarTestCase(unittest.TestCase):
         packetList = []
         packetList.append(avatar[0].resetPacketsQueue())
         packetList.append(avatar[1].resetPacketsQueue())
+
         found = 0
-
-        # First look for all the packets that both of them get and should have.
-        p = []
-        p.extend(packetList[0])
-        p.extend(packetList[1])
-        found = 0
-        for packet in p:
-            if packet.type == PACKET_POKER_BLIND:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.dead, 0)
-                if packet.serial == avatar[1].getSerial():
-                    self.assertEquals(packet.amount, 100)
-                elif packet.serial == avatar[0].getSerial():
-                    self.assertEquals(packet.amount, 200)
-                else:
-                    self.assertEquals("", "Unknown serial: %d" % packet.serial)
-            elif packet.type == PACKET_POKER_CHIPS_PLAYER2BET:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.cookie, "")
-                if (packet.serial == avatar[0].getSerial()):
-                        self.assertEquals(packet.chips, [100, 2])
-                elif (packet.serial == avatar[1].getSerial()):
-                    self.assertEquals(packet.chips, [100, 1])
-                else:
-                        assert("unknown serial in player2bet packet: %d" 
-                               % packet.serial)
-            elif packet.type == PACKET_POKER_CHIPS:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                if (packet.serial == avatar[0].getSerial()):
-                    self.assertEquals(packet.bet, 200)
-                    self.assertEquals(packet.money, 800)
-                elif (packet.serial == avatar[1].getSerial()):
-                    self.assertEquals(packet.bet, 100)
-                    self.assertEquals(packet.money, 900)
-                else:
-                    self.assertEquals(
-                        "unknown serial in player2bet packet: %d" 
-                        % packet.serial, "")
-            elif packet.type == PACKET_POKER_CHAT:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.serial, 0)
-                if (packet.message not in [ "Dealer: user1 pays 1 blind\n",
-                                            "Dealer: user0 pays 2 blind\n",
-                                            "Dealer: pre-flop, 2 players\n" ]):
-                    self.assertEquals("Unexpected message: %s" %
-                                      packet.message, "")
-            elif packet.type == PACKET_POKER_STATE:
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.serial, 0)
-                self.assertEquals(packet.string, "pre-flop")
-            elif packet.type == PACKET_POKER_BEGIN_ROUND:
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.serial, 0)
-                self.assertEquals(packet.cookie, "")
-
-        self.assertEquals(found, 14)
-
+        ignored = 0
         for avid in [0, 1]:
             otherid = avid -1
-            if otherid < 0:
-                otherid = 1
+            if otherid < 0: otherid = 1
+            mySerial = avatar[avid].getSerial()
             for packet in packetList[avid]:
-                if packet.type == PACKET_POKER_PLAYER_CARDS:
+                if packet.type == PACKET_POKER_BLIND:
+                    found += 1
                     self.assertEquals(packet.game_id, gameId)
-                    if (packet.serial == avatar[avid].getSerial()):
+                    self.assertEquals(packet.dead, 0)
+                    if packet.serial == avatar[1].getSerial():
+                        self.assertEquals(packet.amount, 100)
+                    elif packet.serial == avatar[0].getSerial():
+                        self.assertEquals(packet.amount, 200)
+                    else:
+                        self.assertEquals("", "Unknown serial: %d" % packet.serial)
+                elif packet.type == PACKET_POKER_CHIPS_PLAYER2BET:
+                    found += 1
+                    self.assertEquals(packet.game_id, gameId)
+                    self.assertEquals(packet.cookie, "")
+                    if (packet.serial == avatar[0].getSerial()):
+                        self.assertEquals(packet.chips, [100, 2])
+                    elif (packet.serial == avatar[1].getSerial()):
+                        self.assertEquals(packet.chips, [100, 1])
+                    else:
+                        assert("unknown serial in player2bet packet: %d" 
+                               % packet.serial)
+                elif packet.type == PACKET_POKER_CHIPS:
+                    found += 1
+                    self.assertEquals(packet.serial, mySerial)
+                    self.assertEquals(packet.game_id, gameId)
+                    if (avid == 0):
+                        self.assertEquals(packet.bet, 200)
+                        self.assertEquals(packet.money, 800)
+                    else:
+                        self.assertEquals(packet.bet, 100)
+                        self.assertEquals(packet.money, 900)
+                elif packet.type == PACKET_POKER_CHAT:
+                    found += 1
+                    self.assertEquals(packet.game_id, gameId)
+                    self.assertEquals(packet.serial, 0)
+                    if (packet.message not in lang2strings[self.avatarLocales[avid]]):
+                        self.fail("Unexpected and/or Wrong Language message: %s" 
+                                  % packet.message)
+                elif packet.type == PACKET_POKER_STATE:
+                    found += 1
+                    self.assertEquals(packet.game_id, gameId)
+                    self.assertEquals(packet.serial, 0)
+                    self.assertEquals(packet.string, "pre-flop")
+                elif packet.type == PACKET_POKER_BEGIN_ROUND:
+                    found += 1
+                    self.assertEquals(packet.game_id, gameId)
+                    self.assertEquals(packet.serial, 0)
+                    self.assertEquals(packet.cookie, "")
+
+                elif packet.type == PACKET_POKER_PLAYER_CARDS:
+                    found += 1
+                    self.assertEquals(packet.game_id, gameId)
+                    if (packet.serial == mySerial):
                         self.assertEquals(len(packet.cards), 2)
                         for c in packet.cards:
                             self.assertTrue(c <  255)
                             self.assertTrue(c >  0)
-                    elif (packet.serial == avatar[otherid].getSerial()):
+                    else:
                         self.assertEquals(packet.cards, [255, 255])
                 elif packet.type == PACKET_POKER_BET_LIMIT:
+                    found += 1
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
                     self.assertEquals(packet.cookie, "")
@@ -831,6 +860,10 @@ class PokerAvatarTestCase(unittest.TestCase):
                         self.assertEquals(packet.allin, 900)
                         self.assertEquals(packet.pot, 500)
                         self.assertEquals(packet.call, 100)
+                else:
+                    ignored += 1
+        self.assertEquals(found, 28)
+        self.assertEquals(ignored, 12)
         return (client, packet)
     # ------------------------------------------------------------------------
     def sitTable(self, (client, packet), id, gameId):
@@ -856,6 +889,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
+        d.addCallback(self.setLocale, "fr_FR.UTF-8")
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
@@ -2910,11 +2944,55 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.poll, 0)
         return d
+    # -------------------------------------------------------------------------
+    def setLocale(self, (client, packet), myLocale, avid = 0, expectSucceed=True):
+        if FRENCH_LOCALE_MISSING and myLocale == 'fr_FR.UTF-8':
+            print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
+            expectSucceed = False
 
+        avatar = self.service.avatars[avid]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerSetLocale(serial = client.getSerial(), 
+                                                      locale = myLocale))
+        foundCount = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ACK:
+                if expectSucceed:
+                    # Save the locale we've set so other tests can know if
+                    # they need it.
+                    self.avatarLocales[avid] = myLocale
+                    foundCount += 1
+                else:
+                    foundCount -= 1
+            if packet.type == PACKET_POKER_ERROR:
+                if expectSucceed:
+                    foundCount -= 1
+                else:
+                    self.assertEquals(packet.serial, client.getSerial())
+                    self.assertEquals(packet.other_type, PACKET_POKER_SET_LOCALE)
+                    foundCount += 1
+        self.assertEquals(foundCount, 1)
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    def test71_setLocaleAlwaysValid(self):
+        """Tests setting of roles"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.setLocale, "en_US.UTF-8", 0)
+        d.addCallback(self.quit)
+        return d
+    # -------------------------------------------------------------------------
+    def test72_setLocaleAlwaysFail(self):
+        """Tests setting of roles"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.setLocale, "Klingon_Kronos.UTF-8", 0, False)
+        d.addCallback(self.quit)
+        return d
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test70"
+#    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

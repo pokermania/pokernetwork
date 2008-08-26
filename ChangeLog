@@ -1,4 +1,21 @@
+2008-08-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.sendPacket): Handle
+	locale switching, both for avatar and pokergame, before sending a
+	packet.
+	(PokerAvatar.handlePacketLogic): Added handler for
+	PacketPokerSetLocale().
+
 2008-08-25  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test71_setLocaleAlwaysValid): Wrote test.
+	(PokerAvatarTestCase.test72_setLocaleAlwaysFail): Wrote test.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.handlePacketLogic):
+	Added check for PACKET_POKER_SET_LOCALE.
+	(PokerAvatar.setLocale): Wrote method.
+	(PokerAvatar.__init__): Added initialization for localeFunc
 
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.configValues): Added test coverage for
