@@ -33,15 +33,16 @@ twisted.internet.base.DelayedCall.debug = True
 
 from twisted.web import client
 
-from tests.testmessages import silence_all_messages
+from tests import testmessages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+if verbose < 0: testmessages.silence_all_messages()
 
 from tests import testclock
 
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
+from pokernetwork.pokerpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -91,7 +92,8 @@ class ProxyTestCase(unittest.TestCase):
             self.server_service = pokerservice.PokerService(settings)
             self.server_service.disconnectAll = lambda: True
             self.server_service.startService()
-            self.server_port = reactor.listenTCP(19481, pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service)), interface="127.0.0.1")
+            self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
+            self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
             
       def initProxy(self):
             settings = pokernetworkconfig.Config([])
@@ -99,7 +101,8 @@ class ProxyTestCase(unittest.TestCase):
             self.proxy_service = pokerservice.PokerService(settings)
             self.proxy_service.disconnectAll = lambda: True
             self.proxy_service.startService()
-            self.proxy_port = reactor.listenTCP(19480, pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.proxy_service)), interface="127.0.0.1")
+            self.proxy_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.proxy_service))
+            self.proxy_port = reactor.listenTCP(19480, self.proxy_site, interface="127.0.0.1")
           
       def setUp(self):
             testclock._seconds_reset()
@@ -109,11 +112,13 @@ class ProxyTestCase(unittest.TestCase):
             self.initProxy()
 
       def tearDownServer(self):
+            self.server_site.stopFactory()
             d = self.server_service.stopService()
             d.addCallback(lambda x: self.server_port.stopListening())
             return d
             
       def tearDownProxy(self):
+            self.proxy_site.stopFactory()
             d = self.proxy_service.stopService()
             d.addCallback(lambda x: self.proxy_port.stopListening())
             return d
@@ -191,9 +196,45 @@ class ProxyTestCase(unittest.TestCase):
             d.addBoth(checkTable)
             return d
 
+      def test06_tableSeat_auth(self):
+            """
+            Join a table thru a proxy, using an authenticated session
+            """
+            info = self.server_service.auth('user1', 'password1', PacketPokerRoles.PLAY)
+            serial = info[0][0]
+            self.proxy_site.memcache.set('session', str(serial))
+            self.proxy_site.memcache.set(str(serial), 'session')
+            headers = { 'Cookie': 'TWISTED_SESSION_name=session' }
+            #
+            # Join table
+            #
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1,"serial":' + str(serial) + '}',
+                               headers = headers)
+            def checkTable(result):
+                  packets = simplejson.JSONDecoder().decode(result)
+                  self.assertEqual('PacketPokerTable', packets[0]['type'])
+                  self.assertEqual('Table1', packets[0]['name'])
+                  return result
+            d.addCallback(checkTable)
+            #
+            # Get a seat
+            #
+            def seat(result):
+                  d1 = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
+                                     postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":' + str(serial) + '}',
+                                     headers = headers)
+                  def checkSeat(result):
+                        self.assertSubstring('PlayerArrive', result)
+                        return True
+                  d1.addCallback(checkSeat)
+                  return d1
+            d.addCallback(seat)
+            return d
+
 def Run():
       loader = runner.TestLoader()
-#      loader.methodPrefix = "test05"
+#      loader.methodPrefix = "test06"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       return runner.TrialRunner(
