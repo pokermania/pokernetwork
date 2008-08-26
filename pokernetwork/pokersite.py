@@ -98,11 +98,13 @@ def args2packets(args):
             packets.append(PacketError(message = "Invalid type name %s" % arg['type']))
     return packets
 
+memcache_singleton = {}
+
 class MemcacheMockup:
     class Client:
         def __init__(self, addresses, *args, **kwargs):
             self.addresses = addresses
-            self.cache = {}
+            self.cache = memcache_singleton
 
         def get(self, key):
             if self.cache.has_key(key):
