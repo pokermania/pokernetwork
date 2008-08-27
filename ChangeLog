@@ -1,3 +1,15 @@
+2008-08-26  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
+
+	* tests/test-proxyfilter.py.in: test06_tableSeat_auth to verify
+	  authentication survives proxy requests
+	* pokernetwork/proxyfilter.py: copy the args from the URL in the
+	  proxy request
+	* pokernetwork/pokersite.py: MemcacheMockup uses a singleton hash
+	  to share among multiple instances in the same process (typical in
+	  test environments)
+
 2008-08-26  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/pokeravatar.py (PokerAvatar.sendPacket): Handle
@@ -33,8 +45,10 @@
 
 2008-08-25  Loic Dachary <loic@dachary.org>
 
- 	* Release 1.7.0
-
+	* tests/test-protocol.py.in: add POKER_SET_LOCALE to the list of
+	  packets
+	* pokernetwork/pokerpackets.py: Simplify PacketPokerSetLocale
+	  declaration
 	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: last
 	  modification date is better stored as an int
 	* conf/poker.server.xml.in, pokernetwork/pokersite.py,
