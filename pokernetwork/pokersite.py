@@ -150,9 +150,6 @@ class Request(server.Request):
     def cookieName(self):
         return "_".join(['TWISTED_SESSION'] + self.sitepath)
 
-    def getSessionCookie(self):
-        return self.getCookie(self.cookieName())
-
     def expireSessionCookie(self):
         cookiename = self.cookieName()
         sessionCookie = self.getCookie(cookiename)
@@ -269,24 +266,6 @@ class PokerResource(resource.Resource):
             # update the session information if the avatar changed
             #
             session.site.updateSession(session)
-            #
-            # If the session expired and a session cookie was sent by the
-            # client, expire the session cookie by setting its expiration date
-            # in the past.
-            #
-            sessionCookie = request.getSessionCookie()
-            if session.expired:
-                if not session.isLogged:
-                    #
-                    # If the user is not logged in and the session expired,
-                    # the cookie must not be set.
-                    #
-                    request.cookies = []
-                    #
-                    # If the cookie was already set but the user is not logged
-                    # in and the session expired, it must be removed.
-                    #
-                    request.expireSessionCookie()
             #
             # Format answer
             #
