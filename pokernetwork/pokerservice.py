@@ -583,6 +583,7 @@ class PokerService(service.Service):
             tourney_serial = cursor.insert_id()
         if schedule['respawn'] == 'n':
             cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s" % schedule['serial'])
+        cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
         cursor.close()
         self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'])
 

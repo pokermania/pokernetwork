@@ -28,6 +28,7 @@ from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer, reactor
 from twisted.application import internet
 from twisted.python import failure
+from twisted.python.runtime import seconds
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
 
@@ -232,9 +233,48 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(seat)
             return d
 
+      def test07_tourneyRegister(self):
+            """
+            Register to a tourney thru a proxy, using an authenticated session
+            """
+            #
+            # Create tourney
+            #
+            db = self.server_service.db
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO tourneys_schedule (resthost_serial, active, start_time) VALUES (%s, 'y', %s)", ( self.server_service.resthost_serial, seconds() + 36000))
+            schedule_serial = cursor.lastrowid
+            self.server_service.updateTourneysSchedule()
+            cursor.execute("SELECT serial FROM tourneys WHERE schedule_serial = %s", schedule_serial)
+            tourney_serial = cursor.fetchone()[0]
+            cursor.close()
+            self.assertEqual(True, self.server_service.tourneys.has_key(tourney_serial))
+            #
+            # Create user
+            #
+             
+            info = self.server_service.auth('user1', 'password1', PacketPokerRoles.PLAY)
+            serial = info[0][0]
+            self.proxy_site.memcache.set('session', str(serial))
+            self.proxy_site.memcache.set(str(serial), 'session')
+            headers = { 'Cookie': 'TWISTED_SESSION_name=session' }
+            #
+            # Register tourney
+            #
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
+                               postdata = '{"type":"PacketPokerTourneyRegister","game_id":' + str(tourney_serial) + ',"serial":' + str(serial) + '}',
+                               headers = headers)
+            def checkTable(result):
+                  packets = simplejson.JSONDecoder().decode(result)
+                  self.assertEqual('PacketPokerTourneyRegister', packets[0]['type'])
+                  self.assertEqual(tourney_serial, packets[0]['game_id'])
+                  return result
+            d.addCallback(checkTable)
+            return d
+
 def Run():
       loader = runner.TestLoader()
-#      loader.methodPrefix = "test06"
+      loader.methodPrefix = "test07"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       return runner.TrialRunner(
