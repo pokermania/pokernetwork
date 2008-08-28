@@ -108,6 +108,7 @@ class ProxyTestCase(unittest.TestCase):
       def setUp(self):
             testclock._seconds_reset()
             pokersite.memcache = pokersite.MemcacheMockup
+            pokersite.memcache_singleton = {}
             self.destroyDb()
             self.initServer()
             self.initProxy()
@@ -272,9 +273,59 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(checkTable)
             return d
 
+      def test08_tableSeat_relogin(self):
+            """
+            Join a table thru a proxy, using an anonymous session that becomes an
+            authenticated session
+            """
+            headers = { 'Cookie': 'TWISTED_SESSION_name=session' }
+            self.proxy_site.memcache.set('session', '0')
+            #
+            # Join table
+            #
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1}',
+                               headers = headers)
+            def checkTable(result):
+                  packets = simplejson.JSONDecoder().decode(result)
+                  self.assertEqual('PacketPokerTable', packets[0]['type'])
+                  self.assertEqual('Table1', packets[0]['name'])
+                  return result
+            d.addCallback(checkTable)
+            #
+            # Login
+            #
+            def login(result):
+                  d3 = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
+                                     postdata = '{"type":"PacketLogin","user":"user1","password":"password"}',
+                                     headers = headers)
+                  def checkLogin(result):
+                        global serial
+                        packets = simplejson.JSONDecoder().decode(result)
+                        serial = packets[1]['serial']
+                        return True
+                  d3.addCallback(checkLogin)
+                  return d3
+            d.addCallback(login)
+            #
+            # Get a seat
+            #
+            def seat(result):
+                  global serial
+                  d1 = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
+                                     postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":' + str(serial) + '}',
+                                     headers = headers)
+                  def checkSeat(result):
+                        self.assertSubstring('PlayerArrive', result)
+                        return True
+                  d1.addCallback(checkSeat)
+                  return d1
+            d.addCallback(seat)
+            return d
+
 def Run():
       loader = runner.TestLoader()
-      loader.methodPrefix = "test07"
+#      loader.methodPrefix = "test08"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       return runner.TrialRunner(
