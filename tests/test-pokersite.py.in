@@ -144,8 +144,6 @@ class PokerResourceTestCase(PokerSiteBase):
             d = r.notifyFinish()
             def finish(result):
                   self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
-                  self.failIfSubstring('Expire', r.transport.getvalue())
-                  self.assertEqual(0, len(r.cookies))
             d.addCallback(finish)
             r.requestReceived('GET', '/', '')
             return d
@@ -210,21 +208,6 @@ class PokerResourceTestCase(PokerSiteBase):
             r.requestReceived('GET', '/?jsonp=FUN&packet={"type":"PacketPing"}', '')
 
             self.assertSubstring('\r\n\r\nFUN([])', r.transport.getvalue())
-
-      def test05_render_expire_cookie(self):
-            r = pokersite.Request(self.Channel(self.site), True)
-            r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
-            r.gotLength(len(input))
-            r.handleContentChunk(input)
-            r.received_cookies['TWISTED_SESSION'] = 'session'
-            d = r.notifyFinish()
-            def finish(result):
-                  self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
-                  self.assertSubstring('Expire', r.transport.getvalue())
-            d.addCallback(finish)
-            r.requestReceived('GET', '/', '')
-            return d
 
       def test06_render_expire_logged(self):
             r = pokersite.Request(self.Channel(self.site), True)
@@ -784,7 +767,7 @@ class PokerSiteTestCase(PokerSiteBase):
             r.site.memcache.set(serial, session)
             d = r.notifyFinish()
             def finish(result):
-                  self.assertSubstring('=session', r.cookies[0])
+                  self.failIfSubstring('=session', r.cookies[0])
                   self.assertEquals(None, r.site.memcache.get(session))
                   self.assertEquals(None, r.site.memcache.get(serial))
                   return True
