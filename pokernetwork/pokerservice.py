@@ -618,6 +618,10 @@ class PokerService(service.Service):
             del self.schedule2tourneys[tourney.schedule_serial]
         del self.tourneys[tourney.serial]
 
+    def tourneyResumeAndDeal(self, tourney):
+        self.tourneyBreakResume(tourney)
+        self.tourneyDeal(tourney)
+
     def tourneyNewState(self, tourney, old_state, new_state):
         cursor = self.db.cursor()
         updates = [ "state = '" + new_state + "'" ]
@@ -633,8 +637,11 @@ class PokerService(service.Service):
         if new_state == TOURNAMENT_STATE_BREAK:
             self.tourneyBreakCheck(tourney)
         elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
-            self.tourneyBreakResume(tourney)
-            self.tourneyDeal(tourney)
+            reactor.callLater(self.delays.get('extra_wait_tourney_break', 0), self.tourneyResumeAndDeal, tourney)
+        elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
+            # Only obey extra_wait_tourney_start if we had been registering and are now running,
+            # since we only want this behavior before the first deal. 
+            reactor.callLater(self.delays.get('extra_wait_tourney_start', 0), self.tourneyDeal, tourney)
         elif new_state == TOURNAMENT_STATE_RUNNING:
             self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
@@ -679,6 +686,7 @@ class PokerService(service.Service):
     def tourneyEndTurn(self, tourney, game_id):
         if not tourney.endTurn(game_id):
             self.tourneyFinished(tourney)
+
 
     def tourneyFinished(self, tourney):
         prizes = tourney.prizes()
@@ -769,9 +777,13 @@ class PokerService(service.Service):
         table.timeout_policy = "fold"
         return table.game
 
-    def tourneyDestroyGame(self, tourney, game):
+    def tourneyDestroyGameActual(self, game):
         table = self.getTable(game.id)
         table.destroy()
+
+    def tourneyDestroyGame(self, tourney, game):
+        reactor.callLater(self.delays.get('extra_wait_tourney_finish', 0),
+                          self.tourneyDestroyGameActual, game)
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
         from_table = self.getTable(from_game_id)

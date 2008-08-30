@@ -1,3 +1,28 @@
+2008-08-30  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(BreakTestCase.tourneyNewState_tourneyResumeAndDeal): split
+	from test_tourneyNewState() and reworked to handle reactor call.
+	(BreakTestCase.test02_tourneyNewState_tourneyResumeAndDeal_nowait):
+	Wrote test.
+	(BreakTestCase.test02_tourneyNewState_tourneyResumeAndDeal_withWait):
+	Wrote test.
+
+2008-08-28  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(BreakTestCase.test01_tourneyNewState_noCallbacksNeeded): split
+	test_tourneyNewState().
+
+2008-08-27  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyNewState):
+	Added check and delay for extra_wait_tourney_break
+	(PokerService.tourneyResumeAndDeal): Wrote method.
+	(PokerService.tourneyDestroyGame): delay actual table destruction
+	based on extra_wait_tourney_finish
+	(PokerService.tourneyDestroyGameActual): Created method.
+
 2008-08-26  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0

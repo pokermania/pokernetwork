@@ -916,7 +916,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 self.assertEquals(self.default_money, self.service.getMoney(self.user3_serial, 2))
             
         d.addCallback(checkTourneys)
-        reactor.callLater(3, lambda: d.callback(True))
+        reactor.callLater(15, lambda: d.callback(True))
 
         return d
         
@@ -1450,62 +1450,138 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
             self.assertTrue(search_output("bailor failed to provide requested money"))
         
 class BreakTestCase(PokerServiceTestCaseBase):
+    class Table:
+        def __init__(self):
+            self.message = None
+            
+        def broadcastMessage(self, type, message):
+            self.message = message
 
-    def test_tourneyNewState(self):
-        class Database:
+        def scheduleAutoDeal(self):
+            self.autodeal = 1
 
-            class Cursor:
-                def execute(self, sql):
-                    self.sql = sql
-                    self.rowcount = 1
-
-                def close(self):
-                    pass
-
-            def cursor(self):
-                self._cursor = Database.Cursor()
-                return self._cursor
+    class Database:
+        class Cursor:
+            def execute(self, sql):
+                self.sql = sql
+                self.rowcount = 1
 
             def close(self):
                 pass
 
-        class Tournament:
-            def __init__(self):
-                self.serial = 1
-                self.start_time = 1
-            
-        def ok(tourney):
+        def cursor(self):
+            self._cursor = BreakTestCase.Database.Cursor()
+            return self._cursor
+
+        def close(self):
             pass
+
+    class Tournament:
+        def __init__(self):
+            self.serial = 1
+            self.start_time = 1
+
+    def test01_tourneyNewState_noCallbacksNeeded(self):
+        def ok(tourney):
+            self.callCount += 1
+        def notok(tourney):
+            self.failIf(1)
+
+        saveDb = self.service.db
+        self.callCount = 0
+
+        self.service.db = BreakTestCase.Database()
+        self.service.tourneyBreakCheck = notok
+        self.service.tourneyDeal = notok
+        self.service.tourneyBreakWait = notok
+        self.service.tourneyBreakResume = notok
+
+        self.service.tourneyBreakWait = ok
+        self.service.tourneyNewState(BreakTestCase.Tournament(),
+             pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK_WAIT)
+        self.assertEquals(self.callCount, 1)
+        self.service.tourneyBreakWait = notok
+        self.callCount = 0
+
+        self.service.tourneyBreakCheck = ok
+        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
+        self.assertEquals(self.callCount, 1)
+        self.service.tourneyBreakCheck = notok
+        self.callCount = 0
+
+        self.service.db = saveDb
+
+    def tourneyNewState_tourneyResumeAndDeal(self, waitMin, waitMax):
+        """Helper function for testing tourneyResumeAndDeal state change.
+        The wait for the action must be between waitMin and waitMax"""
+
+        self.service.startService()
+        saveDb = self.service.db
+
+        # First, Setup functions that should not be caled and force them
+        # to fail
 
         def notok(tourney):
             self.failIf(1)
 
-        db = self.service.db
-        self.service.db = Database()
+        self.service.db = BreakTestCase.Database()
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
         self.service.tourneyBreakResume = notok
 
-        self.service.tourneyBreakCheck = ok
-        self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
-        self.service.tourneyBreakCheck = notok
+        # Next, create deferreds that must be called.  Since the deferred
+        # callbacks are in the function, we will get a reactor 120 second
+        # timeout error if these functions are not called.  They also use
+        # callCount to make sure they aren't called too often.
 
-        self.service.tourneyDeal = ok
-        self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
-        self.service.tourneyDeal = notok
+        tourneyBreakResumeDeferred = defer.Deferred()
+        def confirmTourneyBreakResume(tourney):
+            # Note that when asserts in here fail, it is just a reactor error
+            self.assertEquals(testclock._seconds_value - self.secondsStart  >= waitMin, True)
+            self.assertEquals(testclock._seconds_value - self.secondsStart  <= waitMax, True)
+            self.assertEquals(self.callCount, 0)
+            self.callCount += 1
+            tourneyBreakResumeDeferred.callback(True)
 
-        self.service.tourneyBreakWait = ok
-        self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK_WAIT)
-        self.service.tourneyBreakWait = notok
+        tourneyBreakResumeDeferred = defer.Deferred()
 
-        self.service.tourneyBreakResume = ok
-        self.service.tourneyDeal = ok
-        self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
-        self.service.tourneyDeal = notok
-        self.service.tourneyBreakResume = notok
-        self.service.db = db
+        def confirmTourneyDeal(tourney):
+            self.assertEquals(self.callCount, 1)
+            self.callCount += 1
+            tourneyDealDeferred.callback(True)
+            self.service.db = saveDb
+
+        tourneyDealDeferred = defer.Deferred()
+
+        self.callCount = 0
+        self.service.tourneyBreakResume = confirmTourneyBreakResume
+        self.service.tourneyDeal = confirmTourneyDeal
+        self.secondsStart = testclock._seconds_value
+
+        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
+
+        return defer.DeferredList((tourneyBreakResumeDeferred, tourneyDealDeferred), fireOnOneErrback = True)
         
+    def test02_tourneyNewState_tourneyResumeAndDeal_nowait(self):
+        return self.tourneyNewState_tourneyResumeAndDeal(0, 5)
+
+    def test02_tourneyNewState_tourneyResumeAndDeal_withWait(self):
+        self.service.delays['extra_wait_tourney_break'] = 40
+        return self.tourneyNewState_tourneyResumeAndDeal(40, 45)
+
+#         self.service.tourneyDeal = ok
+#         self.callCount = 0
+#         self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
+#         reactor.callLater(self.service.delays.get('extra_wait_tourney_start', 0) + 1,
+#                           callbackTourneyCheck, 2)
+
+
+#                  pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
+#         reactor.callLater(self.service.delays.get('extra_wait_tourney_break', 0) + 1,
+#                           callbackTourneyCheck)
+
+
     def test_tourneyDeal(self):
         class Game:
             
@@ -1517,12 +1593,8 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 self.games = [ Game() ]
                 self.serial = 1
                 
-        class Table:
-            def scheduleAutoDeal(self):
-                self.autodeal = 1
-
         tourney = Tournament()
-        table = Table()
+        table = BreakTestCase.Table()
         table.game = tourney.games[0]
         self.service.tables = [ table ]
         self.service.tourneyDeal(tourney)
@@ -1542,16 +1614,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def __init__(self):
                 self.games = [ Game() ]
                 self.serial = 1
-                
-        class Table:
-            def __init__(self):
-                self.message = None
-                
-            def broadcastMessage(self, type, message):
-                self.message = message
 
         tourney = Tournament()
-        table = Table()
+        table = BreakTestCase.Table()
         table.game = tourney.games[0]
         self.service.tables = [ table ]
         tourney.games[0].running = True
@@ -1572,15 +1637,8 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 self.games = [ Game() ]
                 self.serial = 1
                 
-        class Table:
-            def __init__(self):
-                self.message = None
-                
-            def broadcastMessage(self, type, message):
-                self.message = message
-
         tourney = Tournament()
-        table = Table()
+        table = BreakTestCase.Table()
         table.game = tourney.games[0]
         self.service.tables = [ table ]
         self.service.tourneyBreakResume(tourney)
@@ -1607,15 +1665,8 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def updateBreak(self):
                 pass
 
-        class Table:
-            def __init__(self):
-                self.message = None
-                
-            def broadcastMessage(self, type, message):
-                self.message = message
-
         tourney = Tournament()
-        table = Table()
+        table = BreakTestCase.Table()
         table.game = tourney.games[0]
         self.service.tables = [ table ]
         self.service.tourneyBreakCheck(tourney)
@@ -1647,26 +1698,26 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test00_4"
+    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
-    suite.addTest(loader.loadClass(PokerServiceTestCase))
-    suite.addTest(loader.loadClass(RefillTestCase))
-    suite.addTest(loader.loadClass(TimerTestCase))
+#     suite.addTest(loader.loadClass(PokerServiceTestCase))
+#     suite.addTest(loader.loadClass(RefillTestCase))
+#     suite.addTest(loader.loadClass(TimerTestCase))
     suite.addTest(loader.loadClass(BreakTestCase))
-    suite.addTest(loader.loadClass(TourneyFinishedTestCase))
-    suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
-    suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
-    suite.addTest(loader.loadClass(TourneyCancelTestCase))
-    suite.addTest(loader.loadClass(TourneyManagerTestCase))
-    suite.addTest(loader.loadClass(ShutdownCheckTestCase))
-    suite.addTest(loader.loadClass(ListHandsTestCase))
-    suite.addTest(loader.loadClass(SetAccountTestCase))
-    suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
-    suite.addTest(loader.loadClass(MonitorTestCase))
-    suite.addTest(loader.loadClass(ListTablesTestCase))
-    suite.addTest(loader.loadClass(TourneySelectTestCase))
-    suite.addTest(loader.loadClass(PlayerPlacesTestCase))
-    suite.addTest(loader.loadClass(ResthostTestCase))
+#     suite.addTest(loader.loadClass(TourneyFinishedTestCase))
+#     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
+#     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+#     suite.addTest(loader.loadClass(TourneyCancelTestCase))
+#     suite.addTest(loader.loadClass(TourneyManagerTestCase))
+#     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
+#     suite.addTest(loader.loadClass(ListHandsTestCase))
+#     suite.addTest(loader.loadClass(SetAccountTestCase))
+#     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
+#     suite.addTest(loader.loadClass(MonitorTestCase))
+#     suite.addTest(loader.loadClass(ListTablesTestCase))
+#     suite.addTest(loader.loadClass(TourneySelectTestCase))
+#     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
+#     suite.addTest(loader.loadClass(ResthostTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
