@@ -5,7 +5,12 @@
 	from test_tourneyNewState() and reworked to handle reactor call.
 	(BreakTestCase.test02_tourneyNewState_tourneyResumeAndDeal_nowait):
 	Wrote test.
-	(BreakTestCase.test02_tourneyNewState_tourneyResumeAndDeal_withWait):
+	(BreakTestCase.test03_tourneyNewState_tourneyResumeAndDeal_withWait):
+	Wrote test.
+	(BreakTestCase.tourneyNewState_tourneyStart): Wrote method, based
+	on tourneyNewState_tourneyResumeAndDeal.
+	(BreakTestCase.test04_tourneyNewState_tourneyStart_nowait): Wrote test.
+	(BreakTestCase.test05_tourneyNewState_tourneyStart_withWait):
 	Wrote test.
 
 2008-08-28  Bradley M. Kuhn  <bkuhn@ebb.org>

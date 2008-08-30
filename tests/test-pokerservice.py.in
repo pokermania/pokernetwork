@@ -1480,7 +1480,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         def __init__(self):
             self.serial = 1
             self.start_time = 1
-
+    # ------------------------------------------------------------------------
     def test01_tourneyNewState_noCallbacksNeeded(self):
         def ok(tourney):
             self.callCount += 1
@@ -1510,7 +1510,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.callCount = 0
 
         self.service.db = saveDb
-
+    # ------------------------------------------------------------------------
     def tourneyNewState_tourneyResumeAndDeal(self, waitMin, waitMax):
         """Helper function for testing tourneyResumeAndDeal state change.
         The wait for the action must be between waitMin and waitMax"""
@@ -1544,15 +1544,12 @@ class BreakTestCase(PokerServiceTestCaseBase):
             self.callCount += 1
             tourneyBreakResumeDeferred.callback(True)
 
-        tourneyBreakResumeDeferred = defer.Deferred()
-
+        tourneyDealDeferred = defer.Deferred()
         def confirmTourneyDeal(tourney):
             self.assertEquals(self.callCount, 1)
             self.callCount += 1
             tourneyDealDeferred.callback(True)
             self.service.db = saveDb
-
-        tourneyDealDeferred = defer.Deferred()
 
         self.callCount = 0
         self.service.tourneyBreakResume = confirmTourneyBreakResume
@@ -1566,13 +1563,62 @@ class BreakTestCase(PokerServiceTestCaseBase):
     def test02_tourneyNewState_tourneyResumeAndDeal_nowait(self):
         return self.tourneyNewState_tourneyResumeAndDeal(0, 5)
 
-    def test02_tourneyNewState_tourneyResumeAndDeal_withWait(self):
+    def test03_tourneyNewState_tourneyResumeAndDeal_withWait(self):
         self.service.delays['extra_wait_tourney_break'] = 40
         return self.tourneyNewState_tourneyResumeAndDeal(40, 45)
+    # ------------------------------------------------------------------------
+    def tourneyNewState_tourneyStart(self, waitMin, waitMax):
+        """Helper function for testing tourney starting state change.
+        The wait for the action must be between waitMin and waitMax"""
+
+        self.service.startService()
+        saveDb = self.service.db
+
+        # First, Setup functions that should not be caled and force them
+        # to fail
+
+        def notok(tourney):
+            self.failIf(1)
+
+        self.service.db = BreakTestCase.Database()
+        self.service.tourneyBreakCheck = notok
+        self.service.tourneyDeal = notok
+        self.service.tourneyBreakWait = notok
+        self.service.tourneyBreakResume = notok
+
+        # Next, create deferreds that must be called.  Since the deferred
+        # callbacks are in the function, we will get a reactor 120 second
+        # timeout error if these functions are not called.  They also use
+        # callCount to make sure they aren't called too often.
+
+        def confirmTourneyDeal(tourney):
+            self.assertEquals(testclock._seconds_value - self.secondsStart  >= waitMin, True)
+            self.assertEquals(testclock._seconds_value - self.secondsStart  <= waitMax, True)
+            self.assertEquals(self.callCount, 0)
+            self.callCount += 1
+            tourneyDealDeferred.callback(True)
+            self.service.db = saveDb
+
+        tourneyDealDeferred = defer.Deferred()
+
+        self.callCount = 0
+        self.service.tourneyDeal = confirmTourneyDeal
+        self.secondsStart = testclock._seconds_value
+
+        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
+
+        return tourneyDealDeferred
+        
+    def test04_tourneyNewState_tourneyStart_nowait(self):
+        return self.tourneyNewState_tourneyStart(0, 5)
+
+    def test05_tourneyNewState_tourneyStart_withWait(self):
+        self.service.delays['extra_wait_tourney_start'] = 40
+        return self.tourneyNewState_tourneyStart(40, 45)
+    # ------------------------------------------------------------------------
 
 #         self.service.tourneyDeal = ok
 #         self.callCount = 0
-#         self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
 #         reactor.callLater(self.service.delays.get('extra_wait_tourney_start', 0) + 1,
 #                           callbackTourneyCheck, 2)
 
@@ -1698,7 +1744,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test02"
+    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
 #     suite.addTest(loader.loadClass(PokerServiceTestCase))
 #     suite.addTest(loader.loadClass(RefillTestCase))
