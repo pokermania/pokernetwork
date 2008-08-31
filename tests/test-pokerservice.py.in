@@ -392,7 +392,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max, missed_round_max=10):
+    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -440,6 +440,16 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         for ii in ('nothing', 'unknown'):
             self.assertEquals(self.service.locale2translationFunc(ii), None)
 
+        # If delaysValue is negative, that means in the context of this
+        # test that we want to assume they weren't given in the settings
+        # file and therefore service.delays() should not have them as keys.
+
+        for str in ('extra_wait_tourney_break', 'extra_wait_tourney_start', 'extra_wait_tourney_finish'):
+            if delaysValue < 0:
+                self.assertEquals(self.service.delays.has_key(str), False)
+            else:
+                self.assertEquals(int(self.service.delays[str]), delaysValue)
+
     def test00_1_configValues(self):
         self.configValues(settings_xml, 1000)
 
@@ -475,6 +485,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
         self.assertEquals(search_output("*ERROR* Unable to restore original locale: testing bad setlocale"), True)
         locale.setlocale = saveLocale
+
+    def test00_5_configValues(self):
+        self.configValues(settings_xml.replace('delays',
+                                               'delays extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="60"'), 1000, delaysValue=60)
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1794,26 +1808,26 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test00"
     suite = loader.suiteFactory()
-#     suite.addTest(loader.loadClass(PokerServiceTestCase))
-#     suite.addTest(loader.loadClass(RefillTestCase))
-#     suite.addTest(loader.loadClass(TimerTestCase))
+    suite.addTest(loader.loadClass(PokerServiceTestCase))
+    suite.addTest(loader.loadClass(RefillTestCase))
+    suite.addTest(loader.loadClass(TimerTestCase))
     suite.addTest(loader.loadClass(BreakTestCase))
-#     suite.addTest(loader.loadClass(TourneyFinishedTestCase))
-#     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
-#     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
-#     suite.addTest(loader.loadClass(TourneyCancelTestCase))
-#     suite.addTest(loader.loadClass(TourneyManagerTestCase))
-#     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
-#     suite.addTest(loader.loadClass(ListHandsTestCase))
-#     suite.addTest(loader.loadClass(SetAccountTestCase))
-#     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
-#     suite.addTest(loader.loadClass(MonitorTestCase))
-#     suite.addTest(loader.loadClass(ListTablesTestCase))
-#     suite.addTest(loader.loadClass(TourneySelectTestCase))
-#     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
-#     suite.addTest(loader.loadClass(ResthostTestCase))
+    suite.addTest(loader.loadClass(TourneyFinishedTestCase))
+    suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
+    suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+    suite.addTest(loader.loadClass(TourneyCancelTestCase))
+    suite.addTest(loader.loadClass(TourneyManagerTestCase))
+    suite.addTest(loader.loadClass(ShutdownCheckTestCase))
+    suite.addTest(loader.loadClass(ListHandsTestCase))
+    suite.addTest(loader.loadClass(SetAccountTestCase))
+    suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
+    suite.addTest(loader.loadClass(MonitorTestCase))
+    suite.addTest(loader.loadClass(ListTablesTestCase))
+    suite.addTest(loader.loadClass(TourneySelectTestCase))
+    suite.addTest(loader.loadClass(PlayerPlacesTestCase))
+    suite.addTest(loader.loadClass(ResthostTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,

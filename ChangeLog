@@ -15,6 +15,8 @@
 	(BreakTestCase.tourneyFinish): Wrote method.
 	(BreakTestCase.test06_tourneyFinish_nowait): Wrote test.
 	(BreakTestCase.test07_tourneyFinish_withWait): Wrote test.
+	(PokerServiceTestCase.test00_5_configValues): Wrote test.
+	(PokerServiceTestCase.configValues): Added checks on self.service.delays
 
 2008-08-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
