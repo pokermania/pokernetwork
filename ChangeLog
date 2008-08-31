@@ -12,6 +12,9 @@
 	(BreakTestCase.test04_tourneyNewState_tourneyStart_nowait): Wrote test.
 	(BreakTestCase.test05_tourneyNewState_tourneyStart_withWait):
 	Wrote test.
+	(BreakTestCase.tourneyFinish): Wrote method.
+	(BreakTestCase.test06_tourneyFinish_nowait): Wrote test.
+	(BreakTestCase.test07_tourneyFinish_withWait): Wrote test.
 
 2008-08-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 

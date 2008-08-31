@@ -1453,6 +1453,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
     class Table:
         def __init__(self):
             self.message = None
+            self.destroyCalled = 0
             
         def broadcastMessage(self, type, message):
             self.message = message
@@ -1495,6 +1496,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
         self.service.tourneyBreakResume = notok
+        self.service.tourneyDestroyGame = notok
 
         self.service.tourneyBreakWait = ok
         self.service.tourneyNewState(BreakTestCase.Tournament(),
@@ -1529,6 +1531,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
         self.service.tourneyBreakResume = notok
+        self.service.tourneyDestroyGame = notok
 
         # Next, create deferreds that must be called.  Since the deferred
         # callbacks are in the function, we will get a reactor 120 second
@@ -1585,6 +1588,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
         self.service.tourneyBreakResume = notok
+        self.service.tourneyDestroyGame = notok
 
         # Next, create deferreds that must be called.  Since the deferred
         # callbacks are in the function, we will get a reactor 120 second
@@ -1616,17 +1620,63 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.delays['extra_wait_tourney_start'] = 40
         return self.tourneyNewState_tourneyStart(40, 45)
     # ------------------------------------------------------------------------
+    def tourneyFinish(self, waitMin, waitMax):
+        """Helper function for testing tourney Finish callback.
+        The wait for the action must be between waitMin and waitMax"""
 
-#         self.service.tourneyDeal = ok
-#         self.callCount = 0
-#         reactor.callLater(self.service.delays.get('extra_wait_tourney_start', 0) + 1,
-#                           callbackTourneyCheck, 2)
+        self.service.startService()
+        saveDb = self.service.db
+        saveTables = self.service.tables
 
+        # Create a deferred that our MockTable will call when it is
+        # destroyed, since that is the last function called by
+        # tourneyDestroyGameActual().  If the callback isn't done, we will
+        # get a reactor 120 second timeout error, so we can thus confirm
+        # that DestroyGameActual got called
 
-#                  pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
-#         reactor.callLater(self.service.delays.get('extra_wait_tourney_break', 0) + 1,
-#                           callbackTourneyCheck)
+        tableDestroyDeferred = defer.Deferred()
+        class MockTable:
+            def __init__(self):
+                self.destroyCalled = 0
+            def destroy(table):
+                self.assertEquals(testclock._seconds_value - self.secondsStart  >= waitMin, True)
+                self.assertEquals(testclock._seconds_value - self.secondsStart  <= waitMax, True)
+                self.assertEquals(table.destroyCalled, 0)
+                table.destroyCalled += 1
+                tableDestroyDeferred.callback(True)
+                self.service.db = saveDb
+                self.service.tables = saveTables
 
+        ourTable  = MockTable()
+        class MockGame:
+            def __init__(game):
+                game.id = 1102
+
+        ourTable.game = MockGame()
+        self.service.tables = [ ourTable ]
+
+        def notok(tourney):
+            self.failIf(1)
+
+        self.service.db = BreakTestCase.Database()
+        self.service.tourneyBreakCheck = notok
+        self.service.tourneyDeal = notok
+        self.service.tourneyBreakWait = notok
+        self.service.tourneyBreakResume = notok
+        self.service.tourneyDeal =  notok
+
+        self.secondsStart = testclock._seconds_value
+        self.service.tourneyDestroyGame(None, ourTable.game)
+
+        return tableDestroyDeferred
+        
+    def test06_tourneyFinish_nowait(self):
+        return self.tourneyFinish(0, 5)
+
+    def test07_tourneyFinish_withWait(self):
+        self.service.delays['extra_wait_tourney_finish'] = 40
+        return self.tourneyFinish(40, 45)
+    # ------------------------------------------------------------------------
 
     def test_tourneyDeal(self):
         class Game:
@@ -1744,7 +1794,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test05"
+    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
 #     suite.addTest(loader.loadClass(PokerServiceTestCase))
 #     suite.addTest(loader.loadClass(RefillTestCase))
