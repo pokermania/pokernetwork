@@ -17,6 +17,11 @@
 	(BreakTestCase.test07_tourneyFinish_withWait): Wrote test.
 	(PokerServiceTestCase.test00_5_configValues): Wrote test.
 	(PokerServiceTestCase.configValues): Added checks on self.service.delays
+	(BreakTestCase.tourneyFinish): Moved db restore to before deferred return.
+	(BreakTestCase.tourneyNewState_tourneyStart): Moved db restore to
+	before deferred return.
+	(BreakTestCase.tourneyNewState_tourneyResumeAndDeal): Moved db
+	restore to before deferred return.
 
 2008-08-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
