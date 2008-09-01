@@ -277,10 +277,6 @@ class PokerImageUploadTestCase(unittest.TestCase):
             input = ''
             r.gotLength(len(input))
             r.handleContentChunk(input)
-            import cgi
-            def parse_multipart_mockup(content, dict):
-                  return {'filename':[image_data]}
-            cgi.parse_multipart = parse_multipart_mockup
             r.requestReceived('POST', '/', '')
             self.assertSubstring('image uploaded', r.transport.getvalue())
             self.assertEquals(base64.b64encode(self.image_data),
@@ -304,6 +300,32 @@ class PokerImageUploadTestCase(unittest.TestCase):
             r.requestReceived('POST', '/', '')
             self.assertSubstring('not logged', r.transport.getvalue())
             self.assertEquals(None, self.service.player_image)
+      
+      def test03_error(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            
+            r.args = {}
+            session = self.site.makeSession()
+            r.session = session
+            self.assertNotEquals(None, r.getSession().avatar);
+            user_serial = 111
+            r.getSession().avatar.user.serial = user_serial
+            self.assertEquals(True, r.getSession().avatar.isLogged());
+
+            image_data = "image data"
+            r.received_headers['content-type'] = 'multipart/form-data'
+            input = ''
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            error_pattern = 'UNLIKELY'
+            def setPlayerImageFailed(player_image):
+                  raise UserWarning, error_pattern
+            self.service.setPlayerImage = setPlayerImageFailed
+            r.requestReceived('POST', '/', '')
+            self.assertSubstring(error_pattern, r.transport.getvalue())
+            self.assertEquals(None, self.service.player_image)
+            session.expire()
 
 class PokerAvatarResourceTestCase(unittest.TestCase):
 
@@ -341,7 +363,7 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
             self.assertSubstring('\r\n\r\n%s' % data, r.transport.getvalue())
             self.assertEquals(serial, self.service.player_serial)
 
-      def test02_render_error(self):
+      def test02_not_found(self):
             serial = 100
             self.service.setPlayerImage(PacketPokerPlayerImage(image = '', serial = serial))
             r = pokersite.Request(self.Channel(self.site), True)
@@ -351,6 +373,22 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
             r.requestReceived('GET', '/%i' % serial, '')
             self.assertSubstring('not found', r.transport.getvalue())
             self.assertEquals(serial, self.service.player_serial)
+
+      def test03_error(self):
+            data = 'image data'
+            serial = 64
+            self.service.setPlayerImage(PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial))
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            r.gotLength(0)
+            r.handleContentChunk('')
+            error_pattern = 'UNLIKELY'
+            def getPlayerImageFailed(player_serial):
+                  raise UserWarning, error_pattern
+            self.service.getPlayerImage = getPlayerImageFailed
+            r.requestReceived('GET', '/%i' % serial, '')
+            self.assertSubstring('error_pattern', r.transport.getvalue())
+            self.assertEquals(None, self.service.player_serial)
 
 class FilterTestCase(unittest.TestCase):
 

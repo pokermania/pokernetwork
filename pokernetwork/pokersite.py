@@ -310,14 +310,24 @@ class PokerImageUpload(resource.Resource):
         if self.verbose > 3:
             self.message("render " + request.content.read())
         request.content.seek(0, 0)
-        data = request.args['filename'][0]        
-        self.deferred.addCallback(lambda result: self.deferRender(request, data))
+        self.deferred.addCallback(lambda result: self.deferRender(request))
+        def failed(reason):
+            body = reason.getTraceback()
+            request.setResponseCode(http.INTERNAL_SERVER_ERROR)
+            request.setHeader('content-type',"text/html")
+            request.setHeader('content-length', str(len(body)))
+            request.expireSessionCookie()
+            request.write(body)
+            request.connectionLost(reason)
+            return True
+        self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
 
-    def deferRender(self, request, data):
+    def deferRender(self, request):
         session = request.getSession()
         if session.avatar.isLogged():
             serial = request.getSession().avatar.getSerial()
+            data = request.args['filename'][0]    
             packet = PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial)
             self.service.setPlayerImage(packet)
             result_string = 'image uploaded'
@@ -357,6 +367,16 @@ class PokerAvatarResource(resource.Resource):
         request.content.seek(0, 0)
         serial = int(request.path.split('/')[-1])
         self.deferred.addCallback(lambda result: self.deferRender(request, serial))
+        def failed(reason):
+            body = reason.getTraceback()
+            request.setResponseCode(http.INTERNAL_SERVER_ERROR)
+            request.setHeader('content-type',"text/html")
+            request.setHeader('content-length', str(len(body)))
+            request.expireSessionCookie()
+            request.write(body)
+            request.connectionLost(reason)
+            return True
+        self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
 
     def deferRender(self, request, serial):
