@@ -7,8 +7,8 @@
   <delays autodeal_tournament_min="15" autodeal="18" autodeal_max="120" autodeal_check="15" round="12" position="60" showdown="30" finish="18" messages="60" breaks_check="30" extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="30"/>
   
 <!-- extra_waits are additional wait times before hands are dealt at
-  -- various points of the tourney (and at the end).  If they are left
-  -- out, they all default to 0.
+     various points of the tourney (and at the end).  If they are left
+     out, they all default to 0.
   -->
 
   <table name="One" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1" max_missed_round="2"/>
