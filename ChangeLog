@@ -1,3 +1,10 @@
+2008-09-01  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.playWhileObserverGrows): Wrote method.
+	(PokerAvatarTestCase.test74_tooManyPacketsGrowOnObserver): Created
+	test.
+
 2008-08-31  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
