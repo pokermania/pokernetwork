@@ -1,3 +1,10 @@
+2008-08-31  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.playWhilePlayerDisconnectsAndRejoin): Wrote
+	helper function.
+	(PokerAvatarTestCase.test73_packetReplayFromRelogin): Wrote test.
+
 2008-08-30  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
