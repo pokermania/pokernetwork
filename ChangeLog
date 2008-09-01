@@ -6,6 +6,8 @@
 	test.
 	(PokerAvatarTestCase.playerSitsBrieflyThenSitsOut): Wrote method.
 	(PokerAvatarTestCase.test75_playerSitsBrieflyThenOut): Created test.
+	(PokerAvatarTestCase.playerTimesoutAndThenLooksAtQueuedPackets):
+	Fixed bug in test.
 
 2008-08-31  Bradley M. Kuhn  <bkuhn@ebb.org>
 
