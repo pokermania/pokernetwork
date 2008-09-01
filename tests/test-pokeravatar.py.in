@@ -3194,9 +3194,108 @@ class PokerAvatarTestCase(unittest.TestCase):
         d3.addCallback(self.playWhileObserverGrows, 2)
         return defer.DeferredList((d, d2, d3))
     # ------------------------------------------------------------------------
+    def playerSitsBrieflyThenSitsOut(self, (client, packet), gameId):
+        avatars = self.service.avatars
+        clients = {}
+        table = self.service.getTable(gameId)
+        for ii in [ 0, 1, 2]:
+            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            avatars[ii].resetPacketsQueue()
+            self.sitTable((clients[ii], None), ii, gameId)
+        for ii in [ 0, 1, 2]:
+            avatars[ii].resetPacketsQueue()
+            self.autoBlindAnte( (clients[ii], None), ii, gameId)
+        for ii in [ 0 ,1, 2]:
+            avatars[ii].resetPacketsQueue()
+            self.readyToPlay( (clients[ii], None), ii, gameId)
+
+        self.sitOut((clients[ii], None), 2, gameId)
+
+        def findBigBlind(id):
+            bbPacket = None
+            packets = []
+            for ii in [ 0, 1]: packets.extend(avatars[ii].resetPacketsQueue())
+            while bbPacket == None:
+                for packet in packets:
+                    if packet.type == PACKET_POKER_BLIND and packet.serial == avatars[id].getSerial():
+                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.game_id, gameId)
+                        bbPacket = packet
+                        break
+            return bbPacket
+
+        for ii in [ 0, 1, 2]:
+            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            avatars[ii].resetPacketsQueue()
+
+        table.autodeal = True
+        handSkip = 0
+        while handSkip < 5:
+            handSkip += 1
+            self.dealTable((client, packet), gameId)
+            self.assertNotEquals(findBigBlind(0), None)
+            avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(),
+                                                         game_id = gameId))
+            self.dealTable((client, packet), gameId)
+            self.assertNotEquals(findBigBlind(1), None)
+            avatars[0].handlePacketLogic(PacketPokerFold(serial = clients[0].getSerial(),
+                                                         game_id = gameId))
+
+        # After this loop, a number of heads up hands have been played.
+        # Despite the fact that we set avatars[0] to queue packets before
+        # the loop started, we find that only the packets from the last
+        # hand are present.
+        count = 0
+        foldCount = 0
+        rakeCount = 0
+        winCount = 0
+        for pack in avatars[2]._packets_queue:
+            count += 1
+            self.assertEquals(pack.game_id, gameId)
+            if pack.type == PACKET_POKER_FOLD:
+                foldCount += 1
+            elif pack.type == PACKET_POKER_RAKE:
+                self.assertEquals(pack.value, 10)
+                rakeCount += 1
+            elif pack.type == PACKET_POKER_WIN:
+                self.assertEquals(pack.serial, 0)
+                winCount += 1
+        self.assertEquals(count, 200)
+        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
+        self.assertEquals(winCount, 10)
+        return (clients[2], None)
+    # ------------------------------------------------------------------------
+    def test75_playerSitsBrieflyThenOut(self):
+        """Test when a player sits in briefly, then sits out.  Packet queue grows?"""
+        table = self.service.getTable(2)
+        table.autodeal = False
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 10000)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 10000)
+        d3 = self.client_factory[2].established_deferred
+        d3.addCallback(self.setupCallbackChain)
+        d3.addCallback(self.sendRolePlay)
+        d3.addCallback(self.login, 2)
+        d3.addCallback(self.joinTable, 2, 2, 'Table2', '2-4-limit')
+        d3.addCallback(self.seatTable, 2, 2)
+        d3.addCallback(self.buyInTable, 2, 2, 10000)
+        d3.addCallback(self.playerSitsBrieflyThenSitsOut, 2)
+        return defer.DeferredList((d, d2, d3))
+    # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test7"
+#    loader.methodPrefix = "test75"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

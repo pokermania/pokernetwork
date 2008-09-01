@@ -4,6 +4,8 @@
 	(PokerAvatarTestCase.playWhileObserverGrows): Wrote method.
 	(PokerAvatarTestCase.test74_tooManyPacketsGrowOnObserver): Created
 	test.
+	(PokerAvatarTestCase.playerSitsBrieflyThenSitsOut): Wrote method.
+	(PokerAvatarTestCase.test75_playerSitsBrieflyThenOut): Created test.
 
 2008-08-31  Bradley M. Kuhn  <bkuhn@ebb.org>
 
