@@ -219,7 +219,7 @@ class PokerAvatar:
         #    particular when PokerExplain is in effect, some clients are
         #    requiring explanation strings coming from the server about
         #    what is happening in the game.  (Indeed, PokerExplain exists
-        #    for precisely that scenario.)  Thefore, every time we send a
+        #    for precisely that scenario.)  Therefore, every time we send a
         #    packet via PokerAvatar, we need to make sure the local in
         #    poker-engine's pokergame localization is set properly to the
         #    localization requested by the client (iff. they have
