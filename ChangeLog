@@ -1,3 +1,18 @@
+2008-09-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test00_3_configValues): Added
+	queuedPacketMax test.
+	(PokerServiceTestCase.configValues): Added queuedPacketMax test.
+
+	* pokernetwork/pokerservice.py
+	(PokerService.getClientQueuedPacketMax): Added method.
+	(PokerService.__init__): added initialization of
+	self.client_queued_packet_max from settings.
+
+	* conf/poker.server.xml.in: Added max_queued_client_packets
+	setting in <server>.
+
 2008-09-01  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in

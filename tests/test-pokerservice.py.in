@@ -392,7 +392,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1):
+    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -409,6 +409,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(joined_max, self.service.joined_max)
         self.assertEquals(missed_round_max, self.service.missed_round_max,
                           self.service.getMissedRoundMax())
+        self.assertEquals(queuedPacketMax, self.service.client_queued_packet_max,
+                          self.service.getClientQueuedPacketMax())
 
         startedOnlyVars = [ ('joined_count', 0),
                             ('tables', 2), ('tourney_table_serial', 1),
@@ -458,7 +460,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     def test00_3_configValues(self):
         self.configValues(settings_xml.replace('max_joined="1000"',
-                                               'max_missed_round="5"'), 4000, 5)
+                                               'max_missed_round="5" max_queued_client_packets="100"'),
+                          4000, 5, queuedPacketMax=100)
 
     def test00_4_badLocaleObject(self):
         """test00_4_badLocaleObject
@@ -1808,7 +1811,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test00"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

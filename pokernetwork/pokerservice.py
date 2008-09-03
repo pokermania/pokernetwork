@@ -186,6 +186,10 @@ class PokerService(service.Service):
             # Finally, note that this is the server-wide default.  In the
             # config file, <table> entries can override this.
             self.missed_round_max = 10
+        self.client_queued_packet_max = self.settings.headerGetInt("/server/@max_queued_client_packets")
+        if self.client_queued_packet_max <= 0:
+            self.client_queued_packet_max = 500
+        
         self.delays = settings.headerGetProperties("/server/delays")[0]
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
@@ -321,6 +325,9 @@ class PokerService(service.Service):
 
     def getMissedRoundMax(self):
         return self.missed_round_max
+
+    def getClientQueuedPacketMax(self):
+        return self.client_queued_packet_max
 
     def _lookupTranslationFunc(self, lang):
         # Start by defaulting to just returning the string...
