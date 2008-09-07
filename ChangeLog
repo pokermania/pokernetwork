@@ -1,4 +1,22 @@
+2008-09-07  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.forceObserverDisconnectPacketQueue): Wrote method.
+	(PokerAvatarTestCase.test76_forceObserverDisconnectPacketQueue):
+	Wrote test.
+	Changed license of my copyrights to AGPLv3-or-later.
+
+	* pokernetwork/pokerservice.py (PokerService.forceAvatarDestroy):
+	Wrote method.
+	Changed license of my copyrights to AGPLv3-or-later.
+
 2008-09-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.__init__): Added
+	warnedPacketExcess variable.
+	(PokerAvatar.extendPacketsQueue): Wrote method.
+	(PokerAvatar.sendPacket): Changed direct access to
+	self._packets_queue to method call.
 
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test00_3_configValues): Added

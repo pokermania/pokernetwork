@@ -1,14 +1,14 @@
 #
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2004, 2005, 2006 Mekensleep
+# Note: this file is copyrighted by multiple entities; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
 #
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2004, 2005, 2006 Mekensleep
+#                                24 rue vieille du temple 75004 Paris
+#                                <licensing@mekensleep.com>x
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+#
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
@@ -424,6 +441,9 @@ class PokerService(service.Service):
         avatar = pokeravatar.PokerAvatar(self)
         self.avatars.append(avatar)
         return avatar
+
+    def forceAvatarDestroy(self, avatar):
+        reactor.callLater(1, self.destroyAvatar, avatar)
 
     def destroyAvatar(self, avatar):
         if avatar in self.avatars:

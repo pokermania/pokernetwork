@@ -1,14 +1,14 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2004, 2005, 2006 Mekensleep
+# Note: this file is copyrighted by multiple entities; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
 #
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2004, 2005, 2006 Mekensleep
+#                                24 rue vieille du temple 75004 Paris
+#                                <licensing@mekensleep.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authors:
 #  Loic Dachary <loic@gnu.org>
@@ -40,6 +56,7 @@ from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerexplain import PokerExplain
+from twisted.internet import protocol, reactor, defer
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
@@ -53,6 +70,7 @@ class PokerAvatar:
         self.tables = {}
         self.user = User()
         self._packets_queue = []
+        self.warnedPacketExcess = False
         self.tourneys = []
         self.setExplain(0)
         self.has_session = False
@@ -207,7 +225,29 @@ class PokerAvatar:
     def noqueuePackets(self):
         self._queue_packets = False
 
+    def extendPacketsQueue(self, newPackets):
+        """takes PokerAvatar object and a newPackets as arguments, and
+        extends the self._queue_packets variable by that packet.  Checking
+        is done to make sure we haven't exceeded server-wide limits on
+        packet queue length.  PokerAvatar will be force-disconnected if
+        the packets exceed the value of
+        self.service.getClientQueuedPacketMax().  A warning will be
+        printed when the packet queue reaches 75% of the limit imposed by
+        self.service.getClientQueuedPacketMax()"""
+        # This method was introduced when we added the force-disconnect as
+        # the stop-gap.
+        self._packets_queue.extend(newPackets)
+        warnVal = int(.75 * self.service.getClientQueuedPacketMax())
+        if len(self._packets_queue) >= warnVal:
+            # If we have not warned yet that packet queue is getting long, warn now.
+            if not self.warnedPacketExcess:
+                self.warnedPacketExcess = True
+                self.error("WARNING: user %d has more than %d packets queued; will force-disconnect when %d are queued" % (self.getSerial(), warnVal, self.service.getClientQueuedPacketMax()))
+            if len(self._packets_queue) >= self.service.getClientQueuedPacketMax():
+                self.service.forceAvatarDestroy(self)
+
     def resetPacketsQueue(self):
+        self.warnedPacketExcess = False
         queue = self._packets_queue
         self._packets_queue = []
         return queue
@@ -247,7 +287,7 @@ class PokerAvatar:
 	else:
 	    packets = [ packet ]
         if self._queue_packets:
-            self._packets_queue.extend(packets)
+            self.extendPacketsQueue(packets)
         else:
 	    for packet in packets:
                 self.protocol.sendPacket(packet)

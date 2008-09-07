@@ -1,8 +1,11 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
+# Note: this file is copyrighted by multiple people; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
+#
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +20,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 import sys, os
@@ -3299,9 +3319,131 @@ class PokerAvatarTestCase(unittest.TestCase):
         d3.addCallback(self.playerSitsBrieflyThenSitsOut, 2)
         return defer.DeferredList((d, d2, d3))
     # ------------------------------------------------------------------------
+    def forceObserverDisconnectPacketQueue(self, (client, packet), gameId):
+        silence_all_messages()
+        avatars = self.service.avatars
+        clients = {}
+        table = self.service.getTable(gameId)
+        for ii in [ 0, 1]:
+            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            avatars[ii].resetPacketsQueue()
+            self.sitTable((clients[ii], None), ii, gameId)
+        for ii in [ 0, 1]:
+            avatars[ii].resetPacketsQueue()
+            self.autoBlindAnte( (clients[ii], None), ii, gameId)
+        for ii in [ 0 ,1]:
+            avatars[ii].resetPacketsQueue()
+            self.readyToPlay( (clients[ii], None), ii, gameId)
+
+        def findBigBlind(id, expectedCount):
+            bbPacket = None
+            packets = []
+            for ii in [ 0, 1]:
+                self.assertEquals(expectedCount, len(avatars[ii]._packets_queue))
+                if expectedCount >= 15:
+                    self.assertTrue(search_output("ERROR WARNING: user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
+                packets.extend(avatars[ii].resetPacketsQueue())
+            while bbPacket == None:
+                for packet in packets:
+                    if packet.type == PACKET_POKER_BLIND and packet.serial == avatars[id].getSerial():
+                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.game_id, gameId)
+                        bbPacket = packet
+                        break
+            return bbPacket
+
+        for ii in [ 0, 1, 2]:
+            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            avatars[ii].resetPacketsQueue()
+
+        table.autodeal = True
+        expectedCount = 14
+
+        clear_all_messages()
+        self.dealTable((client, packet), gameId)
+        self.assertNotEquals(findBigBlind(0, expectedCount), None)
+        avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(),
+                                                     game_id = gameId))
+        # we should get the warning on the observer
+        self.assertTrue(search_output("ERROR WARNING: user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
+        expectedCount = 20
+        clear_all_messages()
+        self.dealTable((client, packet), gameId)
+        self.assertNotEquals(findBigBlind(1, expectedCount), None)
+        avatars[0].handlePacketLogic(PacketPokerFold(serial = clients[0].getSerial(),
+                                                     game_id = gameId))
+        # This is the point where observer has been disconnected.  We need
+        # to create a callback, I picked this function because it appears
+        # to be the pure bottom of the chain of items that are called when
+        # self.service.destroyAvatar() is called.
+
+        #  Note that we are returning checkLogoutDeferred which should
+        #  generate reactor 120 second error if checkLogout is never
+        #  called.
+        realLogout = avatars[2].user.logout
+        self.service.verbose = 6
+        clear_all_messages()
+        checkLogoutDeferred = defer.Deferred()
+        # The array can't have a closure around it, it appears.... I did
+        # this to save time rather than resarching closures around arrays
+        # in Python. :)
+        av0 = avatars[0]
+        av1 = avatars[1]
+        av2 = avatars[2]
+        def checkLogout():
+            self.assertEquals(search_output('connection lost for %s/%d' %
+                                            (av2.getName(), av2.getSerial())), True)
+            self.assertEquals(search_output('[Server][PokerGame %d] removing player %d from game' % (gameId, av2.getSerial())), True)
+            self.assertTrue(len(av2._packets_queue) > 21)
+            for pack in av0._packets_queue[-1:], av0._packets_queue[-1:]:
+                pack = pack[0]
+                self.assertEquals(pack.type, PACKET_POKER_PLAYER_LEAVE)
+                self.assertEquals(pack.serial, av2.getSerial())
+                self.assertEquals(pack.game_id, gameId)
+            self.assertFalse(av2 in self.service.avatars)
+            self.assertFalse(av2 in self.service.monitors)
+            self.assertFalse(self.service.serial2client.has_key(av2.user.serial))
+            realLogout()
+            checkLogoutDeferred.callback(True)
+        av2.user.logout = checkLogout
+        return checkLogoutDeferred
+    # ------------------------------------------------------------------------
+    def test76_forceObserverDisconnectPacketQueue(self):
+        """Tests packet queue growth and cutoff by setting max leng small"""
+        saveClientQueueMax = self.service.client_queued_packet_max
+        self.service.client_queued_packet_max = 21
+        table = self.service.getTable(2)
+        table.autodeal = False
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 10000)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.setupCallbackChain)
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 10000)
+        d3 = self.client_factory[2].established_deferred
+        d3.addCallback(self.setupCallbackChain)
+        d3.addCallback(self.sendRolePlay)
+        d3.addCallback(self.login, 2)
+        d3.addCallback(self.joinTable, 2, 2, 'Table2', '2-4-limit')
+        d3.addCallback(self.seatTable, 2, 2)
+        d3.addCallback(self.forceObserverDisconnectPacketQueue, 2)
+        def resetQueueMax(d, saveClientQueueMax):
+            self.service.client_queued_packet_max = saveClientQueueMax
+            return d
+        d3.addCallback(resetQueueMax, saveClientQueueMax)
+        return defer.DeferredList((d, d2, d3))
+    # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test73"
+#    loader.methodPrefix = "test76"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
