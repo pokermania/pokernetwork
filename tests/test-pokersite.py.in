@@ -72,6 +72,9 @@ class PokerServiceMockup:
             self.player_serial = serial
             return self.player_image
 
+      def getClientQueuedPacketMax(self):
+            return 2000
+
 class HelpersTestCase(unittest.TestCase):
 
       def test_fromutf8(self):
