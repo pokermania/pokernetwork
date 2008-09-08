@@ -2,11 +2,16 @@ UPDATE server SET version = '1.7.0';
 --
 -- Larger field for skin url 
 --
-ALTER TABLE `users` CHANGE COLUMN `skin_url` `skin_url` VARCHAR(128);
+ALTER TABLE `users` CHANGE COLUMN `skin_url` `skin_url` VARCHAR(255);
 --
 -- Server side, per user locale
 -- 
 ALTER TABLE `users` ADD COLUMN `locale` VARCHAR(32) DEFAULT "en";
+--
+-- Larger field for tourney name
+--
+ALTER TABLE `tourneys` CHANGE COLUMN `name` `name` VARCHAR(200);
+ALTER TABLE `tourneys_schedule` CHANGE COLUMN `name` `name` VARCHAR(200);
 --
 -- Tournament state is used for tourneySelect
 --
@@ -24,7 +29,7 @@ ALTER TABLE `user2tourney` ADD KEY ( `rank` ) ;
 -- History of monitor events
 --
 CREATE TABLE monitor (
-  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  serial BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   event TINYINT NOT NULL,
   param1 BIGINT NOT NULL,
