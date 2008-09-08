@@ -34,8 +34,9 @@ CREATE TABLE monitor (
   event TINYINT NOT NULL,
   param1 BIGINT NOT NULL,
   param2 BIGINT NOT NULL,
+  param3 BIGINT NOT NULL,
 
-  PRIMARY KEY (serial, created)
+  PRIMARY KEY (serial)
 ) ENGINE=MyISAM;
 --
 -- Throw away the tables instead of upgrading the table because 

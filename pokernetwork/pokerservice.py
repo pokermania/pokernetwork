@@ -422,7 +422,7 @@ class PokerService(service.Service):
 
     def databaseEvent(self, **kwargs):
         event = PacketPokerMonitorEvent(**kwargs)
-        self.db.db.query("INSERT INTO monitor (event, param1, param2) VALUES (%d, %d, %d)" % ( kwargs['event'], kwargs.get('param1', 0), kwargs.get('param2', 0) ))
+        self.db.db.query("INSERT INTO monitor (event, param1, param2, param3) VALUES (%d, %d, %d, %d)" % ( kwargs['event'], kwargs.get('param1', 0), kwargs.get('param2', 0), kwargs.get('param3', 0) ))
         for avatar in self.monitors:
             if hasattr(avatar, "protocol") and avatar.protocol:
                 avatar.sendPacketVerbose(event)
@@ -514,7 +514,7 @@ class PokerService(service.Service):
             refill = int(self.refill['amount'])            
         if refill > 0:
             self.db.db.query("REPLACE INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.refill['serial'], refill))
-            self.databaseEvent(event = PacketPokerMonitorEvent.REBUY, param1 = serial, param2 = int(self.refill['serial']), param3 = refill)
+            self.databaseEvent(event = PacketPokerMonitorEvent.REFILL, param1 = serial, param2 = int(self.refill['serial']), param3 = refill)
             
         return refill
 
@@ -1018,7 +1018,7 @@ class PokerService(service.Service):
                                                          code = PacketPokerTourneyRegister.SERVER_ERROR,
                                                          message = "Server error"))
                 return False
-            self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
+        self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
         #
         # Register
         #

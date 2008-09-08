@@ -3970,15 +3970,64 @@ Packet.infoDeclare(globals(), PacketPokerMonitor, Packet, "POKER_MONITOR", 146) 
 
 class PacketPokerMonitorEvent(Packet):
     """ """
-
+    #
+    # A hand is finished and has been archived in the hands table.
+    # param1 = index in the hands table
+    # param2 = 0 if cash game, 1 if tournament
+    # 
+    #
     HAND	= 1
+    #
+    # A tournament is complete and prizes were distributed.
+    # param1 = tourney serial in the tourneys table
+    #
     TOURNEY	= 2
+    #
+    # A player buys in at a cash game table.
+    # param1 = user serial
+    # param2 = table serial
+    # param3 = buy in amount
+    #
     BUY_IN	= 3
-    REBUY	= 4
+    #
+    # A player was granted money by auto refill.
+    # param1 = user serial
+    # param2 = currency serial
+    # param3 = total amount for this currency
+    #
+    REFILL	= 4
+    #
+    # A player won a prize at the end of a tournament.
+    # param1 = user serial
+    # param2 = currency serial
+    # param3 = prize amount
+    #
     PRIZE	= 5
+    #
+    # A player registered in a tournament.
+    # param1 = user serial
+    # param2 = currency serial
+    # param3 = registration fees
+    #
     REGISTER	= 6
+    #
+    # A player unregistered from a tournament.
+    # param1 = user serial
+    # param2 = currency serial
+    # param3 = registration fees
+    # 
     UNREGISTER	= 7
+    #
+    # A player left a poker table.
+    # param1 = user serial
+    # param2 = table serial
+    #
     LEAVE	= 8
+    #
+    # A player got a seat at a poker table.
+    # param1 = user serial
+    # param2 = table serial
+    #
     SEAT	= 9
     
     info = Packet.info + (
