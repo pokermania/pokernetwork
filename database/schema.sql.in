@@ -46,7 +46,7 @@ CREATE TABLE users (
   -- serial of the users record to which this user is affiliated
   affiliate INT UNSIGNED DEFAULT 0,
   -- client interpreted URL from which the player avatar can be downloaded
-  skin_url VARCHAR(32) DEFAULT "random",
+  skin_url VARCHAR(255) DEFAULT "random",
   -- client interpreted textual description of the player aspect
   skin_outfit TEXT,
   -- base64 encoded player picture of type skin_image_type
@@ -225,7 +225,7 @@ DROP TABLE IF EXISTS tourneys_schedule;
 CREATE TABLE tourneys_schedule (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
-  name VARCHAR(32),
+  name VARCHAR(200),
   -- Description that will be shown in tournament lists
   description_short VARCHAR(64),
   -- Description that will be shown on a detailed page about
@@ -375,7 +375,7 @@ DROP TABLE IF EXISTS tourneys;
 CREATE TABLE tourneys (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
-  name VARCHAR(32),
+  name VARCHAR(200),
   description_short VARCHAR(64),
   description_long TEXT,
   players_quota INT DEFAULT 10,
@@ -498,7 +498,7 @@ DROP TABLE IF EXISTS monitor;
 
 CREATE TABLE monitor (
   -- primary key
-  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  serial BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   -- creation date
   created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   -- HAND = 1, TOURNEY = 2, CURRENCY = 3
@@ -515,7 +515,7 @@ CREATE TABLE monitor (
   param1 BIGINT NOT NULL,
   param2 BIGINT NOT NULL,
 
-  PRIMARY KEY (serial, created)
+  PRIMARY KEY (serial)
 ) ENGINE=MyISAM;
 
 DROP TABLE IF EXISTS resthost;
