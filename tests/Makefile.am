@@ -41,6 +41,7 @@ EXTRA_DIST = \
 	poker-engine/poker.holdem.xml \
 	test-pokerauth/pokerauth.py \
 	coverage.py \
+	monitorplugin.py \
 	testfilter.py \
 	testerrorfilter.py \
 	finishedfilter.py \
@@ -105,6 +106,7 @@ TESTS = coverage-reset \
 	test-gamewindow.py \
 	test-poker2d.py \
 	test-pokersite.py \
+	test-pokermemcache.py \
 	test-proxyfilter.py \
 	testcurrency.php \
 	testpoker.php \
