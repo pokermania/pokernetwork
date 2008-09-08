@@ -29,6 +29,8 @@ class PokerStats:
     BOOTSTRAP	= 1
     MONITOR	= 2
     IDLE	= 3
+
+    PERCENTILES = 5.0
     
     def __init__(self, factory, connect = True):
         self.factory = factory
@@ -53,11 +55,14 @@ class PokerStats:
                       "  currency_serial INT UNSIGNED NOT NULL," +
                       "  amount BIGINT NOT NULL," +
                       "  rank INT UNSIGNED NOT NULL," +
+                      "  percentile TINYINT UNSIGNED DEFAULT 0 NOT NULL," +
                       "  PRIMARY KEY (user_serial, currency_serial)," +
                       "  INDEX (currency_serial, amount)," +
-                      "  INDEX (amount)" +
+                      "  INDEX (amount)," +
+                      "  INDEX (currency_serial)," +
+                      "  INDEX (rank)" +
                       ") ENGINE=MyISAM")
-
+        
     def populate(self):
         cursor = self.db.cursor()
         cursor.execute("SET @rank := 0, @currency_serial := 0, @amount := 0; " +
@@ -69,6 +74,13 @@ class PokerStats:
                        "     least(0, @amount := amount)," +
                        "     least(0, @currency_serial := currency_serial)) AS rank " +
                        "   FROM user2money ORDER BY currency_serial DESC, amount DESC")
+        cursor.close()
+        cursor = self.db.cursor()
+        cursor.execute("SELECT  currency_serial, COUNT(*) FROM rank GROUP BY currency_serial")
+        for (currency_serial, count) in cursor.fetchall():
+            range_count = count / PokerStats.PERCENTILES
+            for j in xrange(PokerStats.PERCENTILES):
+                cursor.execute("UPDATE rank SET percentile = %s WHERE rank > %s AND rank <= %s AND currency_serial = %s", ( j, int(range_count * j), int(range_count * ( j + 1 )), currency_serial))
         cursor.close()
         
     def bootstrap(self, protocol, packet):
