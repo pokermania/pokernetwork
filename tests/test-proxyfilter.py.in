@@ -40,6 +40,7 @@ if verbose < 0: testmessages.silence_all_messages()
 
 from tests import testclock
 
+from pokernetwork import pokermemcache
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
@@ -107,8 +108,8 @@ class ProxyTestCase(unittest.TestCase):
           
       def setUp(self):
             testclock._seconds_reset()
-            pokersite.memcache = pokersite.MemcacheMockup
-            pokersite.memcache_singleton = {}
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
+            pokermemcache.memcache_singleton = {}
             self.destroyDb()
             self.initServer()
             self.initProxy()
