@@ -32,6 +32,7 @@ from twisted.python import log
 from twisted.python.runtime import seconds
 
 from pokernetwork.pokerpackets import *
+from pokernetwork import pokermemcache
 
 def uid2last_modified(uid):
     return 'L' + uid
@@ -97,49 +98,6 @@ def args2packets(args):
         else:
             packets.append(PacketError(message = "Invalid type name %s" % arg['type']))
     return packets
-
-memcache_singleton = {}
-
-class MemcacheMockup:
-    class Client:
-        def __init__(self, addresses, *args, **kwargs):
-            self.addresses = addresses
-            self.cache = memcache_singleton
-
-        def get(self, key):
-            if self.cache.has_key(key):
-                return self.cache[key]
-            else:
-                return None
-        
-        def set(self, key, value):
-            self.cache[key] = value
-
-        def add(self, key, value):
-            if self.cache.has_key(key):
-                return 0
-            else:
-                self.cache[key] = value
-                return 1
-
-        def replace(self, key, value):
-            if self.cache.has_key(key):
-                self.cache[key] = value
-                return 1
-            else:
-                return 0
-            
-        def delete(self, key):
-            try:
-                del self.cache[key]
-                return 1
-            except:
-                return 0
-
-try:
-    import memcache #pragma: no cover
-except:
-    memcache = MemcacheMockup #pragma: no cover
 
 class Request(server.Request):
 
@@ -417,9 +375,9 @@ class PokerSite(server.Site):
             self.sessionCheckTime = sessionCheckTime
         memcache_address = settings.headerGet("/server/@memcached")
         if memcache_address:
-            self.memcache = memcache.Client([memcache_address])
+            self.memcache = pokermemcache.memcache.Client([memcache_address])
         else:
-            self.memcache = MemcacheMockup.Client([])
+            self.memcache = pokermemcache.MemcacheMockup.Client([])
         self.pipes = []
         for path in settings.header.xpathEval("/server/rest_filter"):
             module = imp.load_source("poker_pipe", path.content)
