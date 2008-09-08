@@ -1,3 +1,45 @@
+2008-09-08  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
+
+	* database/1.6.0-1.7.0.sql, database/schema.sql.in,
+	  pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py: .
+	  Documentation for monitor table and fields.
+	  . Fill the third field of the monitor table.
+	* tests/test-pokersite.py.in: PokerServiceMockup must provide
+	  getClientQueuedPacketMax
+	* tests/test-pokermemcache.py.in: include from @srcdir@
+	* pokernetwork/pokermemcache.py: extract memcache wrapper from
+	  pokersite.py
+	* tests/test-proxyfilter.py.in: use pokermemcache instead of
+	  pokersite
+	* tests/test-pokersite.py.in: move memcache tests to
+	  test-pokermemcache.py.in
+	* tests/test-pokerservice.py.in: . Implement MonitorTestCase
+	  . The tables service member is now a map
+	* tests/test-pokerclient.py.in: service tables are now a map
+	  instead of a table
+	* tests/Makefile.am, tests/monitorplugin.py: add monitorplugin
+	  support file for tests
+	* pokerstats/test-stats.py.in: test the player level calculations
+	* pokerstats/statslogic.py: Add level, calculated as the percentile
+	  in which the player rank is.
+	* pokernetwork/pokersite.py: move memcache wrapper and mockup to
+	  pokermemcache.py
+	* pokernetwork/pokerservice.py: . implement monitor plugins
+	  . tables is a map instead of an array for quicker lookup
+	  . monitor events involving money are differentiated
+	* pokernetwork/pokerpackets.py: differentiate monitor events when
+	  money is involved
+	* database/schema.sql.in: . skin_url size is 255
+	  . tourney name is 200
+	  . monitor serial is a bigint
+	* database/1.6.0-1.7.0.sql: . skin_url size is 255
+	  . tourney name is 200
+	  . monitor serial is a bigint
+	* Makefile.am, configure.ac, tests/test-pokermemcache.py.in:
+	  isolate memcache interface in a separate file
+
 2008-09-07  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* COPYING: moved to file named 'GPLv3'.
@@ -88,6 +130,18 @@
 	(BreakTestCase.test01_tourneyNewState_noCallbacksNeeded): split
 	test_tourneyNewState().
 
+2008-08-28  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokersite.py: There is no direct relation between an
+	  expired session and the expiration of a cookie.
+	* tests/test-pokersite.py.in: when memcache expires, the session
+	  cookie changes
+	* tests/test-proxyfilter.py.in: test the sequence : join table +
+	  login + get a seat, because it's a case where session handling
+	  has to be exactly right
+	* pokernetwork/pokerservice.py, tests/test-proxyfilter.py.in: when
+	  a tournament is created, a route is added for load balancing
+
 2008-08-27  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/pokerservice.py (PokerService.tourneyNewState):
@@ -98,8 +152,6 @@
 	(PokerService.tourneyDestroyGameActual): Created method.
 
 2008-08-26  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* tests/test-proxyfilter.py.in: test06_tableSeat_auth to verify
 	  authentication survives proxy requests
