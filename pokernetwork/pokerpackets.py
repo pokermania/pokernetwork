@@ -3973,12 +3973,19 @@ class PacketPokerMonitorEvent(Packet):
 
     HAND	= 1
     TOURNEY	= 2
-    CURRENCY	= 3
+    BUY_IN	= 3
+    REBUY	= 4
+    PRIZE	= 5
+    REGISTER	= 6
+    UNREGISTER	= 7
+    LEAVE	= 8
+    SEAT	= 9
     
     info = Packet.info + (
         ('event', 0, 'I'),
         ('param1', 0, 'I'),
-        ('param2', 0, 'I')
+        ('param2', 0, 'I'),
+        ('param3', 0, 'I')
         )
 
 Packet.infoDeclare(globals(), PacketPokerMonitorEvent, Packet, "POKER_MONITOR_EVENT", 147) # 147 # 0x93 # %SEQ%
