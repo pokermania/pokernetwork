@@ -993,7 +993,7 @@ class PokerService(service.Service):
         #
         # Buy in
         #
-        currency_serial = tourney.currency_serial
+        currency_serial = tourney.currency_serial or 0
         withdraw = tourney.buy_in + tourney.rake
         if withdraw > 0:
             sql = ( "UPDATE user2money SET amount = amount - " + str(withdraw) +
