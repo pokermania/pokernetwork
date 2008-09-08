@@ -169,7 +169,43 @@ class PokerServiceTestCaseBase(unittest.TestCase):
 
         cursor.close()
 
-class MonitorTestCase(PokerServiceTestCaseBase):
+monitor_settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <listen tcp="19480" />
+
+  <monitor>../@srcdir@/monitorplugin.py</monitor>
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+class MonitorTestCase(unittest.TestCase):
+
+    def destroyDb(self):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        
+    # ----------------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()        
+        self.destroyDb()
+        settings = pokernetworkconfig.Config([])
+        settings.loadFromString(monitor_settings_xml)
+        self.db = pokerdatabase.PokerDatabase(settings)
+        self.service = pokerservice.PokerService(settings)
+
+    # ----------------------------------------------------------------
+    def tearDown(self):
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.destroyDb())
+        return d
 
     # ----------------------------------------------------------------
     def test01_monitor(self):
@@ -187,6 +223,7 @@ class MonitorTestCase(PokerServiceTestCaseBase):
         self.assertEquals(PACKET_ACK, self.service.monitor(avatar).type)
         self.service.databaseEvent(event = 1, param1 = 2, param2 = 3)
         self.failUnless(avatar.sent)
+        self.failUnless(hasattr(self.service, 'HERE'))
         cursor = self.db.cursor()
         cursor.execute("SELECT COUNT(*) FROM monitor WHERE event = 1")
         self.assertEquals(1, cursor.rowcount)
@@ -576,11 +613,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             #
             # Some money is on a table
             #
-            table_serial = self.service.tables[0].game.id
+            table_serial = self.service.tables.values()[0].game.id
             buy_in = 50
             currency_serial = 1
             self.assertEquals(1, table_serial)
-            self.assertEquals(currency_serial, self.service.tables[0].currency_serial)
+            self.assertEquals(currency_serial, self.service.tables.values()[0].currency_serial)
             self.service.seatPlayer(self.user2_serial, table_serial, 0)
             self.service.buyInPlayer(self.user2_serial, table_serial, currency_serial, buy_in)
             info = self.service.getUserInfo(self.user2_serial)
@@ -860,10 +897,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.joined_count, 1)
             self.assertEquals(len(client1.packets), 14)
             for p in client1.packets:
-                self.assertEquals(p.game_id, self.service.tables[2].game.id)
+                self.assertEquals(p.game_id, self.service.tables.values()[2].game.id)
             self.assertEquals(len(client1.tables), 1)
-            self.assertEquals(client1.tables.has_key(self.service.tables[2].game.id), True)
-            self.assertEquals(client1.tables[self.service.tables[2].game.id], self.service.tables[2])
+            self.assertEquals(client1.tables.has_key(self.service.tables.values()[2].game.id), True)
+            self.assertEquals(client1.tables[self.service.tables.values()[2].game.id], self.service.tables.values()[2])
 
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
             game = heads_up.games[0]
@@ -871,7 +908,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             game.callNraise(in_position, game.maxBuyIn())
             in_position = game.getSerialInPosition()
             game.call(in_position)
-            self.service.tables[2].update() # two tables already in settings
+            self.service.tables.values()[2].update() # two tables already in settings
             
         d.addCallback(checkTourneys)
         reactor.callLater(3, lambda: d.callback(True))
@@ -922,7 +959,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             game.callNraise(in_position, game.maxBuyIn())
             in_position = game.getSerialInPosition()
             game.call(in_position)
-            self.service.tables[2].update() # two tables already in settings
+            self.service.tables.values()[2].update() # two tables already in settings
             if has_bailor:
                 self.assertEquals(0, self.service.getMoney(self.user1_serial, 2), "bailor user1")
                 self.assertEquals(prize, self.service.getMoney(self.user2_serial, 2), "bailor user2")
@@ -1406,7 +1443,7 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
     def test_ok(self):
         table = ShutdownCheckTestCase.PokerTable()
         table.game.playing = True
-        self.service.tables = [ table ]
+        self.service.tables = { 1: table }
         self.service.down = False
         d = defer.Deferred()
         self.service.shutdown_deferred = d
@@ -1669,7 +1706,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 game.id = 1102
 
         ourTable.game = MockGame()
-        self.service.tables = [ ourTable ]
+        self.service.tables = { 1102: ourTable }
 
         def notok(tourney):
             self.failIf(1)
@@ -1709,7 +1746,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tourney = Tournament()
         table = BreakTestCase.Table()
         table.game = tourney.games[0]
-        self.service.tables = [ table ]
+        self.service.tables = { 1: table }
         self.service.tourneyDeal(tourney)
         self.failUnless(hasattr(table, 'autodeal'))
 
@@ -1731,7 +1768,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tourney = Tournament()
         table = BreakTestCase.Table()
         table.game = tourney.games[0]
-        self.service.tables = [ table ]
+        self.service.tables = { 1: table }
         tourney.games[0].running = True
         self.service.tourneyBreakWait(tourney)
         self.failUnless("at the end of the hand" in table.message)
@@ -1753,7 +1790,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tourney = Tournament()
         table = BreakTestCase.Table()
         table.game = tourney.games[0]
-        self.service.tables = [ table ]
+        self.service.tables = { 1: table }
         self.service.tourneyBreakResume(tourney)
         self.failUnless("Tournament resumes" in table.message)
 
@@ -1781,7 +1818,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tourney = Tournament()
         table = BreakTestCase.Table()
         table.game = tourney.games[0]
-        self.service.tables = [ table ]
+        self.service.tables = { 1: table }
         self.service.tourneyBreakCheck(tourney)
         self.failIf(table.message)
         tourney.state = pokertournament.TOURNAMENT_STATE_BREAK
