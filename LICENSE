@@ -1,0 +1,111 @@
+             THE LICENSE OF POKER-NETWORK IS AGPLv3-or-later
+
+Short version: The effective license of the whole work, when copied,
+               modified, conveyed, propogated and/or redistributed is
+               AGPLv3-or-later, pursuant to Sections 13 of the GPLv3 and
+               the AGPLv3.  More details of the licensing follows.
+
+Details follow:
+
+All code and data included in the poker-network distribution are released
+under either the GNU GPLv3-or-later, the AGPLv3-or-later, or some more
+permissive license compatible with GPLv3-or-later.
+
+Currently, one active author (Bradley M. Kuhn) is licensing his
+modifications under AGPLv3-or-later and others are licensing their work
+under GPLv3-or-later.  Under Section 13 of the GPLv3, the GPLv3-or-later
+continues to apply to those works that are not copyrighted by the authors
+who have chosen AGPLv3-or-later.  The "combination as such" or all authors
+work is, therefore, is licensed under AGPLv3-or-later.
+
+===========================================================================
+Authors licensing under GPLv3-or-later (notes made where copyright
+                                        holdings are contained to smaller
+                                        parts of codebase):
+
+  Copyright (C) 1993-2006, Free Software Foundation, Inc.
+        # FSF copyrights appear only in the ./config directory for the build system
+  Copyright (C) 2002, 2005, 2006, 2007, 2008 Loic Dachary <loic@gnu.org>
+        # The  2002 copyrights are only in ./config directory for build system
+  Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
+  Copyright (C) 2007 Miguel Figueiredo  <elmig@debianpt.org>
+        # Miguel's copyrights appear only in ./debian/po/pt.po 
+  Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2007.
+        # Helge's copyrights appear  only in ./debian/po/de.po
+  Copyright (C) 2006 Jerome Jeannin <griim.work@gmail.com> 
+        # Jerome's copyrights only  in ./config directory for build system
+  Copyright (C) 2004, 2005, 2006 Mekensleep, 24 rue vieille du temple, 75004 Paris
+                                 <licensing@mekensleep.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program in the file 'GPLv3' at the toplevel directory; if not,
+# write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
+# Floor, Boston, MA 02110-1301, USA.
+
+NOTE: pokerclient2d/data/Aero is also released under the GNU GPL and is
+      Copyright Marcus Petzoldt <m.petzoldt@gmx.de>
+
+===========================================================================
+Authors licensing under AGPLv3-or-later:
+
+       Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+Code included in the distribution under other more permissive licenses:
+
+Note: The file 'tests/coverage.py' has a different license:
+# Copyright 2001 Gareth Rees.  All rights reserved.
+# Copyright 2004-2007 Ned Batchelder.  All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the
+#    distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDERS AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
+#
+
+Note: ./pokerweb/pages/ have additional copyrights and licenses, but all
+are compatible with the licensing above.

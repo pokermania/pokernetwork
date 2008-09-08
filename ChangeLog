@@ -1,5 +1,13 @@
 2008-09-07  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* COPYING: moved to file named 'GPLv3'.
+
+	* AGPLv3: Added GNU Affero General Public License, version 3.
+
+	* LICENSE: Created file with license information.
+
+	* README (License): Moved license information to LICENSE file.
+
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.forceObserverDisconnectPacketQueue): Wrote method.
 	(PokerAvatarTestCase.test76_forceObserverDisconnectPacketQueue):
