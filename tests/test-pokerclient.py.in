@@ -504,7 +504,7 @@ class PokerClientTestCase(unittest.TestCase):
                 def checkBugousClient((client, packet),):
                     if verbose > 0:
                         print "checkBugousClient for %d" % client.getSerial()
-                    table = self.service.tables[0]
+                    table = self.service.tables.values()[0]
                     has_bugous = False
                     for (serial, server_client) in table.serial2client.iteritems():
                         if server_client.bugous_processing_hand == True:
