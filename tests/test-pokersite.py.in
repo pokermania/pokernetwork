@@ -38,6 +38,7 @@ if verbose < 0: silence_all_messages()
 
 from tests import testclock
 
+from pokernetwork import pokermemcache
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokeravatar
@@ -92,20 +93,6 @@ class HelpersTestCase(unittest.TestCase):
             packet.what = { 0: 1 }
             self.assertEqual([{'message': 'MESSAGE', 'type': 'Packet', 'what': {'X0': 1}}], pokersite.packets2maps([packet]))
 
-class MemcacheTestCase(unittest.TestCase):
-
-      def test01(self):
-            memcache = pokersite.MemcacheMockup.Client([''])
-            memcache.set('a', 'b')
-            self.assertEqual(None, memcache.get('c'))
-            self.assertEqual('b', memcache.get('a'))
-            self.assertEqual(0, memcache.add('a', 'd'))
-            self.assertEqual(1, memcache.add('f', 'g'))
-            self.assertEqual(0, memcache.replace('z', 'k'))
-            self.assertEqual(1, memcache.replace('f', 'l'))
-            self.assertEqual(0, memcache.delete('r'))
-            self.assertEqual(1, memcache.delete('f'))
-            
 class PokerSiteBase(unittest.TestCase):
 
       def setUp(self):
@@ -115,7 +102,7 @@ class PokerSiteBase(unittest.TestCase):
 """
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
-            pokersite.memcache = pokersite.MemcacheMockup
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
 
@@ -248,7 +235,7 @@ class PokerImageUploadTestCase(unittest.TestCase):
 """
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
-            pokersite.memcache = pokersite.MemcacheMockup
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerImageUpload(self.service))
             self.image_data = "image data"
@@ -347,7 +334,7 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
 """
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
-            pokersite.memcache = pokersite.MemcacheMockup
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerAvatarResource(self.service))
 
@@ -402,7 +389,7 @@ class FilterTestCase(unittest.TestCase):
 """
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
-            pokersite.memcache = pokersite.MemcacheMockup
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
 
@@ -439,7 +426,7 @@ class FilterErrorTestCase(unittest.TestCase):
 """
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
-            pokersite.memcache = pokersite.MemcacheMockup
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
 
@@ -481,7 +468,7 @@ class FilterFinishTestCase(unittest.TestCase):
 """
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
-            pokersite.memcache = pokersite.MemcacheMockup
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
 
@@ -826,7 +813,6 @@ def Run():
     suite.addTest(loader.loadClass(SessionTestCase))
     suite.addTest(loader.loadClass(RequestTestCase))
     suite.addTest(loader.loadClass(PokerSiteTestCase))
-    suite.addTest(loader.loadClass(MemcacheTestCase))
     suite.addTest(loader.loadClass(HelpersTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
