@@ -59,6 +59,7 @@ import locale
 import gettext
 import libxml2
 import simplejson
+import imp
 from traceback import print_exc
 
 from OpenSSL import SSL
@@ -221,6 +222,10 @@ class PokerService(service.Service):
         self.down = True
         self.shutdown_deferred = None
         self.resthost_serial = 0
+        self.monitor_plugins = []
+        for monitor in settings.header.xpathEval("/server/monitor"):
+            module = imp.load_source("monitor", monitor.content)
+            self.monitor_plugins.append(getattr(module, "handle_event"))
 
     def startService(self):
         self.monitors = []
@@ -236,7 +241,7 @@ class PokerService(service.Service):
         self.dirs = split(self.settings.headerGet("/server/path"))
         self.serial2client = {}
         self.avatars = []
-        self.tables = []
+        self.tables = {}
         self.joined_count = 0
         self.tourney_table_serial = 1
         self.shutting_down = False
@@ -390,7 +395,7 @@ class PokerService(service.Service):
             return
 
         playing = 0
-        for table in self.tables:
+        for table in self.tables.values():
             if not table.game.isEndOrNull():
                 playing += 1
         if self.verbose and playing > 0:
@@ -421,6 +426,8 @@ class PokerService(service.Service):
         for avatar in self.monitors:
             if hasattr(avatar, "protocol") and avatar.protocol:
                 avatar.sendPacketVerbose(event)
+        for plugin in self.monitor_plugins:
+            plugin(self, event)
 
     def stats(self, query):
         cursor = self.db.cursor()
@@ -507,7 +514,7 @@ class PokerService(service.Service):
             refill = int(self.refill['amount'])            
         if refill > 0:
             self.db.db.query("REPLACE INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.refill['serial'], refill))
-            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = int(self.refill['serial']))
+            self.databaseEvent(event = PacketPokerMonitorEvent.REBUY, param1 = serial, param2 = int(self.refill['serial']), param3 = refill)
             
         return refill
 
@@ -753,7 +760,7 @@ class PokerService(service.Service):
                 if self.verbose > 2:
                     self.message("tourneyFinished: " + sql)
                 cursor.execute(sql)
-            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = tourney.currency_serial)
+            self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = tourney.currency_serial, param3 = prize)
 
         cursor.execute("DELETE FROM route WHERE tourney_serial = %s", tourney.serial)
         cursor.close()
@@ -1011,7 +1018,7 @@ class PokerService(service.Service):
                                                          code = PacketPokerTourneyRegister.SERVER_ERROR,
                                                          message = "Server error"))
                 return False
-            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
+            self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
         #
         # Register
         #
@@ -1055,7 +1062,7 @@ class PokerService(service.Service):
 
         cursor = self.db.cursor()
         #
-        # Refund buy in
+        # Refund registration fees
         #
         currency_serial = tourney.currency_serial
         withdraw = tourney.buy_in + tourney.rake
@@ -1071,7 +1078,7 @@ class PokerService(service.Service):
                 return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                                    code = PacketPokerTourneyUnregister.SERVER_ERROR,
                                    message = "Server error : user_serial = %d and currency_serial = %d was not in user2money" % ( serial, currency_serial ))
-            self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
+            self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
         #
         # Unregister
         #
@@ -1676,13 +1683,13 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 0 and cursor.rowcount != 2:
             self.error("modified %d rows (expected 0 or 2): %s " % ( cursor.rowcount, sql ))
-        self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
+        self.databaseEvent(event = PacketPokerMonitorEvent.BUY_IN, param1 = serial, param2 = table_id, param3 = withdraw)
         return withdraw
 
     def seatPlayer(self, serial, table_id, amount):
         status = True
         cursor = self.db.cursor()
-        sql = ( "INSERT user2table ( user_serial, table_serial, money) VALUES "
+        sql = ( "INSERT INTO user2table ( user_serial, table_serial, money) VALUES "
                 " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + " )" )
         if self.verbose > 1:
             self.message("seatPlayer: %s" % sql)
@@ -1691,6 +1698,7 @@ class PokerService(service.Service):
             self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             status = False
         cursor.close()
+        self.databaseEvent(event = PacketPokerMonitorEvent.SEAT, param1 = serial, param2 = table_id)
         return status
 
     def movePlayer(self, serial, from_table_id, to_table_id):
@@ -1707,9 +1715,9 @@ class PokerService(service.Service):
 
         if money > 0:
             cursor = self.db.cursor()
-            sql = ( "update user2table "
-                    "  set table_serial = " + str(to_table_id) +
-                    "  where user_serial = " + str(serial) + " and"
+            sql = ( "UPDATE user2table "
+                    "  SET table_serial = " + str(to_table_id) +
+                    "  WHERE user_serial = " + str(serial) + " and"
                     "        table_serial = " + str(from_table_id) )
             if self.verbose > 1:
                 self.message("movePlayer: %s" % sql)
@@ -1759,7 +1767,7 @@ class PokerService(service.Service):
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             status = False
         cursor.close()
-        self.databaseEvent(event = PacketPokerMonitorEvent.CURRENCY, param1 = serial, param2 = currency_serial)
+        self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1 = serial, param2 = table_id)
         return status
 
     def updatePlayerRake(self, currency_serial, serial, amount):
@@ -1924,11 +1932,7 @@ class PokerService(service.Service):
         return status
 
     def getTable(self, game_id):
-        for table in self.tables:
-            if game_id == table.game.id:
-                game = table.game
-                return table
-        return False
+        return self.tables.get(game_id, False)
 
     def createTable(self, owner, description):
 
@@ -1963,7 +1967,7 @@ class PokerService(service.Service):
         table = PokerTable(self, id, description)
         table.owner = owner
 
-        self.tables.append(table)
+        self.tables[id] = table
 
         if self.verbose:
             self.message("table created : %s" % table.game.name)
@@ -1992,7 +1996,7 @@ class PokerService(service.Service):
     def deleteTable(self, table):
         if self.verbose:
             self.message("table %s/%d removed from server" % ( table.game.name, table.game.id ))
-        self.tables.remove(table)
+        del self.tables[table.game.id]
         cursor = self.db.cursor()
         sql = ( "delete from  pokertables where serial = " + str(table.game.id) )
         if self.verbose > 1:
