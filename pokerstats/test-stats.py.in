@@ -194,8 +194,18 @@ class LogicTestCase(StatsClientBase):
         self.db.db.query("INSERT user2money (user_serial, currency_serial, amount)" +
                          " VALUES " +
                          " ( 5, 10, 200), " +
-                         " ( 6, 10, 100), " +
-                         " ( 7, 20, 300)  "
+                         " ( 6, 10, 203), " +
+                         " ( 7, 10, 48), " +
+                         " ( 8, 10, 855), " +
+                         " ( 9, 10, 48393), " +
+                         " ( 10, 10, 22), " +
+                         " ( 11, 10, 484), " +
+                         " ( 12, 10, 48), " +
+                         " ( 13, 10, 84344), " +
+                         " ( 14, 10, 72), " +
+                         " ( 15, 10, 84), " +
+                         " ( 16, 10, 74848), " +
+                         " ( 17, 20, 300)  "
                          )
         s = stats.PokerStats(factory = factory, connect = False)
         s.connect()
@@ -203,10 +213,20 @@ class LogicTestCase(StatsClientBase):
         s.populate()
         cursor = self.db.cursor()
         result = cursor.execute("SELECT * FROM rank")
-        self.assertEqual(3, cursor.rowcount)
-        self.assertEqual((7, 20, 300, 1), cursor.fetchone())
-        self.assertEqual((5, 10, 200, 1), cursor.fetchone())
-        self.assertEqual((6, 10, 100, 2), cursor.fetchone())
+        self.assertEqual(13, cursor.rowcount)
+        self.assertEqual((17, 20, 300, 1, 4), cursor.fetchone())
+        self.assertEqual((13, 10, 84344, 1, 0), cursor.fetchone())
+        self.assertEqual((16, 10, 74848, 2, 0), cursor.fetchone())
+        self.assertEqual((9, 10, 48393, 3, 1), cursor.fetchone())
+        self.assertEqual((8, 10, 855, 4, 1), cursor.fetchone())
+        self.assertEqual((11, 10, 484, 5, 2), cursor.fetchone())
+        self.assertEqual((6, 10, 203, 6, 2), cursor.fetchone())
+        self.assertEqual((5, 10, 200, 7, 2), cursor.fetchone())
+        self.assertEqual((15, 10, 84, 8, 3), cursor.fetchone())
+        self.assertEqual((14, 10, 72, 9, 3), cursor.fetchone())
+        self.assertEqual((12, 10, 48, 10, 4), cursor.fetchone())
+        self.assertEqual((7, 10, 48, 11, 4), cursor.fetchone())
+        self.assertEqual((10, 10, 22, 12, 4), cursor.fetchone())
         cursor.close()
 
 class RealTestCase(PokerStatsTestBase):
