@@ -1,11 +1,12 @@
 #
+# Note: this file is copyrighted by multiple entities; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
+#
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
-#
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+#                                24 rue vieille du temple 75004 Paris
+#                                <licensing@mekensleep.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +22,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+#
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org> (2008-)
 #  Cedric Pinson <cpinson@freesheep.org> (2004-2006)
 #  Henry Precheur <henry@precheur.org> (2004)
 #
@@ -4119,6 +4139,53 @@ serial: integer uniquely identifying a player.
     info = PacketSerial.info + ( ('locale', 'en_US.UTF-8', 's'), )
 
 Packet.infoDeclare(globals(), PacketPokerSetLocale, PacketSerial, "POKER_SET_LOCALE", 153) # 153 # 0x99 # %SEQ%
+
+########################################
+
+class PacketPokerTableTourneyBreakBegin(Packet):
+    """\
+
+Semantics: Players at table "game_id" will receive this packet when a
+tournament break offically begins.
+
+Direction: server  => client
+
+Context: 
+
+game_id: integer uniquely identifying a game.
+resume_time: time that the tourney will resume, in seconds since 1970-01-01 00:00:00 UTC.
+"""
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        ('resume_time', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakBegin, Packet, "POKER_TABLE_TOURNEY_BREAK_BEGIN", 154) # 154 # 0x9A # %SEQ%
+
+# infoDeclare would clobber our custom __str__ if we set it in the lass, so replace it here.
+def PacketPokerTableTourneyBreakBegin__str__(self):
+        return Packet.__str__(self) + "game_id = %d, resume_time = %s" % ( self.game_id,strftime("%Y/%m/%d %H:%M", gmtime(self.resume_time)))
+PacketPokerTableTourneyBreakBegin.__str__ = PacketPokerTableTourneyBreakBegin__str__
+
+
+class PacketPokerTableTourneyBreakDone(Packet):
+    """\
+
+Semantics: Players at table "game_id" will receive this packet when a
+tournament break offically ends.
+
+Direction: server  => client
+
+Context: 
+
+game_id: integer uniquely identifying a game.
+"""
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        )
+
+
+Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 154 # 0x9B # %SEQ%
 
 _TYPES = range(50,169)
 

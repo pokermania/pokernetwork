@@ -1,3 +1,9 @@
+2008-09-08  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerpackets.py
+	(PacketPokerTableTourneyBreakStart): Create packet type.
+	(PacketPokerTableTourneyBreakDone): Created packet type.
+
 2008-09-08  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
