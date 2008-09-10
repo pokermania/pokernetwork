@@ -8,7 +8,7 @@
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #                                24 rue vieille du temple 75004 Paris
-#                                <licensing@mekensleep.com>x
+#                                <licensing@mekensleep.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #
 # Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
-# This program gives you software freedom; you can copy, convey,
+# This software's license gives you freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
 # the GNU Affero General Public License (AGPL) as published by the Free
 # Software Foundation, either version 3 of the License, or (at your
@@ -670,6 +670,27 @@ class PokerService(service.Service):
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
         cursor.close()
         if new_state == TOURNAMENT_STATE_BREAK:
+            # When we are entering BREAK state for the first time, which
+            # should only occur here in the state change operation, we
+            # send the PacketPokerTableTourneyBreakBegin.  Note that this
+            # code is here and not in tourneyBreakCheck() because that
+            # function is called over and over again, until the break
+            # finishes.  Note that tourneyBreakCheck() also sends a
+            # PacketPokerGameMessage() with the time remaining, too.
+            secsLeft = tourney.remainingBreakSeconds()
+            if secsLeft == None:
+                # eek, should I really be digging down into tourney's
+                # member variables in this next assignment?
+                secsLeft = tourney.breaks_duration
+            resumeTime = time.time() + secsLeft
+            # I saw at time of writing the above line that
+            # tournament_seconds() returns time.time(), but I think I
+            # actually *want* time.time() here since I'm expecting to send
+            # the "real world" time.  Perhaps I've however misunderstood
+            # the purpose of tournament_seconds()
+            for gameId in map(lambda game: game.id, tourney.games):
+                table = self.getTable(gameId)
+                table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = gameId, resume_time = resumeTime))
             self.tourneyBreakCheck(tourney)
         elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             reactor.callLater(self.delays.get('extra_wait_tourney_break', 0), self.tourneyResumeAndDeal, tourney)

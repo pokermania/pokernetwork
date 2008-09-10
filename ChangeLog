@@ -1,4 +1,17 @@
+2008-09-09  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (BreakTestCase.test08_tourneyNewState_tourneyBreak):
+	Wrote test, coverage for changes below in pokerservice.py
+
 2008-09-08  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(BreakTestCase.test01_tourneyNewState_noCallbacksNeeded): Renamed
+	test to test01_tourneyNewState_simpleTransitions.
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyNewState):
+	send PacketPokerTableTourneyBreakBegin() to all games when
+	new_state is TOURNAMENT_STATE_BREAK.
 
 	* pokernetwork/pokerpackets.py
 	(PacketPokerTableTourneyBreakStart): Create packet type.
