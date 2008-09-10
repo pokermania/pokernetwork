@@ -1,3 +1,16 @@
+2008-09-10  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(BreakTestCase.test_tourneyBreakResume): Renamed test to
+	test11_tourneyBreakResume.
+	(BreakTestCase.test11_tourneyBreakResume): Changed test to handle
+	additional table.broadcast()'d packets.
+	(BreakTestCase.Table.broadcastMessage): Added self.type assignment.
+	(BreakTestCase.Table.__init__): Added self.type assignment.
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyBreakResume):
+	Added table.broadcast of PacketPokerTableTourneyBreakDone.
+
 2008-09-09  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in (BreakTestCase.test08_tourneyNewState_tourneyBreak):

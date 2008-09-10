@@ -735,9 +735,10 @@ class PokerService(service.Service):
                 table.broadcastMessage(PacketPokerGameMessage, "Tournament break will start when the other tables finish their hand")
 
     def tourneyBreakResume(self, tourney):
-        for game_id in map(lambda game: game.id, tourney.games):
-            table = self.getTable(game_id)
+        for gameId in map(lambda game: game.id, tourney.games):
+            table = self.getTable(gameId)
             table.broadcastMessage(PacketPokerGameMessage, "Tournament resumes")
+            table.broadcast(PacketPokerTableTourneyBreakDone(game_id = gameId))
 
     def tourneyEndTurn(self, tourney, game_id):
         if not tourney.endTurn(game_id):

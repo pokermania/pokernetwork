@@ -1522,14 +1522,16 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.assertEqual(False, self.service.tourneyFinished(tournament))
         if verbose < 0:
             self.assertTrue(search_output("bailor failed to provide requested money"))
-        
+##############################################################################        
 class BreakTestCase(PokerServiceTestCaseBase):
     class Table:
         def __init__(self):
             self.message = None
+            self.type = None
             self.destroyCalled = 0
             
         def broadcastMessage(self, type, message):
+            self.type = type
             self.message = message
 
         def scheduleAutoDeal(self):
@@ -1892,24 +1894,42 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyBreakWait(tourney)
         self.failUnless("finish their hand" in table.message)
     # ------------------------------------------------------------------------
-    def test_tourneyBreakResume(self):
-        class Game:
-            
+    def test11_tourneyBreakResume(self):
+        class Table(BreakTestCase.Table):
             def __init__(self):
-                self.id = 1
+                self.broadcastedPackets = []
+                BreakTestCase.Table.__init__(self)
+            def broadcast(self, packet):
+                self.broadcastedPackets.append(packet)
+        tables = {}
+        tables[1] = Table()
+        tables[2] = Table()
 
-        class Tournament:
+        class Game():
+            def __init__(self, newId=0):
+                self.id = newId
+            def getTable(gameId):
+                if gameId == 1: return tables[1]
+                elif  gameId == 2: return tables[2]
+                else: self.failIf(True)
+        class Tournament(BreakTestCase.Tournament):
             def __init__(self):
-                self.games = [ Game() ]
-                self.serial = 1
-                
+                self.games = [ Game(1), Game(2) ]
+                BreakTestCase.Tournament.__init__(self)
+
         tourney = Tournament()
-        table = BreakTestCase.Table()
-        table.game = tourney.games[0]
-        self.service.tables = { 1: table }
-        self.service.tourneyBreakResume(tourney)
-        self.failUnless("Tournament resumes" in table.message)
+        self.service.tables = { 1: tables[1], 2: tables[2] }
 
+        self.service.tourneyBreakResume(tourney)
+        for ii in [ 1, 2 ]:
+            self.assertEqual(tables[ii].message, "Tournament resumes")
+            self.assertEqual(tables[ii].type, PacketPokerGameMessage)
+            self.assertEquals(len(tables[ii].broadcastedPackets), 1)
+            pp = tables[ii].broadcastedPackets[0]
+            self.assertEquals(pp.game_id, ii)
+            self.assertEquals(pp.type, PACKET_POKER_TABLE_TOURNEY_BREAK_DONE)
+
+    # ------------------------------------------------------------------------
     def test_tourneyBreakCheck(self):
 
         class Game:
@@ -1964,7 +1984,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test11"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
