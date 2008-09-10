@@ -1,5 +1,8 @@
 2008-09-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/pokerpackets.py: Added info about tourney break
+	packets to Q&A comments at top of file.
+
 	* tests/test-pokerservice.py.in
 	(BreakTestCase.test_tourneyBreakResume): Renamed test to
 	test11_tourneyBreakResume.

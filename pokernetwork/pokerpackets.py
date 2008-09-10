@@ -189,6 +189,10 @@
 #
 #     PACKET_POKER_READY_TO_PLAY
 # 
+#     What should the client expect when a tournament break begins/ends?
+#
+#     POKER_TABLE_TOURNEY_BREAK_BEGIN
+#     POKER_TABLE_TOURNEY_BREAK_END
 
 import sys
 from time import strftime, gmtime
