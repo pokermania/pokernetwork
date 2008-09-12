@@ -95,13 +95,30 @@ class PokerCrashTestCase(unittest.TestCase):
 
     def test01_cleanupCrashedTables(self):
         cursor = self.db.cursor()
-        cursor.execute('insert into pokertables (serial, currency_serial) values (142, 1)')
+        #
+        # Although the name is not in the configuration file (settings),
+        # it has a matching resthost_serial and is cleanedup
+        #
+        cursor.execute('insert into pokertables (serial, name, variant, betting_structure, currency_serial) values (142, "one", "holdem", "2-4", 1)')
         cursor.execute('insert into user2table (user_serial, table_serial, money, bet) values (1000, 142, 10, 1)')
         cursor.execute("insert into users (serial, created, name) values (1000, 0, 'testuser')")
         cursor.execute("insert into user2money (user_serial, currency_serial, amount) values (1000, 1, 0)")
+        #
+        # resthost_serial does not match, the records are left untouched
+        #
+        cursor.execute('insert into pokertables (serial, name, variant, betting_structure, currency_serial, resthost_serial) values (202, "two", "holdem", "2-4", 1, 10)')
+        cursor.execute('insert into user2table (user_serial, table_serial, money, bet) values (1000, 202, 10, 1)')
+        #
+        # Table1 is in the configuration file and cleaned up even though
+        # resthost_serial does not match
+        #
+        cursor.execute('insert into pokertables (serial, name, variant, betting_structure, currency_serial, resthost_serial) values (303, "Table1", "holdem", "2-4", 1, 44)')
         self.service.startService()
-        cursor.execute("select * from user2table")
-        self.assertEqual(0, cursor.rowcount)
+        cursor.execute("select user_serial,table_serial from user2table")
+        self.assertEqual(1, cursor.rowcount)
+        self.assertEqual((1000, 202), cursor.fetchone())
+        cursor.execute("select serial from pokertables")
+        self.assertEqual((202,), cursor.fetchone())
         cursor.execute("select amount from user2money")
         self.assertEqual(11, cursor.fetchone()[0])
         cursor.close()

@@ -1998,20 +1998,21 @@ class PokerService(service.Service):
 
     def cleanupCrashedTables(self):
         for description in self.settings.headerGetProperties("/server/table"):
-            self.cleanupCrashedTable(description['name'])
+            self.cleanupCrashedTable("pokertables.name = %s" % self.db.literal((description['name'],)))
+        self.cleanupCrashedTable("pokertables.resthost_serial = %d" % self.resthost_serial)
 
-    def cleanupCrashedTable(self, name):
+    def cleanupCrashedTable(self, pokertables_where):
         cursor = self.db.cursor()
 
-        sql = ( "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE user2table.table_serial = pokertables.serial AND pokertables.name = %s " % self.db.literal((name,)) )
+        sql = ( "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE user2table.table_serial = pokertables.serial AND " + pokertables_where )
         cursor.execute(sql)
         if cursor.rowcount > 0:
             if self.verbose > 1:
-                self.message("cleanupCrashedTable found %d players on table %s" % ( cursor.rowcount, name ))
+                self.message("cleanupCrashedTable found %d players on table %s" % ( cursor.rowcount, pokertables_where ))
             for i in xrange(cursor.rowcount):
                 (user_serial, table_serial, currency_serial) = cursor.fetchone()
                 self.leavePlayer(user_serial, table_serial, currency_serial)
-        cursor.execute("DELETE FROM pokertables WHERE name = %s", name)
+        cursor.execute("DELETE FROM pokertables WHERE " + pokertables_where)
 
         cursor.close()
 
