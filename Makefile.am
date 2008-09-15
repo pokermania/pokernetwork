@@ -100,6 +100,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/server.py \
 	pokernetwork/upgrade.py \
 	pokernetwork/user.py \
+	pokernetwork/userstats.py \
 	pokernetwork/version.py
 
 man_MANS = \
