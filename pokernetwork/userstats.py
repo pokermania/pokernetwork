@@ -42,15 +42,35 @@ class UserStatsAccessor:
     def setStatsValue(self, key, value):
         self.stats[key] = value
 ############################################################################
-class UserStatsRankLevelAccessor(UserStatsAccessor):
+from _mysql_exceptions import ProgrammingError
+class UserStatsRankPercentileAccessor(UserStatsAccessor):
     def __init__(self):
         UserStatsAccessor.__init__(self)
-        self.statsSupported = ['level', 'rank']
+        self.statsSupported = ['percentile', 'rank']
+    # ----------------------------------------------------------------------
+    def _lookupValidStat(self, stat, avatar, table, service):
+        currency = table.currency_serial
+        if not currency or currency < 0:
+            return None
+        user = avatar.getSerial()
+        if not user or user < 0:
+            return None
+        value = None
+        try:
+            cursor = service.db.cursor()
+            cursor.execute("SELECT %s from rank where currency_serial = %d and user_serial = %d"
+                           % (stat, currency, user) )
+            tuple = cursor.fetchone()
+            if tuple != None: (value,) = tuple
+            cursor.close()
+        except ProgrammingError, (code, errorStr):
+            self.error("RankPercentile: (MySQL code %d): %s" % (code, errorStr))
+        return value
 ############################################################################
 class UserStatsLookup:
     pass
 ############################################################################
-class UserStatsRankLevelLookup(UserStatsLookup):
+class UserStatsRankPercentileLookup(UserStatsLookup):
     pass
 ############################################################################
 class UserStatsFactory:
