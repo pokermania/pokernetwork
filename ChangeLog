@@ -1,12 +1,18 @@
 2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+ 	* Release 1.7.0
+
 	* pokernetwork/userstats.py (UserStatsAccessor.error): Added method.
 	(UserStatsAccessor.getStatsValue): Restored strangely deleted method.
 	(UserStatsAccessor._lookupValidStat): Restored strangely deleted method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
 
- 	* Release 1.7.0
+	* Makefile.am: add userstats.py to the distribution
+
+	* tests/test-pokerservice.py.in: test18_cleanupTourneys_registering
+	  must use regular tourneys for testing because sng are always
+	  discarded
 
 	* pokernetwork/pokerservice.py, tests/test-servercrash.py.in: fix
 	  tournament cleanup (trash running tournaments or sng in
