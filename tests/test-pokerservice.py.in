@@ -997,7 +997,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test18_cleanupTourneys_registering(self):
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO tourneys (serial, name, start_time) VALUES (4000, 'regular3', " + str(testclock._seconds_value + 120) + ")")
+        cursor.execute("INSERT INTO tourneys (serial, sit_n_go, name, start_time) VALUES (4000, 'n', 'regular3', " + str(testclock._seconds_value + 120) + ")")
         cursor.execute("INSERT INTO user2tourney VALUES (1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (2, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (3, 4000, 0, -1)")
