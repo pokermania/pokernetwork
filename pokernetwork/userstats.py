@@ -33,6 +33,9 @@ class UserStatsAccessor:
     def __init__(self):
         self.statsSupported = []
 
+    def message(self, string):
+        print string
+        
     def getSupportedStatsList(self):
         return self.statsSupported
 
