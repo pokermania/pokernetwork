@@ -1,3 +1,13 @@
+2008-09-15  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
+
+	* pokernetwork/pokerservice.py, tests/test-servercrash.py.in: fix
+	  tournament cleanup (trash running tournaments or sng in
+	  registering state)
+	* pokernetwork/userstats.py: add message method class
+	  UserStatsAccessor: for test purposes
+
 2008-09-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-userstats.py.in (PokerUserStatsTestCase.MockTable):
@@ -33,6 +43,23 @@
 	(PokerUserStatsTestCase.test02_factory): Wrote test.
 
 	* pokernetwork/userstats.py (UserStats): Created class and file.
+
+2008-09-12  Loic Dachary <loic@dachary.org>
+
+	* database/schema.sql.in: Do not respawn the default tourney to
+	  prevent polution of the database.
+	* pokernetwork/pokerservice.py, tests/test-servercrash.py.in:
+	  Cleanup the tables that have a matching resthost_serial even when
+	  they are not listed in the configuration file. This takes care of
+	  the tournament tables and tables that were removed from the
+	  configuration file.
+	* conf/poker.bot.xml.in: cash_in default example
+
+2008-09-11  Loic Dachary <loic@dachary.org>
+
+	* tests/test-protocol.py.in: Add 154:
+	  'POKER_TABLE_TOURNEY_BREAK_BEGIN', 155:
+	  'POKER_TABLE_TOURNEY_BREAK_DONE', new packets
 
 2008-09-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -70,8 +97,6 @@
 	(PacketPokerTableTourneyBreakDone): Created packet type.
 
 2008-09-08  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* database/1.6.0-1.7.0.sql, database/schema.sql.in,
 	  pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py: .
