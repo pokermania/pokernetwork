@@ -1,6 +1,8 @@
 2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/userstats.py (UserStatsAccessor.error): Added method.
+	(UserStatsAccessor.getStatsValue): Restored strangely deleted method.
+	(UserStatsAccessor._lookupValidStat): Restored strangely deleted method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
 

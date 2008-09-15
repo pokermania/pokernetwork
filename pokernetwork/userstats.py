@@ -43,11 +43,15 @@ class UserStatsAccessor:
     def getSupportedStatsList(self):
         return self.statsSupported
 
-    def setStatsDict(self, dict):
-        self.stats = dict
+    def getStatValue(self, stat, avatar = None, table = None, service = None):
+        if stat in self.statsSupported:
+            return self._lookupValidStat(stat, avatar, table, service)
+        else:
+            self.error("invalid user statistic, %s" % stat)
+            return None
 
-    def setStatsValue(self, key, value):
-        self.stats[key] = value
+    def _lookupValidStat(self, stat, avatar, table, service):
+        return "UNIMPLEMENTED IN BASE CLASS"
 ############################################################################
 from _mysql_exceptions import ProgrammingError
 class UserStatsRankPercentileAccessor(UserStatsAccessor):
