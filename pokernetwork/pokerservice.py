@@ -1350,7 +1350,52 @@ class PokerService(service.Service):
         self.tourneys_schedule = {}
 
         cursor = self.db.cursor(DictCursor)
-        sql = "SELECT * FROM tourneys WHERE state = 'registering' AND start_time > (%d + 60)" % seconds()
+        #
+        # Trash uncompleted tournaments and refund the buyin but keep the
+        # tournaments that are 'complete' or 'registering'n.
+        # Tournaments in the 'registering' state for which the start time
+        # is in the past are trashed.
+        # Sit and go tournaments in the 'registering' state are trashed.
+        #
+        sql = ( "SELECT * FROM tourneys WHERE " +
+                " ( state NOT IN ( 'registering', 'complete' ) OR " +
+                "   ( state = 'registering' AND " +
+                "     ( sit_n_go = 'y' OR start_time < (%d + 60) ) " +
+                "   ) " +
+                " ) " +
+                " AND resthost_serial = %d" ) % ( seconds(), self.resthost_serial )
+        if self.verbose > 2:
+            self.message("cleanupTourneys: " + sql)
+        cursor.execute(sql)
+        for x in xrange(cursor.rowcount):
+            row = cursor.fetchone()
+            withdraw = row['buy_in']
+            cursor1 = self.db.cursor()
+            if row['buy_in'] > 0:
+                sql = ( "UPDATE user2money,user2tourney SET amount = amount + " + str(row['buy_in']) +
+                        " WHERE user2tourney.user_serial = user2money.user_serial AND " +
+                        "       user2money.currency_serial = " + str(row['currency_serial']) + " AND " +
+                        "       user2tourney.tourney_serial = " + str(row['serial']) )
+                if self.verbose > 1:
+                    self.message("cleanupTourneys: %s" % sql)
+                cursor1.execute(sql)
+            sql = "DELETE FROM tourneys WHERE serial = %d" % row['serial']
+            if self.verbose > 1:
+                self.message("cleanupTourneys: %s" % sql)
+            cursor1.execute(sql)
+            sql = "DELETE FROM user2tourney WHERE tourney_serial = %d" % row['serial']
+            if self.verbose > 1:
+                self.message("cleanupTourneys: %s" % sql)
+            cursor1.execute(sql)
+            cursor1.close()
+        #
+        # Restore tourney registrations after reboot
+        #
+        sql = ( "SELECT * FROM tourneys " +
+                " WHERE " +
+                "  state = 'registering' AND " +
+                "  start_time > (%d + 60) AND " +
+                "  resthost_serial = %d " ) % ( seconds(), self.resthost_serial )
         if self.verbose > 2:
             self.message("cleanupTourneys: " + sql)
         cursor.execute(sql)

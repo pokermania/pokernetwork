@@ -44,6 +44,8 @@ from tests.testmessages import silence_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
+from twisted.python.runtime import seconds
+
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerdatabase import PokerDatabase
@@ -99,28 +101,86 @@ class PokerCrashTestCase(unittest.TestCase):
         # Although the name is not in the configuration file (settings),
         # it has a matching resthost_serial and is cleanedup
         #
-        cursor.execute('insert into pokertables (serial, name, variant, betting_structure, currency_serial) values (142, "one", "holdem", "2-4", 1)')
-        cursor.execute('insert into user2table (user_serial, table_serial, money, bet) values (1000, 142, 10, 1)')
-        cursor.execute("insert into users (serial, created, name) values (1000, 0, 'testuser')")
-        cursor.execute("insert into user2money (user_serial, currency_serial, amount) values (1000, 1, 0)")
+        cursor.execute('INSERT INTO pokertables (serial, name, variant, betting_structure, currency_serial) VALUES (142, "one", "holdem", "2-4", 1)')
+        cursor.execute('INSERT INTO user2table (user_serial, table_serial, money, bet) VALUES (1000, 142, 10, 1)')
+        cursor.execute("INSERT INTO users (serial, created, name) VALUES (1000, 0, 'testuser')")
+        cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (1000, 1, 0)")
         #
         # resthost_serial does not match, the records are left untouched
         #
-        cursor.execute('insert into pokertables (serial, name, variant, betting_structure, currency_serial, resthost_serial) values (202, "two", "holdem", "2-4", 1, 10)')
-        cursor.execute('insert into user2table (user_serial, table_serial, money, bet) values (1000, 202, 10, 1)')
+        cursor.execute('INSERT INTO pokertables (serial, name, variant, betting_structure, currency_serial, resthost_serial) VALUES (202, "two", "holdem", "2-4", 1, 10)')
+        cursor.execute('INSERT INTO user2table (user_serial, table_serial, money, bet) VALUES (1000, 202, 10, 1)')
         #
         # Table1 is in the configuration file and cleaned up even though
         # resthost_serial does not match
         #
-        cursor.execute('insert into pokertables (serial, name, variant, betting_structure, currency_serial, resthost_serial) values (303, "Table1", "holdem", "2-4", 1, 44)')
+        cursor.execute('INSERT INTO pokertables (serial, name, variant, betting_structure, currency_serial, resthost_serial) VALUES (303, "Table1", "holdem", "2-4", 1, 44)')
         self.service.startService()
-        cursor.execute("select user_serial,table_serial from user2table")
+        cursor.execute("SELECT user_serial,table_serial FROM user2table")
         self.assertEqual(1, cursor.rowcount)
         self.assertEqual((1000, 202), cursor.fetchone())
-        cursor.execute("select serial from pokertables")
+        cursor.execute("SELECT serial FROM pokertables")
         self.assertEqual((202,), cursor.fetchone())
-        cursor.execute("select amount from user2money")
+        cursor.execute("SELECT amount FROM user2money")
         self.assertEqual(11, cursor.fetchone()[0])
+        cursor.close()
+
+    def test02_cleanupTourneys_refund(self):
+        tourney_serial = '10'
+        user_serial = '200'
+        buy_in = '300'
+        currency_serial = '44'
+        cursor = self.db.cursor()
+        cursor.execute('INSERT INTO tourneys (serial,name,buy_in,currency_serial) VALUES (%s, "one", %s, %s)', ( tourney_serial, buy_in, currency_serial ))
+        cursor.execute('INSERT INTO user2tourney (user_serial,tourney_serial) VALUES (%s,%s)', ( user_serial, tourney_serial ))
+        cursor.execute('INSERT INTO user2money (user_serial,currency_serial) VALUES (%s,%s)', ( user_serial, currency_serial ))
+        cursor.execute('SELECT * FROM tourneys WHERE serial = ' + tourney_serial)
+        self.assertEqual(1, cursor.rowcount)
+        cursor.execute('SELECT amount FROM user2money WHERE user_serial = %s AND currency_serial = %s', ( user_serial, currency_serial ))
+        self.assertEqual((0,), cursor.fetchone())
+        self.service.startService()
+        cursor.execute('SELECT * FROM tourneys WHERE serial = ' + tourney_serial)
+        self.assertEqual(0, cursor.rowcount)
+        cursor.execute('SELECT amount FROM user2money WHERE user_serial = %s AND currency_serial = %s', ( user_serial, currency_serial ))
+        self.assertEqual((300,), cursor.fetchone())
+        cursor.close()
+
+    def test02_cleanupTourneys_restore(self):
+        regular_tourney_serial = '10'
+        sng_tourney_serial = '40'
+        user_serial = '200'
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM tourneys_schedule")
+        #
+        # Sit and go in 'registering' state is trashed
+        #
+        cursor.execute('INSERT INTO tourneys (serial,name) VALUES (%s, "one")', sng_tourney_serial)
+        cursor.execute('INSERT INTO user2tourney (user_serial,tourney_serial) VALUES (%s,%s)', ( user_serial, sng_tourney_serial ))
+        cursor.execute('SELECT * FROM tourneys WHERE serial = ' + sng_tourney_serial)
+        self.assertEqual(1, cursor.rowcount)
+        #
+        # Regular in 'registering' state is kept
+        #
+        cursor.execute('INSERT INTO tourneys (serial,name,sit_n_go,start_time) VALUES (%s, "one", "n", %s)', ( regular_tourney_serial, seconds() + 2000))
+        cursor.execute('INSERT INTO user2tourney (user_serial,tourney_serial) VALUES (%s,%s)', ( user_serial, regular_tourney_serial ))
+        cursor.execute('SELECT * FROM tourneys WHERE serial = ' + regular_tourney_serial)
+        self.assertEqual(1, cursor.rowcount)
+        #
+        # Run cleanupTourneys as a side effect
+        #
+        self.service.startService()
+        #
+        # Sanity checks
+        #
+        self.assertEqual([int(regular_tourney_serial)], self.service.tourneys.keys())
+        cursor.execute('SELECT * FROM user2tourney WHERE tourney_serial = %s', regular_tourney_serial)
+        self.assertEqual(1, cursor.rowcount)
+        cursor.execute('SELECT * FROM user2tourney WHERE tourney_serial = %s', sng_tourney_serial)
+        self.assertEqual(0, cursor.rowcount)
+        cursor.execute('SELECT * FROM user2tourney')
+        self.assertEqual(1, cursor.rowcount)
+        cursor.execute('SELECT * FROM tourneys')
+        self.assertEqual(1, cursor.rowcount)
         cursor.close()
 
 # -----------------------------------------------------------------------------------------------------
