@@ -1,3 +1,23 @@
+2008-09-14  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-userstats.py.in
+	(PokerUserStatsTestCase.test02_factory): Fixed test to use
+	Lookup class.
+
+	* pokernetwork/userstats.py (UserStatsLookup): Created class.
+	(UserStatsRankLevelLookup): Created class.
+	(UserStatsFactory.error): Added "Lookup" to end of required class
+	string.
+
+	* tests/test-userstats.py.in
+	(PokerUserStatsTestCase.test01_baseClass): Renamed to
+	test01_userStatsAccessorBaseClass and rewrote.
+	(PokerUserStatsTestCase.test02_rankLevel): Renamed to
+	test03_rankLevelAccessor and rewrote.
+
+	* pokernetwork/userstats.py (UserStatsAccessor): reworked
+	UserStats class into UserStatsAccessor.
+
 2008-09-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-userstats.py.in: Created file.

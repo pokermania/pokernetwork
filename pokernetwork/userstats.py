@@ -18,12 +18,23 @@
 # Authors:
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 
-class UserStats:
-    def __init__(self):
-        self.stats = {}
+# This is designed to be a flexible user stats package to allow various
+# methods for looking up stats, and allowing for mix-in of different types
+# of stats.  Each stat is usually looked up with a UserStatsAccessor class
+# (or a subclass thereof).  The UserStats class itself (or subclasses
+# thereof) are the things used by other classes to lookup statistics.
 
-    def getStatsDict(self):
-        return self.stats
+# I decided to make the elements for lookup a table, an avatar, and a
+# service.  I felt this was the most likely set of objects that would be
+# used for looking up stats, and of course they need not be used if not
+# needed.
+
+class UserStatsAccessor:
+    def __init__(self):
+        self.statsSupported = []
+
+    def getSupportedStatsList(self):
+        return self.statsSupported
 
     def setStatsDict(self, dict):
         self.stats = dict
@@ -31,10 +42,16 @@ class UserStats:
     def setStatsValue(self, key, value):
         self.stats[key] = value
 ############################################################################
-class UserStatsRankLevel(UserStats):
+class UserStatsRankLevelAccessor(UserStatsAccessor):
     def __init__(self):
-        UserStats.__init__(self)
-        self.stats = { 'level' : 0, 'rank' : 0 }
+        UserStatsAccessor.__init__(self)
+        self.statsSupported = ['level', 'rank']
+############################################################################
+class UserStatsLookup:
+    pass
+############################################################################
+class UserStatsRankLevelLookup(UserStatsLookup):
+    pass
 ############################################################################
 class UserStatsFactory:
     def error(self, string):
@@ -45,7 +62,7 @@ class UserStatsFactory:
         
     def getStatsClass(self, classname):
         if classname == "": return None
-        classname = "UserStats" + classname
+        classname = "UserStats" + classname + "Lookup"
         try:
             return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
         except AttributeError, ae:

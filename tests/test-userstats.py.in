@@ -83,24 +83,21 @@ class PokerUserStatsTestCase(unittest.TestCase):
 #        d = self.service.stopService()
 #        return d
     # -------------------------------------------------------------------------
-    def test01_baseClass(self):
-        """test01_baseClass
+    def test01_userStatsAccessorBaseClass(self):
+        """test01_userStatsAccessorBaseClass
         tests to make sure base class is setup as expected and has
         expected public interface"""
-        u = UserStats()
-        self.assertEquals(u.stats, u.getStatsDict(), {})
-        clear_all_messages()
-        self.assertEquals(u.setStatsValue('a', 5), False)
-        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, a" ])
-        clear_all_messages()
-        self.assertEquals(u.getStatsValue('a'), None)
-        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, a" ])
-        u.stats['a'] = 5
+        u = UserStatsAccessor()
+        self.assertEquals(u.statsSupported, u.getSupportedStatsList(), [])
 
-        self.assertEquals(u.stats, u.getStatsDict(), { 'a' : 5})
-        self.assertEquals(u.setStatsValue('a', 42), True)
-        self.assertEquals(u.stats, u.getStatsDict(), { 'a' : 42})
-        self.assertEquals(u.getStatsValue('a'), 42)
+        clear_all_messages()
+        self.assertEquals(u.getStatValue('unknownstat'), None)
+        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, unknownstat" ])
+
+        clear_all_messages()
+        u.statsSupported = [ 'a' ]
+
+        self.assertEquals(u.getStatValue('a'), "UNIMPLEMENTED IN BASE CLASS")
     # -------------------------------------------------------------------------
     def test02_factory(self):
         """test02_factory
@@ -114,29 +111,24 @@ class PokerUserStatsTestCase(unittest.TestCase):
 
         clear_all_messages()
         self.assertEquals(f.getStatsClass("DOESNOTEXIST"), None)
-        self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'UserStatsDOESNOTEXIST'"])
+        self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'UserStatsDOESNOTEXISTLookup'"])
 
-        self.assertEquals(f.getStatsClass("RankLevel"), UserStatsRankLevel)
+        self.assertEquals(f.getStatsClass("RankLevel"), UserStatsRankLevelLookup)
     # -------------------------------------------------------------------------
-    def test03_rankLevel(self):
-        """test02_rankLevel
-        make sure the ranklevle class works correctly"""
+    def test03_rankLevelAccessor(self):
+        """test03_rankLevelAccessor
+        make sure basic interfaces on the RankLevel accessor class works
+        correctly"""
         
-        u = UserStatsRankLevel()
-        self.assertEquals(u.stats, u.getStatsDict(), { 'level' : 0, 'rank' : 0 })
-        clear_all_messages()
-        self.assertEquals(u.setStatsValue('a', 5), False)
-        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, a" ])
+        u = UserStatsRankLevelAccessor()
+        self.assertEquals(u.statsSupported, u.getSupportedStatsList(), [ 'level', 'rank' ])
 
         clear_all_messages()
-        self.assertEquals(u.setStatsValue('level', 10), True)
-        self.assertEquals(u.getStatsValue('level'), 10)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(u.getStatValue('unknownstat'), None)
+        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, unknownstat" ])
 
-        clear_all_messages()
-        self.assertEquals(u.setStatsValue('rank', 5), True)
-        self.assertEquals(u.getStatsValue('rank'), 5)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(u.getStatValue('level'), "UNIMPLEMENTED IN BASE CLASS")
+        self.assertEquals(u.getStatValue('rank'), "UNIMPLEMENTED IN BASE CLASS")
 
     # ------------------------------------------------------------------------
 def Run():
