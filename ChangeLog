@@ -1,5 +1,9 @@
 2008-09-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-userstats.py.in: Created file.
+	(PokerUserStatsTestCase.test01_baseClass): Wrote test.
+	(PokerUserStatsTestCase.test02_factory): Wrote test.
+
 	* pokernetwork/userstats.py (UserStats): Created class and file.
 
 2008-09-10  Bradley M. Kuhn  <bkuhn@ebb.org>

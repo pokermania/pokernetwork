@@ -1,0 +1,163 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+from types import *
+import libxml2
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error, base
+from twisted.python import failure, runtime
+from tests import testclock
+
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
+#os.environ['VERBOSE_T'] = '0'
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
+from pokernetwork import pokernetworkconfig
+from pokernetwork.userstats import *
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <language value="en_US.UTF-8"/>
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="0" />
+  <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
+  <table name="Table4" variant="holdem" betting_structure="ante-1-2-limit" seats="10" player_timeout="60" currency_serial="0" />
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+############################################################################
+class PokerUserStatsTestCase(unittest.TestCase):
+    def destroyDb(self, arg = None):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUp(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        #
+        # Setup server
+        #
+#        self.service = pokerservice.PokerService(settings)
+#        self.service.verbose = 6
+#        self.service.startService()
+
+    def tearDown(self):
+        pass
+#        d = self.service.stopService()
+#        return d
+    # -------------------------------------------------------------------------
+    def test01_baseClass(self):
+        """test01_baseClass
+        tests to make sure base class is setup as expected and has
+        expected public interface"""
+        u = UserStats()
+        self.assertEquals(u.stats, u.getStatsDict(), {})
+        clear_all_messages()
+        self.assertEquals(u.setStatsValue('a', 5), False)
+        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, a" ])
+        clear_all_messages()
+        self.assertEquals(u.getStatsValue('a'), None)
+        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, a" ])
+        u.stats['a'] = 5
+
+        self.assertEquals(u.stats, u.getStatsDict(), { 'a' : 5})
+        self.assertEquals(u.setStatsValue('a', 42), True)
+        self.assertEquals(u.stats, u.getStatsDict(), { 'a' : 42})
+        self.assertEquals(u.getStatsValue('a'), 42)
+    # -------------------------------------------------------------------------
+    def test02_factory(self):
+        """test02_factory
+        basic factory interface tests."""
+        f = UserStatsFactory()
+        clear_all_messages()
+        f.error("test")
+        self.assertEquals(get_messages(), ['ERROR test'])
+
+        self.assertEquals(f.getStatsClass(""), None)
+
+        clear_all_messages()
+        self.assertEquals(f.getStatsClass("DOESNOTEXIST"), None)
+        self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'UserStatsDOESNOTEXIST'"])
+
+        self.assertEquals(f.getStatsClass("RankLevel"), UserStatsRankLevel)
+    # -------------------------------------------------------------------------
+    def test03_rankLevel(self):
+        """test02_rankLevel
+        make sure the ranklevle class works correctly"""
+        
+        u = UserStatsRankLevel()
+        self.assertEquals(u.stats, u.getStatsDict(), { 'level' : 0, 'rank' : 0 })
+        clear_all_messages()
+        self.assertEquals(u.setStatsValue('a', 5), False)
+        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, a" ])
+
+        clear_all_messages()
+        self.assertEquals(u.setStatsValue('level', 10), True)
+        self.assertEquals(u.getStatsValue('level'), 10)
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        self.assertEquals(u.setStatsValue('rank', 5), True)
+        self.assertEquals(u.getStatsValue('rank'), 5)
+        self.assertEquals(get_messages(), [])
+
+    # ------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test76"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerUserStatsTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# ------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-userstats.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/userstats.py' TESTS='coverage-reset test-userstats.py coverage-report' check )"
+# End:

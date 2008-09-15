@@ -314,6 +314,7 @@ AC_CONFIG_FILES([
         tests/test-clientserver.py
         tests/test-currencyclient.py
         tests/test-pokeravatar.py
+        tests/test-userstats.py
         tests/test-pokercashier.py
         tests/test-pokerclient.py
         tests/test-servercrash.py

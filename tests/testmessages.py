@@ -69,6 +69,9 @@ from pokernetwork import pokersite
 classes.append(pokersite.PokerResource)
 classes.append(pokersite.PokerImageUpload)
 classes.append(pokersite.PokerAvatarResource)
+from pokernetwork import userstats
+classes.append(userstats.UserStatsFactory)
+classes.append(userstats.UserStats)
 
 from twisted.internet import defer
 
