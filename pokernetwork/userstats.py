@@ -1,0 +1,53 @@
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors:
+#  Bradley M. Kuhn <bkuhn@ebb.org>
+
+class UserStats:
+    def __init__(self):
+        self.stats = {}
+
+    def getStatsDict(self):
+        return self.stats
+
+    def setStatsDict(self, dict):
+        self.stats = dict
+
+    def setStatsValue(self, key, value):
+        self.stats[key] = value
+############################################################################
+class UserStatsRankLevel(UserStats):
+    def __init__(self):
+        UserStats.__init__(self)
+        self.stats = { 'level' : 0, 'rank' : 0 }
+############################################################################
+class UserStatsFactory:
+    def error(self, string):
+        self.message("ERROR " + string)
+        
+    def message(self, string):
+        print string
+        
+    def getStatsClass(self, classname):
+        if classname == "": return None
+        classname = "UserStats" + classname
+        try:
+            return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
+        except AttributeError, ae:
+            self.error(ae.__str__())
+            return None
