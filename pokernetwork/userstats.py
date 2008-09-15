@@ -21,8 +21,9 @@
 # This is designed to be a flexible user stats package to allow various
 # methods for looking up stats, and allowing for mix-in of different types
 # of stats.  Each stat is usually looked up with a UserStatsAccessor class
-# (or a subclass thereof).  The UserStats class itself (or subclasses
-# thereof) are the things used by other classes to lookup statistics.
+# (or a subclass thereof).  The UserStatsLookup class itself (or
+# subclasses thereof) are the things used by other classes to lookup
+# statistics.
 
 # I decided to make the elements for lookup a table, an avatar, and a
 # service.  I felt this was the most likely set of objects that would be
@@ -32,6 +33,9 @@
 class UserStatsAccessor:
     def __init__(self):
         self.statsSupported = []
+
+    def error(self, string):
+        self.message("ERROR " + string)
 
     def message(self, string):
         print string

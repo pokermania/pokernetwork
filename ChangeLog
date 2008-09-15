@@ -1,3 +1,7 @@
+2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/userstats.py (UserStatsAccessor.error): Added method.
+
 2008-09-15  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0
