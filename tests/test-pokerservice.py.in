@@ -389,22 +389,6 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
         db.db.query("INSERT INTO users (serial, name) VALUES (%d, '%s')" % (serial, name))
         result = self.service.getPlayerPlacesByName('testuser2')
         self.assertEqual(PACKET_POKER_PLAYER_PLACES, result.other_type)        
-
-    def test03_tourneys_registering_state(self):
-        self.service.startService()
-        db = self.service.db
-        serial = 888
-        tourney_serial = 999
-        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial))
-        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+1))
-        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+2))
-        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial, 'registering'))
-        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+1, 'running'))
-        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+2, 'complete'))
-        places = self.service.getPlayerPlaces(serial)
-        self.assertEqual([], places.tables)        
-        self.assertEqual([tourney_serial], places.tourneys)
-        self.assertEqual(serial, places.serial)
     
 class ResthostTestCase(unittest.TestCase):
 
@@ -2032,24 +2016,24 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test11"
     suite = loader.suiteFactory()
-#     suite.addTest(loader.loadClass(PokerServiceTestCase))
-#     suite.addTest(loader.loadClass(RefillTestCase))
-#     suite.addTest(loader.loadClass(TimerTestCase))
-#     suite.addTest(loader.loadClass(BreakTestCase))
-#     suite.addTest(loader.loadClass(TourneyFinishedTestCase))
-#     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
-#     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
-#     suite.addTest(loader.loadClass(TourneyCancelTestCase))
-#     suite.addTest(loader.loadClass(TourneyManagerTestCase))
-#     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
-#     suite.addTest(loader.loadClass(ListHandsTestCase))
-#     suite.addTest(loader.loadClass(SetAccountTestCase))
-#     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
-#     suite.addTest(loader.loadClass(MonitorTestCase))
-#     suite.addTest(loader.loadClass(ListTablesTestCase))
-#     suite.addTest(loader.loadClass(TourneySelectTestCase))
+    suite.addTest(loader.loadClass(PokerServiceTestCase))
+    suite.addTest(loader.loadClass(RefillTestCase))
+    suite.addTest(loader.loadClass(TimerTestCase))
+    suite.addTest(loader.loadClass(BreakTestCase))
+    suite.addTest(loader.loadClass(TourneyFinishedTestCase))
+    suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
+    suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+    suite.addTest(loader.loadClass(TourneyCancelTestCase))
+    suite.addTest(loader.loadClass(TourneyManagerTestCase))
+    suite.addTest(loader.loadClass(ShutdownCheckTestCase))
+    suite.addTest(loader.loadClass(ListHandsTestCase))
+    suite.addTest(loader.loadClass(SetAccountTestCase))
+    suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
+    suite.addTest(loader.loadClass(MonitorTestCase))
+    suite.addTest(loader.loadClass(ListTablesTestCase))
+    suite.addTest(loader.loadClass(TourneySelectTestCase))
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
-#     suite.addTest(loader.loadClass(ResthostTestCase))
+    suite.addTest(loader.loadClass(ResthostTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
