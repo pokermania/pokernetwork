@@ -210,6 +210,7 @@ class PokerService(service.Service):
             self.client_queued_packet_max = 500
         
         self.delays = settings.headerGetProperties("/server/delays")[0]
+            
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
             self.refill = refill[0]
@@ -693,11 +694,19 @@ class PokerService(service.Service):
                 table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = gameId, resume_time = resumeTime))
             self.tourneyBreakCheck(tourney)
         elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
-            reactor.callLater(self.delays.get('extra_wait_tourney_break', 0), self.tourneyResumeAndDeal, tourney)
+            wait = self.delays.get('extra_wait_tourney_break', 0)
+            if wait > 0:
+                reactor.callLater(wait, self.tourneyResumeAndDeal, tourney)
+            else:
+                self.tourneyResumeAndDeal(tourney)
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
             # since we only want this behavior before the first deal. 
-            reactor.callLater(self.delays.get('extra_wait_tourney_start', 0), self.tourneyDeal, tourney)
+            wait = self.delays.get('extra_wait_tourney_start', 0)
+            if wait > 0:
+                reactor.callLater(wait, self.tourneyDeal, tourney)
+            else:
+                self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_RUNNING:
             self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
@@ -839,8 +848,11 @@ class PokerService(service.Service):
         table.destroy()
 
     def tourneyDestroyGame(self, tourney, game):
-        reactor.callLater(self.delays.get('extra_wait_tourney_finish', 0),
-                          self.tourneyDestroyGameActual, game)
+        wait = self.delays.get('extra_wait_tourney_finish', 0)
+        if wait > 0:
+            reactor.callLater(wait, self.tourneyDestroyGameActual, game)
+        else:
+            self.tourneyDestroyGameActual(game)
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
         from_table = self.getTable(from_game_id)

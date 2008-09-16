@@ -1,5 +1,11 @@
 2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/pokerservice.py (PokerService.tourneyDestroyGame):
+	Adjusted so reactor.callLater() is not used for waits <= 0.
+	(PokerService.tourneyNewState): Adjusted so reactor.callLater() is
+	not used for waits <= 0.
+
+
 	* pokernetwork/userstats.py (UserStatsLookup.allStatsAsPacket):
 	Wrote method.
 	(UserStatsLookup.getSupportedListAsPacket): Wrote method.
