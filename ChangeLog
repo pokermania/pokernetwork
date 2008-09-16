@@ -1,12 +1,25 @@
 2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
- 	* Release 1.7.0
+	* tests/test-userstats.py.in
+	(PokerUserStatsTestCase.test04_userStatsLookupBaseClass): Wrote test.
+	(PokerUserStatsTestCase.test05_userStatsRankPercentileLookupBaseClass):
+	Wrote test.
+	(PokerUserStatsTestCase.test03_rankPercentileAccessor): Fixed bug
+	with assertions related to sort.
 
 	* pokernetwork/userstats.py (UserStatsAccessor.error): Added method.
 	(UserStatsAccessor.getStatsValue): Restored strangely deleted method.
 	(UserStatsAccessor._lookupValidStat): Restored strangely deleted method.
+	(UserStatsLookup.getStatValue): Wrote method.
+	(UserStatsLookup.__init__): Wrote method.
+	(UserStatsRankPercentileLookup.__init__): Wrote method.
+	(UserStatsLookup.allStatsAsPacket): Created stub for method.
+	(UserStatsLookup.error): Wrote method.
+	(UserStatsLookup.message): Wrore method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
 
 	* Makefile.am: add userstats.py to the distribution
 

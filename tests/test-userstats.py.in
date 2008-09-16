@@ -141,10 +141,14 @@ class PokerUserStatsTestCase(unittest.TestCase):
         make sure basic interfaces on the RankPercentile accessor class works
         correctly, and test when there is no database precent"""
         statsList = [ 'rank', 'percentile' ]
-
+        statsList.sort()
         u = UserStatsRankPercentileAccessor()
-        self.assertEquals(u.statsSupported.sort(), statsList.sort())
-        self.assertEquals(u.getSupportedStatsList().sort(), statsList.sort())
+        ss = u.statsSupported
+        ss.sort()
+        self.assertEquals(ss, statsList)
+        g = u.getSupportedStatsList()
+        g.sort()
+        self.assertEquals(g, statsList)
         
         clear_all_messages()
         self.assertEquals(u.getStatValue('unknownstat'), None)
@@ -201,9 +205,44 @@ class PokerUserStatsTestCase(unittest.TestCase):
             myTable = PokerUserStatsTestCase.MockTable(2)
             self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
                                              service = myService), value)
-            
+    # -------------------------------------------------------------------------
+    def test04_userStatsLookupBaseClass(self):
+        """test04_userStatsLookupBaseClass
+        Tests the base class called UserStatsLookup: mainly makes sure the
+        interface functions."""
+        ul = UserStatsLookup(PokerUserStatsTestCase.MockService(self.db))
+        self.assertEquals(self.db, ul.service.db)
+        self.assertEquals(ul.stat2accessor, {})
 
-            
+        # test error message for nonexistent stat
+        clear_all_messages()
+        ul.getStatValue('DOESNOTEXIST')
+        self.assertEquals(get_messages(), [ "ERROR unsupported user statistic, DOESNOTEXIST" ])
+
+        # Create a dummy accessor class and make sure
+        # UserStatsLookup.getStatValue does the right thing with it.
+        class MockAccessor():
+            def getStatValue(mockAccessorSelf, stat, a, t, s):
+                self.assertEquals(a, "avatar")
+                self.assertEquals(t, "table")
+                self.assertEquals(s, ul.service)
+
+                return "mockvalue"
+        ul.stat2accessor['mockstat'] = MockAccessor()
+        self.assertEquals(ul.getStatValue("mockstat", "table", "avatar"), "mockvalue")
+
+        self.assertEquals(ul.allStatsAsPacket("table", "avatar"), "UNIMPLEMENTED")
+    # -------------------------------------------------------------------------
+    def test05_userStatsRankPercentileLookupBaseClass(self):
+        """test05_userStatsRankPercentileLookupBaseClass
+        Tests the the RankPercentile lookup class."""
+        urpl = UserStatsRankPercentileLookup(PokerUserStatsTestCase.MockService(self.db))
+        self.assertEquals(self.db, urpl.service.db)
+        k = urpl.stat2accessor.keys()
+        k.sort()
+        self.assertEquals(k, [ 'percentile', 'rank' ])
+        for ii in k:
+            self.failUnless(isinstance(urpl.stat2accessor[ii], UserStatsRankPercentileAccessor))
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()

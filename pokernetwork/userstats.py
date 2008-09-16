@@ -33,23 +33,23 @@
 class UserStatsAccessor:
     def __init__(self):
         self.statsSupported = []
-
+    # ----------------------------------------------------------------------
     def error(self, string):
         self.message("ERROR " + string)
-
+    # ----------------------------------------------------------------------
     def message(self, string):
         print string
-        
+    # ----------------------------------------------------------------------
     def getSupportedStatsList(self):
         return self.statsSupported
-
+    # ----------------------------------------------------------------------
     def getStatValue(self, stat, avatar = None, table = None, service = None):
         if stat in self.statsSupported:
             return self._lookupValidStat(stat, avatar, table, service)
         else:
             self.error("invalid user statistic, %s" % stat)
             return None
-
+    # ----------------------------------------------------------------------
     def _lookupValidStat(self, stat, avatar, table, service):
         return "UNIMPLEMENTED IN BASE CLASS"
 ############################################################################
@@ -79,18 +79,40 @@ class UserStatsRankPercentileAccessor(UserStatsAccessor):
         return value
 ############################################################################
 class UserStatsLookup:
-    pass
+    def __init__(self, service = None):
+        self.service = service
+        self.stat2accessor = {}
+    # ----------------------------------------------------------------------
+    def error(self, string):
+        self.message("ERROR " + string)
+    # ----------------------------------------------------------------------
+    def message(self, string):
+        print string
+    # ----------------------------------------------------------------------
+    def getStatValue(self, stat, table = None, avatar = None):
+        if self.stat2accessor.has_key(stat):
+            return self.stat2accessor[stat].getStatValue(stat, avatar, table, self.service)
+        else:
+            self.error("unsupported user statistic, %s" % stat)
+            return None
+    # ----------------------------------------------------------------------
+    def allStatsAsPacket(self, table, avatar):
+        return "UNIMPLEMENTED"
 ############################################################################
 class UserStatsRankPercentileLookup(UserStatsLookup):
-    pass
+    def __init__(self, service = None):
+        UserStatsLookup.__init__(self, service)
+        self.service = service
+        self.stat2accessor = { 'percentile' : UserStatsRankPercentileAccessor(),
+                               'rank' : UserStatsRankPercentileAccessor() }
 ############################################################################
 class UserStatsFactory:
     def error(self, string):
         self.message("ERROR " + string)
-        
+    # ----------------------------------------------------------------------
     def message(self, string):
         print string
-        
+    # ----------------------------------------------------------------------
     def getStatsClass(self, classname):
         if classname == "": return None
         classname = "UserStats" + classname + "Lookup"
@@ -99,3 +121,4 @@ class UserStatsFactory:
         except AttributeError, ae:
             self.error(ae.__str__())
             return None
+############################################################################
