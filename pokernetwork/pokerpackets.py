@@ -4190,7 +4190,75 @@ game_id: integer uniquely identifying a game.
         )
 
 
-Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 154 # 0x9B # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 155 # 0x9B # %SEQ%
+###########################################################################
+PACKET_POKER_PLAYER_STATS = 156 # 156 # 0x9C # %SEQ%
+PacketNames[PACKET_POKER_PLAYER_STATS] = "POKER_PLAYER_STATS"
+class PacketPokerPlayerStats(PacketSerial):
+    """\
+
+Semantics: Packet sent by server will contain key/value pairs of all
+           statistical information currently supported by the server.
+           This can vary depending on what stats are supported by the
+           server configuration.  Clients that want to know what values to
+           expect should send PacketPokerGetSupportedStats first to get a
+           list of what to expect.  This packet can be ignored by clients
+           if they so choose; no mandatory game information is contained
+           in it.
+
+Direction: server  => client
+
+Context: 
+
+serial: integer uniquely identifying a player.
+key: value (for each statistic supported)
+"""
+    def __init__(self, *args, **kwargs):
+        # FIXME: this is a hack that will work fine with
+        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
+        # binary protocol.  The binary protocol folks will always get a
+        # response with just a serial in it.
+        for (kk, vv) in kwargs.iteritems():
+            self.__dict__[kk] = vv
+        PacketSerial.__init__(self, *args, **kwargs)
+    #---------------------------------------------------------------
+    def __str__(self):
+        retStr =  PacketSerial.__str__(self)
+        klist = self.__dict__.keys()
+        klist.sort()
+        for kk in klist:
+            if kk != "serial":
+                retStr + " %s = %s" % ( kk, self.__dict__[kk] ) 
+
+########################################
+class PacketPokerGetStatsSupported(Packet):
+    """\
+
+Semantics: request the list of statistics that the server currently supports.
+The answer is a possibly empty PACKET_POKER_STATS_SUPPORTED packet.
+
+Direction: server <=  client
+"""
+    
+    info = Packet.info
+
+Packet.infoDeclare(globals(), PacketPokerGetStatsSupported, Packet, "POKER_GET_STATS_SUPPORTED", 157) # 157 # 0x9C # %SEQ%
+########################################
+class PacketPokerStatsSupported(Packet):
+    """\
+
+Semantics: request the list of statistics that the server currently supports.
+The answer is a possibly empty PACKET_POKER_STATS_SUPPORTED packet.
+
+Direction: server <=  client
+"""
+
+    
+    info = Packet.info + (
+        ('stats', [], 'Il'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerStatsSupported, Packet, "POKER_STATS_SUPPORTED", 158) # 158 # 0x9D # %SEQ%
 
 _TYPES = range(50,169)
 

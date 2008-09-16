@@ -1,5 +1,13 @@
 2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-protocol.py.in
+	(UGAMEProtocolTestCase.testHandleData): Added three new packets
+	per below.
+
+	* pokernetwork/pokerpackets.py (PacketPokerPlayerStats): Created packet.
+	(PacketPokerGetStatsSupported): Created packet.
+	(PacketPokerStatsSupported): Created packet.
+
 	* tests/test-userstats.py.in
 	(PokerUserStatsTestCase.test04_userStatsLookupBaseClass): Wrote test.
 	(PokerUserStatsTestCase.test05_userStatsRankPercentileLookupBaseClass):
