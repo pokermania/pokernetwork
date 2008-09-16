@@ -4102,6 +4102,7 @@ class PacketPokerGetPlayerPlaces(Packet):
     
     info = Packet.info + (
         ('serial', 0, 'I'),
+        ('name', '', 's'),
         )
 
 Packet.infoDeclare(globals(), PacketPokerGetPlayerPlaces, Packet, "POKER_GET_PLAYER_PLACES", 151) # 151 # 0x97 # %SEQ%

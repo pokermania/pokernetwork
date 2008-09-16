@@ -1489,6 +1489,14 @@ class PokerService(service.Service):
         return PacketPokerPlayerPlaces(serial = serial,
                                        tables = tables,
                                        tourneys = tourneys)
+
+    def getPlayerPlacesByName(self, name):
+        cursor = self.db.cursor()
+        cursor.execute("SELECT serial FROM users WHERE name = %s", name)
+        serial = cursor.fetchone()
+        if serial == None:
+            return PacketError(other_type = PACKET_POKER_PLAYER_PLACES)
+        return self.getPlayerPlaces(serial)
     
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)

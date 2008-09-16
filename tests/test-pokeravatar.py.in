@@ -2935,17 +2935,62 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertEquals(1, len(packets))
         packet = packets[0]
         self.assertEquals(PACKET_POKER_PLAYER_PLACES, packet.type)
+        self.assertEquals([2], packet.tables)
+        return (client, packet)
+
+    # ------------------------------------------------------------------------
+    def getPlayerPlacesByName(self, (client, packet), id, name):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerPlaces(name = name))
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(1, len(packets))
+        packet = packets[0]
+        self.assertEquals(PACKET_POKER_PLAYER_PLACES, packet.type)
+        self.assertEquals([2], packet.tables)
+        return (client, packet)
+
+    def getPlayerPlacesNone(self, (client, packet), id, name):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerPlaces(name = name))
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(1, len(packets))
+        packet = packets[0]
+        self.assertEquals(PACKET_POKER_PLAYER_PLACES, packet.type)
         self.assertEquals([], packet.tables)
+        return (client, packet)
+
+    def getPlayerPlacesFailed(self, (client, packet), id, name):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerPlaces(name = name))
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(1, len(packets))
+        packet = packets[0]
+        self.assertEquals(PACKET_ERROR, packet.type)
+        self.assertEquals(PACKET_POKER_PLAYER_PLACES, packet.other_type)
         return (client, packet)
     
     # ------------------------------------------------------------------------
     def test69_getPlayerPlaces(self):
         """Test lookup of where the player is playing."""
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.getPlayerPlaces, 0)
-        return d
+        d1 = self.client_factory[0].established_deferred
+        d1.addCallback(self.sendExplain)
+        d1.addCallback(self.sendRolePlay)
+        d1.addCallback(self.login, 0)
+        d1.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d1.addCallback(self.seatTable, 0, 2)
+        d1.addCallback(self.getPlayerPlaces, 0, 1)
+        d1.addCallback(self.getPlayerPlacesByName, 0, 'user0')
+        d1.addCallback(self.getPlayerPlacesFailed, 0, 'user999')
+
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.getPlayerPlacesNone, 1, 'user1')        
+        return defer.DeferredList([d1, d2])
 
     # ------------------------------------------------------------------------
     def poll(self, (client, packet), id ):

@@ -388,7 +388,10 @@ class PokerAvatar:
             return
 
         if packet.type == PACKET_POKER_GET_PLAYER_PLACES:
-            self.sendPacketVerbose(self.service.getPlayerPlaces(packet.serial))
+            if packet.serial != 0:
+                self.sendPacketVerbose(self.service.getPlayerPlaces(packet.serial))
+            else:
+                self.sendPacketVerbose(self.service.getPlayerPlacesByName(packet.name))
             return
 
         if packet.type == PACKET_POKER_GET_PLAYER_INFO:
