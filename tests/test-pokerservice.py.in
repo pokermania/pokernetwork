@@ -359,6 +359,36 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
         self.assertEqual([TABLE1, TABLE2, TABLE3], places.tables)
         self.assertEqual([tourney_serial], places.tourneys)
         self.assertEqual(serial, places.serial)
+
+    def test02_tables_and_tourneys_by_name(self):
+        self.service.startService()
+        db = self.service.db
+        serial = 888
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE1))
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE2))
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE3))
+        tourney_serial = 999
+        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial))
+        name = 'testuser'
+        db.db.query("INSERT INTO users (serial, name) VALUES (%d, '%s')" % (serial, name))
+        places = self.service.getPlayerPlacesByName(name)
+        self.assertEqual([TABLE1, TABLE2, TABLE3], places.tables)
+        self.assertEqual([tourney_serial], places.tourneys)
+        self.assertEqual(serial, places.serial)
+
+    def test02_tables_and_tourneys_by_name_error(self):
+        self.service.startService()
+        db = self.service.db
+        serial = 888
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE1))
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE2))
+        db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE3))
+        tourney_serial = 999
+        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial))
+        name = 'testuser1'
+        db.db.query("INSERT INTO users (serial, name) VALUES (%d, '%s')" % (serial, name))
+        result = self.service.getPlayerPlacesByName('testuser2')
+        self.assertEqual(PACKET_POKER_PLAYER_PLACES, result.other_type)        
     
 class ResthostTestCase(unittest.TestCase):
 

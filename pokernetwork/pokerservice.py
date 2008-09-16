@@ -1496,6 +1496,8 @@ class PokerService(service.Service):
         serial = cursor.fetchone()
         if serial == None:
             return PacketError(other_type = PACKET_POKER_PLAYER_PLACES)
+        else:
+            serial = serial[0]
         return self.getPlayerPlaces(serial)
     
     def getUserInfo(self, serial):
