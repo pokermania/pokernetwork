@@ -4213,23 +4213,26 @@ Context:
 serial: integer uniquely identifying a player.
 key: value (for each statistic supported)
 """
+    type = PACKET_POKER_PLAYER_STATS
+
     def __init__(self, *args, **kwargs):
         # FIXME: this is a hack that will work fine with
         # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
         # binary protocol.  The binary protocol folks will always get a
         # response with just a serial in it.
-        for (kk, vv) in kwargs.iteritems():
-            self.__dict__[kk] = vv
         PacketSerial.__init__(self, *args, **kwargs)
+        if kwargs.has_key('statsDict'):
+            for (kk, vv) in kwargs['statsDict'].iteritems():
+                self.__dict__[kk] = vv
     #---------------------------------------------------------------
     def __str__(self):
         retStr =  PacketSerial.__str__(self)
         klist = self.__dict__.keys()
         klist.sort()
         for kk in klist:
-            if kk != "serial":
-                retStr + " %s = %s" % ( kk, self.__dict__[kk] ) 
-
+            if kk != "serial" and kk != "cookie":
+                retStr += " %s = %s" % ( kk, self.__dict__[kk] ) 
+        return retStr
 ########################################
 class PacketPokerGetStatsSupported(Packet):
     """\

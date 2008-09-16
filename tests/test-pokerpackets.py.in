@@ -83,6 +83,11 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
         self.packUnpack(packet, 'name')
         self.failUnless("name = name" in str(packet))        
 
+    #--------------------------------------------------------------    
+    def test_PacketPokerPlayerStats(self):
+        packet = pokerpackets.PacketPokerPlayerStats(serial = 5, statsDict = { 'a': 6, 'b' : 10})
+        self.assertEquals(packet.__str__(), 
+                          "type = POKER_PLAYER_STATS(156) serial = 5 a = 6 b = 10")
 #--------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
