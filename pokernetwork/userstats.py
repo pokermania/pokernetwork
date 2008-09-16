@@ -30,6 +30,8 @@
 # used for looking up stats, and of course they need not be used if not
 # needed.
 
+from pokerpackets import PacketPokerPlayerStats, PacketPokerStatsSupported
+
 class UserStatsAccessor:
     def __init__(self):
         self.statsSupported = []
@@ -97,7 +99,13 @@ class UserStatsLookup:
             return None
     # ----------------------------------------------------------------------
     def allStatsAsPacket(self, table, avatar):
-        return "UNIMPLEMENTED"
+        sd = {}
+        for stat in self.stat2accessor.keys():
+            sd[stat] = self.getStatValue(stat, table, avatar)
+        return PacketPokerPlayerStats(serial = avatar.getSerial(), statsDict = sd)
+    # ----------------------------------------------------------------------
+    def getSupportedListAsPacket(self):
+        return PacketPokerStatsSupported(stats = self.stat2accessor.keys())
 ############################################################################
 class UserStatsRankPercentileLookup(UserStatsLookup):
     def __init__(self, service = None):

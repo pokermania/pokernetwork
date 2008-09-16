@@ -223,15 +223,25 @@ class PokerUserStatsTestCase(unittest.TestCase):
         # UserStatsLookup.getStatValue does the right thing with it.
         class MockAccessor():
             def getStatValue(mockAccessorSelf, stat, a, t, s):
-                self.assertEquals(a, "avatar")
-                self.assertEquals(t, "table")
+                self.assertEquals(a.getSerial(), 1)
+                self.assertEquals(t.currency_serial, 1)
                 self.assertEquals(s, ul.service)
 
                 return "mockvalue"
-        ul.stat2accessor['mockstat'] = MockAccessor()
-        self.assertEquals(ul.getStatValue("mockstat", "table", "avatar"), "mockvalue")
+        table = PokerUserStatsTestCase.MockTable(1)
+        avatar = PokerUserStatsTestCase.MockAvatar(1)
 
-        self.assertEquals(ul.allStatsAsPacket("table", "avatar"), "UNIMPLEMENTED")
+        ul.stat2accessor['mockstat'] = MockAccessor()
+        self.assertEquals(ul.getStatValue("mockstat", table, avatar), "mockvalue")
+
+        pack = ul.allStatsAsPacket(table, avatar)
+        self.assertEquals(pack.serial, 1)
+        self.assertEquals(pack.mockstat, 'mockvalue')
+        self.assertEquals(pack.__str__(), "type = POKER_PLAYER_STATS(156) serial = 1 mockstat = mockvalue")
+
+        pack = ul.getSupportedListAsPacket()
+        self.assertEquals(pack.stats, ['mockstat'])
+        print pack
     # -------------------------------------------------------------------------
     def test05_userStatsRankPercentileLookupBaseClass(self):
         """test05_userStatsRankPercentileLookupBaseClass

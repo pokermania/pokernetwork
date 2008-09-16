@@ -1,5 +1,9 @@
 2008-09-15  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/userstats.py (UserStatsLookup.allStatsAsPacket):
+	Wrote method.
+	(UserStatsLookup.getSupportedListAsPacket): Wrote method.
+
 	* tests/test-protocol.py.in
 	(UGAMEProtocolTestCase.testHandleData): Added three new packets
 	per below.
