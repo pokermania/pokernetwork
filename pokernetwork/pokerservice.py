@@ -1483,7 +1483,7 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         cursor.execute("SELECT table_serial FROM user2table WHERE user_serial = %s", serial)
         tables = map(lambda x: x[0], cursor.fetchall())
-        cursor.execute("SELECT tourney_serial FROM user2tourney WHERE user_serial = %s", serial)
+        cursor.execute("SELECT user2tourney.tourney_serial FROM user2tourney,tourneys WHERE user2tourney.user_serial = %s AND user2tourney.tourney_serial = tourneys.serial AND tourneys.state = 'registering'", serial)
         tourneys = map(lambda x: x[0], cursor.fetchall())
         cursor.close()
         return PacketPokerPlayerPlaces(serial = serial,
