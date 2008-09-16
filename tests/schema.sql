@@ -22,7 +22,6 @@
 --
 -- Authors:
 --  Loic Dachary <loic@gnu.org>
---
 drop table if exists users;
 
 create table users (

@@ -25,6 +25,11 @@
 -- Authors:
 --  Loic Dachary <loic@gnu.org>
 --
+--
+-- NOTE: Be careful when you change the default tourney parameters in this
+-- file!  Some of the tests, most notably, test-pokerservice.py.in, use
+-- this schema, and make assumptions about the tourney setup.
+
 DROP TABLE IF EXISTS server;
 
 CREATE TABLE server (
@@ -294,6 +299,7 @@ CREATE TABLE tourneys_schedule (
 --
 -- Holdem sit and go
 --
+-- SEE NOTE ABOVE BEFORE CHANGING!!!!
 INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `currency_serial` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
 VALUES ( 'sitngo2', 'Sit and Go 2 players, Holdem', 'Sit and Go 2 players', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', '0', '0', 'y', '0' );
 
@@ -368,6 +374,7 @@ VALUES ( 'sitngo2', 'Sit and Go 2 players, Holdem', 'Sit and Go 2 players', '2',
 -- INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `currency_serial` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval` )
 -- VALUES ( 'Ositngo50', 'Sit and Go 5 tables, Omaha', 'Sit and Go 5 tables', '50', 'omaha', 'level-15-30-no-limit', '10', 1, '300000', '0', 'y', '0', '0', 'y', '0' );
 
+-- SEE NOTE ABOVE BEFORE CHANGING!!!!
 INSERT INTO `tourneys_schedule` (`serial`, `name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) VALUES ('', 'regular1', 'Holdem No Limit Freeroll', 'Holdem No Limit Freeroll', '1000', 'holdem', 'level-001', '10', 1, '0', '0', 'n', '60', '30', '1', '60', unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now()), 'n', '0', 3);
 
 DROP TABLE IF EXISTS tourneys;
