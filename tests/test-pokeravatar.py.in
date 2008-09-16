@@ -2927,7 +2927,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     
     # ------------------------------------------------------------------------
-    def getPlayerPlaces(self, (client, packet), id ):
+    def getPlayerPlaces(self, (client, packet), id, name):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerGetPlayerPlaces(serial= client.getSerial()))
