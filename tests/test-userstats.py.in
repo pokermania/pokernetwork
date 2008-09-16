@@ -241,7 +241,7 @@ class PokerUserStatsTestCase(unittest.TestCase):
 
         pack = ul.getSupportedListAsPacket()
         self.assertEquals(pack.stats, ['mockstat'])
-        print pack
+        self.assertEquals(pack.__str__(), "POKER_STATS_SUPPORTED  type = 158 length = 8 stats = ['mockstat']")
     # -------------------------------------------------------------------------
     def test05_userStatsRankPercentileLookupBaseClass(self):
         """test05_userStatsRankPercentileLookupBaseClass
