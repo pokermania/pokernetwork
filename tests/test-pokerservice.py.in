@@ -79,7 +79,7 @@ from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.packets import PacketError
-
+from pokernetwork.userstats import UserStatsRankPercentileLookup, UserStatsLookup
 from MySQLdb.cursors import DictCursor
 
 class ConstantDeckShuffler:
@@ -127,6 +127,8 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <language value="en_US.UTF-8"/>
   <language value="fr_FR.UTF-8"/>
   <language value="this_locale_does_not_exist"/>
+
+  <stats type="RankPercentile"/>
 
   <refill serial="1" amount="10000000" />
 
@@ -497,7 +499,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500):
+    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500, statsLookupType = UserStatsRankPercentileLookup, statsError = ""):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -517,6 +519,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(queuedPacketMax, self.service.client_queued_packet_max,
                           self.service.getClientQueuedPacketMax())
 
+        # Check that statsLookupType is correct
+        self.failUnless(isinstance(self.service.statsLookup, statsLookupType))
+        if statsError != "":
+            self.failUnless(search_output(statsError))
+
         startedOnlyVars = [ ('joined_count', 0),
                             ('tables', 2), ('tourney_table_serial', 1),
                             ('shutting_down', False), ('avatars', []),
@@ -524,6 +531,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                             ('monitors', []), ('gettextFuncs', 3) ]
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), False)
+
         clear_all_messages()
         self.service.startService()
         self.assertEquals(search_output("*ERROR* No translation to locale en_US.UTF-8 in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"), True)
@@ -597,6 +605,16 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test00_5_configValues(self):
         self.configValues(settings_xml.replace('delays',
                                                'delays extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="60"'), 1000, delaysValue=60)
+
+    def test00_6_configValues(self):
+        self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
+                                               '<stats type="RankPercentile"/> <stats type="Ignored"/>'), 1000, statsError = "*ERROR* settings include multiple <stats> tags; using first one only")
+    def test00_7_configValues(self):
+        self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
+                                               '<stats type="Missing"/>'), 1000, statsLookupType = UserStatsLookup, statsError = "ERROR 'module' object has no attribute 'UserStatsMissingLookup'")
+    def test00_8_configValues(self):
+        self.configValues(settings_xml.replace('<stats type="RankPercentile"/>', ''), 1000,
+                          statsLookupType = UserStatsLookup)
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -2036,7 +2054,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test13"
+#    loader.methodPrefix = "test00_8"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

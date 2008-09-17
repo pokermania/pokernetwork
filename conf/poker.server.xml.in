@@ -10,6 +10,12 @@
 
 <!-- language settings are for client-side localization support, set via the PacketPokerSetLocale() -->
 
+  <stats type="RankPercentile"/>
+
+<!-- the stats setting has one argument, type, that should match a Lookup
+     class implemented in pokernetwork/userstats.py. Only one <stats> tag
+     is permitted. -->
+
   <delays autodeal_tournament_min="15" autodeal="18" autodeal_max="120" autodeal_check="15" round="12" position="60" showdown="30" finish="18" messages="60" breaks_check="30" extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="30"/>
   
 <!-- extra_waits are additional wait times before hands are dealt at

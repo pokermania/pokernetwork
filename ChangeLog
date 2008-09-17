@@ -1,5 +1,11 @@
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test00_6_configValues): Wrote test.
+	(PokerServiceTestCase.test00_7_configValues): Wrote test.
+	(PokerServiceTestCase.test00_8_configValues): Wrote test.
+	(PokerServiceTestCase.configValues): Added stats support.
+
 	* pokernetwork/userstats.py (UserStatsFactory.getStatsClass):
 	Switched to return the default lookup object when nothing found.
 

@@ -116,6 +116,7 @@ from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
+from pokernetwork.userstats import UserStatsFactory
 from pokerauth import get_auth_instance
 
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
@@ -210,7 +211,15 @@ class PokerService(service.Service):
             self.client_queued_packet_max = 500
         
         self.delays = settings.headerGetProperties("/server/delays")[0]
-            
+
+        if len(self.settings.headerGetProperties("/server/stats")) > 1:
+            self.error("settings include multiple <stats> tags; using first one only")
+            print "stats: "
+            print self.settings.headerGetProperties("/server/stats")
+        statsType = settings.headerGet("/server/stats/@type")
+
+        self.statsLookup = UserStatsFactory().getStatsClass(statsType)()
+
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
             self.refill = refill[0]
