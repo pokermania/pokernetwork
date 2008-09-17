@@ -4233,6 +4233,7 @@ key: value (for each statistic supported)
             if kk != "serial" and kk != "cookie":
                 retStr += " %s = %s" % ( kk, self.__dict__[kk] ) 
         return retStr
+PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
 ########################################
 class PacketPokerGetStatsSupported(Packet):
     """\
