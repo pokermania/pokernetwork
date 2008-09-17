@@ -429,9 +429,9 @@ class MockClientWithRemoveTable(MockClient):
     def removeTable(self, gameId):
         return True
 # --------------------------------------------------------------------------------
-class PokerTableTestCase(unittest.TestCase):
+class PokerTableTestCaseBase(unittest.TestCase):
     # -------------------------------------------------------------------
-    def setUp(self, settingsXmlStr=settings_xml):
+    def setUp(self, settingsXmlStr=settings_xml, ServiceClass = MockService):
         testclock._seconds_reset()        
         global table1ID
         global table2ID
@@ -443,7 +443,7 @@ class PokerTableTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
-        self.service = MockService(settings)
+        self.service = ServiceClass(settings)
         self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
@@ -495,6 +495,8 @@ class PokerTableTestCase(unittest.TestCase):
     # -------------------------------------------------------------------
     def createBot(self, serial, getReadyToPlay=True, clientClass=MockClientBot, table=None):
         return self.createPlayer(serial, getReadyToPlay, clientClass, table)
+# --------------------------------------------------------------------------------
+class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test01_autodeal(self):
         self.createPlayer(1)
@@ -739,21 +741,6 @@ class PokerTableTestCase(unittest.TestCase):
 
         self.table.leavePlayer(player[2], 2)
         return deferredLeaveErrorWait
-    # -------------------------------------------------------------------
-    def test15_moveTo(self):
-        """Make sure a player can move from one place to another"""
-        player = self.createPlayer(1)
-        otherTablePlayer = self.createPlayer(2, table=self.table2)
-
-        expectPlayerDeferred = otherTablePlayer.waitFor(PACKET_POKER_PLAYER_ARRIVE)
-        def checkReturnPacket(packet):
-            self.assertEqual(packet.name, "Player1")
-            self.assertEqual(packet.game_id, self.table2_value)
-        expectPlayerDeferred.addCallback(checkReturnPacket)
-
-        self.table.movePlayer(player, 1, self.table2.game.id)
-
-        return expectPlayerDeferred
     # -------------------------------------------------------------------
     def test16_autoMuckTimeoutPolicy(self):
         """Make sure other timeout policies function properly"""
@@ -1188,8 +1175,8 @@ class PokerTableTestCase(unittest.TestCase):
 # tests for autodeal turned off; that's why so many tests are replaced.
 
 class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
-    def setUp(self, settingsXmlStr=settings_stripped_deck_no_autodeal_xml):
-        PokerTableTestCase.setUp(self, settingsXmlStr)
+    def setUp(self, settingsXmlStr=settings_stripped_deck_no_autodeal_xml, ServiceClass = MockService):
+        PokerTableTestCase.setUp(self, settingsXmlStr, ServiceClass)
 
     # -------------------------------------------------------------------
     def test01_autodeal(self):
@@ -1304,7 +1291,7 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
 #  are transient.  Note the outcome of various operations are quite different
 #  when the table is transient.
 class PokerTableTestCaseTransient(PokerTableTestCase):
-    def setUp(self, settingsXmlStr=settings_xml):
+    def setUp(self, settingsXmlStr=settings_xml, ServiceClass = MockService):
         testclock._seconds_reset()        
         global table1ID
         global table2ID
@@ -1316,7 +1303,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
-        self.service = MockService(settings)
+        self.service = ServiceClass(settings)
         self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
@@ -1575,16 +1562,49 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         """SKIP THIS TEST IN THIS SUBCLASS
         """
         return True
-# -------------------------------------------------------------------
+# --------------------------------------------------------------------------------
+class MockServiceWithUserStats(MockService):
+    def __init__(self, settings):
+        MockService.__init__(self, settings)
+        self.calledStatsMockup = None
+
+    def getUserStatsLookup(self):
+        class UserStatsMockup:
+            def allStatsAsPacket(userStatsSelf, table, serial):
+                self.calledStatsMockup = serial
+                return PacketPokerPlayerStats(serial = serial, statsDict = {})
+        return UserStatsMockup()
+# --------------------------------------------------------------------------------
+class PokerTableMoveTestCase(PokerTableTestCaseBase):
+    def setUp(self, ServiceClass = MockServiceWithUserStats):
+        PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithUserStats)
+    # -------------------------------------------------------------------
+    def test15_moveTo(self):
+        """Make sure a player can move from one place to another"""
+        player = self.createPlayer(1)
+        otherTablePlayer = self.createPlayer(2, table=self.table2)
+
+        expectPlayerDeferred = otherTablePlayer.waitFor(PACKET_POKER_PLAYER_ARRIVE)
+        def checkReturnPacket(packet):
+            self.assertEqual(packet.name, "Player1")
+            self.assertEqual(packet.game_id, self.table2_value)
+            self.assertEquals(self.service.calledStatsMockup, packet.serial)
+        expectPlayerDeferred.addCallback(checkReturnPacket)
+
+        self.table.movePlayer(player, 1, self.table2.game.id)
+
+        return expectPlayerDeferred
+# --------------------------------------------------------------------------------
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test31"
+#    loader.methodPrefix = "test15"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal))
     suite.addTest(loader.loadClass(PokerTableTestCaseTransient))
+    suite.addTest(loader.loadClass(PokerTableMoveTestCase))
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',

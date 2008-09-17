@@ -761,6 +761,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                                    auto_blind_ante = player.auto_blind_ante,
                                                    wait_for = player.wait_for,
                                                    seat = player.seat))
+            # FIXME: Should a PokerPlayerStats() packet be sent here?
             if player.isSit():
                 packets.append(PacketPokerSit(game_id = game.id,
                                               serial = player.serial))

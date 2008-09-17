@@ -1,5 +1,16 @@
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokertable.py.in (PokerTableTestCase.test15_moveTo):
+	Adjusted test case to include check for stats packet send.
+	(PokerTableTestCase.setUp): Added ServiceClass arg.
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.setUp): Added
+	ServiceClass arg.
+	(PokerTableTestCaseTransient.setUp): Added ServiceClass arg.
+	(PokerTableMoveTestCase.test15_moveTo): Moved test here.
+
+	* pokernetwork/pokertable.py (PokerTable.newPlayerInformation):
+	Added stats packet.
+
 	* tests/test-userstats.py.in: Switched avatar to userSerial
 
 	* pokernetwork/userstats.py: Switch from avatar as the operative
