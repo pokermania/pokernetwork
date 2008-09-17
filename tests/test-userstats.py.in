@@ -114,10 +114,10 @@ class PokerUserStatsTestCase(unittest.TestCase):
         f.error("test")
         self.assertEquals(get_messages(), ['ERROR test'])
 
-        self.assertEquals(f.getStatsClass(""), None)
+        self.failUnless(f.getStatsClass(""), UserStatsLookup)
 
         clear_all_messages()
-        self.assertEquals(f.getStatsClass("DOESNOTEXIST"), None)
+        self.assertEquals(f.getStatsClass("DOESNOTEXIST"), UserStatsLookup)
         self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'UserStatsDOESNOTEXISTLookup'"])
 
         self.assertEquals(f.getStatsClass("RankPercentile"), UserStatsRankPercentileLookup)

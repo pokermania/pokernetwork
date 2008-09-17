@@ -122,11 +122,10 @@ class UserStatsFactory:
         print string
     # ----------------------------------------------------------------------
     def getStatsClass(self, classname):
-        if classname == "": return None
         classname = "UserStats" + classname + "Lookup"
         try:
             return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
         except AttributeError, ae:
             self.error(ae.__str__())
-            return None
+        return UserStatsLookup
 ############################################################################

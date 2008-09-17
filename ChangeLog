@@ -1,5 +1,8 @@
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/userstats.py (UserStatsFactory.getStatsClass):
+	Switched to return the default lookup object when nothing found.
+
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test13_checkTourneysSchedule_spawn_regular):
 	Added update to set respawn to 'y' for 'regular1' tourney.
@@ -39,7 +42,7 @@
 	(UserStatsRankPercentileLookup.__init__): Wrote method.
 	(UserStatsLookup.allStatsAsPacket): Created stub for method.
 	(UserStatsLookup.error): Wrote method.
-	(UserStatsLookup.message): Wrore method.
+	(UserStatsLookup.message): Wrote method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
 
