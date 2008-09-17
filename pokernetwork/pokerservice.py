@@ -214,8 +214,6 @@ class PokerService(service.Service):
 
         if len(self.settings.headerGetProperties("/server/stats")) > 1:
             self.error("settings include multiple <stats> tags; using first one only")
-            print "stats: "
-            print self.settings.headerGetProperties("/server/stats")
         statsType = settings.headerGet("/server/stats/@type")
 
         self.statsLookup = UserStatsFactory().getStatsClass(statsType)()
