@@ -63,9 +63,9 @@ class UserStatsRankPercentileAccessor(UserStatsAccessor):
     # ----------------------------------------------------------------------
     def _lookupValidStat(self, stat, userSerial, table, service):
         currency = table.currency_serial
-        if not currency or currency < 0:
+        if currency == None or currency < 0:
             return None
-        if not userSerial or userSerial < 0:
+        if not userSerial or userSerial <= 0:
             return None
         value = None
         try:

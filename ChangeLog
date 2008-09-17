@@ -1,5 +1,35 @@
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test15_handPlay): Added test for
+	UserStatsLookup packet sent on join.
+	(PokerAvatarTestCase.joinTable): Added test for UserStatsLookup.
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.configValues): Added check that service is
+	properly set.
+
+	* pokernetwork/pokerservice.py (PokerService.__init__):
+	UserStatsFactory() output must be initalized in with the service.
+
+	* tests/test-userstats.py.in
+	(PokerUserStatsTestCase.test03_rankPercentileAccessor): updated
+	test to check for currency_serial being 0.
+
+	* pokernetwork/userstats.py
+	(UserStatsRankPercentileAccessor._lookupValidStat): currency can
+	be zero.
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.seatTable):
+	Added test for stat packet.
+	(PokerAvatarTestCase.createRankDBTable): Wrote method.
+	(PokerAvatarTestCase.test09_01_seatTableWithRankTable): Wrote
+	test.
+	(PokerAvatarTestCase.test09_00_seatTable): Renamed test.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.join): Added send of
+	PokerPlayerStats packet.
+
 	* tests/test-pokertable.py.in (PokerTableTestCase.test15_moveTo):
 	Adjusted test case to include check for stats packet send.
 	(PokerTableTestCase.setUp): Added ServiceClass arg.

@@ -112,6 +112,8 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <language value="en_US.UTF-8"/>
   <language value="fr_FR.UTF-8"/>
 
+  <stats type="RankPercentile"/>
+
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="0" />
   <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
@@ -459,16 +461,17 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def joinTable(self, (client, packet), id, gameId, name, struct):
+    def joinTable(self, (client, packet), id, gameId, name, struct, statsExpected = []):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
                                                       game_id = gameId))
-        found = False
+        total = 2 + len(statsExpected)
+        found = 0
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TABLE:
-                found = True
+                found += 1
                 for  (kk, vv) in avatar.tables.items():
                     self.assertEquals(vv.game.id, table.game.id)
                     self.assertEquals(vv.game.name, name)
@@ -476,10 +479,16 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(vv.game.variant, 'holdem')
                     self.assertEquals(vv.game.betting_structure, struct)
             elif packet.type == PACKET_POKER_BUY_IN_LIMITS:
+                found += 1
                 for key in [ 'best', 'game_id', 'min', 'max' ]:
                     self.assert_(hasattr(packet, key))
-
-        self.assertEquals(found, True)
+            elif packet.type == PACKET_POKER_PLAYER_STATS:
+                for ss in statsExpected:
+                    if ss['serial'] == packet.serial:
+                        found += 1
+                        self.assertEquals(packet.rank, ss['rank'])
+                        self.assertEquals(packet.percentile, ss['percentile'])
+        self.assertEquals(found, total)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test08_joinTable(self):
@@ -491,7 +500,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
-    def seatTable(self, (client, packet), id, gameId):
+    def seatTable(self, (client, packet), id, gameId, rank = None, percentile = None):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         seatNumber = id + 1
@@ -510,16 +519,21 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(packet.name, "user%d" % id)
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.seat, seatNumber)
+            if packet.type == PACKET_POKER_PLAYER_STATS:
+                found += 1 
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.rank, rank)
+                self.assertEquals(packet.percentile, percentile)
             if packet.type == PACKET_POKER_PLAYER_CHIPS:
                 found += 1
                 self.assertEquals(packet.game_id, table.game.id)
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.bet, 0)
                 self.assertEquals(packet.money, 0)
-        self.assertEquals(found, 3)
+        self.assertEquals(found, 4)
         return (client, packet)
     # ------------------------------------------------------------------------
-    def test09_seatTable(self):
+    def test09_00_seatTable(self):
         """Tests table joining table and sitting down."""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
@@ -527,6 +541,25 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.quit)
+        return d
+    # ------------------------------------------------------------------------
+    def createRankDBTable(self, (client, packet), gameId, rank, percentile):
+        table = self.service.getTable(gameId)
+        self.service.db.db.query('CREATE TABLE rank (user_serial INT, currency_serial INT, rank INT, percentile TINYINT)')
+        self.service.db.db.query('INSERT INTO rank VALUES(%d, %d, %d, %d)' %
+                                 (client.getSerial(), table.currency_serial, rank, percentile))
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test09_01_seatTableWithRankTable(self):
+        """Tests joining table and sitting down, with a stats packet."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.createRankDBTable, 2, rank = 60, percentile = 80)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2, 60, 80)
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -913,8 +946,9 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.setLocale, "fr_FR.UTF-8")
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
+        d.addCallback(self.createRankDBTable, 2, rank = 50, percentile = 30)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.seatTable, 0, 2, 50, 30)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
@@ -923,7 +957,8 @@ class PokerAvatarTestCase(unittest.TestCase):
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit',
+                       [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
         d2.addCallback(self.seatTable, 1, 2)
         d2.addCallback(self.buyInTable, 1, 2, 1000)
         # Note: this avatar does not autopost, and doBlindPost handles it.
@@ -3489,7 +3524,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test76"
+#    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(

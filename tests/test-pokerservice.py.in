@@ -522,6 +522,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         # Check that statsLookupType is correct
         self.failUnless(isinstance(self.service.statsLookup, statsLookupType))
         self.assertEquals(self.service.statsLookup, self.service.getUserStatsLookup())
+        self.assertEquals(self.service.getUserStatsLookup().service, self.service)
         if statsError != "":
             self.failUnless(search_output(statsError))
 
