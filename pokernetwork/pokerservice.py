@@ -357,6 +357,9 @@ class PokerService(service.Service):
     def getMissedRoundMax(self):
         return self.missed_round_max
 
+    def getUserStatsLookup(self):
+        return self.statsLookup
+
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max
 

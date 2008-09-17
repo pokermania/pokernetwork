@@ -514,13 +514,14 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(self.service.verbose, 6)
 
         self.assertEquals(joined_max, self.service.joined_max)
-        self.assertEquals(missed_round_max, self.service.missed_round_max,
-                          self.service.getMissedRoundMax())
-        self.assertEquals(queuedPacketMax, self.service.client_queued_packet_max,
-                          self.service.getClientQueuedPacketMax())
+        self.assertEquals(missed_round_max, self.service.missed_round_max)
+        self.assertEquals(missed_round_max, self.service.getMissedRoundMax())
+        self.assertEquals(queuedPacketMax, self.service.client_queued_packet_max)
+        self.assertEquals(queuedPacketMax, self.service.getClientQueuedPacketMax())
 
         # Check that statsLookupType is correct
         self.failUnless(isinstance(self.service.statsLookup, statsLookupType))
+        self.assertEquals(self.service.statsLookup, self.service.getUserStatsLookup())
         if statsError != "":
             self.failUnless(search_output(statsError))
 

@@ -1,6 +1,13 @@
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.configValues): Improved test to cover
+	getUserStatsLookup()
+
+	* pokernetwork/pokerservice.py (PokerService.getUserStatsLookup):
+	Wrote method.
+
+	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test00_6_configValues): Wrote test.
 	(PokerServiceTestCase.test00_7_configValues): Wrote test.
 	(PokerServiceTestCase.test00_8_configValues): Wrote test.
