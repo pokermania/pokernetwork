@@ -1,5 +1,10 @@
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-userstats.py.in: Switched avatar to userSerial
+
+	* pokernetwork/userstats.py: Switch from avatar as the operative
+	object to sending merely along a userSerial.
+
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.configValues): Improved test to cover
 	getUserStatsLookup()

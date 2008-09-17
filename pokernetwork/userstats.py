@@ -25,7 +25,7 @@
 # subclasses thereof) are the things used by other classes to lookup
 # statistics.
 
-# I decided to make the elements for lookup a table, an avatar, and a
+# I decided to make the elements for lookup a table, a user_serial, and a
 # service.  I felt this was the most likely set of objects that would be
 # used for looking up stats, and of course they need not be used if not
 # needed.
@@ -45,14 +45,14 @@ class UserStatsAccessor:
     def getSupportedStatsList(self):
         return self.statsSupported
     # ----------------------------------------------------------------------
-    def getStatValue(self, stat, avatar = None, table = None, service = None):
+    def getStatValue(self, stat, userSerial = None, table = None, service = None):
         if stat in self.statsSupported:
-            return self._lookupValidStat(stat, avatar, table, service)
+            return self._lookupValidStat(stat, userSerial, table, service)
         else:
             self.error("invalid user statistic, %s" % stat)
             return None
     # ----------------------------------------------------------------------
-    def _lookupValidStat(self, stat, avatar, table, service):
+    def _lookupValidStat(self, stat, userSerial, table, service):
         return "UNIMPLEMENTED IN BASE CLASS"
 ############################################################################
 from _mysql_exceptions import ProgrammingError
@@ -61,18 +61,17 @@ class UserStatsRankPercentileAccessor(UserStatsAccessor):
         UserStatsAccessor.__init__(self)
         self.statsSupported = ['percentile', 'rank']
     # ----------------------------------------------------------------------
-    def _lookupValidStat(self, stat, avatar, table, service):
+    def _lookupValidStat(self, stat, userSerial, table, service):
         currency = table.currency_serial
         if not currency or currency < 0:
             return None
-        user = avatar.getSerial()
-        if not user or user < 0:
+        if not userSerial or userSerial < 0:
             return None
         value = None
         try:
             cursor = service.db.cursor()
             cursor.execute("SELECT %s from rank where currency_serial = %d and user_serial = %d"
-                           % (stat, currency, user) )
+                           % (stat, currency, userSerial) )
             tuple = cursor.fetchone()
             if tuple != None: (value,) = tuple
             cursor.close()
@@ -91,18 +90,18 @@ class UserStatsLookup:
     def message(self, string):
         print string
     # ----------------------------------------------------------------------
-    def getStatValue(self, stat, table = None, avatar = None):
+    def getStatValue(self, stat, table = None, userSerial = None):
         if self.stat2accessor.has_key(stat):
-            return self.stat2accessor[stat].getStatValue(stat, avatar, table, self.service)
+            return self.stat2accessor[stat].getStatValue(stat, userSerial, table, self.service)
         else:
             self.error("unsupported user statistic, %s" % stat)
             return None
     # ----------------------------------------------------------------------
-    def allStatsAsPacket(self, table, avatar):
+    def allStatsAsPacket(self, table, userSerial):
         sd = {}
         for stat in self.stat2accessor.keys():
-            sd[stat] = self.getStatValue(stat, table, avatar)
-        return PacketPokerPlayerStats(serial = avatar.getSerial(), statsDict = sd)
+            sd[stat] = self.getStatValue(stat, table, userSerial)
+        return PacketPokerPlayerStats(serial = userSerial, statsDict = sd)
     # ----------------------------------------------------------------------
     def getSupportedListAsPacket(self):
         return PacketPokerStatsSupported(stats = self.stat2accessor.keys())

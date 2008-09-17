@@ -130,11 +130,6 @@ class PokerUserStatsTestCase(unittest.TestCase):
     class MockService:
         def __init__(self, myDb = None):
             self.db = myDb
-    class MockAvatar:
-        def __init__(self, avatarSerial = None):
-            self.serial = avatarSerial
-        def getSerial(self):
-            return self.serial
     # -------------------------------------------------------------------------
     def test03_rankPercentileAccessor(self):
         """test03_rankPercentileAccessor
@@ -157,27 +152,24 @@ class PokerUserStatsTestCase(unittest.TestCase):
         for stat in statsList:
             # This will return None because the table.currency_serial is None
             myTable = PokerUserStatsTestCase.MockTable()
-            myAvatar = PokerUserStatsTestCase.MockAvatar()
             myService = PokerUserStatsTestCase.MockService()
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = None,
                                              service = myService), None)
             # This will return None because the table.currency_serial is negative
             myTable = PokerUserStatsTestCase.MockTable(-1)
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = None,
                                              service = myService), None)
             # This will return None because the avatar.getSerial() returns None
             myTable = PokerUserStatsTestCase.MockTable(1)
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = None,
                                              service = myService), None)
-            # This will return None because the avatar.getSerial() returns -1
-            myAvatar = PokerUserStatsTestCase.MockAvatar(-1)
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            # This will return None because the userSerial is set to -1
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = -1,
                                              service = myService), None)
             # This will give a Attribute error because the service is None
-            myAvatar = PokerUserStatsTestCase.MockAvatar(1)
             errorStr = ""
             try:
-                u.getStatValue(stat, table = myTable, avatar = myAvatar, service = myService)
+                u.getStatValue(stat, table = myTable, userSerial = 1, service = myService)
                 self.failIf(True)  # Should not be reached
             except AttributeError, ae:
                 errorStr = ae.__str__()
@@ -186,7 +178,7 @@ class PokerUserStatsTestCase(unittest.TestCase):
             # This will fail because there is no rank table
             clear_all_messages()
             myService = PokerUserStatsTestCase.MockService(self.db)
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = 1,
                                              service = myService), None)
             self.assertEquals(get_messages(), [ "ERROR RankPercentile: (MySQL code 1146): Table 'pokernetworktest.rank' doesn't exist"])
         self.db.query("CREATE TABLE rank (user_serial INT, currency_serial INT, rank INT, percentile TINYINT)")
@@ -194,16 +186,15 @@ class PokerUserStatsTestCase(unittest.TestCase):
 
         for (stat, value) in [ ('rank', 20), ('percentile', 30) ]:
             myTable = PokerUserStatsTestCase.MockTable(1)
-            myAvatar = PokerUserStatsTestCase.MockAvatar(1)
             myService = PokerUserStatsTestCase.MockService(self.db)
 
             # Should be None because no row exists for 1, 1
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = 1,
                                              service = myService), None)
 
             # Should now be the expected value
             myTable = PokerUserStatsTestCase.MockTable(2)
-            self.assertEquals(u.getStatValue(stat, table = myTable, avatar = myAvatar,
+            self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = 1,
                                              service = myService), value)
     # -------------------------------------------------------------------------
     def test04_userStatsLookupBaseClass(self):
@@ -223,18 +214,17 @@ class PokerUserStatsTestCase(unittest.TestCase):
         # UserStatsLookup.getStatValue does the right thing with it.
         class MockAccessor():
             def getStatValue(mockAccessorSelf, stat, a, t, s):
-                self.assertEquals(a.getSerial(), 1)
+                self.assertEquals(a, 1)
                 self.assertEquals(t.currency_serial, 1)
                 self.assertEquals(s, ul.service)
 
                 return "mockvalue"
         table = PokerUserStatsTestCase.MockTable(1)
-        avatar = PokerUserStatsTestCase.MockAvatar(1)
 
         ul.stat2accessor['mockstat'] = MockAccessor()
-        self.assertEquals(ul.getStatValue("mockstat", table, avatar), "mockvalue")
+        self.assertEquals(ul.getStatValue("mockstat", table, 1), "mockvalue")
 
-        pack = ul.allStatsAsPacket(table, avatar)
+        pack = ul.allStatsAsPacket(table, 1)
         self.assertEquals(pack.serial, 1)
         self.assertEquals(pack.mockstat, 'mockvalue')
         self.assertEquals(pack.__str__(), "type = POKER_PLAYER_STATS(156) serial = 1 mockstat = mockvalue")
