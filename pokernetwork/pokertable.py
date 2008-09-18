@@ -1031,6 +1031,7 @@ class PokerTable:
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
+                    self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
                     self.update()
             else:
@@ -1225,6 +1226,7 @@ class PokerTable:
         if amount > 0:
             client.setMoney(self, amount)
 
+        self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
         return True
 
     def sitOutPlayer(self, client, serial):

@@ -1142,6 +1142,36 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals(self.table.observers[0].serial, 4)
         return player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
     # -------------------------------------------------------------------
+    def test32_seatPlayerUpdateTableStats(self):
+        player = self.createPlayer(1, False)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.assertEquals(True, self.table.joinPlayer(player, 1))
+        self.assertEquals(True, self.table.seatPlayer(player, 1, 1))
+        self.assertEquals(True, updateTableStats.called)
+    # -------------------------------------------------------------------
+    def test33_leavePlayerUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = True
+        self.table.leavePlayer(player, 1)
+        self.assertEquals(True, updateTableStats.called)
+    # -------------------------------------------------------------------
+    def test34_leavePlayerDelayedNoUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = False
+        self.table.leavePlayer(player, 1)
+        self.assertEquals(False, updateTableStats.called)
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
