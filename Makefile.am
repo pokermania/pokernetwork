@@ -150,6 +150,9 @@ pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = poker-network.pc
 
 EXTRA_DIST = \
+	AGPLv3 \
+	LICENSE \
+	GPLv3 \
 	HACKING \
 	NIHPHOBIA \
 	config/python.m4 \
