@@ -704,7 +704,7 @@ class PokerService(service.Service):
                 table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = gameId, resume_time = resumeTime))
             self.tourneyBreakCheck(tourney)
         elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
-            wait = self.delays.get('extra_wait_tourney_break', 0)
+            wait = int(self.delays.get('extra_wait_tourney_break', 0))
             if wait > 0:
                 reactor.callLater(wait, self.tourneyResumeAndDeal, tourney)
             else:
@@ -712,7 +712,7 @@ class PokerService(service.Service):
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
             # since we only want this behavior before the first deal. 
-            wait = self.delays.get('extra_wait_tourney_start', 0)
+            wait = int(self.delays.get('extra_wait_tourney_start', 0))
             if wait > 0:
                 reactor.callLater(wait, self.tourneyDeal, tourney)
             else:
@@ -858,7 +858,7 @@ class PokerService(service.Service):
         table.destroy()
 
     def tourneyDestroyGame(self, tourney, game):
-        wait = self.delays.get('extra_wait_tourney_finish', 0)
+        wait = int(self.delays.get('extra_wait_tourney_finish', 0))
         if wait > 0:
             reactor.callLater(wait, self.tourneyDestroyGameActual, game)
         else:
