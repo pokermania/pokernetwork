@@ -214,7 +214,8 @@ class PokerTable:
                                 observers = len(self.observers),
                                 waiting = len(self.waiting),
                                 skin = self.skin,
-                                currency_serial = self.currency_serial)
+                                currency_serial = self.currency_serial,
+                                tourney_serial = self.tourney and self.tourney.serial or 0)
                 
     def cards2packets(self, game_id, board, pockets, cache):
         packets = []

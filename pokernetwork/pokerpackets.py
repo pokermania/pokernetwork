@@ -1267,6 +1267,7 @@ skin: name of the level model to use
                            ('variant', 'holdem', 's'),
                            ('betting_structure', '2-4-limit', 's'),
                            ('skin', 'default', 's'),
+                           ('tourney_serial', 0, 'no net')
                            )
     
     format = "!IBIHBBHBHHI"
@@ -1288,6 +1289,7 @@ skin: name of the level model to use
         self.muck_timeout = kwargs.get("muck_timeout", 0)
         self.skin = kwargs.get("skin", "default")
         self.currency_serial = kwargs.get("currency_serial", 0)
+        self.tourney_serial = kwargs.get("tourney_serial", 0)
 
     def pack(self):
         block = Packet.pack(self)
@@ -1312,7 +1314,7 @@ skin: name of the level model to use
         return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin )
+        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s, tourney_serial = %i" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin, self.tourney_serial )
 
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 

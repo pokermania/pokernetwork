@@ -297,7 +297,7 @@ class MockService:
     def tourneyEndTurn(self, tourney, game_id):
         if self.testObject:
             self.testObject.assertEqual(game_id,  self.testObject.table1_value)
-            self.testObject.assertEqual(tourney,  'My Old Sit and Go')
+            self.testObject.assertEqual(tourney.name,  'My Old Sit and Go')
 
     def resetBet(self, gameId):
         if self.testObject:
@@ -1334,6 +1334,9 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
         self.service = ServiceClass(settings)
+        class Tournament:            
+            name = 'My Old Sit and Go'
+            serial = 2
         self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
@@ -1342,7 +1345,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
                                              'transient' : True,
-                                             'tourney' : 'My Old Sit and Go',
+                                             'tourney' : Tournament(),
                                              'currency_serial': 0
                                              })
         self.table2 = pokertable.PokerTable(self.service, table2ID, 
@@ -1353,7 +1356,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
                                              'transient' : True,
-                                             'tourney' : 'My Old Sit and Go',
+                                             'tourney' : Tournament(),
                                              'currency_serial': 0
                                              })
         self.service.table1 = self.table
@@ -1471,7 +1474,20 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.table.scheduleAutoDeal()
         self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
         self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
-
+    # -------------------------------------------------------------------
+    def test11bis_packet_with_tourney_serial(self):
+        """Test toPacket"""
+        packetStr = "%s" % self.table.toPacket()
+        idstr = 'id = %d' % self.table.game.id
+        for str in [ idstr, 'name = table1', 'variant = holdem', \
+                     'betting_structure = 2-4-limit', 'seats = 4', \
+                     'average_pot = 0', 'hands_per_hour = 0', \
+                     'percent_flop = 0', 'players = 0', 'observers = 0', \
+                     'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1', \
+                     'currency_serial = 0', 'skin = default', \
+                     'tourney_serial = 2' ]:
+            self.failUnlessSubstring(str, packetStr)
+    # -------------------------------------------------------------------
     def test27_buyinFailures(self):
         """This test doesn't matter in this subclass"""
         return True
