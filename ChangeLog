@@ -1,3 +1,22 @@
+2008-09-18  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
+
+	* pokernetwork/pokerservice.py: all delays must be converted to int
+	  (when read from the XML file they are strings)
+	* Makefile.am: Add AGPLv3 LICENSE GPLv3 to EXTRA_DIST
+
+2008-09-18  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in: call
+	  service.updateTableStats in pokertable.seatPlayer and
+	  pokertable.leavePlayer
+
+2008-09-17  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: add missing
+	  PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
+
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -104,8 +123,6 @@
 	(UserStatsLookup.message): Wrote method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* Makefile.am: add userstats.py to the distribution
 
