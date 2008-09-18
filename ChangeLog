@@ -1,6 +1,12 @@
-2008-09-18  Loic Dachary <loic@dachary.org>
-
+2008-09-18  Johan Euphrosine <proppy@aminche.com>
+	
  	* Release 1.7.0
+
+	* pokernetwork/pokerpackets.py, pokernetwork/pokertable.py,
+	  tests/test-pokerpackets.py.in, tests/test-pokertable.py.in: add
+	  tourney_serial ('no net') member to PacketPokerTable
+
+2008-09-18  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerservice.py: all delays must be converted to int
 	  (when read from the XML file they are strings)
