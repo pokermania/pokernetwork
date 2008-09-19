@@ -88,7 +88,15 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
         packet = pokerpackets.PacketPokerPlayerStats(serial = 5, statsDict = { 'a': 6, 'b' : 10})
         self.assertEquals(packet.__str__(), 
                           "type = POKER_PLAYER_STATS(156) serial = 5 a = 6 b = 10")
-    #--------------------------------------------------------------    
+
+   def test_verifyfactory(self):
+        from pokernetwork.pokerpackets import PacketNames, PacketFactory
+        for packid in PacketNames.keys():
+            self.failUnless(PacketFactory.has_key(packid))
+            self.assertEquals(PacketFactory[packid].type, packid)
+        for packid in PacketFactory.keys():
+            self.failUnless(PacketNames.has_key(packid))
+                             #--------------------------------------------------------------    
     def test_PacketPokerTable(self):
         packet = pokerpackets.PacketPokerTable(tourney_serial = 2)
         self.failUnless("tourney_serial = 2" in str(packet))
