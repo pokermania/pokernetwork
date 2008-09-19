@@ -557,7 +557,10 @@ class PokerAvatar:
                 self.message("packet for table " + str(table.game.id))
             game = table.game
 
-            if packet.type == PACKET_POKER_READY_TO_PLAY:
+            if packet.type == PACKET_POKER_GET_PLAYER_STATS:
+                self.sendPacketVerbose(self.getPlayerStats(table, packet.serial))
+
+            elif packet.type == PACKET_POKER_READY_TO_PLAY:
                 if self.getSerial() == packet.serial:
                     self.sendPacketVerbose(table.readyToPlay(packet.serial))
                 else:
@@ -798,6 +801,14 @@ class PokerAvatar:
                                message = "Not logged in",
                                other_type = PACKET_POKER_GET_PLAYER_INFO)
     
+    def getPlayerStats(self, table, serialSought):
+        if self.user.isLogged():
+            return self.service.getUserStatsLookup().allStatsAsPacket(table, serialSought)
+        else:
+            return PacketError(code = PacketPokerGetPlayerStats.NOT_LOGGED,
+                               message = "Not logged in",
+                               other_type = PACKET_POKER_GET_PLAYER_STATS)
+
     def listPlayers(self, packet):
         table = self.service.getTable(packet.game_id)
         if table:

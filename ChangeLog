@@ -1,5 +1,23 @@
 2008-09-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.doGetStats):
+	Wrote method.
+	(PokerAvatarTestCase.test77_getStatsWhenLoggedIn): Wrote test.
+	(PokerAvatarTestCase.getStatsError): Wrote method.
+	(PokerAvatarTestCase.test78_getStatsError): Wrote test.
+	(PokerAvatarTestCase.getStatsIgnored): Wrote method.
+	(PokerAvatarTestCase.test79_getStatsIgnoredWhenNotAtTable): Wrote
+	test.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.getPlayerStats): Wrote
+	method.
+
+	* pokernetwork/pokerpackets.py (PacketPokerGetPlayerStats):
+	changed to derive from PacketId
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.handlePacketLogic):
+	Added handler for PACKET_POKER_GET_PLAYER_STATS.
+
 	* tests/test-protocol.py.in
 	(UGAMEProtocolTestCase.testHandleData): Added new packet.
 

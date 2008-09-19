@@ -4285,6 +4285,9 @@ PacketError(code = PacketPokerGetPlayerStats.NOT_LOGGED,
 If the user is logged in a PacketPokerPlayerStats packet is sent
 to the client.
 
+If the user is not at a table yet, the packet is completely and silently
+ignored.  This packet only works when the user is at a table.
+
 Direction: server <= client
 
 Context:
@@ -4292,6 +4295,8 @@ Context:
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
+
+    NOT_LOGGED = 1
 
     type = PACKET_POKER_GET_PLAYER_STATS
 

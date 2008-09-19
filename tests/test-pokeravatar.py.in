@@ -3143,9 +3143,6 @@ class PokerAvatarTestCase(unittest.TestCase):
             self.assertNotEquals(findBigBlind(2), None)
             avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(),
                                                          game_id = gameId))
-            for ii in  [ 0 ,1, 2]:
-                for pack in avatars[ii]._packets_queue:
-                    print "User %d: Packet: %s" %(ii, pack.__str__())
 
         # After this loop, a number of heads up hands have been played.
         # Despite the fact that we set avatars[0] to queue packets before
@@ -3522,9 +3519,99 @@ class PokerAvatarTestCase(unittest.TestCase):
         d3.addCallback(resetQueueMax, saveClientQueueMax)
         return defer.DeferredList((d, d2, d3))
     # ------------------------------------------------------------------------
+    def doGetStats(self, (client, packet), id, serial, gameId, statsExpected = []):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerStats(serial = serial,
+                                                           game_id = gameId))
+        total = len(statsExpected)
+        found = 0
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_POKER_PLAYER_STATS:
+                for ss in statsExpected:
+                    if ss['serial'] == packet.serial:
+                        found += 1
+                        self.assertEquals(packet.rank, ss['rank'])
+                        self.assertEquals(packet.percentile, ss['percentile'])
+        self.assertEquals(found, total)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test77_getStatsWhenLoggedIn(self):
+        """Test for get statistics when the user asking is logged in."""
+        statsExpected = [{ 'rank' : 60, 'percentile' : 80, 'serial' : 4}]
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.createRankDBTable, 2, rank = 60, percentile = 80)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit', statsExpected)
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.doGetStats, 1, 4, 2, statsExpected)
+        return defer.DeferredList((d, d2))
+    # ------------------------------------------------------------------------
+    def getStatsError(self, (client, packet), id, serial, gameId):
+        avatar = self.service.avatars[id]
+        # avatar must log out to generate 
+        avatar.logout()
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerStats(serial = serial, game_id = gameId))
+        found = False
+        for packet in avatar.resetPacketsQueue():
+            if packet.type == PACKET_ERROR:
+                self.assertEquals(packet.code, PacketPokerGetPlayerStats.NOT_LOGGED)
+                self.assertEquals(packet.message, "Not logged in")
+                self.assertEquals(packet.other_type, PACKET_POKER_GET_PLAYER_STATS)
+                found = True
+        self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test78_getStatsError(self):
+        """Test for failed get statistics packet"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.getStatsError, 0, 1, 2)
+        return d
+    # ------------------------------------------------------------------------
+    def getStatsIgnored(self, (client, packet), id, serial, gameId):
+        avatar = self.service.avatars[id]
+        # avatar must log out to generate 
+        avatar.logout()
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerGetPlayerStats(serial = serial, game_id = gameId))
+        found = False
+        # This maybe is wrong that the packet is ignored when not at a
+        # table, but this is how it works currently, so we should have a
+        # test that shows it.
+        for packet in avatar.resetPacketsQueue():
+            found = True
+            print packet
+        self.assertEquals(found, False)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test79_getStatsIgnoredWhenNotAtTable(self):
+        """Test for failed get statistics packet"""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.getStatsIgnored, 0, 1, 2)
+        return d
+    # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test79"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     return runner.TrialRunner(
