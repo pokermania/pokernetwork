@@ -227,7 +227,7 @@ class PokerResource(resource.Resource):
             #
             # Format answer
             #
-            maps = packets2maps(packets)
+            maps = toutf8(packets2maps(packets))
             if jsonp:
                 result_string = jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
             else:
