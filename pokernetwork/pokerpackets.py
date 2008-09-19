@@ -76,6 +76,7 @@
 #     What to expect when watching a table ? 
 #     
 #     PACKET_POKER_PLAYER_ARRIVE
+#     PACKET_POKER_PLAYER_STATS
 #     PACKET_POKER_PLAYER_CHIPS
 #     PACKET_POKER_PLAYER_SIT
 #     PACKET_POKER_PLAYER_SIT_OUT
