@@ -4271,7 +4271,7 @@ Packet.infoDeclare(globals(), PacketPokerStatsSupported, Packet, "POKER_STATS_SU
 PACKET_POKER_GET_PLAYER_STATS = 159 # 0x9f # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_STATS] = "POKER_GET_PLAYER_STATS"
 
-class PacketPokerGetPlayerStats(PacketPokerGetPlayerInfo):
+class PacketPokerGetPlayerStats(PacketPokerId):
     """\
 Semantics: ask the server for a PacketPokerPlayerStatus packet describing
 the player that is logged in with this connection.
@@ -4286,6 +4286,11 @@ If the user is logged in a PacketPokerPlayerStats packet is sent
 to the client.
 
 Direction: server <= client
+
+Context:
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
 """
 
     type = PACKET_POKER_GET_PLAYER_STATS
