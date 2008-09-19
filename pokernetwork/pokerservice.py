@@ -978,7 +978,7 @@ class PokerService(service.Service):
         tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
         criterion = split(string, "\t")
         if string == '':
-            cursor.execute("SELECT * FROM tourneys")
+            cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys, user2tourney WHERE tourneys.serial = user2tourney.tourney_serial GROUP BY tourneys.serial")
             result = cursor.fetchall()
             cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y'")
             result += cursor.fetchall()
@@ -986,17 +986,17 @@ class PokerService(service.Service):
             ( currency_serial, type ) = criterion
             sit_n_go = type == 'sit_n_go' and 'y' or 'n'
             if currency_serial:
-                cursor.execute("SELECT * FROM tourneys WHERE currency_serial = %s AND sit_n_go = %s", ( currency_serial, sit_n_go ))
+                cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys, user2tourney WHERE tourneys.serial = user2tourney.tourney_serial AND currency_serial = %s AND sit_n_go = %s GROUP BY tourneys.serial", ( currency_serial, sit_n_go ))
                 result = cursor.fetchall()
                 cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y' AND currency_serial = %s AND sit_n_go = %s", ( currency_serial, sit_n_go ))
                 result += cursor.fetchall()
             else:
-                cursor.execute("SELECT * FROM tourneys WHERE sit_n_go = %s", sit_n_go)
+                cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys, user2tourney WHERE tourneys.serial = user2tourney.tourney_serial AND sit_n_go = %s GROUP BY tourneys.serial", sit_n_go)
                 result = cursor.fetchall()
                 cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y' AND sit_n_go = %s", sit_n_go)
                 result += cursor.fetchall()
         else:
-            cursor.execute("SELECT * FROM tourneys WHERE name = %s", string)
+            cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys, user2tourney WHERE tourneys.serial = user2tourney.tourney_serial AND name = %s  GROUP BY tourneys.serial", string)
             result = cursor.fetchall()
             cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y' AND name = %s", string)
             result += cursor.fetchall()
