@@ -1,5 +1,13 @@
 2008-09-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in
+	(BreakTestCase.test07_tourneyFinish_withWait): Values in delays
+	dict should be strings.
+	(BreakTestCase.test05_tourneyNewState_tourneyStart_withWait):
+	Values in delays dict should be strings.
+	(BreakTestCase.test03_tourneyNewState_tourneyResumeAndDeal_withWait):
+	Values in delays dict should be strings.
+
 	* tests/test-pokeravatar.py.in (PokerAvatarTestCase.doGetStats):
 	Wrote method.
 	(PokerAvatarTestCase.test77_getStatsWhenLoggedIn): Wrote test.

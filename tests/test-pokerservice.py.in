@@ -1708,7 +1708,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         return self.tourneyNewState_tourneyResumeAndDeal(0, 5)
 
     def test03_tourneyNewState_tourneyResumeAndDeal_withWait(self):
-        self.service.delays['extra_wait_tourney_break'] = 40
+        self.service.delays['extra_wait_tourney_break'] = "40"
         return self.tourneyNewState_tourneyResumeAndDeal(40, 45)
     # ------------------------------------------------------------------------
     def tourneyNewState_tourneyStart(self, waitMin, waitMax):
@@ -1758,7 +1758,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         return self.tourneyNewState_tourneyStart(0, 5)
 
     def test05_tourneyNewState_tourneyStart_withWait(self):
-        self.service.delays['extra_wait_tourney_start'] = 40
+        self.service.delays['extra_wait_tourney_start'] = "40"
         return self.tourneyNewState_tourneyStart(40, 45)
     # ------------------------------------------------------------------------
     def tourneyFinish(self, waitMin, waitMax):
@@ -1815,7 +1815,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         return self.tourneyFinish(0, 5)
 
     def test07_tourneyFinish_withWait(self):
-        self.service.delays['extra_wait_tourney_finish'] = 40
+        self.service.delays['extra_wait_tourney_finish'] = "40"
         return self.tourneyFinish(40, 45)
     # ------------------------------------------------------------------------
     def test08_tourneyNewState_tourneyBreak(self):
@@ -2056,7 +2056,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test00_8"
+#    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
