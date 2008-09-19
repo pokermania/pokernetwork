@@ -1,5 +1,13 @@
+2008-09-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-protocol.py.in
+	(UGAMEProtocolTestCase.testHandleData): Added new packet.
+
+	* pokernetwork/pokerpackets.py (PacketPokerGetPlayerStats):
+	Created packet.
+
 2008-09-18  Johan Euphrosine <proppy@aminche.com>
-	
+
  	* Release 1.7.0
 
 	* pokernetwork/pokerpackets.py, pokernetwork/pokertable.py,

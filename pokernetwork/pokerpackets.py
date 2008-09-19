@@ -4168,7 +4168,7 @@ resume_time: time that the tourney will resume, in seconds since 1970-01-01 00:0
         ('resume_time', 0, 'I'),
         )
 
-Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakBegin, Packet, "POKER_TABLE_TOURNEY_BREAK_BEGIN", 154) # 154 # 0x9A # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakBegin, Packet, "POKER_TABLE_TOURNEY_BREAK_BEGIN", 154) # 154 # 0x9a # %SEQ%
 
 # infoDeclare would clobber our custom __str__ if we set it in the lass, so replace it here.
 def PacketPokerTableTourneyBreakBegin__str__(self):
@@ -4193,9 +4193,9 @@ game_id: integer uniquely identifying a game.
         )
 
 
-Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 155 # 0x9B # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 155 # 0x9b # %SEQ%
 ###########################################################################
-PACKET_POKER_PLAYER_STATS = 156 # 156 # 0x9C # %SEQ%
+PACKET_POKER_PLAYER_STATS = 156 # 0x9c # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_STATS] = "POKER_PLAYER_STATS"
 class PacketPokerPlayerStats(PacketSerial):
     """\
@@ -4249,7 +4249,7 @@ Direction: server <=  client
     
     info = Packet.info
 
-Packet.infoDeclare(globals(), PacketPokerGetStatsSupported, Packet, "POKER_GET_STATS_SUPPORTED", 157) # 157 # 0x9C # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerGetStatsSupported, Packet, "POKER_GET_STATS_SUPPORTED", 157) # 157 # 0x9d # %SEQ%
 ########################################
 class PacketPokerStatsSupported(Packet):
     """\
@@ -4265,7 +4265,32 @@ Direction: server <=  client
         ('stats', [], 'Il'),
         )
 
-Packet.infoDeclare(globals(), PacketPokerStatsSupported, Packet, "POKER_STATS_SUPPORTED", 158) # 158 # 0x9D # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerStatsSupported, Packet, "POKER_STATS_SUPPORTED", 158) # 158 # 0x9e # %SEQ%
+
+########################################
+PACKET_POKER_GET_PLAYER_STATS = 159 # 0x9f # %SEQ%
+PacketNames[PACKET_POKER_GET_PLAYER_STATS] = "POKER_GET_PLAYER_STATS"
+
+class PacketPokerGetPlayerStats(PacketPokerGetPlayerInfo):
+    """\
+Semantics: ask the server for a PacketPokerPlayerInfo packet
+describing the player that is logged in with this connection.
+
+If the user is not logged in the following packet is returned
+
+PacketError(code = PacketPokerGetPlayerInfo.NOT_LOGGED,
+            message = "Not logged in",
+            other_type = PACKET_POKER_GET_PLAYER_INFO)
+
+If the user is logged in a PacketPokerPlayerInfo packet is sent
+to the client.
+
+Direction: server <= client
+"""
+
+    type = PACKET_POKER_GET_PLAYER_STATS
+
+PacketFactory[PACKET_POKER_GET_PLAYER_STATS] = PacketPokerGetPlayerStats
 
 _TYPES = range(50,169)
 
