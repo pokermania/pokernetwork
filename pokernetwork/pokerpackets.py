@@ -4273,16 +4273,16 @@ PacketNames[PACKET_POKER_GET_PLAYER_STATS] = "POKER_GET_PLAYER_STATS"
 
 class PacketPokerGetPlayerStats(PacketPokerGetPlayerInfo):
     """\
-Semantics: ask the server for a PacketPokerPlayerInfo packet
-describing the player that is logged in with this connection.
+Semantics: ask the server for a PacketPokerPlayerStatus packet describing
+the player that is logged in with this connection.
 
 If the user is not logged in the following packet is returned
 
-PacketError(code = PacketPokerGetPlayerInfo.NOT_LOGGED,
+PacketError(code = PacketPokerGetPlayerStats.NOT_LOGGED,
             message = "Not logged in",
-            other_type = PACKET_POKER_GET_PLAYER_INFO)
+            other_type = PACKET_POKER_GET_PLAYER_STATS)
 
-If the user is logged in a PacketPokerPlayerInfo packet is sent
+If the user is logged in a PacketPokerPlayerStats packet is sent
 to the client.
 
 Direction: server <= client
