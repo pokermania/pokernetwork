@@ -23,6 +23,12 @@
 	* pokernetwork/pokerpackets.py: add missing
 	  PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
 
+2008-09-17  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerpackets.py.in
+	(PokerPacketsTestCase.test_verifyfactory): Added test to verify
+	the PokerFactory and PacketNames variables have proper contents.
+
 2008-09-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -129,6 +135,8 @@
 	(UserStatsLookup.message): Wrote method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
 
 	* Makefile.am: add userstats.py to the distribution
 

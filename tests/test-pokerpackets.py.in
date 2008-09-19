@@ -92,6 +92,16 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
     def test_PacketPokerTable(self):
         packet = pokerpackets.PacketPokerTable(tourney_serial = 2)
         self.failUnless("tourney_serial = 2" in str(packet))
+#--------------------------------------------------------------    
+    def test_verifyfactory(self):
+        from pokernetwork.pokerpackets import PacketNames, PacketFactory
+        for packid in PacketNames.keys():
+            self.failUnless(PacketFactory.has_key(packid))
+            self.assertEquals(PacketFactory[packid].type, packid)
+        for packid in PacketFactory.keys():
+            self.failUnless(PacketNames.has_key(packid))
+                            
+
 
 #--------------------------------------------------------------
 def GetTestSuite():
