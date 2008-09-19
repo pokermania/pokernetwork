@@ -163,7 +163,7 @@ class ConnectTestCase(PokerStatsTestBase):
 class ApplicationTestCase(unittest.TestCase):
 
     def test01_no_configuration(self):
-        self.assertEqual(None, stats.configureApplication(['/unlikely']))
+        self.assertEqual(None, stats.configureApplication(['/unlikely.xml']))
 
     def test02_application(self):
         a = stats.configureApplication(['../poker.stats.xml'])
