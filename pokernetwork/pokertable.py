@@ -954,6 +954,7 @@ class PokerTable:
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
+                    self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
                     self.update()
             else:
@@ -979,6 +980,7 @@ class PokerTable:
             return
 
         self.factory.leavePlayer(serial, game.id, self.currency_serial)
+        self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
 
         if self.serial2client.has_key(serial):
             self.seated2observer(self.serial2client[serial])
@@ -999,6 +1001,7 @@ class PokerTable:
                 if client.removePlayer(self, serial):
                     self.seated2observer(client)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
+                    self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
                     self.update()
             else:

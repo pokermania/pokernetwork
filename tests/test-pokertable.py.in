@@ -1172,6 +1172,56 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.leavePlayer(player, 1)
         self.assertEquals(False, updateTableStats.called)
     # -------------------------------------------------------------------
+    def test35_quitPlayerUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = True
+        self.table.quitPlayer(player, 1)
+        self.assertEquals(True, updateTableStats.called)
+    # -------------------------------------------------------------------
+    def test36_quitPlayerDelayedNoUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = False
+        self.table.quitPlayer(player, 1)
+        self.assertEquals(False, updateTableStats.called)
+    # -------------------------------------------------------------------
+    def test37_disconnectPlayerUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = True
+        self.table.disconnectPlayer(player, 1)
+        self.assertEquals(True, updateTableStats.called)
+    # -------------------------------------------------------------------
+    def test38_disconnectPlayerDelayedNoUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = False
+        self.table.disconnectPlayer(player, 1)
+        self.assertEquals(False, updateTableStats.called)
+    # -------------------------------------------------------------------
+    def test39_kickPlayerUpdateTableStats(self):
+        player = self.createPlayer(1)
+        def updateTableStats(game, observers, waiting):
+            updateTableStats.called = True
+        updateTableStats.called = False
+        self.table.factory.updateTableStats = updateTableStats
+        self.table.game.is_open = True
+        self.table.kickPlayer(1)
+        self.assertEquals(True, updateTableStats.called)
+    # -------------------------------------------------------------------
     def test99_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
