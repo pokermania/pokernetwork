@@ -1341,7 +1341,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                  'name' : 'user1',
                                  'money': table_money}}, packet.user2properties)
 
-    def test_no_money_no_table(self):
+    def test02_no_money_no_table(self):
         self.service.startService()
         self.createUsers()
         user_serial = self.user1_serial
@@ -1358,6 +1358,23 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                  'table_serial': None,
                                  'name' : 'user1',
                                  'money': -1}}, packet.user2properties)
+
+    def test03_player_removed(self):
+        self.service.startService()
+        self.createUsers()
+        user_serial = self.user1_serial
+        table_serial = 606
+        table_money = 140
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.service.spawnTourney(schedule)
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = tourney_serial))
+        table_serial = -1
+        self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEqual(tourney_serial, packet.tourney['serial'])
+        self.assertEqual(1, packet.tourney['registered'])
+        self.assertEqual(0, len(packet.table2serials))        
 
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 

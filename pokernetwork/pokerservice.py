@@ -918,7 +918,7 @@ class PokerService(service.Service):
         table2serials = {}
         for row in user2tourney:
             table_serial = row['table_serial']
-            if table_serial == None:
+            if table_serial == None or table_serial == -1:
                 continue
             if not table2serials.has_key(table_serial):
                 table2serials[table_serial] = []
