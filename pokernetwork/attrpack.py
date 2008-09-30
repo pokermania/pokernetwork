@@ -66,13 +66,9 @@ class AttrsFactory:
          SOMETHINGFactory (base class: AttrFactory)
              what to override:
                  __init__() : set the right module name of where are in.
-         
-    Note that you will also need to implement the following packet types
-    in pokerpackets.py:
-        PacketPokerGetSOMETHING           (base class: PacketPokerGetAttrs)
-        PacketPokerSOMETHING              (base class: PacketPokerAttrs)
-        PacketPokerGetSupportedSOMETHING  (base class: PacketPokerGetSupportedAttrs)
-        PacketPokerSupportedSOMETHING     (base class: PacketPokerSupportedAttrs)
+
+    Note that you'll have to implement new packet types to use this.  See
+    the doc string on class AttrLookup for details.
 """
     def __init__(self, moduleStr = 'attrpack', classPrefix = "Attr", defaultClass = "AttrLookup"):
         self.moduleStr = moduleStr
@@ -96,62 +92,197 @@ class AttrsFactory:
 ############################################################################
 class AttrsAccessor:
 
-    """An AttrsAccessor is a base class for doing the key/value lookups for
+    """AttrsAccessor is a base class for doing the key/value lookups for
     the attribute system.  Typically, you will want to override:
          __init__()/getSupportedList():
-              to set the attrsSupported instance variable.
+              to set the attrsSupported and expected LookupArgs instance variables.
          _lookupValidAttr()
               you may want to set it up with the proper arguments expected.
     """
     def __init__(self):
         self.attrsSupported = []
-    # ----------------------------------------------------------------------
-    def error(self, string):
-        self.message("ERROR " + string)
-    # ----------------------------------------------------------------------
-    def message(self, string):
-        print string
+        self.expectLookupArgs = []
     # ----------------------------------------------------------------------
     def getSupportedAttrsList(self):
         """returns list of attributes supported for lookup by this class"""
         return self.attrsSupported
     # ----------------------------------------------------------------------
-    def getStatValue(self, attr, *args, **kwargs):
-        """returns the value associated with the attribute, attr."""
-        if stat in self.statsSupported:
-            return self._lookupValidStat(stat, args, kwargs)
-        else:
+    def getAttrValue(self, attr, *args, **kwargs):
+        """returns the value associated with the attribute, attr.
+            Arguments:
+                self:    this Accessor class object
+                attr:    the key to look up.
+            Remaining arguments are passed directly to self._lookupValidStat()
+        """
+        if not stat in self.attrsSupported:
             self.error("invalid attribute, %s" % attr)
             return None
+
+        if len(args) > 0:
+            self.error("keyword arguments only are supported for getAttrValue.  Ignoring these args: %s" % args.__str__())
+        missingList = filter(lambda g: not g in self.expectLookupArgs, kwargs.keys())
+        extraList = filter(lambda g: not g in kwargs.keys(), self.expectLookupArgs)
+        if len(missingList) > 0:
+            self.error("The following required argument(s) missing for getAttrValue, lookup will surely fail: %s" 
+                       % missingList.__str__())
+        if len(extraList) > 0:
+            self.error("Ignoring these extraneous arguments for getAttrValue: %s" 
+                       % extraList.__str__())
+        return self._lookupValidAttr(attr, **kwargs)
     # ----------------------------------------------------------------------
-    def _lookupValidStat(self, attr, *args, **kwargs):
-        self.error("UNIMPLEMENTED IN BASE CLASS")
-        return "UNIMPLEMENTED IN BASE CLASS"
-############################################################################
-class UserStatsLookup:
-    def __init__(self, service = None):
-        self.service = service
-        self.stat2accessor = {}
+    def _lookupValidAttr(self, attr, **kwargs):
+        """This is an abstract method; it should be overridden by your class.
+        Arguments:
+            self:    this Accessor class object
+            attr:    the key to look up.
+        Remaining arguments are specific to your subclass.  You should
+        make all of them kwargs.
+        """
+        raise NotImplemented
     # ----------------------------------------------------------------------
     def error(self, string):
+        """Handle an error message.  Ultimately calls self.message().
+
+        Keyword arguments:
+                string: error message to send.
+        """
         self.message("ERROR " + string)
     # ----------------------------------------------------------------------
     def message(self, string):
+        """Note a message about an action.  Currently just does "print"
+
+        Keyword arguments:
+            string: message to print.
+        """
         print string
+############################################################################
+class AttrsLookup:
+
+    """AttrsLookup is a base class for aggregating a bunch of
+    AttrsAccessor classes into a single lookup class.  the attribute
+    system.  Typically, you should not need to override any methods here,
+    because you will mostly be overriding them in the
+    """
+
+    def __init__(self, attr2accessor = {},  packetClassesName = "Attrs", requiredAttrPacketFields = []):
+        """Initialize the attribute lookup class.  This should be called
+        by your base class.
+
+        Keyword arguments:
+            attr2accessor: A dict ({} by default) with keys that are
+                           strings, the attributes to be looked up, and
+                           values that are subclasses of AttrsAccessor
+                           that provide those values.
+
+            requiredAttrPacketFields: This is a list of strings ([] by
+                                      default) that are required fields in
+                                      the PacketPokerSOMETHING packet and
+                                      should not be thrown into the
+                                      attrsDict, but should be present as
+                                      keyword arguments to a
+                                      getAttrsAsPacket() method call.
+
+            packetClassesName: The string that is used in the name of the
+                               packet classes that correspond to your
+                               subclass. (replacing SOMETHING below):
+
+        Note that for this class to work properly, you will also need to
+        implement the following packet types in pokerpackets.py:
+            PacketPokerGetSOMETHING           (base class: PacketPokerGetAttrs)
+            PacketPokerSOMETHING              (base class: PacketPokerAttrs)
+            PacketPokerGetSupportedSOMETHING  (base class: PacketPokerGetSupportedAttrs)
+            PacketPokerSupportedSOMETHING     (base class: PacketPokerSupportedAttrs)
+        """
+        self.attr2accessor = attr2accessor
+        self.packetAbbrev2packetClass = {}
+        self.requiredPacketFields = requiredAttrPacketFields
+        self.packetDescription = packetClassesName
+
+        # Get the appropriate PacketPoker classes that correspond to the
+        # four operations we support and the type
+
+        for (pp, val) in [ ('send', ''), ('supported', 'Supported') ]:
+            self.packetAbbrev2packetClass[pp] = self._getPacketClass(val, packetClassesName)
     # ----------------------------------------------------------------------
-    def getStatValue(self, stat, table = None, userSerial = None):
-        if self.stat2accessor.has_key(stat):
-            return self.stat2accessor[stat].getStatValue(stat, userSerial, table, self.service)
+    def _getPacketClass(self, prefix, classname):
+        """Internal, private method.  Used by __init__ to lookup the
+        corresponding packets."""
+
+        classname = "PacketPoker" + prefix + classname
+        try:
+            return getattr(__import__('pokerpackets', globals(), locals(), [classname]), classname)
+        except AttributeError, ae:
+            self.error(ae.__str__())
+        classname = "PacketPoker" + prefix + "Attrs"
+        return getattr(__import__('pokerpackets', globals(), locals(), [classname]), classname)
+    # ----------------------------------------------------------------------
+    def getAttrValue(self, attr, *args, **kwargs)
+        """Returns the attribute value, using the appropriate accessor
+        class, for attr.
+            Arguments:
+                self: this Lookup object.
+                attr: the attribute key to be looked up.
+            Remaining arguments are passed to the Accessor class.
+        """
+        if self.attr2accessor.has_key(attr):
+            return self.attr2accessor[attr].getAttrValue(attr, *args, **kwargs)
         else:
-            self.error("unsupported user statistic, %s" % stat)
+            self.error("unsupported attribute, %s, for %s" % (attr, self.packetDescription))
             return None
     # ----------------------------------------------------------------------
-    def allStatsAsPacket(self, table, userSerial):
-        sd = {}
-        for stat in self.stat2accessor.keys():
-            sd[stat] = self.getStatValue(stat, table, userSerial)
-        return PacketPokerPlayerStats(serial = userSerial, statsDict = sd)
+    def getAttrsAsPacket(self, **kwargs):
+        """Returns the PacketPokerAttrs-derived packet with the key/value
+        correctly placed.  Fields that must be pulled out and should not
+        appear in the attrsDict of the packet should be handled by the pull"""
+        packetClass = self.packetAbbrev2packetClass['get']
+        attrs2vals = {}
+        packetKwargs = {}
+
+        # Next, loop through kwargs, building another one for the packetClass,
+        # and verifying that all the requiredPacketFields are present.
+
+        for fieldName in self.requiredPacketFields:
+            if not kwargs.has_key(fieldName):
+                msg = "PacketPoker%s requires field %s; getAttrsAsPacket called without it" 
+                      % (self.packetDescription, fieldName)
+                self.error(msg)
+                return PacketPokerError(message = "SERVER ERROR: " +  msg,
+                                        other_type = packetClass.type)
+            packetKwargs[fieldName] = kwargs[fieldName]
+            
+        for attr in self.attr2accessor.keys():
+            # Note below that getAttrValue may get more kwargs than
+            # expected, since we're sending along the ones for the packets
+            # as well.  This is probably no harm done, since
+            # getAttrValue() is only going to scream if it is missing one
+            # it expects, not if it has extras
+            attrs2vals[attr] = self.getAttrValue(attr, **kwargs)
+
+        # Next, add results from the loop to the attrsDict, which the
+        # packetClass should be expecting.
+        packetKwargs['attrsDict'] = attrs2vals
+
+        return packetClass(**packetKwargs)
     # ----------------------------------------------------------------------
-    def getSupportedListAsPacket(self):
-        return PacketPokerStatsSupported(stats = self.stat2accessor.keys())
+    def getSupportedAttrsAsPacket(self):
+        """Returns the PacketPokerAttrsSupported-derived packet with a
+        list of attributes that are supported by this class."""
+
+        return self.packetAbbrev2packetClass['getSupported'](attrs = self.attr2accessor.keys())
+    # ----------------------------------------------------------------------
+    def error(self, string):
+        """Handle an error message.  Ultimately calls self.message().
+
+        Keyword arguments:
+                string: error message to send.
+        """
+        self.message("ERROR " + string)
+    # ----------------------------------------------------------------------
+    def message(self, string):
+        """Note a message about an action.  Currently just does "print"
+
+        Keyword arguments:
+            string: message to print.
+        """
+        print string
 ############################################################################
