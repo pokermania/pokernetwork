@@ -1,5 +1,10 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/tourneyattrs.py (TourneySponsoredPrizesAccessor):
+	Created class.
+	(TourneySponsoredPrizesLookup): Created class.
+	(TourneyAttrsFactory): Created class.
+
 	* pokernetwork/pokerpackets.py (PacketPokerPlayerStats.__init__):
 	Renamed statsDict to attrsDict.
 	(PacketPokerSupportedPlayerStats): s/stats/attrs/, changed to Sl
