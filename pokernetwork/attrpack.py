@@ -74,7 +74,11 @@ class AttrsFactory:
         PacketPokerGetSupportedSOMETHING  (base class: PacketPokerGetSupportedAttrs)
         PacketPokerSupportedSOMETHING     (base class: PacketPokerSupportedAttrs)
 """
-
+    def __init__(self, moduleStr = 'attrpack', classPrefix = "Attr", defaultClass = "AttrLookup"):
+        self.moduleStr = moduleStr
+        self.classPrefix = classPrefix
+        self.defaultClass = defaultClass
+    # ----------------------------------------------------------------------
     def error(self, string):
         self.message("ERROR " + string)
     # ----------------------------------------------------------------------
@@ -82,14 +86,14 @@ class AttrsFactory:
         print string
     # ----------------------------------------------------------------------
     def getClass(self, classname):
-        classname = "UserStats" + classname + "Lookup"
+        classname = self.classPrefix + classname + "Lookup"
         try:
-            return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
+            return getattr(__import__(self.moduleStr, globals(), locals(), [classname]), classname)
         except AttributeError, ae:
             self.error(ae.__str__())
-        return UserStatsLookup
+        classname = self.defaultClass
+        return getattr(__import__(self.moduleStr, globals(), locals(), [classname]), classname)
 ############################################################################
-
 class UserStatsAccessor:
     def __init__(self):
         self.statsSupported = []
@@ -112,30 +116,6 @@ class UserStatsAccessor:
     # ----------------------------------------------------------------------
     def _lookupValidStat(self, stat, userSerial, table, service):
         return "UNIMPLEMENTED IN BASE CLASS"
-############################################################################
-from _mysql_exceptions import ProgrammingError
-class UserStatsRankPercentileAccessor(UserStatsAccessor):
-    def __init__(self):
-        UserStatsAccessor.__init__(self)
-        self.statsSupported = ['percentile', 'rank']
-    # ----------------------------------------------------------------------
-    def _lookupValidStat(self, stat, userSerial, table, service):
-        currency = table.currency_serial
-        if currency == None or currency < 0:
-            return None
-        if not userSerial or userSerial <= 0:
-            return None
-        value = None
-        try:
-            cursor = service.db.cursor()
-            cursor.execute("SELECT %s from rank where currency_serial = %d and user_serial = %d"
-                           % (stat, currency, userSerial) )
-            tuple = cursor.fetchone()
-            if tuple != None: (value,) = tuple
-            cursor.close()
-        except ProgrammingError, (code, errorStr):
-            self.error("RankPercentile: (MySQL code %d): %s" % (code, errorStr))
-        return value
 ############################################################################
 class UserStatsLookup:
     def __init__(self, service = None):
@@ -164,9 +144,3 @@ class UserStatsLookup:
     def getSupportedListAsPacket(self):
         return PacketPokerStatsSupported(stats = self.stat2accessor.keys())
 ############################################################################
-class UserStatsRankPercentileLookup(UserStatsLookup):
-    def __init__(self, service = None):
-        UserStatsLookup.__init__(self, service)
-        self.service = service
-        self.stat2accessor = { 'percentile' : UserStatsRankPercentileAccessor(),
-                               'rank' : UserStatsRankPercentileAccessor() }

@@ -1,6 +1,9 @@
 2008-09-23  Bradley M. Kuhn  <bkuhn@ebb.org>
 
-	* pokernetwork/attrpack.py (AttrsFactory): Created class
+	* pokernetwork/attrpack.py (AttrsFactory): Created class by
+	modifying UserStatsFactory.
+	(AttrsFactory.__init__): Wrote method.
+	(AttrsFactory.getClass): Changed to use new instance variables.
 
 2008-09-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
