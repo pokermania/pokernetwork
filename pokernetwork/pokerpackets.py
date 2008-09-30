@@ -4446,7 +4446,7 @@ packets: a list of PACKET_POKER_TOURNEY_ATTRS packets.
 
     type = PACKET_POKER_TOURNEY_ATTRS_LIST
 
-    info = PacketList.info + ( ('tourneyAttrs', 0, 'I') )
+    info = PacketList.info + ( ('tourneyAttrs', 0, 'I'), )
 
     format = "!I"
     format_size = calcsize(format)
@@ -4465,7 +4465,7 @@ packets: a list of PACKET_POKER_TOURNEY_ATTRS packets.
 
     def unpack(self, block):
         block = PacketList.unpack(self, block)
-        (self.tourneyAttrs) = unpack(PacketPokerTourneyAttrsList.format, block[:PacketPokerTourneyAttrsList.format_size])
+        (self.tourneyAttrs,) = unpack(PacketPokerTourneyAttrsList.format, block[:PacketPokerTourneyAttrsList.format_size])
         return block[PacketPokerTourneyAttrsList.format_size:]
 
     def calcsize(self):
