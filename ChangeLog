@@ -1,5 +1,9 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-tourneyattrs.py.in
+	(PokerTourneyAttrsTestCase.test02_tourneyAttrsSponsoredPrizesAccessor):
+	No longer use schedule_serial.
+
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.tourneySelect): Added test for ATTRS packets.
 

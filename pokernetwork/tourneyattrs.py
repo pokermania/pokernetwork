@@ -60,7 +60,7 @@ class TourneyAttrsSponsoredPrizesLookup(AttrsLookup):
            packetClassesName = "TourneyAttrs",
            requiredAttrPacketFields = [ 'serial' ])
     # ----------------------------------------------------------------------
-    def getAttrsAsPacket(self, tourney = None):
+    def getAttrsAsPacket(self, tourney = None, schedule_serial = None):
 
         """Returns a PacketPokerTourneyAttrs packet with the key/value
         correctly placed. 

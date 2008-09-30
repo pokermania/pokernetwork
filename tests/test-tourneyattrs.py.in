@@ -129,14 +129,14 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
 
         # FIXME: when we are no longer using dummyFIXMEdata, this part of
         # the test will need to be changed and improved
-        self.assertEquals(u.getAttrValue('is_monthly', schedule_serial = -5), None)
-        isMonthly = u.getAttrValue('is_monthly', schedule_serial = 1)
+        self.assertEquals(u.getAttrValue('is_monthly', serial = -5), None)
+        isMonthly = u.getAttrValue('is_monthly', serial = 1)
         self.failUnless(isinstance(isMonthly, bool))
-        prize = u.getAttrValue('prizes', schedule_serial = 1)
+        prize = u.getAttrValue('prizes', serial = 1)
         self.failUnless(isinstance(prize, int))
         self.failUnless(prize >= 1)
         self.failUnless(prize <= 1200)
-        sponsor = u.getAttrValue('sponsor', schedule_serial = 1)
+        sponsor = u.getAttrValue('sponsor', serial = 1)
         self.failUnless(isinstance(sponsor, str))
         self.failUnless(sponsor == "Joe" or sponsor == "Jack" or sponsor == "John")
     # -------------------------------------------------------------------------
@@ -152,7 +152,7 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         k.sort()
         attrsList = ['is_monthly', 'prizes', 'sponsor']
         self.assertEquals(k, attrsList)
-        rp = [ 'serial', 'schedule_serial' ]
+        rp = [ 'serial' ]
         rp.sort()
         y = tasp.requiredPacketFields
         y.sort()
@@ -161,7 +161,7 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         for ii in k:
             self.failUnless(isinstance(tasp.attr2accessor[ii], TourneyAttrsSponsoredPrizesAccessor))
 
-        firstPack = tasp.getAttrsAsPacket(schedule_serial = 5, serial = 12)
+        firstPack = tasp.getAttrsAsPacket(schedule_serial = 5)
         self.assertEquals(firstPack.type, PACKET_POKER_TOURNEY_ATTRS)
 
         # FIXME: when we are no longer using dummyFIXMEdata, this part of
@@ -179,25 +179,19 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         # The MockTourney class that follows is used to test the fact that
         # getAttrsAsPacket() can take a tourney and work it out.
 
-        class MockTourney:
-            def __init__(self, schedule_serial = None, tourney_serial = None):
-                if schedule_serial != None:
-                    self.schedule_serial = schedule_serial
-                if tourney_serial != None:
-                    self.serial = tourney_serial
         def checkPack(firstPack, pack):
             self.assertEquals(pack.type, firstPack.type)
             self.assertEquals(firstPack.prizes, pack.prizes)
             self.assertEquals(firstPack.is_monthly, pack.is_monthly)
             self.assertEquals(firstPack.sponsor, pack.sponsor)
 
-        pack = tasp.getAttrsAsPacket(tourney = {}, schedule_serial = 5, serial = 12)
+        pack = tasp.getAttrsAsPacket(tourney = {}, schedule_serial = 5)
         checkPack(firstPack, pack)
 
-        pack = tasp.getAttrsAsPacket(tourney = { 'schedule_serial' : 5 }, serial = 12)
+        pack = tasp.getAttrsAsPacket(tourney = { 'schedule_serial' : 5 })
         checkPack(firstPack, pack)
 
-        pack = tasp.getAttrsAsPacket(tourney =  { 'serial' : 5 } , serial = 12)
+        pack = tasp.getAttrsAsPacket(tourney =  { 'serial' : 5 })
         checkPack(firstPack, pack)
         
     # ------------------------------------------------------------------------
