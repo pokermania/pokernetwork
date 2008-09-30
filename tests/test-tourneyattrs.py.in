@@ -191,13 +191,13 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
             self.assertEquals(firstPack.is_monthly, pack.is_monthly)
             self.assertEquals(firstPack.sponsor, pack.sponsor)
 
-        pack = tasp.getAttrsAsPacket(MockTourney(), schedule_serial = 5, serial = 12)
+        pack = tasp.getAttrsAsPacket(tourney = {}, schedule_serial = 5, serial = 12)
         checkPack(firstPack, pack)
 
-        pack = tasp.getAttrsAsPacket(MockTourney(schedule_serial = 5), serial = 12)
+        pack = tasp.getAttrsAsPacket(tourney = { 'schedule_serial' : 5 }, serial = 12)
         checkPack(firstPack, pack)
 
-        pack = tasp.getAttrsAsPacket(MockTourney(tourney_serial = 5), serial = 12)
+        pack = tasp.getAttrsAsPacket(tourney =  { 'serial' : 5 } , serial = 12)
         checkPack(firstPack, pack)
         
     # ------------------------------------------------------------------------

@@ -86,12 +86,12 @@ class TourneyAttrsSponsoredPrizesLookup(AttrsLookup):
                              option is not given, then the returned packet
                              will have no values.
         """
-
+        print tourney
         if tourney != None:
-            if tourney.__dict__.has_key('schedule_serial'):
-                schedule_serial = tourney.schedule_serial
-            elif tourney.__dict__.has_key('serial'):
-                schedule_serial = tourney.serial
+            if tourney.has_key('schedule_serial'):
+                schedule_serial = tourney['schedule_serial']
+            elif tourney.has_key('serial'):
+                schedule_serial = tourney['serial']
         kwargs = {}
         kwargs['schedule_serial'] = schedule_serial
         kwargs['serial'] = serial
