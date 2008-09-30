@@ -79,7 +79,8 @@ from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.packets import PacketError
-from pokernetwork.userstats import UserStatsRankPercentileLookup, UserStatsLookup
+from pokernetwork.userstats import UserStatsRankPercentileLookup
+from pokernetwork.attrpack  import AttrsLookup
 from MySQLdb.cursors import DictCursor
 
 class ConstantDeckShuffler:
@@ -569,7 +570,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         # Check that statsLookupType is correct
         self.failUnless(isinstance(self.service.statsLookup, statsLookupType))
         self.assertEquals(self.service.statsLookup, self.service.getUserStatsLookup())
-        self.assertEquals(self.service.getUserStatsLookup().service, self.service)
+        if isinstance(self.service.statsLookup, UserStatsRankPercentileLookup):
+            self.assertEquals(self.service.getUserStatsLookup().service, self.service)
+        else:
+            self.failUnless(isinstance(self.service.statsLookup, AttrsLookup))
         if statsError != "":
             self.failUnless(search_output(statsError))
 
@@ -660,10 +664,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                                                '<stats type="RankPercentile"/> <stats type="Ignored"/>'), 1000, statsError = "*ERROR* settings include multiple <stats> tags; using first one only")
     def test00_7_configValues(self):
         self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
-                                               '<stats type="Missing"/>'), 1000, statsLookupType = UserStatsLookup, statsError = "ERROR 'module' object has no attribute 'UserStatsMissingLookup'")
+                                               '<stats type="Missing"/>'), 1000, statsLookupType = AttrsLookup, statsError = "ERROR 'module' object has no attribute 'UserStatsMissingLookup'")
     def test00_8_configValues(self):
         self.configValues(settings_xml.replace('<stats type="RankPercentile"/>', ''), 1000,
-                          statsLookupType = UserStatsLookup)
+                          statsLookupType = AttrsLookup)
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
