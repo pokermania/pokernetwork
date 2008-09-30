@@ -4238,24 +4238,24 @@ key: value (for each statistic supported)
         return retStr
 PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
 ########################################
-class PacketPokerGetStatsSupported(Packet):
+class PacketPokerGetSupportedPlayerStats(Packet):
     """\
 
 Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_STATS_SUPPORTED packet.
+The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
 
 Direction: server <=  client
 """
     
     info = Packet.info
 
-Packet.infoDeclare(globals(), PacketPokerGetStatsSupported, Packet, "POKER_GET_STATS_SUPPORTED", 157) # 157 # 0x9d # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerGetSupportedPlayerStats, Packet, "POKER_GET_SUPPORTED_PLAYER_STATS", 157) # 157 # 0x9d # %SEQ%
 ########################################
-class PacketPokerStatsSupported(Packet):
+class PacketPokerSupportedPlayerStats(Packet):
     """\
 
 Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_STATS_SUPPORTED packet.
+The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
 
 Direction: server <=  client
 """
@@ -4265,7 +4265,7 @@ Direction: server <=  client
         ('stats', [], 'Il'),
         )
 
-Packet.infoDeclare(globals(), PacketPokerStatsSupported, Packet, "POKER_STATS_SUPPORTED", 158) # 158 # 0x9e # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerSupportedPlayerStats, Packet, "POKER_SUPPORTED_PLAYER_STATS", 158) # 158 # 0x9e # %SEQ%
 
 ########################################
 PACKET_POKER_GET_PLAYER_STATS = 159 # 0x9f # %SEQ%
@@ -4273,7 +4273,7 @@ PacketNames[PACKET_POKER_GET_PLAYER_STATS] = "POKER_GET_PLAYER_STATS"
 
 class PacketPokerGetPlayerStats(PacketPokerId):
     """\
-Semantics: ask the server for a PacketPokerPlayerStatus packet describing
+Semantics: ask the server for a PacketPokerPlayerStats packet describing
 the player that is logged in with this connection.
 
 If the user is not logged in the following packet is returned

@@ -1,5 +1,26 @@
 2008-09-27  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-userstats.py.in
+	(PokerUserStatsTestCase.test01_userStatsAccessorBaseClass):
+	Removed test.
+	(PokerUserStatsTestCase.test02_factory): Renamed test to
+	test01_factory, and adapted to new code.
+	(PokerUserStatsTestCase.test03_rankPercentileAccessor): Renamed to
+	test02, adapated to new code.
+	(PokerUserStatsTestCase.test04_userStatsLookupBaseClass): Removed
+	test.
+	(PokerUserStatsTestCase.test05_userStatsRankPercentileLookupBaseClass):
+	Renamed to test03; Adapted to new code.
+
+	* pokernetwork/userstats.py (UserStatsFactory): Reworked to derive
+	from AttrsFactory.
+	(UserStatsRankPercentileLookup): Reworked to derive from
+	AttrsLookup.
+	(UserStatsRankPercentileAccessor): Reworked to derive from
+	AttrsAccessor.
+	(UserStatsAccessor): Removed old base class.
+	(UserStatsLookup): Removed old base class.
+
 	* tests/test-attrpack.py.in
 	(PokerAttrsTestCase.test02_factory): Adapted test from UserStats version.
 	(PokerAttrsTestCase.test03_attrsLookup): Wrote test.

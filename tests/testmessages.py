@@ -71,8 +71,8 @@ classes.append(pokersite.PokerImageUpload)
 classes.append(pokersite.PokerAvatarResource)
 from pokernetwork import userstats
 classes.append(userstats.UserStatsFactory)
-classes.append(userstats.UserStatsAccessor)
-classes.append(userstats.UserStatsLookup)
+classes.append(userstats.UserStatsRankPercentileAccessor)
+classes.append(userstats.UserStatsRankPercentileLookup)
 from pokernetwork import attrpack
 classes.append(attrpack.AttrsFactory)
 classes.append(attrpack.AttrsAccessor)

@@ -45,7 +45,7 @@ class AttrsFactory:
 
         answerGetSupported = attrLookup.supportedAttrsAsPacket(args...)
         #  Send packet inside answerGetSupported to client...
-        answerGetAttrs     = attrLookup.allStatsAsPacket(args...)
+        answerGetAttrs     = attrLookup.getAttrsAsPacket(args...)
         #  Send packet inside answerGetAttrs to client...
 
     The general idea is that only poker-network code that knows a *thing*

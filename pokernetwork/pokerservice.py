@@ -216,7 +216,7 @@ class PokerService(service.Service):
             self.error("settings include multiple <stats> tags; using first one only")
         statsType = settings.headerGet("/server/stats/@type")
 
-        self.statsLookup = UserStatsFactory().getStatsClass(statsType)(self)
+        self.statsLookup = UserStatsFactory().getClass(statsType)(self)
 
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:

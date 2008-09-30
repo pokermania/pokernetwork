@@ -30,48 +30,27 @@
 # used for looking up stats, and of course they need not be used if not
 # needed.
 
-from pokerpackets import PacketPokerPlayerStats, PacketPokerStatsSupported
-
-class UserStatsAccessor:
-    def __init__(self):
-        self.statsSupported = []
-    # ----------------------------------------------------------------------
-    def error(self, string):
-        self.message("ERROR " + string)
-    # ----------------------------------------------------------------------
-    def message(self, string):
-        print string
-    # ----------------------------------------------------------------------
-    def getSupportedStatsList(self):
-        return self.statsSupported
-    # ----------------------------------------------------------------------
-    def getStatValue(self, stat, userSerial = None, table = None, service = None):
-        if stat in self.statsSupported:
-            return self._lookupValidStat(stat, userSerial, table, service)
-        else:
-            self.error("invalid user statistic, %s" % stat)
-            return None
-    # ----------------------------------------------------------------------
-    def _lookupValidStat(self, stat, userSerial, table, service):
-        return "UNIMPLEMENTED IN BASE CLASS"
+from pokerpackets import PacketPokerPlayerStats, PacketPokerSupportedPlayerStats
+from attrpack import AttrsAccessor, AttrsFactory, AttrsLookup
 ############################################################################
 from _mysql_exceptions import ProgrammingError
-class UserStatsRankPercentileAccessor(UserStatsAccessor):
+class UserStatsRankPercentileAccessor(AttrsAccessor):
     def __init__(self):
-        UserStatsAccessor.__init__(self)
-        self.statsSupported = ['percentile', 'rank']
+        AttrsAccessor.__init__(self)
+        self.attrsSupported = ['percentile', 'rank']
+        self.expectLookupArgs = [ 'service', 'table', 'serial' ]
     # ----------------------------------------------------------------------
-    def _lookupValidStat(self, stat, userSerial, table, service):
+    def _lookupValidAttr(self, stat, serial = -1, table = None, service = None):
         currency = table.currency_serial
         if currency == None or currency < 0:
             return None
-        if not userSerial or userSerial <= 0:
+        if not serial or serial <= 0:
             return None
         value = None
         try:
             cursor = service.db.cursor()
             cursor.execute("SELECT %s from rank where currency_serial = %d and user_serial = %d"
-                           % (stat, currency, userSerial) )
+                           % (stat, currency, serial) )
             tuple = cursor.fetchone()
             if tuple != None: (value,) = tuple
             cursor.close()
@@ -79,52 +58,18 @@ class UserStatsRankPercentileAccessor(UserStatsAccessor):
             self.error("RankPercentile: (MySQL code %d): %s" % (code, errorStr))
         return value
 ############################################################################
-class UserStatsLookup:
+class UserStatsRankPercentileLookup(AttrsLookup):
     def __init__(self, service = None):
         self.service = service
-        self.stat2accessor = {}
-    # ----------------------------------------------------------------------
-    def error(self, string):
-        self.message("ERROR " + string)
-    # ----------------------------------------------------------------------
-    def message(self, string):
-        print string
-    # ----------------------------------------------------------------------
-    def getStatValue(self, stat, table = None, userSerial = None):
-        if self.stat2accessor.has_key(stat):
-            return self.stat2accessor[stat].getStatValue(stat, userSerial, table, self.service)
-        else:
-            self.error("unsupported user statistic, %s" % stat)
-            return None
-    # ----------------------------------------------------------------------
-    def allStatsAsPacket(self, table, userSerial):
-        sd = {}
-        for stat in self.stat2accessor.keys():
-            sd[stat] = self.getStatValue(stat, table, userSerial)
-        return PacketPokerPlayerStats(serial = userSerial, statsDict = sd)
-    # ----------------------------------------------------------------------
-    def getSupportedListAsPacket(self):
-        return PacketPokerStatsSupported(stats = self.stat2accessor.keys())
+        AttrsLookup.__init__(self,
+           attr2accessor = { 
+                'percentile' : UserStatsRankPercentileAccessor(),
+                'rank' : UserStatsRankPercentileAccessor() },
+           packetClassesName = "PlayerStats",
+           requiredAttrPacketFields = [ 'serial' ])
 ############################################################################
-class UserStatsRankPercentileLookup(UserStatsLookup):
-    def __init__(self, service = None):
-        UserStatsLookup.__init__(self, service)
-        self.service = service
-        self.stat2accessor = { 'percentile' : UserStatsRankPercentileAccessor(),
-                               'rank' : UserStatsRankPercentileAccessor() }
-############################################################################
-class UserStatsFactory:
-    def error(self, string):
-        self.message("ERROR " + string)
-    # ----------------------------------------------------------------------
-    def message(self, string):
-        print string
-    # ----------------------------------------------------------------------
-    def getStatsClass(self, classname):
-        classname = "UserStats" + classname + "Lookup"
-        try:
-            return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
-        except AttributeError, ae:
-            self.error(ae.__str__())
-        return UserStatsLookup
+class UserStatsFactory(AttrsFactory):
+    def __init__(self):
+        AttrsFactory.__init__(self, moduleStr = 'userstats',
+                              classPrefix = "UserStats", defaultClass = "AttrsLookup")
 ############################################################################
