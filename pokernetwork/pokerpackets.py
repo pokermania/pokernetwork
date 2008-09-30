@@ -4461,7 +4461,7 @@ packets: a list of PACKET_POKER_TOURNEY_ATTRS packets.
     # empty packet response.
 
     def pack(self):
-        return PacketList.pack(self) + pack(PacketPokerTourneyAttrsList.format, self.tourneysAttrs)
+        return PacketList.pack(self) + pack(PacketPokerTourneyAttrsList.format, self.tourneyAttrs)
 
     def unpack(self, block):
         block = PacketList.unpack(self, block)
