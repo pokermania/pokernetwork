@@ -80,6 +80,7 @@ TESTS = coverage-reset \
 	test-packets.py \
 	test-attrpack.py \
 	test-userstats.py \
+	test-tourneyattrs.py \
 	test-pokeravatar.py \
 	test-pokerpackets.py \
 	test-pokerclientpackets.py \

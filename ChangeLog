@@ -1,5 +1,22 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-protocol.py.in
+	(UGAMEProtocolTestCase.testHandleData): Added test for packets
+	just created.
+
+	* pokernetwork/pokerpackets.py (PacketPokerGetTourneyAttrs): Added
+	packet.
+	(PacketPokerTourneyAttrs): Added packet.
+	(PacketPokerGetSupportedTourneyAttrs): Added packet.
+	(PacketPokerSupportedTourneyAttrs): Added packet.
+
+	* tests/test-tourneyattrs.py.in (PokerTourneyAttrsTestCase): Wrote
+	tests.
+
+	* pokernetwork/tourneyattrs.py
+	(TourneyAttrsSponsoredPrizesAccessor._lookupValidAttr):
+	Implemented with dummy data.
+
 	* pokernetwork/pokertable.py (PokerTable.newPlayerInformation): Fixed
 	to use new kwargs call style for getAttrsAsPacket()
 

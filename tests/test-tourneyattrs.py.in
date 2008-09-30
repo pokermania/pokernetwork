@@ -1,0 +1,225 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+import sys, os
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+from types import *
+import libxml2
+import MySQLdb
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error, base
+from twisted.python import failure, runtime
+from tests import testclock
+
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
+#os.environ['VERBOSE_T'] = '0'
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
+from pokernetwork import pokernetworkconfig
+from pokernetwork.tourneyattrs import *
+from pokernetwork.pokerpackets import *
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <language value="en_US.UTF-8"/>
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="0" />
+  <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
+  <table name="Table4" variant="holdem" betting_structure="ante-1-2-limit" seats="10" player_timeout="60" currency_serial="0" />
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+############################################################################
+class PokerTourneyAttrsTestCase(unittest.TestCase):
+    def destroyDb(self, arg = None):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUp(self):
+#         settings = pokernetworkconfig.Config([])
+#         settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+#         settings.header = settings.doc.xpathNewContext()
+        self.destroyDb()
+        self.db = MySQLdb.connect(host = "@MYSQL_TEST_DBHOST@",
+                                  port = 3306, user = "@MYSQL_TEST_DBROOT@",
+                                  passwd = "@MYSQL_TEST_DBROOT_PASSWORD@")
+        self.db.query("CREATE DATABASE pokernetworktest")
+        self.db.select_db("pokernetworktest")
+        #
+        # Setup server
+        #
+#        self.service = pokerservice.PokerService(settings)
+#        self.service.verbose = 6
+#        self.service.startService()
+
+    def tearDown(self):
+        self.destroyDb()
+#        d = self.service.stopService()
+#        return d
+    # -------------------------------------------------------------------------
+    def test01_factory(self):
+        """test01_factory
+        basic factory interface tests."""
+        f = TourneyAttrsFactory()
+        clear_all_messages()
+        f.error("test")
+        self.assertEquals(get_messages(), ['ERROR test'])
+
+        self.failUnless(f.getClass(""), AttrsLookup)
+
+        clear_all_messages()
+        self.assertEquals(f.getClass("DOESNOTEXIST"), AttrsLookup)
+        self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'TourneyAttrsDOESNOTEXISTLookup'"])
+
+        self.assertEquals(f.getClass("SponsoredPrizes"), TourneyAttrsSponsoredPrizesLookup)
+    # -------------------------------------------------------------------------
+    def test02_tourneyAttrsSponsoredPrizesAccessor(self):
+        """test02_tourneyAttrsSponsoredPrizesAccessor
+        make sure basic interfaces on the TourneyAttrsSponsoredPrizes
+        accessor class works correctly."""
+
+        attrsList = ['is_monthly', 'prizes', 'sponsor']
+        attrsList.sort()
+        u = TourneyAttrsSponsoredPrizesAccessor()
+        ss = u.attrsSupported
+        ss.sort()
+        self.assertEquals(ss, attrsList)
+        g = u.getSupportedAttrsList()
+        g.sort()
+        self.assertEquals(g, attrsList)
+        
+        # Next, check to see if invalid stat generates a proper error message
+        clear_all_messages()
+        self.assertEquals(u.getAttrValue('unknownstat'), None)
+        self.assertEquals(get_messages(), [ "ERROR invalid attribute, unknownstat" ])
+
+        # FIXME: when we are no longer using dummyFIXMEdata, this part of
+        # the test will need to be changed and improved
+        self.assertEquals(u.getAttrValue('is_monthly', schedule_serial = -5), None)
+        isMonthly = u.getAttrValue('is_monthly', schedule_serial = 1)
+        self.failUnless(isinstance(isMonthly, bool))
+        prize = u.getAttrValue('prizes', schedule_serial = 1)
+        self.failUnless(isinstance(prize, int))
+        self.failUnless(prize >= 1)
+        self.failUnless(prize <= 1200)
+        sponsor = u.getAttrValue('sponsor', schedule_serial = 1)
+        self.failUnless(isinstance(sponsor, str))
+        self.failUnless(sponsor == "Joe" or sponsor == "Jack" or sponsor == "John")
+    # -------------------------------------------------------------------------
+    def test03_tourneyAttrsSponsoredPrizesLookupClass(self):
+        """test03_tourneyAttrsSponsoredPrizesLookupClass
+        Tests the the SponsoredPrizes lookup class."""
+
+        # Check that the class is structured properly.
+        tasp = TourneyAttrsSponsoredPrizesLookup()
+        self.assertEquals(tasp.packetDescription, "TourneyAttrs")
+
+        k = tasp.attr2accessor.keys()
+        k.sort()
+        attrsList = ['is_monthly', 'prizes', 'sponsor']
+        self.assertEquals(k, attrsList)
+        rp = [ 'serial', 'schedule_serial' ]
+        rp.sort()
+        y = tasp.requiredPacketFields
+        y.sort()
+        self.assertEquals(y, rp)
+
+        for ii in k:
+            self.failUnless(isinstance(tasp.attr2accessor[ii], TourneyAttrsSponsoredPrizesAccessor))
+
+        firstPack = tasp.getAttrsAsPacket(schedule_serial = 5, serial = 12)
+        self.assertEquals(firstPack.type, PACKET_POKER_TOURNEY_ATTRS)
+
+        # FIXME: when we are no longer using dummyFIXMEdata, this part of
+        # the test will need to be changed and improved
+        self.failUnless(isinstance(firstPack.is_monthly, bool))
+        self.failUnless(isinstance(firstPack.prizes, int))
+        self.failUnless(firstPack.prizes >= 1)
+        self.failUnless(firstPack.prizes <= 1200)
+        self.failUnless(isinstance(firstPack.sponsor, str))
+        self.failUnless(firstPack.sponsor == "Joe" or 
+                        firstPack.sponsor == "Jack" or firstPack.sponsor == "John")
+
+        # The rest should work even after the above is fixed.
+
+        # The MockTourney class that follows is used to test the fact that
+        # getAttrsAsPacket() can take a tourney and work it out.
+
+        class MockTourney:
+            def __init__(self, schedule_serial = None, tourney_serial = None):
+                if schedule_serial != None:
+                    self.schedule_serial = schedule_serial
+                if tourney_serial != None:
+                    self.serial = tourney_serial
+        def checkPack(firstPack, pack):
+            self.assertEquals(pack.type, firstPack.type)
+            self.assertEquals(firstPack.prizes, pack.prizes)
+            self.assertEquals(firstPack.is_monthly, pack.is_monthly)
+            self.assertEquals(firstPack.sponsor, pack.sponsor)
+
+        pack = tasp.getAttrsAsPacket(MockTourney(), schedule_serial = 5, serial = 12)
+        checkPack(firstPack, pack)
+
+        pack = tasp.getAttrsAsPacket(MockTourney(schedule_serial = 5), serial = 12)
+        checkPack(firstPack, pack)
+
+        pack = tasp.getAttrsAsPacket(MockTourney(tourney_serial = 5), serial = 12)
+        checkPack(firstPack, pack)
+        
+    # ------------------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test03"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerTourneyAttrsTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# ------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-tourneyattrs.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/tourneyattrs.py' TESTS='coverage-reset test-tourneyattrs.py coverage-report' check )"
+# End:

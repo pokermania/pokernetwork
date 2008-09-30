@@ -21,36 +21,80 @@
 
 from pokerpackets import PacketPokerPlayerStats, PacketPokerSupportedPlayerStats
 from attrpack import AttrsAccessor, AttrsFactory, AttrsLookup
+from random import randint
+
 ############################################################################
 from _mysql_exceptions import ProgrammingError
-class TourneySponsoredPrizesAccessor(AttrsAccessor):
+class TourneyAttrsSponsoredPrizesAccessor(AttrsAccessor):
     def __init__(self):
         AttrsAccessor.__init__(self)
         self.attrsSupported = ['is_monthly', 'prizes', 'sponsor']
-        self.expectLookupArgs = [ 'service', 'table', 'serial' ]
+        self.expectLookupArgs = [ 'schedule_serial' ]
+        # dummyFIXMEdata is used to create dummy data.  Someone else
+        # should come along and implement real data.
+        self.dummyFIXMEdata = { '_possibleSponsors' : [ 'Joe', 'Jack', 'John' ] }
     # ----------------------------------------------------------------------
-    def _lookupValidAttr(self, attr, serial = -1, table = None, service = None):
-        if attr == 'is_monthly':
-            return True
-        elif attr == 'prizes':
-            return 5
-        elif attr == 'sponsor':
-            return 'Joe'
+    def _lookupValidAttr(self, attr, schedule_serial = -1, **kwargs):
+        # FIXME: this function shouldn't use the dummy data but should be
+        # written to lookup the right data based on schedule_serial.
+        if schedule_serial < 0:
+            return None
+        if not self.dummyFIXMEdata.has_key(schedule_serial):
+            isMonthly = True
+            if randint(0, 1) == 0: isMonthly = False
+            prizes = randint(1, 1200)
+            sponsor = self.dummyFIXMEdata['_possibleSponsors'][randint(0, 2)]
+            self.dummyFIXMEdata[schedule_serial] = { 'is_monthly' : isMonthly,
+                                                     'prizes' : prizes,
+                                                     'sponsor': sponsor }
+        return self.dummyFIXMEdata[schedule_serial][attr]
 ############################################################################
-class TourneySponsoredPrizesLookup(AttrsLookup):
-    def __init__(self, service = None):
-        self.service = service
+class TourneyAttrsSponsoredPrizesLookup(AttrsLookup):
+    def __init__(self):
+        tourneyPrizeAcessor = TourneyAttrsSponsoredPrizesAccessor()
         AttrsLookup.__init__(self,
            attr2accessor = { 
-                'is_monthly' : TourneySponsoredPrizesAccessor(),
-                'prizes' : TourneySponsoredPrizesAccessor(),
-                'sponsor' : TourneySponsoredPrizesAccessor() },
+                'is_monthly' : tourneyPrizeAcessor,
+                'prizes' : tourneyPrizeAcessor,
+                'sponsor' : tourneyPrizeAcessor },
            packetClassesName = "TourneyAttrs",
-           requiredAttrPacketFields = [ 'serial' ])
+           requiredAttrPacketFields = [ 'serial', 'schedule_serial' ])
     # ----------------------------------------------------------------------
-    def getAttrsAsPacket(self, **kwargs):
-        if not kwargs.has_key('service'):
-            kwargs['service'] = self.service
+    def getAttrsAsPacket(self, tourney = None, schedule_serial = None, serial = None):
+
+        """Returns a PacketPokerTourneyAttrs packet with the key/value
+        correctly placed. 
+
+        Keyword arguments:
+
+            serial:  user serial of requestor of this information.
+
+            tourney: if a tourney argument is given, it should either have
+                     a member field of 'schedule_serial', which if found
+                     will be used as the 'schedule_serial' for lookup, or
+                     it should have a 'serial' member field, which will be
+                     used instead.  If the tourney object has neither,
+                     then the 'schedule_serial' option is looked at.  If
+                     the schedule_serial can be determined from this
+                     object, a 'schedule_serial' keyword argument will be
+                     *ignored* completely.
+
+            schedule_serial: the schedule_serial value to be used for
+                             lookup.  This option is ignored completely if
+                             'tourney' is given with a member of
+                             'schedule_serial' or 'serial'.  If this
+                             option is not given, then the returned packet
+                             will have no values.
+        """
+
+        if tourney != None:
+            if tourney.__dict__.has_key('schedule_serial'):
+                schedule_serial = tourney.schedule_serial
+            elif tourney.__dict__.has_key('serial'):
+                schedule_serial = tourney.serial
+        kwargs = {}
+        kwargs['schedule_serial'] = schedule_serial
+        kwargs['serial'] = serial
         return AttrsLookup.getAttrsAsPacket(self, **kwargs)
 ############################################################################
 class TourneyAttrsFactory(AttrsFactory):

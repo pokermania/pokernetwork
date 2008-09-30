@@ -316,6 +316,7 @@ AC_CONFIG_FILES([
         tests/test-pokeravatar.py
         tests/test-attrpack.py
         tests/test-userstats.py
+        tests/test-tourneyattrs.py
         tests/test-pokercashier.py
         tests/test-pokerclient.py
         tests/test-servercrash.py
