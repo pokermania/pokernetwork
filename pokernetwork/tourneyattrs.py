@@ -24,39 +24,15 @@ from attrpack import AttrsAccessor, AttrsFactory, AttrsLookup
 from random import randint
 
 ############################################################################
-from _mysql_exceptions import ProgrammingError
-class TourneyAttrsSponsoredPrizesAccessor(AttrsAccessor):
+class TourneyAttrsFactory(AttrsFactory):
     def __init__(self):
-        AttrsAccessor.__init__(self)
-        self.attrsSupported = ['is_monthly', 'prizes', 'sponsor']
-        self.expectLookupArgs = [ 'serial' ]
-        # dummyFIXMEdata is used to create dummy data.  Someone else
-        # should come along and implement real data.
-        self.dummyFIXMEdata = { '_possibleSponsors' : [ 'Joe', 'Jack', 'John' ] }
-    # ----------------------------------------------------------------------
-    def _lookupValidAttr(self, attr, serial = -1, **kwargs):
-        # FIXME: this function shouldn't use the dummy data but should be
-        # written to lookup the right data based on serial.
-        if serial < 0:
-            return None
-        if not self.dummyFIXMEdata.has_key(serial):
-            isMonthly = True
-            if randint(0, 1) == 0: isMonthly = False
-            prizes = randint(1, 1200)
-            sponsor = self.dummyFIXMEdata['_possibleSponsors'][randint(0, 2)]
-            self.dummyFIXMEdata[serial] = { 'is_monthly' : isMonthly,
-                                                     'prizes' : prizes,
-                                                     'sponsor': sponsor }
-        return self.dummyFIXMEdata[serial][attr]
+        AttrsFactory.__init__(self, moduleStr = 'tourneyattrs',
+                              classPrefix = "TourneyAttrs", defaultClass = "TourneyAttrsEmptyLookup")
 ############################################################################
-class TourneyAttrsSponsoredPrizesLookup(AttrsLookup):
+class TourneyAttrsEmptyLookup(AttrsLookup):
     def __init__(self):
-        tourneyPrizeAcessor = TourneyAttrsSponsoredPrizesAccessor()
         AttrsLookup.__init__(self,
-           attr2accessor = { 
-                'is_monthly' : tourneyPrizeAcessor,
-                'prizes' : tourneyPrizeAcessor,
-                'sponsor' : tourneyPrizeAcessor },
+           attr2accessor = { },
            packetClassesName = "TourneyAttrs",
            requiredAttrPacketFields = [ 'serial' ])
     # ----------------------------------------------------------------------
@@ -94,15 +70,39 @@ class TourneyAttrsSponsoredPrizesLookup(AttrsLookup):
         kwargs['serial'] = schedule_serial
         return AttrsLookup.getAttrsAsPacket(self, **kwargs)
 ############################################################################
-class TourneyAttrsEmptyLookup(AttrsLookup):
+class TourneyAttrsSponsoredPrizesLookup(TourneyAttrsEmptyLookup):
     def __init__(self):
+        tourneyPrizeAcessor = TourneyAttrsSponsoredPrizesAccessor()
         AttrsLookup.__init__(self,
-           attr2accessor = { },
+           attr2accessor = { 
+                'is_monthly' : tourneyPrizeAcessor,
+                'prizes' : tourneyPrizeAcessor,
+                'sponsor' : tourneyPrizeAcessor },
            packetClassesName = "TourneyAttrs",
            requiredAttrPacketFields = [ 'serial' ])
 ############################################################################
-class TourneyAttrsFactory(AttrsFactory):
+from _mysql_exceptions import ProgrammingError
+class TourneyAttrsSponsoredPrizesAccessor(AttrsAccessor):
     def __init__(self):
-        AttrsFactory.__init__(self, moduleStr = 'tourneyattrs',
-                              classPrefix = "TourneyAttrs", defaultClass = "TourneyAttrsEmptyLookup")
-############################################################################
+        AttrsAccessor.__init__(self)
+        self.attrsSupported = ['is_monthly', 'prizes', 'sponsor']
+        self.expectLookupArgs = [ 'serial' ]
+        # dummyFIXMEdata is used to create dummy data.  Someone else
+        # should come along and implement real data.
+        self.dummyFIXMEdata = { '_possibleSponsors' : [ 'Joe', 'Jack', 'John' ] }
+    # ----------------------------------------------------------------------
+    def _lookupValidAttr(self, attr, serial = -1, **kwargs):
+        # FIXME: this function shouldn't use the dummy data but should be
+        # written to lookup the right data based on serial.
+        if serial < 0:
+            return None
+        if not self.dummyFIXMEdata.has_key(serial):
+            isMonthly = True
+            if randint(0, 1) == 0: isMonthly = False
+            prizes = randint(1, 1200)
+            sponsor = self.dummyFIXMEdata['_possibleSponsors'][randint(0, 2)]
+            self.dummyFIXMEdata[serial] = { 'is_monthly' : isMonthly,
+                                                     'prizes' : prizes,
+                                                     'sponsor': sponsor }
+        return self.dummyFIXMEdata[serial][attr]
+###########################################################################

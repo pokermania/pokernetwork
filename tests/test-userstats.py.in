@@ -99,10 +99,10 @@ class PokerUserStatsTestCase(unittest.TestCase):
         f.error("test")
         self.assertEquals(get_messages(), ['ERROR test'])
 
-        self.failUnless(f.getClass(""), AttrsLookup)
+        self.failUnless(f.getClass(""), UserStatsEmptyLookup)
 
         clear_all_messages()
-        self.assertEquals(f.getClass("DOESNOTEXIST"), AttrsLookup)
+        self.assertEquals(f.getClass("DOESNOTEXIST"), UserStatsEmptyLookup)
         self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'UserStatsDOESNOTEXISTLookup'"])
 
         self.assertEquals(f.getClass("RankPercentile"), UserStatsRankPercentileLookup)
@@ -249,6 +249,26 @@ class PokerUserStatsTestCase(unittest.TestCase):
         self.assertEquals(pack.length, 12)
         pack.attrs.sort()
         self.assertEquals(pack.attrs, ['percentile', 'rank'])
+    # -------------------------------------------------------------------------
+    def test04_userStatsEmptyLookupClass(self):
+        """test04_userStatsEmptyLookupClass
+        Tests the the Empty lookup class."""
+
+        # Check that the class is structured properly.
+        urpl = UserStatsEmptyLookup(PokerUserStatsTestCase.MockService(self.db))
+        self.assertEquals(self.db, urpl.service.db)
+        k = urpl.attr2accessor.keys()
+        k.sort()
+        statsList = [ ]
+        self.assertEquals(k, statsList)
+        self.assertEquals(urpl.requiredPacketFields, [ 'serial' ])
+        self.assertEquals(urpl.attr2accessor, {})
+
+        clear_all_messages()
+        pack = urpl.getAttrsAsPacket(table = None, serial = 1)
+        self.assertEquals(pack.type, PACKET_POKER_PLAYER_STATS)
+        self.assertEquals(pack.serial, 1)
+        self.assertEquals(get_messages(), [])
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()

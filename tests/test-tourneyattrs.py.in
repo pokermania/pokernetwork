@@ -99,10 +99,10 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         f.error("test")
         self.assertEquals(get_messages(), ['ERROR test'])
 
-        self.failUnless(f.getClass(""), AttrsLookup)
+        self.failUnless(f.getClass(""), TourneyAttrsEmptyLookup)
 
         clear_all_messages()
-        self.assertEquals(f.getClass("DOESNOTEXIST"), AttrsLookup)
+        self.assertEquals(f.getClass("DOESNOTEXIST"), TourneyAttrsEmptyLookup)
         self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'TourneyAttrsDOESNOTEXISTLookup'"])
 
         self.assertEquals(f.getClass("SponsoredPrizes"), TourneyAttrsSponsoredPrizesLookup)
@@ -193,6 +193,30 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
 
         pack = tasp.getAttrsAsPacket(tourney =  { 'serial' : 5 })
         checkPack(firstPack, pack)
+    # -------------------------------------------------------------------------
+    def test04_tourneyAttrsEmptyClass(self):
+        """test04_tourneyAttrsEmptyClass
+        Tests the the Empty lookup class."""
+
+        # Check that the class is structured properly.
+        tasp = TourneyAttrsEmptyLookup()
+        self.assertEquals(tasp.packetDescription, "TourneyAttrs")
+
+        k = tasp.attr2accessor.keys()
+        k.sort()
+        attrsList = []
+        self.assertEquals(k, attrsList)
+        rp = [ 'serial' ]
+        rp.sort()
+        y = tasp.requiredPacketFields
+        y.sort()
+        self.assertEquals(y, rp)
+        self.assertEquals(tasp.attr2accessor, {})
+
+        clear_all_messages()
+        firstPack = tasp.getAttrsAsPacket(schedule_serial = 5)
+        self.assertEquals(firstPack.type, PACKET_POKER_TOURNEY_ATTRS)
+        self.assertEquals(get_messages(), [])
         
     # ------------------------------------------------------------------------
 def Run():

@@ -1,7 +1,17 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/tourneyattrs.py
+	(TourneyAttrsEmptyLookup.getAttrsAsPacket): Moved method here from
+	TourneyAttrsSponsoredPrizesLookup.
+
+	* tests/test-tourneyattrs.py.in
+	(PokerTourneyAttrsTestCase.test04_tourneyAttrsEmptyClass): Wrote test.
+
+	* tests/test-userstats.py.in
+	(PokerUserStatsTestCase.test04_userStatsEmptyLookupClass): Wrote test.
+
 	* pokernetwork/tourneyattrs.py (TourneyAttrsEmptyLookup): Create
-	default class.x
+	default class.
 
 	* pokernetwork/userstats.py (UserStatsEmptyLookup): Created
 	default class.
