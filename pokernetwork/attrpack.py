@@ -94,9 +94,17 @@ class AttrsFactory:
         classname = self.defaultClass
         return getattr(__import__(self.moduleStr, globals(), locals(), [classname]), classname)
 ############################################################################
-class UserStatsAccessor:
+class AttrsAccessor:
+
+    """An AttrsAccessor is a base class for doing the key/value lookups for
+    the attribute system.  Typically, you will want to override:
+         __init__()/getSupportedList():
+              to set the attrsSupported instance variable.
+         _lookupValidAttr()
+              you may want to set it up with the proper arguments expected.
+    """
     def __init__(self):
-        self.statsSupported = []
+        self.attrsSupported = []
     # ----------------------------------------------------------------------
     def error(self, string):
         self.message("ERROR " + string)
@@ -104,17 +112,20 @@ class UserStatsAccessor:
     def message(self, string):
         print string
     # ----------------------------------------------------------------------
-    def getSupportedStatsList(self):
-        return self.statsSupported
+    def getSupportedAttrsList(self):
+        """returns list of attributes supported for lookup by this class"""
+        return self.attrsSupported
     # ----------------------------------------------------------------------
-    def getStatValue(self, stat, userSerial = None, table = None, service = None):
+    def getStatValue(self, attr, *args, **kwargs):
+        """returns the value associated with the attribute, attr."""
         if stat in self.statsSupported:
-            return self._lookupValidStat(stat, userSerial, table, service)
+            return self._lookupValidStat(stat, args, kwargs)
         else:
-            self.error("invalid user statistic, %s" % stat)
+            self.error("invalid attribute, %s" % attr)
             return None
     # ----------------------------------------------------------------------
-    def _lookupValidStat(self, stat, userSerial, table, service):
+    def _lookupValidStat(self, attr, *args, **kwargs):
+        self.error("UNIMPLEMENTED IN BASE CLASS")
         return "UNIMPLEMENTED IN BASE CLASS"
 ############################################################################
 class UserStatsLookup:

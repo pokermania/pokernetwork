@@ -4,6 +4,7 @@
 	modifying UserStatsFactory.
 	(AttrsFactory.__init__): Wrote method.
 	(AttrsFactory.getClass): Changed to use new instance variables.
+	(AttrsAccessor): Created class by modifying UserStatsAccessor. 
 
 2008-09-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
