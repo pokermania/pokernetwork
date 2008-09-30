@@ -113,6 +113,42 @@ class PokerAttrsTestCase(unittest.TestCase):
             gotException = True
             self.assertEquals(ni.__str__(), "_lookupValidAttr NOT IMPLEMENTED IN ABSTRACT BASE CLASS")
         self.failUnless(gotException)
+
+        u._lookupValidAttr = lambda attr : attr
+
+        # Handle incorrect args
+        u.attrsSupported = [ 'foo' ]
+        clear_all_messages()
+        self.assertEquals(u.getAttrValue('foo', 'testing', 'more'), 'foo')
+        self.assertEquals(get_messages(), [ "ERROR keyword arguments only are supported for getAttrValue.  Ignoring these args: ('testing', 'more')"])
+
+        def x(attr, **kwargs):
+            return kwargs
+
+        u._lookupValidAttr = x
+        # Handle incorrect kwargs
+        u.attrsSupported = [ 'foo' ]
+        u.expectLookupArgs = [ 'bar' ]
+        clear_all_messages()
+        self.assertEquals(u.getAttrValue('foo', bar = 'testing', goo = 'more'),
+                          {'goo': 'more', 'bar': 'testing'})
+        self.assertEquals(get_messages(), ["ERROR Ignoring these extraneous arguments for getAttrValue: ['goo']"])
+
+        # Handle incorrect kwargs
+        u.attrsSupported = [ 'foo' ]
+        u.expectLookupArgs = [ 'bar', 'baz' ]
+        clear_all_messages()
+        self.assertEquals(u.getAttrValue('foo', bar = 'testing', goo = 'more'),
+                          {'goo': 'more', 'bar': 'testing'})
+        self.assertEquals(get_messages(), ["ERROR The following required argument(s) missing for getAttrValue, lookup will surely fail: ['baz']", "ERROR Ignoring these extraneous arguments for getAttrValue: ['goo']"])
+
+        # Handle incorrect kwargs
+        u.attrsSupported = [ 'foo' ]
+        u.expectLookupArgs = [ 'bar', 'baz' ]
+        clear_all_messages()
+        self.assertEquals(u.getAttrValue('foo', bar = 'testing'),
+                          {'bar': 'testing'})
+        self.assertEquals(get_messages(), ["ERROR The following required argument(s) missing for getAttrValue, lookup will surely fail: ['baz']"])
     # -------------------------------------------------------------------------
     def test02_factory(self):
         """test02_factory

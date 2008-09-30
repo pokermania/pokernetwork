@@ -2,6 +2,8 @@
 
 	* tests/test-attrpack.py.in: Created file, copying from
 	tests/test-userstats.py.in
+	(PokerAttrsTestCase.test01_attrsAccessorBaseClass): Wrote full
+	coverage for AttrsAccessor.
 
 	* pokernetwork/attrpack.py (AttrsLookup): Created class by
 	modifying UserStatsLookup.

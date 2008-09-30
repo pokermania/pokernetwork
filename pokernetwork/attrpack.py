@@ -119,8 +119,8 @@ class AttrsAccessor:
 
         if len(args) > 0:
             self.error("keyword arguments only are supported for getAttrValue.  Ignoring these args: %s" % args.__str__())
-        missingList = filter(lambda g: not g in self.expectLookupArgs, kwargs.keys())
-        extraList = filter(lambda g: not g in kwargs.keys(), self.expectLookupArgs)
+        extraList = filter(lambda g: not g in self.expectLookupArgs, kwargs.keys())
+        missingList = filter(lambda g: not g in kwargs.keys(), self.expectLookupArgs)
         if len(missingList) > 0:
             self.error("The following required argument(s) missing for getAttrValue, lookup will surely fail: %s" 
                        % missingList.__str__())
