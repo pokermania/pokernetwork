@@ -25,10 +25,7 @@
 # subclasses thereof) are the things used by other classes to lookup
 # statistics.
 
-# I decided to make the elements for lookup a table, a user_serial, and a
-# service.  I felt this was the most likely set of objects that would be
-# used for looking up stats, and of course they need not be used if not
-# needed.
+# It is based on the "attrspack" system, which is in file attrspack.py
 
 from pokerpackets import PacketPokerPlayerStats, PacketPokerSupportedPlayerStats
 from attrpack import AttrsAccessor, AttrsFactory, AttrsLookup
