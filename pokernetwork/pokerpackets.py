@@ -4149,7 +4149,6 @@ serial: integer uniquely identifying a player.
 Packet.infoDeclare(globals(), PacketPokerSetLocale, PacketSerial, "POKER_SET_LOCALE", 153) # 153 # 0x99 # %SEQ%
 
 ########################################
-
 class PacketPokerTableTourneyBreakBegin(Packet):
     """\
 
@@ -4174,8 +4173,7 @@ Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakBegin, Packet, "POKER_
 def PacketPokerTableTourneyBreakBegin__str__(self):
         return Packet.__str__(self) + "game_id = %d, resume_time = %s" % ( self.game_id,strftime("%Y/%m/%d %H:%M", gmtime(self.resume_time)))
 PacketPokerTableTourneyBreakBegin.__str__ = PacketPokerTableTourneyBreakBegin__str__
-
-
+########################################
 class PacketPokerTableTourneyBreakDone(Packet):
     """\
 
@@ -4194,29 +4192,24 @@ game_id: integer uniquely identifying a game.
 
 
 Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 155 # 0x9b # %SEQ%
+########################################
+PACKET_POKER_GET_ATTRS = 156 # 0x9c # %SEQ%
+PacketNames[PACKET_POKER_GET_ATTRS] = "POKER_GET_ATTRS"
+
+class PacketPokerGetAttrs(PacketPokerId):
+    """base class to go along with attrspack.py"""
+
+    NOT_LOGGED = 1
+
+    type = PACKET_POKER_GET_ATTRS
+
+PacketFactory[PACKET_POKER_GET_ATTRS] = PacketPokerGetAttrs
 ###########################################################################
-PACKET_POKER_PLAYER_STATS = 156 # 0x9c # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_STATS] = "POKER_PLAYER_STATS"
-class PacketPokerPlayerStats(PacketSerial):
-    """\
-
-Semantics: Packet sent by server will contain key/value pairs of all
-           statistical information currently supported by the server.
-           This can vary depending on what stats are supported by the
-           server configuration.  Clients that want to know what values to
-           expect should send PacketPokerGetSupportedStats first to get a
-           list of what to expect.  This packet can be ignored by clients
-           if they so choose; no mandatory game information is contained
-           in it.
-
-Direction: server  => client
-
-Context: 
-
-serial: integer uniquely identifying a player.
-key: value (for each statistic supported)
-"""
-    type = PACKET_POKER_PLAYER_STATS
+PACKET_POKER_ATTRS = 157 # 0x9d # %SEQ%
+PacketNames[PACKET_POKER_ATTRS] = "POKER_PLAYER_ATTRS"
+class PacketPokerAttrs(PacketSerial):
+    """base class to go along with attrspack.py"""
+    type = PACKET_POKER_ATTRS
 
     def __init__(self, *args, **kwargs):
         # FIXME: this is a hack that will work fine with
@@ -4236,30 +4229,17 @@ key: value (for each statistic supported)
             if kk != "serial" and kk != "cookie":
                 retStr += " %s = %s" % ( kk, self.__dict__[kk] ) 
         return retStr
-PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
+PacketFactory[PACKET_POKER_ATTRS] = PacketPokerAttrs
 ########################################
-class PacketPokerGetSupportedPlayerStats(Packet):
-    """\
-
-Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
-
-Direction: server <=  client
-"""
+class PacketPokerGetSupportedAttrs(Packet):
+    """base class to go along with attrspack.py"""
     
     info = Packet.info
 
-Packet.infoDeclare(globals(), PacketPokerGetSupportedPlayerStats, Packet, "POKER_GET_SUPPORTED_PLAYER_STATS", 157) # 157 # 0x9d # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerGetSupportedAttrs, Packet, "POKER_GET_SUPPORTED_ATTRS", 158) # 158 # 0x9e # %SEQ%
 ########################################
-class PacketPokerSupportedPlayerStats(Packet):
-    """\
-
-Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
-
-Direction: server <=  client
-"""
-
+class PacketPokerSupportedAttrs(Packet):
+    """base class to go along with attrspack.py"""
     
     info = Packet.info + (
         # FIXME: this is a hack that will work fine with
@@ -4269,13 +4249,12 @@ Direction: server <=  client
         ('attrs', [], 'Il'),
         )
 
-Packet.infoDeclare(globals(), PacketPokerSupportedPlayerStats, Packet, "POKER_SUPPORTED_PLAYER_STATS", 158) # 158 # 0x9e # %SEQ%
-
-########################################
-PACKET_POKER_GET_PLAYER_STATS = 159 # 0x9f # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerSupportedAttrs, Packet, "POKER_SUPPORTED_ATTRS", 159) # 159 # 0x9f # %SEQ%
+###########################################################################
+PACKET_POKER_GET_PLAYER_STATS = 160 # 0xa0 # %SEQ%
 PacketNames[PACKET_POKER_GET_PLAYER_STATS] = "POKER_GET_PLAYER_STATS"
 
-class PacketPokerGetPlayerStats(PacketPokerId):
+class PacketPokerGetPlayerStats(PacketPokerGetAttrs):
     """\
 Semantics: ask the server for a PacketPokerPlayerStats packet describing
 the player that is logged in with this connection.
@@ -4300,11 +4279,67 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    NOT_LOGGED = 1
-
     type = PACKET_POKER_GET_PLAYER_STATS
 
 PacketFactory[PACKET_POKER_GET_PLAYER_STATS] = PacketPokerGetPlayerStats
+########################################
+PACKET_POKER_PLAYER_STATS = 161 # 0xa1 # %SEQ%
+PacketNames[PACKET_POKER_PLAYER_STATS] = "POKER_PLAYER_STATS"
+class PacketPokerPlayerStats(PacketPokerAttrs):
+    """\
+
+Semantics: Packet sent by server will contain key/value pairs of all
+           statistical information currently supported by the server.
+           This can vary depending on what stats are supported by the
+           server configuration.  Clients that want to know what values to
+           expect should send PacketPokerGetSupportedStats first to get a
+           list of what to expect.  This packet can be ignored by clients
+           if they so choose; no mandatory game information is contained
+           in it.
+
+Direction: server  => client
+
+Context: 
+
+serial: integer uniquely identifying a player.
+key: value (for each statistic supported)
+"""
+    type = PACKET_POKER_PLAYER_STATS
+
+PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
+########################################
+class PacketPokerGetSupportedPlayerStats(PacketPokerGetSupportedAttrs):
+    """\
+
+Semantics: request the list of statistics that the server currently supports.
+The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
+
+Direction: server <=  client
+"""
+    
+    info = Packet.info
+
+Packet.infoDeclare(globals(), PacketPokerGetSupportedPlayerStats, Packet, "POKER_GET_SUPPORTED_PLAYER_STATS", 162) # 162 # 0xa2 # %SEQ%
+########################################
+class PacketPokerSupportedPlayerStats(PacketPokerSupportedAttrs):
+    """\
+
+Semantics: request the list of statistics that the server currently supports.
+The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
+
+Direction: server <=  client
+"""
+
+    
+    info = Packet.info + (
+        # FIXME: this is a hack that will work fine with
+        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
+        # binary protocol.  The binary protocol folks will always get an
+        # empty packet response.
+        ('attrs', [], 'Il'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerSupportedPlayerStats, Packet, "POKER_SUPPORTED_PLAYER_STATS", 163) # 163 # 0xa3 # %SEQ%
 
 _TYPES = range(50,169)
 
