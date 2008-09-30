@@ -80,6 +80,7 @@ currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.packets import PacketError
 from pokernetwork.userstats import UserStatsRankPercentileLookup
+from pokernetwork.tourneyattrs import TourneyAttrsSponsoredPrizesLookup
 from pokernetwork.attrpack  import AttrsLookup
 from MySQLdb.cursors import DictCursor
 
@@ -130,6 +131,8 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <language value="this_locale_does_not_exist"/>
 
   <stats type="RankPercentile"/>
+
+  <tourney_attrs type="SponsoredPrizes"/>
 
   <refill serial="1" amount="10000000" />
 
@@ -547,7 +550,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500, statsLookupType = UserStatsRankPercentileLookup, statsError = ""):
+    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500, statsLookupType = UserStatsRankPercentileLookup, statsError = "", tourneyAttrsLookupType = TourneyAttrsSponsoredPrizesLookup, tourneyAttrsError = ""):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -568,13 +571,21 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(queuedPacketMax, self.service.getClientQueuedPacketMax())
 
         # Check that statsLookupType is correct
-        self.failUnless(isinstance(self.service.statsLookup, statsLookupType))
-        self.assertEquals(self.service.statsLookup, self.service.getUserStatsLookup())
-        if isinstance(self.service.statsLookup, UserStatsRankPercentileLookup):
+        self.failUnless(isinstance(self.service.lookups['stats'], statsLookupType))
+        self.assertEquals(self.service.lookups['stats'], self.service.getUserStatsLookup())
+
+        if isinstance(self.service.lookups['stats'], UserStatsRankPercentileLookup):
             self.assertEquals(self.service.getUserStatsLookup().service, self.service)
         else:
-            self.failUnless(isinstance(self.service.statsLookup, AttrsLookup))
+            self.failUnless(isinstance(self.service.lookups['stats'], AttrsLookup))
         if statsError != "":
+            self.failUnless(search_output(statsError))
+
+        self.failUnless(isinstance(self.service.lookups['tourney_attrs'], tourneyAttrsLookupType))
+        self.assertEquals(self.service.lookups['tourney_attrs'], self.service.getTourneyAttrsLookup())
+        if not isinstance(self.service.lookups['tourney_attrs'], TourneyAttrsSponsoredPrizesLookup):
+            self.failUnless(isinstance(self.service.lookups['tourney_attrs'], AttrsLookup))
+        if tourneyAttrsError != "":
             self.failUnless(search_output(statsError))
 
         startedOnlyVars = [ ('joined_count', 0),
@@ -618,13 +629,13 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             else:
                 self.assertEquals(int(self.service.delays[str]), delaysValue)
 
-    def test00_1_configValues(self):
+    def test00_01_configValues(self):
         self.configValues(settings_xml, 1000)
 
-    def test00_2_configValues(self):
+    def test00_02_configValues(self):
         self.configValues(settings_xml.replace('max_joined="1000"', ""), 4000)
 
-    def test00_3_configValues(self):
+    def test00_03_configValues(self):
         self.configValues(settings_xml.replace('max_joined="1000"',
                                                'max_missed_round="5" max_queued_client_packets="100"'),
                           4000, 5, queuedPacketMax=100)
@@ -655,19 +666,29 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(search_output("*ERROR* Unable to restore original locale: testing bad setlocale"), True)
         locale.setlocale = saveLocale
 
-    def test00_5_configValues(self):
+    def test00_05_configValues(self):
         self.configValues(settings_xml.replace('delays',
                                                'delays extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="60"'), 1000, delaysValue=60)
 
-    def test00_6_configValues(self):
+    def test00_06_configValues(self):
         self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
                                                '<stats type="RankPercentile"/> <stats type="Ignored"/>'), 1000, statsError = "*ERROR* settings include multiple <stats> tags; using first one only")
-    def test00_7_configValues(self):
+    def test00_07_configValues(self):
         self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
                                                '<stats type="Missing"/>'), 1000, statsLookupType = AttrsLookup, statsError = "ERROR 'module' object has no attribute 'UserStatsMissingLookup'")
-    def test00_8_configValues(self):
+    def test00_08_configValues(self):
         self.configValues(settings_xml.replace('<stats type="RankPercentile"/>', ''), 1000,
                           statsLookupType = AttrsLookup)
+
+    def test00_09_configValues(self):
+        self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>',
+                                               '<tourney_attrs type="SponsoredPrizes"/> <tourney_attrs type="Ignored"/>'), 1000, tourneyAttrsError = "*ERROR* settings include multiple <tourney_attrs> tags; using first one only")
+    def test00_10_configValues(self):
+        self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>',
+                                               '<tourney_attrs type="Missing"/>'), 1000, tourneyAttrsLookupType = AttrsLookup, tourneyAttrsError = "ERROR 'module' object has no attribute 'TourneyAttrsMissingLookup'")
+    def test00_11_configValues(self):
+        self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>', ''), 1000,
+                          tourneyAttrsLookupType = AttrsLookup)
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -2124,7 +2145,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07"
+#    loader.methodPrefix = "test00"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

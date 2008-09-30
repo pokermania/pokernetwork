@@ -117,6 +117,7 @@ from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
 from pokernetwork.userstats import UserStatsFactory
+from pokernetwork.tourneyattrs import TourneyAttrsFactory
 from pokerauth import get_auth_instance
 
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
@@ -212,11 +213,15 @@ class PokerService(service.Service):
         
         self.delays = settings.headerGetProperties("/server/delays")[0]
 
-        if len(self.settings.headerGetProperties("/server/stats")) > 1:
-            self.error("settings include multiple <stats> tags; using first one only")
-        statsType = settings.headerGet("/server/stats/@type")
+        self.lookups = {}
 
-        self.statsLookup = UserStatsFactory().getClass(statsType)(self)
+        lookup2factoryClass = { 'stats' : UserStatsFactory, 'tourney_attrs' : TourneyAttrsFactory }
+        for lookup in lookup2factoryClass.keys():
+            if len(self.settings.headerGetProperties("/server/%s" % lookup)) > 1:
+                self.error("settings include multiple <%s> tags; using first one only" % lookup)
+            myArgs = []
+            if lookup == 'stats': myArgs = [ self ]
+            self.lookups[lookup] = lookup2factoryClass[lookup]().getClass(settings.headerGet("/server/%s/@type" % lookup))(*myArgs)
 
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
@@ -358,7 +363,10 @@ class PokerService(service.Service):
         return self.missed_round_max
 
     def getUserStatsLookup(self):
-        return self.statsLookup
+        return self.lookups['stats']
+
+    def getTourneyAttrsLookup(self):
+        return self.lookups['tourney_attrs']
 
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max

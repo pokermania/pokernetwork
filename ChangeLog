@@ -1,5 +1,25 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in (PokerServiceTestCase.configValues):
+	Added <tourney_attrs> tests.
+	(PokerServiceTestCase.test00_09_configValues): Wrote test.
+	(PokerServiceTestCase.test00_10_configValues): Wrote test.
+	(PokerServiceTestCase.test00_11_configValues): Wrote test.
+	(PokerServiceTestCase.test00_01_configValues): Renamed test.
+	(PokerServiceTestCase.test00_02_configValues): Renamed test.
+	(PokerServiceTestCase.test00_03_configValues): Renamed test.
+	(PokerServiceTestCase.test00_4_badLocaleObject): Renamed test.
+	(PokerServiceTestCase.test00_05_configValues): Renamed test.
+	(PokerServiceTestCase.test00_06_configValues): Renamed test.
+	(PokerServiceTestCase.test00_07_configValues): Renamed test.
+	(PokerServiceTestCase.test00_08_configValues): Renamed test.
+
+	* pokernetwork/pokerservice.py
+	(PokerService.getTourneyAttrsLookup): Wrote method.
+	(PokerService.getUserStatsLookup): Changed to use dict.
+	(PokerService.__init__): Added TourneyAttrsFactory and
+	<tourney_attrs> field support.
+
 	* tests/test-pokertable.py.in
 	(MockServiceWithUserStats.getUserStatsLookup.UserStatsMockup.getAttrsAsPacket):
 	Changed to use new derived interface for UserStats now that
