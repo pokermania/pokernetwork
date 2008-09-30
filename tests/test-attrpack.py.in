@@ -61,6 +61,9 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 ############################################################################
+class MockLookup:
+    pass
+
 class PokerAttrsTestCase(unittest.TestCase):
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
@@ -158,13 +161,15 @@ class PokerAttrsTestCase(unittest.TestCase):
         f.error("test")
         self.assertEquals(get_messages(), ['ERROR test'])
 
-        self.failUnless(f.getStatsClass(""), AttrsLookup)
+        self.failUnless(f.getClass(""), AttrsLookup)
 
         clear_all_messages()
-        self.assertEquals(f.getStatsClass("DOESNOTEXIST"), AttrsLookup)
+        self.assertEquals(f.getClass("DOESNOTEXIST"), AttrsLookup)
         self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'AttrsDOESNOTEXISTLookup'"])
 
-        self.assertEquals(f.getStatsClass("RankPercentile"), AttrsRankPercentileLookup)
+        f = AttrsFactory(moduleStr = '__main__', classPrefix = '')
+
+        self.assertEquals(f.getClass("Mock"), MockLookup)
     # -------------------------------------------------------------------------
     # Mock ups below are used to test RankPercentile.
 
@@ -311,7 +316,7 @@ class PokerAttrsTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test01"
+    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAttrsTestCase))
     return runner.TrialRunner(

@@ -69,7 +69,7 @@ class AttrsFactory:
     Note that you'll have to implement new packet types to use this.  See
     the doc string on class AttrLookup for details.
 """
-    def __init__(self, moduleStr = 'attrpack', classPrefix = "Attr", defaultClass = "AttrLookup"):
+    def __init__(self, moduleStr = 'attrpack', classPrefix = "Attrs", defaultClass = "AttrsLookup"):
         self.moduleStr = moduleStr
         self.classPrefix = classPrefix
         self.defaultClass = defaultClass
