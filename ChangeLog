@@ -1,5 +1,8 @@
 2008-09-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-attrpack.py.in: Created file, copying from
+	tests/test-userstats.py.in
+
 	* pokernetwork/attrpack.py (AttrsLookup): Created class by
 	modifying UserStatsLookup.
 
