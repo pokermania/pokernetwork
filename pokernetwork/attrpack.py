@@ -18,7 +18,6 @@
 # Authors:
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 
-# This is designed to be a flexible user stats package to allow various
 # methods for looking up stats, and allowing for mix-in of different types
 # of stats.  Each stat is usually looked up with a UserStatsAccessor class
 # (or a subclass thereof).  The UserStatsLookup class itself (or
@@ -30,7 +29,64 @@
 # used for looking up stats, and of course they need not be used if not
 # needed.
 
-from pokerpackets import PacketPokerPlayerStats, PacketPokerStatsSupported
+from pokerpackets import PacketPokerGetAttrs, PacketPokerAttrs, PacketPokerGetSupportedAttrs, PacketPokerSupportedAttrs
+############################################################################
+class AttrsFactory:
+"""The Attrs system is designed to be a flexible and arbitrary key/value
+system for object types when we want poker-network to have
+easily-implemented aribitrary data associated with a particular item.
+
+The public interface usage looks something like this (although "Attr" will
+be replaced with "SOMETHING" since this is a virtual base class):
+
+    attrLookup = AttrFactory().getClass("MySpecialStuff")(args...)
+
+    answerGetSupported = attrLookup.supportedAttrsAsPacket(args...)
+    #  Send packet inside answerGetSupported to client...
+    answerGetAttrs     = attrLookup.allStatsAsPacket(args...)
+    #  Send packet inside answerGetAttrs to client...
+
+The general idea is that only poker-network code that knows a *thing*
+about what key/value attributes are being supported for the particular
+SOMETHING are specific to the classes defined by "MySpecialStuff".
+
+The Attr base classes are currently used to implement the UserStats (in
+userstats.py) and TourneyAttrs (in tourneyattrs.py).  You may want to read
+the code in those files before reading further here, because understanding
+the code here in detail is only needed if you want to write a new
+SOMETHING.
+
+     Actually Using This Class To Implement New Attribute System
+     -----------------------------------------------------------
+
+FIXME:
+
+"Lookup" class, which will usually be called SOMETHINGLookup (base
+class: AttrsLookup).  The key methods used by 
+
+For each type of thing (SOMETHING) supported, there should be implemented
+the following packet types in pokerpackets.py:
+   PacketPokerGetSOMETHING           (base class: PacketPokerGetAttrs)
+   PacketPokerSOMETHING              (base class: PacketPokerAttrs)
+   PacketPokerGetSupportedSOMETHING  (base class: PacketPokerGetSupportedAttrs)
+   PacketPokerSupportedSOMETHING     (base class: PacketPokerSupportedAttrs)
+"""
+
+
+    def error(self, string):
+        self.message("ERROR " + string)
+    # ----------------------------------------------------------------------
+    def message(self, string):
+        print string
+    # ----------------------------------------------------------------------
+    def getStatsClass(self, classname):
+        classname = "UserStats" + classname + "Lookup"
+        try:
+            return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
+        except AttributeError, ae:
+            self.error(ae.__str__())
+        return UserStatsLookup
+############################################################################
 
 class UserStatsAccessor:
     def __init__(self):
@@ -112,19 +168,3 @@ class UserStatsRankPercentileLookup(UserStatsLookup):
         self.service = service
         self.stat2accessor = { 'percentile' : UserStatsRankPercentileAccessor(),
                                'rank' : UserStatsRankPercentileAccessor() }
-############################################################################
-class UserStatsFactory:
-    def error(self, string):
-        self.message("ERROR " + string)
-    # ----------------------------------------------------------------------
-    def message(self, string):
-        print string
-    # ----------------------------------------------------------------------
-    def getStatsClass(self, classname):
-        classname = "UserStats" + classname + "Lookup"
-        try:
-            return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
-        except AttributeError, ae:
-            self.error(ae.__str__())
-        return UserStatsLookup
-############################################################################
