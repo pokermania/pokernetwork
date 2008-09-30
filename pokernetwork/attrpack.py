@@ -32,46 +32,48 @@
 from pokerpackets import PacketPokerGetAttrs, PacketPokerAttrs, PacketPokerGetSupportedAttrs, PacketPokerSupportedAttrs
 ############################################################################
 class AttrsFactory:
-"""The Attrs system is designed to be a flexible and arbitrary key/value
-system for object types when we want poker-network to have
-easily-implemented aribitrary data associated with a particular item.
 
-The public interface usage looks something like this (although "Attr" will
-be replaced with "SOMETHING" since this is a virtual base class):
+    """The Attrs system is designed to be a flexible and arbitrary key/value
+    system for object types when we want poker-network to have
+    easily-implemented aribitrary data associated with a particular item.
 
-    attrLookup = AttrFactory().getClass("MySpecialStuff")(args...)
+    The public interface usage looks something like this (although "Attr" will
+    be replaced with "SOMETHING" since this is a virtual base class):
 
-    answerGetSupported = attrLookup.supportedAttrsAsPacket(args...)
-    #  Send packet inside answerGetSupported to client...
-    answerGetAttrs     = attrLookup.allStatsAsPacket(args...)
-    #  Send packet inside answerGetAttrs to client...
+        attrLookup = AttrFactory().getClass("MySpecialStuff")(args...)
 
-The general idea is that only poker-network code that knows a *thing*
-about what key/value attributes are being supported for the particular
-SOMETHING are specific to the classes defined by "MySpecialStuff".
+        answerGetSupported = attrLookup.supportedAttrsAsPacket(args...)
+        #  Send packet inside answerGetSupported to client...
+        answerGetAttrs     = attrLookup.allStatsAsPacket(args...)
+        #  Send packet inside answerGetAttrs to client...
 
-The Attr base classes are currently used to implement the UserStats (in
-userstats.py) and TourneyAttrs (in tourneyattrs.py).  You may want to read
-the code in those files before reading further here, because understanding
-the code here in detail is only needed if you want to write a new
-SOMETHING.
+    The general idea is that only poker-network code that knows a *thing*
+    about what key/value attributes are being supported for the particular
+    SOMETHING are specific to the classes defined by "MySpecialStuff".
 
-     Actually Using This Class To Implement New Attribute System
-     -----------------------------------------------------------
+    The Attr base classes are currently used to implement the UserStats (in
+    userstats.py) and TourneyAttrs (in tourneyattrs.py).  You may want to read
+    the code in those files before reading further here, because understanding
+    the code here in detail is only needed if you want to write a new
+    SOMETHING.
 
-FIXME:
+         Actually Using This Class To Implement New Attribute System
+        -----------------------------------------------------------
 
-"Lookup" class, which will usually be called SOMETHINGLookup (base
-class: AttrsLookup).  The key methods used by 
-
-For each type of thing (SOMETHING) supported, there should be implemented
-the following packet types in pokerpackets.py:
-   PacketPokerGetSOMETHING           (base class: PacketPokerGetAttrs)
-   PacketPokerSOMETHING              (base class: PacketPokerAttrs)
-   PacketPokerGetSupportedSOMETHING  (base class: PacketPokerGetSupportedAttrs)
-   PacketPokerSupportedSOMETHING     (base class: PacketPokerSupportedAttrs)
+    If you want to implement an attribute system for SOMETHING, you should
+    (initially) derive from three classes, AttrFactory (this one),
+    AttrLookup, and AttrAccessor.  For this one:
+         SOMETHINGFactory (base class: AttrFactory)
+             what to override:
+                 __init__() : set the right module name of where are in.
+         
+    Note that you will also need to implement the following packet types
+    in pokerpackets.py:
+        PacketPokerGetSOMETHING           (base class: PacketPokerGetAttrs)
+        PacketPokerSOMETHING              (base class: PacketPokerAttrs)
+        PacketPokerGetSupportedSOMETHING  (base class: PacketPokerGetSupportedAttrs)
+        PacketPokerSupportedSOMETHING     (base class: PacketPokerSupportedAttrs)
 """
-
 
     def error(self, string):
         self.message("ERROR " + string)
@@ -79,7 +81,7 @@ the following packet types in pokerpackets.py:
     def message(self, string):
         print string
     # ----------------------------------------------------------------------
-    def getStatsClass(self, classname):
+    def getClass(self, classname):
         classname = "UserStats" + classname + "Lookup"
         try:
             return getattr(__import__('userstats', globals(), locals(), [classname]), classname)
