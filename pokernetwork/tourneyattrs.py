@@ -66,8 +66,7 @@ class TourneyAttrsEmptyLookup(AttrsLookup):
                 schedule_serial = tourney['schedule_serial']
             elif tourney.has_key('serial'):
                 schedule_serial = tourney['serial']
-        kwargs = {}
-        kwargs['serial'] = schedule_serial
+        kwargs = { 'serial' : schedule_serial }
         return AttrsLookup.getAttrsAsPacket(self, **kwargs)
 ############################################################################
 class TourneyAttrsSponsoredPrizesLookup(TourneyAttrsEmptyLookup):
