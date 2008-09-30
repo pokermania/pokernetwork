@@ -4224,8 +4224,8 @@ key: value (for each statistic supported)
         # binary protocol.  The binary protocol folks will always get a
         # response with just a serial in it.
         PacketSerial.__init__(self, *args, **kwargs)
-        if kwargs.has_key('statsDict'):
-            for (kk, vv) in kwargs['statsDict'].iteritems():
+        if kwargs.has_key('attrsDict'):
+            for (kk, vv) in kwargs['attrsDict'].iteritems():
                 self.__dict__[kk] = vv
     #---------------------------------------------------------------
     def __str__(self):
@@ -4262,7 +4262,11 @@ Direction: server <=  client
 
     
     info = Packet.info + (
-        ('stats', [], 'Il'),
+        # FIXME: this is a hack that will work fine with
+        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
+        # binary protocol.  The binary protocol folks will always get an
+        # empty packet response.
+        ('attrs', [], 'Il'),
         )
 
 Packet.infoDeclare(globals(), PacketPokerSupportedPlayerStats, Packet, "POKER_SUPPORTED_PLAYER_STATS", 158) # 158 # 0x9e # %SEQ%

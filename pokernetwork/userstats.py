@@ -67,6 +67,11 @@ class UserStatsRankPercentileLookup(AttrsLookup):
                 'rank' : UserStatsRankPercentileAccessor() },
            packetClassesName = "PlayerStats",
            requiredAttrPacketFields = [ 'serial' ])
+    # ----------------------------------------------------------------------
+    def getAttrsAsPacket(self, **kwargs):
+        if not kwargs.has_key('service'):
+            kwargs['service'] = self.service
+        return AttrsLookup.getAttrsAsPacket(self, **kwargs)
 ############################################################################
 class UserStatsFactory(AttrsFactory):
     def __init__(self):
