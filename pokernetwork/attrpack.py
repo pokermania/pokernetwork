@@ -29,6 +29,8 @@
 # used for looking up stats, and of course they need not be used if not
 # needed.
 
+from pokernetwork.pokerpackets import PacketPokerError
+
 ############################################################################
 class AttrsFactory:
 
@@ -233,7 +235,7 @@ class AttrsLookup:
         """Returns the PacketPokerAttrs-derived packet with the key/value
         correctly placed.  Fields that must be pulled out and should not
         appear in the attrsDict of the packet should be handled by the pull"""
-        packetClass = self.packetAbbrev2packetClass['get']
+        packetClass = self.packetAbbrev2packetClass['send']
         attrs2vals = {}
         packetKwargs = {}
 
@@ -266,7 +268,7 @@ class AttrsLookup:
         """Returns the PacketPokerAttrsSupported-derived packet with a
         list of attributes that are supported by this class."""
 
-        return self.packetAbbrev2packetClass['getSupported'](attrs = self.attr2accessor.keys())
+        return self.packetAbbrev2packetClass['supported'](attrs = self.attr2accessor.keys())
     # ----------------------------------------------------------------------
     def error(self, string):
         """Handle an error message.  Ultimately calls self.message().

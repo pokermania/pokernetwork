@@ -1,3 +1,9 @@
+2008-09-27  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-attrpack.py.in
+	(PokerAttrsTestCase.test02_factory): Adapted test from UserStats version.
+	(PokerAttrsTestCase.test03_attrsLookup): Wrote test.
+
 2008-09-24  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-attrpack.py.in: Created file, copying from
