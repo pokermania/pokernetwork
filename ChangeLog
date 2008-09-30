@@ -1,5 +1,22 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.tourneySelect): Added test for ATTRS packets.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.handlePacketLogic):
+	Added send of TourneyAttrsList packet as well.
+
+	* tests/test-tourneyattrs.py.in
+	(PokerTourneyAttrsTestCase.test03_tourneyAttrsSponsoredPrizesLookupClass):
+	Fixed test.
+
+	* pokernetwork/tourneyattrs.py
+	(TourneyAttrsSponsoredPrizesLookup.getAttrsAsPacket): tourney is
+	not supposed to be an object.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTourneyAttrsList):
+	Created new packet.
+
 	* tests/test-pokerservice.py.in (PokerServiceTestCase.configValues):
 	Added <tourney_attrs> tests.
 	(PokerServiceTestCase.test00_09_configValues): Wrote test.

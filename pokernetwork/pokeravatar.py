@@ -486,12 +486,15 @@ class PokerAvatar:
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
-            ( players, tourneys ) = self.service.tourneyStats()
-            tourneys = PacketPokerTourneyList(players = players,
-                                              tourneys = tourneys)
+            ( playerCount, tourneyCount ) = self.service.tourneyStats()
+            tourneyList = PacketPokerTourneyList(players = playerCount,
+                                              tourneys = tourneyCount)
+            tourneyAttrs = PacketPokerTourneyAttrsList(tourneyAttrs = tourneyCount)
             for tourney in self.service.tourneySelect(packet.string):
-                tourneys.packets.append(PacketPokerTourney(**tourney))
-            self.sendPacketVerbose(tourneys)
+                tourneyList.packets.append(PacketPokerTourney(**tourney))
+                tourneyAttrs.packets.append(self.service.getTourneyAttrsLookup().getAttrsAsPacket(tourney = tourney))
+            self.sendPacketVerbose(tourneyList)
+            self.sendPacketVerbose(tourneyAttrs)
             return
         
         elif packet.type == PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST:

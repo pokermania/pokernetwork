@@ -4206,7 +4206,7 @@ class PacketPokerGetAttrs(PacketPokerId):
 PacketFactory[PACKET_POKER_GET_ATTRS] = PacketPokerGetAttrs
 ###########################################################################
 PACKET_POKER_ATTRS = 157 # 0x9d # %SEQ%
-PacketNames[PACKET_POKER_ATTRS] = "POKER_PLAYER_ATTRS"
+PacketNames[PACKET_POKER_ATTRS] = "POKER_ATTRS"
 class PacketPokerAttrs(PacketSerial):
     """base class to go along with attrspack.py"""
     type = PACKET_POKER_ATTRS
@@ -4391,9 +4391,8 @@ Direction: server  => client
 
 Context: 
 
-serial: integer uniquely identifying a player.
-schedule_serial: integer uniquely identifying a scheduled tourney.
-key: value (for each statistic supported)
+serial: integer uniquely identifying a scheduled tourney.
+key: value (for each attribute supported)
 """
     type = PACKET_POKER_TOURNEY_ATTRS
 
@@ -4431,6 +4430,46 @@ Direction: server <=  client
         )
 
 Packet.infoDeclare(globals(), PacketPokerSupportedTourneyAttrs, Packet, "POKER_SUPPORTED_TOURNEY_ATTRS", 167) # 167 # 0xa7 # %SEQ%
+########################################
+PACKET_POKER_TOURNEY_ATTRS_LIST = 168 # 0xa8 # %SEQ%
+PacketNames[PACKET_POKER_TOURNEY_ATTRS_LIST] = "POKER_TOURNEY_ATTRS_LIST"
+
+class PacketPokerTourneyAttrsList(PacketList):
+    """\
+Semantics: a list of PACKET_POKER_TOURNEY_ATTRS packets sent as a
+response to a PACKET_POKER_SELECT request.
+
+Direction: server  => client
+
+packets: a list of PACKET_POKER_TOURNEY_ATTRS packets.
+"""
+
+    type = PACKET_POKER_TOURNEY_ATTRS_LIST
+
+    info = PacketList.info + ( ('tourneyAttrs', 0, 'I') )
+
+    format = "!I"
+    format_size = calcsize(format)
+
+    def __init__(self, *args, **kwargs):
+        self.tourneyAttrs = kwargs.get("tourneyAttrs", 0)
+        PacketList.__init__(self, *args, **kwargs)
+
+    def pack(self):
+        return PacketList.pack(self) + pack(PacketPokerTourneyAttrsList.format, self.tourneysAttrs)
+
+    def unpack(self, block):
+        block = PacketList.unpack(self, block)
+        (self.tourneyAttrs) = unpack(PacketPokerTourneyAttrsList.format, block[:PacketPokerTourneyAttrsList.format_size])
+        return block[PacketPokerTourneyAttrsList.format_size:]
+
+    def calcsize(self):
+        return PacketList.calcsize(self) + PacketPokerTourneyAttrsList.format_size
+
+    def __str__(self):
+        return PacketList.__str__(self) + "\n\ttourneyAttrs = %d" % ( self.tourneyAttrs )
+
+PacketFactory[PACKET_POKER_TOURNEY_ATTRS_LIST] = PacketPokerTourneyAttrsList
 
 _TYPES = range(50,169)
 
