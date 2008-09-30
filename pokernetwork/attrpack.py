@@ -29,7 +29,6 @@
 # used for looking up stats, and of course they need not be used if not
 # needed.
 
-from pokerpackets import PacketPokerGetAttrs, PacketPokerAttrs, PacketPokerGetSupportedAttrs, PacketPokerSupportedAttrs
 ############################################################################
 class AttrsFactory:
 
@@ -114,7 +113,7 @@ class AttrsAccessor:
                 attr:    the key to look up.
             Remaining arguments are passed directly to self._lookupValidStat()
         """
-        if not stat in self.attrsSupported:
+        if not attr in self.attrsSupported:
             self.error("invalid attribute, %s" % attr)
             return None
 
@@ -138,7 +137,7 @@ class AttrsAccessor:
         Remaining arguments are specific to your subclass.  You should
         make all of them kwargs.
         """
-        raise NotImplemented
+        raise NotImplementedError("_lookupValidAttr NOT IMPLEMENTED IN ABSTRACT BASE CLASS")
     # ----------------------------------------------------------------------
     def error(self, string):
         """Handle an error message.  Ultimately calls self.message().
@@ -216,7 +215,7 @@ class AttrsLookup:
         classname = "PacketPoker" + prefix + "Attrs"
         return getattr(__import__('pokerpackets', globals(), locals(), [classname]), classname)
     # ----------------------------------------------------------------------
-    def getAttrValue(self, attr, *args, **kwargs)
+    def getAttrValue(self, attr, *args, **kwargs):
         """Returns the attribute value, using the appropriate accessor
         class, for attr.
             Arguments:
@@ -243,8 +242,7 @@ class AttrsLookup:
 
         for fieldName in self.requiredPacketFields:
             if not kwargs.has_key(fieldName):
-                msg = "PacketPoker%s requires field %s; getAttrsAsPacket called without it" 
-                      % (self.packetDescription, fieldName)
+                msg = "PacketPoker%s requires field %s; getAttrsAsPacket called without it" % (self.packetDescription, fieldName)
                 self.error(msg)
                 return PacketPokerError(message = "SERVER ERROR: " +  msg,
                                         other_type = packetClass.type)

@@ -73,6 +73,10 @@ from pokernetwork import userstats
 classes.append(userstats.UserStatsFactory)
 classes.append(userstats.UserStatsAccessor)
 classes.append(userstats.UserStatsLookup)
+from pokernetwork import attrpack
+classes.append(attrpack.AttrsFactory)
+classes.append(attrpack.AttrsAccessor)
+classes.append(attrpack.AttrsLookup)
 
 from twisted.internet import defer
 

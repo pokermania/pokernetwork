@@ -39,7 +39,7 @@ verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
 from pokernetwork import pokernetworkconfig
-from pokernetwork.userstats import *
+from pokernetwork.attrpack import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -61,7 +61,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 ############################################################################
-class PokerUserStatsTestCase(unittest.TestCase):
+class PokerAttrsTestCase(unittest.TestCase):
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -90,37 +90,45 @@ class PokerUserStatsTestCase(unittest.TestCase):
 #        d = self.service.stopService()
 #        return d
     # -------------------------------------------------------------------------
-    def test01_userStatsAccessorBaseClass(self):
-        """test01_userStatsAccessorBaseClass
+    def test01_attrsAccessorBaseClass(self):
+        """test01_attrsAccessorBaseClass
         tests to make sure base class is setup as expected and has
         expected public interface"""
-        u = UserStatsAccessor()
-        self.assertEquals(u.statsSupported, u.getSupportedStatsList(), [])
+        u = AttrsAccessor()
+        self.assertEquals(u.attrsSupported, [])
+        self.assertEquals(u.getSupportedAttrsList(), [])
 
         clear_all_messages()
-        self.assertEquals(u.getStatValue('unknownstat'), None)
-        self.assertEquals(get_messages(), [ "ERROR invalid user statistic, unknownstat" ])
+        self.assertEquals(u.getAttrValue('unknownstat'), None)
+        self.assertEquals(get_messages(), [ "ERROR invalid attribute, unknownstat" ])
 
         clear_all_messages()
-        u.statsSupported = [ 'a' ]
+        u.attrsSupported = [ 'a' ]
 
-        self.assertEquals(u.getStatValue('a'), "UNIMPLEMENTED IN BASE CLASS")
+        gotException = False
+        try:
+            u.getAttrValue('a')
+            self.failIf(True)
+        except NotImplementedError, ni:
+            gotException = True
+            self.assertEquals(ni.__str__(), "_lookupValidAttr NOT IMPLEMENTED IN ABSTRACT BASE CLASS")
+        self.failUnless(gotException)
     # -------------------------------------------------------------------------
     def test02_factory(self):
         """test02_factory
         basic factory interface tests."""
-        f = UserStatsFactory()
+        f = AttrsFactory()
         clear_all_messages()
         f.error("test")
         self.assertEquals(get_messages(), ['ERROR test'])
 
-        self.failUnless(f.getStatsClass(""), UserStatsLookup)
+        self.failUnless(f.getStatsClass(""), AttrsLookup)
 
         clear_all_messages()
-        self.assertEquals(f.getStatsClass("DOESNOTEXIST"), UserStatsLookup)
-        self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'UserStatsDOESNOTEXISTLookup'"])
+        self.assertEquals(f.getStatsClass("DOESNOTEXIST"), AttrsLookup)
+        self.assertEquals(get_messages(), ["ERROR 'module' object has no attribute 'AttrsDOESNOTEXISTLookup'"])
 
-        self.assertEquals(f.getStatsClass("RankPercentile"), UserStatsRankPercentileLookup)
+        self.assertEquals(f.getStatsClass("RankPercentile"), AttrsRankPercentileLookup)
     # -------------------------------------------------------------------------
     # Mock ups below are used to test RankPercentile.
 
@@ -137,7 +145,7 @@ class PokerUserStatsTestCase(unittest.TestCase):
         correctly, and test when there is no database precent"""
         statsList = [ 'rank', 'percentile' ]
         statsList.sort()
-        u = UserStatsRankPercentileAccessor()
+        u = AttrsRankPercentileAccessor()
         ss = u.statsSupported
         ss.sort()
         self.assertEquals(ss, statsList)
@@ -151,16 +159,16 @@ class PokerUserStatsTestCase(unittest.TestCase):
 
         for stat in statsList:
             # This will return None because the table.currency_serial is None
-            myTable = PokerUserStatsTestCase.MockTable()
-            myService = PokerUserStatsTestCase.MockService()
+            myTable = PokerAttrsTestCase.MockTable()
+            myService = PokerAttrsTestCase.MockService()
             self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = None,
                                              service = myService), None)
             # This will return None because the table.currency_serial is negative
-            myTable = PokerUserStatsTestCase.MockTable(-1)
+            myTable = PokerAttrsTestCase.MockTable(-1)
             self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = None,
                                              service = myService), None)
             # This will return None because the avatar.getSerial() returns None
-            myTable = PokerUserStatsTestCase.MockTable(1)
+            myTable = PokerAttrsTestCase.MockTable(1)
             self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = None,
                                              service = myService), None)
             # This will return None because the userSerial is set to -1
@@ -177,7 +185,7 @@ class PokerUserStatsTestCase(unittest.TestCase):
 
             # This will fail because there is no rank table
             clear_all_messages()
-            myService = PokerUserStatsTestCase.MockService(self.db)
+            myService = PokerAttrsTestCase.MockService(self.db)
             self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = 1,
                                              service = myService), None)
             self.assertEquals(get_messages(), [ "ERROR RankPercentile: (MySQL code 1146): Table 'pokernetworktest.rank' doesn't exist"])
@@ -188,19 +196,19 @@ class PokerUserStatsTestCase(unittest.TestCase):
         self.db.query("INSERT INTO rank VALUES(2, 0, 20, 30)")
         self.db.query("INSERT INTO rank VALUES(2, -1, 20, 30)")
         for (stat, value) in [ ('rank', 20), ('percentile', 30) ]:
-            myTable = PokerUserStatsTestCase.MockTable(1)
-            myService = PokerUserStatsTestCase.MockService(self.db)
+            myTable = PokerAttrsTestCase.MockTable(1)
+            myService = PokerAttrsTestCase.MockService(self.db)
 
             # Should be None because no row exists for 1, 1
             self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = 1,
                                              service = myService), None)
 
             # Should now be the expected value
-            myTable = PokerUserStatsTestCase.MockTable(2)
+            myTable = PokerAttrsTestCase.MockTable(2)
             self.assertEquals(u.getStatValue(stat, table = myTable, userSerial = 1,
                                              service = myService), value)
             # Should also be the expected value
-            secondTable = PokerUserStatsTestCase.MockTable(0)
+            secondTable = PokerAttrsTestCase.MockTable(0)
             self.assertEquals(u.getStatValue(stat, table = secondTable, userSerial = 2,
                                              service = myService), value)
 
@@ -213,16 +221,16 @@ class PokerUserStatsTestCase(unittest.TestCase):
             # -1 is there, since currency_serial cannot be negative
 
             for cur in [ None, -1 ]:
-                t = PokerUserStatsTestCase.MockTable(cur)
+                t = PokerAttrsTestCase.MockTable(cur)
                 self.assertEquals(u.getStatValue(stat, table = t, userSerial = 2,
                                                  service = myService), None)
 
     # -------------------------------------------------------------------------
-    def test04_userStatsLookupBaseClass(self):
-        """test04_userStatsLookupBaseClass
-        Tests the base class called UserStatsLookup: mainly makes sure the
+    def test04_attrsLookupBaseClass(self):
+        """test04_attrsLookupBaseClass
+        Tests the base class called AttrsLookup: mainly makes sure the
         interface functions."""
-        ul = UserStatsLookup(PokerUserStatsTestCase.MockService(self.db))
+        ul = AttrsLookup(PokerAttrsTestCase.MockService(self.db))
         self.assertEquals(self.db, ul.service.db)
         self.assertEquals(ul.stat2accessor, {})
 
@@ -232,7 +240,7 @@ class PokerUserStatsTestCase(unittest.TestCase):
         self.assertEquals(get_messages(), [ "ERROR unsupported user statistic, DOESNOTEXIST" ])
 
         # Create a dummy accessor class and make sure
-        # UserStatsLookup.getStatValue does the right thing with it.
+        # AttrsLookup.getStatValue does the right thing with it.
         class MockAccessor():
             def getStatValue(mockAccessorSelf, stat, a, t, s):
                 self.assertEquals(a, 1)
@@ -240,7 +248,7 @@ class PokerUserStatsTestCase(unittest.TestCase):
                 self.assertEquals(s, ul.service)
 
                 return "mockvalue"
-        table = PokerUserStatsTestCase.MockTable(1)
+        table = PokerAttrsTestCase.MockTable(1)
 
         ul.stat2accessor['mockstat'] = MockAccessor()
         self.assertEquals(ul.getStatValue("mockstat", table, 1), "mockvalue")
@@ -254,22 +262,22 @@ class PokerUserStatsTestCase(unittest.TestCase):
         self.assertEquals(pack.stats, ['mockstat'])
         self.assertEquals(pack.__str__(), "POKER_STATS_SUPPORTED  type = 158 length = 8 stats = ['mockstat']")
     # -------------------------------------------------------------------------
-    def test05_userStatsRankPercentileLookupBaseClass(self):
-        """test05_userStatsRankPercentileLookupBaseClass
+    def test05_attrsRankPercentileLookupBaseClass(self):
+        """test05_attrsRankPercentileLookupBaseClass
         Tests the the RankPercentile lookup class."""
-        urpl = UserStatsRankPercentileLookup(PokerUserStatsTestCase.MockService(self.db))
+        urpl = AttrsRankPercentileLookup(PokerAttrsTestCase.MockService(self.db))
         self.assertEquals(self.db, urpl.service.db)
         k = urpl.stat2accessor.keys()
         k.sort()
         self.assertEquals(k, [ 'percentile', 'rank' ])
         for ii in k:
-            self.failUnless(isinstance(urpl.stat2accessor[ii], UserStatsRankPercentileAccessor))
+            self.failUnless(isinstance(urpl.stat2accessor[ii], AttrsRankPercentileAccessor))
     # ------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test76"
+    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
-    suite.addTest(loader.loadClass(PokerUserStatsTestCase))
+    suite.addTest(loader.loadClass(PokerAttrsTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
@@ -285,5 +293,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-userstats.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/userstats.py' TESTS='coverage-reset test-userstats.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-attrpack.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/attrpack.py' TESTS='coverage-reset test-attrpack.py coverage-report' check )"
 # End:
