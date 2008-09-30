@@ -1666,7 +1666,7 @@ class MockServiceWithUserStats(MockService):
 
     def getUserStatsLookup(self):
         class UserStatsMockup:
-            def allStatsAsPacket(userStatsSelf, table, serial):
+            def getAttrsAsPacket(userStatsSelf, table = None, serial = None):
                 self.calledStatsMockup = serial
                 return PacketPokerPlayerStats(serial = serial, statsDict = {})
         return UserStatsMockup()
