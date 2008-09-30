@@ -4455,6 +4455,11 @@ packets: a list of PACKET_POKER_TOURNEY_ATTRS packets.
         self.tourneyAttrs = kwargs.get("tourneyAttrs", 0)
         PacketList.__init__(self, *args, **kwargs)
 
+    # FIXME: this is a hack that will work fine with
+    # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
+    # binary protocol.  The binary protocol folks will always get an
+    # empty packet response.
+
     def pack(self):
         return PacketList.pack(self) + pack(PacketPokerTourneyAttrsList.format, self.tourneysAttrs)
 

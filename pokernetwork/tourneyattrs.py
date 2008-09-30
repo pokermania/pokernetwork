@@ -94,8 +94,15 @@ class TourneyAttrsSponsoredPrizesLookup(AttrsLookup):
         kwargs['serial'] = schedule_serial
         return AttrsLookup.getAttrsAsPacket(self, **kwargs)
 ############################################################################
+class TourneyAttrsEmptyLookup(AttrsLookup):
+    def __init__(self):
+        AttrsLookup.__init__(self,
+           attr2accessor = { },
+           packetClassesName = "TourneyAttrs",
+           requiredAttrPacketFields = [ 'serial' ])
+############################################################################
 class TourneyAttrsFactory(AttrsFactory):
     def __init__(self):
         AttrsFactory.__init__(self, moduleStr = 'tourneyattrs',
-                              classPrefix = "TourneyAttrs", defaultClass = "AttrsLookup")
+                              classPrefix = "TourneyAttrs", defaultClass = "TourneyAttrsEmptyLookup")
 ############################################################################

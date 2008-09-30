@@ -70,8 +70,21 @@ class UserStatsRankPercentileLookup(AttrsLookup):
             kwargs['service'] = self.service
         return AttrsLookup.getAttrsAsPacket(self, **kwargs)
 ############################################################################
+class UserStatsEmptyLookup(AttrsLookup):
+    def __init__(self, service = None):
+        self.service = service
+        AttrsLookup.__init__(self,
+           attr2accessor = { },
+           packetClassesName = "PlayerStats",
+           requiredAttrPacketFields = [ 'serial' ])
+    # ----------------------------------------------------------------------
+    def getAttrsAsPacket(self, **kwargs):
+        if not kwargs.has_key('service'):
+            kwargs['service'] = self.service
+        return AttrsLookup.getAttrsAsPacket(self, **kwargs)
+############################################################################
 class UserStatsFactory(AttrsFactory):
     def __init__(self):
         AttrsFactory.__init__(self, moduleStr = 'userstats',
-                              classPrefix = "UserStats", defaultClass = "AttrsLookup")
+                              classPrefix = "UserStats", defaultClass = "UserStatsEmptyLookup")
 ############################################################################

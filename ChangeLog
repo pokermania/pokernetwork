@@ -1,5 +1,11 @@
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/tourneyattrs.py (TourneyAttrsEmptyLookup): Create
+	default class.x
+
+	* pokernetwork/userstats.py (UserStatsEmptyLookup): Created
+	default class.
+
 	* tests/test-tourneyattrs.py.in
 	(PokerTourneyAttrsTestCase.test02_tourneyAttrsSponsoredPrizesAccessor):
 	No longer use schedule_serial.
