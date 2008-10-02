@@ -1,3 +1,46 @@
+2008-09-30  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-user.py.in: Created file.
+	(PokerUserTestCase.test01_init): Wrote test.
+	(PokerUserTestCase.test02_logout): Wrote test.
+	(PokerUserTestCase.test03_hasPrivilege): Wrote test.
+	(PokerUserTestCase.test04_checkName): Wrote test.
+	(PokerUserTestCase.test05_checkPassword): Wrote test.
+	(PokerUserTestCase.test06_checkNameAndPassword): Wrote test.
+
+	* tests/Makefile.am (TESTS): Added tests/test-user.py.
+
+	* configure.ac (AC_CONFIG_FILES): Added tests/test-user.py.
+
+	* tests/test-pokerauth.py.in: Added pokerauthmysql.py to
+	LocalVariables coverage list.  Rewrote fallback pokerauth test to
+	a better common denominator for deriving.
+	(PokerAuthMysqlTestCase.checkIfUserExistsInDB): Derived method.
+	(PokerAuthMysqlTestCase.test04_authWithoutAutoCreate): Derived
+	method.
+	(PokerAuthMysqlTestCase.test07_mysql11userCreate): Overrode method
+	for pass.
+	(PokerAuthMysqlTestCase.test08_mysqlbeyond11userCreate): Overrode
+	method for pass.
+	(PokerAuthMysqlTestCase.test05_authWhenDoubleEntry): Overrode
+	method.
+	(PokerAuthMysqlTestCase.test06_validAuthWhenEntryExists): Overrode
+	method.
+
+	* tests/run.in (DEFAULT_COVERAGE_FILES): Added
+	pokernetwork/pokerauth to list.
+
+	* tests/test-pokerauth.py.in
+	(PokerAuthTestCase.test03_authWithAutoCreate): Added db check.
+	(PokerAuthTestCase.test04_authWithoutAutoCreate): Added db check.
+	(PokerAuthTestCase.checkIfUserExistsInDB): Wrote method.
+	(PokerAuthTestCase.test05_authWhenDoubleEntry): Wrote test.
+	(PokerAuthTestCase.test06_validAuthWhenEntryExists): Wrote test.
+	(PokerAuthTestCase.test07_mysql11userCreate): Wrote test.
+	(PokerAuthTestCase.test08_mysqlbeyond11userCreate.MockCursor):
+	Wrote test.
+	(PokerAuthTestCase.test09_setAndGetLevel): Wrote test.
+
 2008-09-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/tourneyattrs.py
