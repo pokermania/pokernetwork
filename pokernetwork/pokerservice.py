@@ -814,6 +814,11 @@ class PokerService(service.Service):
         cursor.execute("DELETE FROM route WHERE tourney_serial = %s", tourney.serial)
         cursor.close()
         self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY, param1 = tourney.serial)
+        finish = PacketPokerTourneyFinish(tourney_serial = tourney.serial)
+        for serial in tourney.winners:
+            client = self.serial2client.get(serial, None)
+            if client:
+                client.sendPacketVerbose(finish)
         return True
 
     def tourneyGameFilled(self, tourney, game):
@@ -1330,7 +1335,6 @@ class PokerService(service.Service):
         if self.resthost_serial:
             cursor = self.db.cursor()
             cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
-            cursor.execute("DELETE FROM resthost WHERE serial = %s", self.resthost_serial)
             cursor.close()
 
     def packet2resthost(self, packet):
