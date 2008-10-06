@@ -819,6 +819,6 @@ class PacketMessage(PacketString):
 
 PacketFactory[PACKET_MESSAGE] = PacketMessage
 
-_TYPES = range(0,49)
+_TYPES = range(0,39)
 
 ### !!!!!! NO SERIAL >= 50 !!!!!! ####

@@ -1639,6 +1639,18 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
     
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 
+    class ClientMockup:
+        def __init__(self, serial):
+            self.serial = serial
+#            self.tableJoined = None
+            self.packets = []
+
+        def join(self, table):
+            self.tableJoined = table
+
+        def sendPacketVerbose(self, packet):
+            self.packets.append(packet)
+
     def test_ok(self):
         class Tournament:
             def __init__(self):
@@ -1652,15 +1664,17 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
         tournament = Tournament()
-        winner_serial = 10
+        winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = self.user2_serial
         self.service.tourneyFinished(tournament)
         cursor = self.db.cursor()
         cursor.execute("SELECT amount FROM user2money WHERE user_serial = %d" % winner_serial)
         (amount,) = cursor.fetchone()
-        self.assertEqual(tournament.prize_min, amount)
+        self.assertEqual(self.default_money + tournament.prize_min, amount)
         cursor.close()
         
     def test_no_bailor(self):
@@ -1683,6 +1697,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.assertEqual(False, self.service.tourneyFinished(tournament))
         if verbose < 0:
             self.assertTrue(search_output("bailor failed to provide requested money"))
+
 ##############################################################################        
 class BreakTestCase(PokerServiceTestCaseBase):
     class Table:

@@ -343,10 +343,10 @@ class PokerExplain:
             elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                    packet.type == PACKET_POKER_TABLE_MOVE ) :
                 game.removePlayer(packet.serial)
-                forward_packets.remove(packet)
-                forward_packets.append(PacketPokerPlayerLeave(game_id = packet.game_id,
-                                                              serial = packet.serial,
-                                                              seat = packet.seat))
+                if packet.type == PACKET_POKER_TABLE_MOVE:
+                    forward_packets.append(PacketPokerPlayerLeave(game_id = packet.game_id,
+                                                                  serial = packet.serial,
+                                                                  seat = packet.seat))
                 if not self.no_display_packets:
                     self.forward_packets.append(PacketPokerSeats(game_id = game.id,
                                                                  seats = game.seats()))

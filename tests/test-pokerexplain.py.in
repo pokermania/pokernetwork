@@ -633,6 +633,20 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_PLAYER_LEAVE, self.explain.forward_packets[0].type)
         self.assertEqual(PACKET_POKER_SEATS, self.explain.forward_packets[1].type)
 
+    def test27_explain_table_move(self):
+        game_id = 1
+        to_game_id = 10
+        game = self.explain.games.getOrCreateGame(game_id)
+        player_serial = 3
+        self.failUnless(game.addPlayer(player_serial, 1))
+        self.assertTrue(self.explain.explain(PacketPokerTableMove(game_id = game_id,
+                                                                  to_game_id = to_game_id,
+                                                                  serial = player_serial)))
+        self.assertEqual(3, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_TABLE_MOVE, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_PLAYER_LEAVE, self.explain.forward_packets[1].type)
+        self.assertEqual(PACKET_POKER_SEATS, self.explain.forward_packets[2].type)
+
     def test28_explain_player_self(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)

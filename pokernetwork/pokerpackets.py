@@ -235,6 +235,22 @@ from pokernetwork.packets import *
 
 ########################################
 
+class PacketPokerTourneyFinish(Packet):
+    """\
+Semantics: notify the client that the tournament is over
+
+Direction: server => client
+
+tourney_serial: integer uniquely identifying a tournament.
+"""
+    info = Packet.info + (
+        ('tourney_serial', 0, 'I'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerTourneyFinish, Packet, "POKER_TOURNEY_FINISH", 49) # 49 # 0x31 # %SEQ%
+
+########################################
+
 PACKET_POKER_SEATS = 50 # 0x32 # %SEQ%
 PacketNames[PACKET_POKER_SEATS] = "POKER_SEATS"
 
