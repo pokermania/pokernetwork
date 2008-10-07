@@ -1,3 +1,23 @@
+2008-10-06  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.0
+
+	* pokernetwork/packets.py, pokernetwork/pokerexplain.py,
+	  pokernetwork/pokerpackets.py, tests/test-pokerexplain.py.in,
+	  tests/test-pokerservice.py.in, tests/test-protocol.py.in: .
+	  TOURNEY_FINISH is sent at the end of a tournament
+	  . explain mode keeps the MOVE packet instead of turning it into a
+	  LEAVE packet
+	  . a LEAVE packet is added when a MOVE packet is sent
+	* pokernetwork/pokerservice.py: do not delete resthost entries when
+	  shutingdown the server (or else it invalidates all the matching
+	  tourneys_schedule entries)
+
+2008-10-01  Loic Dachary <loic@dachary.org>
+
+	* Makefile.am: Add missing pokernetwork/attrpack.py
+	  pokernetwork/tourneyattrs.py to Makefile.am
+
 2008-09-30  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-user.py.in: Created file.
@@ -187,6 +207,17 @@
 	(AttrsFactory.getClass): Changed to use new instance variables.
 	(AttrsAccessor): Created class by modifying UserStatsAccessor.
 
+2008-09-19  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokersite.py: convert the JSON structures to UTF-8
+	  before sending them back
+
+2008-09-18  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerservice.py: all delays must be converted to int
+	  (when read from the XML file they are strings)
+	* Makefile.am: Add AGPLv3 LICENSE GPLv3 to EXTRA_DIST
+
 2008-09-18  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
@@ -222,8 +253,6 @@
 	Created packet.
 
 2008-09-18  Johan Euphrosine <proppy@aminche.com>
-
- 	* Release 1.7.0
 
 	* pokernetwork/pokerpackets.py, pokernetwork/pokertable.py,
 	  tests/test-pokerpackets.py.in, tests/test-pokertable.py.in: add
