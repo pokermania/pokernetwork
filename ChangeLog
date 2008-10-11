@@ -13,6 +13,45 @@
 	  shutingdown the server (or else it invalidates all the matching
 	  tourneys_schedule entries)
 
+2008-10-05  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/run.in (DEFAULT_COVERAGE_FILES): Added
+	../pokernetwork/protocol.py
+
+	* tests/test-protocol.py.in
+	(UGAMEProtocolTestCase.testDataReceived): Added asserts and
+	testing.
+	(UGAMEProtocolTestCase.testCoverDataWrite): Wrote test.
+	(UGAMEProtocolTestCase.testConnectionMade): Added asserts and
+	testing.
+	(UGAMEProtocolTestCase.testSendVersion): testConnectionMade() now
+	covers _sendVersion.
+	(UGAMEProtocolTestCase.testHandleConnection): Attempted to improve
+	test.
+	(UGAMEProtocolTestCase.testProcessQueues): Improved asserts.
+	(UGAMEProtocolTestCase.triggerTimer_expectNoCallLater): Wrote
+	helper method.
+	(UGAMEProtocolTestCase.testTriggerTimer_alreadyHaveActiveTimer):
+	Wrote test.
+	(UGAMEProtocolTestCase.testTriggerTimer_noTimerPollingEmptyQueues):
+	Wrote test.
+	(UGAMEProtocolTestCase.testTriggerTimer_inactiveTimerNoPoll):
+	Wrote test.
+	(UGAMEProtocolTestCase.testTriggerTimer_noTimerPollingEmptyQueues):
+	Wrote test.
+	(UGAMEProtocolTestCase.testTriggerTimer_reactorIsCalled): Wrote
+	test.
+	(Run): Rewrote to use twisted unittest/runner.
+	(UGAMEProtocolTestCase.testPushPacket): Rewrote to mock up
+	triggerTimer.
+	(UGAMEProtocolTestCase.fakeProcessQueuesDeferred): Wrote helper
+	method.
+	(UGAMEProtocolTestCase.testProcessQueues): Rewrote to mock up
+	triggerTimer.
+
+	* pokernetwork/protocol.py (UGAMEProtocol._processQueues): Added
+	no cover pragma.
+
 2008-10-01  Loic Dachary <loic@dachary.org>
 
 	* Makefile.am: Add missing pokernetwork/attrpack.py

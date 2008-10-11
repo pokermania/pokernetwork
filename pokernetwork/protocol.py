@@ -192,7 +192,7 @@ class UGAMEProtocol(protocol.Protocol):
                 if len(queue.packets) <= 0:
                     if queue.delay <= now:
                         to_delete.append(id)
-                    continue
+                    continue #pragma: no cover
                 #
                 # If lagging behind too much, ignore the imposed delay
                 #

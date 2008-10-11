@@ -1,14 +1,14 @@
 #!/usr/bin/python2.4
 # -*- mode: python -*-
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008       Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2006 Mekensleep
+# Note: this file is copyrighted by multiple entities; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
 #
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006       Mekensleep
+#                          24 rue vieille du temple 75004 Paris
+#                          <licensing@mekensleep.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,9 +24,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
 # Authors:
 #  J.Jeannin <griim.work@gmail.com>
-#
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 
 import sys, os
 sys.path.insert(0, "@srcdir@/..")
@@ -41,11 +58,12 @@ from pokernetwork import protocol
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
 
+from twisted.trial import unittest, runner, reporter
+from twisted.internet import reactor, defer
+
 from time import time
 
 protocol_version = Version(protocol_number)
-
-import unittest
 
 #-----------------
 
@@ -78,10 +96,11 @@ class FakeTimer:
 
 class FakePacket:
     """Packet for testing purpose"""
-    def __init__(self, time):
+    def __init__(self, time, id = None):
         self.time__ = time
         self.nodelay__ = None
         self.arg = time
+        self.id = id
 
 #-----------------
 
@@ -102,6 +121,28 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u = protocol.UGAMEProtocol()
         self.u.transport = FakeTransport()
         self.u.factory = FakeFactory(int(os.environ.get('VERBOSE_T', 6)))
+        silence_all_messages()
+
+    def fakeProcessQueuesDeferred(self, count = 1):
+        global calledProcessQueuesCount
+        calledProcessQueuesCount = 0
+        self.soughtCount= count
+        def mockProcessQueues():
+            global calledProcessQueuesCount
+            calledProcessQueuesCount += 1
+
+        self.u._processQueues = mockProcessQueues
+
+        def doneOk(mySelf):
+            global calledProcessQueuesCount
+            self.assertEquals(calledProcessQueuesCount, mySelf.soughtCount)
+        d = defer.Deferred()
+        d.addCallback(doneOk)
+        # Note, if test fails, you'll get a reactor error.
+        reactor.callLater(1, lambda: d.callback(self))
+
+        return d
+
 
     def testUGAMEProtocolInit(self):
         """Testing class UGAMEProtocol init"""
@@ -149,11 +190,20 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
         assert q1 == q2                           , "getOrCreateQueue overwrite queues"
 
-    # assert ?
     def testConnectionMade(self):
         """Testing connectionMade"""
-    
+        global writeCallCount
+        writeCallCount = 0
+
+        def mockTestSendVersion(data):
+            global writeCallCount
+            self.assertEquals(data, 'CGI %s.%s\n' % (protocol.PROTOCOL_MAJOR, 
+                                                     protocol.PROTOCOL_MINOR))
+            writeCallCount += 1
+        self.u.transport.write = mockTestSendVersion
+
         self.u.connectionMade()
+        self.assertEquals(writeCallCount, 1)
  
     def testConnectionLost(self):
         """Testing ConnectionLost"""
@@ -176,17 +226,13 @@ class UGAMEProtocolTestCase(unittest.TestCase):
             
         assert self.u.established == 0
     
-    # assert ?
-    def testSendVersion(self):
-        """Testing sendVersion"""
-        
-        self.u._sendVersion()
-            
-    # assert ?
     def testHandleConnection(self):
         """Testing _handleConnection"""        
-
-        self.u._handleConnection("...")
+        clear_all_messages()
+        # there is just a pass here in the implementation, there is really
+        # nothing to be done to truly test it.
+        self.assertEquals(self.u._handleConnection("..."), None)
+        self.assertEquals(get_messages(), [])
 
     def testIgnoreIncomingData(self):
         """Testing ignoreIncomingData"""
@@ -278,43 +324,187 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
         assert self.u.canHandlePacket('') == (True,0)
     
-    # assert ?
     def testProcessQueues(self):
         """Testing _proccessQueues"""
-         
+        global triggerTimerCallCount
+        triggerTimerCallCount = 0
+        def mockTriggerTimer():
+            global triggerTimerCallCount
+            triggerTimerCallCount += 1
+            
+        self.u.triggerTimer = mockTriggerTimer
         self.u.canHandlePacket = lambda x : (False, time()+10)
+        self.failIf(self.u._queues.has_key(0))
         self.u.getOrCreateQueue(0)
+        self.failUnless(self.u._queues.has_key(0))
 
         self.u._lagmax = 10
 
+        self.failIf(self.u._queues.has_key(1))
         self.u.getOrCreateQueue(1)
+        self.failUnless(self.u._queues.has_key(1))
         self.u._queues[1].delay = time()+10
-        self.u._queues[1].packets.insert( 0, FakePacket(0) )
+        oneArg = 0
+        self.u._queues[1].packets.insert( 0, FakePacket(oneArg, "one") )
         self.u._queues[1].packets[0].nodelay__ = True
 
+        self.failIf(self.u._queues.has_key(2))
         self.u.getOrCreateQueue(2)
+        self.failUnless(self.u._queues.has_key(2))
         self.u._queues[2].delay = time()
-        self.u._queues[2].packets.insert( 0, FakePacket(time()) )
+        twoArg = time()
+        self.u._queues[2].packets.insert( 0, FakePacket(twoArg, "two") )
 
+        self.failIf(self.u._queues.has_key(3))
         self.u.getOrCreateQueue(3)
+        self.failUnless(self.u._queues.has_key(3))
         self.u._queues[3].delay = time()+1
-        self.u._queues[3].packets.insert( 0, FakePacket(time()+10) )
+        threeArg = time() +10
+        self.u._queues[3].packets.insert( 0, FakePacket(threeArg, "three") )
 
+        # Ok, Test blocked first -- nothing happens
         clear_all_messages()
+        self.u._blocked = True
         self.u._processQueues()
+        k = self.u._queues.keys()
+        self.assertEquals(triggerTimerCallCount,  1)
+
+        k.sort()
+        self.assertEquals(k, [ 0, 1, 2, 3 ])
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.u._lag, 0)
+
+        # Unblocked test, function fully runs
+        triggerTimerCallCount = 0
+        self.u._blocked = False
+
+        global callCount
+        callCount = 0
+        def mockHandler(packet):
+            global callCount
+            callCount += 1
+            self.assertEquals(packet.arg, oneArg)
+            self.assertEquals(packet.id, 'one')
+                
+        self.u._handler = mockHandler
+
+        startTime = time()
+        self.u._processQueues()
+        endTime = time()
+
+        self.assertEquals(callCount, 1)
+        self.failUnless(self.u._lag > startTime)
+        self.failUnless(self.u._lag <= endTime)
+
+        k = self.u._queues.keys()
+        k.sort()
+        self.assertEquals(k, [ 1, 2, 3 ])
+
+        self.assertEquals(len(self.u._queues[1].packets), 0)
+        self.assertEquals(len(self.u._queues[2].packets), 1)
+        self.assertEquals(len(self.u._queues[3].packets), 1)
+        self.assertEquals(triggerTimerCallCount,  1)
+
         self.assertEquals(len(get_messages()), 2)
         self.assertEquals(get_messages()[0], ' => queue 1 delay canceled because lag too high')
         self.assertEquals(get_messages()[1].find('seconds before handling the next packet in queue 3') > 0, True)
 
-    # assert ?
-    def testTriggerTimer(self):
-        """Testing triggerTimer"""
-
-        self.u.getOrCreateQueue(0)
+    def triggerTimer_expectNoCallLater(self, doneOk):
+        def mockProcessQueue(): self.fail()
+        self.u._processQueues = mockProcessQueue
+        self._poll_frequency = 0.1
         self.u.triggerTimer()
+
+        d = defer.Deferred()
+        d.addCallback(doneOk)
+        reactor.callLater(1, lambda: d.callback(self))
+        return d
+
+    def testTriggerTimer_alreadyHaveActiveTimer(self):
+        """Testing triggerTimer when it already has an active timer
+        """
+        self.assertEquals(self.u._timer, None)
+        class MockTimer():
+            def __init__(self): self.myID = "MOCK"
+            def active(self): return True
+
+        self.u._timer = MockTimer()
+
+        def doneOk(mySelf):
+            mySelf.assertEquals(mySelf.u._timer.myID, "MOCK")
+
+        # Note that _poll is removed because it should never actually be
+        # read and if it is, we know something has gone wrong with test.
+        del self.u.__dict__['_poll']
+
+        return self.triggerTimer_expectNoCallLater(doneOk)
+
+    def testTriggerTimer_inactiveTimerNoPoll(self):
+        """Testing triggerTimer when timer exists, is inactive, but not polling
+        """
+        self.assertEquals(self.u._timer, None)
+        class MockTimer():
+            def __init__(self): self.myID = "MOCK2"
+            def active(self): return False
+
+        self.u._timer = MockTimer()
+
+        def doneOk(mySelf):
+            mySelf.assertEquals(mySelf.u._timer.myID, "MOCK2")
+
+        self.u._poll = False
+
+        return self.triggerTimer_expectNoCallLater(doneOk)
+
+    def testTriggerTimer_noTimerPollingEmptyQueues(self):
+        """Testing triggerTimer without timer, polling on, empty queue
+        """
+        self.assertEquals(self.u._timer, None)
+
+        def doneOk(mySelf):
+            mySelf.assertEquals(mySelf.u._timer, None)
+
+        self.u._poll = True
+
+        return self.triggerTimer_expectNoCallLater(doneOk)
+
+    def testTriggerTimer_reactorIsCalled(self):
+        """Testing triggerTimer when reactor is called
+        """
+        self.assertEquals(self.u._timer, None)
+        self.u._poll = True
+        self.u.getOrCreateQueue(0)
+
+        global processQueueCalled
+        processQueueCalled = 0
+        def mockProcessQueue():
+            global processQueueCalled
+            processQueueCalled += 1
+            
+        self.u._processQueues = mockProcessQueue
+
+        def doneOk(mySelf):
+            global processQueueCalled
+            self.assertEquals(processQueueCalled, 1)
+
+        d = defer.Deferred()
+        d.addCallback(doneOk)
+        # Note, if test fails, you'll get a reactor error.
+        reactor.callLater(1, lambda: d.callback(self))
+
+        self.u.triggerTimer()
+
+        return d
 
     def testPushPacket(self):
         """Testing pushPacket"""
+        global triggerTimerCallCount
+        triggerTimerCallCount = 0
+        def mockTriggerTimer():
+            global triggerTimerCallCount
+            triggerTimerCallCount += 1
+            
+        self.u.triggerTimer = mockTriggerTimer
        
         self.u._packet2front = lambda x:  x <= 0
 
@@ -323,9 +513,11 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         
         assert len(self.u._queues[0].packets) == 2  , "packets not in list"
         assert self.u._queues[0].packets[0].arg <  self.u._queues[0].packets[1].arg  , "packet not set in front of the queue"
+        self.assertEquals(triggerTimerCallCount, 2)
 
     def testHandleData(self):
         """Testing handleData"""
+        fakeProcessQueuesDeferred = self.fakeProcessQueuesDeferred()
 
         self.u._expected_len = 3
         self.u._packet.append("\x00\x00\x03")
@@ -355,35 +547,89 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         # should get absolutely no output when we send the "wrong packet".
         # I've asked Loic to take a look.
         self.assertEquals(get_messages(), [])
-     
-    # assert ?
+        return fakeProcessQueuesDeferred
+        
     def testDataReceived(self):
         """Testing dataReceived"""
+        global handledVersion
+        global handledData
+        handledData = handledVersion = 0
+
+        def mockHandleVersion():
+            global handledVersion
+            handledVersion += 1
+
+        def mockHandleData():
+            global handledData
+            handledData += 1
+
+        self.u._handleVersion = mockHandleVersion
+        self.u.handleData = mockHandleData
+
+        self.assertEquals(self.u._packet, [])
+        self.assertEquals(self.u._packet_len, 0)
 
         self.u.dataReceived("packet_1")
 
-        self.u.established == True
-        self.u.dataReceived("packet_2")
+        self.assertEquals(self.u._packet, ['packet_1'])
+        self.assertEquals(self.u._packet_len, 8)
+        self.failIf(handledData > 0)
+        self.failUnless(handledVersion == 1)
+        self.assertEquals(self.u.established, 0)
 
+        handledVersion = 0
+        self.u.established = 1
+        self.u.dataReceived("packet_2  ")
+
+        self.assertEquals(self.u._packet, ['packet_1', 'packet_2  '])
+        self.assertEquals(self.u._packet_len, 18)
+        self.failIf(handledVersion > 0)
+        self.failUnless(handledData == 1)
+        
     def testForceError(self):
         """Testing error call"""
         clear_all_messages()
         self.u.error("testing this error")
         self.assertEquals(get_messages(), ["ERROR testing this error"])
 
+    def testCoverDataWrite(self):
+        """Testing data write"""
+        clear_all_messages()
+        tot = protocol.UGAMEProtocol._stats_write
+
+        global calledWrite
+        calledWrite = 0
+        myData = "testing data"
+        def mockTransportWrite(data):
+            global calledWrite
+            self.assertEquals(data, myData)
+            calledWrite += 1
+        self.u.transport.write = mockTransportWrite
+
+        self.u.dataWrite(myData)
+
+        self.assertEquals(tot + len(myData), protocol.UGAMEProtocol._stats_write)
+
+        self.assertEquals(calledWrite, 1)
+        self.assertEquals(get_messages(), [])
+
 #------------------------------------------------------------------------
-
-def GetTestSuite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(QueueTestCase))
-    suite.addTest(unittest.makeSuite(UGAMEProtocolTestCase))
-    return suite
-
-def Run(verbose):
-    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
-    
+def Run():
+    loader = runner.TestLoader()
+    # Comment in line below this when you wish to run just one test by
+    # itself (changing prefix as needed).
+#    loader.methodPrefix = "testProcess"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(QueueTestCase))
+    suite.addTest(loader.loadClass(UGAMEProtocolTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#	tracebackFormat='verbose',
+        tracebackFormat='default',
+        ).run(suite)
+# ----------------------------------------------------------------
 if __name__ == '__main__':
-    if Run(int(os.environ.get('VERBOSE_T', 2))).wasSuccessful():
+    if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
