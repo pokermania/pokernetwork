@@ -41,6 +41,7 @@ if verbose < 0: silence_all_messages()
 from pokernetwork import pokernetworkconfig
 from pokernetwork.tourneyattrs import *
 from pokernetwork.pokerpackets import *
+from pokernetwork import pokerservice
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -124,6 +125,7 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         
         # Next, check to see if invalid stat generates a proper error message
         clear_all_messages()
+        u.fetchData([{'serial': 1},])
         self.assertEquals(u.getAttrValue('unknownstat'), None)
         self.assertEquals(get_messages(), [ "ERROR invalid attribute, unknownstat" ])
 
@@ -161,6 +163,7 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         for ii in k:
             self.failUnless(isinstance(tasp.attr2accessor[ii], TourneyAttrsSponsoredPrizesAccessor))
 
+        tasp.fetchData([{'schedule_serial': 5},])
         firstPack = tasp.getAttrsAsPacket(schedule_serial = 5)
         self.assertEquals(firstPack.type, PACKET_POKER_TOURNEY_ATTRS)
 
@@ -219,6 +222,20 @@ class PokerTourneyAttrsTestCase(unittest.TestCase):
         self.assertEquals(get_messages(), [])
         
     # ------------------------------------------------------------------------
+    def test05_tourneyAttrsFetchData(self):
+        """test05_tourneyAttrsFetchData
+        Test the prefetch of tourney data."""
+        tasp = TourneyAttrsEmptyLookup()
+        class AccessorMockup:
+            nbCall = 0
+            def fetchData(self, tourneys):
+                self.nbCall = self.nbCall + 1
+        accessor = AccessorMockup() 
+        tasp.attr2accessor['foo'] = accessor
+        tasp.attr2accessor['bar'] = accessor
+        tasp.fetchData([{'serial': 1},])
+        self.assertEquals(accessor.nbCall, 1)
+    # -------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"

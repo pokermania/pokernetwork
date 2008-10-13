@@ -68,6 +68,9 @@ class TourneyAttrsEmptyLookup(AttrsLookup):
                 schedule_serial = tourney['serial']
         kwargs = { 'serial' : schedule_serial }
         return AttrsLookup.getAttrsAsPacket(self, **kwargs)
+    def fetchData(self, tourneys):
+        for accessor in set(self.attr2accessor.values()):
+            accessor.fetchData(tourneys)
 ############################################################################
 class TourneyAttrsSponsoredPrizesLookup(TourneyAttrsEmptyLookup):
     def __init__(self):
@@ -86,22 +89,34 @@ class TourneyAttrsSponsoredPrizesAccessor(AttrsAccessor):
         AttrsAccessor.__init__(self)
         self.attrsSupported = ['is_monthly', 'prizes', 'sponsor']
         self.expectLookupArgs = [ 'serial' ]
+    # ----------------------------------------------------------------------
+    def fetchData(self, tourneys):
         # dummyFIXMEdata is used to create dummy data.  Someone else
         # should come along and implement real data.
-        self.dummyFIXMEdata = { '_possibleSponsors' : [ 'Joe', 'Jack', 'John' ] }
+        
+        possibleSponsors = [ 'Joe', 'Jack', 'John' ]
+        isMonthly = True
+        if randint(0, 1) == 0: isMonthly = False
+        prizes = randint(1, 1200)
+        sponsor = possibleSponsors[randint(0, 2)]
+        self.dummyFIXMEdata = {}
+        tourney_serials = []
+        for tourney in tourneys:
+            if tourney.has_key('schedule_serial'):
+                tourney_serials.append(tourney['schedule_serial'])
+            elif tourney.has_key('serial'):
+                tourney_serials.append(tourney['serial'])
+        for tourney_serial in tourney_serials:
+            if tourney_serial:
+                if not self.dummyFIXMEdata.has_key(tourney_serial):
+                    self.dummyFIXMEdata[tourney_serial] = { 'is_monthly' : isMonthly,
+                                                            'prizes' : prizes,
+                                                            'sponsor': sponsor }
     # ----------------------------------------------------------------------
     def _lookupValidAttr(self, attr, serial = -1, **kwargs):
         # FIXME: this function shouldn't use the dummy data but should be
         # written to lookup the right data based on serial.
-        if serial < 0:
+        if serial < 0 or not self.dummyFIXMEdata.has_key(serial):
             return None
-        if not self.dummyFIXMEdata.has_key(serial):
-            isMonthly = True
-            if randint(0, 1) == 0: isMonthly = False
-            prizes = randint(1, 1200)
-            sponsor = self.dummyFIXMEdata['_possibleSponsors'][randint(0, 2)]
-            self.dummyFIXMEdata[serial] = { 'is_monthly' : isMonthly,
-                                                     'prizes' : prizes,
-                                                     'sponsor': sponsor }
         return self.dummyFIXMEdata[serial][attr]
 ###########################################################################

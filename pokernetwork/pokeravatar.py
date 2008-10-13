@@ -490,9 +490,12 @@ class PokerAvatar:
             tourneyList = PacketPokerTourneyList(players = playerCount,
                                               tourneys = tourneyCount)
             tourneyAttrs = PacketPokerTourneyAttrsList(tourneyAttrs = tourneyCount)
-            for tourney in self.service.tourneySelect(packet.string):
+            lookup = self.service.getTourneyAttrsLookup()
+            tourneys = self.service.tourneySelect(packet.string)
+            lookup.fetchData(tourneys)
+            for tourney in tourneys:
                 tourneyList.packets.append(PacketPokerTourney(**tourney))
-                tourneyAttrs.packets.append(self.service.getTourneyAttrsLookup().getAttrsAsPacket(tourney = tourney))
+                tourneyAttrs.packets.append(lookup.getAttrsAsPacket(tourney = tourney))
             self.sendPacketVerbose(tourneyList)
             self.sendPacketVerbose(tourneyAttrs)
             return
