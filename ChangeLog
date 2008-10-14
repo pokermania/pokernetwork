@@ -1,3 +1,71 @@
+2008-10-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-clientserver.py.in (MockPingTimer): Moved class from
+	out of DummyServerTests into main body of file.
+	(DummyClientTests): Wrote class and ping tests.
+	(DummyClientTests.test05_getSerial): Wrote test.
+	(DummyClientTests.test06_getName): Wrote test.
+	(DummyClientTests.test07_getURL): Wrote test.
+	(DummyClientTests.test08_getOutfit): Wrote test.
+	(DummyClientTests.test09_isLogged): Wrote test.
+	(DummyClientTests.test10_error): Wrote test.
+	(ClientServer.test09_badClientProtocol): Moved test to new class,
+	ClientServerBadClientProtocol.
+	(ClientServerBadClientProtocol): Created class for single test.
+
+	* pokernetwork/client.py (UGAMEClientProtocol): Added comment
+	about strange behavior of this method.
+
+	* tests/test-clientserver.py.in
+	(ClientServer.test07_bufferizedClientPackets.bufferPackets): Wrote test.
+	(ClientServer.test08_bufferizedClientPacketsTwo): Wrote test.
+	(ClientServer.test09_badClientProtocol): Wrote test.
+
+	* tests/run.in (DEFAULT_COVERAGE_FILES): Added
+	../pokernetwork/server, fixed ../pokernetwork/protocol
+
+	* tests/test-clientserver.py.in
+	(DummyServerTests.test12_handleConnectionNoException): Wrote test.
+	(DummyServerTests.test13_handleConnectionWithExceptionRaised):
+	Wrote test.
+	(DummyServerTests.test14_handleConnectionWithExceptionRaisedNotSet):
+	Wrote test.
+
+2008-10-12  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-clientserver.py.in (ClientServerQueuedServerPackets):
+	Created class.
+	(ClientServerTestBase): Created base class.
+	(ClientServerDeferredServerPackets): Created class.
+	(ClientServerDeferredServerPackets.test01_deferredPacket): Wrote test.
+	(ClientServerDeferredServerPackets.deferErrorPacket): Wrote helper.
+	(ClientServerDeferredServerPackets.test02_deferredErrBackPacket):
+	Wrote test.
+
+2008-10-11  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-clientserver.py.in
+	(FakeFactory.buildProtocol.Transport.__init__): Wrote method.
+	(FakeFactory.buildProtocol.Transport.loseConnection): Added
+	counter.
+	(DummyServerTests.test02_pingRenew): Replaced with new tests.
+	(DummyServerTests.MockPingTimer): Wrote mock class.
+	(DummyServerTests.test02_pingWithoutTimer): Wrote test.
+	(DummyServerTests.test03_pingWithNoneTimer): Wrote test.
+	(DummyServerTests.test04_pingWithActiveTimerNoUser): Wrote test.
+	(DummyServerTests.test05_pingWithActiveTimerWithUser): Wrote test.
+	(DummyServerTests.test06_pingWithInactiveTimerNoUser): Wrote test.
+	(DummyServerTests.test07_pingWithInactiveTimerWithUser): Wrote test.
+	(FakeFactory.__init__): Added self.destroyedAvatars
+	(FakeFactory.destroyAvatar): Append to self.destroyedAvatars
+	(DummyServerTests.MockPingTimer.cancel): Added method.
+	(DummyServerTests.test08_connectionLostNonePingTimerNoAvatar):
+	Wrote test.
+	(DummyServerTests.test09_connectionLostNoPingTimerWithAvatarButNoQueues):
+	Wrote test.
+	(DummyServerTests.test10_connectionLostWithInactivePingTimerWithAvatarAndQueues):
+	Wrote test.
+
 2008-10-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.0

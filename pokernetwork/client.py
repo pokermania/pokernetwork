@@ -90,6 +90,15 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self.factory.established_deferred = defer.Deferred()
 
     def protocolInvalid(self, server, client):
+        # FIXME: I am not completely sure this method makes sense.  You'll
+        # note in ClientServer.test09 in test-clientserver.py.in where I
+        # cover this code, it seems that 'server' and 'client' arguments
+        # are something different entirely.  This is because the code that
+        # calls protocolInvalid() in protocol.connectionLost() and
+        # protocol._handleVersion() send strings as 'server' and 'client'.
+        # The test assumes this is the case, but I think someone should
+        # reexamine this code at some point and make sure it is doing what
+        # we really expect. -- bkuhn, 2008-10-13
         if not self.factory.established_deferred.called:
             self.factory.established_deferred.errback((self, server, client),)
             
