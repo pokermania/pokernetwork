@@ -71,6 +71,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/__init__.py \
 	pokernetwork/attrpack.py \
 	pokernetwork/client.py \
+	pokernetwork/countfilter.py \
 	pokernetwork/currencyclient.py \
 	pokernetwork/dispatch.py \
 	pokernetwork/nullfilter.py \
