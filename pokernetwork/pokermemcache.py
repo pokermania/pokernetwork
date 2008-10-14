@@ -18,12 +18,14 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 memcache_singleton = {}
+memcache_expiration_singleton = {}
 
 class MemcacheMockup:
     class Client:
         def __init__(self, addresses, *args, **kwargs):
             self.addresses = addresses
             self.cache = memcache_singleton
+            self.expiration = memcache_expiration_singleton
 
         def get(self, key):
             if self.cache.has_key(key):
@@ -40,9 +42,11 @@ class MemcacheMockup:
         
         def set(self, key, value, time = 0):
             self.cache[key] = value
+            self.expiration[key] = time
 
         def set_multi(self, kwargs, time = 0):
             self.cache.update(kwargs)
+            for k in kwargs: self.expiration[k] = time
             return []
 
         def add(self, key, value):
