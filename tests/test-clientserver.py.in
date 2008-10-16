@@ -369,8 +369,8 @@ class ClientServer(ClientServerTestBase):
 
         d.addCallback(bufferPackets)
         return d
-    def test09_badClientProtocol(self):
-        pass
+#    def test09_badClientProtocol(self):
+#        pass
 #-------------------------------------------------------------------------------
 class ClientServerBadClientProtocol(ClientServerTestBase):
     def setUpServer(self):
@@ -1066,6 +1066,7 @@ class DummyClientTests(unittest.TestCase):
         self.assertEquals(client.isLogged(), True)
     # -----------------------------------------------------------------------
     def test10_factoryError(self):
+        clear_all_messages()
         clientFactory = pokernetwork.client.UGAMEClientFactory()
         clientFactory.error("test10")
         self.assertEquals(get_messages(), [ "ERROR test10"])
