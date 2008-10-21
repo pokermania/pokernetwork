@@ -445,20 +445,26 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
         result = self.service.getPlayerPlacesByName('testuser2')
         self.assertEqual(PACKET_POKER_PLAYER_PLACES, result.other_type)
 
-    def test03_list_only_tourneys_in_registering_state(self):
+    def test03_list_tourneys_in_registering_running_break_break_wait_state(self):
         self.service.startService()
         db = self.service.db
         serial = 888
         tourney_serial = 999
-        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial))
         db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+1))
         db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+2))
-        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial, 'registering'))
-        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+1, 'running'))
-        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+2, 'complete'))
+        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+3))
+        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+4))
+        db.db.query("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % (serial, tourney_serial+5))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial, 'announced'))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+1, 'registering'))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+2, 'running'))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+3, 'breakwait'))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+4, 'break'))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+5, 'complete'))
+        db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+6, 'canceled'))
         places = self.service.getPlayerPlaces(serial)
         self.assertEqual([], places.tables)   
-        self.assertEqual([tourney_serial], places.tourneys)
+        self.assertEqual([tourney_serial+1, tourney_serial+2, tourney_serial+3, tourney_serial+4], places.tourneys)
         self.assertEqual(serial, places.serial)
 
 class ResthostTestCase(unittest.TestCase):
