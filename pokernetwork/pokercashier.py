@@ -88,6 +88,8 @@ class PokerCashier:
                 cursor.execute(sql, url)
                 if cursor.rowcount == 1:
                     currency_serial = cursor.lastrowid
+                else:
+                    raise Exception("SQL command '%s' failed without raising exception.  Underlying DB may be severely hosed" % sql)
             except Exception, e:
                 cursor.close()
                 if e[0] == ER.DUP_ENTRY and reentrant:
@@ -311,7 +313,7 @@ class PokerCashier:
         return deferred
         
     def cashOutUpdateCounter(self, new_notes, packet):
-        if self.verbose > 2: self.message("cashOuUpdateCounter: new_notes = " + str(new_notes) + " packet = " + str(packet))
+        if self.verbose > 2: self.message("cashOutUpdateCounter: new_notes = " + str(new_notes) + " packet = " + str(packet))
         cursor = self.db.cursor()
         if len(new_notes) != 2:
             raise PacketError(other_type = PACKET_POKER_CASH_OUT,
@@ -370,7 +372,8 @@ class PokerCashier:
                 if self.verbose > 2: self.message(sql)
                 cursor.execute(sql)
                 if cursor.rowcount != 1:
-                    self.error(sql + " found " + str(cursor.rowcount) + " records instead of exactly 1")
+                    message = sql + " found " + str(cursor.rowcount) + " records instead of exactly 1"
+                    self.error(message)
                     raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                       code = PacketPokerCashOut.SAFE,
                                       message = message)
@@ -393,10 +396,10 @@ class PokerCashier:
     def unlock(self, currency_serial):
         name = self.getLockName(currency_serial)
         if not self.locks.has_key(name):
-            if self.verbose: self.error("cashInUnlock: unpexected missing " + name + " in locks (ignored)")
+            if self.verbose: self.error("cashInUnlock: unexpected missing " + name + " in locks (ignored)")
             return
         if not self.locks[name].isAlive():
-            if self.verbose: self.error("cashInUnlock: unpexected dead " + name + " pokerlock (ignored)")
+            if self.verbose: self.error("cashInUnlock: unexpected dead " + name + " pokerlock (ignored)")
             return
         self.locks[name].release(name)
 

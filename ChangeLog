@@ -1,3 +1,66 @@
+2008-10-19  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/run.in (DEFAULT_COVERAGE_FILES): Added
+	../pokernetwork/pokercashier.py
+
+	* tests/test-pokercashier.py.in (PokerCashierLockUnlockTestCase):
+	Created class.
+	(PokerCashierLockUnlockTestCase.test01_unlockNonExistent): Wrote
+	test.
+	(PokerCashierLockUnlockTestCase.test02_lockCreateTwice): Wrote
+	test.
+	(PokerCashierLockUnlockTestCase.test04_unlockTwice): Wrote test.
+
+	* pokernetwork/pokercashier.py (PokerCashier.cashOutBreakNote):
+	'message' variable was not set in error condition.
+
+	* tests/test-pokercashier.py.in
+	(PokerCashierFakeDBTestCase.test09_cashOutUpdateCounter_forceRaiseOnNotesOrder):
+	Wrot test.
+	(PokerCashierFakeDBTestCase.test10_cashOutBreakNote_DeferredFromCommit):
+	Wrote test.
+	(PokerCashierFakeDBTestCase.test11_cashOutBreakNote_multirowForSerial):
+	Wrote test.
+
+2008-10-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokercashier.py.in
+	(PokerCashierFakeDBTestCase.test08_cashOutUpdateCounter_various):
+	Wrote test.
+
+	* pokernetwork/pokercashier.py
+	(PokerCashier.cashOutUpdateCounter): Fixed typo in message.
+
+	* tests/test-pokercashier.py.in
+	(PokerCashierFakeDBTestCase.test06_cashOutUpdateSafe_forceFakeFalsePacket):
+	Wrote test.
+	(PokerCashierFakeDBTestCase.cashOutUpdateCounter_weirdLen): Wrote
+	method.
+	(PokerCashierFakeDBTestCase.test07_cashOutUpdateCounter_weirdLen_1):
+	Wrote test.
+	(PokerCashierFakeDBTestCase.test07_cashOutUpdateCounter_weirdLen_3):
+	Wrote test.
+
+	* pokernetwork/pokercashier.py (PokerCashier.unlock): Fixed
+	misspelling in verbose output.
+
+	* tests/test-pokercashier.py.in
+	(PokerCashierFakeDBTestCase.test04_cashOutUpdateSafe_twoNullPackets):
+	Wrote test.
+
+2008-10-16  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokercashier.py.in (PokerCashierFakeDBTestCase):
+	Created class.
+	(PokerCashierFakeDBTestCase.test01_ForceExceptionOnExecute): Wrote
+	test.
+	(PokerCashierFakeDBTestCase.test01_ForceExceptionOnRowCount):
+	Renamed test.
+	(PokerCashierFakeDBTestCase.test02_forceExceptionOnExecute): Wrote
+	test.
+	(PokerCashierTestCase.test07_getCurrencySerial): Improved checking
+	for getCurrencySerial()
+
 2008-10-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-clientserver.py.in (MockPingTimer): Moved class from

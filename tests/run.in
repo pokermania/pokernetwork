@@ -78,6 +78,7 @@ COVERAGE_100_PERCENT="
 ../pokernetwork/protocol
 ../pokernetwork/server
 ../pokernetwork/client
+../pokernetwork/pokercashier
 ../pokernetwork/pokerauthmysql
 ../pokernetwork/user
 ../pokernetwork/userstats

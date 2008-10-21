@@ -1,14 +1,14 @@
 #!@PYTHON@
-# -*- mode: python -*-
+# -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
+#
+# Note: this file is copyrighted by multiple entities; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
 #
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org> 
-# Copyright (C) 2006 Mekensleep
-#
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+# Copyright (C) 2006             Mekensleep
+#                                24 rue vieille du temple 75004 Paris
+#                                <licensing@mekensleep.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,9 +24,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
 # Authors:
 #  Loic Dachary <loic@gnu.org>
-#
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 
 import sys, os
 sys.path.insert(0, "@srcdir@/..")
@@ -42,7 +59,7 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages
+from tests.testmessages import silence_all_messages, get_messages, clear_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
@@ -365,9 +382,17 @@ class PokerCashierTestCase(unittest.TestCase):
 
     # --------------------------------------------------------
     def test07_getCurrencySerial(self):
+        clear_all_messages()
         self.cashier.parameters['user_create'] = 'no';
 
-        self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
+        pe = self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
+        self.assertEquals(pe.type, PACKET_ERROR)
+        self.assertEquals(pe.other_type, PACKET_POKER_CASH_IN)
+        self.assertEquals(pe.message, 
+                        'Invalid currency http://fake and user_create = no in settings.')
+        self.assertEquals(pe.code, PacketPokerCashIn.REFUSED)
+        self.assertEquals(get_messages(),
+                          ["SELECT serial FROM currencies WHERE url = 'http://fake'"])
     # --------------------------------------------------------
     def test08_forcecashInUpdateSafeFail(self):
         self.value = 100
@@ -521,11 +546,787 @@ class PokerCashierTestCase(unittest.TestCase):
         self.cashier.cashOutCollect = origCashOutCollect
         return True
 # --------------------------------------------------------
+# Following tests use a MockDB rather than the real MySQL database
+class PokerCashierFakeDBTestCase(unittest.TestCase):
+    def destroyDb(self):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        
+    # --------------------------------------------------------
+    def setUp(self):
+        self.destroyDb()
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+        self.cashier = pokercashier.PokerCashier(self.settings)
+        self.user_serial = 5050
+        self.user1_serial = 6060
+        self.user2_serial = 7070
+        self.user3_serial = 8080
+        self.users_serial = range(9000, 9010)
+
+    # --------------------------------------------------------
+    def tearDown(self):
+        self.cashier.close()
+#        self.destroyDb()
+    # --------------------------------------------------------
+    def test01_getCurrencySerial_forceExceptionOnRowCount(self):
+        clear_all_messages()
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+            def close(cursorSelf): pass
+            def execute(*args):
+                self = args[0]
+                sql = args[1]
+                if sql.find('SELECT') >= 0:
+                    self.rowcount = 0
+                elif sql.find('INSERT') >= 0:
+                    self.rowcount = 0
+                else:
+                    self.failIf(True)  # Should not be reached.
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+            def cursor(dbSelf):
+                return MockCursor()
+        
+        self.cashier.setDb(MockDatabase())
+
+        caughtExeption = False
+        try:
+            self.cashier.getCurrencySerial("http://example.org")
+            self.failIf(True)
+        except Exception, e:
+            caughtExeption = True
+            self.assertEquals(e.__str__(), "SQL command 'INSERT INTO currencies (url) VALUES (%s)' failed without raising exception.  Underlying DB may be severely hosed")
+        self.failUnless(caughtExeption)
+
+        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)'])
+    # --------------------------------------------------------
+    def test02_getCurrencySerial_forceExceptionOnExecute(self):
+        clear_all_messages()
+        from MySQLdb.constants import ER
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+            def close(cursorSelf): pass
+            def execute(*args):
+                self = args[0]
+                sql = args[1]
+                if sql.find('SELECT') >= 0:
+                    self.rowcount = 0
+                elif sql.find('INSERT INTO') >= 0:
+                    raise Exception(ER.DUP_ENTRY)
+                else:
+                    self.failIf(True)  # Should not be reached.
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+            def cursor(dbSelf):
+                return MockCursor()
+        
+        self.cashier.setDb(MockDatabase())
+
+        caughtExeption = False
+        try:
+            self.cashier.getCurrencySerial("http://example.org", reentrant = False)
+            self.failIf(True)
+        except Exception, e:
+            caughtExeption = True
+            self.assertEquals(len(e.args), 1)
+            self.assertEquals(e[0], ER.DUP_ENTRY)
+        self.failUnless(caughtExeption)
+
+        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)'])
+    # --------------------------------------------------------
+    def test03_getCurrencySerial_forceRecursionWithNoResolution(self):
+        clear_all_messages()
+        from MySQLdb.constants import ER
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.selectCount = 0
+                cursorSelf.insertCount = 0
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                if sql.find('SELECT') >= 0:
+                    self.rowcount = 0
+                    cursorSelf.selectCount += 1
+                elif sql.find('INSERT INTO') >= 0:
+                    cursorSelf.insertCount += 1
+                    raise Exception(ER.DUP_ENTRY)
+                else:
+                    self.failIf(True)  # Should not be reached.
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf):
+                return dbSelf.cursorValue
+        
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        caughtExeption = False
+        try:
+            self.cashier.getCurrencySerial("http://example.org")
+            self.failIf(True)
+        except Exception, e:
+            caughtExeption = True
+            self.assertEquals(len(e.args), 1)
+            self.assertEquals(e[0], ER.DUP_ENTRY)
+        self.failUnless(caughtExeption)
+        self.assertEquals(db.cursor().selectCount, 2)
+        self.assertEquals(db.cursor().insertCount, 2)
+
+        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)', 'SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)'])
+    # --------------------------------------------------------
+    def test04_cashOutUpdateSafe_twoNullPackets(self):
+        """test04_cashOutUpdateSafe_forceFallThrough
+        This test is handling the case where cashOutCollect() twice
+        returns an empty packet in a row.  The code in cashOutUpdateSafe()
+        does not actually check what is returned on the second call, but
+        is wrapped in a try/except, so we catch that and make sure the
+        operations."""
+
+        clear_all_messages()
+        from MySQLdb.constants import ER
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT', 'INSERT INTO', 'UPDATE',
+                                                  'DELETE', 'START TRANSACTION',
+                                                  'COMMIT', 'ROLLBACK' ]
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        if str == "DELETE" or str == 'UPDATE':
+                            cursorSelf.rowcount = 1
+                        found = True
+                        break
+                self.failUnless(found)
+                return cursorSelf.rowcount
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf):
+                return dbSelf.cursorValue
+        
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        caughtExeption = False
+        try:
+            packet = self.cashier.cashOutUpdateSafe("IGNORED", 5, 8)
+            self.failIf(True)
+        except Exception, e:
+            caughtExeption = True
+            self.assertEquals(len(e.args), 1)
+            self.assertEquals(e[0], "'NoneType' object has no attribute 'value'")
+
+        self.assertEquals(caughtExeption, True)
+        self.assertEquals(db.cursor().counts['SELECT'], 2)
+        self.assertEquals(db.cursor().counts['DELETE'], 2)
+        self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
+        self.assertEquals(db.cursor().counts['ROLLBACK'], 1)
+        self.assertEquals(db.cursor().counts['COMMIT'], 0)
+    # --------------------------------------------------------
+    def test05_cashOutUpdateSafe_secondPacketGood(self):
+        """test05_cashOutUpdateSafe_secondPacketGood
+        On the second call to cashOutCollect(), we return a valid row.
+        This causes us to get back a valid packet.  But still an (ignored)
+        error on the lock() not existing."""
+        clear_all_messages()
+        from MySQLdb.constants import ER
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT', 'INSERT INTO', 'UPDATE',
+                                                  'DELETE', 'START TRANSACTION',
+                                                  'COMMIT', 'ROLLBACK' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        if str == "DELETE" or str == 'UPDATE':
+                            cursorSelf.rowcount = 1
+                        found = True
+                        break
+                self.failUnless(found)
+                # The second time cashOutCollect() is called, we want to
+                # return a valid set of values.
+                if str == "SELECT" and cursorSelf.counts[str] == 2:
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = (5, "http://example.org", 5, "example", 10, "")
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf):
+                return dbSelf.cursorValue
+        
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        packet = self.cashier.cashOutUpdateSafe("IGNORED", 5, 8)
+        self.assertEquals(packet.type, PACKET_POKER_CASH_OUT)
+        self.assertEquals(packet.serial, 5)
+        self.assertEquals(packet.url, "http://example.org")
+        self.assertEquals(packet.name, "example")
+        self.assertEquals(packet.bserial, 5)
+        self.assertEquals(packet.value, 10)
+        self.assertEquals(db.cursor().counts['SELECT'], 2)
+        self.assertEquals(db.cursor().counts['DELETE'], 2)
+        self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
+        self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
+        self.assertEquals(db.cursor().counts['COMMIT'], 1)
+        msgs = get_messages()
+        self.assertEquals(msgs[len(msgs)-1], '*ERROR* cashInUnlock: unexpected missing cash_5 in locks (ignored)')
+    # --------------------------------------------------------
+    def test06_cashOutUpdateSafe_forceFakeFalsePacket(self):
+        """test06_cashOutUpdateSafe_forceFakeFalsePacket
+        We override the second call to cashOutCollect(), so we return a
+        valid row.  We force the packet returned to always be false, to
+        force the final error code to operate.  """
+        clear_all_messages()
+        from MySQLdb.constants import ER
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT', 'INSERT INTO', 'UPDATE',
+                                                  'DELETE', 'START TRANSACTION',
+                                                  'COMMIT', 'ROLLBACK' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        if str == "DELETE" or str == 'UPDATE':
+                            cursorSelf.rowcount = 1
+                        found = True
+                        break
+                self.failUnless(found)
+                return cursorSelf.rowcount
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf):
+                return dbSelf.cursorValue
+        
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        global calledCount
+        calledCount = 0
+
+        class MockPacket():
+            def __init__(mockPacketSelf):
+                mockPacketSelf.serial  = 5
+                mockPacketSelf.value  = 10
+            def __nonzero__(mockPacketSelf): return False
+            
+        def mockedcashOutCollect(currencySerial, transactionId):
+            return MockPacket()
+
+        self.cashier.cashOutCollect = mockedcashOutCollect
+
+        packet = self.cashier.cashOutUpdateSafe("IGNORED", 5, 8)
+
+        self.assertEquals(packet.type, PACKET_ERROR)
+        self.assertEquals(packet.message, 'no currency note to be collected for currency 5')
+        self.assertEquals(packet.other_type, PACKET_POKER_CASH_OUT)
+        self.assertEquals(packet.code, PacketPokerCashOut.EMPTY)
+
+        self.assertEquals(db.cursor().counts['SELECT'], 0)
+        self.assertEquals(db.cursor().counts['DELETE'], 2)
+        self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
+        self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
+        self.assertEquals(db.cursor().counts['COMMIT'], 1)
+        msgs = get_messages()
+        self.assertEquals(msgs[len(msgs)-1], '*ERROR* cashInUnlock: unexpected missing cash_5 in locks (ignored)')
+    # --------------------------------------------------------
+    def cashOutUpdateCounter_weirdLen(self, new_notes, message):
+        clear_all_messages()
+        class MockDatabase():
+            def cursor(dbSelf): return MockCursor()
+        class MockCursor(): pass
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        caughtIt = False
+        try:
+            self.cashier.cashOutUpdateCounter(new_notes, "dummy packet")
+            self.failIf(True)
+        except PacketError, pe:
+            caughtIt = True
+            self.assertEquals(pe.type, PACKET_ERROR)
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_OUT)
+            self.assertEquals(pe.code, PacketPokerCashOut.BREAK_NOTE)
+            self.assertEquals(pe.message, "breaking dummy packet resulted in %d notes (%s) instead of 2"
+                              % (len(new_notes), message))
+            self.assertEquals(get_messages(),
+                              ["cashOutUpdateCounter: new_notes = %s packet = dummy packet" % message])
+        self.failUnless(caughtIt)
+    # --------------------------------------------------------
+    def test07_cashOutUpdateCounter_weirdLen_1(self):
+        self.cashOutUpdateCounter_weirdLen(['a'], "['a']")
+    # --------------------------------------------------------
+    def test07_cashOutUpdateCounter_weirdLen_3(self):
+        self.cashOutUpdateCounter_weirdLen(['a', 'b', 'c'], "['a', 'b', 'c']")
+    # --------------------------------------------------------
+    def test08_cashOutUpdateCounter_various(self):
+        """test08_cashOutUpdateCounter_various
+        This is a somewhat goofy test in that it is covering a bunch of
+        oddball situations in cashOutUpdateCounter().  First, it's
+        checking for the case where the new_notes args are in order [
+        user, server].  Second, it checks that when server_note's value is
+        zero, only one INSERT is done.  Third, it's handling the case when
+        an Exception is thrown by the execute causing a rollback. """
+        self.cashier.parameters['user_create'] = 'yes'
+        class MockException(Exception):
+            pass
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'INSERT INTO', 'START TRANSACTION',
+                                                  'COMMIT', 'ROLLBACK' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                if sql[:len(str)] == "INSERT INTO": raise MockException()
+                return cursorSelf.rowcount
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf):
+                return dbSelf.cursorValue
+        class MockPacket():
+            def __init__(mockPacketSelf):
+                mockPacketSelf.value  = 55
+                mockPacketSelf.currency_serial = 5
+                mockPacketSelf.serial = 1
+                mockPacketSelf.application_data = "application"
+            def __str__(mockPacketSelf): return "MOCK PACKET"
+
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        caughtIt = False
+        clear_all_messages()
+        try:
+            self.cashier.cashOutUpdateCounter([ (0, 5, "joe", 55), (0, 0, "server", 0)],
+                                              MockPacket())
+            self.failIf(True)
+        except MockException, me:
+            caughtIt = True
+            self.failUnless(isinstance(me, MockException))
+
+        self.failUnless(caughtIt)
+        self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
+        self.assertEquals(db.cursor().counts['ROLLBACK'], 1)
+        self.assertEquals(db.cursor().counts['COMMIT'], 0)
+        self.assertEquals(db.cursor().counts['START TRANSACTION'], 1)
+        self.assertEquals(get_messages(), 
+                          ["cashOutUpdateCounter: new_notes = [(0, 5, 'joe', 55), (0, 0, 'server', 0)] packet = MOCK PACKET"])
+    # --------------------------------------------------------
+    def test09_cashOutUpdateCounter_forceRaiseOnNotesOrder(self):
+        """test09_cashOutUpdateCounter_forceRaiseOnNotesOrder
+        This test handles the case where new_notes do not match what is in
+        the packet sent to cashOutUpdateCounter() """
+        caughtIt = False
+        clear_all_messages()
+        class MockPacket():
+            def __init__(mockPacketSelf): mockPacketSelf.value  = 43
+            def __str__(mockPacketSelf):  return "MOCK PACKET"
+        class MockDatabase():
+            def cursor(mockDBSelf): return "MOCK CURSOR"
+        db = MockDatabase()
+        self.cashier.setDb(db)
+        try:
+            self.cashier.cashOutUpdateCounter([ (0, 5, "joe", 57), (0, 0, "server", 59)],
+                                              MockPacket())
+            self.failIf(True)
+        except PacketError, pe:
+            caughtIt = True
+            self.failUnless(isinstance(pe, PacketError))
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_OUT)
+            self.assertEquals(pe.code, PacketPokerCashOut.BREAK_NOTE)
+            self.assertEquals(pe.message,
+                              "breaking MOCK PACKET did not provide a note with the proper value (notes are [(0, 5, 'joe', 57), (0, 0, 'server', 59)])")
+        self.failUnless(caughtIt)
+    # --------------------------------------------------------
+    def test10_cashOutBreakNote_DeferredFromCommit(self):
+        """test10_cashOutBreakNote_DeferredFromCommit
+        Handle situation where the currency_serial already has an entry in
+        counter table, and causes a deferred to be returned from
+        cashOutCurrencyCommit()."""
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT transaction_id', 
+                                                  "SELECT serial FROM currencies",
+                                                  "SELECT counter.user_serial"]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        cursorSelf.row = ()
+                        found = True
+                        break
+                self.failUnless(found)
+                if sql[:len(str)] == 'SELECT transaction_id':
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = (777,)
+                elif sql[:len(str)] == "SELECT serial FROM currencies":
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = (6,)
+                elif sql[:len(str)] == "SELECT counter.user_serial":
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = ( 6, "http://example.org", 9, "joe", 100, "application" )
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+        class MockPacket():
+            def __init__(mockPacketSelf):
+                mockPacketSelf.url  = "http://cashier.example.org"
+                mockPacketSelf.currency_serial = 12
+            def __str__(mockPacketSelf): return "MOCK PACKET"
+        class MockCurrencyClient():
+            def commit(ccSelf, url, transactionId):
+                self.assertEquals(url, "http://cashier.example.org")
+                self.assertEquals(transactionId, 777)
+                return defer.Deferred()
+
+        db = MockDatabase()
+        self.cashier.setDb(db)
+        self.cashier.currency_client = MockCurrencyClient()
+
+        clear_all_messages()
+        d = self.cashier.cashOutBreakNote("MEANINGLESS ARG", MockPacket())
+
+        for key in db.cursor().counts.keys():
+            if key in [ 'SELECT transaction_id', "SELECT serial FROM currencies" ]:
+                self.assertEquals(db.cursor().counts[key], 1)
+            else:
+                self.assertEquals(db.cursor().counts[key], 0)
+        self.assertEquals(get_messages(), ['SELECT transaction_id FROM counter WHERE  currency_serial = 12', 'cashOutCurrencyCommit', 'SELECT serial FROM currencies WHERE url = http://cashier.example.org'])
+        clear_all_messages()
+
+        self.assertEquals(d.callback(True), None)
+        pack = d.result
+        self.assertEquals(pack.type, PACKET_POKER_CASH_OUT)
+        self.assertEquals(pack.serial,  6)
+        self.assertEquals(pack.url, 'http://example.org')
+        self.assertEquals(pack.name, 'joe')
+        self.assertEquals(pack.bserial, 9)
+        self.assertEquals(pack.value, 100)
+        self.assertEquals(pack.application_data, 'application')
+        [self.assertEquals(db.cursor().counts[key], 1) for key in db.cursor().counts.keys()]
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 4)
+        self.assertEquals(msgs[0], 'cashOutUpdateSafe: 6 777')
+        self.assertEquals(msgs[3], '*ERROR* cashInUnlock: unexpected missing cash_6 in locks (ignored)')
+    # --------------------------------------------------------
+    def test11_cashOutBreakNote_multirowForSerial(self):
+        """test11_cashOutBreakNote_multirowForSerial
+
+        """
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT transaction_id', 
+                                                  'SELECT name']
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        cursorSelf.row = ()
+                        found = True
+                        break
+                self.failUnless(found)
+                return cursorSelf.rowcount
+        class MockDatabase:
+            def __init__(dbSelf):
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+        class MockPacket():
+            def __init__(mockPacketSelf):
+                mockPacketSelf.url  = "http://cashier.example.org"
+                mockPacketSelf.currency_serial = 12
+            def __str__(mockPacketSelf): return "MOCK PACKET"
+        db = MockDatabase()
+        self.cashier.setDb(db)
+
+        clear_all_messages()
+        caughtIt = False
+        failMsg = 'SELECT name, serial, value FROM safe WHERE currency_serial = 12 found 0 records instead of exactly 1'
+        try:
+            self.cashier.cashOutBreakNote("MEANINGLESS ARG", MockPacket())
+            self.failIf(True)  # Should not be reached
+        except PacketError, pe:
+            caughtIt = True
+            self.assertEquals(pe.other_type, PACKET_POKER_CASH_OUT)
+            self.assertEquals(pe.type, PACKET_ERROR)
+            self.assertEquals(pe.code, PacketPokerCashOut.SAFE)
+            self.assertEquals(pe.message, failMsg)
+        self.failUnless(caughtIt)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 3)
+        self.assertEquals(msgs[2], "*ERROR* " + failMsg)
+# --------------------------------------------------------
+# Following tests are for the lock/unlock mechanism and do not need any
+# database at all.
+class PokerCashierLockUnlockTestCase(unittest.TestCase):
+    # --------------------------------------------------------
+    def setUp(self):
+        from pokernetwork import pokerlock
+        class MockLock():
+            def __init__(lockSelf, params):
+                lockSelf.alive = False
+                lockSelf.started = False
+                lockSelf.acquireCounts = {}
+            def isAlive(lockSelf): return lockSelf.alive
+            def close(lockSelf):
+                lockSelf.alive = False
+                lockSelf.started = False
+            def release(lockSelf, name):
+                lockSelf.alive = False
+                lockSelf.acquireCounts[name] -= 1
+            def start(lockSelf):
+                lockSelf.alive = True
+                lockSelf.started = True
+            def acquire(lockSelf, name, value):
+                self.assertEquals(value, 5)
+                if lockSelf.acquireCounts.has_key(name):
+                    lockSelf.acquireCounts[name] += 1
+                else:
+                    lockSelf.acquireCounts[name] = 1
+                return "ACQUIRED %s: %d" % (name, lockSelf.acquireCounts[name])
+
+        pokerlock.PokerLock = MockLock
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+        self.cashier = pokercashier.PokerCashier(self.settings)
+    # --------------------------------------------------------
+    def tearDown(self):
+        pass
+    # --------------------------------------------------------
+    def test01_unlockNonExistent(self):
+        """test01_unlockNonExistent
+        Tests when unlock is called on a serial that does not exist."""
+        self.assertEquals(self.cashier.locks, {})
+        clear_all_messages()
+        self.assertEquals(self.cashier.unlock(5), None)
+        self.assertEquals(self.cashier.locks, {})
+        self.assertEquals(get_messages(), ['*ERROR* cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
+    # --------------------------------------------------------
+    def test02_lockCreateTwice(self):
+        """test02_lockCreateTwice
+        Testing creation of the lock twice."""
+        self.assertEquals(self.cashier.locks, {})
+        clear_all_messages()
+        self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2Lock = self.cashier.locks['cash_2']
+        self.failUnless(cash2Lock.alive)
+        self.failUnless(cash2Lock.started)
+        self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
+    # --------------------------------------------------------
+    def test03_lockCreateTwiceWhenUnalive(self):
+        """test03_lockCreateTwiceWhenUnalive
+        Testing creation of the lock again after the activity is turned
+        off."""
+        self.assertEquals(self.cashier.locks, {})
+        clear_all_messages()
+        self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2Lock = self.cashier.locks['cash_2']
+        self.failUnless(cash2Lock.alive)
+        self.failUnless(cash2Lock.started)
+        self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
+        self.assertEquals(get_messages(), ['get lock cash_2'])
+
+        clear_all_messages()
+        cash2Lock.alive = False
+
+        self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2newLock = self.cashier.locks['cash_2']
+        self.failUnless(cash2newLock.alive)
+        self.failUnless(cash2newLock.started)
+        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 1)
+        self.assertEquals(get_messages(), ['get lock cash_2'])
+    # --------------------------------------------------------
+    def test04_unlockTwice(self):
+        """test03_unlockTwice
+        try to unlock a lock twice"""
+        self.assertEquals(self.cashier.locks, {})
+        clear_all_messages()
+        self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2Lock = self.cashier.locks['cash_2']
+        self.failUnless(cash2Lock.alive)
+        self.failUnless(cash2Lock.started)
+        self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
+        self.assertEquals(get_messages(), ['get lock cash_2'])
+
+        clear_all_messages()
+
+        self.assertEquals(self.cashier.unlock(2), None)
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2newLock = self.cashier.locks['cash_2']
+        self.failIf(cash2newLock.alive)
+        self.failUnless(cash2newLock.started)
+        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
+        self.assertEquals(get_messages(), [])
+
+        self.assertEquals(self.cashier.unlock(2), None)
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2newLock = self.cashier.locks['cash_2']
+        self.failIf(cash2newLock.alive)
+        self.failUnless(cash2newLock.started)
+        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
+        self.assertEquals(get_messages(),
+                          ['*ERROR* cashInUnlock: unexpected dead cash_2 pokerlock (ignored)'])
+    # --------------------------------------------------------
+    def test05_lockCreateTwiceWhenAliven(self):
+        """test05_lockCreateTwiceWhenAlive
+        relock after lock leaving it alive"""
+        self.assertEquals(self.cashier.locks, {})
+        clear_all_messages()
+        self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2Lock = self.cashier.locks['cash_2']
+        self.failUnless(cash2Lock.alive)
+        self.failUnless(cash2Lock.started)
+        self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
+        self.assertEquals(get_messages(), ['get lock cash_2'])
+
+        clear_all_messages()
+
+        self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 2")
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2newLock = self.cashier.locks['cash_2']
+        self.failUnless(cash2newLock.alive)
+        self.failUnless(cash2newLock.started)
+        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 2)
+        self.assertEquals(get_messages(), ['get lock cash_2'])
+# --------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerCashierTestCase)
     suite.addTest(unittest.makeSuite(PokerCashierTestCase))
+    suite.addTest(unittest.makeSuite(PokerCashierFakeDBTestCase))
+    suite.addTest(unittest.makeSuite(PokerCashierLockUnlockTestCase))
     return suite
-
 # --------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -533,8 +1334,11 @@ def GetTestedModule():
 # --------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test14"
-    suite = loader.loadClass(PokerCashierTestCase)
+#    loader.methodPrefix = "test11"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerCashierTestCase))
+    suite.addTest(loader.loadClass(PokerCashierFakeDBTestCase))
+    suite.addTest(loader.loadClass(PokerCashierLockUnlockTestCase))
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
