@@ -1074,6 +1074,7 @@ class PokerTable:
             client.join(other_table)
         other_table.movePlayerTo(serial, money, sit_out)
         other_table.sendNewPlayerInformation(serial)
+        other_table.update()
         if self.factory.verbose:
             self.message("player %d moved from table %d to table %d" % ( serial, game.id, to_game_id ))
 

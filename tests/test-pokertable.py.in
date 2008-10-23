@@ -1685,8 +1685,14 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
             self.assertEqual(packet.name, "Player1")
             self.assertEqual(packet.game_id, self.table2_value)
             self.assertEquals(self.service.calledStatsMockup, packet.serial)
+            self.assertEquals(self.table2.timer_info.has_key('dealTimeout'), False)
         expectPlayerDeferred.addCallback(checkReturnPacket)
 
+        #
+        # Artificial timer that must be removed when the autodeal functions are
+        # called as a side effect of moving the player to the table2
+        #
+        self.table2.timer_info['dealTimeout'] = reactor.callLater(200000, lambda: True)
         self.table.movePlayer(player, 1, self.table2.game.id)
 
         return expectPlayerDeferred
