@@ -254,6 +254,31 @@ class MonitorTestCase(unittest.TestCase):
         cursor.execute("SELECT COUNT(*) FROM monitor WHERE event = 1")
         self.assertEquals(1, cursor.rowcount)
 
+class CleanUpTestCase(PokerServiceTestCaseBase):
+
+    # ----------------------------------------------------------------
+    def test01_cleanUp(self):
+        self.service.startService()
+        db = self.service.db
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO users (serial, name, password, created) VALUES (43, 'BOTAA', 'passwordAA', 0)")
+        cursor.execute("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (43, 200)")
+        cursor.execute("INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (44, 200)")
+        self.service.cleanUp('BOT')
+        cursor.execute("SELECT COUNT(*) FROM users WHERE name like 'BOT%'")
+        self.assertEqual(0, cursor.fetchone()[0])
+        #
+        # Bot removed from tourney
+        #
+        cursor.execute("SELECT COUNT(*) FROM user2tourney WHERE user_serial = 43")
+        self.assertEqual(0, cursor.fetchone()[0])
+        #
+        # Non bot not removed from tourney
+        #
+        cursor.execute("SELECT COUNT(*) FROM user2tourney WHERE user_serial = 44")
+        self.assertEqual(1, cursor.fetchone()[0])
+        cursor.close()
+
 class ListTablesTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
@@ -2185,6 +2210,7 @@ def Run():
     suite.addTest(loader.loadClass(ListTablesTestCase))
     suite.addTest(loader.loadClass(TourneySelectTestCase))
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
+    suite.addTest(loader.loadClass(CleanUpTestCase))
     suite.addTest(loader.loadClass(ResthostTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,

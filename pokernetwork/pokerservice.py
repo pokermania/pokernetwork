@@ -1368,6 +1368,8 @@ class PokerService(service.Service):
             cursor.execute(sql)
             sql = "delete session from session, users where session.user_serial = users.serial and users.name like '" + temporary_users + "%'"
             cursor.execute(sql)
+            sql = "DELETE FROM user2tourney USING user2tourney, users WHERE users.name like '" + temporary_users + "%' AND users.serial = user2tourney.user_serial"
+            cursor.execute(sql)
             sql = "delete from users where name like '" + temporary_users + "%'"
             cursor.execute(sql)
 
