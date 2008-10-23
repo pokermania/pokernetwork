@@ -36,7 +36,7 @@ class AttrsFactory:
 
     """The Attrs system is designed to be a flexible and arbitrary key/value
     system for object types when we want poker-network to have
-    easily-implemented aribitrary data associated with a particular item.
+    easily-implemented arbitrary data associated with a particular item.
 
     The public interface usage looks something like this (although "Attr" will
     be replaced with "SOMETHING" since this is a virtual base class):
@@ -160,9 +160,7 @@ class AttrsAccessor:
 class AttrsLookup:
 
     """AttrsLookup is a base class for aggregating a bunch of
-    AttrsAccessor classes into a single lookup class.  the attribute
-    system.  Typically, you should not need to override any methods here,
-    because you will mostly be overriding them in the
+    AttrsAccessor classes into a single lookup class.  
     """
 
     def __init__(self, attr2accessor = {},  packetClassesName = "Attrs", requiredAttrPacketFields = []):
