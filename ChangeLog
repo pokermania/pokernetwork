@@ -1,3 +1,23 @@
+2008-10-23  Loic Dachary <loic@dachary.org>
+
+	* Release 1.0.17
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  Remove bots from tournaments where they are registered when
+	  discarding them at shutdown.
+	* pokernetwork/attrpack.py: fix comment
+
+2008-10-22  Johan Euphrosine <proppy@aminche.com>
+
+	* conf/poker.server.xml.in: add counfilter sample in
+	  poker.server.xml.in
+
+2008-10-21  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  getPlayerPlaces list registering running break and break wait
+	  tourneys
+
 2008-10-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/run.in (DEFAULT_COVERAGE_FILES): Added
@@ -47,6 +67,11 @@
 	* tests/test-pokercashier.py.in
 	(PokerCashierFakeDBTestCase.test04_cashOutUpdateSafe_twoNullPackets):
 	Wrote test.
+
+2008-10-16  Loic Dachary <loic@dachary.org>
+
+	* tests/test-clientserver.py.in: clear messages in test10
+	  remove test09
 
 2008-10-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -130,8 +155,6 @@
 	Wrote test.
 
 2008-10-06  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* pokernetwork/packets.py, pokernetwork/pokerexplain.py,
 	  pokernetwork/pokerpackets.py, tests/test-pokerexplain.py.in,
@@ -6615,8 +6638,6 @@ Sun Mar 26 2006  Loic Dachary  <loic@gnu.org>
 	* pokerclient2d/*: fix warnings
 
 Wed Mar 22 2006  Loic Dachary  <loic@gnu.org>
-
-	* Release 1.0.17
 
 	* pokerclient2d/pokerdisplay2d.py (PokerTable2D.render): handle
 	  PACKET_POKER_HIGHEST_BET_INCREASE to update the raise range
