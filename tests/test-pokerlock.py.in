@@ -1,13 +1,14 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2006 Mekensleep
+# Note: this file is copyrighted by multiple entities; some license their
+# copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
+# below for details.
 #
-# Mekensleep
-# 24 rue vieille du temple
-# 75004 Paris
-#       licensing@mekensleep.com
+# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006       Mekensleep
+#                          24 rue vieille du temple, 75004 Paris
+#                          <licensing@mekensleep.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,13 +24,34 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This program gives you software freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version of the AGPL.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+#
 # Authors:
 #  Loic Dachary <loic@gnu.org>
+#  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 
 import sys, os
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
+
+from tests.testmessages import silence_all_messages, get_messages, clear_all_messages, search_output
 
 from twisted.python import failure
 from twisted.trial import unittest, runner, reporter
@@ -46,9 +68,10 @@ from pokernetwork import pokerlock
 class PokerLockTestCase(unittest.TestCase):
 
     # ----------------------------------------------------------------
-    def setUp(self):
+    def setUp(self, verbose = 6):
         pokerlock.PokerLock.acquire_sleep = 1
-        verbose = int(os.environ.get('VERBOSE_T', '-1'))
+#        verbose = int(os.environ.get('VERBOSE_T', '-1'))
+        silence_all_messages()
         if verbose < 0:
             pokerlock.PokerLock.message = lambda self, string: True
         self.parameters = {'host': '@MYSQL_TEST_DBHOST@', 'user': '@MYSQL_TEST_DBROOT@', 'password': '@MYSQL_TEST_DBROOT_PASSWORD@'}
@@ -59,23 +82,26 @@ class PokerLockTestCase(unittest.TestCase):
         self.locker2 = pokerlock.PokerLock(self.parameters)
         if verbose >= 0: self.locker2.verbose = verbose;
         self.locker2.start()
-    
     # ----------------------------------------------------------------    
     def tearDown(self):
         self.locker2.close()
         self.locker.close()
-        
+    # ----------------------------------------------------------------    
     def test01_simple(self):
         d = self.locker.acquire('lock01')
         def validate(result):
             if isinstance(result, failure.Failure): raise result
+            for str in  ['loop, queue size',  '__acquire lock01',
+                         '__acquire got MySQL lock', 'acquired' ]:
+                self.failUnless(search_output(str))
             self.assertEqual("lock01", result)
             self.locker.release('lock01')
             return result
         
         d.addBoth(validate)
+        clear_all_messages()
         return d
-
+    # ----------------------------------------------------------------    
     def test02_wait(self):
         def locker2_succeeded(result):
             self.locker.release('lock01')
@@ -83,87 +109,339 @@ class PokerLockTestCase(unittest.TestCase):
             self.locker2.close()
 
         def locker2_failed(result):
+            msgs = get_messages()
+            for str in [ '__acquire lock01', 'acquired', 'exception in function', 
+                         'release because exception', 'loop, queue size']:
+                self.failUnless(search_output(str))
+
             self.locker.release('lock01')
             self.assertTrue(isinstance(result, failure.Failure))
             self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
+            clear_all_messages()
             
         def locker2():
             d = self.locker2.acquire('lock01', 5)
+            self.assertEquals(get_messages(), ['acquire'])
+            clear_all_messages()
             d.addCallback(locker2_succeeded)
             d.addErrback(locker2_failed)
             return d
             
         def validate(result):
             if isinstance(result, failure.Failure): raise result
+
+            for str in ['loop, queue size', '__acquire lock01', 'acquired', '__acquire got MySQL lock']:
+                self.failUnless(search_output(str))
             self.assertEqual("lock01", result)
+            clear_all_messages()
             return locker2()
-        
+
         d = self.locker.acquire('lock01')
+        clear_all_messages()
         d.addBoth(validate)
         return d
-
+    # ----------------------------------------------------------------    
     def test03_acquire_dead(self):
         self.locker.close()
+        clear_all_messages()
         try:
             self.locker.acquire('lock01')
             problem = True
         except Exception, e:
             problem = False
             self.assertEqual(e[0], pokerlock.PokerLock.DEAD)
+            self.assertEqual(get_messages(), ['acquire'])
         if problem:
             self.fail("acquire on dead PokerLock did not raise exception")
-        
+    # ----------------------------------------------------------------    
     def test04_release_twice(self):
         def validate(result):
             if isinstance(result, failure.Failure): raise result
             self.assertEqual("lock01", result)
+            for str in ['loop, queue size', '__acquire lock01',
+                        'acquired', '__acquire got MySQL lock']:
+                self.failUnless(search_output(str))
+
+            clear_all_messages()
             self.locker.release("lock01")
+            self.assertEquals(get_messages(), ['release lock01'])
+            clear_all_messages()
             try:
                 self.locker.release("lock01")
                 problem = True
             except Exception, e:
                 problem = False
                 self.assertEqual(e[0], pokerlock.PokerLock.RELEASE)
+                self.assertEquals(get_messages(), ['release lock01'])
             if problem:
                 self.fail("double release did not raise exception")
-        
+
+        clear_all_messages()
         d = self.locker.acquire('lock01')
+        self.assertEqual(get_messages(), ['acquire'])
+        clear_all_messages()
         d.addBoth(validate)
         return d
-        
+    # ----------------------------------------------------------------    
     def test05_many(self):
+        self.locker.message = lambda self, string: True
+        self.locker.verbose = 0
+        # Runs too slow if you have messages on
         dl = []
         def show(x):
             self.locker.release('lock01')
+
         pokerlock.PokerLock.acquire_sleep = 0.01
+
         for i in xrange(1,500):
             d = self.locker.acquire('lock01', 3)
             d.addBoth(show)
             dl.append(d)
+        clear_all_messages()
         return defer.DeferredList(dl)
+    # ----------------------------------------------------------------    
+    def test06_aquireTimeout(self):
+        pokerlock.PokerLock.acquire_sleep = 0.01
 
+        def lockTimeoutExpected_succeeded(result):
+            self.locker.release('lock01')
+            self.fail("lock timeout succeeded with result = %s : should have failed with timeout"
+                      % result)
+
+        def lockTimeoutExpected_failed(result):
+            msgs = get_messages()
+            self.failUnless(search_output('__acquire TIMED OUT'))
+
+            self.assertTrue(isinstance(result, failure.Failure))
+            self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
+            clear_all_messages()
+            
+        def lockFastTimeout():
+            pokerlock.PokerLock.acquire_sleep = 60
+            d = self.locker.acquire('lock01', 5)
+            self.assertEquals(get_messages(), ['acquire'])
+            clear_all_messages()
+            d.addCallback(lockTimeoutExpected_succeeded)
+            d.addErrback(lockTimeoutExpected_failed)
+            return d
+            
+        def validate(result):
+            if isinstance(result, failure.Failure): raise result
+            for str in  ['loop, queue size',  '__acquire lock01',
+                         '__acquire got MySQL lock', 'acquired' ]:
+                self.failUnless(search_output(str))
+            self.assertEqual("lock01", result)
+            clear_all_messages()
+            return lockFastTimeout()
+
+        pokerlock.PokerLock.acquire_sleep = 0.01
+        d = self.locker.acquire('lock01', 1)
+        clear_all_messages()
+        d.addBoth(validate)
+        return d
+    # ----------------------------------------------------------------    
+    def test07_mainTests_stopped(self):
+        clear_all_messages()
+        self.locker.stopping()
+        self.assertEquals(get_messages(), [ "stopping" ])
+        d = defer.Deferred()
+        def checker(val):
+            self.failIf(self.locker.running)
+            self.assertEquals(get_messages(), [ "stopped" ])
+        clear_all_messages()
+        reactor.callLater(pokerlock.PokerLock.acquire_sleep*3, lambda: d.callback(True))
+        return d
+    # ----------------------------------------------------------------    
+    def test08_mainTests_emptyQueue(self):
+        import Queue
+        class MockQueue():
+            def qsize(qSelf):
+                return 1
+            def get(qSelf, timeout = 1):
+                raise Queue.Empty("MOCK")
+            def empty(qSelf):
+                return False
+            def put(qSelf, val):
+                pass
+        self.locker.q = MockQueue()
+        d = defer.Deferred()
+        def checker(val):
+            search_output("timeout")
+        d.addCallback(checker)
+        reactor.callLater(pokerlock.PokerLock.acquire_sleep*2, lambda: d.callback(True))
+        return d
+    # ----------------------------------------------------------------    
+    def test09_mainTests_wrongRaise(self):
+        import Queue
+        import time
+        from cStringIO import StringIO
+        class MockException(Exception): pass
+        class MockQueue():
+            def qsize(qSelf):
+                return 1
+            def get(qSelf, timeout = 1):
+                raise MockException("MOCK")
+            def empty(qSelf):
+                return False
+            def put(qSelf, val):
+                pass
+        oldStderr = sys.stderr
+        sys.stderr = StringIO()
+        anotherLock = pokerlock.PokerLock(self.parameters)
+        anotherLock.q = MockQueue()
+        anotherLock.start()
+        time.sleep(2)
+        value = sys.stderr.getvalue()
+        sys.stderr = oldStderr
+        self.failUnless(value.find('raise MockException("MOCK")\nMockException: MOCK') >= 0)
+    # ----------------------------------------------------------------    
+    def test10_mainTests_notRunningForCallback(self):
+        import Queue
+        import time
+
+        global myLock
+        def setNotRunning(name, timeout):
+            global myLock
+            myLock.running = False
+
+        d = defer.Deferred()
+        def succeeded(result): 
+            self.failIf(True)
+            
+        def failed(result): 
+            self.failIf(True)
+        d.addErrback(failed)
+        d.addCallback(succeeded)
+
+        class MockQueue():
+            def __init__(qSelf):
+                qSelf.count = 1
+            def qsize(qSelf):
+                return qSelf.count
+            def get(qSelf, timeout = 1):
+                if qSelf.count > 0:
+                    qSelf.count = 0
+                    return ("Mocky", setNotRunning, 10, d)
+                else:
+                    raise Queue.Empty
+            def empty(qSelf):
+                return qSelf.count <= 0
+            def put(qSelf, val):
+                pass
+        class MockLock():
+            def __init__(lSelf):
+                lSelf.calledReleaseCount = 0
+            def release(lSelf):
+                lSelf.calledReleaseCount += 1
+
+        silence_all_messages()
+        clear_all_messages()
+        anotherLock = pokerlock.PokerLock(self.parameters)
+        anotherLock.q = MockQueue()
+        anotherLock.lock = MockLock()
+        anotherLock.verbose = 6
+        myLock = anotherLock
+        anotherLock.start()
+        time.sleep(2)
+        self.failUnless(search_output('release because not running'))
+        self.assertEquals(anotherLock.running, False)
+        self.assertEquals(anotherLock.lock.calledReleaseCount, 1)
+    # ----------------------------------------------------------------    
+    def test11_mainTests_raiseForceRelease(self):
+        import Queue
+        import time
+        class MockException(Exception): pass
+
+        def raiseForceRelease(name, timeout):
+            raise MockException()
+
+        def succeeded(result): 
+            self.failIf(True)
+            
+        def failed(result): 
+            self.failUnless(issinstance(result, MockException))
+            # FIXME: this callback never happens; it should, however.  I
+            # am not completely sure why; I assume it's because the
+            # reactor.callFromThread() errback call in the main() doesn't
+            # get executed before the reactor dies.  OTOH, I don't fully
+            # understand the thread/reactor interaction issues .  If
+            # someone can figure out and make sure this callback happens,
+            # I'd appreciate it.
+        d = defer.Deferred()
+        d.addErrback(failed)
+        d.addCallback(succeeded)
+
+        class MockQueue():
+            def __init__(qSelf):
+                qSelf.count = 1
+            def qsize(qSelf):
+                return qSelf.count
+            def get(qSelf, timeout = 1):
+                if qSelf.count > 0:
+                    qSelf.count = 0
+                    return ("Mocky", raiseForceRelease, 10, d)
+                else:
+                    raise Queue.Empty
+            def empty(qSelf):
+                return qSelf.count <= 0
+            def put(qSelf, val):
+                pass
+        class MockLock():
+            def release(lSelf):
+                raise MockException("MOCKY NO LOCK RELEASE")
+
+        silence_all_messages()
+        clear_all_messages()
+        anotherLock = pokerlock.PokerLock(self.parameters)
+
+        anotherLock.q = MockQueue()
+        anotherLock.lock = MockLock()
+        anotherLock.verbose = 6
+        anotherLock.start()
+        time.sleep(2)
+
+        self.assertEquals(anotherLock.running, True)
+        self.failUnless(search_output('exception in function Traceback'))
+        self.failUnless(search_output('release because exception'))
+        self.failUnless(search_output('raise MockException("MOCKY NO LOCK RELEASE")'))
+    # ----------------------------------------------------------------    
+    def test12_mainTests_makeSureDBCloses(self):
+        class MockDB():
+            def __init__(dbSelf):
+                dbSelf.closeCount = 0
+            def close(dbSelf):
+                dbSelf.closeCount += 1
+        db = MockDB()
+        oldIsAlive = self.locker.isAlive
+        def mockIsAlive(): return False
+        self.locker.isAlive = mockIsAlive
+        oldDb = self.locker.db
+        self.locker.db = db
+        self.locker.close()
+        self.assertEquals(self.locker.db, None)
+        self.locker.db = oldDb
+        self.assertEquals(db.closeCount, 1)
+        self.locker.isAlive = oldIsAlive
 # ----------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerLockTestCase)
     suite.addTest(unittest.makeSuite(PokerLockTestCase))
     return suite
-    
 # ----------------------------------------------------------------
 def GetTestedModule():
     return currencyclient
-  
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test05"
+#    loader.methodPrefix = "test12"
     suite = loader.loadClass(PokerLockTestCase)
     return runner.TrialRunner(
-                              reporter.VerboseTextReporter,
-#                              reporter.TextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
-    
+        reporter.VerboseTextReporter,
+        #                              reporter.TextReporter,
+        #                              tracebackFormat='verbose',
+        tracebackFormat='default',
+        ).run(suite)
+
 # ----------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():

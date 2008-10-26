@@ -1,3 +1,16 @@
+2008-10-25  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerlock.py.in
+	(PokerLockTestCase.test12_mainTests_makeSureDBCloses): Wrote test.
+
+	* tests/run.in (DEFAULT_COVERAGE_FILES): Added pokerlock.
+
+	* tests/test-pokerlock.py.in
+	(PokerLockTestCase.test10_mainTests_notRunningForCallback):
+	Wrote test.
+	(PokerLockTestCase.test11_mainTests_raiseForceRelease): Wrote
+	test.
+
 2008-10-23  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17
@@ -18,7 +31,24 @@
 	  getPlayerPlaces list registering running break and break wait
 	  tourneys
 
+2008-10-20  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerlock.py.in (PokerLockTestCase.test07_mainTests_stopped):
+	Wrote test.
+	(PokerLockTestCase.test08_mainTests_emptyQueue): Wrote test.
+	(PokerLockTestCase.test09_mainTests_wrongRaise): Wrote test.
+	(PokerLockTestCase.test06_aquireTimeout.lockTimeoutExpected_failed):
+	Fixed overzealous search_output.
+
 2008-10-19  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerlock.py.in (PokerLockTestCase.test01_simple):
+	Added message asserts.
+	(PokerLockTestCase.test02_wait): Added message asserts.
+	(PokerLockTestCase.test03_acquire_dead): Added message asserts.
+	(PokerLockTestCase.test04_release_twice.validate): Added message
+	asserts.
+	(PokerLockTestCase.test06_aquireTimeout): Wrote test.
 
 	* tests/run.in (DEFAULT_COVERAGE_FILES): Added
 	../pokernetwork/pokercashier.py
