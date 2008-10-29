@@ -1,21 +1,24 @@
+# translation of fr.po to
 # translation of poker2d.po to
 # French translations for pokerclient package.
 # Copyright (C) 2006 THE pokerclient'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the pokerclient package.
-# griim <griim.work@gmail.com>, 2006.
 #
+# griim <griim.work@gmail.com>, 2006.
+# Johan Euphrosine <proppy@aminche.com>, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: poker2d\n"
+"Project-Id-Version: fr\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-02-14 18:36+0100\n"
-"PO-Revision-Date: 2007-01-13 23:45+0100\n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"PO-Revision-Date: 2008-10-29 11:57+0100\n"
+"Last-Translator: Johan Euphrosine <proppy@aminche.com>\n"
+"Language-Team:  <pokersource-users@gna.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #: pokerclient2d/data/interface/interface.glade:100
 msgid "<b>Login</b>"
@@ -27,7 +30,7 @@ msgstr "<b>Mot de passe</b>"
 
 #: pokerclient2d/data/interface/interface.glade:198
 msgid "_Remember password"
-msgstr "_Mémorise mot de passe"
+msgstr "_Mémoriser le mot de passe"
 
 #: pokerclient2d/data/interface/interface.glade:224
 #: pokerclient2d/data/interface/interface.glade:323
@@ -48,7 +51,7 @@ msgstr "Créer un compte"
 
 #: pokerclient2d/data/interface/interface.glade:441
 msgid "auto post blinds"
-msgstr "blind automatique"
+msgstr "blindes automatique"
 
 #: pokerclient2d/data/interface/interface.glade:461
 msgid "sit out next hand"
@@ -56,11 +59,11 @@ msgstr "se lever"
 
 #: pokerclient2d/data/interface/interface.glade:627
 msgid "Post blind"
-msgstr "Payer le blind"
+msgstr "Payer la blinde"
 
 #: pokerclient2d/data/interface/interface.glade:653
 msgid "Auto Post"
-msgstr "Blind auto"
+msgstr "Blinde auto"
 
 #: pokerclient2d/data/interface/interface.glade:688
 #: pokerclient2d/data/interface/interface.glade:10460
@@ -74,7 +77,7 @@ msgstr "NON"
 
 #: pokerclient2d/data/interface/interface.glade:724
 msgid "WAIT FOR BIG BLIND"
-msgstr "ATTENDRE BIG BLIND"
+msgstr "ATTENDRE LA GROSSE BLINDE"
 
 #: pokerclient2d/data/interface/interface.glade:894
 msgid "Which amount do you want to bring at the table ?"
@@ -90,7 +93,7 @@ msgstr "Autre montant : "
 
 #: pokerclient2d/data/interface/interface.glade:1532
 msgid "Player ID"
-msgstr "ID Joueur"
+msgstr "ID du joueur"
 
 #: pokerclient2d/data/interface/interface.glade:1583
 msgid "Email"
@@ -226,7 +229,7 @@ msgstr "_Effets graphiques avancés"
 
 #: pokerclient2d/data/interface/interface.glade:3284
 msgid " _Auto Post Blind"
-msgstr "_Blinds automatiques"
+msgstr "_Blindes automatiques"
 
 #: pokerclient2d/data/interface/interface.glade:3294
 msgid " _Remember Me"
@@ -387,32 +390,32 @@ msgstr "Recave"
 
 #: pokerclient2d/data/interface/interface.glade:9680
 msgid "Switch"
-msgstr ""
+msgstr "Changer"
 
 #: pokerclient2d/data/interface/interface.glade:9735
 msgid "Call"
-msgstr ""
+msgstr "Suivre"
 
 #: pokerclient2d/data/interface/interface.glade:9753
 msgid "Check"
-msgstr ""
+msgstr "Passer"
 
 #: pokerclient2d/data/interface/interface.glade:9791
 #: pokerclient2d/data/interface/interface.glade:9867
 msgid "Raise Increase"
-msgstr ""
+msgstr "Augmenter la relance"
 
 #: pokerclient2d/data/interface/interface.glade:9810
 msgid "Raise Decrease"
-msgstr ""
+msgstr "Reduire la relance"
 
 #: pokerclient2d/data/interface/interface.glade:9829
 msgid "Raise Pot"
-msgstr ""
+msgstr "Relancer du pot"
 
 #: pokerclient2d/data/interface/interface.glade:9848
 msgid "Raise half pot"
-msgstr ""
+msgstr "Relance de la moitié du pot"
 
 #: pokerclient2d/data/interface/interface.glade:9886
 msgid "Raise decrease BB"
@@ -444,11 +447,11 @@ msgstr "La main est finie, que voulez-vous faire ?"
 
 #: pokerclient2d/data/interface/interface.glade:11092
 msgid "CHECK"
-msgstr ""
+msgstr "SUIVRE"
 
 #: pokerclient2d/data/interface/interface.glade:11105
 msgid "FOLD"
-msgstr ""
+msgstr "COUCHER"
 
 #: pokerclient2d/data/interface/interface.glade:11137
 msgid "Checking is free. What do you want to do?"
@@ -1056,3 +1059,4 @@ msgstr ""
 "pressé sur les cartes jusqu'a\n"
 "voir leurs valeurs. Relacher pour\n"
 "revenir dans la position initiale."
+
