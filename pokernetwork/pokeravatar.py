@@ -89,7 +89,8 @@ class PokerAvatar:
                     return False
 
                 self.explain = PokerExplain(dirs = self.service.dirs,
-                                            verbose = self.service.verbose)
+                                            verbose = self.service.verbose,
+                                            explain = what)
         else:
             self.explain = None
         return True

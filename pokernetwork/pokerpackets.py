@@ -3942,8 +3942,10 @@ Direction: server <= client
 """
     pass #pragma: no cover
 
-    NONE = 0x0000
-    ALL  = 0xFFFF
+    NONE       = 0x0000
+    REST       = 0x0001
+    CHIPSTACKS = 0x0004
+    ALL        = REST | CHIPSTACKS
 
 Packet.infoDeclare(globals(), PacketPokerExplain, PacketInt, "POKER_EXPLAIN", 142) # 142 # 0x8e # %SEQ%
 

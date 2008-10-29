@@ -90,6 +90,7 @@ class PokerExplain:
         self._prefix = ""
         self.games = PokerGames(**kwargs)
         self.setVerbose(kwargs.get('verbose', 0))
+        self.what = kwargs.get("explain", PacketPokerExplain.ALL)
 
     def error(self, string):
         self.message("ERROR " + string)
@@ -148,6 +149,8 @@ class PokerExplain:
                                             chips = self.normalizeChips(game, chips))
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
+        if self.what & PacketPokerExplain.CHIPSTACKS:
+            packets.append(self.explainPlayerChips(game, player))
         return packets
 
     def chipsBet2Pot(self, game, player, bet, pot_index):
@@ -165,6 +168,8 @@ class PokerExplain:
                                          pot = pot_index)
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
+        if self.what & PacketPokerExplain.CHIPSTACKS:
+            packets.append(self.explainPlayerChips(game, player))
         return packets
         
     def chipsPot2Player(self, game, player, bet, pot_index, reason):
@@ -314,6 +319,8 @@ class PokerExplain:
                         forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
                         for serial in game.player_list:
                             forward_packets.append(self.updatePlayerChips(game, game.serial2player[serial]))
+                            if self.what & PacketPokerExplain.CHIPSTACKS:
+                                forward_packets.append(self.explainPlayerChips(game, game.serial2player[serial]))
                         forward_packets.extend(self.updatePotsChips(game, []))
 
             elif packet.type == PACKET_POKER_CANCELED:
@@ -482,11 +489,9 @@ class PokerExplain:
                     #
                     player = game.getPlayer(packet.serial)
                     player.buy_in_payed = True
-                    chips = PacketPokerPlayerChips(game_id = game.id,
-                                                   serial = packet.serial,
-                                                   money = player.money,
-                                                   bet = player.bet)
-                    forward_packets.append(chips)
+                    forward_packets.append(self.updatePlayerChips(game, player))
+                    if self.what & PacketPokerExplain.CHIPSTACKS:
+                        forward_packets.append(self.explainPlayerChips(game, player))
 
             elif packet.type == PACKET_POKER_PLAYER_CHIPS:
                 player = game.getPlayer(packet.serial)
@@ -507,6 +512,8 @@ class PokerExplain:
                     player.money = packet.money
                     if player.money > 0:
                         player.buy_in_payed = True
+                if self.what & PacketPokerExplain.CHIPSTACKS:
+                    forward_packets.append(self.explainPlayerChips(game, player))
 
             elif packet.type == PACKET_POKER_FOLD:
                 game.fold(packet.serial)
@@ -652,7 +659,7 @@ class PokerExplain:
 
         packets.extend(self.updatePotsChips(game, game.getPots()))
         return packets
-        
+
     #
     # Should be move all bets back to players (for uncalled bets)
     # This is a border case we don't want to handle right now
@@ -696,6 +703,15 @@ class PokerExplain:
             games.remove(exclude)
         return PacketPokerCurrentGames(game_ids = games,
                                        count = len(games))
+
+    def explainPlayerChips(self, game, player):
+        packet = PacketPokerClientPlayerChips(game_id = game.id,
+                                              serial = player.serial,
+                                              bet = self.normalizeChips(game, player.bet),
+                                              money = self.normalizeChips(game, player.money) )
+        return packet
+                
+        
     
     def packetsPot2Player(self, game):
         packets = []
@@ -747,6 +763,8 @@ class PokerExplain:
                 
         for player in game.serial2player.itervalues():
             packets.append(self.updatePlayerChips(game, player))
+            if self.what & PacketPokerExplain.CHIPSTACKS:
+                packets.append(self.explainPlayerChips(game, player))
         packets.extend(self.updatePotsChips(game, []))
         return packets
         

@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 import sys
+import os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
@@ -126,7 +127,7 @@ class PokerExplainTestCase(unittest.TestCase):
             bet = 30
             money = 50
         packets = self.explain.chipsPlayer2Bet(PokerGame(), PokerPlayer(), 10)
-        self.assertEqual(2, len(packets))
+        self.assertEqual(3, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_PLAYER2BET, packet.type)
         self.assertEqual([1, 6, 2, 2], packet.chips)
@@ -147,13 +148,20 @@ class PokerExplainTestCase(unittest.TestCase):
 
         pot_index = 0
         packets = self.explain.chipsBet2Pot(PokerGame(), PokerPlayer(), 13, pot_index)
-        self.assertEqual(2, len(packets))
+        self.assertEqual(3, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packet.type)
         self.assertEqual([1, 6, 2, 2], packet.chips)
         self.assertEqual(pot_index, packet.pot)
         packet = packets[1]
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+        packet = packets[2]
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, packet.type)
+
+        # test without explain chipstack
+        self.explain.what = PacketPokerExplain.REST
+        packets = self.explain.chipsBet2Pot(PokerGame(), PokerPlayer(), 13, pot_index)
+        self.assertEqual(2, len(packets))
 
     def test07_chipsPot2Player(self):
         class PokerGame:
@@ -218,13 +226,22 @@ class PokerExplainTestCase(unittest.TestCase):
         event = ( "raise", player_serial, 20 )
         game.historyAdd(*event)
         self.assertEqual(True, self.explain.gameEvent(game_id, "money2bet", player_serial, 20))
-        self.assertEqual(4, len(self.explain.forward_packets))
+        self.assertEqual(5, len(self.explain.forward_packets))
         packet = self.explain.forward_packets[1]
         self.assertEqual(PACKET_POKER_HIGHEST_BET_INCREASE, packet.type)
         packet = self.explain.forward_packets[2]
         self.assertEqual(PACKET_POKER_CHIPS_PLAYER2BET, packet.type)
         packet = self.explain.forward_packets[3]
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+        packet = self.explain.forward_packets[4]
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, packet.type)
+
+        # test without explain chipstack
+        self.explain.what = PacketPokerExplain.REST
+        self.explain.forward_packets = [ 'fake' ]
+        self.assertEqual(True, self.explain.gameEvent(game_id, "money2bet", player_serial, 20))
+        self.assertEqual(4, len(self.explain.forward_packets))
+
 
     def test08_gameEvent_bet2pot(self):
         self.explain.forward_packets = [ 'fake' ]
@@ -235,11 +252,19 @@ class PokerExplainTestCase(unittest.TestCase):
 
         game.current_round = -1
         self.assertEqual(True, self.explain.gameEvent(game_id, "bet2pot", player_serial, 20))
-        self.assertEqual(3, len(self.explain.forward_packets))
+        self.assertEqual(4, len(self.explain.forward_packets))
         packet = self.explain.forward_packets[1]
         self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packet.type)
         packet = self.explain.forward_packets[2]
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+        packet = self.explain.forward_packets[3]
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, packet.type)
+
+        # test without explain chipstack
+        self.explain.what = PacketPokerExplain.REST
+        self.explain.forward_packets = [ 'fake' ]
+        self.assertEqual(True, self.explain.gameEvent(game_id, "bet2pot", player_serial, 20))
+        self.assertEqual(3, len(self.explain.forward_packets))
 
         
     def test08_gameEvent_round_cap_decrease(self):
@@ -337,12 +362,20 @@ class PokerExplainTestCase(unittest.TestCase):
                 return False
 
         packets = self.explain.moveBet2Pot(PokerGame())
-        self.assertEqual(4, len(packets))
+        self.assertEqual(5, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_BET2POT, packet.type)
         self.assertEqual([1, 6, 2, 6, 5, 1], packet.chips)
         packet = packets[1]
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, packet.type)
+        packet = packets[2]
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, packet.type)
+
+        # test without explain chipstack
+        self.explain.what = PacketPokerExplain.REST
+        packets = self.explain.moveBet2Pot(PokerGame())
+        self.assertEqual(4, len(packets))
+
 
     def test15_updateBetLimit(self):
         game_id = 1
@@ -401,7 +434,7 @@ class PokerExplainTestCase(unittest.TestCase):
 
 
         packets = self.explain.packetsPot2Player(PokerGameChipsLeft())
-        self.assertEqual(3, len(packets))
+        self.assertEqual(4, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
         self.assertEqual('left_over', packet.reason)
@@ -421,7 +454,7 @@ class PokerExplainTestCase(unittest.TestCase):
                 ]
 
         packets = self.explain.packetsPot2Player(PokerGameUncalled())
-        self.assertEqual(3, len(packets))
+        self.assertEqual(4, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
         self.assertEqual('uncalled', packet.reason)
@@ -444,7 +477,7 @@ class PokerExplainTestCase(unittest.TestCase):
                 ]
 
         packets = self.explain.packetsPot2Player(PokerGameResolve())
-        self.assertEqual(4, len(packets))
+        self.assertEqual(5, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_POT_MERGE, packet.type)
         self.assertEqual([0], packet.sources)
@@ -475,7 +508,7 @@ class PokerExplainTestCase(unittest.TestCase):
                 ]
 
         packets = self.explain.packetsPot2Player(PokerGameResolve())
-        self.assertEqual(4, len(packets))
+        self.assertEqual(5, len(packets))
         packet = packets[0]
         self.assertEqual(PACKET_POKER_CHIPS_POT2PLAYER, packet.type)
         self.assertEqual("win", packet.reason)
@@ -601,10 +634,19 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertTrue(self.explain.explain(PacketPokerCanceled(game_id = game_id,
                                                                  serial = player_serial,
                                                                  amount = amount)))
-        self.assertEqual(5, len(self.explain.forward_packets))
+        self.assertEqual(6, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_CANCELED, self.explain.forward_packets[0].type)
         self.assertEqual(PACKET_POKER_CHIPS_BET2POT, self.explain.forward_packets[1].type)
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[2].type)
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, self.explain.forward_packets[3].type)
+
+        # test without explain chipstack
+        self.explain.forward_packets = []
+        self.explain.what = PacketPokerExplain.REST
+        self.assertTrue(self.explain.explain(PacketPokerCanceled(game_id = game_id,
+                                                                 serial = player_serial,
+                                                                 amount = amount)))
+        self.assertEqual(5, len(self.explain.forward_packets))
 
     def test26_explain_player_arrive(self):
         game_id = 1
@@ -1001,8 +1043,17 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertTrue(self.explain.explain(PacketPokerRebuy(game_id = game_id,
                                                               serial = player_serial,
                                                               amount = amount)))
-        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, self.explain.forward_packets[1].type)
+
+        # test without explain chipstack
+        self.explain.forward_packets = []
+        self.explain.what = PacketPokerExplain.REST
+        self.assertTrue(self.explain.explain(PacketPokerRebuy(game_id = game_id,
+                                                              serial = player_serial,
+                                                              amount = amount)))
+        self.assertEqual(1, len(self.explain.forward_packets))
 
     def test38_explain_player_chips(self):
         game_id = 1
@@ -1019,10 +1070,14 @@ class PokerExplainTestCase(unittest.TestCase):
                                                                     serial = player_serial,
                                                                     money = money - 1,
                                                                     bet = bet - 1)))
-        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[0].type)
         self.assertEqual(money - 1, player.money)
         self.assertEqual(bet - 1, player.bet)
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, self.explain.forward_packets[1].type)
+        self.assertEqual([1, 7, 2, 2], self.explain.forward_packets[1].bet)
+        self.assertEqual([1, 7, 2, 5, 5, 1], self.explain.forward_packets[1].money)
+        
         self.failUnless(player.isBuyInPayed())
         #
         # override the money/bet
@@ -1031,10 +1086,22 @@ class PokerExplainTestCase(unittest.TestCase):
                                                                     serial = player_serial,
                                                                     money = money,
                                                                     bet = bet)))
-        self.assertEqual(1, len(self.explain.forward_packets))
+        self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_PLAYER_CHIPS, self.explain.forward_packets[0].type)
         self.assertEqual(money, player.money)
         self.assertEqual(bet, player.bet)
+        self.assertEqual(PACKET_POKER_CLIENT_PLAYER_CHIPS, self.explain.forward_packets[1].type)
+        self.assertEqual([1, 6, 2, 3], self.explain.forward_packets[1].bet)
+        self.assertEqual([1, 6, 2, 6, 5, 1], self.explain.forward_packets[1].money)
+
+        # test without explain chipstack
+        self.explain.forward_packets = []
+        self.explain.what = PacketPokerExplain.REST
+        self.assertTrue(self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                                    serial = player_serial,
+                                                                    money = money,
+                                                                    bet = bet)))
+        self.assertEqual(1, len(self.explain.forward_packets))
 
     def test39_explain_win(self):
         game_id = 1

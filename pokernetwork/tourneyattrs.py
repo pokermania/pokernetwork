@@ -1,4 +1,6 @@
-# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This program gives you software freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
@@ -16,6 +18,7 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authors:
+#  Loic Dachary <loic@dachary.org>
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 
 
