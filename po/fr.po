@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: fr\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-10-29 15:41+0000\n"
-"PO-Revision-Date: 2008-10-29 11:57+0100\n"
+"PO-Revision-Date: 2008-10-29 16:29+0000\n"
 "Last-Translator: Johan Euphrosine <proppy@aminche.com>\n"
 "Language-Team:  <pokersource-users@gna.org>\n"
 "MIME-Version: 1.0\n"
@@ -157,7 +157,7 @@ msgstr ""
 
 #: pokerclient2d/data/interface/interface.glade:2999
 msgid " _LOBBY"
-msgstr "_LOBBY"
+msgstr "_SALON"
 
 #: pokerclient2d/data/interface/interface.glade:3009
 msgid " T_ables List"
@@ -177,11 +177,11 @@ msgstr "_Caissier"
 
 #: pokerclient2d/data/interface/interface.glade:3045
 msgid " Cash I_n"
-msgstr ""
+msgstr "_Dépot"
 
 #: pokerclient2d/data/interface/interface.glade:3054
 msgid " Cash _Out"
-msgstr ""
+msgstr "_Retrait"
 
 #: pokerclient2d/data/interface/interface.glade:3063
 msgid " _Quit"
