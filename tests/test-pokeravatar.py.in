@@ -919,7 +919,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                 else:
                     ignored += 1
         self.assertEquals(found, 28)
-        self.assertEquals(ignored, 12)
+        self.assertEquals(ignored, 16)
         return (client, packet)
     # ------------------------------------------------------------------------
     def sitTable(self, (client, packet), id, gameId):
