@@ -1,5 +1,6 @@
 debian/tmp/usr/lib/python???/site-packages/pokernetwork
 debian/tmp/usr/lib/python???/site-packages/pokerui
+debian/tmp/usr/lib/python???/site-packages/twisted/plugins
 debian/tmp/usr/share/poker-network/*.sql
 debian/tmp/usr/sbin
 debian/tmp/usr/share/poker-network/conf/poker.server.xml

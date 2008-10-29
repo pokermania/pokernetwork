@@ -126,6 +126,10 @@ pokerui_PYTHON = \
 	pokerui/pokeranimation.py \
 	pokerui/pokerchat.py
 
+twistedpluginsdir = ${pythondir}/twisted/plugins/
+twistedplugins_PYTHON = \
+	twisted/plugins/pokernetwork_plugin.py
+
 pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \
 	database/schema.sql \

@@ -63,13 +63,8 @@ lockfile=/etc/poker-network/lockfile
 
 serverpidfile=/var/run/poker-network-server.pid
 serverlogfile=/var/log/poker-network-server.log
-serverscript=/usr/lib/python/site-packages/pokernetwork/pokerserver.py
-if ! test -f $serverscript ; then
-    serverscript=/usr/share/pycentral/python-poker-network/site-packages/pokernetwork/pokerserver.py
-fi
-if ! test -f $serverscript ; then
-    serverscript=`pycentral pycentraldir python-poker-network`/pokernetwork/pokerserver.py
-fi
+serverplugin=pokerserver
+#serverconfig=/etc/poker-network/poker.server2.xml
 
 botpidfile=/var/run/poker-network-bot.pid
 botlogfile=/var/log/poker-network-bot.log
@@ -97,9 +92,10 @@ case "$1" in
 	    exit 0;
 	fi
 	${python} ${twistd} \
-	    --pidfile=${serverpidfile} --python ${serverscript} \
+	    --pidfile=${serverpidfile} \
 	    --logfile=${serverlogfile} --quiet ${more_args} \
-	    --reactor=${reactor}
+	    --reactor=${reactor} \
+	    ${serverplugin} #--config=${serverconfig}
         if $RUN_BOTS ; then
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} --python ${botscript} \

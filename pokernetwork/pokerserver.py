@@ -47,32 +47,19 @@ except:
         
 
 from twisted.application import internet, service, app
-from twisted.internet import pollreactor
-if platform.system() != "Windows":
-        if not sys.modules.has_key('twisted.internet.reactor'):
-                print "installing poll reactor"
-                pollreactor.install()
-        else:
-                print "poll reactor already installed"
-from twisted.internet import reactor
 from twisted.web import resource,server
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory, SSLContextFactory
 from pokernetwork.pokersite import PokerSite
 
-def makeApplication(argv):
-    default_path = "/etc/poker-network" + sys.version[:3] + "/poker.server.xml"
-    if not exists(default_path):
-        default_path = "/etc/poker-network/poker.server.xml"
-    configuration = argv[-1][-4:] == ".xml" and argv[-1] or default_path
+def makeService(configuration):
     settings = Config([''])
     settings.load(configuration)
     if not settings.header:
         sys.exit(1)
 
-    application = service.Application('poker')
-    serviceCollection = service.IServiceCollection(application)
+    serviceCollection = service.MultiService()
     poker_service = PokerService(settings)
     poker_service.setServiceParent(serviceCollection)
 
@@ -119,12 +106,30 @@ def makeApplication(argv):
     if HAS_OPENSSL and http_ssl_port:
             internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)
                                ).setServiceParent(serviceCollection)
+    return serviceCollection
+
+def makeApplication(argv):
+    default_path = "/etc/poker-network" + sys.version[:3] + "/poker.server.xml"
+    if not exists(default_path):
+        default_path = "/etc/poker-network/poker.server.xml"
+    configuration = argv[-1][-4:] == ".xml" and argv[-1] or default_path    
+    application = service.Application('poker')
+    serviceCollection = service.IServiceCollection(application)
+    poker_service = makeService(configuration)
+    poker_service.setServiceParent(serviceCollection)
     return application
-        
-application = makeApplication(sys.argv)
 
 def run():
+    if platform.system() != "Windows":
+        if not sys.modules.has_key('twisted.internet.reactor'):
+                print "installing poll reactor"
+                pollreactor.install()
+        else:
+                print "poll reactor already installed"
+    from twisted.internet import reactor
+    application = makeApplication(sys.argv)
     app.startApplication(application, None)
+    from twisted.internet import pollreactor
     reactor.run()
 
 if __name__ == '__main__':
