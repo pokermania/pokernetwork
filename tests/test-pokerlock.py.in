@@ -87,20 +87,20 @@ class PokerLockTestCase(unittest.TestCase):
         self.locker2.close()
         self.locker.close()
     # ----------------------------------------------------------------    
-    def test01_simple(self):
-        d = self.locker.acquire('lock01')
-        def validate(result):
-            if isinstance(result, failure.Failure): raise result
-            for str in  ['loop, queue size',  '__acquire lock01',
-                         '__acquire got MySQL lock', 'acquired' ]:
-                self.failUnless(search_output(str))
-            self.assertEqual("lock01", result)
-            self.locker.release('lock01')
-            return result
+#     def test01_simple(self):
+#         d = self.locker.acquire('lock01')
+#         def validate(result):
+#             if isinstance(result, failure.Failure): raise result
+#             for str in  ['loop, queue size',  '__acquire lock01',
+#                          '__acquire got MySQL lock', 'acquired' ]:
+#                 self.failUnless(search_output(str))
+#             self.assertEqual("lock01", result)
+#             self.locker.release('lock01')
+#             return result
         
-        d.addBoth(validate)
-        clear_all_messages()
-        return d
+#         d.addBoth(validate)
+#         clear_all_messages()
+#         return d
     # ----------------------------------------------------------------    
     def test02_wait(self):
         def locker2_succeeded(result):
