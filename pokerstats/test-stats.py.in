@@ -178,8 +178,14 @@ class ApplicationTestCase(unittest.TestCase):
         self.assertEqual(None, stats.configureApplication(['/unlikely.xml']))
 
     def test02_application(self):
-        a = stats.configureApplication(['../poker.stats.xml'])
+        a = stats.configureApplication(['pokerstats', '../poker.stats.xml'])
         self.assertEqual(1, len(service.IServiceCollection(a).services))
+        self.assertEqual(None, service.IServiceCollection(a).services[0].factory.stop_service_deferred)
+
+    def test03_one_time_application(self):
+        a = stats.configureApplication(['pokerstats', '--one-time', '../poker.stats.xml'])
+        self.assertEqual(1, len(service.IServiceCollection(a).services))
+        self.assertNotEqual(None, service.IServiceCollection(a).services[0].factory.stop_service_deferred)
 
 class LogicTestCase(StatsClientBase):
 
@@ -264,6 +270,15 @@ class RealTestCase(PokerStatsTestBase):
             if state == stats.PokerStats.IDLE:
                 reactor.callLater(0, lambda: d.callback(True))
         factory.pokerstats.setState = setState
+        return d
+    def test02_one_time(self):
+        a = stats.configureApplication(['pokerstats', '--one-time', '../poker.stats.xml'])
+        factory = service.IServiceCollection(a).services[0].factory
+        reactor.connectTCP('127.0.0.1', 19480, factory)
+        d = defer.Deferred()
+        def stop(x):
+            reactor.callLater(0, lambda: d.callback(True))
+        stats.stop_application.addCallback(stop)
         return d
 
 # ------------------------------------------------------

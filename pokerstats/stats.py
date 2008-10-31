@@ -30,7 +30,7 @@ if not sys.modules.has_key('twisted.internet.reactor'):
 from twisted.internet import reactor
 from twisted.python import components
 from twisted.persisted import sob
-from twisted.internet import error
+from twisted.internet import error, defer
 
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerclientpackets import *
@@ -44,6 +44,7 @@ class PokerStatsFactory(PokerClientFactory):
         PokerClientFactory.__init__(self, *args, **kwargs)
         self.server = kwargs['server']
         self.verbose = self.settings.headerGetInt("/settings/@verbose")
+        self.stop_service_deferred = kwargs.has_key('stop_service_deferred') and kwargs['stop_service_deferred'] or None
         self.pokerstats = PokerStats(self)
         
     def buildProtocol(self, addr):
@@ -53,7 +54,11 @@ class PokerStatsFactory(PokerClientFactory):
         pokerstats.connect()
         protocol.registerHandler(True, PACKET_POKER_MONITOR_EVENT, pokerstats.pokerMonitorEvent)
         protocol.registerHandler(True, PACKET_BOOTSTRAP, pokerstats.bootstrap)
-        protocol.registerHandler(True, PACKET_ACK, pokerstats.ack)
+        def ack_and_stop(protocol, packet):
+            pokerstats.ack(protocol, packet)
+            if self.stop_service_deferred:
+                self.stop_service_deferred.callback(True)
+        protocol.registerHandler(True, PACKET_ACK, ack_and_stop)
         return protocol
 
 class Stat(internet.TCPClient):
@@ -64,28 +69,40 @@ class Stat(internet.TCPClient):
         # were stopped because of a SIGINT signal), properly
         # close it before exiting.
         #
-        if(hasattr(self._connection.transport, "protocol")):
-            protocol = self._connection.transport.protocol
-            #
-            # If the connection fails, the transport exists but
-            # the protocol is not set
-            #
-            if protocol:
-                self._connection.transport.protocol.sendPacket(PacketQuit())
+        if self._connection:
+            if(hasattr(self._connection.transport, "protocol")):
+                protocol = self._connection.transport.protocol
+                #
+                # If the connection fails, the transport exists but
+                # the protocol is not set
+                #
+                if protocol:
+                    self._connection.transport.protocol.sendPacket(PacketQuit())
         return internet.TCPClient.stopService(self)
 
-def newApplication(settings):
+def newApplication(settings, one_time = False):
     stats = service.Application('pokerstats')
     services = service.IServiceCollection(stats)
 
     i = 1
+    ds = []
     for server in settings.headerGetProperties("/settings/server"):
         host = server['host']
         port = int(server['port'])
+        stop_service_deferred = None
+        if one_time:
+            stop_service_deferred = defer.Deferred()
+            ds.append(stop_service_deferred)
         factory = PokerStatsFactory(settings = settings,
-                                    server = i)
-        Stat(host, port, factory).setServiceParent(services)
+                                    server = i,
+                                    stop_service_deferred = stop_service_deferred)
+        stat = Stat(host, port, factory)
+        stat.setServiceParent(services)
+        stat.factory = factory
         i += 1
+    if one_time and len(ds) > 0:
+        global stop_application
+        stop_application = defer.DeferredList(ds)
     return stats
 
 def configureApplication(argv):
@@ -99,13 +116,16 @@ def configureApplication(argv):
     
     settings = pokernetworkconfig.Config([''])
     settings.load(configuration)
-    return newApplication(settings)
+    one_time = (len(argv) > 1 and argv[1] == '--one-time') and True or False
+    return newApplication(settings, one_time)
 
+stop_application = None
 application = configureApplication(sys.argv[:])
 
 def run():
-    global application                      #pragma: no cover
+    global application, stop_application    #pragma: no cover
     app.startApplication(application, None) #pragma: no cover
+    if stop_application: stop_application.addCallback(lambda x: reactor.stop()) #pragma: no cover
     reactor.run()                           #pragma: no cover
 
 if __name__ == '__main__':
