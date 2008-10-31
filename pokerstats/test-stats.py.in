@@ -63,6 +63,18 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 """
 
 settings_xml_stats = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings ping="15000" verbose="6" delays="true" poll_frequency="0.1" percentiles="5.0">
+  <server host="127.0.0.1" port="19480" >
+    <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  </server>
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+</settings>
+"""
+
+settings_xml_stats_no_percentiles = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <settings ping="15000" verbose="6" delays="true" poll_frequency="0.1" >
   <server host="127.0.0.1" port="19480" >
     <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
@@ -177,12 +189,14 @@ class LogicTestCase(StatsClientBase):
         
     def test01_bootstrap_error(self):
         factory = LogicTestCase.Factory()
+        factory.settings = self.settings_stats
         s = stats.PokerStats(factory = factory, connect = False)
         s.state = stats.PokerStats.IDLE
         self.assertEqual(False, s.bootstrap(None, None))
 
     def test02_ack_error(self):
         factory = LogicTestCase.Factory()
+        factory.settings = self.settings_stats
         s = stats.PokerStats(factory = factory, connect = False)
         s.state = stats.PokerStats.IDLE
         self.assertEqual(False, s.ack(None, None))
@@ -228,6 +242,15 @@ class LogicTestCase(StatsClientBase):
         self.assertEqual((7, 10, 48, 11, 4), cursor.fetchone())
         self.assertEqual((10, 10, 22, 12, 4), cursor.fetchone())
         cursor.close()
+
+    def test04_no_percentiles(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_stats_no_percentiles, len(settings_xml_stats_no_percentiles))
+        settings.header = settings.doc.xpathNewContext()
+        factory = LogicTestCase.Factory()
+        factory.settings = settings
+        s = stats.PokerStats(factory = factory, connect = False)
+        self.assertEqual(4.0, s.percentiles)
 
 class RealTestCase(PokerStatsTestBase):
 

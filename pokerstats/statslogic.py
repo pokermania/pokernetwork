@@ -30,12 +30,11 @@ class PokerStats:
     MONITOR	= 2
     IDLE	= 3
 
-    PERCENTILES = 5.0
-    
     def __init__(self, factory, connect = True):
         self.factory = factory
         if connect:
             self.setState(PokerStats.BOOTSTRAP)
+        self.percentiles = float(self.factory.settings.headerGet("/settings/@percentiles") or 4.0)
 
     def setState(self, state):
         self.state = state
@@ -78,8 +77,8 @@ class PokerStats:
         cursor = self.db.cursor()
         cursor.execute("SELECT  currency_serial, COUNT(*) FROM rank GROUP BY currency_serial")
         for (currency_serial, count) in cursor.fetchall():
-            range_count = count / PokerStats.PERCENTILES
-            for j in xrange(PokerStats.PERCENTILES):
+            range_count = count / self.percentiles
+            for j in xrange(self.percentiles):
                 cursor.execute("UPDATE rank SET percentile = %s WHERE rank > %s AND rank <= %s AND currency_serial = %s", ( j, int(range_count * j), int(range_count * ( j + 1 )), currency_serial))
         cursor.close()
         
