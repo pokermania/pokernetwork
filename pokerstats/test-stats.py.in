@@ -271,8 +271,19 @@ class RealTestCase(PokerStatsTestBase):
                 reactor.callLater(0, lambda: d.callback(True))
         factory.pokerstats.setState = setState
         return d
+
+class OptionsTestCase(PokerStatsTestBase):
+    def setUp(self):
+        PokerStatsTestBase.setUp(self)
+        self.filepath = "@builddir@/poker.stats.test.xml"
+        fp = open(self.filepath, "w")
+        fp.write(settings_xml_stats)
+        fp.close()
+    def tearDown(self):
+        os.remove(self.filepath)
+        PokerStatsTestBase.tearDown(self)
     def test02_one_time(self):
-        a = stats.configureApplication(['pokerstats', '--one-time', '../poker.stats.xml'])
+        a = stats.configureApplication(['pokerstats', '--one-time', self.filepath])
         factory = service.IServiceCollection(a).services[0].factory
         reactor.connectTCP('127.0.0.1', 19480, factory)
         d = defer.Deferred()
@@ -290,6 +301,7 @@ def Run():
     suite.addTest(loader.loadClass(ConnectTestCase))
     suite.addTest(loader.loadClass(LogicTestCase))
     suite.addTest(loader.loadClass(RealTestCase))
+    suite.addTest(loader.loadClass(OptionsTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
                               tracebackFormat='default',
