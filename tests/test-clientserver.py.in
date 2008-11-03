@@ -305,12 +305,12 @@ class ClientServer(ClientServerTestBase):
                 return False
         silence_all_messages()
         clear_all_messages()
-        d = client.connectionLost(ReasonMockUp())
+        client.connectionLost(ReasonMockUp())
         self.assertEquals(get_messages(), ['connectionLost: reason = you mock me',
                                            'UGAMEClient.connectionLost you mock me'])
         self.assertEquals(client._ping_timer, None)
         self.assertEquals(self.client_factory[0].protocol_instance,  None)
-        return d
+        return True
 
     def test05_clientConnectionLost(self):
         """Covers the case where the client connection is lost"""
