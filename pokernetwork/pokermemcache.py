@@ -17,6 +17,25 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
+
+# borrowed from memcache.py
+import types
+
+class MemcachedStringEncodingError(Exception):
+    pass
+
+def check_key(key, key_extra_len=0):
+    """Checks sanity of key.  Fails if:
+        Key length is > SERVER_MAX_KEY_LENGTH (Raises MemcachedKeyLength).
+        Contains control characters  (Raises MemcachedKeyCharacterError).
+        Is not a string (Raises MemcachedStringEncodingError)
+    """
+    if type(key) == types.TupleType: key = key[1]
+    if not isinstance(key, str):
+        raise MemcachedStringEncodingError, ("Keys must be str()'s, not"
+                "unicode.  Convert your unicode strings using "
+                "mystring.encode(charset)!")
+
 memcache_singleton = {}
 memcache_expiration_singleton = {}
 
@@ -28,6 +47,7 @@ class MemcacheMockup:
             self.expiration = memcache_expiration_singleton
 
         def get(self, key):
+            check_key(key)
             if self.cache.has_key(key):
                 return self.cache[key]
             else:
@@ -41,6 +61,7 @@ class MemcacheMockup:
             return r
         
         def set(self, key, value, time = 0):
+            check_key(key)
             self.cache[key] = value
             self.expiration[key] = time
 
@@ -64,6 +85,7 @@ class MemcacheMockup:
                 return 0
             
         def delete(self, key):
+            check_key(key)
             try:
                 del self.cache[key]
                 return 1

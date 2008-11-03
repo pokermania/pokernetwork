@@ -506,14 +506,14 @@ class SessionTestCase(PokerSiteBase):
       def test01_checkExpired(self):
             serial = 111
             uid = 'uid'
-            self.site.memcache.set(uid, serial)
-            self.site.memcache.set(serial, uid)
+            self.site.memcache.set(uid, str(serial))
+            self.site.memcache.set(str(serial), uid)
             session = self.site.getSession(uid)
             self.assertEqual(True, session.checkExpired())
-            self.site.memcache.set(serial, 'wrongsession')
+            self.site.memcache.set(str(serial), 'wrongsession')
             self.assertEqual(None, session.checkExpired())
             self.site.memcache.delete(uid)
-            self.site.memcache.delete(serial)
+            self.site.memcache.delete(str(serial))
             self.assertEqual(False, session.checkExpired())
 
 class RequestTestCase(PokerSiteBase):
@@ -575,8 +575,8 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             session = self.site.makeSession()
             serial = 111
-            self.site.memcache.set(session.uid, serial)
-            self.site.memcache.set(serial, session.uid)
+            self.site.memcache.set(session.uid, str(serial))
+            self.site.memcache.set(str(serial), session.uid)
             self.site.getSession(session.uid)
             self.assertEquals(serial, session.avatar.getSerial())
             self.assertNotEquals(None, session.avatar.explain)
@@ -585,8 +585,8 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             Memcache serial changed and becomes inconsistent.
             """
-            self.site.memcache.set(session.uid, serial + 1)
-            self.site.memcache.set(serial + 1, session.uid)
+            self.site.memcache.set(session.uid, str(serial + 1))
+            self.site.memcache.set(str(serial + 1), session.uid)
             session = self.site.getSession(session.uid)
             self.assertEquals(serial + 1, session.avatar.getSerial())
 
@@ -597,8 +597,8 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             session = self.site.makeSession()
             serial = 111
-            self.site.memcache.set(session.uid, serial)
-            self.site.memcache.set(serial, 'fakesession')
+            self.site.memcache.set(session.uid, str(serial))
+            self.site.memcache.set(str(serial), 'fakesession')
             exception = False
             try: 
                   self.site.getSession(session.uid)
@@ -634,9 +634,9 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             session = self.site.makeSession()
             serial = 100
-            self.site.memcache.set(session.uid, serial)
+            self.site.memcache.set(session.uid, str(serial))
             session.avatar.user.serial = serial
-            self.site.memcache.set(serial, 'other uid')
+            self.site.memcache.set(str(serial), 'other uid')
             self.assertEquals(False, self.site.updateSession(session))
             self.assertEquals(True, session.expired)
             self.assertEquals(None, self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
@@ -802,6 +802,20 @@ class PokerSiteTestCase(PokerSiteBase):
             d.addCallback(finish)
             r.requestReceived('GET', '/', '')
             return d
+
+      def test08_memcache_unicode(self):
+            exceptionCaught = False
+            session = self.site.makeSession()
+            uuid = unicode(session.uid)
+            try:
+                  self.site.memcache.get(uuid)
+            except Exception:
+                  exceptionCaught = True
+            self.assertEquals(True, exceptionCaught)
+            self.site.getSession(uuid)
+            self.site.refreshMemcacheCookie(uuid)
+            self.site.expireMemcacheCookie(uuid)
+            self.site.deleteMemcacheCookie(uuid)
 
 def Run():
     loader = runner.TestLoader()
