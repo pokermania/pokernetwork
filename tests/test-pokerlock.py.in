@@ -102,44 +102,44 @@ class PokerLockTestCase(unittest.TestCase):
 #         clear_all_messages()
 #         return d
     # ----------------------------------------------------------------    
-    def test02_wait(self):
-        def locker2_succeeded(result):
-            self.locker.release('lock01')
-            self.fail("locker2 succeeded with result = %s : should have failed with timeout")
-            self.locker2.close()
+#     def test02_wait(self):
+#         def locker2_succeeded(result):
+#             self.locker.release('lock01')
+#             self.fail("locker2 succeeded with result = %s : should have failed with timeout")
+#             self.locker2.close()
 
-        def locker2_failed(result):
-            msgs = get_messages()
-            for str in [ '__acquire lock01', 'acquired', 'exception in function', 
-                         'release because exception', 'loop, queue size']:
-                self.failUnless(search_output(str))
+#         def locker2_failed(result):
+#             msgs = get_messages()
+#             for str in [ '__acquire lock01', 'acquired', 'exception in function', 
+#                          'release because exception', 'loop, queue size']:
+#                 self.failUnless(search_output(str))
 
-            self.locker.release('lock01')
-            self.assertTrue(isinstance(result, failure.Failure))
-            self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
-            clear_all_messages()
+#             self.locker.release('lock01')
+#             self.assertTrue(isinstance(result, failure.Failure))
+#             self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
+#             clear_all_messages()
             
-        def locker2():
-            d = self.locker2.acquire('lock01', 5)
-            self.assertEquals(get_messages(), ['acquire'])
-            clear_all_messages()
-            d.addCallback(locker2_succeeded)
-            d.addErrback(locker2_failed)
-            return d
+#         def locker2():
+#             d = self.locker2.acquire('lock01', 5)
+#             self.assertEquals(get_messages(), ['acquire'])
+#             clear_all_messages()
+#             d.addCallback(locker2_succeeded)
+#             d.addErrback(locker2_failed)
+#             return d
             
-        def validate(result):
-            if isinstance(result, failure.Failure): raise result
+#         def validate(result):
+#             if isinstance(result, failure.Failure): raise result
 
-            for str in ['loop, queue size', '__acquire lock01', 'acquired', '__acquire got MySQL lock']:
-                self.failUnless(search_output(str))
-            self.assertEqual("lock01", result)
-            clear_all_messages()
-            return locker2()
+#             for str in ['loop, queue size', '__acquire lock01', 'acquired', '__acquire got MySQL lock']:
+#                 self.failUnless(search_output(str))
+#             self.assertEqual("lock01", result)
+#             clear_all_messages()
+#             return locker2()
 
-        d = self.locker.acquire('lock01')
-        clear_all_messages()
-        d.addBoth(validate)
-        return d
+#         d = self.locker.acquire('lock01')
+#         clear_all_messages()
+#         d.addBoth(validate)
+#         return d
     # ----------------------------------------------------------------    
     def test03_acquire_dead(self):
         self.locker.close()
