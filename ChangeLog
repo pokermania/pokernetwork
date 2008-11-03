@@ -1,3 +1,64 @@
+2008-11-03  Loic Dachary <loic@dachary.org>
+
+	* Release 1.0.17
+
+	* tests/test-clientserver.py.in: connectionLost does not return a
+	  deferred
+
+2008-11-03  Johan Euphrosine <proppy@aminche.com>
+
+	* debian/python-poker-stats.cron.hourly: add
+	  python-poker-stats.cron.hourly
+	* pokerstats/test-stats.py.in: move test --one-time to
+	  OptionsTestCase, add poker.stats.test.xml generation/deletion in
+	  setUp/tearDown
+	* pokernetwork/pokermemcache.py, pokernetwork/pokersite.py,
+	  tests/test-pokersite.py.in: convert memcache key to regular
+	  string if unicode in pokernetwork.pokersite
+
+2008-11-03  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerlock.py.in: comment out test02 because it fails
+	  under unknown conditions
+
+2008-10-31  Johan Euphrosine <proppy@aminche.com>
+
+	* pokerstats/stats.py, pokerstats/test-stats.py.in: add --one-time
+	  option to pokerstats
+	* pokerstats/poker.stats.xml.in, pokerstats/statslogic.py,
+	  pokerstats/test-stats.py.in: add /settings/@percentiles in
+	  poker.stats.xml
+
+2008-10-29  Johan Euphrosine <proppy@aminche.com>
+
+	* Makefile.am, twisted, twisted/plugins,
+	  twisted/plugins/pokernetwork_plugin.py: add poker-network twisted
+	  plugin take 2
+	* Makefile.am, debian/python-poker-network.init,
+	  debian/python-poker-network.install, pokernetwork/pokerserver.py:
+	  add poker-network twisted plugin
+	* po/fr.po: update poker-network fr_FR translation
+
+2008-10-29  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerlock.py.in: get rid of time sensitive test case
+	  and remove pokerlock from the list of files with 100% coverage
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerexplain.py,
+	  pokernetwork/pokerpackets.py, pokernetwork/tourneyattrs.py,
+	  tests/test-pokerexplain.py.in: better control over explain
+	  verbosity (patch from mornifle)
+	* tests/run.in, tests/test-pokeravatar.py.in: get rid of time
+	  sensitive test case and remove pokerlock from the list of files
+	  with 100% coverage
+
+2008-10-29  Johan Euphrosine <proppy@aminche.com>
+
+	* debian/control.lenny: add python-xml to poker-network build
+	  depends for lenny
+	* po/fr.po: make update-po in poker-network
+	* po/ChangeLog:
+	* po/fr.po: poker-network french translation update
+
 2008-10-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerlock.py.in
@@ -13,8 +74,9 @@
 
 2008-10-23  Loic Dachary <loic@dachary.org>
 
-	* Release 1.0.17
-
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in: call
+	  update when the player moves or the hand may not be dealt in a
+	  heads up tournament table.
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
 	  Remove bots from tournaments where they are registered when
 	  discarding them at shutdown.
