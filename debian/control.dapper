@@ -57,7 +57,7 @@ Architecture: all
 Priority: optional
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), ucf
 Description: statistics poker-network client 
  poker-stats collects statistics from running poker-network servers
  and consolidate them in a separate set of tables, in a separate
