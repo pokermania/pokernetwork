@@ -2,6 +2,11 @@
 
 	* Release 1.0.17
 
+	* debian/poker-web.prerm: fix inverted db_input tag and priority
+	* debian/control: python-pyopenssl replaced by python-openssl
+	* debian/control.unstable: python-pyopenssl replaced by
+	  python-openssl
+	* debian/control.jaunty: preliminary jaunty support
 	* database/1.0.11-1.0.12.sql, database/1.0.30-1.0.31.sql: replace
 	  --- comment with -- because mysql-5.0 is picky and rejects it
 	* tests/upgrade.in: add compile command to run tests from the file
