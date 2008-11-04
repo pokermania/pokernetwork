@@ -44,3 +44,8 @@ chmod u+w conftest
 @PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.client conftest/poker.client.xml.in
 @PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
 @PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../pokerclient2d/upgrades conftest/poker2d.xml.in conftest/client.xml
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/upgrade.py ) ; ( cd ../tests ; make TESTS='upgrade' check )"
+# End:
