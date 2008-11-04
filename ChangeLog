@@ -2,6 +2,11 @@
 
 	* Release 1.0.17
 
+	* database/1.0.11-1.0.12.sql, database/1.0.30-1.0.31.sql: replace
+	  --- comment with -- because mysql-5.0 is picky and rejects it
+	* tests/upgrade.in: add compile command to run tests from the file
+	  being edited under emacs
+	* ChangeLog: *** empty log message ***
 	* pokernetwork/pokersite.py: pipesFailed must log the error in
 	  addition to returning it to the user because the system
 	  administrator needs it to analyze the problem.
