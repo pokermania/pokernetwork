@@ -22,7 +22,7 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
                 test -x /usr/sbin/$webserver || continue
                 db_reset poker-web/restart-webserver
                 db_subst poker-web/restart-webserver webserver "$webserver"
-                db_input poker-web/restart-webserver high || true
+                db_input high poker-web/restart-webserver || true
                 db_go
                 db_get poker-web/restart-webserver
                 if [ "$RET" = "true" ]; then
