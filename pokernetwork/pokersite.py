@@ -164,8 +164,8 @@ class PokerResource(resource.Resource):
     def message(self, string):
         print "PokerXMLSimplified: " + string
 
-#    def error(self, string):
-#        self.message("*ERROR* " + string)
+    def error(self, string):
+        self.message("*ERROR* " + string)
 
     def render(self, request):
         if self.verbose > 3:
@@ -200,6 +200,9 @@ class PokerResource(resource.Resource):
                 request.expireSessionCookie()
                 request.write(body)
                 request.connectionLost(reason)
+                if self.verbose > 2:
+                    self.error(str(body))
+                    
             #
             # Return a value that is not a Failure so that the next
             # incoming request is accepted (otherwise the server keeps
