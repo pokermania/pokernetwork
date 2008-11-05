@@ -70,7 +70,7 @@ CREATE TABLE users (
   games_count INT DEFAULT 0,
   
   PRIMARY KEY (serial),
-  UNIQUE KEY name_idx (name),
+  KEY name_idx (name),
   UNIQUE KEY email_idx (email)
 ) ENGINE=InnoDB CHARSET=utf8;
 
