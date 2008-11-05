@@ -803,19 +803,15 @@ class PokerSiteTestCase(PokerSiteBase):
             r.requestReceived('GET', '/', '')
             return d
 
-      def test08_memcache_unicode(self):
+      def test08_memcache_key_not_string(self):
             exceptionCaught = False
             session = self.site.makeSession()
             uuid = unicode(session.uid)
-            try:
-                  self.site.memcache.get(uuid)
-            except Exception:
-                  exceptionCaught = True
-            self.assertEquals(True, exceptionCaught)
-            self.site.getSession(uuid)
-            self.site.refreshMemcacheCookie(uuid)
-            self.site.expireMemcacheCookie(uuid)
-            self.site.deleteMemcacheCookie(uuid)
+            self.assertRaises(Exception, self.site.memcache.get, uuid)
+            self.assertRaises(Exception, self.site.getSession, uuid)
+            self.assertRaises(Exception, self.site.refreshMemcacheCookie, uuid)
+            self.assertRaises(Exception, self.site.expireMemcacheCookie, uuid)
+            self.assertRaises(Exception, self.site.deleteMemcacheCookie, uuid)
 
 def Run():
     loader = runner.TestLoader()

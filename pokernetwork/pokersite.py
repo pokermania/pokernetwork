@@ -456,7 +456,8 @@ class PokerSite(server.Site):
         return True
 
     def getSession(self, uid):
-        if isinstance(uid, unicode): uid = fromutf8(uid)
+        if not isinstance(uid, str):
+            raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         self.expireMemcacheCookie(uid)
         memcache_serial = self.memcache.get(uid)
         if memcache_serial == None:
@@ -525,15 +526,18 @@ class PokerSite(server.Site):
         return session
 
     def deleteMemcacheCookie(self, uid):
-        if isinstance(uid, unicode): uid = fromutf8(uid)
+        if not isinstance(uid, str):
+            raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         self.memcache.delete(uid2last_modified(uid))
 
     def refreshMemcacheCookie(self, uid):
-        if isinstance(uid, unicode): uid = fromutf8(uid)
+        if not isinstance(uid, str):
+            raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         self.memcache.set(uid2last_modified(uid), str(int(seconds())))
 
     def expireMemcacheCookie(self, uid):
-        if isinstance(uid, unicode): uid = fromutf8(uid)
+        if not isinstance(uid, str):
+            raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         last_modified = self.memcache.get(uid2last_modified(uid))
         if last_modified != None and seconds() - int(last_modified) > self.cookieTimeout:
             self.memcache.delete(uid2last_modified(uid))
