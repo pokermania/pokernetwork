@@ -123,6 +123,7 @@ class Session(server.Session):
     def __init__(self, site, uid):
         server.Session.__init__(self, site, uid)
         self.avatar = site.resource.service.createAvatar()
+        self.avatar.verbose = site.resource.verbose
         self.avatar.queuePackets()
         self.avatar.setExplain(PacketPokerExplain.ALL)
         self.avatar.roles.add(PacketPokerRoles.PLAY)
@@ -169,6 +170,7 @@ class PokerResource(resource.Resource):
 
     def render(self, request):
         if self.verbose > 3:
+            request.content.seek(0, 0)
             self.message("render " + request.content.read())
         request.content.seek(0, 0)
         jsonp = request.args.get('jsonp', [''])[0]
