@@ -2180,7 +2180,6 @@ class PokerRestTree(resource.Resource):
     def __init__(self, service):
         resource.Resource.__init__(self)
         self.service = service
-        self.verbose = service.verbose
         self.putChild("POKER_REST", PokerResource(self.service))
         self.putChild("UPLOAD", PokerImageUpload(self.service))
         self.putChild("AVATAR", PokerAvatarResource(self.service))
