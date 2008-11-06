@@ -48,24 +48,27 @@ class PokerStats:
                                       db = p["name"])
 
     def create(self):
-        self.db.query("DROP TABLE IF EXISTS rank")
-        self.db.query("CREATE TABLE rank (" +
-                      "  user_serial INT UNSIGNED NOT NULL," +
-                      "  currency_serial INT UNSIGNED NOT NULL," +
-                      "  amount BIGINT NOT NULL," +
-                      "  rank INT UNSIGNED NOT NULL," +
-                      "  percentile TINYINT UNSIGNED DEFAULT 0 NOT NULL," +
-                      "  PRIMARY KEY (user_serial, currency_serial)," +
-                      "  INDEX (currency_serial, amount)," +
-                      "  INDEX (amount)," +
-                      "  INDEX (currency_serial)," +
-                      "  INDEX (rank)" +
-                      ") ENGINE=MyISAM")
+        self.db.query("DROP TABLE IF EXISTS rank_tmp")
+        def create_rank_table(name):
+            self.db.query("CREATE TABLE IF NOT EXISTS %s (" % name +
+                          "  user_serial INT UNSIGNED NOT NULL," +
+                          "  currency_serial INT UNSIGNED NOT NULL," +
+                          "  amount BIGINT NOT NULL," +
+                          "  rank INT UNSIGNED NOT NULL," +
+                          "  percentile TINYINT UNSIGNED DEFAULT 0 NOT NULL," +
+                          "  PRIMARY KEY (user_serial, currency_serial)," +
+                          "  INDEX (currency_serial, amount)," +
+                          "  INDEX (amount)," +
+                          "  INDEX (currency_serial)," +
+                          "  INDEX (rank)" +
+                          ") ENGINE=MyISAM")
+        create_rank_table("rank")
+        create_rank_table("rank_tmp")
         
     def populate(self):
         cursor = self.db.cursor()
         cursor.execute("SET @rank := 0, @currency_serial := 0, @amount := 0; " +
-                       " INSERT INTO rank " +
+                       " INSERT INTO rank_tmp " +
                        "  (user_serial, currency_serial, amount, rank)" +
                        "  SELECT user_serial, currency_serial, amount, " +
                        "   GREATEST(" +
@@ -75,11 +78,14 @@ class PokerStats:
                        "   FROM user2money ORDER BY currency_serial DESC, amount DESC")
         cursor.close()
         cursor = self.db.cursor()
-        cursor.execute("SELECT  currency_serial, COUNT(*) FROM rank GROUP BY currency_serial")
+        cursor.execute("SELECT  currency_serial, COUNT(*) FROM rank_tmp GROUP BY currency_serial")
         for (currency_serial, count) in cursor.fetchall():
             range_count = count / self.percentiles
             for j in xrange(self.percentiles):
-                cursor.execute("UPDATE rank SET percentile = %s WHERE rank > %s AND rank <= %s AND currency_serial = %s", ( j, int(range_count * j), int(range_count * ( j + 1 )), currency_serial))
+                cursor.execute("UPDATE rank_tmp SET percentile = %s WHERE rank > %s AND rank <= %s AND currency_serial = %s", ( j, int(range_count * j), int(range_count * ( j + 1 )), currency_serial))
+        cursor.close()
+        cursor = self.db.cursor()
+        cursor.execute("RENAME TABLE rank to rank_old, rank_tmp TO rank, rank_old TO rank_tmp")
         cursor.close()
         
     def bootstrap(self, protocol, packet):
