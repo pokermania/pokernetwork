@@ -1,6 +1,12 @@
-2008-11-05  Loic Dachary <loic@dachary.org>
+2008-11-05  Johan Euphrosine <proppy@aminche.com>
 
 	* Release 1.0.17
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: pokersite
+	  raise Exception if memcache_key is not a string, printing key
+	  value and type to get more information
+
+2008-11-05  Loic Dachary <loic@dachary.org>
 
 	* database/1.6.0-1.7.0.sql, database/schema.sql.in: The user name
 	  is not a unique key.
