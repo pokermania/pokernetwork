@@ -1,6 +1,16 @@
-2008-11-05  Johan Euphrosine <proppy@aminche.com>
+2008-11-06  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17
+
+	* pokernetwork/pokersite.py: seek to beginning of request before
+	  printing message
+
+2008-11-06  Johan Euphrosine <proppy@aminche.com>
+
+	* pokerstats/statslogic.py, pokerstats/test-stats.py.in: add
+	  rank_tmp for pokerstats not to lock rank while calculating
+
+2008-11-05  Johan Euphrosine <proppy@aminche.com>
 
 	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: pokersite
 	  raise Exception if memcache_key is not a string, printing key
