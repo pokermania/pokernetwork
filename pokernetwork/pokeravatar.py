@@ -25,6 +25,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C)             2008 Johan Euphrosine <proppy@aminche.com>
 #
 # This program gives you software freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
@@ -933,6 +934,9 @@ class PokerAvatar:
                 if game.isSit(player.serial):
                     self.sendPacketVerbose(PacketPokerSit(game_id = game.id,
                                                           serial = player.serial))
+                if player.isAuto():
+                    self.sendPacketVerbose(PacketPokerAutoFold(game_id = game.id,
+                                                          serial = player.serial))                    
 
         self.sendPacketVerbose(PacketPokerSeats(game_id = game.id,
                                                 seats = game.seats()))

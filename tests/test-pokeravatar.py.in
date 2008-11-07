@@ -22,6 +22,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
 #
 # This program gives you software freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
@@ -1378,12 +1379,26 @@ class PokerAvatarTestCase(unittest.TestCase):
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_AUTO_FOLD:
+                self.assertEquals(False, table.game.getPlayer(avatar.getSerial()).sit_out)
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.game_id, gameId)
                 found = True
         self.assertEquals(found, True)
         return (client, packet)
     # -------------------------------------------------------------------------
+    def joinTableAndCheckPokerSitAndAutoFoldAreSend(self, (client, packet), id, gameId, name, struct):
+        avatar = self.service.avatars[id]
+        table = self.service.getTable(gameId)
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
+                                                      game_id = gameId))
+        founds = [packet.type for packet in avatar.resetPacketsQueue()
+                  if packet.type == PACKET_POKER_SIT
+                  or packet.type == PACKET_POKER_AUTO_FOLD]
+        self.assertEquals(founds[0], PACKET_POKER_SIT)
+        self.assertEquals(founds[1], PACKET_POKER_AUTO_FOLD)
+        return (client, packet)
+    # -------------------------------------------------------------------------    
     def test22_sitOutClosedGame(self):
         """Test playing an actual hand all the way through"""
         # The sequence of how to get yourself seated in a cash game was
@@ -1400,7 +1415,12 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.readyToPlay, 0, 2)
         d.addCallback(self.sitOutClosedGame, 0, 2)
-        return d
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTableAndCheckPokerSitAndAutoFoldAreSend, 0, 2, 'Table2', '2-4-limit')
+        return defer.DeferredList((d, d2))        
     # ------------------------------------------------------------------------
     def doBlindPostAndHaveOtherGuyWaitForCardsAndQuit(self, (client, packet), id, gameId):
         # By now, we should have seen as noted above, a request for the
