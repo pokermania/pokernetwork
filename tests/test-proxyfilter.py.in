@@ -332,6 +332,7 @@ def Run():
       return runner.TrialRunner(
             reporter.VerboseTextReporter,
             tracebackFormat='default',
+#            logfile = '-',
             ).run(suite)
 
 if __name__ == '__main__':

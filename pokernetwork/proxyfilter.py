@@ -38,7 +38,6 @@ class ProxyClient(http.HTTPClient):
         self.headers = headers
         self.data = data
 
-
     def connectionMade(self):
         self.sendCommand(self.command, self.rest)
         for header, value in self.headers.items():
@@ -46,10 +45,8 @@ class ProxyClient(http.HTTPClient):
         self.endHeaders()
         self.transport.write(self.data)
 
-
     def handleStatus(self, version, code, message):
         self.father.setResponseCode(code, message)
-
 
     def handleHeader(self, key, value):
         self.father.setHeader(key, value)
@@ -62,9 +59,11 @@ class ProxyClient(http.HTTPClient):
 
 class ProxyClientFactory(protocol.ClientFactory):
 
+    serial = 0
+    
     protocol = ProxyClient
 
-    def __init__(self, command, rest, version, headers, data, father):
+    def __init__(self, command, rest, version, headers, data, father, verbose, destination):
         self.father = father
         self.command = command
         self.rest = rest
@@ -72,12 +71,31 @@ class ProxyClientFactory(protocol.ClientFactory):
         self.data = data
         self.version = version
         self.deferred = defer.Deferred()
+        self.verbose = verbose
+        self.noisy = False
+        self.destination = destination
+        ProxyClientFactory.serial += 1
+        self.serial = ProxyClientFactory.serial
 
+    def message(self, string):
+        print 'Proxy(%d) %s => %s : %s' % ( self.serial, self.data, self.destination, str(string) )
+
+    def doStart(self):
+        if self.verbose > 3:
+            self.message('start')
+        protocol.ClientFactory.doStart(self)
+
+    def doStop(self):
+        if self.verbose > 3:
+            self.message('stop')
+        protocol.ClientFactory.doStop(self)
+
+#    def error(self, string):
+#	self.message("*ERROR* " + str(string))
 
     def buildProtocol(self, addr):
         return self.protocol(self.command, self.rest, self.version,
                              self.headers, self.data, self.father)
-
 
     def clientConnectionFailed(self, connector, reason):
         if not self.deferred.called:
@@ -104,7 +122,8 @@ def rest_filter(site, request, packet):
         request.content.seek(0, 0)
         clientFactory = ProxyClientFactory(
             request.method, path, request.clientproto,
-            request.getAllHeaders(), request.content.read(), request)
+            request.getAllHeaders(), request.content.read(), request,
+            service.verbose, host + ':' + str(port) + path)
         local_reactor.connectTCP(host, int(port), clientFactory)
         return clientFactory.deferred
     return True
