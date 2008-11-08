@@ -1,6 +1,23 @@
-2008-11-06  Loic Dachary <loic@dachary.org>
+2008-11-08  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17
+
+	* pokernetwork/pokeravatar.py: verbosity control (connection lost
+	  shows only if verbose > 3)
+	* pokernetwork/pokersite.py: verbosity control (ping shows only if
+	  verbose > 3)
+
+2008-11-07  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in: send
+	  AUTO_FOLD after SIT when joining for all players in auto
+
+2008-11-07  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/proxyfilter.py, tests/test-proxyfilter.py.in:
+	  meaningfull verbose logs for tracing proxy activity
+
+2008-11-06  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokersite.py: seek to beginning of request before
 	  printing message
