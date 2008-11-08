@@ -162,21 +162,21 @@ class PokerResource(resource.Resource):
         self.isLeaf = True
 
     def message(self, string):
-        print "PokerXMLSimplified: " + string
+        print "PokerResource: " + string
 
     def error(self, string):
         self.message("*ERROR* " + string)
 
     def render(self, request):
-        if self.verbose > 3:
-            request.content.seek(0, 0)
-            self.message("render " + request.content.read())
         request.content.seek(0, 0)
         jsonp = request.args.get('jsonp', [''])[0]
         if jsonp:
             data = request.args.get('packet', [''])[0]
         else:
             data = request.content.read()
+        if self.verbose >= 3:
+            if "PacketPing" not in data or self.verbose > 3:
+                self.message("render " + data)
         args = simplejson.loads(data, encoding = 'UTF-8')
         if hasattr(Packet.JSON, 'decode_objects'): # backward compatibility
             args = Packet.JSON.decode_objects(args)
@@ -201,7 +201,7 @@ class PokerResource(resource.Resource):
                 request.expireSessionCookie()
                 request.write(body)
                 request.connectionLost(reason)
-                if self.verbose > 2:
+                if self.verbose >= 0:
                     self.error(str(body))
                     
             #
