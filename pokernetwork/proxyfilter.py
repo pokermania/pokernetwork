@@ -78,16 +78,16 @@ class ProxyClientFactory(protocol.ClientFactory):
         self.serial = ProxyClientFactory.serial
 
     def message(self, string):
-        print 'Proxy(%d) %s => %s : %s' % ( self.serial, self.data, self.destination, str(string) )
+        print 'Proxy(%d) %s' % ( self.serial, string )
 
     def doStart(self):
-        if self.verbose > 3:
-            self.message('start')
+        if self.verbose >= 3:
+            self.message('START %s => %s' % ( self.data, self.destination ))
         protocol.ClientFactory.doStart(self)
 
     def doStop(self):
-        if self.verbose > 3:
-            self.message('stop')
+        if self.verbose >= 3:
+            self.message('STOP')
         protocol.ClientFactory.doStop(self)
 
 #    def error(self, string):
