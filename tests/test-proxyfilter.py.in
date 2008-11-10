@@ -324,9 +324,34 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(seat)
             return d
 
+      def test09_pokerPoll(self):
+            """
+            """
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST",
+                               postdata = '{"type":"PacketPokerPoll","game_id":1}')
+            def checkTable(result):
+                  packets = simplejson.JSONDecoder().decode(result)
+                  self.assertEqual(0, len(packets))
+            d.addCallback(checkTable)
+            return d
+
+      def test10_error500(self):
+            """
+            """
+            def error500(game_id):
+                  raise UserWarning, "%d fail" % game_id
+            self.server_service.getTable = error500
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
+            def checkError(result):
+                  self.assertSubstring('500', str(result))
+                  return True
+            d.addErrback(checkError)
+            return d
+
 def Run():
       loader = runner.TestLoader()
-#      loader.methodPrefix = "test08"
+#      loader.methodPrefix = "test10"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       return runner.TrialRunner(
