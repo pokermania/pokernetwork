@@ -454,7 +454,6 @@ class FilterErrorTestCase(unittest.TestCase):
             d = r.notifyFinish()
             def finish(reason):
                   self.assertSubstring('UNLIKELY', r.transport.getvalue())
-                  self.assertEqual(True, isinstance(reason, failure.Failure))
                   return True
             d.addBoth(finish)
             r.requestReceived('GET', '/', '')
