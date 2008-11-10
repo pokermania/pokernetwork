@@ -200,9 +200,10 @@ class PokerResource(resource.Resource):
                 request.setHeader('content-length', str(len(body)))
                 request.expireSessionCookie()
                 request.write(body)
-                request.connectionLost(reason)
-                if self.verbose >= 0:
-                    self.error(str(body))
+            if self.verbose >= 0 and request.code != 200:
+                self.error(str(body))
+            if not request.finished:
+                request.finish()
                     
             #
             # Return a value that is not a Failure so that the next
@@ -242,13 +243,13 @@ class PokerResource(resource.Resource):
             request.finish()
             return True
         def processingFailed(reason):
-            session.expire()
             body = reason.getTraceback()
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-length', str(len(body)))
             request.setHeader('content-type',"text/html")
             request.write(body)
-            request.connectionLost(reason)
+            request.finish()
+            session.expire()
             return True
         d.addCallbacks(render, processingFailed)
         return d
