@@ -1,6 +1,26 @@
-2008-11-08  Loic Dachary <loic@dachary.org>
+2008-11-10  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17
+
+	* tests/test-proxyfilter.py.in: tests for pokerPoll and stack trace
+	  server side
+	* tests/test-pokersite.py.in: an error not longer disconnects with
+	  a Failure() reason argument
+	* pokernetwork/proxyfilter.py: improve log readability for tracking
+	  errors
+	* pokernetwork/pokersite.py: pipeFailed must print the body of the
+	  error even when it comes from a proxyd request that has already
+	  been filled. Otherwise proxyd errors are never logged proxy side
+	  (only server side). Use finish() instead of connectionLost()
+	  which was initialy used probably because the regular request
+	  handler was not protected against requests for which an answer
+	  was ready (either because a filter created an answer or because
+	  pipeFailed reported an error). If the regular handler fails,
+	  expire the session after creating the answer with the appropriate
+	  error code and messages. There is no reason to expire the session
+	  before and it's more error prone.
+
+2008-11-08  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokeravatar.py: verbosity control (connection lost
 	  shows only if verbose > 3)
