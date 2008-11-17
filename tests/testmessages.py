@@ -69,6 +69,7 @@ from pokernetwork import pokersite
 classes.append(pokersite.PokerResource)
 classes.append(pokersite.PokerImageUpload)
 classes.append(pokersite.PokerAvatarResource)
+classes.append(pokersite.PokerSite)
 from pokernetwork import userstats
 classes.append(userstats.UserStatsFactory)
 classes.append(userstats.UserStatsRankPercentileAccessor)

@@ -193,8 +193,8 @@ class PokerResource(resource.Resource):
             # either by passing them on the errback chain or by filling
             # the request with a proper report.
             #
+            body = reason.getTraceback()
             if not request.finished:
-                body = reason.getTraceback()
                 request.setResponseCode(http.INTERNAL_SERVER_ERROR)
                 request.setHeader('content-type',"text/html")
                 request.setHeader('content-length', str(len(body)))
@@ -367,6 +367,7 @@ class PokerSite(server.Site):
 
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
+        self.verbose = self.resource.verbose
         cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
         if cookieTimeout > 0:
             self.cookieTimeout = cookieTimeout
@@ -387,6 +388,12 @@ class PokerSite(server.Site):
         for path in settings.header.xpathEval("/server/rest_filter"):
             module = imp.load_source("poker_pipe", path.content)
             self.pipes.append(getattr(module, "rest_filter"))
+
+    def message(self, string):
+        print "PokerSite: " + string
+
+    def error(self, string):
+        self.message("*ERROR* " + string)
 
     def pipe(self, d, request, packet):
         if self.pipes:
@@ -479,7 +486,10 @@ class PokerSite(server.Site):
             # get any requests. 
             #
             if int(memcache_serial) > 0:
-                assert uid == self.memcache.get(memcache_serial)
+                memcache_uid = self.memcache.get(memcache_serial)
+                if self.verbose >= 0 and uid != memcache_uid:
+                    self.error("uid(%s) != memcache_uid(%s)" % ( uid, memcache_uid))
+                assert uid == memcache_uid
             memcache_serial = int(memcache_serial)
             #
             # If a session exists, make sure it is in sync with the memcache

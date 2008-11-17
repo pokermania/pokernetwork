@@ -538,7 +538,8 @@ class PokerSiteTestCase(PokerSiteBase):
 """
             settings = pokernetworkconfig.Config([])
             settings.loadFromString(settings_xml)
-            site = pokersite.PokerSite(settings, pokersite.PokerResource)
+            service = PokerServiceMockup()
+            site = pokersite.PokerSite(settings, pokersite.PokerResource(service))
             self.assertEqual([ '127.0.0.1:11211' ], site.memcache.addresses)
             self.assertEqual(60, site.sessionFactory.sessionTimeout)
             self.assertEqual(10, site.sessionCheckTime)
@@ -547,7 +548,8 @@ class PokerSiteTestCase(PokerSiteBase):
       def test02_init_default(self):
             sessionTimeout = pokersite.PokerSite.sessionFactory.sessionTimeout
             sessionCheckTime = pokersite.PokerSite.sessionCheckTime
-            site = pokersite.PokerSite(self.settings, pokersite.PokerResource)
+            service = PokerServiceMockup()
+            site = pokersite.PokerSite(self.settings, pokersite.PokerResource(service))
             self.assertEqual([ ], site.memcache.addresses)
             self.assertEqual(sessionTimeout, site.sessionFactory.sessionTimeout)
             self.assertEqual(sessionCheckTime, site.sessionCheckTime)
