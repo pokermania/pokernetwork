@@ -78,6 +78,9 @@ from pokernetwork import attrpack
 classes.append(attrpack.AttrsFactory)
 classes.append(attrpack.AttrsAccessor)
 classes.append(attrpack.AttrsLookup)
+# that does not work because it gets imported in two different ways
+#from pokernetwork import proxyfilter
+#classes.append(proxyfilter.ProxyClientFactory)
 
 from twisted.internet import defer
 
