@@ -984,6 +984,17 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_IN_GAME, self.explain.forward_packets[0].type)
         self.assertEqual(PACKET_POKER_SIT_OUT, self.explain.forward_packets[1].type)
+        #
+        # player in game and auto
+        #
+        player.auto = True
+        player.sit_out = True
+        self.assertTrue(self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                                               players = [player_serial])))
+        self.assertEqual(3, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_IN_GAME, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_SIT, self.explain.forward_packets[1].type)
+        self.assertEqual(PACKET_POKER_AUTO_FOLD, self.explain.forward_packets[2].type)
         
     def test35_explain_wait_for(self):
         game_id = 1

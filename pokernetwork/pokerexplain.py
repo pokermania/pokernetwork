@@ -417,10 +417,16 @@ class PokerExplain:
                     wait_for = player.wait_for
                     in_game = serial in packet.players 
                     if in_game or wait_for:
+                        auto = player.isAuto()
                         if not game.isSit(serial):
                             game.sit(serial)
                             forward_packets.append(PacketPokerSit(game_id = game.id,
                                                                   serial = serial))
+                        if auto:
+                            game.autoPlayer(serial)
+                            forward_packets.append(PacketPokerAutoFold(game_id = game.id,
+                                                                       serial = player.serial))
+
                         if wait_for:
                             if wait_for == True and not in_game and not game.isRunning():
                                 #
