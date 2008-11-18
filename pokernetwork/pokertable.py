@@ -811,16 +811,9 @@ class PokerTable:
             if delta > autodeal_max: delta = autodeal_max
             self.game_delay["delay"] = ( seconds() - self.game_delay["start"] ) + delta
         elif self.transient:
-            all_auto = True
-            for player in game.playersAll():
-                if not player.isAuto():
-                    all_auto = False
-                    delta = 0
-                    break
-            if all_auto:
-                delta = int(self.delays.get("autodeal_tournament_min", 15))
-                if seconds() - self.game_delay["start"] > delta:
-                    delta = 0
+            delta = int(self.delays.get("autodeal_tournament_min", 15))
+            if seconds() - self.game_delay["start"] > delta:
+                delta = 0
         else:
             delta = 0
         if self.factory.verbose > 2:
