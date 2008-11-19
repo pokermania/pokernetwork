@@ -115,7 +115,7 @@ class ProxyClientFactory(protocol.ClientFactory):
 def rest_filter(site, request, packet):
     if request.finished:
         #
-        # For instance : the request was reverse-proxied to a server.
+        # the request has been answered by a filter earlier in the chain
         #
         return True
     service = site.resource.service
