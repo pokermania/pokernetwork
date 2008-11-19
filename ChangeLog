@@ -1,3 +1,9 @@
+2008-11-16  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* LICENSE, COPYING: Relicensed many authors under AGPLv3 with
+	their consent.  (Includes "bombing run" changes in nearly all
+	file-by-file copyright/license notices in the code base).
+
 2008-11-10  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17

@@ -3368,7 +3368,8 @@
 			      <child>
 				<widget class="GtkMenuItem" id="gnu_gpl_v2">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">GNU General  Public License v2 or later</property>
+				  <property name="label"
+				  translatable="yes">GNU Affero General Public License v2 or later</property>
 				  <property name="use_underline">True</property>
 				  <signal name="activate" handler="on_license_activate" last_modification_time="Thu, 30 Mar 2006 12:19:34 GMT"/>
 				</widget>

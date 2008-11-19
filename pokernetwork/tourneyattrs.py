@@ -2,11 +2,11 @@
 # Copyright (C) 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
-# This program gives you software freedom; you can copy, convey,
+# This software's license gives you freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
 # the GNU Affero General Public License (AGPL) as published by the Free
-# Software Foundation, either version 3 of the License, or (at your
-# option) any later version of the AGPL.
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of

@@ -35,15 +35,15 @@ Copyright (C) 2004, 2005, 2006 Mekensleep
 licensing@mekensleep.com
 
 Authors:
-      Loic Dachary         loic@gnu.org
+      Loic Dachary         loic@gnu.dachary
       Cedric Pinson        cpinson@freesheep.org
       Henry Precheur       henry@precheur.org
       Johan Euphrosine     euphro_j@epitech.net
 
-GNU General Public License
+GNU Affero General Public License
 &lt;/tt&gt;
   </credits>
   <licenses list="http://www.gnu.org/licenses/license-list.html">
-   <gnu_gpl_v2>http://gnu.org/licenses/gpl.txt</gnu_gpl_v2>
+   <gnu_gpl_v2>http://www.gnu.org/licenses/agpl.txt</gnu_gpl_v2>
   </licenses>
 </sequence>
