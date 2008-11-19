@@ -113,6 +113,11 @@ class ProxyClientFactory(protocol.ClientFactory):
 # return a value if all actions were complete
 #
 def rest_filter(site, request, packet):
+    if request.finished:
+        #
+        # For instance : the request was reverse-proxied to a server.
+        #
+        return True
     service = site.resource.service
     resthost = service.packet2resthost(packet)
     if resthost:

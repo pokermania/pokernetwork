@@ -32,7 +32,7 @@ from twisted.python.runtime import seconds
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
 
-from twisted.web import client
+from twisted.web import client, http
 
 from tests import testmessages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
@@ -44,6 +44,7 @@ from pokernetwork import pokermemcache
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
+from pokernetwork import proxyfilter
 from pokernetwork.pokerpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
@@ -349,11 +350,45 @@ class ProxyTestCase(unittest.TestCase):
             d.addErrback(checkError)
             return d
 
+class ProxyFilterTestCase(unittest.TestCase):
+
+      def test01_rest_filter_finished_request(self):
+            """
+            proxyfilter.rest_filter should ignore finished request
+            """
+            class Transport:
+                  def write(self, data):
+                        pass
+            class Channel:
+                  transport = Transport()
+                  def requestDone(self, request):
+                        pass
+            class Service:
+                  verbose = 6
+                  def packet2resthost(self, packet):
+                        return (None, None, None)
+            class Resource:
+                  service = Service()
+            class Site:
+                  resource = Resource()
+            class Packet:
+                  pass
+            r = pokersite.Request(Channel(), True)
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            r.setResponseCode(http.OK)
+            r.write("FINISHED")
+            r.finish()
+            r.noLongerQueued()
+            proxyfilter.rest_filter(Site(), r, Packet())
+
 def Run():
       loader = runner.TestLoader()
 #      loader.methodPrefix = "test10"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
+      suite.addTest(loader.loadClass(ProxyFilterTestCase))
       return runner.TrialRunner(
             reporter.VerboseTextReporter,
             tracebackFormat='default',
