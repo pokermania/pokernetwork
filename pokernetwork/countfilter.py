@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
