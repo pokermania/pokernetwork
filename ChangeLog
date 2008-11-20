@@ -1,3 +1,24 @@
+2008-11-20  Loic Dachary <loic@dachary.org>
+
+	* Release 1.0.17
+
+	* pokernetwork/countfilter.py: copyright update
+	* pokernetwork/countfilter.py, tests/test-countfilter.py.in:
+	  memcache stores strings and tests must be done using string
+	  instead of int. The comparison of the counts was flawed because
+	  comparing strings in lexical order.
+
+2008-11-19  Loic Dachary <loic@dachary.org>
+
+	* tests/test-svg2gtk.py.in: remove spurious x
+
+2008-11-19  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/proxyfilter.py: better comment for poker-network
+	  proxyfilter
+	* pokernetwork/proxyfilter.py, tests/test-proxyfilter.py.in:
+	  proxyfilter should ignore finished request
+
 2008-11-16  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* LICENSE, COPYING: Relicensed many authors under AGPLv3 with
@@ -5,8 +26,6 @@
 	file-by-file copyright/license notices in the code base).
 
 2008-11-10  Loic Dachary <loic@dachary.org>
-
-	* Release 1.0.17
 
 	* tests/test-proxyfilter.py.in: tests for pokerPoll and stack trace
 	  server side
