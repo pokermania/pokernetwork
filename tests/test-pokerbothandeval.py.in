@@ -1,0 +1,340 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+#
+# This software's license gives you freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+import sys
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+
+from tests.testmessages import silence_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
+from pokernetwork.pokerbothandeval import *
+
+class FakeUser:
+    def __init__(self, serial, name, seat):
+        self.serial = serial
+        self.name = name
+        self.seat = seat
+class FakeGame:
+    def __init__(self):
+        self.hand = "As Ad"
+        self.board = "Ah 2c 3d"
+        self.resetHistory()
+        self.test_serials = [1001,1002,1003,1004,1005,1006,1007,1008,1009]
+        self.serial2player = {}
+        self.state = "flop"
+        self.pot = 300
+        self.bet = 200
+        self.id = 1
+        self.resetActions()
+        for k,v in enumerate(self.test_serials):
+            user = FakeUser(v, "player%d" % (k+1),k)
+            self.serial2player[v] = user
+        self.blindAnteRound = False
+    def isBlindAnteRound(self):
+        return self.blindAnteRound
+    def getHandAsString(self, serial):
+        return self.hand
+    def getBoardAsString(self):
+        return self.board
+    def serialsAllSorted(self):
+        return self.serial2player.keys()
+    def historyGet(self):
+        return self.history
+    def possibleActions(self, serial):
+        return self.actions
+    def resetHistory(self):
+        self.history = [
+            ["fold", 1001],
+            ["call", 1002, 200],
+            ["fold", 1003],
+            ["raise",1004, 600],
+            ["fold", 1005],
+            ["fold", 1006],
+            ["fold", 1007],
+            ["fold", 1008],
+            ["fold", 1009],
+        ]
+    def resetActions(self):
+        self.actions = ["check", "call", "raise", "fold"]
+    def betsNull(self):
+        return False
+    def getPotAmount(self):
+        return self.pot
+    def getUncalled(self):
+        return self.bet
+    def serialsNotFold(self):
+        return self.test_serials
+    def handEV(self, serial, interations):
+        return 200
+    def betLimits(self, serial):
+        return (200, 800, 0)
+class FakeFactory:
+    def __init__(self):
+        self.wait = 0
+        self.level = 1
+        self.verbose = False
+
+
+class FakeProtocol:
+    def __init__(self,name,serial):
+        self.name = name
+        self.serial = serial
+    def getSerial(self):
+        return self.serial
+    def getName(self):
+        return self.name
+    def sendPacket(self,packet):
+        self.packet = packet
+
+
+class PokerHandEvalTestCase(unittest.TestCase):
+    def setUp(self):
+        self.handEval = PokerHandEval()
+        self.game = FakeGame()
+    def testPokerHandEvalInit(self):
+        assert hasattr(self.handEval, "hand_groups") , "missing hand_groups"
+        assert hasattr(self.handEval, "hand_values"), "missing hand_values"
+        assert hasattr(self.handEval, "odds_map"), "missing odds_map"
+    def testPrepareHand(self):
+        self.handEval.prepareHand("As Jd")
+        assert self.handEval.hand == "AJ", "invalid hand"
+        #test with a lower card before a higher card
+        self.handEval.prepareHand("Jd As")
+        assert self.handEval.hand == "AJ", "invalid hand"
+    def testGetHandGroup(self):
+        self.handEval.prepareHand("As Ad")
+        assert self.handEval.hand == "AA", "hand invalid"
+        assert self.handEval.getHandGroup() == "A", "hand_group invalid"
+        self.handEval.prepareHand("Jd 3s")
+        assert self.handEval.getHandGroup() == False, "hand_group invalid"
+    def testGetHandValue(self):
+        hand_value = self.handEval.getHandValue(self.game, "")
+        assert hand_value[0] == "Trips", "invalid hand_value"
+    def testParseHistory(self):
+        self.handEval.parseHistory(self.game.history)
+        for event in self.game.history:
+            if len(event) == 3:
+                (action, serial, amount) = event
+            else:
+                (action, serial) = event
+                amount = False
+            assert self.handEval.round_action[serial][0] == action, "invalid action"
+            if amount:
+                assert self.handEval.round_action[serial][1] == amount, "invalid amount"
+            assert self.handEval.serial2action[serial] == action, "incorrect action for serial"
+            assert serial in self.handEval.action2serials[action], "serial not in action"
+    def testGetPosition(self):
+        #early position(blinds)
+        self.handEval.getPosition(self.game, 1001)
+        assert self.handEval.position == "early", "invaild position"
+        assert self.handEval.serial2position[1001] == "early", "serial2position invalid"
+        assert 1001 in self.handEval.position2serials["early"], "missing serial in position2serials"
+        #early position(not in blinds)
+        self.handEval.getPosition(self.game, 1003)
+        assert self.handEval.position == "early", "invaild position"
+        assert self.handEval.serial2position[1003] == "early", "serial2position invalid"
+        assert 1003 in self.handEval.position2serials["early"], "missing serial in position2serials"
+        self.game.resetHistory()
+        #middle position
+        self.handEval.getPosition(self.game, 1004)
+        assert self.handEval.position == "middle", "invaild position"
+        assert self.handEval.serial2position[1004] == "middle", "serial2position invalid"
+        assert 1004 in self.handEval.position2serials["middle"], "missing serial in position2serials"
+
+class PreFlopHandEvalTestCase(unittest.TestCase):
+    def setUp(self):
+        self.handEval = PreFlopHandEval()
+        self.game = FakeGame()
+    def testHasPreflopRaise(self):
+        assert self.handEval.hasPreflopRaise(self.game) != False, "invalid: has preflop raise"
+    def evalHandAsserts(self, serial, hand, action, position, hand_group=False, raised_from=False):
+        desired_action = self.handEval.evalHand(hand, self.game, serial)
+        assert desired_action == action, "invalid action expected %s but got %s" % (action, desired_action)
+        if hand_group:
+            assert self.handEval.position == position, "invalid position expected %s but got % s" % (position, self.handEval.position)
+        assert self.handEval.hand_group == hand_group, "in valid hand group expect %s but got %s" % (hand_group, self.handEval.hand_group)
+        if raised_from:
+            assert self.handEval.raised_from == raised_from, "in valid raiser expected %s but got %s" % (raised_from, self.handEval.raised_from)
+    def testEvalHand(self):
+        #early position(blinds) with a group A hand and an early position raiser
+        self.game.history[1][0] = "raise"
+        self.game.history[1][2] = 800
+        self.game.history[3][0] = "fold"
+        del(self.game.history[3][2])
+        self.evalHandAsserts(1001, "As Ad","raise", "early", "A", "early")
+        #early position(blinds) with a group B,C or D hand and an early position raiser
+        self.evalHandAsserts(1001, "Js Jd","call", "early", "C", "early")
+        #early position(blinds) with a group E, F, G or H hand and an early position raiser
+        self.evalHandAsserts(1001, "Jd 8d", "fold", "early", "H", "early")
+        #early position(blinds) with a group A hand and a middle position raiser
+        self.game.resetHistory()
+        self.game.history[4][0] = "raise"
+        self.game.history[5].append(800)
+        self.game.history[3][0] = "fold"
+        del(self.game.history[3][2])
+        self.evalHandAsserts(1001, "Ad As", 'raise', "early", "A", "middle")
+        #early position(blinds) with a group D or E hand and a middle position raiser
+        self.evalHandAsserts(1001, "Ad Qd", "call", "early", "D", "middle")
+        #early position(blinds) with a group F,G or H hand and a middle position raiser
+        self.evalHandAsserts(1001, "Ad Ts", "fold", "early", "F", "middle")
+        #early position(blinds) with a group A, B, C or D hand and a late position raiser
+        self.game.resetHistory()
+        self.game.history[7][0] = "raise"
+        self.game.history[7].append(800)
+        self.game.history[3][0] = "fold"
+        del(self.game.history[3][2])
+        self.evalHandAsserts(1001, "As Ad","raise", "early", "A", "late")
+        #early position(blinds) with a group E or F hand an a late position raiser
+        self.evalHandAsserts(1001, "Ah Jd", "call", "early", "E", "late")
+        #early position(blinds) with a group G or H hand and a late position raiser
+        self.evalHandAsserts(1001, "As 9s", "fold", "early", "G", "late")
+        #early position(not blind) with group A hand and a raise
+        self.evalHandAsserts(1003, "Ad As", "raise", "early", "A")
+        #early position(not blind) with group B or C hand and a raise
+        self.evalHandAsserts(1003, "Ad Ks", "call", "early", "B")
+        #early position(not blind) with group D, E, F, G or H hand and a raise
+        self.evalHandAsserts(1003, "Ad Qs", "fold", "early", "D")
+        #middle position with a group A or B hand and a raise
+        self.game.resetHistory()
+        self.evalHandAsserts(1004, "Ad As", "raise", "middle", "A")
+        #middle position with a group C hand and a raise
+        self.evalHandAsserts(1004, "Js Jd", "call", "middle", "C")
+        #middle position with a group D,E,F,G or H hand and a raise
+        self.evalHandAsserts(1004, "9s 9d", "fold", "middle", "D")
+        #late position with a group A or B hand and a raise
+        self.evalHandAsserts(1008, "Ad As", "raise", "late", "A")
+        #late position with a group C or D hand and a raise
+        self.evalHandAsserts(1008, "Jd Js", "call", "late", "C")
+        #late position with a group E,F,G or H hand and a raise
+        self.evalHandAsserts(1008, "As Jd", "fold", "late", "E")
+        #early position with a group A, B, C, or D hand and no raise
+        self.game.resetHistory()
+        self.game.history[3][0] = "fold"
+        del(self.game.history[3][2])
+        self.evalHandAsserts(1003, "Ad As", "raise", "early", "A")
+        #early position with a group E, F, G or H hand and no raise
+        self.evalHandAsserts(1003, "Ad Td", "fold", "early", "E")
+        #middle position with a group A, B, C, D or E hand and no raise
+        self.evalHandAsserts(1004, "As Qs", "raise", "middle", "D")
+        #middle position with a group F or G hand and no raise
+        self.evalHandAsserts(1004, "As Td", "call", "middle", "F")
+        #middle position with a group H hand and no raise
+        self.evalHandAsserts(1004, "Kd Js", "fold", "middle", "H")
+        #late position with a group A,B,C,D,E or F hand and no raise
+        self.evalHandAsserts(1008, "As Ad", "raise", "late", "A")
+        #last position with a group G or H hand and no raise
+        self.evalHandAsserts(1008, "7s 6s", "call", "late", "H")
+        #early position with a trash hand
+        self.evalHandAsserts(1001, "7d 2s", "fold", "early")
+        #big blind with a trash hand
+        del(self.game.actions[3])
+        self.evalHandAsserts(1002, "7d 2s", "check", "early")
+
+class PostFlopHandEvalTestCase(unittest.TestCase):
+    def setUp(self):
+        self.game = FakeGame()
+        self.handEval = PostFlopHandEval()
+    def testEvalHand(self):
+        #raise with TwoPair, Trips, Straight, Flush, Flhouse, Quads or StFlush
+        assert self.handEval.evalHand(700,self.game, 1001) == "raise", "invalid action expected raise"
+        #with no pair and no draw
+        self.game.hand = "7s 3h"
+        self.game.board = "4d 9s Jc"
+        action = self.handEval.evalHand(200, self.game, 1001)
+        assert action == "check", "invalid action expected check but got %s" % action
+        #flop with a flush draw and correct odds to draw
+        self.game.hand = "9s 8s"
+        self.game.board = "Ts 3s 4d"
+        self.game.pot = 800
+        self.game.bet = 200
+        assert self.handEval.evalHand(200, self.game, 1001) == "call", "invalid action expected call"
+        #turn with a flush draw and correct odds to draw
+        self.game.state = "turn"
+        assert self.handEval.evalHand(200, self.game, 1001) == "call", "invalid action expected call"
+        #river with busted flush draw
+        self.game.state = "river"
+        assert self.handEval.evalHand(200, self.game, 1001) == "check", "invalid action expected check"
+        #flush draw and incorrect odds to draw
+        self.game.state = "flop"
+        self.game.pot = 800
+        self.game.bet = 600
+        assert self.handEval.evalHand(200, self.game, 1001) == "fold", "invalid action expected fold"
+        #OnePair with draw
+        self.bet = 0
+        self.game.board = "Ts 3s 9h"
+        assert self.handEval.evalHand(200, self.game, 1001) == "call", "invalid action expected call"
+        #OnePair without draw
+        self.game.board = "Ts 3d 9h"
+        assert self.handEval.evalHand(200, self.game, 1001) == "check", "invalid action expected check"
+class EvalDrawsTestCase(unittest.TestCase):
+    def setUp(self):
+        self.game = FakeGame()
+    def testConvertHandValue(self):
+        draw = EvalDraws(" ", self.game.hand, self.game.board)
+        cards = self.game.hand.split(" ") + self.game.board.split(" ")
+        self.assertEquals(draw.convertHandValue(cards), sorted([13,13,13,1,2]))
+    def testLookForFlushDraw(self):
+        draw = EvalDraws(" ", self.game.hand, self.game.board)
+        assert draw.lookForFlushDraw(["As", "Js", "7s", "4s", "3d"]) == "FlushDraw", "invalid flushdraw result"
+        assert draw.lookForFlushDraw(["As", "Js", "Ts", "Ks", "3d"]) == "GutShotStraightFlush", "invalid flushdraw result"
+        assert draw.lookForFlushDraw(["Qs", "Js", "Ts", "Ks", "3d"]) == "OpenEndedStraightFlush", "invalid flushdraw result"
+    def testLookForStraightDraw(self):
+        draw = EvalDraws(" ", self.game.hand, self.game.board)
+        assert draw.lookForStraightDraw(["As", "Js", "Ts", "Ks", "3d"], True) == "GutShotStraight", "invalid flushdraw result"
+        assert draw.lookForStraightDraw(["Qs", "Js", "Ts", "Ks", "3d"], True) == "OpenEndedStraight", "invalid flushdraw result"
+        assert draw.lookForStraightDraw(["Ad", "Jh", "Ts", "Ks", "3d"], False) == "GutShotStraight", "invalid flushdraw result"
+        assert draw.lookForStraightDraw(["Qh", "Jd", "Ts", "Ks", "3d"], False) == "OpenEndedStraight", "invalid flushdraw result"
+    def testLookForDraws(self):
+        draw = EvalDraws(" ", self.game.hand, self.game.board)
+        assert draw.lookForDraws() == False, "invalid draw result"
+        draw = EvalDraws(" ", "Qh Jd", "Ts Ks 3d")
+        assert draw.lookForDraws() == "OpenEndedStraight", "invalid draw result"
+        draw = EvalDraws(" ", "Qh Jh", "Th 7h 3d")
+        assert draw.lookForDraws() == "FlushDraw", "invalid draw result"
+
+# ----------------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test40"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerHandEvalTestCase))
+    suite.addTest(loader.loadClass(PreFlopHandEvalTestCase))
+    suite.addTest(loader.loadClass(PostFlopHandEvalTestCase))
+    suite.addTest(loader.loadClass(EvalDrawsTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+        tracebackFormat='default',
+        ).run(suite)
+
+# ----------------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerbothandeval.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerbothandeval.py' TESTS='coverage-reset test-pokerbothandeval.py coverage-report' check )"
+# End:
