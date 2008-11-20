@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
+# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
@@ -69,31 +70,31 @@ class CountTestCase(unittest.TestCase):
             pass
 
         countfilter.rest_filter(Site(), Request(), Packet())
-        self.assertEqual(self.memcache.get(memcache_key), 0)
+        self.assertEqual(self.memcache.get(memcache_key), "0")
         self.assertEqual(memcache_timeout, self.memcache.expiration[memcache_key])
         
-        count = 1
+        count = "9"
         countfilter.rest_filter(Site(), Request(count), Packet())
         self.assertEqual(self.memcache.get(memcache_key), count)
         self.assertEqual(memcache_timeout, self.memcache.expiration[memcache_key])
 
-        count = 1
+        count = "9"
         countfilter.rest_filter(Site(), Request(count), Packet())
         self.assertEqual(self.memcache.get(memcache_key), count)
         self.assertEqual(memcache_timeout, self.memcache.expiration[memcache_key])
 
-        count = 2
+        count = "10"
         countfilter.rest_filter(Site(), Request(count), Packet())
         self.assertEqual(self.memcache.get(memcache_key), count)
         self.assertEqual(memcache_timeout, self.memcache.expiration[memcache_key])
         
-        count = 1
+        count = "9"
         exceptionRaised = None
         try:
             countfilter.rest_filter(Site(), Request(count), Packet())
         except Exception:
             exceptionRaised = str(sys.exc_info()[1])
-        self.assertEqual(exceptionRaised, "a more recent client connection occured (2), killing old connection (1)")
+        self.assertEqual(exceptionRaised, "a more recent client connection occured (10), killing old connection (9)")
 
 def Run():
       loader = runner.TestLoader()
