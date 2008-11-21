@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+# Authors:
+#  Thomas Johnson <tomfmason@gmail.com>
 #
 from pokereval import PokerEval
 class PokerHandEval:
