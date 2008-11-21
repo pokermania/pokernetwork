@@ -39,6 +39,7 @@ import locale
 import sets
 from _mysql_exceptions import IntegrityError
 from pprint import pprint
+from datetime import date
 
 from tests import testclock
 
@@ -1174,6 +1175,36 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.joinedCountReachedMax(),
                               val >= expectedMax)
         self.service.stopService()
+    # ----------------------------------------------------------------
+    def test20_spawnTourneyCurrencySerialFromDateFormat(self):
+        cursor = self.db.cursor()
+        currency_serial_from_date_format = '%Y%m'
+        cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = '%s' WHERE name = 'sitngo2'" % currency_serial_from_date_format)
+        self.assertEqual(1, cursor.rowcount)
+        cursor.close()
+        self.service.today = lambda: date(1970, 01, 01)
+        currency_serial_from_date = 197001L
+        self.service.startService()
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.assertEqual(currency_serial_from_date_format, schedule["currency_serial_from_date_format"])
+        cursor = self.db.cursor()
+        cursor.execute("SELECT currency_serial from tourneys WHERE name = '%s'" % 'sitngo2')
+        self.assertEqual(1, cursor.rowcount)
+        currency_serial = cursor.fetchone()[0]
+        cursor.close()
+        self.assertEqual(currency_serial_from_date, currency_serial)
+        tourney = self.service.tourneys[tourney_serial]
+        self.assertEqual(False, hasattr(tourney, currency_serial_from_date_format))
+        self.assertEqual(currency_serial_from_date, tourney.currency_serial)
+    # ----------------------------------------------------------------
+    def test21_today(self):
+        self.assertEqual(self.service.today(), date.today())
+    # ----------------------------------------------------------------
+    def test22_spawnTourneyBadCurrencySerialFromDateFormat(self):
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
+        cursor.close()
+        self.assertRaises(UserWarning, self.service.startService)
 
 class RefillTestCase(unittest.TestCase):
 

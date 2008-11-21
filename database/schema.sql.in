@@ -286,6 +286,8 @@ CREATE TABLE tourneys_schedule (
   respawn CHAR DEFAULT 'n',
   -- Unused.
   respawn_interval INT DEFAULT 0,
+  -- Format string to override currency serial from date.
+  currency_serial_from_date_format VARCHAR(16) DEFAULT NULL,
 
   PRIMARY KEY (serial),
   KEY tourneys_schedule_active_index (active),

@@ -98,6 +98,7 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork.userstats import UserStatsFactory
 from pokernetwork.tourneyattrs import TourneyAttrsFactory
 from pokerauth import get_auth_instance
+from datetime import date
 
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
@@ -575,7 +576,17 @@ class PokerService(service.Service):
         self.cancelTimer('checkTourney')
         self.timer['checkTourney'] = reactor.callLater(CHECK_TOURNEYS_SCHEDULE_DELAY, self.checkTourneysSchedule)
 
+    def today(self):
+        return date.today()
+
     def spawnTourney(self, schedule):
+        currency_serial = schedule['currency_serial']
+        currency_serial_from_date_format = schedule['currency_serial_from_date_format']
+        if currency_serial_from_date_format:
+            currency_serial_from_date_format_regexp = '(%[Ymd])+'
+            if not re.match(currency_serial_from_date_format_regexp, currency_serial_from_date_format):
+                raise UserWarning, "bad tourney_schedule.currency_serial_from_date_format format string: %s" % currency_serial_from_date_format
+            currency_serial = long(self.today().strftime(currency_serial_from_date_format))
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
                        " (resthost_serial, schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time)"
@@ -592,7 +603,7 @@ class PokerService(service.Service):
                          schedule['betting_structure'],
                          schedule['seats_per_game'],
                          schedule['player_timeout'],
-                         schedule['currency_serial'],
+                         currency_serial,
                          schedule['prize_min'],
                          schedule['bailor_serial'],
                          schedule['buy_in'],
@@ -618,16 +629,16 @@ class PokerService(service.Service):
             cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s" % schedule['serial'])
         cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
         cursor.close()
-        self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'])
+        self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial)
 
-    def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial):
+    def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial, currency_serial):
         tourney_map['start_time'] = int(tourney_map['start_time'])
         tourney_map['register_time'] = int(tourney_map.get('register_time', 0))
         tourney = PokerTournament(dirs = self.dirs, **tourney_map)
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
         tourney.schedule_serial = schedule_serial
-        tourney.currency_serial = tourney_map['currency_serial']
+        tourney.currency_serial = currency_serial
         tourney.bailor_serial = tourney_map['bailor_serial']
         tourney.player_timeout = int(tourney_map['player_timeout'])
         tourney.callback_new_state = self.tourneyNewState
@@ -1417,7 +1428,7 @@ class PokerService(service.Service):
         for x in xrange(cursor.rowcount):
             row = cursor.fetchone()
             if self.verbose >= 0: message = "cleanupTourneys: restoring %s(%s) with players" % ( row['name'], row['serial'],  )
-            tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'])
+            tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'])
             cursor1 = self.db.cursor()
             sql = "SELECT user_serial FROM user2tourney WHERE tourney_serial = " + str(row['serial'])
             if self.verbose > 2:

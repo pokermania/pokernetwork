@@ -24,6 +24,7 @@ ALTER TABLE `tourneys` ADD KEY ( `state` ) ;
 --
 ALTER TABLE `tourneys` ADD COLUMN resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL;
 ALTER TABLE `tourneys_schedule` ADD COLUMN resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL;
+ALTER TABLE `tourneys_schedule` ADD COLUMN currency_serial_from_date_format VARCHAR(16) DEFAULT NULL;
 --
 -- Tournament rank is used for tourneySelect
 --
