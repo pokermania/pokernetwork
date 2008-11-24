@@ -1,3 +1,38 @@
+2008-11-23  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.forceDbToLocaleValue): Wrote function.
+
+2008-11-22  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py
+	(PokerAvatarTestCase.test15a_handPlay_dbLocalesAndOverridesThereof):
+	Wrote test.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarNoClientServerTestCase): Created test class.
+	(PokerAvatarNoClientServerTestCase.setUp): Wrote method.
+	(PokerAvatarNoClientServerTestCase.test01_reloginCoverage): Wrote
+	test.
+	(PokerAvatarNoClientServerTestCase.test02_relogin_localeAlreadySet):
+	Wrote test.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.setLocale): Make sure
+	locale is not None before looking up translation function.
+	(PokerAvatar._setDefaultLocale): Wrote method.
+	(PokerAvatar.relogin): Added call to _setDefaultLocale().
+	(PokerAvatar.login): Added call to _setDefaultLocale().
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test21_getPlayerInfo_validReturns):
+	Wrote test.
+
+	* database/schema.sql.in: Switched locale default from "en" to
+	"en_US.UTF-8".
+
+	* pokernetwork/pokerservice.py (PokerService.getPlayerInfo): Added
+	locale to include the lookup.
+
 2008-11-20  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17

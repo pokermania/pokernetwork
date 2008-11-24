@@ -34,6 +34,7 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer, error, base
 from twisted.python import failure, runtime
+from twisted.python.runtime import seconds
 
 from pokerengine import pokertournament
 #
@@ -856,8 +857,8 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
                     if (packet.message not in lang2strings[self.avatarLocales[avid]]):
-                        self.fail("Unexpected and/or Wrong Language message: %s" 
-                                  % packet.message)
+                        self.fail("Unexpected and/or Wrong Language (expected %s) message: %s for avatar %d" 
+                                  % (self.avatarLocales[avid], packet.message, avid))
                 elif packet.type == PACKET_POKER_STATE:
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
@@ -968,6 +969,57 @@ class PokerAvatarTestCase(unittest.TestCase):
         avatar.noqueuePackets()
         client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
         return  d
+    # ------------------------------------------------------------------------
+    def forceDbToLocaleValue(self, (client, packet), avid = 0, setTo = '', expect = '', updateCount = 0):
+        from pokernetwork.pokerauth import get_auth_instance
+        auth = get_auth_instance(self.service.db, self.service.settings)
+
+        avatar = self.service.avatars[avid]
+        self.avatarLocales[avid] = expect
+
+        cursor = self.service.db.cursor()
+        cursor.execute("insert into users(created, name, password, locale) values(%d, 'user%d', '%s', '%s')"
+                       % (seconds(), avid, 'password1', setTo))
+        self.assertEquals(cursor.rowcount, 1)
+        cursor.close()
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test15a_handPlay_dbLocalesAndOverridesThereof(self):
+        """Test playing an actual hand all the way through when locale changes"""
+
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.forceDbToLocaleValue, avid = 0, 
+                      setTo = 'fr_FR.UTF-8', expect = "RESET_BY_SET_LOCALE")
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.setLocale, "en_US.UTF-8")
+        d.addCallback(self.createRankDBTable, 2, rank = 50, percentile = 30)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.seatTable, 0, 2, 50, 30)
+        d.addCallback(self.buyInTable, 0, 2, 1000)
+        d.addCallback(self.autoBlindAnte, 0, 2)
+        d.addCallback(self.sitTable, 0, 2)
+        d.addCallback(self.readyToPlay, 0, 2)
+        d2 = self.client_factory[1].established_deferred
+
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.forceDbToLocaleValue, avid = 1, 
+                       setTo = 'fr_FR.UTF-8', expect = "fr_FR.UTF-8")
+        d2.addCallback(self.sendRolePlay)
+        d2.addCallback(self.login, 1)
+        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit',
+                       [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
+        d2.addCallback(self.seatTable, 1, 2)
+        d2.addCallback(self.buyInTable, 1, 2, 1000)
+        # Note: this avatar does not autopost, and doBlindPost handles it.
+        d2.addCallback(self.sitTable, 1, 2)
+        d2.addCallback(self.readyToPlay, 1, 2)
+        d2.addCallback(self.dealTable, 2)
+        d2.addCallback(self.beginHandSetup, 2)
+        d2.addCallback(self.doBlindPost, 1, 2)
+        d2.addCallback(self.startHandAndReceiveCards, 2)
+        return defer.DeferredList((d, d2))
     # -------------------------------------------------------------------------
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
@@ -3640,12 +3692,111 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.getStatsIgnored, 0, 1, 2)
         return d
+##############################################################################
+class PokerAvatarNoClientServerTestCase(unittest.TestCase):
+    class MockPlayerInfo:
+        def __init__(mpiSelf):
+            mpiSelf.url = "http://example.org/"
+            mpiSelf.outfit = "naked"
+            mpiSelf.locale = 'mylocale'
+            mpiSelf.name = 'Doyle Brunson'
+    class MockService:
+        def __init__(msSelf):
+            def transFunc(locale):
+                if locale == 'mylocale':
+                    return lambda s: "MYTRANSLATION"
+                else:
+                    return lambda s: "BROKEN FAIL"
+            msSelf.locale2translationFunc = transFunc
+            msSelf.serial2client = {}
+            
+        def getPlayerInfo(msSelf, serial):
+            return PokerAvatarNoClientServerTestCase.MockPlayerInfo()
+        def getPlayerPlaces(msSelf, serial):
+            class MockPlace:
+                def __init__(mpSelf): mpSelf.tourneys = "MOCKPLACES"
+            return MockPlace()
+
+    class MockExplain:
+        def __init__(meSelf): meSelf.handleSerialPackets = []
+        def handleSerial(meSelf, pack):
+            meSelf.handleSerialPackets.append(pack)
+    # ------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()        
+
+        self.avatarLocales = {}
+        self.avatarLocales[0] = "default"
+        self.avatarLocales[1] = "default"
     # ------------------------------------------------------------------------
+    def test01_reloginCoverage(self):
+        """No packet actualy does a relogin, this covers it 'by-hand', as
+        it were."""
+        from pokernetwork import pokeravatar
+
+        service = PokerAvatarNoClientServerTestCase.MockService()
+        avatar = pokeravatar.PokerAvatar(service)
+        explain = PokerAvatarNoClientServerTestCase.MockExplain()
+        saveExplain = avatar.explain
+        avatar.explain = explain
+
+        avatar.localeFunc = lambda s: "DONOTOVERRIDE"
+
+        avatar.relogin(1042)
+        self.assertEquals(avatar.user.serial, 1042)
+        self.assertEquals(avatar.user.name, 'Doyle Brunson')
+        self.assertEquals(avatar.user.url, "http://example.org/")
+        self.assertEquals(avatar.user.outfit, "naked")
+        self.assertEquals(avatar.user.privilege, pokeravatar.User.REGULAR)
+        self.assertEquals(avatar.tourneys, "MOCKPLACES")
+
+        self.failUnless(service.serial2client.keys(), [1042])
+        self.assertEquals(service.serial2client[1042], avatar)
+
+        avatar.explain = saveExplain
+
+        self.assertEquals(len(explain.handleSerialPackets), 1)
+        self.assertEquals(explain.handleSerialPackets[0].serial, 1042)
+        self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
+
+        self.assertEquals(avatar.localeFunc("DUMMY"),  "DONOTOVERRIDE")
+    # ------------------------------------------------------------------------
+    def test02_relogin_localeAlreadySet(self):
+        """No packet actualy does a relogin, this covers it 'by-hand', as
+        it were."""
+        from pokernetwork import pokeravatar
+
+        service = PokerAvatarNoClientServerTestCase.MockService()
+        avatar = pokeravatar.PokerAvatar(service)
+        explain = PokerAvatarNoClientServerTestCase.MockExplain()
+        saveExplain = avatar.explain
+        avatar.explain = explain
+
+        avatar.relogin(1042)
+        self.assertEquals(avatar.user.serial, 1042)
+        self.assertEquals(avatar.user.name, 'Doyle Brunson')
+        self.assertEquals(avatar.user.url, "http://example.org/")
+        self.assertEquals(avatar.user.outfit, "naked")
+        self.assertEquals(avatar.user.privilege, pokeravatar.User.REGULAR)
+        self.assertEquals(avatar.tourneys, "MOCKPLACES")
+
+        self.failUnless(service.serial2client.keys(), [1042])
+        self.assertEquals(service.serial2client[1042], avatar)
+
+        avatar.explain = saveExplain
+
+        self.assertEquals(len(explain.handleSerialPackets), 1)
+        self.assertEquals(explain.handleSerialPackets[0].serial, 1042)
+        self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
+
+        self.assertEquals(avatar.localeFunc("DUMMY"), "MYTRANSLATION")
+##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test35"
+#    loader.methodPrefix = "test15a"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
+    suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',

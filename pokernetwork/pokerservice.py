@@ -1491,19 +1491,25 @@ class PokerService(service.Service):
             return placeholder
 
         cursor = self.db.cursor()
-        sql = ( "select name,skin_url,skin_outfit from users where serial = " + str(serial) )
+        sql = ( "select locale,name,skin_url,skin_outfit from users where serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("getPlayerInfo(%d) expected one row got %d" % ( serial, cursor.rowcount ))
             return placeholder
-        (name,skin_url,skin_outfit) = cursor.fetchone()
+        (locale,name,skin_url,skin_outfit) = cursor.fetchone()
         if skin_outfit == None:
             skin_outfit = "random"
         cursor.close()
-        return PacketPokerPlayerInfo(serial = serial,
+        pack = PacketPokerPlayerInfo(serial = serial,
                                      name = name,
                                      url = skin_url,
                                      outfit = skin_outfit)
+        # pokerservice generally provides playerInfo() internally to
+        # methods like pokeravatar.(re)?login.  Since this is the central
+        # internal location where the query occurs, we hack in the locale
+        # returned from the DB.
+        pack.locale = locale
+        return pack
 
     def getPlayerPlaces(self, serial):
         cursor = self.db.cursor()

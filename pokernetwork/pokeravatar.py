@@ -78,8 +78,20 @@ class PokerAvatar:
             self.explain = None
         return True
 
+    def _setDefaultLocale(self, locale):
+        """Set self.localFunc using locale iff. it is not already set.
+        Typically, this method is only used for a locale found for the
+        user in the database.  If the client sends a
+        PacketPokerSetLocale(), that will always take precedent and should
+        not use this method, but self.setLocale() instead."""
+        if not self.localeFunc:
+            return self.setLocale(locale)
+        else:
+            return None
+            
     def setLocale(self, locale):
-        self.localeFunc = self.service.locale2translationFunc(locale)
+        if locale:
+            self.localeFunc = self.service.locale2translationFunc(locale)
         return self.localeFunc
 
     def setProtocol(self, protocol):
@@ -104,6 +116,8 @@ class PokerAvatar:
         self.user.privilege = User.REGULAR
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
+        self._setDefaultLocale(player_info.locale)
+
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
         assert self.service.serial2client.has_key(serial) == False
@@ -120,7 +134,8 @@ class PokerAvatar:
         player_info = self.service.getPlayerInfo(serial)
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
-        
+        self._setDefaultLocale(player_info.locale)
+
         self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
         if PacketPokerRoles.PLAY in self.roles:
             self.service.serial2client[serial] = self

@@ -2199,6 +2199,65 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
         self.assertEqual(15, row['points'])
         cursor.close()
 
+##############################################################################        
+class PokerServiceCoverageTests(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()        
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+    # ----------------------------------------------------------------
+    def tearDown(self):
+        if hasattr(self, 'service'):
+            d = self.service.stopService()
+            return d
+    # ----------------------------------------------------------------
+    def test21_getPlayerInfo_validReturns(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "select locale,name,skin_url,skin_outfit"]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                cursorSelf.rowcount = 1
+                cursorSelf.row = ('ourlocal','ourname','ourskinurl',None)
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        pack = self.service.getPlayerInfo(5)
+        self.assertEquals(pack.locale, 'ourlocal')
+        self.assertEquals(pack.name, 'ourname')
+        self.assertEquals(pack.url, 'ourskinurl')
+        self.assertEquals(pack.outfit, 'random')
+
+        self.service.db = oldDb
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
@@ -2223,6 +2282,7 @@ def Run():
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
     suite.addTest(loader.loadClass(CleanUpTestCase))
     suite.addTest(loader.loadClass(ResthostTestCase))
+    suite.addTest(loader.loadClass(PokerServiceCoverageTests))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
