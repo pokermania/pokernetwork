@@ -1,3 +1,11 @@
+2008-11-24  Loic Dachary <loic@dachary.org>
+
+	* Release 1.0.17
+
+	* database/1.6.0-1.7.0.sql, pokernetwork/pokerservice.py,
+	  tests/test-pokersite.py.in: update the mockup for locale handling
+	  and always set the locale in playerinfo packet
+
 2008-11-23  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -33,9 +41,12 @@
 	* pokernetwork/pokerservice.py (PokerService.getPlayerInfo): Added
 	locale to include the lookup.
 
-2008-11-20  Loic Dachary <loic@dachary.org>
+2008-11-21  Thomas Johnson <thomas.johnson@phpfreaks.com>
 
-	* Release 1.0.17
+	* pokernetwork/pokerbothandeval.py: added name and email to
+	  copyright notice
+
+2008-11-20  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/countfilter.py: copyright update
 	* pokernetwork/countfilter.py, tests/test-countfilter.py.in:
