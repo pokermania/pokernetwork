@@ -1486,7 +1486,8 @@ class PokerService(service.Service):
         placeholder = PacketPokerPlayerInfo(serial = serial,
                                             name = "anonymous",
                                             url= "random",
-                                            outfit = "random")
+                                            outfit = "random",
+                                            locale = "en_US.UTF-8")
         if serial == 0:
             return placeholder
 
@@ -1500,16 +1501,16 @@ class PokerService(service.Service):
         if skin_outfit == None:
             skin_outfit = "random"
         cursor.close()
-        pack = PacketPokerPlayerInfo(serial = serial,
-                                     name = name,
-                                     url = skin_url,
-                                     outfit = skin_outfit)
+        packet = PacketPokerPlayerInfo(serial = serial,
+                                       name = name,
+                                       url = skin_url,
+                                       outfit = skin_outfit)
         # pokerservice generally provides playerInfo() internally to
         # methods like pokeravatar.(re)?login.  Since this is the central
         # internal location where the query occurs, we hack in the locale
         # returned from the DB.
-        pack.locale = locale
-        return pack
+        packet.locale = locale
+        return packet
 
     def getPlayerPlaces(self, serial):
         cursor = self.db.cursor()

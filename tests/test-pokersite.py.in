@@ -52,8 +52,13 @@ class PokerServiceMockup:
             self.dirs = []
 
       def getPlayerInfo(self, serial):
-            return PacketPokerPlayerInfo(serial = serial)
+            packet = PacketPokerPlayerInfo(serial = serial)
+            packet.locale = 'en_US.UTF-8'
+            return packet
 
+      def locale2translationFunc(self, locale):
+            return None
+      
       def createAvatar(self):
             return pokeravatar.PokerAvatar(self)
 

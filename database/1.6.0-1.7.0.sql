@@ -6,7 +6,7 @@ ALTER TABLE `users` CHANGE COLUMN `skin_url` `skin_url` VARCHAR(255);
 --
 -- Server side, per user locale
 -- 
-ALTER TABLE `users` ADD COLUMN `locale` VARCHAR(32) DEFAULT "en";
+ALTER TABLE `users` ADD COLUMN `locale` VARCHAR(32) DEFAULT "en_US.UTF-8";
 --
 -- There may be multiple users
 ALTER TABLE `users` DROP INDEX `name_idx`, ADD INDEX `name_idx` ( `name` );
