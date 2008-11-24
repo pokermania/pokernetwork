@@ -177,7 +177,7 @@ class PokerAttrsTestCase(unittest.TestCase):
 
         # MockAccessor is a dummy accessor class that has only the
         # interface required by AttrsLookup
-        class MockAccessor():
+        class  MockAccessor:
             def getAttrValue(mockAccessorSelf, attr, **kwargs):
                 self.assertEquals(attr, "mockattr")
                 return "mockvalue"
@@ -185,7 +185,7 @@ class PokerAttrsTestCase(unittest.TestCase):
         # are forced into the pokerpackets module so that AttrsLookup can
         # instantiate them
         from pokernetwork import pokerpackets
-        class PacketPokerDummy():
+        class  PacketPokerDummy:
             type = 168
             def __init__(packetPokerDummySelf, mockPacketField = 7, attrsDict = {}):
                 self.assertEquals(mockPacketField, 5)
@@ -193,7 +193,7 @@ class PokerAttrsTestCase(unittest.TestCase):
                 self.assertEquals(attrsDict['mockattr'], 'mockvalue')
                 packetPokerDummySelf.initialized = True
                 
-        class PacketPokerSupportedAttrs():
+        class  PacketPokerSupportedAttrs:
             type = 169
             def __init__(packetPokerSupportedSelf, attrs = []):
                 self.assertEquals(attrs, [ 'mockattr' ])

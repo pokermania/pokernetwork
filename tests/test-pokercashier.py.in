@@ -858,7 +858,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         global calledCount
         calledCount = 0
 
-        class MockPacket():
+        class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.serial  = 5
                 mockPacketSelf.value  = 10
@@ -886,9 +886,9 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
     # --------------------------------------------------------
     def cashOutUpdateCounter_weirdLen(self, new_notes, message):
         clear_all_messages()
-        class MockDatabase():
+        class  MockDatabase:
             def cursor(dbSelf): return MockCursor()
-        class MockCursor(): pass
+        class  MockCursor: pass
         db = MockDatabase()
         self.cashier.setDb(db)
 
@@ -956,7 +956,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf):
                 return dbSelf.cursorValue
-        class MockPacket():
+        class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.value  = 55
                 mockPacketSelf.currency_serial = 5
@@ -991,10 +991,10 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         the packet sent to cashOutUpdateCounter() """
         caughtIt = False
         clear_all_messages()
-        class MockPacket():
+        class  MockPacket:
             def __init__(mockPacketSelf): mockPacketSelf.value  = 43
             def __str__(mockPacketSelf):  return "MOCK PACKET"
-        class MockDatabase():
+        class  MockDatabase:
             def cursor(mockDBSelf): return "MOCK CURSOR"
         db = MockDatabase()
         self.cashier.setDb(db)
@@ -1057,12 +1057,12 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
-        class MockPacket():
+        class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.url  = "http://cashier.example.org"
                 mockPacketSelf.currency_serial = 12
             def __str__(mockPacketSelf): return "MOCK PACKET"
-        class MockCurrencyClient():
+        class  MockCurrencyClient:
             def commit(ccSelf, url, transactionId):
                 self.assertEquals(url, "http://cashier.example.org")
                 self.assertEquals(transactionId, 777)
@@ -1129,7 +1129,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             def __init__(dbSelf):
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
-        class MockPacket():
+        class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.url  = "http://cashier.example.org"
                 mockPacketSelf.currency_serial = 12
@@ -1160,7 +1160,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
     # --------------------------------------------------------
     def setUp(self):
         from pokernetwork import pokerlock
-        class MockLock():
+        class  MockLock:
             def __init__(lockSelf, params):
                 lockSelf.alive = False
                 lockSelf.started = False

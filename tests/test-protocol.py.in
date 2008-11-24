@@ -404,7 +404,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         """Testing triggerTimer when it already has an active timer
         """
         self.assertEquals(self.u._timer, None)
-        class MockTimer():
+        class  MockTimer:
             def __init__(self): self.myID = "MOCK"
             def active(self): return True
 
@@ -423,7 +423,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         """Testing triggerTimer when timer exists, is inactive, but not polling
         """
         self.assertEquals(self.u._timer, None)
-        class MockTimer():
+        class  MockTimer:
             def __init__(self): self.myID = "MOCK2"
             def active(self): return False
 

@@ -2028,7 +2028,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tables[1] = Table()
         tables[2] = Table()
         #the following gives me syntax error
-        #class Game():
+        #class  Game:
         class Game:
             def __init__(self, newId=0):
                 self.id = newId
@@ -2160,7 +2160,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tables[1] = Table()
         tables[2] = Table()
         #the following gives me a syntax error
-        #class Game():
+        #class  Game:
         class Game:
             def __init__(self, newId=0):
                 self.id = newId
