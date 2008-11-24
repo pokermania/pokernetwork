@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" max_joined="4000" max_queued_client_packets="500" cleanup="yes" simultaneous="4" max_missed_round="5" verbose="0" chat="yes" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="1200" poker_network_version="1.7.0">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" max_joined="4000" max_queued_client_packets="500" cleanup="yes" simultaneous="4" max_missed_round="5" verbose="0" chat="yes" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="1200" remove_completed="1" poker_network_version="1.7.0">
 
 <!-- max_queued_client_packets defaults to 500 if you leave it out.
      max_missed_round defaults to 10 if you leave it out.
@@ -23,7 +23,7 @@
      is permitted. -->
 
   <delays autodeal_tournament_min="15" autodeal="18" autodeal_max="120" autodeal_check="15" round="12" position="60" showdown="30" finish="18" messages="60" breaks_check="30" extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="30"/>
-  
+
 <!-- extra_waits are additional wait times before hands are dealt at
      various points of the tourney (and at the end).  If they are left
      out, they all default to 0.
@@ -85,6 +85,6 @@
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <refill serial="1" amount="5000000" />
   <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" port="3306" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@" root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" schema="@POKER_NETWORK_PKGDATADIR@/schema.sql" command="@MYSQL@"/>
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>

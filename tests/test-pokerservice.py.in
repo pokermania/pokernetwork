@@ -94,12 +94,12 @@ try:
 except locale.Error, le:
     print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
     FRENCH_LOCALE_MISSING = True
-    
+
 locale.setlocale(locale.LC_ALL, localLocale)
 
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -130,7 +130,7 @@ def fun_name():
         raise ZeroDivisionError
     except ZeroDivisionError:
         return sys.exc_info()[2].tb_frame.f_back.f_code.co_name
-        
+
 class PokerServiceTestCaseBase(unittest.TestCase):
 
     def destroyDb(self):
@@ -138,10 +138,10 @@ class PokerServiceTestCaseBase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        
+
     # ----------------------------------------------------------------
     def setUp(self):
-        testclock._seconds_reset()        
+        testclock._seconds_reset()
         self.destroyDb()
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -198,10 +198,10 @@ class MonitorTestCase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        
+
     # ----------------------------------------------------------------
     def setUp(self):
-        testclock._seconds_reset()        
+        testclock._seconds_reset()
         self.destroyDb()
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(monitor_settings_xml)
@@ -321,19 +321,19 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
         self.assertEqual(2, len(tourneys))
         self.assertEqual('sitngo2', tourneys[0]['name'])
         self.assertEqual('regular1', tourneys[1]['name'])
-    
+
     def test01_sit_n_go(self):
         self.service.startService()
         tourneys = self.service.tourneySelect('\tsit_n_go')
         self.assertEqual(1, len(tourneys))
         self.assertEqual('sitngo2', tourneys[0]['name'])
-    
+
     def test02_regular(self):
         self.service.startService()
         tourneys = self.service.tourneySelect('\tregular')
         self.assertEqual(1, len(tourneys))
         self.assertEqual('regular1', tourneys[0]['name'])
-    
+
     def test02_currency_serial(self):
         self.service.startService()
         tourneys = self.service.tourneySelect('1\tregular')
@@ -341,7 +341,7 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
         self.assertEqual('regular1', tourneys[0]['name'])
         tourneys = self.service.tourneySelect('44\tregular')
         self.assertEqual(0, len(tourneys))
-    
+
     def test03_name(self):
         self.service.startService()
         tourneys = self.service.tourneySelect('regular1')
@@ -394,7 +394,7 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
         self.assertEqual('sitngo2', tourneys[0]['name'])
         self.assertEqual(heads_up.serial, tourneys[0]['serial'])
         self.assertEqual(1, tourneys[0]['registered'])
-    
+
 class PlayerPlacesTestCase(PokerServiceTestCaseBase):
 
     def test00_not_anywhere(self):
@@ -469,7 +469,7 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
         db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+5, 'complete'))
         db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+6, 'canceled'))
         places = self.service.getPlayerPlaces(serial)
-        self.assertEqual([], places.tables)   
+        self.assertEqual([], places.tables)
         self.assertEqual([tourney_serial+1, tourney_serial+2, tourney_serial+3, tourney_serial+4], places.tourneys)
         self.assertEqual(serial, places.serial)
 
@@ -510,7 +510,7 @@ class ResthostTestCase(unittest.TestCase):
         d = self.service.stopService()
         d.addCallback(lambda x: self.destroyDb())
         return d
-        
+
     def test00_init(self):
         """ setupResthost twice with the same information gives the same serial """
         self.service.startService()
@@ -557,8 +557,8 @@ class ResthostTestCase(unittest.TestCase):
         # packet with a game_id
         #
         resthost = self.service.packet2resthost(PacketPokerCall(game_id = 1))
-        self.assertEqual('HOST', resthost[0])        
-    
+        self.assertEqual('HOST', resthost[0])
+
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
@@ -732,7 +732,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         ( status, message ) = self.service.auth("user1", "password1", sets.Set('role1'))
         self.assertEquals('Already logged in from somewhere else', message)
         self.assertEquals(False, status)
-            
+
     # ----------------------------------------------------------------
     def cashIn(self):
 
@@ -803,12 +803,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals({1: (50, 50, 0)}, info.money)
 
             return result
-            
+
         d = self.cashIn()
         d.addCallback(step2)
         return d
     test04_getUserInfo.timeout = 500
-    
+
     # ----------------------------------------------------------------
     def test05_getPersonalInfo(self):
         self.service.startService()
@@ -816,12 +816,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.createUsers()
         info = self.service.getPersonalInfo(self.user1_serial)
         self.assertEquals(self.user1_serial, info.serial)
-        
+
     def cashOutCommit(self, packet):
         packet = PacketPokerCashOutCommit(transaction_id = packet.name)
         self.assertEquals(PacketAck(), self.service.cashOutCommit(packet))
         return 1
-    
+
     def cashOut(self, result):
         self.assertEquals([ (True, PacketAck()), (True, PacketAck()), (True, PacketAck()) ], result)
         packet = PacketPokerCashOut(serial = self.user1_serial,
@@ -831,12 +831,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals("ONE", packet.url)
             self.assertEquals(30, packet.value)
             return packet
-        
+
         d = self.service.cashOut(packet)
         d.addCallback(validate)
         d.addCallback(self.cashOutCommit)
         return d
-                
+
     # ----------------------------------------------------------------
     def test07_cashOut(self):
         self.service.startService()
@@ -890,15 +890,15 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.rank = 10
         def getRank(self, serial):
             return self.rank
-        
+
         def prizes(self):
             return self.prize
-        
+
 
     def test09_endOfTournamentsNotInPlayers(self):
         self.service.startService()
         self.createUsers()
-        
+
         table = self.TableMockup()
         kickplayer = None
         def getTableMockup( game_id):
@@ -913,7 +913,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test10_endOfTournamentsNoPrize(self):
         self.service.startService()
         self.createUsers()
-        
+
         table = self.TableMockup()
         kickplayer = None
         def getTableMockup( game_id):
@@ -934,7 +934,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test11_endOfTournamentsPrize(self):
         self.service.startService()
         self.createUsers()
-        
+
         table = self.TableMockup()
         kickplayer = None
         def getTableMockup( game_id):
@@ -965,7 +965,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(player_image1.image, player_image2.image)
         player_image2 = self.service.getPlayerImage(self.user2_serial)
         self.assertEquals("", player_image2.image)
-        
+
     # ----------------------------------------------------------------
     def test13_checkTourneysSchedule_spawn_regular(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
@@ -992,7 +992,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         reactor.callLater(3, lambda: d.callback(True))
 
         return d
-        
+
     # ----------------------------------------------------------------
     def test14_checkTourneysSchedule_cancel_regular(self):
         pokerservice.DELETE_OLD_TOURNEYS_DELAY = 0
@@ -1003,10 +1003,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         # A regular tournament starts registration now
         #
         cursor = self.db.cursor()
-        cursor.execute("UPDATE tourneys_schedule " + 
+        cursor.execute("UPDATE tourneys_schedule " +
                        " SET register_time = " + str(testclock._seconds_value) + ", " +
-                       "     start_time = " + str(testclock._seconds_value + 10) + ", " + 
-                       "     respawn = 'n' " + 
+                       "     start_time = " + str(testclock._seconds_value + 10) + ", " +
+                       "     respawn = 'n' " +
                        " WHERE name = 'regular1'")
         self.assertEqual(1, cursor.rowcount)
         cursor.close()
@@ -1024,7 +1024,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                                                                     game_id = regular.serial))
             self.assertEquals(self.default_money - regular.buy_in - regular.rake, self.service.getMoney(self.user1_serial, 1))
             self.assertEquals([ self.user1_serial ], regular.players)
-            
+
         d1.addCallback(registerPlayer)
         reactor.callLater(5, lambda: d1.callback(True))
 
@@ -1037,7 +1037,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         reactor.callLater(15, lambda: d2.callback(True))
 
         return defer.DeferredList((d1, d2), fireOnOneErrback = True)
-        
+
     # ----------------------------------------------------------------
     def test15_runTourney(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
@@ -1065,7 +1065,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user2_serial,
                                                                 game_id = heads_up.serial))
-                                     
+
         d = defer.Deferred()
         def checkTourneys(status):
             # joined_count should now be one, as the tourneyGameFilled() should
@@ -1085,7 +1085,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             in_position = game.getSerialInPosition()
             game.call(in_position)
             self.service.tables.values()[2].update() # two tables already in settings
-            
+
         d.addCallback(checkTourneys)
         reactor.callLater(3, lambda: d.callback(True))
 
@@ -1118,7 +1118,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         (heads_up,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
         if has_bailor:
-            heads_up.bailor_serial = self.user3_serial 
+            heads_up.bailor_serial = self.user3_serial
         else:
             heads_up.bailor_serial = 42
 
@@ -1126,7 +1126,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                                                                 game_id = heads_up.serial))
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user2_serial,
                                                                 game_id = heads_up.serial))
-                                     
+
         d = defer.Deferred()
         def checkTourneys(status):
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
@@ -1144,12 +1144,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 self.assertEquals(0, self.service.getMoney(self.user1_serial, 2))
                 self.assertEquals(0, self.service.getMoney(self.user2_serial, 2))
                 self.assertEquals(self.default_money, self.service.getMoney(self.user3_serial, 2))
-            
+
         d.addCallback(checkTourneys)
         reactor.callLater(15, lambda: d.callback(True))
 
         return d
-        
+
     # ----------------------------------------------------------------
     def test18_cleanupTourneys_registering(self):
         cursor = self.db.cursor()
@@ -1205,6 +1205,15 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
+    # ----------------------------------------------------------------
+    def test23_testCleanUpOldCompleted(self):
+        self.service.startService()
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO tourneys (serial, name, state, finish_time) VALUES (4000,'%s', '%s', UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))" % ('regular3', 'complete', self.service.remove_completed + 1))
+        cursor.close()
+        self.assertEquals(self.service.remove_completed, 1)
+        tourneys = self.service.tourneySelect(' ')
+        self.failIf(filter(lambda tourney: tourney["name"] == "regular3", tourneys))
 
 class RefillTestCase(unittest.TestCase):
 
@@ -1213,7 +1222,7 @@ class RefillTestCase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        
+
     def setUp(self):
         settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <server verbose="3">
@@ -1226,7 +1235,7 @@ class RefillTestCase(unittest.TestCase):
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
         </server>
         """
-        testclock._seconds_reset()        
+        testclock._seconds_reset()
         self.destroyDb()
         self.service = pokerservice.PokerService(settings_xml)
 
@@ -1247,7 +1256,7 @@ class RefillTestCase(unittest.TestCase):
         money_left = 100
         self.service.db.db.query("UPDATE user2money SET amount = " + str(money_left) + " WHERE user_serial = " + str(serial))
         self.assertEquals(refill - table_money, self.service.autorefill(serial))
-    
+
 class TimerTestCase(unittest.TestCase):
 
     def test_cancelTimers(self):
@@ -1264,7 +1273,7 @@ class TimerTestCase(unittest.TestCase):
         service.timer['foo_2'] = Timer()
         service.cancelTimers('foo')
         self.assertEqual([], service.timer.keys())
-    
+
 class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
 
     def test_ok(self):
@@ -1282,7 +1291,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                game_id = tourney_serial)
         return_packet = self.service.tourneyUnregister(packet)
         self.assertEqual(packet, return_packet)
-        
+
     def test_does_not_exist(self):
         tourney_serial = 100
         user_serial = 1
@@ -1290,7 +1299,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.DOES_NOT_EXIST, p.code)
-        
+
     def test_not_registered(self):
         tourney_serial = 100
         user_serial = 1
@@ -1301,7 +1310,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.NOT_REGISTERED, p.code)
-        
+
     def test_too_late(self):
         tourney_serial = 100
         user_serial = 1
@@ -1315,7 +1324,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.TOO_LATE, p.code)
-        
+
     def test_no_user2money(self):
         tourney_serial = 100
         user_serial = 1
@@ -1330,7 +1339,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.SERVER_ERROR, p.code)
         self.assertTrue("not in user2money" in p.message)
-        
+
     def test_no_user2tourney(self):
         tourney_serial = 100
         self.service.startService()
@@ -1345,7 +1354,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.SERVER_ERROR, p.code)
         self.assertTrue("not in user2tourney" in p.message)
-        
+
 class TourneyCancelTestCase(PokerServiceTestCaseBase):
     def test_ok(self):
         class Tournament:
@@ -1400,7 +1409,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         packet = self.service.tourneyManager(tourney_serial)
         self.assertEquals(get_messages(), [])
-        self.assertEqual(tourney_serial, packet.tourney['serial'])        
+        self.assertEqual(tourney_serial, packet.tourney['serial'])
         self.assertNotEqual(None, packet.tourney['rank2prize'])
         self.assertEqual(1, packet.tourney['registered'])
         self.assertEqual({'4' : {'rank': -1,
@@ -1441,7 +1450,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         packet = self.service.tourneyManager(tourney_serial)
         self.assertEqual(tourney_serial, packet.tourney['serial'])
         self.assertEqual(1, packet.tourney['registered'])
-        self.assertEqual(0, len(packet.table2serials))        
+        self.assertEqual(0, len(packet.table2serials))
 
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
@@ -1454,7 +1463,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
     class Table:
         def __init__(self):
             self.serial2client = {}
-            
+
         def movePlayer(self, client, serial, to_game_id):
             pass
 
@@ -1478,7 +1487,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
         wrong_user_serial = 2
         self.assertFalse(self.service.tourneyMovePlayer(TourneyMovePlayerTestCase.Tournament(), table_serial, 200, wrong_user_serial))
         cursor.close()
-        
+
 class ListHandsTestCase(PokerServiceTestCaseBase):
 
     def test_ok(self):
@@ -1588,19 +1597,19 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
                                                              email = 'a@b.c'))
         self.assertEquals(info.type, PACKET_ERROR)
         self.assertEquals(PacketPokerSetAccount.SERVER_ERROR, info.code)
-        
+
     def test_name_error(self):
         info = self.service.setAccount(PacketPokerSetAccount(name = 'ab'))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.NAME_TOO_SHORT, info.code)
-        
+
     def test_password_error(self):
         self.service.startService()
         info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef',
                                                              password = ''))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.PASSWORD_TOO_SHORT, info.code)
-        
+
     def test_email_error(self):
         self.service.startService()
         info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef',
@@ -1608,7 +1617,7 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
                                                              email = ''))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.INVALID_EMAIL, info.code)
-        
+
     def test_email_duplicate(self):
         self.service.startService()
         info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
@@ -1621,7 +1630,7 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
                                                              email = 'a@b.c'))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.EMAIL_ALREADY_EXISTS, info.code)
-        
+
     def test_user_private_duplicate(self):
         self.service.startService()
         cursor = self.db.cursor()
@@ -1636,21 +1645,21 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
         except IntegrityError:
             raised = True
         self.assertTrue(raised)
-        
+
 class ShutdownCheckTestCase(PokerServiceTestCaseBase):
 
     class PokerGame:
         def isEndOrNull(self):
             return not self.playing
-    
+
     class PokerTable:
         def __init__(self):
             self.game = ShutdownCheckTestCase.PokerGame()
-                
+
 
     def tearDown(self):
         pass
-    
+
     def test_down(self):
         self.deferred_called = False
         def c(x):
@@ -1678,7 +1687,7 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
             return status
         d.addCallback(f)
         return d
-    
+
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 
     class ClientMockup:
@@ -1701,7 +1710,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
-                
+
             def prizes(self):
                 return [self.prize_min]
         self.service.startService()
@@ -1718,7 +1727,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         (amount,) = cursor.fetchone()
         self.assertEqual(self.default_money + tournament.prize_min, amount)
         cursor.close()
-        
+
     def test_no_bailor(self):
         class Tournament:
             def __init__(self):
@@ -1727,7 +1736,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
-                
+
             def prizes(self):
                 return [self.prize_min]
         self.service.startService()
@@ -1740,14 +1749,41 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         if verbose < 0:
             self.assertTrue(search_output("bailor failed to provide requested money"))
 
-##############################################################################        
+    def test_tourney_finish(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                self.serial = 1
+                self.finish_time = testclock._seconds_value
+
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
+        tournament = Tournament()
+        winner_serial = self.user1_serial
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = self.user2_serial
+        self.service.tourneyFinished(tournament)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT finish_time FROM tourneys WHERE serial = %d" % tournament.serial)
+        (finish_time,) = cursor.fetchone()
+        self.failUnless(tournament.finish_time - finish_time < 1)
+        cursor.close()
+
+##############################################################################
 class BreakTestCase(PokerServiceTestCaseBase):
     class Table:
         def __init__(self):
             self.message = None
             self.type = None
             self.destroyCalled = 0
-            
+
         def broadcastMessage(self, type, message):
             self.type = type
             self.message = message
@@ -1849,7 +1885,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         self.service.db = saveDb
         return defer.DeferredList((tourneyBreakResumeDeferred, tourneyDealDeferred), fireOnOneErrback = True)
-        
+
     def test02_tourneyNewState_tourneyResumeAndDeal_nowait(self):
         return self.tourneyNewState_tourneyResumeAndDeal(0, 5)
 
@@ -1899,7 +1935,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         self.service.db = saveDb
         return tourneyDealDeferred
-        
+
     def test04_tourneyNewState_tourneyStart_nowait(self):
         return self.tourneyNewState_tourneyStart(0, 5)
 
@@ -1956,7 +1992,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         self.service.db = saveDb
         return tableDestroyDeferred
-        
+
     def test06_tourneyFinish_nowait(self):
         return self.tourneyFinish(0, 5)
 
@@ -1991,8 +2027,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tables = {}
         tables[1] = Table()
         tables[2] = Table()
-
-        class Game():
+        #the following gives me syntax error
+        #class Game():
+        class Game:
             def __init__(self, newId=0):
                 self.id = newId
             def getTable(gameId):
@@ -2070,7 +2107,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
     # ------------------------------------------------------------------------
     def test_tourneyDeal(self):
         class Game:
-            
+
             def __init__(self):
                 self.id = 1
 
@@ -2078,7 +2115,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def __init__(self):
                 self.games = [ Game() ]
                 self.serial = 1
-                
+
         tourney = Tournament()
         table = BreakTestCase.Table()
         table.game = tourney.games[0]
@@ -2088,7 +2125,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
     def test_tourneyBreakWait(self):
         class Game:
-            
+
             def __init__(self):
                 self.id = 1
                 self.running = False
@@ -2122,8 +2159,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tables = {}
         tables[1] = Table()
         tables[2] = Table()
-
-        class Game():
+        #the following gives me a syntax error
+        #class Game():
+        class Game:
             def __init__(self, newId=0):
                 self.id = newId
             def getTable(gameId):
@@ -2151,12 +2189,12 @@ class BreakTestCase(PokerServiceTestCaseBase):
     def test_tourneyBreakCheck(self):
 
         class Game:
-            
+
             def __init__(self):
                 self.id = 1
-                
+
         class Tournament:
-            
+
             def __init__(self):
                 self.state = pokertournament.TOURNAMENT_STATE_RUNNING
                 self.remaining = 0
@@ -2184,7 +2222,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tourney.remaining = 120
         self.service.tourneyBreakCheck(tourney)
         self.failUnless("2 minute" in table.message)
-        
+
 class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 
     def test_updatePlayerRake(self):
@@ -2199,11 +2237,11 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
         self.assertEqual(15, row['points'])
         cursor.close()
 
-##############################################################################        
+##############################################################################
 class PokerServiceCoverageTests(unittest.TestCase):
     # ----------------------------------------------------------------
     def setUp(self):
-        testclock._seconds_reset()        
+        testclock._seconds_reset()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         self.settings.header = self.settings.doc.xpathNewContext()
@@ -2221,7 +2259,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.acceptedStatements = [ "select locale,name,skin_url,skin_outfit"]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
+                    cursorSelf.counts[cntType] = 0
             def close(cursorSelf): pass
             def execute(*args):
                 cursorSelf = args[0]

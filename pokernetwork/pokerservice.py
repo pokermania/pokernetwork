@@ -190,7 +190,7 @@ class PokerService(service.Service):
         self.client_queued_packet_max = self.settings.headerGetInt("/server/@max_queued_client_packets")
         if self.client_queued_packet_max <= 0:
             self.client_queued_packet_max = 500
-        
+
         self.delays = settings.headerGetProperties("/server/delays")[0]
 
         self.lookups = {}
@@ -219,6 +219,7 @@ class PokerService(service.Service):
         for monitor in settings.header.xpathEval("/server/monitor"):
             module = imp.load_source("monitor", monitor.content)
             self.monitor_plugins.append(getattr(module, "handle_event"))
+        self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
 
     def startService(self):
         self.monitors = []
@@ -287,7 +288,7 @@ class PokerService(service.Service):
 
     def error(self, string):
         self.message("*ERROR* " + str(string))
-            
+
     def stopServiceFinish(self, x):
         self.monitors = []
         if self.cashier: self.cashier.close()
@@ -301,7 +302,7 @@ class PokerService(service.Service):
 
     def disconnectAll(self):
         reactor.disconnectAll()
-        
+
     def stopService(self):
         deferred = self.shutdown()
         deferred.addCallback(lambda x: self.disconnectAll())
@@ -443,7 +444,7 @@ class PokerService(service.Service):
             bytesin = UGAMEProtocol._stats_read,
             bytesout = UGAMEProtocol._stats_write,
             )
-    
+
     def createAvatar(self):
         avatar = pokeravatar.PokerAvatar(self)
         self.avatars.append(avatar)
@@ -508,13 +509,13 @@ class PokerService(service.Service):
             if missing > 0:
                 refill = int(money[0]) + missing
             else:
-                refill = 0 
+                refill = 0
         else:
-            refill = int(self.refill['amount'])            
+            refill = int(self.refill['amount'])
         if refill > 0:
             self.db.db.query("REPLACE INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.refill['serial'], refill))
             self.databaseEvent(event = PacketPokerMonitorEvent.REFILL, param1 = serial, param2 = int(self.refill['serial']), param3 = refill)
-            
+
         return refill
 
     def updateTourneysSchedule(self):
@@ -522,10 +523,10 @@ class PokerService(service.Service):
             self.message("updateTourneysSchedule")
         cursor = self.db.cursor(DictCursor)
 
-        sql = ( " SELECT * FROM tourneys_schedule WHERE " + 
-                "          active = 'y' AND " + 
-                "          resthost_serial = %s AND " + 
-                "          ( respawn = 'y' OR " + 
+        sql = ( " SELECT * FROM tourneys_schedule WHERE " +
+                "          active = 'y' AND " +
+                "          resthost_serial = %s AND " +
+                "          ( respawn = 'y' OR " +
                 "            register_time < %s )" ) % self.db.literal((self.resthost_serial, int(seconds()) )
                 )
         cursor.execute(sql)
@@ -541,7 +542,7 @@ class PokerService(service.Service):
             self.message("checkTourneysSchedule")
         #
         # Respawning tournaments
-        # 
+        #
         for schedule in filter(lambda schedule: schedule['respawn'] == 'y', self.tourneys_schedule.values()):
             schedule_serial = schedule['serial']
             if ( not self.schedule2tourneys.has_key(schedule_serial) or
@@ -549,12 +550,12 @@ class PokerService(service.Service):
                 self.spawnTourney(schedule)
         #
         # One time tournaments
-        # 
+        #
         now = seconds()
         one_time = []
         for serial in self.tourneys_schedule.keys():
             schedule = self.tourneys_schedule[serial]
-            if ( schedule['respawn'] == 'n' and 
+            if ( schedule['respawn'] == 'n' and
                  int(schedule['register_time']) < now ):
                 one_time.append(schedule)
                 del self.tourneys_schedule[serial]
@@ -563,11 +564,11 @@ class PokerService(service.Service):
 
         #
         # Update tournaments with time clock
-        # 
+        #
         for tourney in filter(lambda tourney: tourney.sit_n_go == 'n', self.tourneys.values()):
             tourney.updateRunning()
         #
-        # Forget about old tournaments 
+        # Forget about old tournaments
         #
         for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED ), self.tourneys.values()):
             if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
@@ -709,7 +710,7 @@ class PokerService(service.Service):
                 self.tourneyResumeAndDeal(tourney)
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
-            # since we only want this behavior before the first deal. 
+            # since we only want this behavior before the first deal.
             wait = int(self.delays.get('extra_wait_tourney_start', 0))
             if wait > 0:
                 reactor.callLater(wait, self.tourneyDeal, tourney)
@@ -735,7 +736,7 @@ class PokerService(service.Service):
             for game_id in map(lambda game: game.id, tourney.games):
                 table = self.getTable(game_id)
                 table.broadcastMessage(PacketPokerGameMessage, "Tournament is now on break for " + remaining)
-        
+
             self.timer[key] = reactor.callLater(int(self.delays.get('breaks_check', 30)), self.tourneyBreakCheck, tourney)
 
     def tourneyDeal(self, tourney):
@@ -772,18 +773,18 @@ class PokerService(service.Service):
         #
         bail = tourney.prize_min - ( tourney.buy_in * tourney.registered )
         if bail > 0:
-            sql = ( "UPDATE user2money SET amount = amount - " + str(bail) + " WHERE " + 
+            sql = ( "UPDATE user2money SET amount = amount - " + str(bail) + " WHERE " +
                     "       user_serial = " + str(tourney.bailor_serial) + " AND " +
                     "       currency_serial = " + str(tourney.currency_serial) + " AND " +
                     "       amount >= " + str(bail) )
             if self.verbose > 2:
                 self.message("tourneyFinished: bailor pays " + sql)
             cursor.execute(sql)
-            if cursor.rowcount != 1: 
+            if cursor.rowcount != 1:
                 self.error("tourneyFinished: bailor failed to provide requested money modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
                 cursor.close()
                 return False
-            
+
         while prizes:
             prize = prizes.pop(0)
             serial = winners.pop(0)
@@ -802,6 +803,10 @@ class PokerService(service.Service):
             self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = tourney.currency_serial, param3 = prize)
 
         cursor.execute("DELETE FROM route WHERE tourney_serial = %s", tourney.serial)
+        #added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
+        if not hasattr(tourney, "finish_time"):
+            tourney.finish_time = seconds()
+        cursor.execute("UPDATE tourneys SET finish_time = %d WHERE serial = %s" % (tourney.finish_time, tourney.serial))
         cursor.close()
         self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY, param1 = tourney.serial)
         finish = PacketPokerTourneyFinish(tourney_serial = tourney.serial)
@@ -932,7 +937,7 @@ class PokerService(service.Service):
             cursor.execute("SELECT user_serial, money FROM user2table WHERE table_serial IN ( " + ",".join(map(lambda x: str(x), table2serials.keys())) + " )")
             for row in cursor.fetchall():
                 user2money[row['user_serial']] = row['money']
-                
+
         cursor.execute("SELECT user_serial, name FROM user2tourney, users WHERE user2tourney.tourney_serial = " + str(tourney_serial) + " AND user2tourney.user_serial = users.serial")
         user2name = dict((entry["user_serial"], entry["name"]) for entry in cursor.fetchall())
 
@@ -956,7 +961,7 @@ class PokerService(service.Service):
         packet.user2properties = user2properties
 
         return packet
-        
+
     def tourneyPlayersList(self, tourney_serial):
         if not self.tourneys.has_key(tourney_serial):
             return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
@@ -976,7 +981,13 @@ class PokerService(service.Service):
         cursor.close()
         return ( players, tourneys )
 
+    def cleanUpOldCompleted(self):
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM tourneys WHERE state = 'complete' AND finish_time < UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR)" % self.remove_completed)
+        cursor.close()
+
     def tourneySelect(self, string):
+        self.cleanUpOldCompleted()
         cursor = self.db.cursor(DictCursor)
         tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
         criterion = split(string, "\t")
@@ -1275,12 +1286,12 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         cursor.execute("REPLACE INTO route VALUES (%s,%s,%s,%s)", ( table_serial, tourney_serial, int(seconds()), self.resthost_serial))
         cursor.close()
-        
+
     def statsTables(self):
         cursor = self.db.cursor()
         cursor.execute("SELECT COUNT(*) FROM pokertables")
         tables = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM user2table")        
+        cursor.execute("SELECT COUNT(*) FROM user2table")
         players = cursor.fetchone()[0]
         cursor.close()
         return ( players, tables )
@@ -1291,15 +1302,15 @@ class PokerService(service.Service):
         if string == '' or string == 'all':
             cursor.execute("SELECT * FROM pokertables")
         elif string == 'my':
-            cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s", serial) 
+            cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s", serial)
         elif re.match("^[0-9]+$", string):
-            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s", string) 
+            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s", string)
         elif len(criterion) > 1:
             ( currency_serial, variant ) = criterion
             if currency_serial:
-                cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s AND variant = %s", (currency_serial, variant)) 
+                cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s AND variant = %s", (currency_serial, variant))
             else:
-                cursor.execute("SELECT * FROM pokertables WHERE variant = %s", variant) 
+                cursor.execute("SELECT * FROM pokertables WHERE variant = %s", variant)
         else:
             cursor.execute("SELECT * FROM pokertables WHERE name = %s", string)
         result = cursor.fetchall()
@@ -1320,7 +1331,7 @@ class PokerService(service.Service):
                 self.resthost_serial = cursor.lastrowid
             cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
             cursor.close()
-            
+
     def cleanupResthost(self):
         if self.resthost_serial:
             cursor = self.db.cursor()
@@ -1339,7 +1350,7 @@ class PokerService(service.Service):
             where = "table_serial = " + str(packet.game_id)
         else:
             return None
-        
+
         cursor = self.db.cursor()
         cursor.execute("SELECT host, port, path FROM route,resthost WHERE " +
                        " route.resthost_serial = resthost.serial AND " + where)
@@ -1349,7 +1360,7 @@ class PokerService(service.Service):
             result = None
         cursor.close()
         return result
-        
+
     def cleanUp(self, temporary_users = ''):
         cursor = self.db.cursor()
 
@@ -1438,7 +1449,7 @@ class PokerService(service.Service):
                 (serial,) = cursor1.fetchone()
                 if self.verbose >= 0: message += " " + str(serial)
                 tourney.register(serial)
-                
+
             cursor1.execute(sql)
             cursor1.close()
             if self.verbose >= 0:
@@ -1532,7 +1543,7 @@ class PokerService(service.Service):
         else:
             serial = serial[0]
         return self.getPlayerPlaces(serial)
-    
+
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)
 
@@ -1942,11 +1953,11 @@ class PokerService(service.Service):
     def updateTableStats(self, game, observers, waiting):
         cursor = self.db.cursor()
         cursor.execute("UPDATE pokertables SET " +
-                       " average_pot = %s, " + 
-                       " hands_per_hour = %s, " + 
-                       " percent_flop = %s, " + 
-                       " players = %s, " + 
-                       " observers = %s, " + 
+                       " average_pot = %s, " +
+                       " hands_per_hour = %s, " +
+                       " percent_flop = %s, " +
+                       " players = %s, " +
+                       " observers = %s, " +
                        " waiting = %s " +
                        " WHERE serial = %s ", (
             game.stats['average_pot'],
@@ -1958,7 +1969,7 @@ class PokerService(service.Service):
             game.id
             ))
         cursor.close()
-        
+
     def tableMoneyAndBet(self, table_id):
         cursor = self.db.cursor()
         sql = ( "SELECT sum(money), sum(bet) FROM user2table WHERE table_serial = " + str(table_id) )
@@ -2126,7 +2137,7 @@ class PokerService(service.Service):
 
     def messageCheck(self):
         cursor = self.db.cursor()
-        cursor.execute("SELECT serial,message FROM messages WHERE " + 
+        cursor.execute("SELECT serial,message FROM messages WHERE " +
                        "       sent = 'n' AND send_date < FROM_UNIXTIME(" + str(int(seconds())) + ")")
         rows = cursor.fetchall()
         for (serial, message) in rows:
@@ -2246,7 +2257,7 @@ class PokerXML(resource.Resource):
 
     def error(self, string):
         self.message("*ERROR* " + string)
-            
+
     def sessionExpires(self, session):
         self.service.destroyAvatar(session.avatar)
         del session.avatar
@@ -2367,7 +2378,7 @@ class PokerREST(PokerXML):
         elif use_sessions in ( 'clear', 'new' ):
             #
             # Force session expiration.
-            # 
+            #
             # NOTE 1: that request.getSession() will create a session
             # if no session exists. However, since it is a light
             # weight operation that will be canceled by
