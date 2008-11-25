@@ -981,39 +981,32 @@ class PokerService(service.Service):
         cursor.close()
         return ( players, tourneys )
 
-    def cleanUpOldCompleted(self):
-        cursor = self.db.cursor()
-        cursor.execute("DELETE FROM tourneys WHERE state = 'complete' AND finish_time < UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR)" % self.remove_completed)
-        cursor.close()
-
     def tourneySelect(self, string):
-        self.cleanUpOldCompleted()
         cursor = self.db.cursor(DictCursor)
         tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
         criterion = split(string, "\t")
-        if string == '':
-            cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) GROUP BY tourneys.serial")
-            result = cursor.fetchall()
-            cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y'")
-            result += cursor.fetchall()
-        elif len(criterion) > 1:
+        tourneys_sql = {
+            "main":"SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) ",
+            "where":" WHERE (finish_time = 0 OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed,
+            "group":" GROUP BY tourneys.serial"
+        }
+        schedule_sql = "SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y'"
+        if len(criterion) > 1:
             ( currency_serial, type ) = criterion
             sit_n_go = type == 'sit_n_go' and 'y' or 'n'
             if currency_serial:
-                cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) WHERE currency_serial = %s AND sit_n_go = %s GROUP BY tourneys.serial", ( currency_serial, sit_n_go ))
-                result = cursor.fetchall()
-                cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y' AND currency_serial = %s AND sit_n_go = %s", ( currency_serial, sit_n_go ))
-                result += cursor.fetchall()
+                tourneys_sql["where"] += " AND currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
+                schedule_sql += " AND currency_serial = %s AND sit_n_go = '%s'" % ( currency_serial, sit_n_go )
             else:
-                cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) WHERE sit_n_go = %s GROUP BY tourneys.serial", sit_n_go)
-                result = cursor.fetchall()
-                cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y' AND sit_n_go = %s", sit_n_go)
-                result += cursor.fetchall()
-        else:
-            cursor.execute("SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) WHERE name = %s GROUP BY tourneys.serial", string)
-            result = cursor.fetchall()
-            cursor.execute("SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y' AND name = %s", string)
-            result += cursor.fetchall()
+                tourneys_sql["where"] += " AND sit_n_go = '%s'" % sit_n_go
+                schedule_sql += " AND sit_n_go = '%s'" % sit_n_go
+        elif string != '':
+            tourneys_sql["where"] += " AND name = '%s'" % string
+            schedule_sql += " AND name = '%s'" % string
+        cursor.execute(tourneys_sql["main"] + tourneys_sql["where"] + tourneys_sql["group"])
+        result = cursor.fetchall()
+        cursor.execute(schedule_sql)
+        result += cursor.fetchall()
         cursor.close()
         return result
 

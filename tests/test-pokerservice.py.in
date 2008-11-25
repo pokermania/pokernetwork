@@ -395,6 +395,17 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
         self.assertEqual(heads_up.serial, tourneys[0]['serial'])
         self.assertEqual(1, tourneys[0]['registered'])
 
+    def test04_with_old_completed(self):
+        self.service.startService()
+        self.createUsers()
+        tourneys = self.service.tourneySelect('')
+        self.assertEquals(len(tourneys),2)
+        db = self.service.db
+        db.db.query("UPDATE tourneys SET finish_time = UNIX_TIMESTAMP(NOW() - INTERVAL 2 HOUR) WHERE name = 'regular1'")
+        self.assertEquals(self.service.remove_completed, 1)
+        tourneys = self.service.tourneySelect('')
+        self.assertEquals(len(tourneys),1)
+
 class PlayerPlacesTestCase(PokerServiceTestCaseBase):
 
     def test00_not_anywhere(self):
@@ -1205,15 +1216,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
-    # ----------------------------------------------------------------
-    def test23_testCleanUpOldCompleted(self):
-        self.service.startService()
-        cursor = self.db.cursor()
-        cursor.execute("INSERT INTO tourneys (serial, name, state, finish_time) VALUES (4000,'%s', '%s', UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))" % ('regular3', 'complete', self.service.remove_completed + 1))
-        cursor.close()
-        self.assertEquals(self.service.remove_completed, 1)
-        tourneys = self.service.tourneySelect(' ')
-        self.failIf(filter(lambda tourney: tourney["name"] == "regular3", tourneys))
 
 class RefillTestCase(unittest.TestCase):
 
