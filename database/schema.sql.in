@@ -421,11 +421,13 @@ DROP TABLE IF EXISTS user2tourney;
 
 CREATE TABLE user2tourney (
   user_serial INT NOT NULL,
+  currency_serial INT UNSIGNED NOT NULL,
   tourney_serial INT NOT NULL,
   table_serial INT,
   rank INT DEFAULT -1,
 
   PRIMARY KEY (user_serial, tourney_serial),
+  KEY (user_serial, currency_serial, tourney_serial),
   KEY (rank)
 )  ENGINE=InnoDB CHARSET=utf8;
 

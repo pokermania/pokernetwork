@@ -30,6 +30,12 @@ ALTER TABLE `tourneys_schedule` ADD COLUMN currency_serial_from_date_format VARC
 --
 ALTER TABLE `user2tourney` ADD KEY ( `rank` ) ;
 --
+-- Currency serial is redundant but commonly used in requests
+-- and duplication saves joins.
+--
+ALTER TABLE `user2tourney` ADD COLUMN currency_serial INT UNSIGNED NOT NULL;
+ALTER TABLE `user2tourney` ADD KEY ( `user_serial`, `currency_serial`, `rank` ) ;
+--
 -- History of monitor events
 --
 CREATE TABLE monitor (

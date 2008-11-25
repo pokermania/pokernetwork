@@ -128,7 +128,7 @@ class PokerCrashTestCase(unittest.TestCase):
         currency_serial = '44'
         cursor = self.db.cursor()
         cursor.execute('INSERT INTO tourneys (serial,name,buy_in,currency_serial) VALUES (%s, "one", %s, %s)', ( tourney_serial, buy_in, currency_serial ))
-        cursor.execute('INSERT INTO user2tourney (user_serial,tourney_serial) VALUES (%s,%s)', ( user_serial, tourney_serial ))
+        cursor.execute('INSERT INTO user2tourney (user_serial,currency_serial,tourney_serial) VALUES (%s,1,%s)', ( user_serial, tourney_serial ))
         cursor.execute('INSERT INTO user2money (user_serial,currency_serial) VALUES (%s,%s)', ( user_serial, currency_serial ))
         cursor.execute('SELECT * FROM tourneys WHERE serial = ' + tourney_serial)
         self.assertEqual(1, cursor.rowcount)
@@ -151,14 +151,14 @@ class PokerCrashTestCase(unittest.TestCase):
         # Sit and go in 'registering' state is trashed
         #
         cursor.execute('INSERT INTO tourneys (serial,name) VALUES (%s, "one")', sng_tourney_serial)
-        cursor.execute('INSERT INTO user2tourney (user_serial,tourney_serial) VALUES (%s,%s)', ( user_serial, sng_tourney_serial ))
+        cursor.execute('INSERT INTO user2tourney (user_serial,currency_serial,tourney_serial) VALUES (%s,1,%s)', ( user_serial, sng_tourney_serial ))
         cursor.execute('SELECT * FROM tourneys WHERE serial = ' + sng_tourney_serial)
         self.assertEqual(1, cursor.rowcount)
         #
         # Regular in 'registering' state is kept
         #
         cursor.execute('INSERT INTO tourneys (serial,name,sit_n_go,start_time) VALUES (%s, "one", "n", %s)', ( regular_tourney_serial, seconds() + 2000))
-        cursor.execute('INSERT INTO user2tourney (user_serial,tourney_serial) VALUES (%s,%s)', ( user_serial, regular_tourney_serial ))
+        cursor.execute('INSERT INTO user2tourney (user_serial,currency_serial,tourney_serial) VALUES (%s,1,%s)', ( user_serial, regular_tourney_serial ))
         cursor.execute('SELECT * FROM tourneys WHERE serial = ' + regular_tourney_serial)
         self.assertEqual(1, cursor.rowcount)
         #

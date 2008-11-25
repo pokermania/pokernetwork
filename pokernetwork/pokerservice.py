@@ -986,13 +986,13 @@ class PokerService(service.Service):
         criterion = split(string, "\t")
         tourney_sql = "SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) "
         tourney_sql += "WHERE (state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
-        schedule_sql = "SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y'"
+        schedule_sql = "SELECT * FROM tourneys_schedule AS tourneys WHERE respawn = 'n' AND active = 'y'"
         sql = ''
         if len(criterion) > 1:
             ( currency_serial, type ) = criterion
             sit_n_go = type == 'sit_n_go' and 'y' or 'n'
             if currency_serial:
-                sql += " AND currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
+                sql += " AND tourneys.currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
             else:
                 sql += " AND sit_n_go = '%s'" % sit_n_go
         elif string != '':
@@ -1070,7 +1070,7 @@ class PokerService(service.Service):
         #
         # Register
         #
-        sql = "INSERT INTO user2tourney (user_serial, tourney_serial) VALUES (%d, %d)" % ( serial, tourney_serial )
+        sql = "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, %d, %d)" % ( serial, currency_serial, tourney_serial )
         if self.verbose > 4:
             self.message("tourneyRegister: " + sql)
         cursor.execute(sql)
