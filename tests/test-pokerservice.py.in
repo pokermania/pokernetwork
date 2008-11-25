@@ -1798,6 +1798,82 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.failUnless(tournament.finish_time - finish_time < 1)
         cursor.close()
 
+    def test_delete_route(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                self.serial = 1
+
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
+        tournament = Tournament()
+        winner_serial = self.user1_serial
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = self.user2_serial
+        self.service._ping_delay = 1000
+        d = defer.Deferred()
+        d.addCallback(self.service.tourneyDeleteRouteActual)
+        self.service.tourneyDeleteRouteActual = d.callback
+        self.service.tourneyFinished(tournament)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = %s", tournament.serial)
+        self.assertEqual(1, cursor.rowcount)
+        (tournament_serial,) = cursor.fetchone()
+        self.assertEqual(tournament.serial, tournament_serial)
+        self.secondsStart = testclock._seconds_value
+        def checkRoute(x):
+            cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = %s", tournament.serial)
+            self.assertEqual(0, cursor.rowcount)
+            self.assertEquals(testclock._seconds_value - self.secondsStart  >= self.service._ping_delay/1000.0, True)
+            cursor.close()
+        d.addCallback(checkRoute)
+        return d
+
+    def test_delete_route_table_delay(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                self.serial = 1
+
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
+        tournament = Tournament()
+        winner_serial = self.user1_serial
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = self.user2_serial
+        self.service._ping_delay = 1000
+        self.service.delays['extra_wait_tourney_finish'] = "40"        
+        d = defer.Deferred()
+        d.addCallback(self.service.tourneyDeleteRouteActual)
+        self.service.tourneyDeleteRouteActual = d.callback        
+        self.service.tourneyFinished(tournament)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = %s", tournament.serial)
+        self.assertEqual(1, cursor.rowcount)
+        (tournament_serial,) = cursor.fetchone()
+        self.assertEqual(tournament.serial, tournament_serial)
+        self.secondsStart = testclock._seconds_value
+        def checkRoute(x):
+            cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = %s", tournament.serial)
+            self.assertEqual(0, cursor.rowcount)
+            self.assertEquals(testclock._seconds_value - self.secondsStart  >= int(self.service.delays['extra_wait_tourney_finish']), True)
+        d.addCallback(checkRoute)
+        return d           
+
 ##############################################################################
 class BreakTestCase(PokerServiceTestCaseBase):
     class Table:

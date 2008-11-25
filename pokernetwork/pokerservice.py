@@ -384,6 +384,7 @@ class PokerService(service.Service):
         self.cancelTimer('updateTourney')
         self.cancelTimer('messages')
         self.cancelTimers('tourney_breaks')
+        self.cancelTimers('tourney_delete_route')
         self.shutdown_deferred = defer.Deferred()
         reactor.callLater(0.01, self.shutdownCheck)
         return self.shutdown_deferred
@@ -802,7 +803,6 @@ class PokerService(service.Service):
                 cursor.execute(sql)
             self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = tourney.currency_serial, param3 = prize)
 
-        cursor.execute("DELETE FROM route WHERE tourney_serial = %s", tourney.serial)
         #added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
         if not hasattr(tourney, "finish_time"):
             tourney.finish_time = seconds()
@@ -814,8 +814,22 @@ class PokerService(service.Service):
             client = self.serial2client.get(serial, None)
             if client:
                 client.sendPacketVerbose(finish)
+        self.tourneyDeleteRoute(tourney)
         return True
 
+    def tourneyDeleteRoute(self, tourney):
+        key = 'tourney_delete_route_%d' % id(tourney)
+        wait = int(self.delays.get('extra_wait_tourney_finish', 0))
+        def doTourneyDeleteRoute():
+            self.cancelTimer(key)
+            self.tourneyDeleteRouteActual(tourney.serial)
+        self.timer[key] = reactor.callLater(max((self._ping_delay/1000.0)*2, wait*2), doTourneyDeleteRoute)
+        
+    def tourneyDeleteRouteActual(self, tourney_serial):
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM route WHERE tourney_serial = %s", tourney_serial)
+        cursor.close()
+    
     def tourneyGameFilled(self, tourney, game):
         table = self.getTable(game.id)
         cursor = self.db.cursor()
