@@ -823,7 +823,7 @@ class PokerService(service.Service):
         def doTourneyDeleteRoute():
             self.cancelTimer(key)
             self.tourneyDeleteRouteActual(tourney.serial)
-        self.timer[key] = reactor.callLater(max((self._ping_delay/1000.0)*2, wait*2), doTourneyDeleteRoute)
+        self.timer[key] = reactor.callLater(max(self._ping_delay*2, wait*2), doTourneyDeleteRoute)
         
     def tourneyDeleteRouteActual(self, tourney_serial):
         cursor = self.db.cursor()

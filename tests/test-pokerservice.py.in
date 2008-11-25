@@ -1817,7 +1817,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = self.user2_serial
-        self.service._ping_delay = 1000
+        self.service._ping_delay = 1
         d = defer.Deferred()
         d.addCallback(self.service.tourneyDeleteRouteActual)
         self.service.tourneyDeleteRouteActual = d.callback
@@ -1855,8 +1855,8 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = self.user2_serial
-        self.service._ping_delay = 1000
-        self.service.delays['extra_wait_tourney_finish'] = "40"        
+        self.service._ping_delay = 1
+        self.service.delays['extra_wait_tourney_finish'] = "40"
         d = defer.Deferred()
         d.addCallback(self.service.tourneyDeleteRouteActual)
         self.service.tourneyDeleteRouteActual = d.callback        
