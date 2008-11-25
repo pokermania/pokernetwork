@@ -401,10 +401,11 @@ class TourneySelectTestCase(PokerServiceTestCaseBase):
         tourneys = self.service.tourneySelect('')
         self.assertEquals(len(tourneys),2)
         db = self.service.db
-        db.db.query("UPDATE tourneys SET finish_time = UNIX_TIMESTAMP(NOW() - INTERVAL 2 HOUR) WHERE name = 'regular1'")
+        db.db.query("UPDATE tourneys SET finish_time = UNIX_TIMESTAMP(NOW() - INTERVAL 2 HOUR), state = 'complete' WHERE name = 'regular1'")
         self.assertEquals(self.service.remove_completed, 1)
         tourneys = self.service.tourneySelect('')
         self.assertEquals(len(tourneys),1)
+        self.assertEquals(tourneys[0]["name"], "sitngo2")
 
 class PlayerPlacesTestCase(PokerServiceTestCaseBase):
 

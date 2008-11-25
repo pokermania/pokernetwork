@@ -985,25 +985,23 @@ class PokerService(service.Service):
         cursor = self.db.cursor(DictCursor)
         tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
         criterion = split(string, "\t")
-        tourneys_sql = {
-            "main":"SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) ",
-            "where":" WHERE (finish_time = 0 OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed,
-            "group":" GROUP BY tourneys.serial"
-        }
+        tourney_sql = "SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) "
+        tourney_sql += "WHERE (state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
         schedule_sql = "SELECT * FROM tourneys_schedule WHERE respawn = 'n' AND active = 'y'"
+        sql = ''
         if len(criterion) > 1:
             ( currency_serial, type ) = criterion
             sit_n_go = type == 'sit_n_go' and 'y' or 'n'
             if currency_serial:
-                tourneys_sql["where"] += " AND currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
-                schedule_sql += " AND currency_serial = %s AND sit_n_go = '%s'" % ( currency_serial, sit_n_go )
+                sql += " AND currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
             else:
-                tourneys_sql["where"] += " AND sit_n_go = '%s'" % sit_n_go
-                schedule_sql += " AND sit_n_go = '%s'" % sit_n_go
+                sql += " AND sit_n_go = '%s'" % sit_n_go
         elif string != '':
-            tourneys_sql["where"] += " AND name = '%s'" % string
-            schedule_sql += " AND name = '%s'" % string
-        cursor.execute(tourneys_sql["main"] + tourneys_sql["where"] + tourneys_sql["group"])
+            sql = " AND name = '%s'" % string
+        tourney_sql += sql
+        schedule_sql += sql
+        tourney_sql += " GROUP BY tourneys.serial"
+        cursor.execute(tourney_sql)
         result = cursor.fetchall()
         cursor.execute(schedule_sql)
         result += cursor.fetchall()
