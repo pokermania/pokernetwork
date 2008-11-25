@@ -7,6 +7,8 @@
 
 2008-11-25  Loic Dachary <loic@dachary.org>
 
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: the
+	  ping delay is measured in seconds, not milliseconds
 	* database/1.6.0-1.7.0.sql, database/schema.sql.in,
 	  pokernetwork/pokerservice.py, tests/test-pokerservice.py.in,
 	  tests/test-servercrash.py.in: add currency_serial column to the
