@@ -1,6 +1,32 @@
-2008-11-24  Loic Dachary <loic@dachary.org>
+2008-11-25  Loic Dachary <loic@dachary.org>
 
 	* Release 1.0.17
+
+	* pokernetwork/pokerservice.py: remove useless line from
+	  tourneySelect
+
+2008-11-25  Thomas Johnson <thomas.johnson@phpfreaks.com>
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  Additional refactoring
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  removed cleanUpOldCompleted and edited tourneySelect to not
+	  return completed tournaments older than the specified hours
+
+2008-11-24  Loic Dachary <loic@dachary.org>
+
+	* tests/test-attrpack.py.in, tests/test-clientserver.py.in,
+	  tests/test-pokercashier.py.in, tests/test-pokerlock.py.in,
+	  tests/test-pokerservice.py.in, tests/test-protocol.py.in: replace
+	  class foo(): with class foo: for python2.4 compatibility
+
+2008-11-24  Thomas Johnson <thomas.johnson@phpfreaks.com>
+
+	* conf/poker.server.xml.in, pokernetwork/pokerservice.py,
+	  tests/test-pokerservice.py.in: fixed bug from #2173 and added
+	  #2171
+
+2008-11-24  Loic Dachary <loic@dachary.org>
 
 	* database/1.6.0-1.7.0.sql, pokernetwork/pokerservice.py,
 	  tests/test-pokersite.py.in: update the mockup for locale handling
