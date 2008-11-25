@@ -1752,6 +1752,25 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         if verbose < 0:
             self.assertTrue(search_output("bailor failed to provide requested money"))
 
+    def test_bailor_zero(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                self.serial = 1
+
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        tournament = Tournament()
+        winner_serial = 10
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = 0
+        self.assertEqual(True, self.service.tourneyFinished(tournament))
+
     def test_tourney_finish(self):
         class Tournament:
             def __init__(self):

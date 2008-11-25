@@ -772,7 +772,7 @@ class PokerService(service.Service):
         # the buy in of the players is not enough.
         #
         bail = tourney.prize_min - ( tourney.buy_in * tourney.registered )
-        if bail > 0:
+        if bail > 0 and tourney.bailor_serial > 0:
             sql = ( "UPDATE user2money SET amount = amount - " + str(bail) + " WHERE " +
                     "       user_serial = " + str(tourney.bailor_serial) + " AND " +
                     "       currency_serial = " + str(tourney.currency_serial) + " AND " +
