@@ -983,7 +983,6 @@ class PokerService(service.Service):
 
     def tourneySelect(self, string):
         cursor = self.db.cursor(DictCursor)
-        tourneys = filter(lambda schedule: schedule['respawn'] == 'n', self.tourneys_schedule.values()) + map(lambda tourney: tourney.__dict__, self.tourneys.values() )
         criterion = split(string, "\t")
         tourney_sql = "SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) "
         tourney_sql += "WHERE (state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
