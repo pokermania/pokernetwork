@@ -92,6 +92,8 @@ class PokerAvatar:
     def setLocale(self, locale):
         if locale:
             self.localeFunc = self.service.locale2translationFunc(locale)
+            if not self.localeFunc:
+                self.error("locale not found: '%s'" % locale)
         return self.localeFunc
 
     def setProtocol(self, protocol):

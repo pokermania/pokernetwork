@@ -3790,6 +3790,40 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
 
         self.assertEquals(avatar.localeFunc("DUMMY"), "MYTRANSLATION")
+    # ------------------------------------------------------------------------
+    def test03_relogin_localeNotFound(self):
+        """No packet actualy does a relogin, this covers it 'by-hand', as
+        it were."""
+        from pokernetwork import pokeravatar
+
+        service = PokerAvatarNoClientServerTestCase.MockService()
+        service.locale2translationFunc = lambda l: None
+        avatar = pokeravatar.PokerAvatar(service)
+        explain = PokerAvatarNoClientServerTestCase.MockExplain()
+        saveExplain = avatar.explain
+        avatar.explain = explain
+
+        errors = []
+        avatar.error = lambda e: errors.append(e)
+        avatar.relogin(1042)
+        self.assertEquals(avatar.user.serial, 1042)
+        self.assertEquals(avatar.user.name, 'Doyle Brunson')
+        self.assertEquals(avatar.user.url, "http://example.org/")
+        self.assertEquals(avatar.user.outfit, "naked")
+        self.assertEquals(avatar.user.privilege, pokeravatar.User.REGULAR)
+        self.assertEquals(avatar.tourneys, "MOCKPLACES")
+
+        self.failUnless(service.serial2client.keys(), [1042])
+        self.assertEquals(service.serial2client[1042], avatar)
+
+        avatar.explain = saveExplain
+
+        self.assertEquals(len(explain.handleSerialPackets), 1)
+        self.assertEquals(explain.handleSerialPackets[0].serial, 1042)
+        self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
+
+        self.assertEquals(None, avatar.localeFunc)
+        self.assertEquals("locale not found: 'mylocale'", errors[0])
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
