@@ -1,3 +1,8 @@
+2008-11-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* examples/merged-translation-import.plx.in: Added jpoker
+	support.  Fixed copyright replacement.
+
 2008-11-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* configure.ac: Added merged-translation-import.plx.in.

@@ -85,15 +85,15 @@ sub SanityCheck ($$) {
   }
 }
 ###########################################################################
-if (@ARGV < 2 or @ARGV > 3) {
-  print STDERR "usage: $0 <DIRECTORY_WITH_NEW_LANG_FILES> <POKERSOURCE_TOPLEVEL> [<OVERRIDE_EXISTING_TRANSLATIONS> (defaults to 0)]\n";
+if (@ARGV != 3 or $ARGV[2] !~ /^jpoker|pokersource$/i) {
+  print STDERR "usage: $0 <DIRECTORY_WITH_NEW_LANG_FILES> <TOPLEVEL> <MODE (jpoker or pokersource)>\n";
   exit 1;
 }
-my $OVERRIDE_EXISTING = 0;
-$OVERRIDE_EXISTING = $ARGV[2] if defined $ARGV[2];
+my $MODE = "\L$ARGV[2]\E";
 
 my @pokersourceDirs = ("$ARGV[1]/poker-network", "$ARGV[1]/poker-engine",
                        "$ARGV[1]/poker-eval");
+@pokersourceDirs = ($ARGV[1]) if $MODE eq "jpoker";
 my @allPotFiles = FindFilesEndingWith(\@pokersourceDirs, '\.pot');
 my @orignalPoFiles = FindFilesEndingWith(\@pokersourceDirs, '\.po');
 my @newPoFiles = FindFilesEndingWith([ $ARGV[0] ], '\.po');
@@ -113,7 +113,10 @@ foreach my $origFile (keys %$origFiles) {
   my $dir = $origFiles->{$origFile}{directory};
   my $lang = $origFile;
   $lang =~ s%^.*/([^/]+)\.po$%$1%;
+  $dir = $ARGV[1] if ($MODE eq "jpoker");
+  $lang =~ s/^jpoker\-// if ($MODE eq "jpoker");
   $existingTranslations{$dir}{$lang} = $origFile;
+  print STDERR "$dir $lang $origFile\n";
 }
 
 foreach my $newPoFile (@newPoFiles) {
@@ -123,15 +126,17 @@ foreach my $newPoFile (@newPoFiles) {
     my $dir = $potFiles->{$potFile}{directory};
     my $project = $potFile;
     $project =~ s%^.*/([^/]+)\.pot$%$1%;
+    $project = "jpoker" if ($MODE eq "jpoker");
     open(MERGE, "$MSG_MERGE $newPoFile $potFile|") 
       or die "unable to run: $MSG_MERGE $newPoFile $potFile";
     my $extraFooterData = "";
     my $extraHeaderData = "";
-      use Data::Dumper;
+    print "Checking $dir $lang\n";
     if (defined $existingTranslations{$dir}{$lang}) {
       my $oldFile = $existingTranslations{$dir}{$lang};
-      use Data::Dumper;
+      print STDERR "Handling $oldFile\n";
       foreach my $line (split /\n/, $origFiles->{$oldFile}{contents}{'""'}{comment}) {
+        print STDERR "$extraHeaderData\n";
         $extraHeaderData .=  "# $line\n";
       }
       open(OLD_FILE, "<$oldFile") or die "Unable to read $oldFile: $!";
@@ -146,6 +151,7 @@ foreach my $newPoFile (@newPoFiles) {
       rename($oldFile, "${oldFile}~") or warn "unable to rename $oldFile: $!";
     }
     my $newFile = "${dir}/${lang}.po";
+    $newFile = "${dir}/jpoker/l10n/jpoker-$ {lang}.po" if $MODE eq "jpoker";
     open(NEW_FILE, "| $MSG_CONV --to-code=UTF-8 --output-file=$newFile") 
       or die "unable to run $MSG_CONV --output-file=$newFile: $!";
     print NEW_FILE $extraHeaderData;
@@ -154,8 +160,10 @@ foreach my $newPoFile (@newPoFiles) {
         $line = "\"Project-Id-Version: $project VERSION\\n\"\n";
       } elsif ($line =~ /^"Report-Msgid-Bugs-To:/) {
         $line = "\"Report-Msgid-Bugs-To: <pokersource-users\@gna.org>\\n\"\n";
-      } elsif ($line =~ /^(\s*#\s*Copyright\s*)Orbus/i) {
+      } elsif ($line =~ /^(\s*#\s*Copyright.*)Orbus/i) {
         $line = "$1 Telefun\n";
+        $line .= "# Licensed under the same license as jpoker itself.\n"
+          if ($MODE eq "jpoker");
       } elsif ($line =~ /^"Language-Team:/) {
         $line = "\"Language-Team: <pokersource-users\@gna.org>\\n\"\n";
       } elsif ($line =~ /^\s*#\s*~/) {
