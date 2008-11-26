@@ -1,11 +1,3 @@
-# translation of fr.po to
-# translation of poker2d.po to
-# French translations for pokerclient package.
-# Copyright (C) 2006 THE pokerclient'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the pokerclient package.
-# 
-# griim <griim.work@gmail.com>, 2006.
-# Johan Euphrosine <proppy@aminche.com>, 2008.
 # Skyrock Network
 # Copyright (C) 2002-2008 Orbus group
 # Devteam <devteam@orbus.fr>
@@ -16,30 +8,30 @@ msgstr ""
 "Project-Id-Version: poker2d VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-25 16:10-0500\n"
-"PO-Revision-Date: 2008-11-25 16:30+0200\n"
+"PO-Revision-Date: 2008-11-25 16:31+0200\n"
 "Last-Translator: devteam <devteam@orbus.fr>\n"
 "Language-Team: <pokersource-users@gna.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n>1;\n"
+"Plural-Forms: plurals=2; plural=n != 1;\n"
 
-# Translation #54400 (fr)
+# Translation #55614 (nl)
 #: pokerclient2d/data/interface/interface.glade:100
 msgid "<b>Login</b>"
-msgstr "<b>Identifiant</b>"
+msgstr "<b>Nickname</b>"
 
-# Translation #54401 (fr)
+# Translation #55634 (nl)
 #: pokerclient2d/data/interface/interface.glade:167
 msgid "<b>Password</b>"
-msgstr "<b>Mot de passe</b>"
+msgstr "<b>Paswoord</b>"
 
-# Translation #54402 (fr)
+# Translation #55659 (nl)
 #: pokerclient2d/data/interface/interface.glade:198
 msgid "_Remember password"
-msgstr "_Mémoriser le mot de passe"
+msgstr "_Remember password"
 
-# Translation #54403 (fr)
+# Translation #55766 (nl)
 #: pokerclient2d/data/interface/interface.glade:224
 #: pokerclient2d/data/interface/interface.glade:323
 #: pokerclient2d/data/interface/interface.glade:1047
@@ -48,382 +40,384 @@ msgstr "_Mémoriser le mot de passe"
 msgid "OK"
 msgstr "OK"
 
-# Translation #54404 (fr)
+# Translation #55855 (nl)
 #: pokerclient2d/data/interface/interface.glade:237
 #: pokerclient2d/data/interface/interface.glade:11119
 msgid "CANCEL"
-msgstr "ANNULER"
+msgstr "ANNULEREN"
 
-# Translation #54405 (fr)
+# Translation #56263 (nl)
 #: pokerclient2d/data/interface/interface.glade:256
 msgid "Create Account"
-msgstr "Créer un compte"
+msgstr "Account maken"
 
-# Translation #54406 (fr)
+# Translation #56267 (nl)
 #: pokerclient2d/data/interface/interface.glade:441
 msgid "auto post blinds"
-msgstr "blindes automatique"
+msgstr "Automatisch blind inzetten"
 
-# Translation #54407 (fr)
+# Translation #56278 (nl)
 #: pokerclient2d/data/interface/interface.glade:461
 msgid "sit out next hand"
-msgstr "se lever"
+msgstr "Sit out volgende hand"
 
-# Translation #54408 (fr)
+# Translation #56279 (nl)
 #: pokerclient2d/data/interface/interface.glade:627
 msgid "Post blind"
-msgstr "Payer la blinde"
+msgstr "Blind inzetten"
 
-# Translation #54409 (fr)
+# Translation #56283 (nl)
 #: pokerclient2d/data/interface/interface.glade:653
 msgid "Auto Post"
-msgstr "Blinde auto"
+msgstr "Automatisch inzetten"
 
-# Translation #54410 (fr)
+# Translation #56284 (nl)
 #: pokerclient2d/data/interface/interface.glade:688
 #: pokerclient2d/data/interface/interface.glade:10461
 msgid "YES"
-msgstr "OUI"
+msgstr "JA"
 
-# Translation #54411 (fr)
+# Translation #56285 (nl)
 #: pokerclient2d/data/interface/interface.glade:706
 #: pokerclient2d/data/interface/interface.glade:10474
 msgid "NO"
-msgstr "NON"
+msgstr "NEE"
 
-# Translation #54412 (fr)
+# Translation #56288 (nl)
 #: pokerclient2d/data/interface/interface.glade:724
 msgid "WAIT FOR BIG BLIND"
-msgstr "ATTENDRE LA GROSSE BLINDE"
+msgstr "WACHTEN OP BIG BLIND"
 
-# Translation #54413 (fr)
+# Translation #56294 (nl)
 #: pokerclient2d/data/interface/interface.glade:894
 msgid "Which amount do you want to bring at the table ?"
-msgstr "Combien de jetons apporter à la table ?"
+msgstr "Hoeveel wil je meebrengen naar de tafel?"
 
-# Translation #54414 (fr)
+# Translation #56296 (nl)
 #: pokerclient2d/data/interface/interface.glade:929
 msgid "The maximum"
-msgstr "Le maximum"
+msgstr "Het maximum"
 
-# Translation #54415 (fr)
+# Translation #56297 (nl)
 #: pokerclient2d/data/interface/interface.glade:980
 #, fuzzy
 msgid "Another amount : "
-msgstr "Autre montant :"
+msgstr "Ander bedrag:"
 
-# Translation #54416 (fr)
+# Translation #56299 (nl)
 #: pokerclient2d/data/interface/interface.glade:1532
 msgid "Player ID"
-msgstr "ID du joueur"
+msgstr "ID speler"
 
-# Translation #54256 (fr)
+# Translation #55664 (nl)
 #: pokerclient2d/data/interface/interface.glade:1583
 msgid "Email"
 msgstr "Email"
 
-# Translation #54417 (fr)
+# Translation #56300 (nl)
 #: pokerclient2d/data/interface/interface.glade:1640
 msgid "Mailing Address"
-msgstr "Adresse email"
+msgstr "Mail-adres"
 
-# Translation #54418 (fr)
+# Translation #56301 (nl)
 #: pokerclient2d/data/interface/interface.glade:1803
 #: pokerclient2d/data/interface/interface.glade:2171
 msgid "Available:"
-msgstr "Disponible:"
+msgstr "Beschikbaar:"
 
-# Translation #54419 (fr)
+# Translation #56302 (nl)
 #: pokerclient2d/data/interface/interface.glade:1898
 #: pokerclient2d/data/interface/interface.glade:2266
 msgid "In play:"
-msgstr "En jeu:"
+msgstr "In spel:"
 
-# Translation #54420 (fr)
+# Translation #56308 (nl)
 #: pokerclient2d/data/interface/interface.glade:1987
 #: pokerclient2d/data/interface/interface.glade:2355
 msgid "Total:"
-msgstr "Total:"
+msgstr "Totaal:"
 
-# Translation #54421 (fr)
+# Translation #56309 (nl)
 #: pokerclient2d/data/interface/interface.glade:2078
 #: pokerclient2d/data/interface/interface.glade:5427
 #: pokerclient2d/data/interface/interface.glade:6301
 msgid "PLAY MONEY"
-msgstr "PLAY MONEY"
+msgstr "SPEEL GELD"
 
-# Translation #54422 (fr)
+# Translation #56311 (nl)
 #: pokerclient2d/data/interface/interface.glade:2446
 #: pokerclient2d/data/interface/interface.glade:5482
 #: pokerclient2d/data/interface/interface.glade:6370
 msgid "CUSTOM MONEY"
 msgstr "CUSTOM MONEY"
 
-# Translation #54423 (fr)
+# Translation #56312 (nl)
 #: pokerclient2d/data/interface/interface.glade:2524
 msgid "Points:"
-msgstr "Points:"
+msgstr "Punten:"
 
-# Translation #54424 (fr)
+# Translation #56318 (nl)
 #: pokerclient2d/data/interface/interface.glade:2590
 msgid "frequent player cash"
-msgstr ""
+msgstr "Regelmatige cash-speler"
 
-# Translation #54425 (fr)
+# Translation #56319 (nl)
 #: pokerclient2d/data/interface/interface.glade:2787
 msgid "Previous"
-msgstr "Précédent"
+msgstr "Vorige"
 
-# Translation #54426 (fr)
+# Translation #56320 (nl)
 #: pokerclient2d/data/interface/interface.glade:2826
 msgid "Next"
-msgstr "Suivant"
+msgstr "Volgende"
 
-# Translation #54427 (fr)
+# Translation #56323 (nl)
 #: pokerclient2d/data/interface/interface.glade:2921
 #: pokerclient2d/data/interface/interface.glade:9646
 msgid "Quit"
-msgstr "Quitter"
+msgstr "Vertrekken"
 
-# Translation #54428 (fr)
+# Translation #56324 (nl)
 #: pokerclient2d/data/interface/interface.glade:2998
 msgid "Lobby Lobby"
-msgstr ""
+msgstr "Lobby Lobby"
 
-# Translation #54429 (fr)
+# Translation #56325 (nl)
 #: pokerclient2d/data/interface/interface.glade:2999
 #, fuzzy
 msgid " _LOBBY"
-msgstr "_SALON"
+msgstr "_LOBBY"
 
-# Translation #54430 (fr)
+# Translation #56326 (nl)
 #: pokerclient2d/data/interface/interface.glade:3009
 #, fuzzy
 msgid " T_ables List"
-msgstr "Liste des t_ables"
+msgstr "T_afel-lijst"
 
-# Translation #54431 (fr)
+# Translation #56330 (nl)
 #: pokerclient2d/data/interface/interface.glade:3018
 #, fuzzy
 msgid " _Tournaments"
-msgstr "_Tournois"
+msgstr "_Toernooien"
 
-# Translation #54432 (fr)
+# Translation #56331 (nl)
 #: pokerclient2d/data/interface/interface.glade:3027
 #, fuzzy
 msgid " _Login"
-msgstr "_Identification"
+msgstr "_Login"
 
-# Translation #54433 (fr)
+# Translation #56334 (nl)
 #: pokerclient2d/data/interface/interface.glade:3036
 #, fuzzy
 msgid " _Cashier"
-msgstr "_Caissier"
+msgstr "_Cashier"
 
-# Translation #54434 (fr)
+# Translation #56338 (nl)
 #: pokerclient2d/data/interface/interface.glade:3045
 #, fuzzy
 msgid " Cash I_n"
-msgstr "_Dépot"
+msgstr "Cash I_n"
 
-# Translation #54435 (fr)
+# Translation #56341 (nl)
 #: pokerclient2d/data/interface/interface.glade:3054
 #, fuzzy
 msgid " Cash _Out"
-msgstr "_Retrait"
+msgstr "Cash _Out"
 
-# Translation #54436 (fr)
+# Translation #56345 (nl)
 #: pokerclient2d/data/interface/interface.glade:3063
 #, fuzzy
 msgid " _Quit"
-msgstr "_Quitter"
+msgstr "_Quit"
 
-# Translation #54437 (fr)
+# Translation #56347 (nl)
 #: pokerclient2d/data/interface/interface.glade:3082
 #, fuzzy
 msgid " MY _ACCOUNT"
-msgstr "MON _COMPTE"
+msgstr "MIJN _ACCOUNT"
 
-# Translation #54438 (fr)
+# Translation #56349 (nl)
 #: pokerclient2d/data/interface/interface.glade:3091
 #, fuzzy
 msgid " _Edit Account"
-msgstr "_Editer mon compte"
+msgstr "_Edit Account"
 
-# Translation #54439 (fr)
+# Translation #56351 (nl)
 #: pokerclient2d/data/interface/interface.glade:3100
 #, fuzzy
 msgid " _Change Outfit"
-msgstr "_Changer de panoplie"
+msgstr "_Change Outfit"
 
-# Translation #54440 (fr)
+# Translation #56354 (nl)
 #: pokerclient2d/data/interface/interface.glade:3109
 #, fuzzy
 msgid " _Hand History"
-msgstr "_Historique des mains"
+msgstr "_Historiek hand"
 
-# Translation #54441 (fr)
+# Translation #56356 (nl)
 #: pokerclient2d/data/interface/interface.glade:3128
 #, fuzzy
 msgid " _OPTIONS"
-msgstr "_OPTIONS"
+msgstr "_OPTIES"
 
-# Translation #54442 (fr)
+# Translation #56358 (nl)
 #: pokerclient2d/data/interface/interface.glade:3137
 #, fuzzy
 msgid " _Full Screen"
-msgstr "_Plein écran"
+msgstr "_Full Screen"
 
-# Translation #54443 (fr)
+# Translation #56372 (nl)
 #: pokerclient2d/data/interface/interface.glade:3147
 #, fuzzy
 msgid " _Screen Resolution"
-msgstr "_Résolution"
+msgstr "_Schermresolutie"
 
-# Translation #54444 (fr)
+# Translation #56379 (nl)
 #: pokerclient2d/data/interface/interface.glade:3156
 #, fuzzy
 msgid " _Auto Select"
-msgstr "Sélection _Auto"
+msgstr "_Automatisch Kiezen"
 
-# Translation #54445 (fr)
+# Translation #56380 (nl)
 #: pokerclient2d/data/interface/interface.glade:3258
 #, fuzzy
 msgid " S_ound Effects"
-msgstr "Effets s_onores"
+msgstr "S_ound Effects"
 
-# Translation #54446 (fr)
+# Translation #56388 (nl)
 #: pokerclient2d/data/interface/interface.glade:3268
 #, fuzzy
 msgid " _High Quality Graphics"
-msgstr "_Effets graphiques avancés"
+msgstr "_Hoge Kwaliteit-beelden"
 
-# Translation #54447 (fr)
+# Translation #56393 (nl)
 #: pokerclient2d/data/interface/interface.glade:3284
 #, fuzzy
 msgid " _Auto Post Blind"
-msgstr "_Blindes automatiques"
+msgstr "_Automatisch Blind inzetten"
 
-# Translation #54448 (fr)
+# Translation #56395 (nl)
 #: pokerclient2d/data/interface/interface.glade:3294
 #, fuzzy
 msgid " _Remember Me"
-msgstr "_Se souvenir de moi"
+msgstr "_Remember Me"
 
-# Translation #54449 (fr)
+# Translation #56396 (nl)
 #: pokerclient2d/data/interface/interface.glade:3304
 #, fuzzy
 msgid " _Always Muck"
-msgstr "_Toujours cacher mes cartes"
+msgstr "_Altijd verbergen"
 
-# Translation #54450 (fr)
+# Translation #56398 (nl)
 #: pokerclient2d/data/interface/interface.glade:3324
 #, fuzzy
 msgid " _ABOUT"
-msgstr "_A PROPOS"
+msgstr "_ABOUT"
 
-# Translation #54451 (fr)
+# Translation #56400 (nl)
 #: pokerclient2d/data/interface/interface.glade:3334
 msgid "Software released under the GNU GPL"
-msgstr "Logiciel sous licence GNU GPL"
+msgstr "Software uitgebracht onder de licentie GNU GPL"
 
-# Translation #54452 (fr)
+# Translation #56401 (nl)
 #: pokerclient2d/data/interface/interface.glade:3335
 msgid "_Credits & Licenses"
-msgstr ""
+msgstr "_Credits & Licenties"
 
-# Translation #54453 (fr)
+# Translation #56403 (nl)
 #: pokerclient2d/data/interface/interface.glade:3356
 #: pokerclient2d/data/interface/interface.glade:11178
 msgid "Credits"
-msgstr ""
+msgstr "Credits"
 
+# Translation #56405 (nl)
 #: pokerclient2d/data/interface/interface.glade:3371
+#, fuzzy
 msgid "GNU Affero General Public License v2 or later"
-msgstr ""
+msgstr "GNU General Public License v2 of later"
 
-# Translation #54455 (fr)
+# Translation #56407 (nl)
 #: pokerclient2d/data/interface/interface.glade:3381
 msgid "GNU Lesser General Public License v2.1 or later"
-msgstr ""
+msgstr "GNU Lesser General Public License v2.1 of later"
 
-# Translation #54456 (fr)
+# Translation #56410 (nl)
 #: pokerclient2d/data/interface/interface.glade:3390
 msgid "OpenSceneGraph Public License, Version 0.0"
-msgstr ""
+msgstr "OpenSceneGraph Public License, Versie 0.0"
 
-# Translation #54457 (fr)
+# Translation #56427 (nl)
 #: pokerclient2d/data/interface/interface.glade:3399
 msgid "MIT or X11 License"
-msgstr ""
+msgstr "MIT of X11 License"
 
-# Translation #54458 (fr)
+# Translation #56429 (nl)
 #: pokerclient2d/data/interface/interface.glade:3408
 msgid "Python 2.4.2 License"
-msgstr ""
+msgstr "Python 2.4.2 License"
 
-# Translation #54459 (fr)
+# Translation #56431 (nl)
 #: pokerclient2d/data/interface/interface.glade:3417
 msgid "Zope Public License (ZPL) Version 2.1"
-msgstr ""
+msgstr "Zope Public License (ZPL) Versie 2.1"
 
-# Translation #54460 (fr)
+# Translation #56433 (nl)
 #: pokerclient2d/data/interface/interface.glade:3426
 msgid "libJPEG License"
-msgstr ""
+msgstr "libJPEG License"
 
-# Translation #54461 (fr)
+# Translation #56434 (nl)
 #: pokerclient2d/data/interface/interface.glade:3435
 msgid "OpenSSL License"
-msgstr ""
+msgstr "OpenSSL License"
 
-# Translation #54462 (fr)
+# Translation #56447 (nl)
 #: pokerclient2d/data/interface/interface.glade:3458
 #, fuzzy
 msgid " _QUIT"
-msgstr "_QUITTER"
+msgstr "_QUIT"
 
-# Translation #54463 (fr)
+# Translation #56489 (nl)
 #: pokerclient2d/data/interface/interface.glade:5224
 #: pokerclient2d/data/interface/interface.glade:10285
 msgid "Regular"
-msgstr "Tournois"
+msgstr "Toernooi"
 
-# Translation #54464 (fr)
+# Translation #56490 (nl)
 #: pokerclient2d/data/interface/interface.glade:5276
 msgid "Sit  and go"
 msgstr "Sit and go"
 
-# Translation #54465 (fr)
+# Translation #56491 (nl)
 #: pokerclient2d/data/interface/interface.glade:5372
 #: pokerclient2d/data/interface/interface.glade:6232
 msgid "ALL"
-msgstr "TOUS"
+msgstr "ALLES"
 
-# Translation #54261 (fr)
+# Translation #55669 (nl)
 #: pokerclient2d/data/interface/interface.glade:5968
 #: pokerclient2d/data/interface/interface.glade:9975
 msgid "Holdem"
 msgstr "Holdem"
 
-# Translation #54466 (fr)
+# Translation #56493 (nl)
 #: pokerclient2d/data/interface/interface.glade:6020
 #: pokerclient2d/data/interface/interface.glade:10037
 msgid "Omaha"
 msgstr "Omaha"
 
-# Translation #54467 (fr)
+# Translation #56495 (nl)
 #: pokerclient2d/data/interface/interface.glade:6072
 #: pokerclient2d/data/interface/interface.glade:10099
 msgid "Omaha H/L"
 msgstr "Omaha H/L"
 
-# Translation #54468 (fr)
+# Translation #56496 (nl)
 #: pokerclient2d/data/interface/interface.glade:6124
 msgid "Stud 7"
 msgstr "Stud 7"
 
-# Translation #54469 (fr)
+# Translation #56503 (nl)
 #: pokerclient2d/data/interface/interface.glade:7284
 #: pokerclient2d/data/interface/interface.glade:7303
 #: pokerclient2d/data/interface/interface.glade:8149
@@ -435,9 +429,9 @@ msgstr "Stud 7"
 #: pokerclient2d/data/interface/interface.glade:9698
 #: pokerclient2d/data/interface/interface.glade:9717
 msgid "Click to sit at the table"
-msgstr "Cliquer ici pour s'assoir a la table"
+msgstr "Klik om aan de tafel te gaan zitten"
 
-# Translation #54470 (fr)
+# Translation #56506 (nl)
 #: pokerclient2d/data/interface/interface.glade:7286
 #: pokerclient2d/data/interface/interface.glade:7305
 #: pokerclient2d/data/interface/interface.glade:8151
@@ -449,19 +443,19 @@ msgstr "Cliquer ici pour s'assoir a la table"
 #: pokerclient2d/data/interface/interface.glade:9700
 #: pokerclient2d/data/interface/interface.glade:9719
 msgid "Get a seat"
-msgstr "Place libre"
+msgstr "Gaan zitten"
 
-# Translation #54471 (fr)
+# Translation #56508 (nl)
 #: pokerclient2d/data/interface/interface.glade:8829
 msgid "Fold"
-msgstr "Coucher"
+msgstr "Fold"
 
-# Translation #54472 (fr)
+# Translation #56510 (nl)
 #: pokerclient2d/data/interface/interface.glade:8846
 msgid "Raise"
-msgstr "Miser"
+msgstr "Raise"
 
-# Translation #54473 (fr)
+# Translation #56511 (nl)
 #: pokerclient2d/data/interface/interface.glade:8862
 #: pokerclient2d/data/interface/interface.glade:8887
 #: pokerclient2d/data/interface/interface.glade:8912
@@ -473,8 +467,9 @@ msgstr "Miser"
 #: pokerclient2d/data/interface/interface.glade:9062
 #: pokerclient2d/data/interface/interface.glade:9087
 msgid "D"
-msgstr ""
+msgstr "D"
 
+# Translation #56514 (nl)
 #: pokerclient2d/data/interface/interface.glade:9337
 #: pokerclient2d/data/interface/interface.glade:9362
 #: pokerclient2d/data/interface/interface.glade:9387
@@ -484,210 +479,211 @@ msgstr ""
 #: pokerclient2d/data/interface/interface.glade:9487
 #: pokerclient2d/data/interface/interface.glade:9512
 #: pokerclient2d/data/interface/interface.glade:9537
+#, fuzzy
 msgid "readable hand value at showdown "
-msgstr ""
+msgstr "Leesbare hand op het einde tonen"
 
-# Translation #51229 (fr)
+# Translation #52595 (nl)
 #: pokerclient2d/data/interface/interface.glade:9664
 msgid "Rebuy"
-msgstr "Recave"
+msgstr "Rebuy"
 
-# Translation #54475 (fr)
+# Translation #56515 (nl)
 #: pokerclient2d/data/interface/interface.glade:9681
 msgid "Switch"
-msgstr "Changer"
+msgstr "Switch"
 
-# Translation #54476 (fr)
+# Translation #56517 (nl)
 #: pokerclient2d/data/interface/interface.glade:9736
 msgid "Call"
-msgstr "Suivre"
+msgstr "Call"
 
-# Translation #54477 (fr)
+# Translation #56519 (nl)
 #: pokerclient2d/data/interface/interface.glade:9754
 msgid "Check"
-msgstr "Passer"
+msgstr "Checken"
 
-# Translation #54478 (fr)
+# Translation #56520 (nl)
 #: pokerclient2d/data/interface/interface.glade:9792
 #: pokerclient2d/data/interface/interface.glade:9868
 msgid "Raise Increase"
-msgstr "Augmenter la relance"
+msgstr "Raise Inzet"
 
-# Translation #54479 (fr)
+# Translation #56521 (nl)
 #: pokerclient2d/data/interface/interface.glade:9811
 msgid "Raise Decrease"
-msgstr "Reduire la relance"
+msgstr "Raise Decrease"
 
-# Translation #54480 (fr)
+# Translation #56523 (nl)
 #: pokerclient2d/data/interface/interface.glade:9830
 msgid "Raise Pot"
-msgstr "Relancer du pot"
+msgstr "Raise Pot"
 
-# Translation #54481 (fr)
+# Translation #56524 (nl)
 #: pokerclient2d/data/interface/interface.glade:9849
 msgid "Raise half pot"
-msgstr "Relance de la moitié du pot"
+msgstr "Raise halve pot"
 
-# Translation #54482 (fr)
+# Translation #56552 (nl)
 #: pokerclient2d/data/interface/interface.glade:9887
 msgid "Raise decrease BB"
-msgstr ""
+msgstr "Raise decrease BB"
 
-# Translation #54483 (fr)
+# Translation #56553 (nl)
 #: pokerclient2d/data/interface/interface.glade:10161
 msgid "Stud"
-msgstr ""
+msgstr "Stud"
 
-# Translation #54484 (fr)
+# Translation #56554 (nl)
 #: pokerclient2d/data/interface/interface.glade:10223
 msgid "Sit & Go"
-msgstr ""
+msgstr "Sit & Go"
 
-# Translation #54485 (fr)
+# Translation #56556 (nl)
 #: pokerclient2d/data/interface/interface.glade:10867
 msgid "SHOW CARDS"
-msgstr "MONTRER MES CARTES"
+msgstr "KAARTEN TONEN"
 
-# Translation #54486 (fr)
+# Translation #56559 (nl)
 #: pokerclient2d/data/interface/interface.glade:10880
 msgid "HIDE CARDS"
-msgstr "CACHER MES CARTES"
+msgstr "KAARTEN VERBERGEN"
 
-# Translation #54487 (fr)
+# Translation #56560 (nl)
 #: pokerclient2d/data/interface/interface.glade:10893
 msgid "ALWAYS HIDE"
-msgstr "TOUJOURS CACHER"
+msgstr "ALTIJD VERBERGEN"
 
-# Translation #54488 (fr)
+# Translation #56561 (nl)
 #: pokerclient2d/data/interface/interface.glade:10912
 msgid "Hand is over, what do you want to do ?"
-msgstr "La main est finie, que voulez-vous faire ?"
+msgstr "De hand is gedaan, wat wil je doen?"
 
-# Translation #54489 (fr)
+# Translation #56562 (nl)
 #: pokerclient2d/data/interface/interface.glade:11093
 msgid "CHECK"
-msgstr "SUIVRE"
+msgstr "CHECK"
 
-# Translation #54490 (fr)
+# Translation #56563 (nl)
 #: pokerclient2d/data/interface/interface.glade:11106
 msgid "FOLD"
-msgstr "COUCHER"
+msgstr "FOLD"
 
-# Translation #54491 (fr)
+# Translation #56570 (nl)
 #: pokerclient2d/data/interface/interface.glade:11138
 msgid "Checking is free. What do you want to do?"
-msgstr "Le Check est gratuit. Que voulez-vous faire ?"
+msgstr "Checken is gratis. Wat wil je doen?"
 
-# Translation #54492 (fr)
+# Translation #56577 (nl)
 #: pokerclient2d/data/interface/interface.glade:11348
 msgid "Credits for poker-network"
-msgstr ""
+msgstr "Credits voor poker-netwerk"
 
-# Translation #54493 (fr)
+# Translation #56579 (nl)
 #: pokerclient2d/lobby.c:314
 msgid "My"
-msgstr ""
+msgstr "Mijn"
 
-# Translation #51226 (fr)
+# Translation #52592 (nl)
 #: pokerclient2d/lobby.c:349
 msgid "Name"
-msgstr "Nom"
+msgstr "Game"
 
-# Translation #54494 (fr)
+# Translation #56580 (nl)
 #: pokerclient2d/lobby.c:351
 msgid "Structure"
-msgstr "Structure"
+msgstr "Structuur"
 
-# Translation #51230 (fr)
+# Translation #52596 (nl)
 #: pokerclient2d/lobby.c:353
 msgid "Seats"
-msgstr "Places"
+msgstr "Plaatsen"
 
-# Translation #54495 (fr)
+# Translation #56585 (nl)
 #: pokerclient2d/lobby.c:355
 msgid "Avg.pot"
-msgstr "Moy.Pot"
+msgstr "Gem.pot"
 
-# Translation #54496 (fr)
+# Translation #56592 (nl)
 #: pokerclient2d/lobby.c:357
 msgid "Hands/h"
-msgstr "Mains/H"
+msgstr "Handen/u"
 
-# Translation #54497 (fr)
+# Translation #56593 (nl)
 #: pokerclient2d/lobby.c:359
 msgid "Flop%"
-msgstr "%Flop"
+msgstr "Flop%"
 
-# Translation #54498 (fr)
+# Translation #56595 (nl)
 #: pokerclient2d/lobby.c:361
 msgid "Playing"
-msgstr "Joueurs"
+msgstr "Spelers"
 
-# Translation #51228 (fr)
+# Translation #52594 (nl)
 #: pokerclient2d/lobby.c:387 pokerclient2d/tournaments.c:293
 #: pokerclient2d/tournaments.c:338 pokerclient2d/tournaments.c:363
 msgid "Players"
-msgstr "Joueurs"
+msgstr "Spelers"
 
-# Translation #54499 (fr)
+# Translation #56597 (nl)
 #: pokerclient2d/lobby.c:395
 msgid "Chips"
-msgstr "Jetons"
+msgstr "Chips"
 
-# Translation #54500 (fr)
+# Translation #56600 (nl)
 #: pokerclient2d/lobby.c:611
 msgid "GO TO TABLE"
-msgstr "ALLER A LA TABLE"
+msgstr "NAAR TAFEL GAAN"
 
-# Translation #54501 (fr)
+# Translation #56601 (nl)
 #: pokerclient2d/tournaments.c:277 pokerclient2d/tournaments.c:322
 msgid "Title"
-msgstr "Titre"
+msgstr "Titel"
 
-# Translation #54298 (fr)
+# Translation #55720 (nl)
 #: pokerclient2d/tournaments.c:285 pokerclient2d/tournaments.c:330
 msgid "State"
-msgstr "Etat"
+msgstr "Status"
 
-# Translation #54502 (fr)
+# Translation #56602 (nl)
 #: pokerclient2d/tournaments.c:314
 msgid "Date"
-msgstr "Date"
+msgstr "Datum"
 
-# Translation #54503 (fr)
+# Translation #56603 (nl)
 #: pokerclient2d/tournaments.c:570
 msgid "REGISTER"
-msgstr "S'ENREGISTRER"
+msgstr "INSCHRIJVEN"
 
-# Translation #54504 (fr)
+# Translation #56604 (nl)
 #: pokerclient2d/tournaments.c:572
 msgid "UNREGISTER"
-msgstr "ANNULER MON INSCRIPTION"
+msgstr "UITSCHRIJVEN"
 
-# Translation #54505 (fr)
+# Translation #56605 (nl)
 #: pokerclient2d/hand_history.c:148
 msgid "Show hand"
-msgstr "Mains :"
+msgstr "Hand tonen"
 
-# Translation #54506 (fr)
+# Translation #56606 (nl)
 #: pokerui/pokerinterface.py:157 pokerui/pokerinterface.py:226
 #, python-format
 msgid "Players: %d"
-msgstr "Joueurs: %d"
+msgstr "Spelers: %d"
 
-# Translation #54507 (fr)
+# Translation #56607 (nl)
 #: pokerui/pokerinterface.py:157
 #, python-format
 msgid "Tournaments: %d"
-msgstr "Tournois: %d"
+msgstr "Toernooien: %d"
 
-# Translation #54508 (fr)
+# Translation #56608 (nl)
 #: pokerui/pokerinterface.py:226
 #, python-format
 msgid "Tables: %d"
-msgstr "Tables: %d"
+msgstr "Tafels:%d"
 
-# Translation #59717 (fr)
+# Translation #59799 (nl)
 #: pokerui/pokerrenderer.py:467
 #, python-format
 msgid ""
@@ -695,93 +691,91 @@ msgid ""
 " Your rank is %(your_rank)d on %(num_players)d\n"
 "You won %(my_prize)s"
 msgstr ""
-"Tournoi %(num_tourney)d\n"
-" Vous finissez %(your_rank)d sur %(num_players)d\n"
-"Vous gagnez %(my_prize)s"
+"Toernooi %(num_tourney)d\n"
+"Je positie is %(your_rank)d van %(num_players)d\n"
+"Je wint %(my_prize)s"
 
-# Translation #54510 (fr)
+# Translation #56620 (nl)
 #: pokerui/pokerrenderer.py:508
 msgid "Do you really want to quit ?"
-msgstr "Voulez-vous vraiment quitter ?"
+msgstr "Wil je echt vertrekken?"
 
-# Translation #54511 (fr)
+# Translation #56621 (nl)
 #: pokerui/pokerrenderer.py:564
 #, python-format
 msgid "Pay the ante (%d) ?"
-msgstr "Payer l'ante (%d) ?"
+msgstr "Ante betalen (%d)?"
 
-# Translation #54512 (fr)
+# Translation #56622 (nl)
 #: pokerui/pokerrenderer.py:595
 #, fuzzy
 msgid "Pay the "
-msgstr "Payer"
+msgstr "Betalen"
 
-# Translation #54513 (fr)
+# Translation #56623 (nl)
 #: pokerui/pokerrenderer.py:597
 #, python-format
 msgid "big blind (%(bblind_)s) + dead (%(dead_)s)"
-msgstr "la grosse blinde (%(bblind_)s) + dead (%(dead_)s)"
+msgstr "Big Blind (%(bblind_)s) + Dead (%(dead_)s)"
 
-# Translation #54514 (fr)
+# Translation #56624 (nl)
 #: pokerui/pokerrenderer.py:599
 #, python-format
 msgid "big blind (%s)"
-msgstr "la grosse blinde (%s)"
+msgstr "big blind (%s)"
 
-# Translation #54515 (fr)
+# Translation #56625 (nl)
 #: pokerui/pokerrenderer.py:601
 #, python-format
 msgid "small blind (%s)"
-msgstr "la petite blind (%s)"
+msgstr "small blind (%s)"
 
-# Translation #54516 (fr)
+# Translation #56626 (nl)
 #: pokerui/pokerrenderer.py:1192
 msgid "This seat is busy"
-msgstr "Cette place est occupée"
+msgstr "Deze plaats is bezet"
 
-# Translation #54517 (fr)
+# Translation #56627 (nl)
 #: pokerui/pokerrenderer.py:1329
 msgid "wait for big blind"
-msgstr "attendre la grande blinde"
+msgstr "wachten op big blind"
 
-# Translation #54518 (fr)
+# Translation #56628 (nl)
 #: pokerui/pokerrenderer.py:1331
 #, python-format
 msgid "wait for %s blind"
-msgstr "attendre la blinde (%s)"
+msgstr "wachten op %s blind"
 
-# Translation #54519 (fr)
+# Translation #56629 (nl)
 #: pokerui/pokerrenderer.py:1334 pokerui/pokerrenderer.py:1339
 #: pokerui/pokerrenderer.py:1347
 msgid "sit out next turn"
-msgstr "se lever"
+msgstr "volgende ronde vertrekken"
 
-# Translation #54323 (fr)
+# Translation #55760 (nl)
 #: pokerui/pokerrenderer.py:1336 pokerui/pokerrenderer.py:1341
 #: pokerui/pokerrenderer.py:1343 pokerui/pokerrenderer.py:1345
 msgid "sit out"
-msgstr "se lever"
+msgstr "sit out"
 
-# Translation #59718 (fr)
+# Translation #59803 (nl)
 #: pokerui/pokerrenderer.py:1371
 msgid ""
 "You can't bring more money\n"
 "to the table"
-msgstr ""
-"Vous ne pouvez pas ammener\n"
-"plus d'argent à la table"
+msgstr "Je kunt geen extra geld meer naar de tafel brengen."
 
-# Translation #54521 (fr)
+# Translation #56631 (nl)
 #: pokerui/pokerrenderer.py:1381
 msgid "You have no money left"
-msgstr "Vous n'avez plus d'argent"
+msgstr "Je geld is op"
 
-# Translation #54522 (fr)
+# Translation #56634 (nl)
 #: pokerui/pokerrenderer.py:1385
 msgid "How much do you want to rebuy?"
-msgstr "La main est finie, que voulez-vous faire ?"
+msgstr "Hoeveel wil je inkopen?"
 
-# Translation #59719 (fr)
+# Translation #59813 (nl)
 #: pokerui/pokerrenderer.py:1389
 msgid ""
 "You don't have enough money to play on this table.\n"
@@ -789,345 +783,338 @@ msgid ""
 "(if you are in play money you might need to win more\n"
 "money to sit at this table)"
 msgstr ""
-"Vous n'avez pas assez de jetons pour venir à cette table.\n"
-"Pour obtenir des jetons, menu 'Lobby' puis 'Cash in'.\n"
-"(si vous jouez en play money, il vous faut peut-être \n"
-"accumuler plus de jetons via des victoires)"
+"Je hebt niet genoeg geld om aan deze tafel te spelen. Voor meer geld, ga "
+"naar het menu 'Lobby' en klik op 'Cash in'. (Als dat niet lukt, moet je meer "
+"geld winnen)."
 
-# Translation #54524 (fr)
+# Translation #56638 (nl)
 #: pokerui/pokerrenderer.py:1392
 msgid "Which amount do you want to bring at the table?"
-msgstr "Combien de jetons apporter à la table ?"
+msgstr "Hoeveel geld wil je naar deze tafel brengen?"
 
-# Translation #54525 (fr)
+# Translation #56640 (nl)
 #: pokerui/pokerrenderer.py:1397
 msgid "All your bankroll"
-msgstr "Toute ma bankroll"
+msgstr "Al mijn geld"
 
-# Translation #54526 (fr)
+# Translation #56641 (nl)
 #: pokerui/pokerrenderer.py:1399
 msgid "Maximum buy in"
-msgstr "Le maximum"
+msgstr "Maximum buy in"
 
-# Translation #54527 (fr)
+# Translation #56643 (nl)
 #: pokerui/pokerrenderer.py:1631 pokerui/pokerrenderer.py:1640
 msgid "Screen resolution changed"
-msgstr "Résolution changée"
+msgstr "Schermresolutie veranderd"
 
-# Translation #54528 (fr)
+# Translation #56644 (nl)
 #: pokerui/pokerrenderer.py:1636
 #, fuzzy
 msgid "Display changed to "
-msgstr "Affichage modifié en"
+msgstr "Display veranderd in"
 
-# Translation #54529 (fr)
+# Translation #56645 (nl)
 #: pokerui/pokerrenderer.py:1646
 msgid "Graphics quality changed"
-msgstr "Qualité des graphismes modifiée"
+msgstr "Beeldkwaliteit veranderd"
 
-# Translation #59720 (fr)
+# Translation #59815 (nl)
 #: pokerui/pokerrenderer.py:1680
 #, fuzzy
 msgid "The game must be restarted for this change to take effect\n"
-msgstr "Le jeu doit être redémarer pour que les modifications prennent effet"
+msgstr "Herstart  het spel om de wijzigingen door te voeren"
 
-# Translation #54531 (fr)
+# Translation #56650 (nl)
 #: pokerui/pokerrenderer.py:1681
 msgid "Do you want to restart the game now ?"
-msgstr "Voulez-vous redémarrer maintenant ?"
+msgstr "Wil je het spel nu herstarten?"
 
-# Translation #54532 (fr)
+# Translation #56653 (nl)
 #: pokerui/pokerrenderer.py:1978
 msgid "Your hand history is empty"
-msgstr "L'historique est vide"
+msgstr "Je hand-historiek is leeg"
 
-# Translation #54533 (fr)
+# Translation #56655 (nl)
 #: pokerui/pokerrenderer.py:2191
 msgid "Already logged in"
-msgstr "Vous êtes déja identifié"
+msgstr "Al ingelogd"
 
-# Translation #54534 (fr)
+# Translation #56658 (nl)
 #: pokerui/pokerrenderer.py:2223 pokerui/pokerrenderer.py:2333
 #: pokerui/pokerrenderer.py:2345 pokerui/pokerrenderer.py:2440
 #: pokerui/pokerrenderer.py:2461 pokerui/pokerrenderer.py:2474
 msgid "You cannot do that now"
-msgstr "Vous ne pouvez pas faire ca"
+msgstr "Voorlopig onmogelijk"
 
-# Translation #54535 (fr)
+# Translation #56660 (nl)
 #: pokerui/pokerrenderer.py:2340
 msgid "You must be logged in to get a seat"
-msgstr "Vous devez vous identifier avant de vous assoir"
+msgstr "Log in om plaats te kunnen nemen"
 
-# Translation #59721 (fr)
+# Translation #59818 (nl)
 #: pokerui/pokerrenderer.py:2397
 msgid ""
 "Do you really want to fold your hand\n"
 "and leave the table ?"
-msgstr ""
-"Voulez-vous vraiment coucher votre main\n"
-"et quitter la table ?"
+msgstr "Wil je écht folden en de tafel verlaten?"
 
-# Translation #54537 (fr)
+# Translation #56666 (nl)
 #: pokerui/pokerrenderer.py:2400
 msgid "Do you really want to leave the table ?"
-msgstr "Voulez-vous vraiment quitter la table ?"
+msgstr "Wil je echt de tafel verlaten?"
 
-# Translation #54538 (fr)
+# Translation #56668 (nl)
 #: pokerui/pokerrenderer.py:2422
 msgid "You must leave the table to change your outfit"
-msgstr "Vous devez quitter la table avant de modifier votre panoplie"
+msgstr "Je moet de tafel verlaten om je outfit te wijzigen"
 
-# Translation #54539 (fr)
+# Translation #56670 (nl)
 #: po/raw.string:4
 msgid "gtkrc"
-msgstr "gtkrc.fr"
+msgstr "gtkrc"
 
-# Translation #54540 (fr)
+# Translation #56673 (nl)
 #: po/raw.string:8
 msgid "head"
-msgstr "Tête"
+msgstr "hoofd"
 
-# Translation #54541 (fr)
+# Translation #56675 (nl)
 #: po/raw.string:9
 msgid "hair"
-msgstr "Tête"
+msgstr "haar"
 
-# Translation #54542 (fr)
+# Translation #56677 (nl)
 #: po/raw.string:10
 msgid "beard"
-msgstr "Barbe"
+msgstr "baard"
 
-# Translation #54543 (fr)
+# Translation #56690 (nl)
 #: po/raw.string:11
 msgid "torso"
-msgstr "Torse"
+msgstr "Torso"
 
-# Translation #54544 (fr)
+# Translation #56691 (nl)
 #: po/raw.string:12
 msgid "legs"
-msgstr "Jambes"
+msgstr "Benen"
 
-# Translation #54545 (fr)
+# Translation #56693 (nl)
 #: po/raw.string:13
 msgid "dress"
-msgstr "Robe"
+msgstr "Jurk"
 
-# Translation #54546 (fr)
+# Translation #56694 (nl)
 #: po/raw.string:14
 msgid "feet"
-msgstr "Pied"
+msgstr "voeten"
 
-# Translation #54547 (fr)
+# Translation #56695 (nl)
 #: po/raw.string:15
 msgid "accessory1"
-msgstr "Accessoire n°1"
+msgstr "accessoire1"
 
-# Translation #54548 (fr)
+# Translation #56696 (nl)
 #: po/raw.string:16
 msgid "accessory2"
-msgstr "Accessoire n°2"
+msgstr "accessoire"
 
-# Translation #54549 (fr)
+# Translation #56699 (nl)
 #: po/raw.string:17
 msgid "accessory3"
-msgstr "Accessoire n°3"
+msgstr "accessoire3"
 
-# Translation #54550 (fr)
+# Translation #56700 (nl)
 #: po/raw.string:19
 msgid "Base color"
-msgstr "Couleur"
+msgstr "Basiskleur"
 
-# Translation #54551 (fr)
+# Translation #56701 (nl)
 #: po/raw.string:20 po/raw.string:30
 msgid "Skin color"
-msgstr "Couleur peau"
+msgstr "Huidskleur"
 
-# Translation #54552 (fr)
+# Translation #56703 (nl)
 #: po/raw.string:21
 msgid "Eyes color"
-msgstr "Couleur yeux"
+msgstr "Kleur ogen"
 
-# Translation #54553 (fr)
+# Translation #56706 (nl)
 #: po/raw.string:22
 msgid "Hair color"
-msgstr "Couleur cheveux"
+msgstr "Haarkleur"
 
-# Translation #54554 (fr)
+# Translation #56709 (nl)
 #: po/raw.string:23
 msgid "Sunshade color"
-msgstr "Couleur visière"
+msgstr "Kleur glazen"
 
-# Translation #54555 (fr)
+# Translation #56711 (nl)
 #: po/raw.string:24
 msgid "Jacket color"
-msgstr "Couleur veste"
+msgstr "Kleur vest"
 
-# Translation #54556 (fr)
+# Translation #56713 (nl)
 #: po/raw.string:25 po/raw.string:36
 msgid "Shirt color"
-msgstr "Couleur chemise"
+msgstr "Kleur T-shirt"
 
-# Translation #54557 (fr)
+# Translation #56718 (nl)
 #: po/raw.string:26
 msgid "Shirt detail color #1"
-msgstr "Couleur détail n°1"
+msgstr "Kleurdetail T-shirt 1"
 
-# Translation #54558 (fr)
+# Translation #56719 (nl)
 #: po/raw.string:27
 msgid "Shirt detail color #2"
-msgstr "Couleur détail n°2"
+msgstr "Kleurdetail T-shirt 2"
 
-# Translation #54559 (fr)
+# Translation #56721 (nl)
 #: po/raw.string:28
 msgid "Shirt sleeves color"
-msgstr "Couleur manches"
+msgstr "Kleur mouwen"
 
-# Translation #54560 (fr)
+# Translation #56725 (nl)
 #: po/raw.string:29
 msgid "Shirt base color"
-msgstr "Couleur chemise"
+msgstr "Basiskleur T-shirt"
 
-# Translation #54561 (fr)
+# Translation #56729 (nl)
 #: po/raw.string:31
 msgid "Glasses color"
-msgstr "Couleur lunettes"
+msgstr "Kleur bril"
 
-# Translation #54562 (fr)
+# Translation #56736 (nl)
 #: po/raw.string:32
 msgid "Mount color"
-msgstr "Couleur montures"
+msgstr "Kleur montuur"
 
-# Translation #54563 (fr)
+# Translation #56739 (nl)
 #: po/raw.string:33
 msgid "Pants color"
-msgstr "Couleur pantalon"
+msgstr "Broekkleur"
 
-# Translation #54564 (fr)
+# Translation #56742 (nl)
 #: po/raw.string:34
 msgid "Pull color"
-msgstr "Couleur pull"
+msgstr "Kleur pull"
 
-# Translation #54565 (fr)
+# Translation #56744 (nl)
 #: po/raw.string:35
 msgid "Pullover color"
-msgstr "Couleur pull"
+msgstr "Kleur pull"
 
-# Translation #54566 (fr)
+# Translation #56746 (nl)
 #: po/raw.string:37
 msgid "Shoes color"
-msgstr "Couleur chaussures"
+msgstr "Schoenkleur"
 
-# Translation #54567 (fr)
+# Translation #56747 (nl)
 #: po/raw.string:38
 msgid "Nails color"
-msgstr "Couleur ongles"
+msgstr "Kleur nagels"
 
-# Translation #54568 (fr)
+# Translation #56748 (nl)
 #: po/raw.string:39
 msgid "Lips color"
-msgstr "Couleur lèvres"
+msgstr "Kleur lippen"
 
-# Translation #54569 (fr)
+# Translation #56750 (nl)
 #: po/raw.string:40
 msgid "Eyes makup color"
-msgstr "Couleur maquillage"
+msgstr "Kleur oog make-up"
 
-# Translation #54570 (fr)
+# Translation #56753 (nl)
 #: po/raw.string:41
 msgid "Skirt color"
-msgstr "Couleur jupe"
+msgstr "Kleur rok"
 
-# Translation #54571 (fr)
+# Translation #56754 (nl)
 #: po/raw.string:42
 msgid "Clip color"
-msgstr "Couleur clip"
+msgstr "Kleur clip"
 
-# Translation #54572 (fr)
+# Translation #56756 (nl)
 #: po/raw.string:43
 msgid "Beltclip color"
-msgstr "Couleur clip"
+msgstr "Kleur riemclip"
 
-# Translation #54573 (fr)
+# Translation #56757 (nl)
 #: po/raw.string:44
 msgid "Pants base color"
-msgstr "Couleur base pantalon"
+msgstr "Basiskleur broek"
 
-# Translation #54574 (fr)
+# Translation #56760 (nl)
 #: po/raw.string:45
 msgid "Pants strips color"
-msgstr "Couleur bandes"
+msgstr "Kleur streep broek"
 
-# Translation #54575 (fr)
+# Translation #56761 (nl)
 #: po/raw.string:46
 msgid "Squares color"
-msgstr "Couleurs carrés"
+msgstr "Kleur ruiten"
 
-# Translation #54576 (fr)
+# Translation #56763 (nl)
 #: po/raw.string:47
 msgid "Fur color"
-msgstr "Couleur fourrure"
+msgstr "Kleur bont"
 
-# Translation #54577 (fr)
+# Translation #56765 (nl)
 #: po/raw.string:48
 msgid "Dress color"
-msgstr "Couleur robe"
+msgstr "Kleur jurk"
 
-# Translation #54578 (fr)
+# Translation #56767 (nl)
 #: po/raw.string:49
 msgid "Pattern color"
-msgstr "Couleur motif"
+msgstr "Kleur patroon"
 
-# Translation #54579 (fr)
+# Translation #56769 (nl)
 #: po/raw.string:50
 msgid "Flowers color"
-msgstr "Couleur fleurs"
+msgstr "Kleur bloemen"
 
-# Translation #54580 (fr)
+# Translation #56770 (nl)
 #: po/raw.string:51
 msgid "Belt color"
-msgstr "Couleur ceinture"
+msgstr "Kleur riem"
 
-# Translation #54581 (fr)
+# Translation #56771 (nl)
 #: po/raw.string:52
 msgid "Cap color"
-msgstr "Couleur casquette"
+msgstr "Kleur pet"
 
-# Translation #54582 (fr)
+# Translation #56776 (nl)
 #: po/raw.string:53
 msgid "Hat color"
-msgstr "Couleur chapeau"
+msgstr "Kleur hoed"
 
-# Translation #54583 (fr)
+# Translation #56779 (nl)
 #: po/raw.string:54
 msgid "Band color"
-msgstr "Couleur bande"
+msgstr "Bandkleur"
 
-# Translation #54584 (fr)
+# Translation #56780 (nl)
 #: po/raw.string:55
 msgid "Tie color"
-msgstr "Couleur noeud"
+msgstr "Kleur das"
 
-# Translation #59722 (fr)
+# Translation #59820 (nl)
 #: po/raw.string:59
 msgid ""
 "Clicking on the door will\n"
 "allow you to leave the table\n"
 "and return to the Lobby."
 msgstr ""
-"Cliquer sur la porte\n"
-"vous permet de retourner\n"
-"au lobby."
+"Klik op de deur om de tafel te verlaten en terug te keren naar de Lobby."
 
-# Translation #59723 (fr)
+# Translation #59822 (nl)
 #: po/raw.string:61
 msgid ""
 "Clicking on the arrow will\n"
 "allow you to sit down."
-msgstr ""
-"Cliquez sur la flèche\n"
-"pour vous assoir."
+msgstr "Klik op de pijl om te gaan zitten."
 
-# Translation #59724 (fr)
+# Translation #59826 (nl)
 #: po/raw.string:63
 msgid ""
 "Clicking on this button will\n"
@@ -1144,20 +1131,13 @@ msgid ""
 "fold as soon as you click\n"
 "on this button."
 msgstr ""
-"Cliquez sur ce bouton pour\n"
-"coucher votre jeux.\n"
-"Vous pouvez pre-sélectionner\n"
-"cette action avant votre tour\n"
-"et elle sera activée le moment\n"
-"venu. Tant que ce n'est pas\n"
-"votre tour, vous pouvez changer\n"
-"d'avis et faire une autre action\n"
-"Cependant, si c'est à votre tour\n"
-"de jouer, alors vous coucherez\n"
-"votre jeux instantanément en\n"
-"cliquant sur ce boutton"
+"Klik op deze knop om je kaarten te folden. Je mag op de fold-knop klikken "
+"voor het jouw beurt is en deze wordt dan geactiveerd zodra het aan jouw "
+"beurt is. Zo lang je nog niet aan beurt bent geweest, kan je van mening "
+"veranderen en een andere actie doen. Is het echter aan jouw beurt, dan fold "
+"je zodra je op deze knop klikt."
 
-# Translation #59725 (fr)
+# Translation #59827 (nl)
 #: po/raw.string:65
 msgid ""
 "Clicking on this button will\n"
@@ -1175,21 +1155,13 @@ msgid ""
 "check as soon as you click\n"
 "on this button."
 msgstr ""
-"Cliquez sur ce boutton pour\n"
-"passer la parole.\n"
-"Vous pouvez pre-sélectionner\n"
-"cette action avant votre tour\n"
-"et elle sera activée le moment\n"
-"venu. Tant que ce n'est pas\n"
-"votre tour, vous pouvez changer\n"
-"d'avis et faire un autre action\n"
-"Cependant, si c'est à votre tour\n"
-"de jouer, alors vous passerez\n"
-"la main au joueur suivant\n"
-"directement après avoir pressé\n"
-"ce boutton"
+"Klik op deze knop om te checken. Je mag op de check-knop klikken voor het "
+"jouw beurt is en deze wordt dan geactiveerd zodra het aan jouw beurt is. Zo "
+"lang je nog niet aan beurt bent geweest, kan je van mening veranderen en een "
+"andere actie doen. Is het echter aan jouw beurt, dan check je zodra je op "
+"deze knop klikt."
 
-# Translation #59726 (fr)
+# Translation #59828 (nl)
 #: po/raw.string:67
 msgid ""
 "Clicking on this button will\n"
@@ -1207,21 +1179,13 @@ msgid ""
 "call as soon as you click\n"
 "on this button."
 msgstr ""
-"Cliquez sur ce bouton\n"
-"pour suivre la relance du joueur\n"
-"précédent.\n"
-"Vous pouvez sélectionner cette\n"
-"action avant votre tour et elle\n"
-"sera activée le moment venu.\n"
-"Tant que ce n'est pas votre tour,\n"
-"vous pouvez changer d'avis\n"
-"et faire une autre action\n"
-"Cependant, si c'est à votre tour\n"
-"de jouer, alors vous suiverez la\n"
-"relance directement après avoir\n"
-"pressé ce bouton"
+"Klik op deze knop om te callen. Je mag op de call-knop klikken voor het jouw "
+"beurt is en deze wordt dan geactiveerd zodra het aan jouw beurt is. Zo lang "
+"je nog niet aan beurt bent geweest, kan je van mening veranderen en een "
+"andere actie doen. Is het echter aan jouw beurt, dan call je zodra je op "
+"deze knop klikt."
 
-# Translation #59727 (fr)
+# Translation #59829 (nl)
 #: po/raw.string:69
 msgid ""
 "Clicking on this button will\n"
@@ -1239,20 +1203,13 @@ msgid ""
 "raise as soon as you click\n"
 "on this button."
 msgstr ""
-"Cliquez sur ce bouton\n"
-"pour relancer la mise\n"
-"Vous pouvez sélectionner cette\n"
-"action avant votre tour et elle\n"
-"sera activée le moment venu.\n"
-"Tant que ce n'est pas votre tour,\n"
-"vous pouvez changer d'avis\n"
-"et faire une autre action\n"
-"Cependant, si c'est à votre tour\n"
-"de jouer, alors la relance sera\n"
-"prise en compte directement\n"
-"après avoir pressé ce bouton"
+"Klik op deze knop om te raisen. Je mag op de raise-knop klikken voor het "
+"jouw beurt is en deze wordt dan geactiveerd zodra het aan jouw beurt is. Zo "
+"lang je nog niet aan beurt bent geweest, kan je van mening veranderen en een "
+"andere actie doen. Is het echter aan jouw beurt, dan raise je zodra je op "
+"deze knop klikt."
 
-# Translation #59728 (fr)
+# Translation #59831 (nl)
 #: po/raw.string:71 po/raw.string:73
 msgid ""
 "Clicking on your cards will\n"
@@ -1272,19 +1229,8 @@ msgid ""
 "then release the button\n"
 "to move out."
 msgstr ""
-"Cliquez sur vos cartes\n"
-"afin de regarder la valeur\n"
-"des cartes qui vous ont été\n"
-"distribuée.\n"
-"Un premier clic change le point\n"
-"de vue de la caméra pour vous\n"
-"permettre de voir les cartes.\n"
-"Pour ramener la caméra dans\n"
-"sa position précédente, il\n"
-"suffit de faire un click\n"
-"n'importe où sur la table.\n"
-"Vous pouvez aussi\n"
-"garder le boutton de la sourie\n"
-"pressé sur les cartes jusqu'a\n"
-"voir leurs valeurs. Relacher pour\n"
-"revenir dans la position initiale."
+"Klik op je kaarten om de waarde te zien van de kaarten die je kreeg. 1 klik "
+"doet de camera inzoomen zodat je je kaarten beter ziet.\n"
+"Om terug uit te zoomen, klik eender waar op de tafel.\n"
+"Je kunt ook je klik-knop ingedrukt houden op de kaarten om in te zoomen en "
+"terug loslaten om uit te zoomen."

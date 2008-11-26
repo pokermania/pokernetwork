@@ -379,6 +379,7 @@ AC_CONFIG_FILES([
 AC_CONFIG_FILES([
         pokerstats/run
         pokerstats/pokerstats
+	examples/merged-translation-import.plx
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
         pokerstats/pokerstats.1

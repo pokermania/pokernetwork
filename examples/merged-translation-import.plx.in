@@ -1,0 +1,182 @@
+#!@PERL@
+# -*- Perl -*-
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+#
+# This software's license gives you freedom; you can copy, convey,
+# propogate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+
+# make sure you hve done a make update-po in all po directories before
+# using this script
+
+use strict;
+use warnings;
+
+use Locale::PO;
+
+my $MSG_MERGE = '@MSGMERGE@';
+my $MSG_MERGE_UPDATE = '@MSGMERGE@ --update';
+my $MSG_INIT = '/usr/bin/msginit';
+my $MSG_CONV = '/usr/bin/msgconv';
+my $MSG_FILTER = '/usr/bin/msgfilter';
+
+###########################################################################
+sub FindFilesEndingWith ($$) {
+  my($dirs, $end) = @_;
+
+  use File::Find;
+
+  my @files;
+  my $buildList = sub {
+    push(@files, $_) if -f $_ and /$end$/;
+  };
+
+  find({ wanted => $buildList, no_chdir => 1},  @$dirs);
+
+  return @files;
+}
+###########################################################################
+sub BuildPoHash (@) {
+  my(@files) = @_;
+
+  my %stuff;
+  foreach my $file (@files) {
+    $stuff{$file}{contents} = Locale::PO->load_file_ashash($file);
+    my $dir = $file;
+    $dir =~ s%/[^/]+$%%;
+    $stuff{$file}{directory} = $dir;
+  }
+  return \%stuff;
+}
+###########################################################################
+sub SanityCheck ($$) {
+# Sanity check to make sure that we don't have .po files in a directory
+# where there is no corresponding .pot file and all the strings in the
+# various .po files are from the .pot file.
+  my($potFiles, $origFiles) = @_;
+
+  foreach my $potFile (keys %$potFiles) {
+    my $potDir = $potFiles->{$potFile}{directory};
+    foreach my $origFile (keys %$origFiles) {
+      next unless ($origFiles->{$origFile}{directory} eq $potDir);
+      $origFiles->{$origFile}{potFile} = $potFile;
+      my %potKeys;
+      @potKeys{keys %{$potFiles->{$potFile}{contents}}} = keys %{$potFiles->{$potFile}{contents}};
+      foreach my $str (keys %{$origFiles->{$origFile}{contents}}) {
+        die "$str in $origFile but not in $potFile" unless defined $potKeys{$str};
+        delete $potKeys{$str};
+      }
+      print STDERR "The following strings are found in $potFile but not in $origFile: " ,
+          join(" ", keys(%potKeys)) , "\n"
+        if (keys(%potKeys) > 0);
+    }
+  }
+}
+###########################################################################
+if (@ARGV < 2 or @ARGV > 3) {
+  print STDERR "usage: $0 <DIRECTORY_WITH_NEW_LANG_FILES> <POKERSOURCE_TOPLEVEL> [<OVERRIDE_EXISTING_TRANSLATIONS> (defaults to 0)]\n";
+  exit 1;
+}
+my $OVERRIDE_EXISTING = 0;
+$OVERRIDE_EXISTING = $ARGV[2] if defined $ARGV[2];
+
+my @pokersourceDirs = ("$ARGV[1]/poker-network", "$ARGV[1]/poker-engine",
+                       "$ARGV[1]/poker-eval");
+my @allPotFiles = FindFilesEndingWith(\@pokersourceDirs, '\.pot');
+my @orignalPoFiles = FindFilesEndingWith(\@pokersourceDirs, '\.po');
+my @newPoFiles = FindFilesEndingWith([ $ARGV[0] ], '\.po');
+
+# Ignore debian templates.
+my @potFiles = grep {!m%debian/po/templates.po%} @allPotFiles;
+
+my $potFiles = BuildPoHash(@potFiles);
+my $origFiles = BuildPoHash(@orignalPoFiles);
+my $newFiles =  BuildPoHash(@newPoFiles);
+
+SanityCheck($potFiles, $origFiles);
+
+my %existingTranslations;
+
+foreach my $origFile (keys %$origFiles) {
+  my $dir = $origFiles->{$origFile}{directory};
+  my $lang = $origFile;
+  $lang =~ s%^.*/([^/]+)\.po$%$1%;
+  $existingTranslations{$dir}{$lang} = $origFile;
+}
+
+foreach my $newPoFile (@newPoFiles) {
+  my $lang = $newPoFile;
+  $lang =~ s%^$ARGV[0]/([^/]+)/.*%$1%;
+  foreach my $potFile (keys %$potFiles) {
+    my $dir = $potFiles->{$potFile}{directory};
+    my $project = $potFile;
+    $project =~ s%^.*/([^/]+)\.pot$%$1%;
+    open(MERGE, "$MSG_MERGE $newPoFile $potFile|") 
+      or die "unable to run: $MSG_MERGE $newPoFile $potFile";
+    my $extraFooterData = "";
+    my $extraHeaderData = "";
+      use Data::Dumper;
+    if (defined $existingTranslations{$dir}{$lang}) {
+      my $oldFile = $existingTranslations{$dir}{$lang};
+      use Data::Dumper;
+      foreach my $line (split /\n/, $origFiles->{$oldFile}{contents}{'""'}{comment}) {
+        $extraHeaderData .=  "# $line\n";
+      }
+      open(OLD_FILE, "<$oldFile") or die "Unable to read $oldFile: $!";
+      # Keep old negated lines; these are the ones that actually were
+      # useful and translated historically.  The ones generated below
+      # could be superfulous.
+      while (my $line = <OLD_FILE>) {
+        $extraFooterData .= $line
+          if $line =~ /^\s*#\s*~/;
+      }
+      close OLD_FILE;
+      rename($oldFile, "${oldFile}~") or warn "unable to rename $oldFile: $!";
+    }
+    my $newFile = "${dir}/${lang}.po";
+    open(NEW_FILE, "| $MSG_CONV --to-code=UTF-8 --output-file=$newFile") 
+      or die "unable to run $MSG_CONV --output-file=$newFile: $!";
+    print NEW_FILE $extraHeaderData;
+    while (my $line = <MERGE>) {
+      if ($line =~ /^"Project-Id-Version:/) {
+        $line = "\"Project-Id-Version: $project VERSION\\n\"\n";
+      } elsif ($line =~ /^"Report-Msgid-Bugs-To:/) {
+        $line = "\"Report-Msgid-Bugs-To: <pokersource-users\@gna.org>\\n\"\n";
+      } elsif ($line =~ /^(\s*#\s*Copyright\s*)Orbus/i) {
+        $line = "$1 Telefun\n";
+      } elsif ($line =~ /^"Language-Team:/) {
+        $line = "\"Language-Team: <pokersource-users\@gna.org>\\n\"\n";
+      } elsif ($line =~ /^\s*#\s*~/) {
+        # Ignore #~ lines that we get here; they are spurious because we merged
+        # in translations that were global
+        # antying below this is bad too
+        $line = "";
+        last;
+      }
+      print NEW_FILE $line;
+    }
+    close MERGE;
+    print NEW_FILE $extraFooterData;
+
+    close NEW_FILE;
+  }
+}
+
+
+
+
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status examples/merged-translation-import.plx )  && ( perl -c  merged-translation-import.plx)"
+# End:
