@@ -4130,7 +4130,7 @@ Packet.infoDeclare(globals(), PacketPokerPlayerPlaces, Packet, "POKER_PLAYER_PLA
 
 ########################################
 
-class PacketPokerSetLocale(PacketSerial):
+class PacketPokerSetLocale(PacketPokerId):
     """\
 
 Semantics: the player "serial" is required to set the "locale" string,
