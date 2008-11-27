@@ -7,24 +7,19 @@
 
   <language value="en_US.UTF-8"/>
   <language value="fr_FR.UTF-8"/>
-  <language value="de_BE.UTF-8"/>
+  <language value="fr_FX.UTF-8"/>
   <language value="de_DE.UTF-8"/>
   <language value="en_GB.UTF-8"/>
   <language value="es_ES.UTF-8"/>
-  <language value="nl_BE.UTF-8"/>
   <language value="nl_NL.UTF-8"/>
   <language value="fr_BE.UTF-8"/>
-  <language value="de_AT.UTF-8"/>
   <language value="en_CA.UTF-8"/>
-  <language value="es_US.UTF-8"/>
   <language value="fr_CA.UTF-8"/>
   <language value="it_IT.UTF-8"/>
   <language value="pt_PT.UTF-8"/>
   <language value="da_DK.UTF-8"/>
   <language value="fi_FI.UTF-8"/>
-  <language value="it_CH.UTF-8"/>
   <language value="nb_NO.UTF-8"/>
-  <language value="pt_BR.UTF-8"/>
   <language value="sv_SE.UTF-8"/>
 
 <!-- language settings are for client-side localization support, set via the PacketPokerSetLocale() -->
