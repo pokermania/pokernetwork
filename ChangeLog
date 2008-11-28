@@ -1,6 +1,13 @@
+2008-11-28  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.1
+
+	* pokernetwork/pokersite.py: always issue error message in the logs
+	  when a request reports failure
+
 2008-11-27  Johan Euphrosine <proppy@aminche.com>
 
-	* Release 1.0.17
+ 	* Release 1.7.0
 
 	* conf/poker.server.xml.in: remove non-translated locales from
 	  poker.server.xml.in and add fr_FX
@@ -895,8 +902,6 @@
 	(UserStatsLookup.message): Wrote method.
 
 2008-09-15  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.0
 
 	* Makefile.am: add userstats.py to the distribution
 
