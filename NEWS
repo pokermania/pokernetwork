@@ -1,4 +1,12 @@
+Release 1.7.1
+
+Minor fixes
+
 Release 1.7.0
+
+Complete REST interface.
+
+Add de, es, nl, it, pt, da, fi, nb, sv translations.
 
 Proxy server with authentication capabilities.
 
