@@ -837,18 +837,22 @@ class PokerTable:
 
         game = self.game
         history_tail = game.historyGet()[self.history_index:]
-        
-        self.updateTimers(history_tail)        
-        packets = self.history2packets(history_tail, game.id, self.cache);
-        self.syncDatabase()
-        self.delayedActions()
-        if len(packets) > 0:
-            self.broadcast(packets)
-        self.tourneyEndTurn()
-        if self.isValid():
-            self.cashGame_kickPlayerSittingOutTooLong(history_tail)
+
+        try:
+            self.updateTimers(history_tail)        
+            packets = self.history2packets(history_tail, game.id, self.cache);
+            self.syncDatabase()
+            self.delayedActions()
+            if len(packets) > 0:
+                self.broadcast(packets)
+            self.tourneyEndTurn()
+            if self.isValid():
+                self.cashGame_kickPlayerSittingOutTooLong(history_tail)
+                self.scheduleAutoDeal()
+        except:
+            raise
+        finally:
             self.historyReduce()
-            self.scheduleAutoDeal()
 
     def handReplay(self, client, hand):
         history = self.factory.loadHand(hand)

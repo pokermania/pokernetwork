@@ -1223,7 +1223,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.kickPlayer(1)
         self.assertEquals(True, updateTableStats.called)
     # -------------------------------------------------------------------
-    def test99_destroy_table(self):
+    def test40_destroy_table(self):
         """Test table destruction"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
@@ -1232,7 +1232,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals(None, self.table.update())
         return d
     # -------------------------------------------------------------------
-    def test99altForNewClientAPI_destroy_table(self):
+    def test40altForNewClientAPI_destroy_table(self):
         """Test table destruction once the client API has a removeTable method
            This is currently turned off because the change has not been made.
            See the FIXME around line 117 of pokertable.py in pokertable.destroy
@@ -1243,6 +1243,23 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
         return d
+    # -------------------------------------------------------------------
+    def test41_update_exception(self):
+        """Test if exception caught in update and hitory reduced"""
+        player = {}
+        self.table.history_index = -1
+        def failure(history_tail):
+            raise Exception("FAIL")
+        self.table.updateTimers = failure
+        exception_occurred = False
+        try:
+            self.table.update()
+        except Exception, e:
+            exception_occurred = True
+            self.assertEquals("FAIL", e.message)
+        self.assertEquals(0, self.table.history_index)
+        self.assertEquals(True, exception_occurred)
+
 # -------------------------------------------------------------------
 
 # I seriously considered not having *all* the same tests run with
@@ -1697,7 +1714,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test41"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
