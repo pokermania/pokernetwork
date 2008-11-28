@@ -251,6 +251,8 @@ class PokerResource(resource.Resource):
             request.write(body)
             request.finish()
             session.expire()
+            if self.verbose >= 0:
+                self.error(str(body))
             return True
         d.addCallbacks(render, processingFailed)
         return d
@@ -267,8 +269,8 @@ class PokerImageUpload(resource.Resource):
     def message(self, string):
         print "PokerImageUpload: " + string
 
-#    def error(self, string):
-#        self.message("*ERROR* " + string)
+    def error(self, string):
+        self.message("*ERROR* " + string)
 
     def render(self, request):
         if self.verbose > 3:
@@ -283,6 +285,8 @@ class PokerImageUpload(resource.Resource):
             request.expireSessionCookie()
             request.write(body)
             request.connectionLost(reason)
+            if self.verbose >= 0:
+                self.error(str(body))
             return True
         self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
@@ -322,8 +326,8 @@ class PokerAvatarResource(resource.Resource):
     def message(self, string):
         print "PokerAvatarResource: " + string
 
-#    def error(self, string):
-#        self.message("*ERROR* " + string)
+    def error(self, string):
+        self.message("*ERROR* " + string)
 
     def render(self, request):
         if self.verbose > 3:
@@ -339,6 +343,8 @@ class PokerAvatarResource(resource.Resource):
             request.expireSessionCookie()
             request.write(body)
             request.connectionLost(reason)
+            if self.verbose >= 0:
+                self.error(str(body))
             return True
         self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
