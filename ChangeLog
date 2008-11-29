@@ -4,6 +4,14 @@
 
 2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.startHandAndReceiveCards): test no longer
+	fails when fr_FR not present; doesn't need adjustor for that.
+	(PokerAvatarTestCase.setLocale): test no longer fails when fr_FR
+	not present; doesn't need adjustor for that.
+
+2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.configValues): Added check for
 	only-English-available message on failed locale lookup.

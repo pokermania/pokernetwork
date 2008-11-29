@@ -48,21 +48,6 @@ from tests.testmessages import restore_all_messages, silence_all_messages, searc
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
-# Note that we use the locale fr_FR.ISO-8859-1 here for testing.  This must be
-# a valid locale on the system!  Important tests are skipped otherwise!!!
-
-localLocale = locale.getlocale(locale.LC_ALL)
-MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.ISO-8859-1 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!  FAIL!  fail!"
-FRENCH_LOCALE_MISSING = False
-try:
-    locale.setlocale(locale.LC_ALL, "fr_FR.ISO-8859-1")
-except locale.Error, le:
-    print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
-    FRENCH_LOCALE_MISSING = True
-    
-locale.setlocale(locale.LC_ALL, localLocale)
-
-
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
@@ -802,10 +787,6 @@ class PokerAvatarTestCase(unittest.TestCase):
                          'fr_FR' : [ "Dealer: user1 paye 1 de blind\n",
                                            "Dealer: user0 paye 2 de blind\n",
                                            "Dealer: pre-flop, 2 joueurs\n" ] }
-        if FRENCH_LOCALE_MISSING:
-            print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
-            lang2strings['fr_FR'] = lang2strings['default']
-
         avatar = []
         avatar.append(self.service.avatars[0])
         avatar.append(self.service.avatars[1])
@@ -3133,9 +3114,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # -------------------------------------------------------------------------
     def setLocale(self, (client, packet), myLocale, avid = 0, expectSucceed=True):
-        if FRENCH_LOCALE_MISSING and myLocale == 'fr_FR':
-            print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
-            expectSucceed = False
 
         avatar = self.service.avatars[avid]
         avatar.queuePackets()
@@ -3829,7 +3807,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test72"
+#    loader.methodPrefix = "test15"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
