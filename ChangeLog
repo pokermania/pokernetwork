@@ -2,20 +2,25 @@
 
  	* Release 1.7.1
 
-	* tests/test-pokersite.py.in: locale2translationFunc mockup taks an
-	  additional argument
-
 2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.configValues): Added check for
 	only-English-available message on failed locale lookup.
 
+	* pokernetwork/pokerservice.py (PokerService._lookupTranslationFunc):
+	Fixed required call to gettext object install().
+
+2008-11-29  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokersite.py.in: locale2translationFunc mockup taks an
+	  additional argument
+
+2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
 	Reverted Loic's changes below to these files in favor of mine from
 	last night.
-	* pokernetwork/pokerservice.py (PokerService._lookupTranslationFunc):
-	Fixed required call to gettext object install().
 
 2008-11-29  Loic Dachary <loic@dachary.org>
 
