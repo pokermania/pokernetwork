@@ -34,6 +34,7 @@ from re import match
 from types import *
 from string import split, join
 import time
+import traceback
 
 from pokerengine.pokergame import PokerGameServer, history2messages
 from pokerengine import pokergame, pokertournament
@@ -102,7 +103,8 @@ class PokerTable:
         self.game_delay = {
             "start": 0,
             "delay": 0,
-            }            
+            }
+        self.update_recursion = False
 
     def message(self, string):
         print "PokerTable: " + string
@@ -832,8 +834,13 @@ class PokerTable:
         return PacketAck()
         
     def update(self):
+        if self.update_recursion:
+            if self.factory.verbose >= 0:
+                self.error("unexpected recursion (ignored)\n" + "".join(traceback.format_list(traceback.extract_stack())))
+            return "recurse"
+        self.update_recursion = True
         if not self.isValid():
-            return
+            return "not valid"
 
         game = self.game
         history_tail = game.historyGet()[self.history_index:]
@@ -853,6 +860,8 @@ class PokerTable:
             raise
         finally:
             self.historyReduce()
+            self.update_recursion = False
+        return "ok"
 
     def handReplay(self, client, hand):
         history = self.factory.loadHand(hand)

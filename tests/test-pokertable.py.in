@@ -1229,7 +1229,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
          # Make sure we can't update once table is destroyed.
-        self.assertEquals(None, self.table.update())
+        self.assertEquals("not valid", self.table.update())
         return d
     # -------------------------------------------------------------------
     def test40altForNewClientAPI_destroy_table(self):
@@ -1246,7 +1246,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test41_update_exception(self):
         """Test if exception caught in update and hitory reduced"""
-        player = {}
         self.table.history_index = -1
         def failure(history_tail):
             raise Exception("FAIL")
@@ -1259,6 +1258,18 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEquals("FAIL", e.message)
         self.assertEquals(0, self.table.history_index)
         self.assertEquals(True, exception_occurred)
+
+    # -------------------------------------------------------------------
+    def test42_update_recursion(self):
+        """Test if update is protected against recursion"""
+        self.table.prot = False
+        def recurse(dummy):
+            self.table.prot = True
+            self.assertEquals("recurse", self.table.update())
+        self.table.updateTimers = recurse
+        self.assertEquals("ok", self.table.update())
+        self.assertEquals(True, search_output('unexpected recursion'))
+        self.assertEquals(True, self.table.prot)
 
 # -------------------------------------------------------------------
 
@@ -1714,7 +1725,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test41"
+#    loader.methodPrefix = "test42"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))
