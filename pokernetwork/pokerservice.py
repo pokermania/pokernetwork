@@ -366,7 +366,7 @@ class PokerService(service.Service):
         gettext.bind_textdomain_codeset("poker-engine", lang)
         gettext.install("poker-engine")
         try:
-            myGetTextFunc = gettext.translation('poker-engine', languages=[lang]).gettext
+            myGetTextFunc = gettext.translation('poker-engine', languages=[lang], codeset="iso-8859-1").gettext
         except IOError, e:
             self.error("No translation to locale %s in poker-engine; locale ignored: %s"
                        % (lang, e))

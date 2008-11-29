@@ -1,5 +1,6 @@
 #!@PYTHON@
-# -*- mode: python -*-
+# -*- mode: python; coding: iso-8859-1 -*-
+# more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
@@ -1218,6 +1219,17 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
 
+    def test23_gettext_latin_1(self):
+        """All gettext messages are iso-8859-1"""
+
+        if FRENCH_LOCALE_MISSING: return
+
+        settings = pokernetworkconfig.Config([])
+        settings.loadFromString(settings_xml)
+        self.service = pokerservice.PokerService(settings)
+        self.service.startService()
+        self.assertEquals("Carré %(card)s", self.service.gettextFuncs["fr_FR.UTF-8"]("Four of a kind %(card)s"))
+
 class RefillTestCase(unittest.TestCase):
 
     def destroyDb(self):
@@ -2397,7 +2409,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test00"
+#    loader.methodPrefix = "test23"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
