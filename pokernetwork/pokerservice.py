@@ -352,30 +352,81 @@ class PokerService(service.Service):
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max
 
-    def _lookupTranslationFunc(self, lang):
+    def _separateCodesetFromLocale(self, lang_with_codeset):
+        lang = lang_with_codeset
+        codeset = ""
+        dotLoc = lang.find('.')
+        if dotLoc > 0:
+            lang = lang_with_codeset[:dotLoc]
+            codeset = lang_with_codeset[dotLoc+1:]
+
+        if len(codeset) <= 0:
+            self.error('Unable to find codeset string in language value: %s' % lang_with_codeset)
+        if len(lang) <= 0:
+            self.error('Unable to find locale string in language value: %s' % lang_with_codeset)
+        return (lang, codeset)
+
+    def _lookupTranslationFunc(self, lang_with_codeset):
         # Start by defaulting to just returning the string...
         myGetTextFunc = lambda text:text
-        try:
-            locale.setlocale(locale.LC_ALL, lang)
-        except locale.Error, le:
-            self.error('Unable to support locale, "%s", due to locale error: %s'
-                       % (lang, le))
-            return myGetTextFunc
 
-        # I am not completely sure poker-engine should be hardcoded here like this...
-        gettext.bind_textdomain_codeset("poker-engine", lang)
-        gettext.install("poker-engine")
+        (lang, codeset) = self._separateCodesetFromLocale(lang_with_codeset)
+
+# I now believe that changing the locale in this way for each language is
+# completely uneeded given the set of features we are looking for.
+# Ultimately, we aren't currently doing localization operations other than
+# gettext() string lookup, so the need to actually switch locales does not
+# exist.  Long term, we may want to format numbers properly for remote
+# users, and then we'll need more involved locale changes, probably
+# handled by avatar and stored in the server object.  In the meantime,
+# this can be commented out and makes testing easier.  --bkuhn, 2008-11-28
+
+#         try:
+#             locale.setlocale(locale.LC_ALL, lang)
+#         except locale.Error, le:
+#             self.error('Unable to support locale, "%s", due to locale error: %s'
+#                        % (lang_with_codeset, le))
+#             return myGetTextFunc
+
+# I believe calling these was completely pointless in the first place,
+#  since we never want to install these using the standard GNU API.
+#  --bkuhn, 2008-11-28
+
+#        gettext.bind_textdomain_codeset("poker-engine", lang)
+#        gettext.install("poker-engine")
         try:
-            myGetTextFunc = gettext.translation('poker-engine', languages=[lang], codeset="iso-8859-1").gettext
+            # I am not completely sure poker-engine should be hardcoded here like this...
+            myGetTextFunc = gettext.translation('poker-engine', 
+                                                languages=[lang], codeset=codeset).gettext
+            # This test call of the function *must* be a string in the
+            # poker-engine domain.  The idea is to force a throw of
+            # LookupError, which will be thrown if the codeset doesn't
+            # exist.  Unfortunately, gettext doesn't throw it until you
+            # call it with a string that it can translate (gibberish
+            # doesn't work!).  We want to fail to support this
+            # language/encoding pair here so the server can send the error
+            # early and still support clients with this codec, albeit by
+            # sending untranslated strings.
+            myGetTextFunc("Aces")
         except IOError, e:
-            self.error("No translation to locale %s in poker-engine; locale ignored: %s"
-                       % (lang, e))
+            self.error("No translation for language %s for %s in poker-engine; locale ignored: %s"
+                       % (lang, lang_with_codeset, e))
+            myGetTextFunc = lambda text:text
+        except LookupError, l:
+            self.error("Unsupported codeset %s for %s in poker-engine; locale ignored: %s"
+                       % (codeset, lang_with_codeset, l))
+            myGetTextFunc = lambda text:text
+
         return myGetTextFunc
 
-    def locale2translationFunc(self, locale):
+    def locale2translationFunc(self, locale, codeset = ""):
+        if len(codeset) > 0:
+            locale += "." + codeset
         if self.gettextFuncs.has_key(locale):
             return self.gettextFuncs[locale]
         else:
+            if self.verbose > 2:
+                self.message("Locale, \"%s\" not available.  %s must not have been provide via <language/> tag in settings, or errors occured during loading." % (locale, locale))
             return None
 
     def shutdown(self):

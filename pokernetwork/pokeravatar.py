@@ -91,9 +91,16 @@ class PokerAvatar:
             
     def setLocale(self, locale):
         if locale:
-            self.localeFunc = self.service.locale2translationFunc(locale)
-            if not self.localeFunc:
-                self.error("locale not found: '%s'" % locale)
+            # 'ISO-8859-1' is currently enforced for all setLocale()
+            # requests.  This is primarily because the JSON interface
+            # implemented in pokersite.py *assumes* that all strings must
+            # be 'ISO-8859-1' and encodes them to unicode.  We should
+            # actually find a way to be knowledgeable about the needed
+            # encoding, because there is probably pointless conversion
+            # between ISO and UTF-8 happening in this process.  Also, we
+            # cannot currently support any languages that are non
+            # 'ISO-8859-1', so that's a huge FIXME!  --bkuhn, 2008-10-28
+            self.localeFunc = self.service.locale2translationFunc(locale, 'ISO-8859-1')
         return self.localeFunc
 
     def setProtocol(self, protocol):

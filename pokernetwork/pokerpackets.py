@@ -4145,11 +4145,12 @@ returned, and future PokerExplain strings will be localized to the
 requested language.  Otherwise a PacketError is returned with other_type
 set to PACKET_POKER_SET_LOCALE.
 
-locale: string representing fully qualified locale and encoding, such as "fr_FR.UTF-8"
+locale: string representing a valid locale supported by the server configuration (e.g.,  "fr_FR" or "fr")
 serial: integer uniquely identifying a player.
 """
+# locale: string representing fully qualified locale and encoding, such as "fr_FR.UTF-8"
 
-    info = PacketSerial.info + ( ('locale', 'en_US.UTF-8', 's'), )
+    info = PacketSerial.info + ( ('locale', 'en_US', 's'), )
 
 Packet.infoDeclare(globals(), PacketPokerSetLocale, PacketSerial, "POKER_SET_LOCALE", 153) # 153 # 0x99 # %SEQ%
 

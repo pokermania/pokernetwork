@@ -1,3 +1,9 @@
+2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	Reverted Loic's changes below to these files in favor of mine from
+	last night.
+
 2008-11-29  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
@@ -7,6 +13,55 @@
 	* pokernetwork/pokertable.py, tests/test-pokertable.py.in: protect
 	  the update function of pokertable against reentrance and print
 	  stacktrace for better diagnostic when it happens
+
+2008-11-28  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarNoClientServerTestCase.MockService.__init__): Added
+	encoding option to transFunc.
+	(PokerAvatarTestCase.test71_setLocaleAlwaysValid): Changed locale
+	string.
+	(PokerAvatarTestCase.test15_handPlay): Changed locale strings.
+	(PokerAvatarTestCase.test15a_handPlay_dbLocalesAndOverridesThereof):
+	Changed locale strings.
+	(PokerAvatarTestCase.startHandAndReceiveCards): Changed locale
+	strings.
+	(PokerAvatarNoClientServerTestCase.test03_relogin_localeNotFound):
+	Rewrote lambda as transFunc; added arg.  Removed expectation of
+	message.
+	(PokerAvatarTestCase.setLocale): Added check for verbosity message
+	on invalid locale.
+
+	* pokernetwork/pokersite.py (fromutf8, toutf8): Added FIXME
+	comment.
+
+	* pokernetwork/pokerpackets.py (PacketPokerSetLocale): Changed
+	documentation string to match what is actually expected.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.setLocale): Removed
+	error function; locale2translationFunc now has verbose message.
+	Added default encoding call and comment.
+
+	* conf/poker.server.xml.in: Added non-country supported languages.
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test23_localeChecks): Wrote test.
+
+	* pokernetwork/pokerservice.py
+	(PokerService.locale2translationFunc): Added codeset argument and
+	auto-append it before lookup.  Added warning message when locale
+	not found.
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test00_12_badEncoding): Wrote test.
+
+	* pokernetwork/pokerservice.py
+	(PokerService._separateCodesetFromLocale): Wrote function.
+	(PokerService._lookupTranslationFunc): Added proper codeset
+	support with error handling.
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test23_localeChecks): Added stub for test.
 
 2008-11-28  Loic Dachary <loic@dachary.org>
 

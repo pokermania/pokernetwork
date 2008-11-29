@@ -84,14 +84,14 @@ TABLE1 = 1
 TABLE2 = 2
 TABLE3 = 3
 
-# Note that we use the locale fr_FR.UTF-8 here for testing.  This must be
+# Note that we use the locale fr_FR.ISO-8859-1 here for testing.  This must be
 # a valid locale on the system!  Important tests are skipped otherwise!!!
 
 localLocale = locale.getlocale(locale.LC_ALL)
 FRENCH_LOCALE_MISSING = False
-MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE! FAIL!  fail!"
+MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.ISO-8859-1 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE! FAIL!  fail!"
 try:
-    locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+    locale.setlocale(locale.LC_ALL, "fr_FR.ISO-8859-1")
 except locale.Error, le:
     print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
     FRENCH_LOCALE_MISSING = True
@@ -108,8 +108,22 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
-  <language value="en_US.UTF-8"/>
-  <language value="fr_FR.UTF-8"/>
+  <language value="en_US.ISO-8859-1"/>
+  <language value="fr_FR.ISO-8859-1"/>
+  <language value="fr_FX.ISO-8859-1"/>
+  <language value="de_DE.ISO-8859-1"/>
+  <language value="en_GB.ISO-8859-1"/>
+  <language value="es_ES.ISO-8859-1"/>
+  <language value="nl_NL.ISO-8859-1"/>
+  <language value="fr_BE.ISO-8859-1"/>
+  <language value="en_CA.ISO-8859-1"/>
+  <language value="fr_CA.ISO-8859-1"/>
+  <language value="it_IT.ISO-8859-1"/>
+  <language value="pt_PT.ISO-8859-1"/>
+  <language value="da_DK.ISO-8859-1"/>
+  <language value="fi_FI.ISO-8859-1"/>
+  <language value="nb_NO.ISO-8859-1"/>
+  <language value="sv_SE.ISO-8859-1"/>
   <language value="this_locale_does_not_exist"/>
 
   <stats type="RankPercentile"/>
@@ -617,29 +631,25 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                             ('tables', 2), ('tourney_table_serial', 1),
                             ('shutting_down', False), ('avatars', []),
                             ('serial2client', {}), ('simultaneous', 4),
-                            ('monitors', []), ('gettextFuncs', 3) ]
+                            ('monitors', []), ('gettextFuncs', 17) ]
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), False)
 
         clear_all_messages()
         self.service.startService()
-        self.assertEquals(search_output("*ERROR* No translation to locale en_US.UTF-8 in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"), True)
-        self.assertEquals(search_output('*ERROR* Unable to support locale, "this_locale_does_not_exist", due to locale error: unsupported locale setting'), True)
+        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
             if instanceVar == "tables":
                 self.assertEquals(len(self.service.__dict__[instanceVar]), val)
 
-        for ii in ('this_locale_does_not_exist', 'en_US.UTF-8', 'fr_FR.UTF-8'):
+        for ii in ('this_locale_does_not_exist', 'en_US.ISO-8859-1', 'fr_FR.ISO-8859-1'):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
             self.assertEquals(callable(self.service.locale2translationFunc(ii)), True)
-        for ii in ('this_locale_does_not_exist', 'en_US.UTF-8'):
+        for ii in ('this_locale_does_not_exist', 'en_US.ISO-8859-1'):
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
-        if FRENCH_LOCALE_MISSING:
-            print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
-            self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "Aces")
-        else:
-            self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
+        self.assertEquals(self.service.gettextFuncs['fr_FR.ISO-8859-1']("Aces"), "d'As")
 
         for ii in ('nothing', 'unknown'):
             self.assertEquals(self.service.locale2translationFunc(ii), None)
@@ -683,11 +693,13 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service = pokerservice.PokerService(settings)
         clear_all_messages()
         self.service.startService()
-        self.assertEquals(len(self.service.gettextFuncs), 3)
-        for ii in ('en_US.UTF-8', 'fr_FR.UTF-8', 'this_locale_does_not_exist'):
-            self.assertEquals(search_output('*ERROR* Unable to support locale, "%s", due to locale error: testing bad setlocale' % ii), True)
+        self.assertEquals(len(self.service.gettextFuncs), 17)
+        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        for ii in ('en_US.ISO-8859-1', 'fr_FR.ISO-8859-1'):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
-            self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
+        self.assertEquals(self.service.gettextFuncs['en_US.ISO-8859-1']("Aces"), "Aces")
+        self.assertEquals(self.service.gettextFuncs['fr_FR.ISO-8859-1']("Aces"), "d'As")
         self.assertEquals(search_output("*ERROR* Unable to restore original locale: testing bad setlocale"), True)
         locale.setlocale = saveLocale
 
@@ -714,6 +726,28 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test00_11_configValues(self):
         self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>', ''), 1000,
                           tourneyAttrsLookupType = AttrsLookup)
+    def test00_12_badEncoding(self):
+        """test00_12_badEncoding
+        Check the case where an error occurs due to an encoding requested
+        for a config language value has an unknown encoding."""
+
+        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>',
+                                                '<language value="fr_FR.MAGIC-PIXIE-DUST"/>')
+
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
+        clear_all_messages()
+        self.service.startService()
+        self.assertEquals(len(self.service.gettextFuncs), 17)
+        self.failUnless(search_output('*ERROR* Unsupported codeset MAGIC-PIXIE-DUST for fr_FR.MAGIC-PIXIE-DUST in poker-engine; locale ignored: unknown encoding: MAGIC-PIXIE-DUST'))
+        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        for ii in ('en_US.ISO-8859-1', 'fr_FR.MAGIC-PIXIE-DUST'):
+            self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
+            self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
+
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1218,18 +1252,28 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
-
-    def test23_gettext_latin_1(self):
-        """All gettext messages are iso-8859-1"""
-
-        if FRENCH_LOCALE_MISSING: return
-
-        settings = pokernetworkconfig.Config([])
-        settings.loadFromString(settings_xml)
-        self.service = pokerservice.PokerService(settings)
+    # ----------------------------------------------------------------
+    def test23_localeChecks(self):
         self.service.startService()
-        self.assertEquals("Carré %(card)s", self.service.gettextFuncs["fr_FR.UTF-8"]("Four of a kind %(card)s"))
-
+        for enlo in ('this_locale_does_not_exist', 'en_GB.ISO-8859-1',
+                     'en_US.ISO-8859-1', 'en_CA.ISO-8859-1'):
+            self.assertEquals(self.service.locale2translationFunc(enlo)("Aces"), "Aces")
+        clear_all_messages()
+        self.assertEquals(self.service.locale2translationFunc('fr_FR', 'UTF-8'),
+                         None)
+        self.assertEquals(get_messages(), ['Locale, "fr_FR.UTF-8" not available.  fr_FR.UTF-8 must not have been provide via <language/> tag in settings, or errors occured during loading.'])
+        enc = 'ISO-8859-1'
+        self.assertEquals(self.service.locale2translationFunc('da_DK', enc)("%(name)s mucks loosing hand"), "%(name)s mucker tabende h\xe5nd")
+        self.assertEquals(self.service.locale2translationFunc('de_DE', enc)("%(name)s raises %(amount)s"), '%(name)s erh\xf6ht %(amount)s' )
+        self.assertEquals(self.service.locale2translationFunc('fi_FI', enc)("Board: %(board)s"), 'P\xf6yt\xe4kortit: %(board)s')
+        for fr in ('fr_FR', 'fr_FX', 'fr_BE', 'fr_CA'):
+            self.assertEquals(self.service.locale2translationFunc(fr, enc)("%(name)s receives %(amount)s"), '%(name)s re\xe7oit %(amount)s')
+        self.assertEquals(self.service.locale2translationFunc('it_IT', enc)("High card %(card)s"),'Carta pi\xf9 alta: %(card)s')
+        self.assertEquals(self.service.locale2translationFunc('nb_NO', enc)("%(name)s mucks loosing hand"), '%(name)s skjuler tapende h\xe5nd')
+        self.assertEquals(self.service.locale2translationFunc('nl_NL', enc)("Four of a kind %(card)s"), 'Carr\xe9 %(card)s')
+        self.assertEquals(self.service.locale2translationFunc('pt_PT', enc)("Rake %(amount)s"), 'Comiss\xe3o %(amount)s')
+        self.assertEquals(self.service.locale2translationFunc('sv_SE', enc)("winners share a pot of %(pot)s"), 'vinnarna delar p\xe5 potten %(pot)s')
+##############################################################################
 class RefillTestCase(unittest.TestCase):
 
     def destroyDb(self):

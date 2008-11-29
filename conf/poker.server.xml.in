@@ -5,24 +5,39 @@
      max_missed_round defaults to 10 if you leave it out.
      max_joined defaults to 4000 if you leave it out.  -->
 
-  <language value="en_US.UTF-8"/>
-  <language value="fr_FR.UTF-8"/>
-  <language value="fr_FX.UTF-8"/>
-  <language value="de_DE.UTF-8"/>
-  <language value="en_GB.UTF-8"/>
-  <language value="es_ES.UTF-8"/>
-  <language value="nl_NL.UTF-8"/>
-  <language value="fr_BE.UTF-8"/>
-  <language value="en_CA.UTF-8"/>
-  <language value="fr_CA.UTF-8"/>
-  <language value="it_IT.UTF-8"/>
-  <language value="pt_PT.UTF-8"/>
-  <language value="da_DK.UTF-8"/>
-  <language value="fi_FI.UTF-8"/>
-  <language value="nb_NO.UTF-8"/>
-  <language value="sv_SE.UTF-8"/>
+  <language value="en.ISO-8859-1"/>
+  <language value="en_US.ISO-8859-1"/>
+  <language value="en_GB.ISO-8859-1"/>
+  <language value="en_CA.ISO-8859-1"/>
+  <language value="fr_FR.ISO-8859-1"/>
+  <language value="fr.ISO-8859-1"/>
+  <language value="fr_FX.ISO-8859-1"/>
+  <language value="fr_BE.ISO-8859-1"/>
+  <language value="fr_CA.ISO-8859-1"/>
+  <language value="de.ISO-8859-1"/>
+  <language value="de_DE.ISO-8859-1"/>
+  <language value="es.ISO-8859-1"/>
+  <language value="es_ES.ISO-8859-1"/>
+  <language value="nl.ISO-8859-1"/>
+  <language value="nl_NL.ISO-8859-1"/>
+  <language value="it.ISO-8859-1"/>
+  <language value="it_IT.ISO-8859-1"/>
+  <language value="pt.ISO-8859-1"/>
+  <language value="pt_PT.ISO-8859-1"/>
+  <language value="da.ISO-8859-1"/>
+  <language value="da_DK.ISO-8859-1"/>
+  <language value="fi.ISO-8859-1"/>
+  <language value="fi_FI.ISO-8859-1"/>
+  <language value="nb.ISO-8859-1"/>
+  <language value="nb_NO.ISO-8859-1"/>
+  <language value="sv.ISO-8859-1"/>
+  <language value="sv_SE.ISO-8859-1"/>
 
-<!-- language settings are for client-side localization support, set via the PacketPokerSetLocale() -->
+<!-- language settings above are for client-side localization support, set
+     via the PacketPokerSetLocale().  Note that *only* ISO-8859-1 codesets
+     are currently supported!  If you use ISO-8859-1 codsets, clients
+     using the JSON interface (and perhaps even the packet interface) will
+     receive *incorrectly encoded* strings.  -->
 
   <stats type="RankPercentile"/>
 

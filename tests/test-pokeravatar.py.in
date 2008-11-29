@@ -48,14 +48,14 @@ from tests.testmessages import restore_all_messages, silence_all_messages, searc
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
-# Note that we use the locale fr_FR.UTF-8 here for testing.  This must be
+# Note that we use the locale fr_FR.ISO-8859-1 here for testing.  This must be
 # a valid locale on the system!  Important tests are skipped otherwise!!!
 
 localLocale = locale.getlocale(locale.LC_ALL)
-MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.UTF-8 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!  FAIL!  fail!"
+MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.ISO-8859-1 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE!  FAIL!  fail!"
 FRENCH_LOCALE_MISSING = False
 try:
-    locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+    locale.setlocale(locale.LC_ALL, "fr_FR.ISO-8859-1")
 except locale.Error, le:
     print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
     FRENCH_LOCALE_MISSING = True
@@ -91,8 +91,8 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <language value="en_US.UTF-8"/>
-  <language value="fr_FR.UTF-8"/>
+  <language value="en_US.ISO-8859-1"/>
+  <language value="fr_FR.ISO-8859-1"/>
 
   <stats type="RankPercentile"/>
 
@@ -796,15 +796,15 @@ class PokerAvatarTestCase(unittest.TestCase):
         lang2strings = { 'default' : [ "Dealer: user1 pays 1 blind\n",
                                        "Dealer: user0 pays 2 blind\n",
                                        "Dealer: pre-flop, 2 players\n" ], 
-                         'en_US.UTF-8' : [ "Dealer: user1 pays 1 blind\n",
+                         'en_US' : [ "Dealer: user1 pays 1 blind\n",
                                            "Dealer: user0 pays 2 blind\n",
                                            "Dealer: pre-flop, 2 players\n" ], 
-                         'fr_FR.UTF-8' : [ "Dealer: user1 paye 1 de blind\n",
+                         'fr_FR' : [ "Dealer: user1 paye 1 de blind\n",
                                            "Dealer: user0 paye 2 de blind\n",
                                            "Dealer: pre-flop, 2 joueurs\n" ] }
         if FRENCH_LOCALE_MISSING:
             print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
-            lang2strings['fr_FR.UTF-8'] = lang2strings['default']
+            lang2strings['fr_FR'] = lang2strings['default']
 
         avatar = []
         avatar.append(self.service.avatars[0])
@@ -927,7 +927,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # labelled "How to sit at a cash game table ?"
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
-        d.addCallback(self.setLocale, "fr_FR.UTF-8")
+        d.addCallback(self.setLocale, "fr_FR")
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.createRankDBTable, 2, rank = 50, percentile = 30)
@@ -990,10 +990,10 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.forceDbToLocaleValue, avid = 0, 
-                      setTo = 'fr_FR.UTF-8', expect = "RESET_BY_SET_LOCALE")
+                      setTo = 'fr_FR', expect = "RESET_BY_SET_LOCALE")
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.setLocale, "en_US.UTF-8")
+        d.addCallback(self.setLocale, "en_US")
         d.addCallback(self.createRankDBTable, 2, rank = 50, percentile = 30)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         d.addCallback(self.seatTable, 0, 2, 50, 30)
@@ -1005,7 +1005,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 
         d2.addCallback(self.sendExplain)
         d2.addCallback(self.forceDbToLocaleValue, avid = 1, 
-                       setTo = 'fr_FR.UTF-8', expect = "fr_FR.UTF-8")
+                       setTo = 'fr_FR', expect = "fr_FR")
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit',
@@ -1379,6 +1379,8 @@ class PokerAvatarTestCase(unittest.TestCase):
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.game_id, gameId)
                 found = True
+            elif packet.type == PACKET_POKER_CHAT:
+                print packet
         self.assertEquals(found, True)
         return (client, packet)
     # -------------------------------------------------------------------------
@@ -3131,12 +3133,13 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # -------------------------------------------------------------------------
     def setLocale(self, (client, packet), myLocale, avid = 0, expectSucceed=True):
-        if FRENCH_LOCALE_MISSING and myLocale == 'fr_FR.UTF-8':
+        if FRENCH_LOCALE_MISSING and myLocale == 'fr_FR':
             print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
             expectSucceed = False
 
         avatar = self.service.avatars[avid]
         avatar.queuePackets()
+        clear_all_messages()
         avatar.handlePacketLogic(PacketPokerSetLocale(serial = client.getSerial(), 
                                                       locale = myLocale))
         foundCount = 0
@@ -3156,6 +3159,7 @@ class PokerAvatarTestCase(unittest.TestCase):
                     self.assertEquals(packet.serial, client.getSerial())
                     self.assertEquals(packet.other_type, PACKET_POKER_SET_LOCALE)
                     foundCount += 1
+                    self.failUnless(search_output('Locale, "Klingon_Kronos.ISO-8859-1" not available.  Klingon_Kronos.ISO-8859-1 must not have been provide via <language/> tag in settings, or errors occured during loading.'))
         self.assertEquals(foundCount, 1)
         return (client, packet)
     # -------------------------------------------------------------------------
@@ -3163,7 +3167,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Tests setting of roles"""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
-        d.addCallback(self.setLocale, "en_US.UTF-8", 0)
+        d.addCallback(self.setLocale, "en_US", 0)
         d.addCallback(self.quit)
         return d
     # -------------------------------------------------------------------------
@@ -3171,7 +3175,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Tests setting of roles"""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
-        d.addCallback(self.setLocale, "Klingon_Kronos.UTF-8", 0, False)
+        d.addCallback(self.setLocale, "Klingon_Kronos", 0, False)
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -3702,7 +3706,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
             mpiSelf.name = 'Doyle Brunson'
     class MockService:
         def __init__(msSelf):
-            def transFunc(locale):
+            def transFunc(locale, encoding = ''):
                 if locale == 'mylocale':
                     return lambda s: "MYTRANSLATION"
                 else:
@@ -3797,14 +3801,13 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         from pokernetwork import pokeravatar
 
         service = PokerAvatarNoClientServerTestCase.MockService()
-        service.locale2translationFunc = lambda l: None
+        def transFunc(l, codeset = ''): return None
+        service.locale2translationFunc = transFunc
         avatar = pokeravatar.PokerAvatar(service)
         explain = PokerAvatarNoClientServerTestCase.MockExplain()
         saveExplain = avatar.explain
         avatar.explain = explain
 
-        errors = []
-        avatar.error = lambda e: errors.append(e)
         avatar.relogin(1042)
         self.assertEquals(avatar.user.serial, 1042)
         self.assertEquals(avatar.user.name, 'Doyle Brunson')
@@ -3823,11 +3826,10 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
 
         self.assertEquals(None, avatar.localeFunc)
-        self.assertEquals("locale not found: 'mylocale'", errors[0])
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15a"
+#    loader.methodPrefix = "test72"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))

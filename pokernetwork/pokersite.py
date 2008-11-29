@@ -38,6 +38,9 @@ from pokernetwork import pokermemcache
 def uid2last_modified(uid):
     return 'L' + uid
 
+# FIXME: I don't think these next two functions should assume 'ISO-8859-1'
+# like they do.  This is related to another FIXME about this issue you'll
+# find in pokeravatar.py -- bkuhn, 2008-11-28
 def fromutf8(tree, encoding = 'ISO-8859-1'):
     return __walk(tree, lambda x: x.encode(encoding))
 
