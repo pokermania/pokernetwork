@@ -639,6 +639,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
         self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(search_output('*ERROR* Translation setup for this_locale_does_not_exist failed.  Strings for clients requesting this_locale_does_not_exist will likely always be in English'))
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
             if instanceVar == "tables":
@@ -2453,7 +2454,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test23"
+#    loader.methodPrefix = "test00_02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

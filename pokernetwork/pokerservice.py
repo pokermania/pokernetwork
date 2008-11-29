@@ -388,16 +388,13 @@ class PokerService(service.Service):
 #                        % (lang_with_codeset, le))
 #             return myGetTextFunc
 
-# I believe calling these was completely pointless in the first place,
-#  since we never want to install these using the standard GNU API.
-#  --bkuhn, 2008-11-28
-
-#        gettext.bind_textdomain_codeset("poker-engine", lang)
-#        gettext.install("poker-engine")
+        outputStr = "Aces"
         try:
             # I am not completely sure poker-engine should be hardcoded here like this...
-            myGetTextFunc = gettext.translation('poker-engine', 
-                                                languages=[lang], codeset=codeset).gettext
+            transObj = gettext.translation('poker-engine', 
+                                                languages=[lang], codeset=codeset)
+            transObj.install()
+            myGetTextFunc = transObj.gettext
             # This test call of the function *must* be a string in the
             # poker-engine domain.  The idea is to force a throw of
             # LookupError, which will be thrown if the codeset doesn't
@@ -407,7 +404,7 @@ class PokerService(service.Service):
             # language/encoding pair here so the server can send the error
             # early and still support clients with this codec, albeit by
             # sending untranslated strings.
-            myGetTextFunc("Aces")
+            outputStr = myGetTextFunc("Aces")
         except IOError, e:
             self.error("No translation for language %s for %s in poker-engine; locale ignored: %s"
                        % (lang, lang_with_codeset, e))
@@ -417,6 +414,8 @@ class PokerService(service.Service):
                        % (codeset, lang_with_codeset, l))
             myGetTextFunc = lambda text:text
 
+        if outputStr == "Aces" and lang[0:2] != "en":
+            self.error("Translation setup for %s failed.  Strings for clients requesting %s will likely always be in English" % (lang_with_codeset, lang))
         return myGetTextFunc
 
     def locale2translationFunc(self, locale, codeset = ""):
