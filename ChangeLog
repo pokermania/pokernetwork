@@ -1,9 +1,25 @@
-2008-11-28  Loic Dachary <loic@dachary.org>
+2008-11-29  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
 
-	* pokernetwork/pokersite.py: always issue error message in the logs
-	  when a request reports failure
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: all
+	  messages returned by gettext are encoded in iso-8859-1
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in: protect
+	  the update function of pokertable against reentrance and print
+	  stacktrace for better diagnostic when it happens
+
+2008-11-28  Loic Dachary <loic@dachary.org>
+
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, examples/poker.bot.xml,
+	  examples/poker.server-monotone.xml, examples/poker.server.xml,
+	  pokerclient2d/poker2d.xml.in, tests/conf/poker.client.xml.in:
+	  bump configuration files to version to 1.3.1
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in: protect
+	  table against exceptions so that the history is never interpreted
+	  twice
+	* NEWS, debian/changelog, pokernetwork/__init__.py: bump to version
+	  1.7.1
 
 2008-11-27  Johan Euphrosine <proppy@aminche.com>
 
