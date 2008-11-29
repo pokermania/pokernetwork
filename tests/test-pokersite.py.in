@@ -56,7 +56,7 @@ class PokerServiceMockup:
             packet.locale = 'en_US.UTF-8'
             return packet
 
-      def locale2translationFunc(self, locale):
+      def locale2translationFunc(self, locale, codeset = ""):
             return None
       
       def createAvatar(self):
