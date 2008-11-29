@@ -856,8 +856,6 @@ class PokerTable:
             if self.isValid():
                 self.cashGame_kickPlayerSittingOutTooLong(history_tail)
                 self.scheduleAutoDeal()
-        except:
-            raise
         finally:
             self.historyReduce()
             self.update_recursion = False
