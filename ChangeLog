@@ -1,3 +1,10 @@
+2008-11-29  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.1
+
+	* tests/test-pokersite.py.in: locale2translationFunc mockup taks an
+	  additional argument
+
 2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
@@ -5,8 +12,6 @@
 	last night.
 
 2008-11-29  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.1
 
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: all
 	  messages returned by gettext are encoded in iso-8859-1
