@@ -1552,7 +1552,7 @@ class PokerService(service.Service):
                                             name = "anonymous",
                                             url= "random",
                                             outfit = "random",
-                                            locale = "en_US.UTF-8")
+                                            locale = "en_US")
         if serial == 0:
             return placeholder
 

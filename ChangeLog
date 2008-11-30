@@ -1,3 +1,14 @@
+2008-11-30  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* database/1.6.0-1.7.0.sql: en_US.UTF-8 is no longer default locale,
+	en_US by itself is.
+
+	* database/schema.sql.in: en_US.UTF-8 is no longer default locale,
+	en_US by itself is.
+
+	* pokernetwork/pokerservice.py (PokerService.getPlayerInfo):
+	en_US.UTF-8 is no longer default locale, en_US by itself is.
+
 2008-11-29  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
