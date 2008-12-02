@@ -859,11 +859,6 @@ class PokerService(service.Service):
         cursor.execute("UPDATE tourneys SET finish_time = %d WHERE serial = %s" % (tourney.finish_time, tourney.serial))
         cursor.close()
         self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY, param1 = tourney.serial)
-        finish = PacketPokerTourneyFinish(tourney_serial = tourney.serial)
-        for serial in tourney.winners:
-            client = self.serial2client.get(serial, None)
-            if client:
-                client.sendPacketVerbose(finish)
         self.tourneyDeleteRoute(tourney)
         return True
 
@@ -872,6 +867,10 @@ class PokerService(service.Service):
         wait = int(self.delays.get('extra_wait_tourney_finish', 0))
         def doTourneyDeleteRoute():
             self.cancelTimer(key)
+            for serial in tourney.players:
+                player = self.serial2client.get(serial, None)
+                if player:
+                    player.tourneys.remove(tourney.serial)
             self.tourneyDeleteRouteActual(tourney.serial)
         self.timer[key] = reactor.callLater(max(self._ping_delay*2, wait*2), doTourneyDeleteRoute)
         

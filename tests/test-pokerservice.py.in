@@ -1770,6 +1770,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
+                self.players = []
 
             def prizes(self):
                 return [self.prize_min]
@@ -1796,6 +1797,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
+                self.players = []
 
             def prizes(self):
                 return [self.prize_min]
@@ -1817,6 +1819,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
+                self.players = []
 
             def prizes(self):
                 return [self.prize_min]
@@ -1837,6 +1840,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.currency_serial = 1
                 self.serial = 1
                 self.finish_time = testclock._seconds_value
+                self.players = []
 
             def prizes(self):
                 return [self.prize_min]
@@ -1863,17 +1867,23 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
+                self.players = []
 
             def prizes(self):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial)
+        client1.tourneys = [1, 2, 3]
+        client2 = self.ClientMockup(self.user2_serial)
+        client2.tourneys = [1, 2]
         self.service.serial2client[self.user1_serial] = client1
+        self.service.serial2client[self.user2_serial] = client2
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = self.user2_serial
+        tournament.players = [ self.user1_serial, self.user2_serial ]
         self.service._ping_delay = 1
         d = defer.Deferred()
         d.addCallback(self.service.tourneyDeleteRouteActual)
@@ -1885,11 +1895,15 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         (tournament_serial,) = cursor.fetchone()
         self.assertEqual(tournament.serial, tournament_serial)
         self.secondsStart = testclock._seconds_value
+        def checkAvatarTourneys(x):
+            self.assertEqual(True, 1 not in client1.tourneys)
+            self.assertEqual(True, 1 not in client2.tourneys)
         def checkRoute(x):
             cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = %s", tournament.serial)
             self.assertEqual(0, cursor.rowcount)
             self.assertEquals(testclock._seconds_value - self.secondsStart  >= self.service._ping_delay/1000.0, True)
             cursor.close()
+        d.addCallback(checkAvatarTourneys)
         d.addCallback(checkRoute)
         return d
 
@@ -1901,6 +1915,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.registered = 2
                 self.currency_serial = 1
                 self.serial = 1
+                self.players = []
 
             def prizes(self):
                 return [self.prize_min]
@@ -1930,6 +1945,32 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
             self.assertEquals(testclock._seconds_value - self.secondsStart  >= int(self.service.delays['extra_wait_tourney_finish']), True)
         d.addCallback(checkRoute)
         return d           
+
+    def test_tourney_finish_packet(self):
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                self.serial = 1
+                self.players = []
+
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
+        client2 = self.ClientMockup(self.user2_serial)
+        self.service.serial2client[self.user2_serial] = client2
+        tournament = Tournament()
+        winner_serial = self.user1_serial
+        tournament.winners = [ winner_serial ]
+        tournament.bailor_serial = self.user2_serial
+        self.service.tourneyFinished(tournament)
+        self.assertEqual(0, len(client1.packets))
+        self.assertEqual(0, len(client2.packets))
 
 ##############################################################################
 class BreakTestCase(PokerServiceTestCaseBase):

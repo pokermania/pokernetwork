@@ -3099,7 +3099,8 @@ class PokerAvatarTestCase(unittest.TestCase):
     def poll(self, (client, packet), id ):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerPoll())
+        avatar.tourneys = [1]
+        avatar.handlePacketLogic(PacketPokerPoll(tourney_serial = 1))
         packets = avatar.resetPacketsQueue()
         self.assertEquals(0, len(packets))
         return (client, packet)
@@ -3112,6 +3113,26 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.login, 0)
         d.addCallback(self.poll, 0)
         return d
+    
+    # ------------------------------------------------------------------------
+    def pollTourneyFinished(self, (client, packet), id ):
+        avatar = self.service.avatars[id]
+        avatar.queuePackets()
+        avatar.tourneys = [1]
+        avatar.handlePacketLogic(PacketPokerPoll(tourney_serial = 2))
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(1, len(packets))
+        self.assertEquals(PACKET_POKER_TOURNEY_FINISH, packets[0].type)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def test70_1_pollTourneyFinished(self):
+        """Test poll packet when tourney is finished."""
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.pollTourneyFinished, 0)
+        return d
+    
     # -------------------------------------------------------------------------
     def setLocale(self, (client, packet), myLocale, avid = 0, expectSucceed=True):
 

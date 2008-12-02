@@ -380,6 +380,8 @@ class PokerAvatar:
             return
         
         if packet.type == PACKET_POKER_POLL:
+            if packet.tourney_serial != 0 and not (packet.tourney_serial in self.tourneys):
+                self.sendPacketVerbose(PacketPokerTourneyFinish(tourney_serial = packet.tourney_serial))
             return
         
         if not self.isAuthorized(packet.type):
