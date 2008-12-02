@@ -1,3 +1,25 @@
+2008-12-02  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.1
+
+	* pokernetwork/countfilter.py, tests/test-countfilter.py.in: Do not
+	  use request.getSession() but extract the session cookie using the
+	  same code as pokersite.py.
+	  Calling getSession may create a session if it does not already
+	  exists, which is an undesirable side effect.
+
+2008-12-02  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerservice.py,
+	  tests/test-pokeravatar.py.in, tests/test-pokerservice.py.in:
+	  poker-network send PacketPokerTourneyFinish only if polling for a
+	  tourney_serial not in avatar.tourneys
+
+2008-12-01  Loic Dachary <loic@dachary.org>
+
+	* database/schema.sql.in: set start time in the past to avoid race
+	  conditions
+
 2008-11-30  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* database/1.6.0-1.7.0.sql: en_US.UTF-8 is no longer default locale,
@@ -8,10 +30,6 @@
 
 	* pokernetwork/pokerservice.py (PokerService.getPlayerInfo):
 	en_US.UTF-8 is no longer default locale, en_US by itself is.
-
-2008-11-29  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.1
 
 2008-11-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
