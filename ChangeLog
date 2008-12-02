@@ -4,6 +4,11 @@
 
 2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* configure.ac (AC_PROG_CPP): AC_PROG_CPP appears to be
+	deprecated; switched to AC_PROG_CXX
+
+2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
 	* configure.ac (poker2d): Added PYTHON_2_6 support.
 
 	* pokerclient2d/Makefile.am (PYTHON_2_6): Added Python 2.6 support

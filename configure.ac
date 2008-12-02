@@ -91,7 +91,7 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     # Checks for programs.
     AC_PROG_MAKE_SET
     AC_GNU_SOURCE
-    AC_PROG_CPP
+    AC_PROG_CXX
     AC_PROG_LIBTOOL
 
     if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then
