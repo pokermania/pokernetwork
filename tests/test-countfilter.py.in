@@ -42,16 +42,13 @@ class CountTestCase(unittest.TestCase):
         pass
     def test01_set_count_memcache(self):
         memcache = self.memcache
-        uid = 42
+        cookie = 42
         cookie_timeout = 60
         memcache_timeout = cookie_timeout * 2
         sitepath = 'URLID'
         count_prefix = 'COUNT'
-        memcache_key = "_".join([count_prefix,str(sitepath),str(uid)])
+        memcache_key = "_".join([count_prefix,str(sitepath),str(cookie)])
 
-        class Session:
-            def __init__(self):
-                self.uid = uid
         class Request:            
             def __init__(self, count = None):
                 self.sitepath = sitepath
@@ -60,8 +57,8 @@ class CountTestCase(unittest.TestCase):
                     self.args = {'count': [count]}
                 else:
                     self.args = {}
-            def getSession(self):
-                return Session()
+            def getCookie(self, name):
+                return cookie
         class Site:
             def __init__(self):
                 self.memcache = memcache

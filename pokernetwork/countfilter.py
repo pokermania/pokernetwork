@@ -24,18 +24,20 @@ from pokernetwork import pokermemcache
 # return a value if all actions were complete
 #
 def rest_filter(site, request, packet):    
-    session = request.getSession()
-    count_prefix = "COUNT"
-    memcache_key = "_".join([count_prefix, str(request.sitepath), str(session.uid)])
-    last_count = site.memcache.get(memcache_key)
-    if last_count:
-        last_count = int(last_count)
-    else:
-        last_count = 0
-    count = int(request.args.get("count", ['0'])[0])
-    if count < last_count:
-        raise Exception("a more recent client connection occured (%s), killing old connection (%s)" % (last_count, count))
-    site.memcache.set(memcache_key, str(count), site.cookieTimeout*2)
+    cookiename = "_".join(['TWISTED_SESSION'] + request.args.get('name', []))
+    sessionCookie = request.getCookie(cookiename)
+    if sessionCookie:
+        count_prefix = "COUNT"
+        memcache_key = "_".join([count_prefix, str(request.sitepath), str(sessionCookie)])
+        last_count = site.memcache.get(memcache_key)
+        if last_count:
+            last_count = int(last_count)
+        else:
+            last_count = 0
+        count = int(request.args.get("count", ['0'])[0])
+        if count < last_count:
+            raise Exception("a more recent client connection occured (%s), killing old connection (%s)" % (last_count, count))
+        site.memcache.set(memcache_key, str(count), site.cookieTimeout*2)
     return True
 
 #
