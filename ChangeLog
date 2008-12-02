@@ -2,6 +2,15 @@
 
  	* Release 1.7.1
 
+2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* configure.ac (poker2d): Added PYTHON_2_6 support.
+
+	* pokerclient2d/Makefile.am (PYTHON_2_6): Added Python 2.6 support
+	that mimics the 2.5 support.
+
+2008-12-02  Loic Dachary <loic@dachary.org>
+
 	* pokernetwork/countfilter.py, tests/test-countfilter.py.in: Do not
 	  use request.getSession() but extract the session cookie using the
 	  same code as pokersite.py.
@@ -21,6 +30,10 @@
 	  conditions
 
 2008-11-30  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* config/python.m4 (AM_PATH_PYTHON): Added python2.6 support.
+
+	* config/ccpython.m4 (ALL_CC_PYTHON): Added python2.6 support.
 
 	* database/1.6.0-1.7.0.sql: en_US.UTF-8 is no longer default locale,
 	en_US by itself is.

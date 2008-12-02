@@ -105,6 +105,14 @@ _pokerinterface_la_DEPENDENCIES = libinterface.la
 _pokerinterface_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @GLADE_LIBS@ libinterface.la
 _pokerinterface_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"\" -D'VERSION_NAME(w)=w'
 
+if PYTHON_2_6
+py2_6exec_LTLIBRARIES = _pokerinterface2_6.la
+_pokerinterface2_6_la_SOURCES = python.c
+_pokerinterface2_6_la_DEPENDENCIES = libinterface.la
+_pokerinterface2_6_la_LDFLAGS = -module -no-undefined @GLIB_LIBS@ @GLADE_LIBS@ libinterface.la
+_pokerinterface2_6_la_CPPFLAGS = @GLADE_CFLAGS@ @PYTHON2_6_CFLAGS@ @GLIB_CFLAGS@ -DPYTHON_VERSION=\"2_6\" -D'VERSION_NAME(w)=w\#\#2_6'
+endif
+
 if PYTHON_2_5
 py2_5exec_LTLIBRARIES = _pokerinterface2_5.la
 _pokerinterface2_5_la_SOURCES = python.c
