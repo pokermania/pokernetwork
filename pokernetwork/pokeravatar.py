@@ -129,7 +129,8 @@ class PokerAvatar:
 
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
-        assert self.service.serial2client.has_key(serial) == False
+        if self.service.serial2client.has_key(serial):
+            self.service.destroyAvatar(self.service.serial2client[serial])
         self.service.serial2client[serial] = self
         self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)

@@ -3719,6 +3719,8 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
             class MockPlace:
                 def __init__(mpSelf): mpSelf.tourneys = "MOCKPLACES"
             return MockPlace()
+        def destroyAvatar(msSelf, avatar):
+            avatar.connectionLost("Disconnected")
 
     class MockExplain:
         def __init__(meSelf): meSelf.handleSerialPackets = []
@@ -3825,10 +3827,58 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
 
         self.assertEquals(None, avatar.localeFunc)
+
+    # ------------------------------------------------------------------------
+    def test04_relogin_avatarExists(self):
+        """relogin is called where an avatar already exists."""
+        from pokernetwork import pokeravatar
+
+        serial = 1042
+
+        service = PokerAvatarNoClientServerTestCase.MockService()
+        def transFunc(l, codeset = ''): return None
+        service.locale2translationFunc = transFunc
+        avatar_first = pokeravatar.PokerAvatar(service)
+        #
+        # pre-existing avatar
+        #
+        avatar_second = pokeravatar.PokerAvatar(service)
+        def lost(reason):
+            self.assertEquals("Disconnected", reason)
+            avatar_second.HERE = True
+        avatar_second.connectionLost = lost
+        service.serial2client[serial] = avatar_second
+        
+        explain = PokerAvatarNoClientServerTestCase.MockExplain()
+        saveExplain = avatar_first.explain
+        avatar_first.explain = explain
+
+        avatar_first.relogin(serial)
+        
+        self.assertEquals(True, avatar_second.HERE)
+        
+        self.assertEquals(avatar_first.user.serial, serial)
+        self.assertEquals(avatar_first.user.name, 'Doyle Brunson')
+        self.assertEquals(avatar_first.user.url, "http://example.org/")
+        self.assertEquals(avatar_first.user.outfit, "naked")
+        self.assertEquals(avatar_first.user.privilege, pokeravatar.User.REGULAR)
+        self.assertEquals(avatar_first.tourneys, "MOCKPLACES")
+
+        self.failUnless(service.serial2client.keys(), [serial])
+        self.assertEquals(service.serial2client[serial], avatar_first)
+
+        avatar_first.explain = saveExplain
+
+        self.assertEquals(len(explain.handleSerialPackets), 1)
+        self.assertEquals(explain.handleSerialPackets[0].serial, serial)
+        self.assertEquals(explain.handleSerialPackets[0].type, PACKET_SERIAL)
+
+        self.assertEquals(None, avatar_first.localeFunc)
+        
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test04"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
