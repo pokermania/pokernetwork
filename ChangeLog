@@ -2,8 +2,19 @@
 
  	* Release 1.7.1
 
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in: when
+	  relogin the last wins https://gna.org/support/?2202
+
 	* tests/test-pokerservice.py.in: Close the database in teardown.
 	  Create a new database instance instead of sharing with services.
+
+2008-12-03  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in:
+	  PokerResource log client ip as prefix of errors and messages
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  restore tourney route when cleanupTourney restore regular
+	  registering tourneys
 
 2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
