@@ -122,7 +122,7 @@ class Request(server.Request):
                            expires = time.asctime(time.gmtime(seconds() - 3600)) + ' UTC',
                            path = '/')
 
-    def getClientIP(self):
+    def findProxiedIP(self):
         """Return the IP address of the client who submitted this request,
         making an attempt to determine the actual IP through the proxy.
         Returns	the client IP address (type: str )"""
@@ -134,11 +134,11 @@ class Request(server.Request):
         # sr#2157 remains open for this reason.
 
         if self.getHeader('x-forwarded-for'):
-            return self.getHeader('x-forwarded-for')
+            return ('x-forwarded-for', self.getHeader('x-forwarded-for'))
         elif self.getHeader('x-cluster-client-ip'):
-            return self.getHeader('x-cluster-client-ip')
+            return ('x-cluster-client-ip', self.getHeader('x-cluster-client-ip'))
         else:
-            return server.Request.getClientIP(self)
+            return ('client-ip', server.Request.getClientIP(self))
 
 class Session(server.Session):
 
@@ -198,7 +198,7 @@ class PokerResource(resource.Resource):
             data = request.content.read()
         if self.verbose >= 3:
             if "PacketPing" not in data or self.verbose > 3:
-                self.message("render " + data)
+                self.message("(%s:%s) " % request.findProxiedIP() + "render " + data)
         args = simplejson.loads(data, encoding = 'UTF-8')
         if hasattr(Packet.JSON, 'decode_objects'): # backward compatibility
             args = Packet.JSON.decode_objects(args)
@@ -223,7 +223,7 @@ class PokerResource(resource.Resource):
                 request.expireSessionCookie()
                 request.write(body)
             if self.verbose >= 0 and request.code != 200:
-                self.error(str(body))
+                self.error("(%s:%s) " % request.findProxiedIP() + str(body))
             if not request.finished:
                 request.finish()
                     
@@ -273,7 +273,7 @@ class PokerResource(resource.Resource):
             request.finish()
             session.expire()
             if self.verbose >= 0:
-                self.error(str(body))
+                self.error("(%s:%s) " % request.findProxiedIP() + str(body))
             return True
         d.addCallbacks(render, processingFailed)
         return d
