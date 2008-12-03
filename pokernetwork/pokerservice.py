@@ -1005,6 +1005,25 @@ class PokerService(service.Service):
         user2name = dict((entry["user_serial"], entry["name"]) for entry in cursor.fetchall())
 
         cursor.execute("SELECT * FROM tourneys WHERE serial = " + str(tourney_serial));
+        if cursor.rowcount > 1:
+            # This would be a bizarre case; unlikely to happen, but worth
+            # logging if it happens.
+            self.message("tourneyManager: tourney_serial(%d) has more than one row in tourneys table, using first row returned" % tourney_serial)
+        elif cursor.rowcount <= 0:
+            # More likely to happen, so don't log it unless some verbosity
+            # is requested.
+            if self.verbose > 2:
+                self.message("tourneyManager: tourney_serial(%d) requested not found in database, returning error packet" % tourney_serial)
+                # Construct and return an error packet at this point.  I
+                # considered whether it made more sense to return "None"
+                # here and have avatar construct the Error packet, but it
+                # seems other methods in pokerservice also construct error
+                # packets already, so it seemed somewhat fitting.
+                return PacketError(other_type = PACKET_POKER_GET_TOURNEY_MANAGER,
+                                      code = PacketPokerGetTourneyManager.DOES_NOT_EXIST,
+                                   message = "Tournament %d does not exist" % tourney_serial)
+        # Now we know we can proceed with taking the first row returned in
+        # the cursor; there is at least one there.
         packet.tourney = cursor.fetchone()
         packet.tourney["registered"] = len(user2tourney)
         packet.tourney["rank2prize"] = None

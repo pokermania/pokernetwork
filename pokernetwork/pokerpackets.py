@@ -4074,11 +4074,25 @@ Packet.infoDeclare(globals(), PacketPokerMonitorEvent, Packet, "POKER_MONITOR_EV
 ########################################
 
 class PacketPokerGetTourneyManager(Packet):
-    """ """
-    
+    """
+Semantics: Get tournement manager packet for tourney_serial
+
+Direction: server <= client
+
+If the tourney_serial is not found occurs, the server will send back
+
+  PacketError(other_type = PACKET_POKER_GET_TOURNEY_MANAGER)
+
+with the "code" field name set as follows:
+
+DOES_NOT_EXIST : the "tourney_serial" field does not match any existing
+                 tournaments.
+"""
     info = Packet.info + (
         ('tourney_serial', 0, 'I'),
         )
+
+    DOES_NOT_EXIST = 1
 
 Packet.infoDeclare(globals(), PacketPokerGetTourneyManager, Packet, "POKER_GET_TOURNEY_MANAGER", 148) # 148 # 0x94 # %SEQ%
 

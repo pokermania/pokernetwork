@@ -1511,7 +1511,27 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEqual(tourney_serial, packet.tourney['serial'])
         self.assertEqual(1, packet.tourney['registered'])
         self.assertEqual(0, len(packet.table2serials))
+    # ------------------------------------------------------------------------
+    def test04_bogusTourneySerial(self):
+        self.service.startService()
+        self.createUsers()
+        tourney_serial = 17731
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEquals(packet.type, PACKET_ERROR)
+        self.assertEquals(packet.other_type, PACKET_POKER_GET_TOURNEY_MANAGER)
+        self.failUnless(packet.message.find("%d" % tourney_serial) >= 0)
+        self.assertEquals(packet.code, PacketPokerGetTourneyManager.DOES_NOT_EXIST)
+    # ------------------------------------------------------------------------
+    def test05_moreThanOneTourneyRow(self):
+        # FIXME: BKUHN needs to fix this later.  the line:
+        # !             self.message("tourneyManager: tourney_serial(%d) has more than one row in tourneys table, using first row returned" % tourney_serial)
 
+        # is not covered.  I was in a bit of a hurry, but I'm working on
+        # full coverage for service in another branch anyway, and this is
+        # just a self.message() anyway and converage can wait; I'm in a
+        # hurry.
+        pass
+###########################################################################
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
     tourney_serial = 10
@@ -2495,7 +2515,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test00_02"
+#    loader.methodPrefix = "test04"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

@@ -4,10 +4,23 @@
 
 2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in
+	(TourneyManagerTestCase.test04_bogusTourneySerial): Wrote test.
+	(TourneyManagerTestCase): Wrote stub for test.
+
+	* pokernetwork/pokerpackets.py (PacketPokerGetTourneyManager):
+	Documented packet, added error code.
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyManager):
+	check cursour.rowcount on SELECT * FROM tourneys, give appropriate
+	verbose output/error message, return PacketPokerError if no rows
+	found.
+
+	* tests/test-pokerservice.py.in
+	(TourneyManagerTestCase.test04_bogusTourneySerial): Wrote test.
+
 	* configure.ac (AC_PROG_CPP): AC_PROG_CPP appears to be
 	deprecated; switched to AC_PROG_CXX
-
-2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* configure.ac (poker2d): Added PYTHON_2_6 support.
 
