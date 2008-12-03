@@ -1,16 +1,12 @@
 2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+ 	* Release 1.7.1
+
 	* tests/test-pokersite.py.in
 	(RequestTestCase.test02_ipNumberProxy.Channel): Wrote test.
 
 	* pokernetwork/pokersite.py (Request.getClientIP): Wrote override
 	to check 'x-forwarded-for' and 'x-cluster-client-ip' first.
-
-2008-12-02  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.1
-
-2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
 	(TourneyManagerTestCase.test04_bogusTourneySerial): Wrote test.
