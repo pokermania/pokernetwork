@@ -1526,6 +1526,9 @@ class PokerService(service.Service):
             cursor1.close()
             if self.verbose >= 0:
                 self.message(message)
+            cursor2 = self.db.cursor()
+            cursor2.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( row['serial'], int(seconds()), self.resthost_serial))
+            cursor2.close()            
         cursor.close()
 
     def getMoney(self, serial, currency_serial):

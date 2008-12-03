@@ -1207,12 +1207,16 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("INSERT INTO user2tourney VALUES (1, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1)")
-        cursor.close()
         self.service.db = pokerdatabase.PokerDatabase(self.settings)
         self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
         self.service.cleanupTourneys()
         tourney = self.service.tourneys[4000]
         self.assertEqual([1, 2, 3], tourney.players)
+        cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = 4000")        
+        self.assertEqual(1, cursor.rowcount)
+        (tournament_serial,) = cursor.fetchone()
+        self.assertEqual(4000, tournament_serial)
+        cursor.close()        
     # ----------------------------------------------------------------
     def test19_testJoinCounter(self):
         expectedMax = 1000
