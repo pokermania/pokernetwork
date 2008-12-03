@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
@@ -534,6 +535,31 @@ class RequestTestCase(PokerSiteBase):
             self.assertSubstring('name=', r.cookies[0])
             session.expire()
             self.assertEqual(True, session.expired)
+
+      def test02_ipNumberProxy(self):
+            from twisted.internet import address
+
+            class Channel:
+                  def __init__(self, site):
+                        self.site = site
+            class MockClient:
+                  pass
+                  
+            addr = address.IPv4Address('TCP', 'proxy.example.org', 7775)
+            r = pokersite.Request(Channel(self.site), True)
+            r.client = addr
+            self.assertEquals(r.getClientIP(), 'proxy.example.org')
+
+            # received_headers will become requestHeaders RSN, according to:
+            # http://python.net/crew/mwh/apidocs/twisted.web.http.Request.html
+
+            r.received_headers['x-cluster-client-ip'] = 'cluster-player.example.com'
+
+            self.assertEquals(r.getClientIP(), 'cluster-player.example.com')
+            
+            r.received_headers['x-forwarded-for'] = 'forward-player.example.com'
+            self.assertEquals(r.getClientIP(), 'forward-player.example.com')
+
 
 class PokerSiteTestCase(PokerSiteBase):
 

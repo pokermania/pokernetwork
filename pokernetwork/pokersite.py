@@ -2,6 +2,7 @@
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
 # Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propogate, redistribute and/or modify this program under the terms of
@@ -120,7 +121,24 @@ class Request(server.Request):
                            sessionCookie,
                            expires = time.asctime(time.gmtime(seconds() - 3600)) + ' UTC',
                            path = '/')
-        
+
+    def getClientIP(self):
+        """Return the IP address of the client who submitted this request,
+        making an attempt to determine the actual IP through the proxy.
+        Returns	the client IP address (type: str )"""
+
+        # FIXME: we shouldn't trust these headers so completely because
+        # they can be easily forged.  Loic had the idea that we should
+        # have a list of trusted proxies.  bkuhn was thinking we should
+        # figure a way to log both the real IP and proxier IP.  Anyway,
+        # sr#2157 remains open for this reason.
+
+        if self.getHeader('x-forwarded-for'):
+            return self.getHeader('x-forwarded-for')
+        elif self.getHeader('x-cluster-client-ip'):
+            return self.getHeader('x-cluster-client-ip')
+        else:
+            return server.Request.getClientIP(self)
 
 class Session(server.Session):
 
