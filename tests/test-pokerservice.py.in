@@ -158,7 +158,7 @@ class PokerServiceTestCaseBase(unittest.TestCase):
     def setUp(self):
         testclock._seconds_reset()
         self.destroyDb()
-        settings = pokernetworkconfig.Config([])
+        self.settings = settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.db = pokerdatabase.PokerDatabase(settings)
@@ -169,6 +169,7 @@ class PokerServiceTestCaseBase(unittest.TestCase):
 
     # ----------------------------------------------------------------
     def tearDown(self):
+        self.db.close()
         d = self.service.stopService()
         d.addCallback(lambda x: self.destroyDb())
         return d
@@ -225,6 +226,7 @@ class MonitorTestCase(unittest.TestCase):
 
     # ----------------------------------------------------------------
     def tearDown(self):
+        self.db.close()
         d = self.service.stopService()
         d.addCallback(lambda x: self.destroyDb())
         return d
@@ -1206,7 +1208,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1)")
         cursor.close()
-        self.service.db = self.db
+        self.service.db = pokerdatabase.PokerDatabase(self.settings)
         self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
         self.service.cleanupTourneys()
         tourney = self.service.tourneys[4000]
@@ -2443,7 +2445,7 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 
     def test_updatePlayerRake(self):
         self.service.startService()
-        self.service.db = self.db
+        self.service.db = pokerdatabase.PokerDatabase(self.settings)
         cursor = self.db.cursor(DictCursor)
         cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount, points, rake) VALUES (101, 1, 10, 10, 10)")
         self.assertEqual(True, self.service.updatePlayerRake(1, 101, 5))
