@@ -1,6 +1,11 @@
-2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+2008-12-03  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
+
+	* tests/test-pokerservice.py.in: Close the database in teardown.
+	  Create a new database instance instead of sharing with services.
+
+2008-12-02  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokersite.py.in
 	(RequestTestCase.test02_ipNumberProxy.Channel): Wrote test.
