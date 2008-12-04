@@ -1,6 +1,15 @@
-2008-12-03  Loic Dachary <loic@dachary.org>
+2008-12-04  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  GetTourneyManager is routed
+	* po/da.po, po/de.po, po/en.po, po/en_CA.po, po/en_US.po, po/es.po,
+	  po/fi.po, po/fr.po, po/fr_BE.po, po/fr_CA.po, po/fr_FX.po,
+	  po/it.po, po/nb.po, po/nl.po, po/pt.po, po/sv.po: update po files
+	  creation date
+
+2008-12-03  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in: when
 	  relogin the last wins https://gna.org/support/?2202
