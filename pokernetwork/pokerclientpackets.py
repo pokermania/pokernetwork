@@ -2,7 +2,7 @@
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 #
 # This software's license gives you freedom; you can copy, convey,
-# propogate, redistribute and/or modify this program under the terms of
+# propagate, redistribute and/or modify this program under the terms of
 # the GNU Affero General Public License (AGPL) as published by the Free
 # Software Foundation (FSF), either version 3 of the License, or (at your
 # option) any later version of the AGPL published by the FSF.

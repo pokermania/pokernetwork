@@ -1,7 +1,7 @@
 # Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This program gives you software freedom; you can copy, convey,
-# propogate, redistribute and/or modify this program under the terms of
+# propagate, redistribute and/or modify this program under the terms of
 # the GNU Affero General Public License (AGPL) as published by the Free
 # Software Foundation, either version 3 of the License, or (at your
 # option) any later version of the AGPL.
