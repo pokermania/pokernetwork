@@ -1028,7 +1028,7 @@ class PokerService(service.Service):
         packet.tourney["registered"] = len(user2tourney)
         packet.tourney["rank2prize"] = None
         if self.tourneys.has_key(tourney_serial):
-            packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizes()
+            packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizesTable()
 
         cursor.close()
 
