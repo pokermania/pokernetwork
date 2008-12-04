@@ -3,7 +3,7 @@
 # French translations for pokerclient package.
 # Copyright (C) 2006 THE pokerclient'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the pokerclient package.
-# 
+#
 # griim <griim.work@gmail.com>, 2006.
 # Johan Euphrosine <proppy@aminche.com>, 2008.
 # Skyrock Network
@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-25 16:10-0500\n"
+"POT-Creation-Date: 2008-12-03 11:46+0100\n"
 "PO-Revision-Date: 2008-11-25 16:30+0200\n"
 "Last-Translator: devteam <devteam@orbus.fr>\n"
 "Language-Team: <pokersource-users@gna.org>\n"
