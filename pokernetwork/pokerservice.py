@@ -102,7 +102,7 @@ from datetime import date
 
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
-DELETE_OLD_TOURNEYS_DELAY = 15 * 60
+DELETE_OLD_TOURNEYS_DELAY = 15 * 60 * 60
 
 class IPokerService(Interface):
 
@@ -1418,6 +1418,8 @@ class PokerService(service.Service):
                 where = "tourney_serial = " + str(packet.tourney_serial) + " AND table_serial = " + str(packet.game_id)
         elif packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
             where = "tourney_serial = " + str(packet.game_id)
+        elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
+            where = "tourney_serial = " + str(packet.tourney_serial)
         elif hasattr(packet, "game_id"):
             where = "table_serial = " + str(packet.game_id)
         else:

@@ -587,6 +587,12 @@ class ResthostTestCase(unittest.TestCase):
         #
         resthost = self.service.packet2resthost(PacketPokerCall(game_id = 1))
         self.assertEqual('HOST', resthost[0])
+        #
+        # PACKET_POKER_GET_TOURNEY_MANAGER
+        #
+        db.db.query("INSERT INTO route VALUES (0, 1, 0, 1)")
+        resthost = self.service.packet2resthost(PacketPokerGetTourneyManager(tourney_serial = 1))
+        self.assertEqual('HOST', resthost[0])
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
