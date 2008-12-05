@@ -71,16 +71,18 @@ class MemcacheMockup:
             for k in kwargs: self.expiration[k] = time
             return []
 
-        def add(self, key, value):
+        def add(self, key, value, time = 0):
             if self.cache.has_key(key):
                 return 0
             else:
                 self.cache[key] = value
+                self.expiration[key] = time                
                 return 1
 
-        def replace(self, key, value):
+        def replace(self, key, value, time = 0):
             if self.cache.has_key(key):
                 self.cache[key] = value
+                self.expiration[key] = time
                 return 1
             else:
                 return 0

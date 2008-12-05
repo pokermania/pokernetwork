@@ -46,12 +46,16 @@ class MemcacheTestCase(unittest.TestCase):
             self.assertEqual({}, memcache.get_multi(map.keys()))
       def test02(self):
             memcache = MemcacheMockup.Client([''])
-            memcache.set('a', 'b', 1)
+            memcache.set('a', 'b', time = 1)
             self.assertEqual(1, memcache.expiration['a'])
-            map = {'A': '1', 'B':'2'}
-            self.assertEqual([], memcache.set_multi(map, 2))
+            map = {'A': 'x', 'B':'y'}
+            self.assertEqual([], memcache.set_multi(map, time = 2))
             self.assertEqual(2, memcache.expiration['A'])
             self.assertEqual(2, memcache.expiration['B'])
+            memcache.replace('A', 'z', time = 1)
+            self.assertEqual(1, memcache.expiration['A'])
+            memcache.add('C', 'x', time = 3)
+            self.assertEqual(3, memcache.expiration['C'])            
             
 #--------------------------------------------------------------
 def GetTestSuite():

@@ -559,7 +559,8 @@ class SessionTestCase(PokerSiteBase):
             session = self.site.getSession(uid)
             self.assertEqual(True, session.checkExpired())
             self.site.memcache.set(str(serial), 'wrongsession')
-            self.assertEqual(None, session.checkExpired())
+            self.assertEqual(True, session.checkExpired())
+            self.assertEqual('-1', self.site.memcache.get('wrongsession'))
             self.site.memcache.delete(uid)
             self.site.memcache.delete(str(serial))
             self.assertEqual(False, session.checkExpired())
@@ -668,18 +669,15 @@ class PokerSiteTestCase(PokerSiteBase):
       def test03_03_getSession(self):
             """
             If the serial in memcache is associated to a session name
-            that does not match the in core session name, abort.
+            that does not match the in core session name, the memcache
+            session is blacklisted.
             """
             session = self.site.makeSession()
             serial = 111
             self.site.memcache.set(session.uid, str(serial))
             self.site.memcache.set(str(serial), 'fakesession')
-            exception = False
-            try: 
-                  self.site.getSession(session.uid)
-            except AssertionError:
-                  exception = True
-            self.assertEquals(True, exception)
+            self.site.getSession(session.uid)
+            self.assertEquals('-1', self.site.memcache.get('fakesession'))
 
       def test04_01_updateSession(self):
             """
@@ -714,7 +712,6 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.memcache.set(str(serial), 'other uid')
             self.assertEquals(False, self.site.updateSession(session))
             self.assertEquals(True, session.expired)
-            self.assertEquals(None, self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
 
       def test04_04_updateSession(self):
             """
@@ -728,7 +725,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
-            int(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
+            self.assertEquals(self.site.cookieTimeout, self.site.memcache.expiration[session.uid])
             
       def test04_05_updateSession(self):
             """
@@ -746,7 +743,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
-            int(self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
+            self.assertEquals(self.site.cookieTimeout, self.site.memcache.expiration[session.uid])
             #
             # logout
             #
@@ -755,7 +752,6 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals(0, int(self.site.memcache.get(session.uid)))
             self.assertEquals(None, self.site.memcache.get(str(serial)))
-            self.assertEquals(None, self.site.memcache.get(pokersite.uid2last_modified(session.uid)))
 
       def test04_06_updateSession(self):
             """
@@ -798,7 +794,7 @@ class PokerSiteTestCase(PokerSiteBase):
                   self.transport = PokerResourceTestCase.Transport()
                   self.site = site
 
-      def test06_getSession_assert(self):
+      def test06_getSession_toggle(self):
             """
             An inconsistency in the memcache invalidates the session and an assert
             kills the request. When this happens, the assert must be caught and
@@ -816,18 +812,16 @@ class PokerSiteTestCase(PokerSiteBase):
             r.site.memcache.set(serial, 'yerk')
             d = r.notifyFinish()
             def finish(result):
-                  self.assertSubstring('AssertionError', str(result.getTraceback()))
-                  self.assertSubstring('Expires', r.cookies[0])
+                  self.assertEqual('-1', r.site.memcache.get('yerk'))
                   return True
-            d.addErrback(finish)
+            d.addCallback(finish)
             r.requestReceived('GET', '/', '')
             return d
 
-      def test07_memcacheCookie_expired(self):
+      def test07_memcacheCookie_blacklisted(self):
             """
-            If a session stored in memcache has not been used for too long (i.e.
-            its last_modified timestamp is greater than a given number of seconds)
-            the session is invalidated.
+            If a session stored in memcache has been blacklisted using
+            serial -1, BlacklistedSession is raised.
             """
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
@@ -837,46 +831,14 @@ class PokerSiteTestCase(PokerSiteBase):
             session = 'session'
             serial = '5'
             r.received_cookies['TWISTED_SESSION'] = session
-            r.site.memcache.set(pokersite.uid2last_modified(session), '0')
-            r.site.memcache.set(session, serial)
-            r.site.memcache.set(serial, session)
+            r.site.memcache.set(session, '-1')
             d = r.notifyFinish()
             def finish(result):
-                  self.assertSubstring('=session', r.cookies[0])
-                  self.assertEquals(None, r.site.memcache.get(session))
-                  self.assertEquals(None, r.site.memcache.get(serial))
-                  self.assertEquals(None, r.site.memcache.get(pokersite.uid2last_modified(session)))
+                  self.assertSubstring('Traceback', r.transport.getvalue())
+                  self.assertSubstring('BlacklistedSession', r.transport.getvalue())                  
                   return True
             d.addCallback(finish)
-            r.requestReceived('GET', '/', '')
-            return d
-
-      def test07_memcacheCookie_expired(self):
-            """
-            If a session stored in memcache has not been used for too long (i.e.
-            its last_modified timestamp is greater than a given number of seconds)
-            the session is invalidated.
-            """
-            r = pokersite.Request(self.Channel(self.site), True)
-            r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
-            r.gotLength(len(input))
-            r.handleContentChunk(input)
-            session = 'session'
-            serial = '5'
-            r.received_cookies['TWISTED_SESSION'] = session
-            r.site.memcache.set(pokersite.uid2last_modified(session), '0')
-            r.site.memcache.set(session, serial)
-            r.site.memcache.set(serial, session)
-            d = r.notifyFinish()
-            def finish(result):
-                  self.failIfSubstring('=session', r.cookies[0])
-                  self.assertEquals(None, r.site.memcache.get(session))
-                  self.assertEquals(None, r.site.memcache.get(serial))
-                  return True
-            d.addCallback(finish)
-            r.requestReceived('GET', '/', '')
-            return d
+            r.requestReceived('GET', '/', '')           
 
       def test08_memcache_key_not_string(self):
             exceptionCaught = False
@@ -884,9 +846,10 @@ class PokerSiteTestCase(PokerSiteBase):
             uuid = unicode(session.uid)
             self.assertRaises(Exception, self.site.memcache.get, uuid)
             self.assertRaises(Exception, self.site.getSession, uuid)
-            self.assertRaises(Exception, self.site.refreshMemcacheCookie, uuid)
-            self.assertRaises(Exception, self.site.expireMemcacheCookie, uuid)
-            self.assertRaises(Exception, self.site.deleteMemcacheCookie, uuid)
+
+      def test09_error_coverage(self):
+            self.site.message = lambda text: self.assertSubstring("*ERROR*", text)
+            self.site.error('foo')
 
 def Run():
     loader = runner.TestLoader()
