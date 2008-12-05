@@ -35,6 +35,7 @@ import sets
 from twisted.internet import defer
 
 from types import *
+from traceback import format_exc
 
 from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
@@ -292,8 +293,13 @@ class PokerAvatar:
             _ = self.localeFunc
             pokergameSavedUnder = pokergame_init_i18n('', self.localeFunc)
 	if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
-	    self.explain.explain(packet)
-	    packets = self.explain.forward_packets
+            try:
+                self.explain.explain(packet)
+                packets = self.explain.forward_packets
+            except:
+                packets = [ PacketError(other_type = PACKET_NONE, message = format_exc()) ]
+                if self.service.verbose >= 0:
+                    self.message(packets[0].message)
 	else:
 	    packets = [ packet ]
         if self._queue_packets:

@@ -3705,6 +3705,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
             mpiSelf.name = 'Doyle Brunson'
     class MockService:
         def __init__(msSelf):
+            msSelf.verbose = 6
             def transFunc(locale, encoding = ''):
                 if locale == 'mylocale':
                     return lambda s: "MYTRANSLATION"
@@ -3712,7 +3713,9 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
                     return lambda s: "BROKEN FAIL"
             msSelf.locale2translationFunc = transFunc
             msSelf.serial2client = {}
-            
+
+        def getClientQueuedPacketMax(self):
+            return 200000
         def getPlayerInfo(msSelf, serial):
             return PokerAvatarNoClientServerTestCase.MockPlayerInfo()
         def getPlayerPlaces(msSelf, serial):
@@ -3875,10 +3878,31 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
 
         self.assertEquals(None, avatar_first.localeFunc)
         
+    # ------------------------------------------------------------------------
+    def test05_explain_throws(self):
+        """relogin is called where an avatar already exists."""
+        from pokernetwork import pokeravatar
+
+        serial = 1042
+
+        service = PokerAvatarNoClientServerTestCase.MockService()
+        avatar = pokeravatar.PokerAvatar(service)
+        class Explain:
+            def explain(self, what):
+                raise Exception("FAILURE")
+        clear_all_messages()
+        avatar.explain = Explain()
+        avatar.queuePackets()
+        avatar.sendPacket(Packet())
+        packets = avatar.resetPacketsQueue()
+        self.assertEquals(PACKET_ERROR, packets[0].type)
+        self.assertSubstring('FAILURE', packets[0].message)
+        self.assertEquals(True, search_output('FAILURE'))
+        
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
