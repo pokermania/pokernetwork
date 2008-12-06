@@ -257,6 +257,7 @@ class PokerResource(resource.Resource):
             # update the session information if the avatar changed
             #
             session.site.updateSession(session)
+            session.site.persistSession(session)
             #
             # Format answer
             #
@@ -448,6 +449,12 @@ class PokerSite(server.Site):
         for key in self.sessions.keys():
             self.sessions[key].expire()
         
+    def persistSession(self, session):
+        if len(session.avatar.tables) <= 0 and len(session.avatar.tourneys) <= 0:
+            session.expire()
+            return False
+        return True
+        
     def updateSession(self, session):
         #
         # assert the session informations were not changed in memcache
@@ -503,8 +510,6 @@ class PokerSite(server.Site):
             #
             self.memcache.set_multi({ session.uid: str(serial),
                                       str(serial): session.uid }, time = self.cookieTimeout)
-        if len(session.avatar.tables) <= 0 and len(session.avatar.tourneys) <= 0:
-            session.expire()
         return True
 
     def getSession(self, uid):

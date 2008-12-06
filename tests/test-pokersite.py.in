@@ -679,18 +679,6 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.getSession(session.uid)
             self.assertEquals('-1', self.site.memcache.get('fakesession'))
 
-      def test04_01_updateSession(self):
-            """
-            the session expires after upateSession, unless there are tables
-            """
-            session = self.site.makeSession()
-            session.avatar.tables[1] = 'table'
-            self.site.updateSession(session)
-            self.assertEquals(False, session.expired)
-            session.avatar.tables = []
-            self.site.updateSession(session)
-            self.assertEquals(True, session.expired)
-
       def test04_02_updateSession(self):
             """
             expire the session if the memcache serial changed since the request started
@@ -850,6 +838,18 @@ class PokerSiteTestCase(PokerSiteBase):
       def test09_error_coverage(self):
             self.site.message = lambda text: self.assertSubstring("*ERROR*", text)
             self.site.error('foo')
+
+      def test10_persistSession(self):
+            """
+            the session expires after persistSession, unless there are tables
+            """
+            session = self.site.makeSession()
+            session.avatar.tables[1] = 'table'
+            self.assertEquals(True, self.site.persistSession(session))
+            self.assertEquals(False, session.expired)
+            session.avatar.tables = []
+            self.assertEquals(False, self.site.persistSession(session))
+            self.assertEquals(True, session.expired)
 
 def Run():
     loader = runner.TestLoader()
