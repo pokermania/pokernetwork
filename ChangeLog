@@ -1,7 +1,34 @@
-2008-12-04  Loic Dachary <loic@dachary.org>
+2008-12-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
 
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: the
+	  decision to keep the session or not has been separated from the
+	  update of the memcache to reflect the state of the session. The
+	  function persistSession now decides that the session is expires
+	  based on the fact that the avatar is connected to tables or
+	  tournaments.
+
+2008-12-05  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  protect sendPacket from explain failures. Because sendPacket is
+	  called from pokerservice.update, an exception in this area is of
+	  great consequence. Instead, log the error and send it back as a
+	  single error packet.
+
+2008-12-05  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokermemcache.py, pokernetwork/pokersite.py,
+	  tests/test-pokermemcache.py.in, tests/test-pokersite.py.in:
+	  replace AssertionError with BlacklistedSession in pokersite when
+	  two session use the same serial
+
+2008-12-04  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerservice.py: Use prizesTable instead of prizes
+	  because the later returns None unless the tournament is in
+	  running mode.
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
 	  GetTourneyManager is routed
 	* po/da.po, po/de.po, po/en.po, po/en_CA.po, po/en_US.po, po/es.po,
