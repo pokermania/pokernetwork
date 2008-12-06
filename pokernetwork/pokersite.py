@@ -256,8 +256,8 @@ class PokerResource(resource.Resource):
             #
             # update the session information if the avatar changed
             #
-            session.site.updateSession(session)
-            session.site.persistSession(session)
+            if session.site.updateSession(session):
+                session.site.persistSession(session)
             #
             # Format answer
             #
