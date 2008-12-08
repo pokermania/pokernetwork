@@ -577,6 +577,7 @@ class SessionTestCase(PokerSiteBase):
       def test01_checkExpired(self):
             uid = 'uid'
             session = self.site.makeSessionFromUid(uid)
+            self.site.memcache.set(uid, '0')
             self.assertEqual(True, session.checkExpired())
             self.site.memcache.delete(uid)
             self.assertEqual(False, session.checkExpired())
