@@ -256,8 +256,8 @@ class PokerResource(resource.Resource):
             #
             # update the session information if the avatar changed
             #
-            if session.site.updateSession(session):
-                session.site.persistSession(session)
+            session.site.updateSession(session)
+            session.site.persistSession(session)
             #
             # Format answer
             #
@@ -456,36 +456,24 @@ class PokerSite(server.Site):
         return True
         
     def updateSession(self, session):
-        #
-        # assert the session informations were not changed in memcache
-        # This can happen if another process takes over the session while
-        # this process was handling the request. 
-        #
-        if ( ( self.memcache.get(session.uid) != str(session.memcache_serial) ) or
-             ( session.memcache_serial > 0 and
-               self.memcache.get(str(session.memcache_serial)) != session.uid )):
-            session.isLogged = False
-            session.expire()
-            return False
-
         serial = session.avatar.getSerial()
-        if session.memcache_serial == 0:
-            if serial > 0:
+        if serial > 0:
+            #
+            # blacklist a session previously associated to the serial
+            #
+            memcache_uid = self.memcache.get(str(serial))
+            if memcache_uid != None and session.uid != memcache_uid:
                 #
-                # if the user is now logged in, bind the serial to the session
+                # the lifespan of this blacklisted uid *must* be greater than
+                # self.sessionTimeout
                 #
-                self.memcache.replace(session.uid, str(serial), time = self.cookieTimeout)
-                #
-                # 'set' is used instead of 'add' because the latest session wins,
-                # even if the previous is still active. When a session is
-                # properly closed, the serial memecache entry is discarded.
-                # But if the session is not closed, there is a spurious
-                # serial entry referencing the old session. When a request
-                # arrives with the old session uid (check getSession #xref1) it will
-                # trigger an error and do nothing.
-                #
-                self.memcache.set(str(serial), session.uid, time = self.cookieTimeout)
-        else:
+                self.memcache.set(memcache_uid, '-1', time = self.cookieTimeout)
+
+        #
+        # There is no need to consider the case where session.memcache_serial is
+        # zero because nothing needs updating in memcache.
+        #
+        if session.memcache_serial > 0:
             if serial == 0:
                 #
                 # if the user has logged out, unbind the serial that was in memcache
@@ -494,15 +482,16 @@ class PokerSite(server.Site):
                 self.memcache.replace(session.uid, '0', time = self.cookieTimeout)
             elif serial != session.memcache_serial:
                 #
-                # if the user changed personality, delete old serial, add new one and
-                # update session
+                # if the user changed personality, delete old serial
                 #
                 self.memcache.delete(str(session.memcache_serial))
-                self.memcache.add(str(serial), session.uid, time = self.cookieTimeout)
-                self.memcache.replace(session.uid, str(serial), time = self.cookieTimeout)
-                
-        session.isLogged = session.avatar.isLogged()
-        if session.isLogged:
+            #
+            # for consistency, so that updateSession can be called multiple times without
+            # side effects
+            #
+            session.memcache_serial = serial
+
+        if serial > 0:
             #
             # refresh the memcache entry each time a request is handled
             # because it is how each poker server is informed that
@@ -510,7 +499,6 @@ class PokerSite(server.Site):
             #
             self.memcache.set_multi({ session.uid: str(serial),
                                       str(serial): session.uid }, time = self.cookieTimeout)
-        return True
 
     def getSession(self, uid):
         if not isinstance(uid, str):
@@ -525,23 +513,6 @@ class PokerSite(server.Site):
                 self.sessions[uid].expire()
         else:
             memcache_serial = int(memcache_serial)
-            #
-            # #xref1
-            # Safeguard against memcache inconsistency.  This
-            # happens when another session is already bound to the
-            # serial. The policy is that the newest session wins and
-            # the previous session must not get any requests. This can
-            # be reproduced with two web browsers logged in the same
-            # account.
-            #
-            if memcache_serial > 0:
-                memcache_uid = self.memcache.get(str(memcache_serial))
-                if memcache_uid != None and uid != memcache_uid:
-                    #
-                    # the lifespan of this blacklisted uid *must* be greater than
-                    # self.sessionTimeout
-                    #
-                    self.memcache.set(memcache_uid, '-1', time = self.cookieTimeout)
             #
             # If a session exists, make sure it is in sync with the memcache
             # serial.

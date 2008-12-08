@@ -254,6 +254,29 @@ class PokerResourceTestCase(PokerSiteBase):
             r.requestReceived('GET', '/', '')
             return d
 
+      def test09_render_blacklist_session(self):
+            """ when session is blacklisted, the new session takes over the serial in memcache """
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPing"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            session = 'session'
+            other_session = 'other'
+            serial = '5'
+            r.received_cookies['TWISTED_SESSION'] = session
+            r.site.memcache.set(session, serial)
+            r.site.memcache.set(serial, other_session)
+            d = r.notifyFinish()
+            def finish(result):
+                  self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+                  self.failIfSubstring('Expire', r.transport.getvalue())
+                  self.assertEqual('-1', self.site.memcache.get(other_session))
+                  self.assertEqual(session, self.site.memcache.get(serial))
+            d.addCallback(finish)
+            r.requestReceived('GET', '/', '')
+            return d
+
 class PokerImageUploadTestCase(unittest.TestCase):
 
       class Transport:
@@ -552,17 +575,10 @@ class FilterFinishTestCase(unittest.TestCase):
 class SessionTestCase(PokerSiteBase):
 
       def test01_checkExpired(self):
-            serial = 111
             uid = 'uid'
-            self.site.memcache.set(uid, str(serial))
-            self.site.memcache.set(str(serial), uid)
-            session = self.site.getSession(uid)
+            session = self.site.makeSessionFromUid(uid)
             self.assertEqual(True, session.checkExpired())
-            self.site.memcache.set(str(serial), 'wrongsession')
-            self.assertEqual(True, session.checkExpired())
-            self.assertEqual('-1', self.site.memcache.get('wrongsession'))
             self.site.memcache.delete(uid)
-            self.site.memcache.delete(str(serial))
             self.assertEqual(False, session.checkExpired())
 
 class RequestTestCase(PokerSiteBase):
@@ -666,40 +682,17 @@ class PokerSiteTestCase(PokerSiteBase):
             session = self.site.getSession(session.uid)
             self.assertEquals(serial + 1, session.avatar.getSerial())
 
-      def test03_03_getSession(self):
-            """
-            If the serial in memcache is associated to a session name
-            that does not match the in core session name, the memcache
-            session is blacklisted.
-            """
-            session = self.site.makeSession()
-            serial = 111
-            self.site.memcache.set(session.uid, str(serial))
-            self.site.memcache.set(str(serial), 'fakesession')
-            self.site.getSession(session.uid)
-            self.assertEquals('-1', self.site.memcache.get('fakesession'))
-
       def test04_02_updateSession(self):
             """
-            expire the session if the memcache serial changed since the request started
-            """
-            session = self.site.makeSession()
-            self.site.memcache.set(session.uid, 100)
-            self.assertEquals(False, self.site.updateSession(session))
-            self.assertEquals(True, session.expired)
-
-      def test04_03_updateSession(self):
-            """
-            expire the session if the memcache uid for the serial
-            changed since the request started
+            blacklist the session associated with the serial if it is not the current session
             """
             session = self.site.makeSession()
             serial = 100
-            self.site.memcache.set(session.uid, str(serial))
             session.avatar.user.serial = serial
-            self.site.memcache.set(str(serial), 'other uid')
-            self.assertEquals(False, self.site.updateSession(session))
-            self.assertEquals(True, session.expired)
+            badsession = 'badsession'
+            self.site.memcache.set(str(serial), badsession)
+            self.site.updateSession(session)
+            self.assertEquals('-1', self.site.memcache.get(badsession))
 
       def test04_04_updateSession(self):
             """
@@ -823,7 +816,7 @@ class PokerSiteTestCase(PokerSiteBase):
             d = r.notifyFinish()
             def finish(result):
                   self.assertSubstring('Traceback', r.transport.getvalue())
-                  self.assertSubstring('BlacklistedSession', r.transport.getvalue())                  
+                  self.assertSubstring('BlacklistedSession', r.transport.getvalue())
                   return True
             d.addCallback(finish)
             r.requestReceived('GET', '/', '')           
@@ -853,7 +846,7 @@ class PokerSiteTestCase(PokerSiteBase):
 
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test17"
+#    loader.methodPrefix = "test04"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(FilterErrorTestCase))
     suite.addTest(loader.loadClass(FilterTestCase))
