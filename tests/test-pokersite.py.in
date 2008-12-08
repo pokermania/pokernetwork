@@ -682,7 +682,7 @@ class PokerSiteTestCase(PokerSiteBase):
             session = self.site.getSession(session.uid)
             self.assertEquals(serial + 1, session.avatar.getSerial())
 
-      def test04_02_updateSession(self):
+      def test04_updateSession_blacklist(self):
             """
             blacklist the session associated with the serial if it is not the current session
             """
@@ -694,7 +694,16 @@ class PokerSiteTestCase(PokerSiteBase):
             self.site.updateSession(session)
             self.assertEquals('-1', self.site.memcache.get(badsession))
 
-      def test04_04_updateSession(self):
+      def test04_updateSession_noop(self):
+            """
+            nothing happened and user logged out
+            """
+            session = self.site.makeSession()
+            self.site.updateSession(session)
+            self.assertEquals('0', self.site.memcache.get(session.uid))
+            self.assertEquals(None, self.site.memcache.get('0'))
+
+      def test04_updateSession_login(self):
             """
             memcache serial is 0 and serial is > 0, meaning the user logged in
             the memcache must be updated accordingly by adding an entry 
@@ -708,7 +717,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
             self.assertEquals(self.site.cookieTimeout, self.site.memcache.expiration[session.uid])
             
-      def test04_05_updateSession(self):
+      def test04_updateSession_logout(self):
             """
             memcache serial is > 0 and serial is == 0, meaning the user logged out
             the memcache must be updated by killing the entry that had the former
@@ -734,11 +743,10 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(0, int(self.site.memcache.get(session.uid)))
             self.assertEquals(None, self.site.memcache.get(str(serial)))
 
-      def test04_06_updateSession(self):
+      def test04_updateSession_inconsistent_serial(self):
             """
-            memcache serial is > 0 and serial is == 0, meaning the user logged out
-            the memcache must be updated by killing the entry that had the former
-            serial as a key
+            memcache serial is > 0 and serial is > 0 and memcache_serial != serial, 
+            serial wins and take over
             """
             session = self.site.makeSession()
             #
@@ -751,14 +759,16 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(serial)))
             #
-            # inconsistency
+            # inconsistency in serial, previous serial is discarded
             #
             new_serial = 200
             session.memcache_serial = serial # would be set by getSession()
             session.avatar.user.serial = new_serial
             self.site.updateSession(session)
+            self.assertEquals(None, self.site.memcache.get(str(serial)))
             self.assertEquals(new_serial, int(self.site.memcache.get(session.uid)))
             self.assertEquals(session.uid, self.site.memcache.get(str(new_serial)))
+            self.assertEquals(session.memcache_serial, new_serial)
 
       def test05_startFactory(self):
             self.site.startFactory()
