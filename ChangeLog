@@ -1,6 +1,14 @@
-2008-12-06  Loic Dachary <loic@dachary.org>
+2008-12-08  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: Move
+	  blacklisting of sessions from getSession to updateSession.
+	  getSession has no side effect on memcache.
+	  updateSession updates the memcache according to the changes that
+	  occured since getSession was called.
+
+2008-12-06  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: the
 	  decision to keep the session or not has been separated from the
