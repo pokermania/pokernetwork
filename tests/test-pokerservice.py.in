@@ -1543,6 +1543,60 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         # just a self.message() anyway and converage can wait; I'm in a
         # hurry.
         pass
+    # ------------------------------------------------------------------------
+    def test06_prizes_tourney_regular(self):
+        self.service.startService()
+        self.createUsers()
+        db = self.service.db.db
+        tourney_serial = 11791
+        db.query("INSERT INTO tourneys (serial, sit_n_go, state, buy_in) VALUES (%d, '%s', '%s', %d)" % (tourney_serial, 'n', 'complete', 1000))
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 1, 1, 1)")
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 2, 1, 2)")
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 3, 1, 3)")
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 4, 1, 4)")
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEquals(packet.type, PACKET_POKER_TOURNEY_MANAGER)
+        rank2prize = packet.tourney['rank2prize']
+        self.assertEquals(len(rank2prize), 2)
+        self.assertEquals(int(rank2prize[0]), 2800)
+        self.assertEquals(int(rank2prize[1]), 1200)
+        self.assertEquals(packet.tourney['registered'], 4)
+
+    # ------------------------------------------------------------------------
+    def test07_prizes_tourney_sng(self):
+        self.service.startService()
+        self.createUsers()
+        db = self.service.db.db
+        tourney_serial = 11791
+        db.query("INSERT INTO tourneys (serial, sit_n_go, state, buy_in, players_quota) VALUES (%d, '%s', '%s', %d, %d)" % (tourney_serial, 'y', 'complete', 1000, 10))
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEquals(packet.type, PACKET_POKER_TOURNEY_MANAGER)
+        rank2prize = packet.tourney['rank2prize']
+        self.assertEquals(len(rank2prize), 3)
+        self.assertEquals(int(rank2prize[0]), 5000)
+        self.assertEquals(int(rank2prize[1]), 3000)
+        self.assertEquals(int(rank2prize[2]), 2000)
+        self.assertEquals(packet.tourney['registered'], 0)
+
+    # ------------------------------------------------------------------------
+    def test08_prizes_guarantee_amount(self):
+        self.service.startService()
+        self.createUsers()
+        db = self.service.db.db
+        tourney_serial = 11791
+        db.query("INSERT INTO tourneys (serial, sit_n_go, state, buy_in, players_quota, prize_min) VALUES (%d, '%s', '%s', %d, %d, %d)" % (tourney_serial, 'n', 'complete', 100, 1000, 10000))
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 1, 1, 1)")
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 2, 1, 2)")
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 3, 1, 3)")
+        db.query("INSERT INTO user2tourney (tourney_serial, user_serial, table_serial, rank) VALUES (11791, 4, 1, 4)")
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEquals(packet.type, PACKET_POKER_TOURNEY_MANAGER)
+        rank2prize = packet.tourney['rank2prize']
+        self.assertEquals(len(rank2prize), 2)
+        self.assertEquals(int(rank2prize[0]), 7000)
+        self.assertEquals(int(rank2prize[1]), 3000)
+        self.assertEquals(packet.tourney['registered'], 4)
+
 ###########################################################################
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
@@ -2527,7 +2581,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test04"
+#    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
