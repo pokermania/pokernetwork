@@ -1,6 +1,28 @@
-2008-12-08  Loic Dachary <loic@dachary.org>
+2008-12-09  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
+
+	* tests/test-pokerservice.py.in: cover all tournament prizes
+	  logical cases
+	* pokernetwork/pokerservice.py: tourney getPrize is called with a
+	  player count that depends sit&go and with the guarantee_amount
+	  argument
+	* tests/test-pokersite.py.in: makeSessionFromUid does not set
+	  memcache entry
+	* tests/test-pokersite.py.in: rename and improve updateSession
+	  logic coverage
+
+2008-12-08  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyManager):
+	prizesTable() => prizes() for PokerTournament; added condition to
+	properly fill rank2prize when no tourney object.
+
+	* tests/test-pokerservice.py.in
+	(TourneyManagerTestCase.test06_tourneyInDB): Wrote test to show
+	sr#2207.
+
+2008-12-08  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: Move
 	  blacklisting of sessions from getSession to updateSession.
