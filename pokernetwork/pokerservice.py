@@ -83,6 +83,7 @@ from twisted.python import components
 
 from pokerengine.pokertournament import *
 from pokerengine.pokercards import PokerCards
+from pokerengine import pokerprizes
 
 from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.server import PokerServerProtocol
@@ -1028,8 +1029,23 @@ class PokerService(service.Service):
         packet.tourney["registered"] = len(user2tourney)
         packet.tourney["rank2prize"] = None
         if self.tourneys.has_key(tourney_serial):
-            packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizesTable()
-
+            packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizes()
+        else:
+            # What follows really a complete hack.  Since prizes_specs
+            # isn't stored in the database, we don't really know if we
+            # should use "Table" lookup.  There are no checks being done
+            # or anything like that to see if these ranks were actually
+            # payed these amounts.  But it might be good enough to solve
+            # an immediate problem.
+            if packet.tourney["sit_n_go"] == 'y':
+                player_count = packet.tourney["players_quota"]
+            else:
+                player_count = packet.tourney["registered"]
+            packet.tourney["rank2prize"] = pokerprizes.__dict__["PokerPrizesTable"](
+                        buy_in_amount = packet.tourney['buy_in'],
+                        guarantee_amount = packet.tourney['prize_min'],
+                        player_count = player_count,
+                        config_dirs = self.dirs).getPrizes()
         cursor.close()
 
         user2properties = {}
