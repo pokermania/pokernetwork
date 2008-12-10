@@ -1,4 +1,4 @@
-Release 1.7.1 
+Release 1.7.2
 
 Complete REST interface.
 
@@ -9,6 +9,10 @@ Proxy server with authentication capabilities.
 Add test coverage.
 
 Implement authentication plugin infrastructure and example.
+
+Release 1.7.1 
+
+Pre-release
 
 Release 1.7.0
 

@@ -1,3 +1,11 @@
+2008-12-10  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.2
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  PacketPokerPoll game_id + tourney_serial => used in the route
+	  selection when > 0
+
 2008-12-09  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.1
