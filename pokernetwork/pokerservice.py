@@ -1428,10 +1428,12 @@ class PokerService(service.Service):
 
     def packet2resthost(self, packet):
         if packet.type == PACKET_POKER_POLL:
-            if packet.game_id <= 0:
-                where = "tourney_serial = " + str(packet.tourney_serial)
-            else:
-                where = "tourney_serial = " + str(packet.tourney_serial) + " AND table_serial = " + str(packet.game_id)
+            wheres = []
+            if packet.game_id > 0:
+                wheres.append("table_serial = " + str(packet.game_id))
+            if packet.tourney_serial > 0:
+                wheres.append(" tourney_serial = " + str(packet.tourney_serial))
+            where = " AND ".join(wheres)
         elif packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
             where = "tourney_serial = " + str(packet.game_id)
         elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):

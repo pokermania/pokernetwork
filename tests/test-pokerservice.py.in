@@ -566,11 +566,18 @@ class ResthostTestCase(unittest.TestCase):
         resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 888))
         self.assertEqual(None, resthost)
         #
-        # poll is routed
+        # poll to a tourney is routed
         #
         db = self.service.db
         db.db.query("INSERT INTO route VALUES (0, 484, 1, 1)")
         resthost = self.service.packet2resthost(PacketPokerPoll(tourney_serial = 484))
+        self.assertEqual('HOST', resthost[0])
+        #
+        # poll to a tourney table is routed
+        #
+        db = self.service.db
+        db.db.query("INSERT INTO route VALUES (232, 484, 1, 1)")
+        resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 232))
         self.assertEqual('HOST', resthost[0])
         #
         # poll to an unknown tourney_serial is not routed
