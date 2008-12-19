@@ -136,7 +136,7 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(lambda x: reactor.disconnectAll())
             return d
       
-      def test01_ping_server(self):
+      def test01_ping_proxy(self):
             """
             Ping to the proxy.
             """
@@ -147,7 +147,7 @@ class ProxyTestCase(unittest.TestCase):
             d.addCallback(checkPing)
             return d
 
-      def test02_ping_proxy(self):
+      def test02_ping_server(self):
             """
             Ping to the server.
             """
