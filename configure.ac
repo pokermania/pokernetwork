@@ -351,6 +351,9 @@ AC_CONFIG_FILES([
 	tests/test-svg2gtk.py
 	tests/test-gamewindow.py
 	tests/test-poker2d.py
+	tests/test-leak.py
+	tests/test-leak-reference.py
+	tests/test-leak-exarkun.py
         tests/testcurrency.php
         tests/testpoker.php
         tests/testbirthday.php
