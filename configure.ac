@@ -352,6 +352,7 @@ AC_CONFIG_FILES([
 	tests/test-gamewindow.py
 	tests/test-poker2d.py
 	tests/test-leak.py
+	tests/test-leak-no-trial.py
 	tests/test-leak-reference.py
 	tests/test-leak-exarkun.py
         tests/testcurrency.php

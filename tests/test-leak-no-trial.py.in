@@ -24,8 +24,6 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
-from twisted.trial import unittest, runner, reporter
-
 from twisted.internet import selectreactor, main
 class MyReactor(selectreactor.SelectReactor):
       def runUntilCurrent(self):
@@ -41,21 +39,17 @@ twisted.internet.base.DelayedCall.debug = True
 
 from twisted.web import client, http
 
-from tests import testmessages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: testmessages.silence_all_messages()
-
 from tests import testclock
 
 from pokernetwork import pokermemcache
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
-from pokernetwork import proxyfilter
 from pokernetwork.pokerpackets import *
 
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="%i" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -66,13 +60,13 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../database/schema.sql" command="@MYSQL@" />
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
-"""
+""" % verbose
 
-class LeakTestCase(unittest.TestCase):
+class LeakTestCase:
 
       def destroyDb(self, arg = None):
             if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
@@ -109,26 +103,25 @@ class LeakTestCase(unittest.TestCase):
             d.addCallback(lambda x: reactor.disconnectAll())
             return d
 
-      def test00(self):
-            pass
+      def cleanMemcache(self, x):
+            pokermemcache.memcache_singleton.clear()
+            pokermemcache.memcache_expiration_singleton.clear()
 
       def test01_ping(self):
             """
+            VIRT (samples: 167, step 3s)
+            34372, stable
             """
             def f(ignored):
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPing"}')
-                  def cleanMemcache(x):
-                        pokermemcache.memcache_singleton.clear()
-                        pokermemcache.memcache_expiration_singleton.clear()
-                  d.addCallback(cleanMemcache)
+                  d.addCallback(self.cleanMemcache)
                   d.addCallback(f)
             f(None)
-            d = defer.Deferred()
-            return d
-      test01_ping.timeout = pow(2, 30)
 
       def test02_joinTable(self):
             """
+            VIRT (samples: 63, step: 3s)
+            35792, stable
             """
             def f(ignored, i):
                   serial = 0
@@ -137,16 +130,10 @@ class LeakTestCase(unittest.TestCase):
                   headers = { 'Cookie': 'TWISTED_SESSION='+session }
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
-                  def cleanMemcache(x):
-                        pokermemcache.memcache_singleton.clear()
-                        pokermemcache.memcache_expiration_singleton.clear()
-                  d.addCallback(cleanMemcache)
+                  d.addCallback(self.cleanMemcache)
                   d.addCallback(f, i+1)
             i = 1
             f(None, i)
-            d = defer.Deferred()
-            return d
-      test02_joinTable.timeout = pow(2, 30)
 
       def test03_joinTable_guppy(self):
             import guppy, gc
@@ -164,36 +151,19 @@ class LeakTestCase(unittest.TestCase):
                   headers = { 'Cookie': 'TWISTED_SESSION='+session }
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
-                  def cleanMemcache(x):
-                        pokermemcache.memcache_singleton.clear()
-                        pokermemcache.memcache_expiration_singleton.clear()
-                  d.addCallback(cleanMemcache)                  
+                  d.addCallback(self.cleanMemcache)
                   d.addCallback(f, next, first, i+1)
             first = hpy.heap()
             i = 1
             f(None, first, first, i)
-            d = defer.Deferred()
-            return d
-      test03_joinTable_guppy.timeout = pow(2, 30)      
-
-def Run():
-      loader = runner.TestLoader()
-      loader.methodPrefix = "test03"
-      suite = loader.suiteFactory()
-      suite.addTest(loader.loadClass(LeakTestCase))
-      return runner.TrialRunner(
-            reporter.VerboseTextReporter,
-            tracebackFormat='default',
-#            logfile = '-',
-            ).run(suite)
 
 if __name__ == '__main__':
-      if Run().wasSuccessful():
-            sys.exit(0)
-      else:
-            sys.exit(1)
+      t = LeakTestCase()
+      t.setUp()
+      t.test01_ping()
+      reactor.run()
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-leak.py ) ; ( cd ../tests ; make VERBOSE_T=-2 TESTS='test-leak.py' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-leak-no-trial.py ) ; ( cd ../tests ; VERBOSE_T=-1 ./test-leak-no-trial.py )"
 # End:
