@@ -25,6 +25,13 @@ sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
 from twisted.trial import unittest, runner, reporter
+
+from twisted.internet import selectreactor, main
+class MyReactor(selectreactor.SelectReactor):
+      def runUntilCurrent(self):
+            self._cancellations = 20000000
+            selectreactor.SelectReactor.runUntilCurrent(self)
+main.installReactor(MyReactor())
 from twisted.internet import defer, reactor
 from twisted.application import internet
 from twisted.python import failure
@@ -102,6 +109,9 @@ class LeakTestCase(unittest.TestCase):
             d.addCallback(lambda x: reactor.disconnectAll())
             return d
 
+      def test00(self):
+            pass
+      
       def test01_getPage(self):
             """
             VIRT (samples: 33, step: 3s)
