@@ -135,7 +135,44 @@ class LeakTestCase(unittest.TestCase):
             d.addCallback(lambda x: reactor.disconnectAll())
             return d
 
-      def test01_joinTable(self):            
+      def test01_getPage(self):
+            """
+            12m,24m,24m,24m,24m,24m,24m,24m,24m,24m,
+            24m,24m,24m,24m,24m,24m,24m,24m,24m,24m,
+            24m,24m,24m,24m,24m,24m,24m,24m,24m,24m,
+            24m,24m,24m,24m,24m,24m,24m
+            """
+            def f(ignored):
+                  d = client.getPage("http://127.0.0.1:19481/POKER_REST")
+                  d.addCallback(f)
+            f(None)
+            d = defer.Deferred()
+            return d
+      test01_getPage.timeout = pow(2, 30)
+
+      def test02_ping(self):
+            """
+            6520,22m,24m,24m,24m,24m,24m,24m,24m,24m,
+            24m,24m,24m,24m,24m,24m,24m,25m,25m,25m,
+            25m,25m,25m,25m,25m,25m,25m,25m,25m,25m,
+            25m,25m,25m,25m,25m,25m,25m,25m,25m,25m,
+            25m,25m,25m,25m
+            """
+            def f(ignored):
+                  d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPing"}')
+                  d.addCallback(f)
+            f(None)
+            d = defer.Deferred()
+            return d
+      test02_ping.timeout = pow(2, 30)
+
+      def test03_joinTable(self):
+            """
+            10m,24m,25m,25m,25m,25m,26m,26m,26m,26m,
+            26m,26m,26m,27m,27m,27m,27m,27m,27m,27m,
+            27m,28m,28m,28m,28m,28m,28m,28m,28m,28m,
+            28m,29m,29m,29m,29m,29m,29m,29m
+            """
             def f(ignored, i):
                   serial = 0
                   session = 'session' + str(i)
@@ -143,13 +180,14 @@ class LeakTestCase(unittest.TestCase):
                   headers = { 'Cookie': 'TWISTED_SESSION='+session }
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
-                  d.addCallback(f, i+i)
+                  d.addCallback(f, i+1)
             i = 1
             f(None, i)
             d = defer.Deferred()
             return d
-      test01_joinTable.timeout = pow(2, 30)
-      def test02_joinTable_guppy(self):
+      test03_joinTable.timeout = pow(2, 30)
+
+      def test04_joinTable_guppy(self):
             import guppy, gc
             hpy = guppy.hpy()            
             def f(ignored, last, first, i):
@@ -171,11 +209,11 @@ class LeakTestCase(unittest.TestCase):
             f(None, first, first, i)
             d = defer.Deferred()
             return d
-      test02_joinTable_guppy.timeout = pow(2, 30)      
+      test04_joinTable_guppy.timeout = pow(2, 30)      
 
 def Run():
       loader = runner.TestLoader()
-      loader.methodPrefix = "test01"
+      loader.methodPrefix = "test04"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(LeakTestCase))
       return runner.TrialRunner(
