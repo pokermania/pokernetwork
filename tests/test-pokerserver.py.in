@@ -1,0 +1,100 @@
+#!@PYTHON@
+# -*- mode: python; coding: iso-8859-1 -*-
+# more information about the above line at http://www.python.org/dev/peps/pep-0263/
+#
+# Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
+#
+# This software's license gives you freedom; you can copy, convey,
+# propagate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+import sys, os, tempfile
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+from twisted.trial import unittest, runner, reporter
+from twisted.application import service
+from twisted.internet import reactor, defer
+from pokernetwork.pokerserver import makeService
+from twisted.manhole import telnet
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19481" manhole="%(manhole_port)i" />
+  <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+class PokerServerMakeServiceTestCase(unittest.TestCase):
+    def destroyDb(self, arg = None):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def setUp(self):
+        self.destroyDb()
+        self.tmpdir = tempfile.mkdtemp()
+        self.filename = os.path.join(self.tmpdir, "poker.server.xml")
+        f = open(self.filename, "w")
+        self.manhole_port = 33333
+        f.write(settings_xml_server % {'manhole_port' : self.manhole_port})
+        f.close()
+        argv =  [self.filename]
+        self.service = makeService(self.filename)
+        self.service.startService()
+    def tearDown(self):
+        os.remove(self.filename)
+        return self.service.stopService()
+    def test01_manhole(self):
+        manhole = self.service.getServiceNamed('manhole')
+        self.assertNotEqual(None, manhole)
+        self.assertEqual(self.manhole_port, manhole._port.port)
+        self.assertEqual('127.0.0.1', manhole._port.interface)
+        self.assertEqual(telnet.Shell, manhole._port.factory.protocol)
+        self.assertNotEqual(None, manhole._port.factory.namespace['poker_service'])
+        self.assertNotEqual(None, manhole._port.factory.namespace['poker_site'])
+
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test01"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerServerMakeServiceTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#       reporter.TextReporter,
+#	tracebackFormat='verbose',
+        tracebackFormat='default',
+        ).run(suite)
+
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-pokerserver.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerserver.py coverage-report' check )"
+# End:
