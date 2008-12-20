@@ -85,8 +85,8 @@ class LeakTestCase(unittest.TestCase):
       def setUp(self):
             testclock._seconds_reset()
             pokermemcache.memcache = pokermemcache.MemcacheMockup
-            pokermemcache.memcache_singleton = {}
-            pokermemcache.memcache_expiration_singleton = {}
+            pokermemcache.memcache_singleton.clear()
+            pokermemcache.memcache_expiration_singleton.clear()
             self.destroyDb()
             self.initServer()
 
@@ -149,8 +149,8 @@ class LeakTestCase(unittest.TestCase):
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
                   def cleanMemcache(x):
-                        pokermemcache.memcache_singleton = {}
-                        pokermemcache.memcache_expiration_singleton = {}
+                        pokermemcache.memcache_singleton.clear()
+                        pokermemcache.memcache_expiration_singleton.clear()
                   d.addCallback(cleanMemcache)
                   d.addCallback(f, i+1)
             i = 1
@@ -176,8 +176,8 @@ class LeakTestCase(unittest.TestCase):
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
                   def cleanMemcache(x):
-                        pokermemcache.memcache_singleton = {}
-                        pokermemcache.memcache_expiration_singleton = {}
+                        pokermemcache.memcache_singleton.clear()
+                        pokermemcache.memcache_expiration_singleton.clear()
                   d.addCallback(cleanMemcache)                  
                   d.addCallback(f, next, first, i+1)
             first = hpy.heap()
@@ -189,7 +189,7 @@ class LeakTestCase(unittest.TestCase):
 
 def Run():
       loader = runner.TestLoader()
-      loader.methodPrefix = "test03"
+      loader.methodPrefix = "test04"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(LeakTestCase))
       return runner.TrialRunner(
