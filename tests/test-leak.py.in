@@ -65,21 +65,6 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-settings_xml_proxy = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
-
-  <listen tcp="19480" />
-
-  <rest_filter>../@srcdir@/../pokernetwork/proxyfilter.py</rest_filter>
-
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
-</server>
-"""
 class LeakTestCase(unittest.TestCase):
 
       def destroyDb(self, arg = None):
@@ -97,40 +82,22 @@ class LeakTestCase(unittest.TestCase):
             self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
             self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
             
-      def initProxy(self):
-            settings = pokernetworkconfig.Config([])
-            settings.loadFromString(settings_xml_proxy)
-            self.proxy_service = pokerservice.PokerService(settings)
-            self.proxy_service.disconnectAll = lambda: True
-            self.proxy_service.startService()
-            self.proxy_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.proxy_service))
-            self.proxy_port = reactor.listenTCP(19480, self.proxy_site, interface="127.0.0.1")
-          
       def setUp(self):
             testclock._seconds_reset()
             pokermemcache.memcache = pokermemcache.MemcacheMockup
             pokermemcache.memcache_singleton = {}
+            pokermemcache.memcache_expiration_singleton = {}
             self.destroyDb()
             self.initServer()
-            self.initProxy()
 
       def tearDownServer(self):
             self.server_site.stopFactory()
             d = self.server_service.stopService()
             d.addCallback(lambda x: self.server_port.stopListening())
             return d
-            
-      def tearDownProxy(self):
-            self.proxy_site.stopFactory()
-            d = self.proxy_service.stopService()
-            d.addCallback(lambda x: self.proxy_port.stopListening())
-            return d
-            
+                        
       def tearDown(self):
-            d = defer.DeferredList((
-                  self.tearDownServer(),
-                  self.tearDownProxy()
-                  ))
+            d = self.tearDownServer()
             d.addCallback(self.destroyDb)
             d.addCallback(lambda x: reactor.disconnectAll())
             return d
@@ -168,18 +135,23 @@ class LeakTestCase(unittest.TestCase):
 
       def test03_joinTable(self):
             """
-            10m,24m,25m,25m,25m,25m,26m,26m,26m,26m,
-            26m,26m,26m,27m,27m,27m,27m,27m,27m,27m,
-            27m,28m,28m,28m,28m,28m,28m,28m,28m,28m,
-            28m,29m,29m,29m,29m,29m,29m,29m
+            11m,24m,24m,25m,25m,25m,25m,25m,25m,26m,
+            26m,26m,26m,26m,26m,26m,27m,27m,27m,27m,
+            27m,27m,27m,28m,28m,28m,28m,28m,28m,28m,
+            28m,28m,28m,28m,28m,28m,28m,29m,29m,29m,
+            29m,29m,29m,29m,30m,30m
             """
             def f(ignored, i):
                   serial = 0
                   session = 'session' + str(i)
-                  self.proxy_site.memcache.set(session, str(serial))
+                  self.server_site.memcache.set(session, str(serial))
                   headers = { 'Cookie': 'TWISTED_SESSION='+session }
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
+                  def cleanMemcache(x):
+                        pokermemcache.memcache_singleton = {}
+                        pokermemcache.memcache_expiration_singleton = {}
+                  d.addCallback(cleanMemcache)
                   d.addCallback(f, i+1)
             i = 1
             f(None, i)
@@ -199,10 +171,14 @@ class LeakTestCase(unittest.TestCase):
                   print last - first
                   serial = 0
                   session = 'session' + str(i)
-                  self.proxy_site.memcache.set(session, str(serial))
+                  self.server_site.memcache.set(session, str(serial))
                   headers = { 'Cookie': 'TWISTED_SESSION='+session }
                   d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
                   d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
+                  def cleanMemcache(x):
+                        pokermemcache.memcache_singleton = {}
+                        pokermemcache.memcache_expiration_singleton = {}
+                  d.addCallback(cleanMemcache)                  
                   d.addCallback(f, next, first, i+1)
             first = hpy.heap()
             i = 1
@@ -213,7 +189,7 @@ class LeakTestCase(unittest.TestCase):
 
 def Run():
       loader = runner.TestLoader()
-      loader.methodPrefix = "test04"
+      loader.methodPrefix = "test03"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(LeakTestCase))
       return runner.TrialRunner(
