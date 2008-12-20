@@ -116,6 +116,8 @@ def messages_grep(haystack):
         hit.callback(haystack)
         
 def messages_append(string):
+    if verbose < -1:
+        return
     if verbose > 3:
         print "OUTPUT: " + string
     if not hasattr(string, '__str__'):
