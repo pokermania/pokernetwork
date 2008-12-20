@@ -104,6 +104,9 @@
   <table name="Cayrryns" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1"/>
 
   <listen tcp="19380" tcp_ssl="19381" http="19382" http_ssl="19383" rest="19384" rest_ssl="19385"/>
+  <!-- <listen ... manhole="%(manhole_port)i" />  -->
+  <!-- manhole is useful for debugging, use with telnet admin/admin, 
+       however, it can be a security risk and should be used only during debugging -->
   <!-- <resthost host="localhost" port="19384" path="/POKER_REST" /> -->
 
   <!-- <auth script="/usr/local/share/poker-network/pokerauth.py"/> -->

@@ -1,6 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
+# Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple, 75004 Paris
@@ -49,6 +50,7 @@ from twisted.web import resource,server
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory, SSLContextFactory
 from pokernetwork.pokersite import PokerSite
+from twisted.manhole import telnet
 
 def makeService(configuration):
     settings = Config([''])
@@ -103,6 +105,21 @@ def makeService(configuration):
     if HAS_OPENSSL and http_ssl_port:
             internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)
                                ).setServiceParent(serviceCollection)
+
+    #
+    # TELNET twisted.manhole (without SSL)
+    #
+    manhole_port = settings.headerGetInt("/server/listen/@manhole")
+    if manhole_port:
+	    manhole_factory = telnet.ShellFactory()
+	    manhole_factory.namespace['poker_service'] = poker_service
+	    manhole_factory.namespace['poker_site'] = rest_site
+	    manhole_service = internet.TCPServer(manhole_port, manhole_factory, interface = '127.0.0.1')
+	    manhole_service.setName("manhole")
+	    manhole_service.setServiceParent(serviceCollection)
+	    if settings.headerGetInt("/server/@verbose") > 0:
+		    print  "PokerManhole: manhole is useful for debugging, use with telnet admin/admin, however, it can be a security risk and should be used only during debugging"
+    
     return serviceCollection
 
 def makeApplication(argv):
