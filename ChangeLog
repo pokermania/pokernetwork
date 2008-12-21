@@ -1,6 +1,66 @@
-2008-12-10  Loic Dachary <loic@dachary.org>
+2008-12-21  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.2
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: Incoming
+	  requests must not be chained otherwise a lag on the first request
+	  will delay all requests. This constraint was originaly
+	  implemented so that when R1 is received before R2; R1 does not
+	  return before R2. However, this may only adversively impact the
+	  client if it sent R2 before getting an answer to R1 is received.
+	  However, jpoker is designed to not send a request before the
+	  answer to the previous request is received. A client with a
+	  different design, sending a number async requests and expecting
+	  them to come back in the same order, would be very difficult to
+	  implement without numbering the packets.
+
+2008-12-21  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/Makefile.am: add missing poker-network test to Makefile.am
+
+2008-12-20  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/test-pokerserver.py.in: add test-pokerserver for testing
+	  manhole support
+	* conf/poker.server.xml.in, configure.ac,
+	  pokernetwork/pokerserver.py: add optional manhole service to
+	  pokerserver (default login/password: admin/admin)
+	* configure.ac, tests/test-leak-no-trial.py.in,
+	  tests/test-leak.py.in: add test-leak-no-trial, remove failing
+	  testXX_getPage, set VERBOSE_T=-2 in test-leak compile-command,
+	  and add cleanMemcache callback to testXX_ping
+
+2008-12-20  Loic Dachary <loic@dachary.org>
+
+	* tests/testmessages.py: if VERBOSE < -1 do not store messages
+	* tests/test-leak.py.in: hack reactor to never delay cancelled
+	  delayedCall removal
+
+2008-12-20  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/test-leak.py.in: new leak test result (docstring) based on
+	  VIRT instead of RES
+
+2008-12-20  Loic Dachary <loic@dachary.org>
+
+	* tests/test-leak.py.in: use clear() instead of = {} so that all
+	  references are updated
+
+2008-12-20  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/test-leak.py.in: remove unused proxy setup, and clean
+	  pokermemcache after each step, update leak result
+	* tests/test-leak.py.in: add test-leak.py.in top result in
+	  docstrings
+
+2008-12-19  Johan Euphrosine <proppy@aminche.com>
+
+	* configure.ac, tests/test-leak-exarkun.py.in,
+	  tests/test-leak-reference.py.in, tests/test-leak.py.in: add
+	  test-leak-* suites
+	* tests/test-proxyfilter.py.in: fix test-proxy-filter method name
+
+2008-12-10  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
 	  PacketPokerPoll game_id + tourney_serial => used in the route
