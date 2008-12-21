@@ -186,7 +186,6 @@ class PokerResource(resource.Resource):
         resource.Resource.__init__(self)
         self.service = service
         self.verbose = service.verbose
-        self.deferred = defer.succeed(None)
         self.isLeaf = True
 
     def message(self, string):
@@ -211,8 +210,10 @@ class PokerResource(resource.Resource):
         args = fromutf8(args)
         packet = args2packets([args])[0]
 
+        deferred = defer.succeed(None)
+
         if request.site.pipes:
-            request.site.pipe(self.deferred, request, packet)
+            request.site.pipe(deferred, request, packet)
 
         def pipesFailed(reason):
             #
@@ -240,8 +241,8 @@ class PokerResource(resource.Resource):
             #
             return True
 
-        self.deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
-        self.deferred.addErrback(pipesFailed)
+        deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
+        deferred.addErrback(pipesFailed)
         return server.NOT_DONE_YET
 
     def deferRender(self, request, jsonp, packet):

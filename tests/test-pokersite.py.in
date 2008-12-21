@@ -158,11 +158,11 @@ class PokerResourceTestCase(PokerSiteBase):
             r.requestReceived('GET', '/', '')
             self.assertSubstring(error_pattern, r.transport.getvalue())
 
-      def test03_render_chained(self):
+      def test03_render_simultaneous(self):
             """
-            requests that are received while another request is being handled (this
-            may happen if the packet logic returned a deferred) are added to the
-            callback chain
+            requests that are received while another request is being
+            handled (this may happen if the packet logic returned a
+            deferred) are not blocked by the first request.
             """
             channel = self.Channel(self.site)
             r1 = pokersite.Request(channel, True)
@@ -190,11 +190,19 @@ class PokerResourceTestCase(PokerSiteBase):
             r2.getSession().avatar.handlePacketLogic = handlePacketLogic2
             r2.requestReceived('GET', '/', '')
 
+            #
+            # r1 not complete yet
+            #
             self.assertEqual('', r1.transport.getvalue())
-            self.assertEqual('', r2.transport.getvalue())
+            #
+            # r2 complete
+            #
+            self.assertSubstring('PacketPing', r2.transport.getvalue())
+            #
+            # r1 complete
+            #
             d1.callback(PacketAck())
             self.assertSubstring('PacketAck', r1.transport.getvalue())
-            self.assertSubstring('PacketPing', r2.transport.getvalue())
 
       def test04_render_jsonp(self):
             r = pokersite.Request(self.Channel(self.site), True)
