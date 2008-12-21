@@ -45,6 +45,10 @@ EXTRA_DIST = \
 	test-poker-interface.py \
 	testpackets.py \
 	testmessages.py \
+	test-leak.py.in \
+	test-leak-no-trial.py.in \
+	test-leak-reference.py.in \
+	test-leak-exarkun.py.in \
 	poker-interface-sid.supp \
 	test-pokerdatabase \
 	test-pokerdisplay2d \
@@ -109,6 +113,7 @@ TESTS = coverage-reset \
 	test-pokersite.py \
 	test-pokermemcache.py \
 	test-proxyfilter.py \
+	test-pokerserver.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
