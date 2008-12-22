@@ -279,7 +279,7 @@ class PokerRendererTestCase(unittest.TestCase):
         self.assertEquals("All your bankroll", self.renderer.factory.interface.label)
 
         self.renderer.requestBuyIn(GameMockup(50,100,60,False))
-        self.assertEquals("Which amount do you want to bring at the table?", self.renderer.factory.interface.legend)
+        self.assertTrue("want to bring" in self.renderer.factory.interface.legend)
         self.assertEquals("Maximum buy in", self.renderer.factory.interface.label)
 
         self.renderer.requestBuyIn(GameMockup(500,1000,60,False))
