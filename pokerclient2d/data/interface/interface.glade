@@ -891,7 +891,7 @@
 		      <child>
 			<widget class="GtkLabel" id="legend">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">Which amount do you want to bring at the table ?</property>
+			  <property name="label" translatable="yes">Which amount do you want to bring to the table ?</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>

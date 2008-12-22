@@ -1389,7 +1389,7 @@ class PokerRenderer:
                 self.showMessage( _("You don't have enough money to play on this table.\nTo get money go in menu 'Lobby' and click 'Cash in'.\n(if you are in play money you might need to win more\nmoney to sit at this table)"), None)
                 return False
 
-            legend = _("Which amount do you want to bring at the table?")
+            legend = _("Which amount do you want to bring to the table?")
         
         interface = self.factory.interface
 
