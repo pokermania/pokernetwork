@@ -2,10 +2,23 @@
 
  	* Release 1.7.3
 
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, examples/poker.bot.xml,
+	  examples/poker.server-monotone.xml, examples/poker.server.xml,
+	  pokerclient2d/poker2d.xml.in: bump version 1.7.3
+	* pokerclient2d/data/interface/interface.glade,
+	  pokerui/pokerrenderer.py: s/bring at the table/bring to the
+	  table/
+	* ChangeLog, NEWS, debian/changelog, pokernetwork/__init__.py: bump
+	  version 1.7.3
+	* tests/test-string.py.in: avoid translation sensitivity
+
 2008-12-21  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.2
 
+	* pokernetwork/pokerservice.py: keep old tourneys in core no longer
+	  than one hour
 	* pokernetwork/pokersite.py, tests/test-pokersite.py.in: Incoming
 	  requests must not be chained otherwise a lag on the first request
 	  will delay all requests. This constraint was originaly
