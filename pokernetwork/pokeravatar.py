@@ -300,6 +300,12 @@ class PokerAvatar:
                 packets = [ PacketError(other_type = PACKET_NONE, message = format_exc()) ]
                 if self.service.verbose >= 0:
                     self.message(packets[0].message)
+                self.explain = None # disabling the explain instance
+                                    # that issued the exception, as it
+                                    # may be in an inconsistent state,
+                                    # and used before the avatar
+                                    # destruction
+                self.service.forceAvatarDestroy(self)
 	else:
 	    packets = [ packet ]
         if self._queue_packets:

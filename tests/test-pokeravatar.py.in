@@ -3880,12 +3880,17 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         
     # ------------------------------------------------------------------------
     def test05_explain_throws(self):
-        """relogin is called where an avatar already exists."""
+        """explain throws cause the explain instance to be discarded
+        and the avatar do be destroyed."""
+
         from pokernetwork import pokeravatar
 
         serial = 1042
 
         service = PokerAvatarNoClientServerTestCase.MockService()
+        def forceAvatarDestroyMockup(avatar):
+            forceAvatarDestroyMockup.called = True
+        service.forceAvatarDestroy = forceAvatarDestroyMockup
         avatar = pokeravatar.PokerAvatar(service)
         class Explain:
             def explain(self, what):
@@ -3898,6 +3903,8 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(PACKET_ERROR, packets[0].type)
         self.assertSubstring('FAILURE', packets[0].message)
         self.assertEquals(True, search_output('FAILURE'))
+        self.assertEquals(None, avatar.explain)
+        self.assertEquals(True, forceAvatarDestroyMockup.called)
         
 ##############################################################################
 def Run():
