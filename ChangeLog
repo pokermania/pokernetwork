@@ -1,6 +1,30 @@
-2008-12-22  Loic Dachary <loic@dachary.org>
+2008-12-23  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.3
+
+	* pokernetwork/pokerexplain.py, tests/test-pokerexplain.py.in:
+	  IN_GAME packet carries an authoritative list of players that must
+	  be set instead of the list computed by the game instance as a
+	  result of the beginTurn instance. When START packet is
+	  interpreted by the game instance, it first resets the wait_for
+	  flag of each player to False (save the first_round value which is
+	  a temporary way to exclude players that insert themselves in the
+	  game while resolving the blinds). Because the wait_for flag is
+	  set to False for all players, the list of player participating in
+	  the game will be different from the list maintained by the
+	  server. As a result POSITION packets will not designate the
+	  expected players and all subsequent packets will be
+	  misinterpreted.
+
+	* tests/conf/poker.client.xml.in: bump version 1.7.3
+
+2008-12-23  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  discard explain instance, and schedule avatar destruction, when
+	  pokeravatar.explain throws
+
+2008-12-22  Loic Dachary <loic@dachary.org>
 
 	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
 	  conf/poker.server.xml.in, examples/poker.bot.xml,
