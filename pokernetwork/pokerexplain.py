@@ -78,7 +78,10 @@ class PokerGames:
 
     def getAll(self):
         return self.games.values()
-    
+
+class ListHintSubset(Exception):
+    pass
+
 class PokerExplain:
     """Expand poker packets for the caller when they know nothing about poker """
 
@@ -274,6 +277,8 @@ class PokerExplain:
             if packet.id == 0:
                 self.error("Too many open tables")
             else:
+                if self.games.getGame(packet.id):
+                    self.games.deleteGame(packet.id)
                 new_game = self.games.getOrCreateGame(packet.id)
                 new_game.prefix = self._prefix
                 new_game.name = packet.name
@@ -281,7 +286,6 @@ class PokerExplain:
                 new_game.setVariant(packet.variant)
                 new_game.setBettingStructure(packet.betting_structure)
                 new_game.setMaxPlayers(packet.seats)
-                new_game.reset()
                 new_game.registerCallback(self.gameEvent)
                 new_game.level_skin = packet.skin
                 new_game.currency_serial = packet.currency_serial
@@ -315,6 +319,15 @@ class PokerExplain:
                     game.setHandsCount(packet.hands_count)
                     game.setLevel(packet.level)
                     game.beginTurn(packet.hand_serial)
+                    if game.player_list_hint != None and game.player_list_hint != game.player_list:
+                        player_list_hint = set(game.player_list_hint)
+                        player_list = set(game.player_list)
+                        if not player_list_hint.issubset(player_list):
+                            raise ListHintSubset, "%s is not a subset of %s" % ( game.player_list_hint, game.player_list )
+                        if self.verbose >= 3:
+                            self.message("player_list_hint discards %s" % ( player_list_hint ^ player_list ))
+                        game.player_list = game.player_list_hint
+                    game.player_list_hint = None
                     game.position_info[PokerNetworkGameClient.POSITION_OBSOLETE] = True
                     if not self.no_display_packets:
                         forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
@@ -413,6 +426,7 @@ class PokerExplain:
                 forward_packets.remove(packet)
 
             elif packet.type == PACKET_POKER_IN_GAME:
+                game.player_list_hint = packet.players[:]
                 for serial in game.serialsAll():
                     player = game.getPlayer(serial)
                     wait_for = player.wait_for
