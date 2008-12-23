@@ -28,4 +28,5 @@ class PokerNetworkGameClient(PokerGameClient):
         self.level_skin = ""
         self.currency_serial = 0
         self.history_index = 0
+        self.player_list_hint = None
         self.position_info = [ 0, 0 ]
