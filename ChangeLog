@@ -1,6 +1,16 @@
-2008-12-23  Loic Dachary <loic@dachary.org>
+2008-12-26  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.3
+
+	* configure.ac: AC_PROG_CXX & al are only used if poker2d is
+	  enabled but needs to be tested outside
+	  of the conditional to prevent autoconf misbehaviour.
+	  https://gna.org/support/?2197
+
+2008-12-23  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokergameclient.py: player_list_hint member holds
+	  the player_list provided by the IN_GAME packet
 
 	* pokernetwork/pokerexplain.py, tests/test-pokerexplain.py.in:
 	  IN_GAME packet carries an authoritative list of players that must
