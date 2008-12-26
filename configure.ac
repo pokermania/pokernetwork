@@ -78,6 +78,15 @@ AC_SUBST(pkglibdir, [$pkglibdir])
 pkgdatadir=$datadir/$PACKAGE
 AC_SUBST(pkgdatadir, [$pkgdatadir])
 
+#
+# AC_PROG_CXX & al are only used if poker2d is enabled but needs to be tested outside
+# of the conditional to prevent autoconf misbehaviour. https://gna.org/support/?2197
+#
+AC_PROG_MAKE_SET
+AC_GNU_SOURCE
+AC_PROG_CXX
+AC_PROG_LIBTOOL
+
 AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     poker2d=false			# for AM_CONDITION
 
@@ -88,12 +97,6 @@ AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
     AM_CONDITIONAL([PYTHON_2_6], [false])
 
 ], [
-    # Checks for programs.
-    AC_PROG_MAKE_SET
-    AC_GNU_SOURCE
-    AC_PROG_CXX
-    AC_PROG_LIBTOOL
-
     if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then
       if test "$enable_debug" = "yes" ; then
         CFLAGS="-pipe -g -Wall -W"
@@ -319,6 +322,7 @@ AC_CONFIG_FILES([
         tests/test-pokercashier.py
         tests/test-pokerclient.py
         tests/test-servercrash.py
+        tests/test-pokerbothandeval.py
         tests/test-pokerbotlogic.py
         tests/test-pokerdatabase.py
         tests/test-pokerexplain.py
