@@ -1,6 +1,26 @@
-2008-12-27  Loic Dachary  <loic@dachary.org>
+2009-01-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
+
+	* Makefile.am, conf/poker.server.xml.in, configure.ac,
+	  debian/python-poker-network.install, pokernetwork/pokerserver.py,
+	  pokernetwork/pokersql.in, pokernetwork/pokersql.py,
+	  tests/pokersql.xml, tests/pokersqlfail.xml: pokersql is a cgi-bin
+	  script that will run SQL queries using the same database and
+	  permissions as the installed poker server. It is intended as the
+	  backend for a backoffice client. It is disabled by default with
+	  the admin="false" attribute from the poker.server.xml
+	  configuration file.
+
+2008-12-27  Loic Dachary <loic@dachary.org>
+
+	* ChangeLog, NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, debian/changelog,
+	  examples/poker.bot.xml, examples/poker.server-monotone.xml,
+	  examples/poker.server.xml, pokerclient2d/poker2d.xml.in,
+	  pokernetwork/__init__.py, tests/conf/poker.client.xml.in: bump to
+	  version 1.7.4
+	* AUTHORS: update proppy mail
 
 2008-12-26  Loic Dachary <loic@dachary.org>
 
