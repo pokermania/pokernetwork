@@ -27,6 +27,8 @@ EXTRA_DIST = \
 	createdatabase \
 	schema.sql \
 	poker.server.xml \
+	pokersql.xml \
+	pokersqlfail.xml \
 	poker.test18pokerclient.xml \
 	upgrade-rsync \
 	conf/poker.bot.xml.in \
@@ -88,6 +90,7 @@ TESTS = coverage-reset \
 	test-pokerbotlogic.py \
 	test-pokerdatabase.py \
 	test-pokerservice.py \
+	test-pokersql.py \
 	test-pokerauth.py \
 	test-user.py \
 	test-pokertable.py \
