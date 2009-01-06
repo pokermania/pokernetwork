@@ -3,6 +3,7 @@ debian/tmp/usr/lib/python???/site-packages/pokerui
 debian/tmp/usr/lib/python???/site-packages/twisted/plugins
 debian/tmp/usr/share/poker-network/*.sql
 debian/tmp/usr/sbin
+debian/tmp/usr/lib/cgi-bin
 debian/tmp/usr/share/poker-network/conf/poker.server.xml
 debian/tmp/usr/share/poker-network/conf/poker.bot.xml
 debian/tmp/usr/share/poker-network/conf/poker.pem

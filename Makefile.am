@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple, 75004 Paris
 #       
@@ -74,6 +74,8 @@ pokernetwork_PYTHON = \
 	pokernetwork/dispatch.py \
 	pokernetwork/nullfilter.py \
 	pokernetwork/packets.py \
+	pokernetwork/pokerauth.py \
+	pokernetwork/pokerauthmysql.py \
 	pokernetwork/pokeravatar.py \
 	pokernetwork/pokerbot.py \
 	pokernetwork/pokerbotlogic.py \
@@ -91,8 +93,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerservice.py \
 	pokernetwork/pokersite.py \
-	pokernetwork/pokerauth.py \
-	pokernetwork/pokerauthmysql.py \
+	pokernetwork/pokersql.py \
 	pokernetwork/pokertable.py \
 	pokernetwork/protocol.py \
 	pokernetwork/proxy.py \
@@ -113,6 +114,10 @@ sbin_SCRIPTS = \
 	pokernetwork/pokerserver \
 	pokernetwork/pokerbot \
 	database/pokerdatabaseupgrade
+
+cgidir = ${libdir}/cgi-bin/poker-network
+cgi_SCRIPTS = \
+	pokernetwork/pokersql
 
 pokeruidir = ${pythondir}/pokerui
 pokerui_PYTHON = \

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple, 75004 Paris
@@ -338,6 +338,7 @@ AC_CONFIG_FILES([
         tests/test-pokersite.py
         tests/test-pokermemcache.py
         tests/test-pokerauth.py
+        tests/test-pokersql.py
         tests/test-pokertable.py
         tests/test-proxyfilter.py
         tests/test-countfilter.py
@@ -368,6 +369,7 @@ AC_CONFIG_FILES([
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
         poker-network.pc
+        pokernetwork/pokersql
         pokernetwork/pokerserver
         pokernetwork/pokerserver.8
         pokernetwork/pokerbot
