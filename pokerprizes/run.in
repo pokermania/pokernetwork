@@ -1,0 +1,74 @@
+#!@BASH@
+# -*- sh -*-
+#
+# Copyright (C) 2009 Loic Dachary <loic@dachary.org>
+#
+# This software's license gives you freedom; you can copy, convey,
+# propagate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+set -e
+
+echo "RUNNING: $*" 
+
+. ${top_srcdir}/tests/setupMysqlVariables
+
+if ! $MYSQL_ROOT_CMD -e "show databases" >/dev/null 2>&1 ; then
+    echo "skipped because $MYSQL_ROOT_CMD -e \"show databases\" fails"
+    exit 0
+fi
+
+: ${srcdir:=.}
+export srcdir
+: ${top_srcdir:=..}
+export top_srcdir
+
+DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/pokerprizes/{prizes,tourneyselectinfo}.py) 
+: ${COVERAGE_FILES:=$DEFAULT_COVERAGE_FILES}
+
+COVERAGE_100_PERCENT="
+../pokerprizes/__init__
+../pokerprizes/prizes.py
+../pokerprizes/tourneyselectinfo.py
+"
+
+case "$1" in 
+
+*coverage-reset) @PYTHON@ ${top_srcdir}/tests/coverage.py -e ;;
+
+*coverage-report) 
+        output=$( @PYTHON@ ${top_srcdir}/tests/coverage.py -m -r ${COVERAGE_FILES} )
+        rm -fr annotated ; mkdir annotated
+        @PYTHON@ ${top_srcdir}/tests/coverage.py -a -d annotated ${COVERAGE_FILES}
+        echo "$output"
+        for file in ${COVERAGE_100_PERCENT} ; do
+            if echo "$output" | grep "$file" > /dev/null ; then
+                if ! echo "$output" | grep "$file.*100%" > /dev/null ; then
+                    echo "FAIL: tests do not cover 100% of the $file code"
+                    exit 1
+                fi
+            fi
+        done
+        ;;
+
+*.py)   @PYTHON@ -u ${top_srcdir}/tests/coverage.py -x "$1" ;;
+# shows all functions called
+#*.py) pydb --fntrace --basename "$1" ;;
+
+*) 
+        echo unknown test $1
+        exit 1
+        ;;
+esac
+

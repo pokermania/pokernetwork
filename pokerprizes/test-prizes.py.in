@@ -1,0 +1,115 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2009 Loic Dachary <loic@dachary.org>
+#
+# This software's license gives you freedom; you can copy, convey,
+# propagate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+import sys, os
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+
+import libxml2
+
+from twisted.application import app, service
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import protocol, reactor, defer, error, base
+from twisted.python import failure, runtime
+
+#
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
+from tests import testclock
+
+from tests.testmessages import silence_all_messages, get_messages, search_output, clear_all_messages
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+silence_all_messages()
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokerdatabase
+from pokernetwork import pokerservice
+from pokernetwork import pokernetworkconfig
+from pokernetwork.pokerclientpackets import *
+from pokerprizes import prizes
+
+settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <listen tcp="19480" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+class Base(unittest.TestCase):
+
+    def destroyDb(self, arg = None):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    # ------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()
+        self.destroyDb()
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.header = settings.doc.xpathNewContext()
+        self.settings = settings
+        self.db = pokerdatabase.PokerDatabase(settings)
+
+    def tearDown(self):
+        clear_all_messages()
+        self.destroyDb()
+
+class PokerPrizesTestBase(Base):
+
+    def test01_create(self):
+        service = pokerservice.PokerService(self.settings)
+        return service.stopService()
+
+# ------------------------------------------------------
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test33"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerPrizesTestBase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# ------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status pokerprizes/test-prizes.py ) ; ( cd ../pokerprizes ; make TESTS='coverage-reset test-prizes.py coverage-report' check )"
+# End:
+
