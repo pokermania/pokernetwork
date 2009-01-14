@@ -151,7 +151,7 @@ class PokerService(service.Service):
 
     def __init__(self, settings):
         if type(settings) is StringType:
-            settings_object = pokernetworkconfig.Config([])
+            settings_object = pokernetworkconfig.Config(['.'])
             settings_object.doc = libxml2.parseMemory(settings, len(settings))
             settings_object.header = settings_object.doc.xpathNewContext()
             settings = settings_object
