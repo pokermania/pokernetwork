@@ -97,7 +97,6 @@ from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
 from pokernetwork.userstats import UserStatsFactory
-from pokernetwork.tourneyattrs import TourneyAttrsFactory
 from pokerauth import get_auth_instance
 from datetime import date
 
@@ -196,7 +195,7 @@ class PokerService(service.Service):
 
         self.lookups = {}
 
-        lookup2factoryClass = { 'stats' : UserStatsFactory, 'tourney_attrs' : TourneyAttrsFactory }
+        lookup2factoryClass = { 'stats' : UserStatsFactory }
         for lookup in lookup2factoryClass.keys():
             if len(self.settings.headerGetProperties("/server/%s" % lookup)) > 1:
                 self.error("settings include multiple <%s> tags; using first one only" % lookup)
@@ -204,6 +203,23 @@ class PokerService(service.Service):
             if lookup == 'stats': myArgs = [ self ]
             self.lookups[lookup] = lookup2factoryClass[lookup]().getClass(settings.headerGet("/server/%s/@type" % lookup))(*myArgs)
 
+        #
+        # load module that provides additional tourney information
+        #
+        self.tourney_select_info = None
+        for path in settings.header.xpathEval("/server/tourney_select_info"):
+            if self.verbose > 0:
+                self.message("trying to load " + path.content)
+            module = imp.load_source("tourney_select_info", path.content)
+            path = settings.headerGet("/server/tourney_select_info/@settings")
+            if path:
+                s = pokernetworkconfig.Config(settings.dirs)
+                s.load(path)
+            else:
+                s = None
+            self.tourney_select_info = module.Handle(self, s)
+            getattr(self.tourney_select_info, '__call__')
+            
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
             self.refill = refill[0]
@@ -346,9 +362,6 @@ class PokerService(service.Service):
 
     def getUserStatsLookup(self):
         return self.lookups['stats']
-
-    def getTourneyAttrsLookup(self):
-        return self.lookups['tourney_attrs']
 
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max
@@ -1105,6 +1118,12 @@ class PokerService(service.Service):
         cursor.close()
         return result
 
+    def tourneySelectInfo(self, packet, tourneys):
+        if self.tourney_select_info:
+            return self.tourney_select_info(self, packet, tourneys)
+        else:
+            return None
+    
     def tourneyRegister(self, packet):
         serial = packet.serial
         tourney_serial = packet.game_id

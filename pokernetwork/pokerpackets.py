@@ -4360,141 +4360,18 @@ Direction: server <=  client
         )
 
 Packet.infoDeclare(globals(), PacketPokerSupportedPlayerStats, Packet, "POKER_SUPPORTED_PLAYER_STATS", 163) # 163 # 0xa3 # %SEQ%
-###########################################################################
-PACKET_POKER_GET_TOURNEY_ATTRS = 164 # 0xa4 # %SEQ%
-PacketNames[PACKET_POKER_GET_TOURNEY_ATTRS] = "POKER_GET_TOURNEY_ATTRS"
 
-class PacketPokerGetTourneyAttrs(PacketPokerGetAttrs):
-    """\
-Semantics: ask the server for a PacketPokerTourneyAttrs packet describing
-the player that is logged in with this connection.
-
-If the user is not logged in the following packet is returned
-
-PacketError(code = PacketPokerGetTourneyAttrs.NOT_LOGGED,
-            message = "Not logged in",
-            other_type = PACKET_POKER_GET_TOURNEY_ATTRS)
-
-If the user is logged in a PacketPokerTourneyAttrs packet is sent
-to the client.
-
-If the user is not at a table yet, the packet is completely and silently
-ignored.  This packet only works when the user is at a table.
-
-Direction: server <= client
-
-Context:
-
-serial: integer uniquely identifying a player.
-schedule_serial: integer uniquely identifying a scheduled tourney.
-"""
-
-    type = PACKET_POKER_GET_TOURNEY_ATTRS
-
-PacketFactory[PACKET_POKER_GET_TOURNEY_ATTRS] = PacketPokerGetTourneyAttrs
 ########################################
-PACKET_POKER_TOURNEY_ATTRS = 165 # 0xa5 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_ATTRS] = "POKER_TOURNEY_ATTRS"
-class PacketPokerTourneyAttrs(PacketPokerAttrs):
+class PacketPokerTourneyInfo(Packet):
     """\
 
-Semantics: Packet sent by server will contain key/value pairs of all
-           statistical information currently supported by the server.
-           This can vary depending on what stats are supported by the
-           server configuration.  Clients that want to know what values to
-           expect should send PacketPokerGetSupportedTourneyAttrs first to
-           get a list of what to expect.  This packet can be ignored by
-           clients if they so choose; no mandatory game information is
-           contained in it.
+Semantics: defined by tourney_select_info module as loaded from poker.server.xml
 
-Direction: server  => client
-
-Context: 
-
-serial: integer uniquely identifying a scheduled tourney.
-key: value (for each attribute supported)
+Direction: server =>  client
 """
-    type = PACKET_POKER_TOURNEY_ATTRS
-
-PacketFactory[PACKET_POKER_TOURNEY_ATTRS] = PacketPokerTourneyAttrs
-########################################
-class PacketPokerGetSupportedTourneyAttrs(PacketPokerGetSupportedAttrs):
-    """\
-
-Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_SUPPORTED_TOURNEY_ATTRS packet.
-
-Direction: server <=  client
-"""
+    pass
     
-    info = Packet.info
-
-Packet.infoDeclare(globals(), PacketPokerGetSupportedTourneyAttrs, Packet, "POKER_GET_SUPPORTED_TOURNEY_ATTRS", 166) # 166 # 0xa6 # %SEQ%
-########################################
-class PacketPokerSupportedTourneyAttrs(PacketPokerSupportedAttrs):
-    """\
-
-Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_SUPPORTED_TOURNEY_ATTRS packet.
-
-Direction: server <=  client
-"""
-
-    
-    info = Packet.info + (
-        # FIXME: this is a hack that will work fine with
-        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
-        # binary protocol.  The binary protocol folks will always get an
-        # empty packet response.
-        ('attrs', [], 'Il'),
-        )
-
-Packet.infoDeclare(globals(), PacketPokerSupportedTourneyAttrs, Packet, "POKER_SUPPORTED_TOURNEY_ATTRS", 167) # 167 # 0xa7 # %SEQ%
-########################################
-PACKET_POKER_TOURNEY_ATTRS_LIST = 168 # 0xa8 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_ATTRS_LIST] = "POKER_TOURNEY_ATTRS_LIST"
-
-class PacketPokerTourneyAttrsList(PacketList):
-    """\
-Semantics: a list of PACKET_POKER_TOURNEY_ATTRS packets sent as a
-response to a PACKET_POKER_SELECT request.
-
-Direction: server  => client
-
-packets: a list of PACKET_POKER_TOURNEY_ATTRS packets.
-"""
-
-    type = PACKET_POKER_TOURNEY_ATTRS_LIST
-
-    info = PacketList.info + ( ('tourneyAttrs', 0, 'I'), )
-
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.tourneyAttrs = kwargs.get("tourneyAttrs", 0)
-        PacketList.__init__(self, *args, **kwargs)
-
-    # FIXME: this is a hack that will work fine with
-    # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
-    # binary protocol.  The binary protocol folks will always get an
-    # empty packet response.
-
-    def pack(self):
-        return PacketList.pack(self) + pack(PacketPokerTourneyAttrsList.format, self.tourneyAttrs)
-
-    def unpack(self, block):
-        block = PacketList.unpack(self, block)
-        (self.tourneyAttrs,) = unpack(PacketPokerTourneyAttrsList.format, block[:PacketPokerTourneyAttrsList.format_size])
-        return block[PacketPokerTourneyAttrsList.format_size:]
-
-    def calcsize(self):
-        return PacketList.calcsize(self) + PacketPokerTourneyAttrsList.format_size
-
-    def __str__(self):
-        return PacketList.__str__(self) + "\n\ttourneyAttrs = %d" % ( self.tourneyAttrs )
-
-PacketFactory[PACKET_POKER_TOURNEY_ATTRS_LIST] = PacketPokerTourneyAttrsList
+Packet.infoDeclare(globals(), PacketPokerTourneyInfo, Packet, "POKER_TOURNEY_INFO", 164) # 164 # 0xa4 # %SEQ%
 
 _TYPES = range(50,169)
 

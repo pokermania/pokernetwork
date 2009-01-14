@@ -17,6 +17,12 @@
 -- along with this program in a file in the toplevel directory called
 -- "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 --
+DROP TABLE IF EXISTS prizes_version;
+CREATE TABLE prizes_version (
+  version VARCHAR(16) NOT NULL
+) ENGINE=InnoDB CHARSET=utf8;
+INSERT INTO prizes_version (version) VALUES ("@PACKAGE_VERSION@");
+
 DROP TABLE IF EXISTS `tourneys_schedule2prizes`;
 CREATE TABLE `tourneys_schedule2prizes` (
 
@@ -24,7 +30,7 @@ CREATE TABLE `tourneys_schedule2prizes` (
   `tourneys_schedule_serial` int(11) default NULL,
 
   /* Foreign key to prizes table */
-  `prize_serial` int(11) default NULL,
+  `prize_serial` int(11) default NULL
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -43,7 +49,7 @@ CREATE TABLE `prizes` (
   `image_url` text,
 
   /* points needed for this reward */
-  `points` int(10) NOT NULL,
+  `points` int(10) DEFAULT 0 NOT NULL,
 
   /* URL to the image to be displayed */
   `link_url` text,

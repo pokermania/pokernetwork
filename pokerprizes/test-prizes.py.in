@@ -45,8 +45,9 @@ twisted.internet.base.DelayedCall.debug = True
 from pokernetwork import pokerdatabase
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
-from pokernetwork.pokerclientpackets import *
-from pokerprizes import prizes
+from pokernetwork.pokerpackets import *
+from pokerprizes.prizes import PokerPrizes
+from pokerprizes.tourneyselectinfo import Handle
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -75,19 +76,67 @@ class Base(unittest.TestCase):
         testclock._seconds_reset()
         self.destroyDb()
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_server)
         self.settings = settings
         self.db = pokerdatabase.PokerDatabase(settings)
 
     def tearDown(self):
         clear_all_messages()
-        self.destroyDb()
+#        self.destroyDb()
 
-class PokerPrizesTestBase(Base):
+class PokerPrizesTestCase(Base):
 
     def test01_create(self):
         service = pokerservice.PokerService(self.settings)
+        service.db = self.db
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/../../pokerprizes/schema.sql" />
+"""
+        prizes = PokerPrizes(service, xml)
+        cursor = self.db.cursor()
+        cursor.execute("SHOW TABLES LIKE 'prizes'")
+        self.assertEquals(1, cursor.rowcount)
+        return service.stopService()
+
+    def test02_settings(self):
+        service = pokerservice.PokerService(self.settings)
+        service.db = self.db
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/../../pokerprizes/schema.sql" />
+"""
+        settings = pokernetworkconfig.Config([])
+        settings.loadFromString(xml)
+        prizes = PokerPrizes(service, settings)
+        cursor = self.db.cursor()
+        cursor.execute("SHOW TABLES LIKE 'prizes'")
+        self.assertEquals(1, cursor.rowcount)
+        return service.stopService()
+
+class TourneySelectInfoTestCase(Base):
+
+    def test01_select(self):
+        service = pokerservice.PokerService(self.settings)
+        service.db = self.db
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/../../pokerprizes/schema.sql" />
+"""
+        prizes = Handle(service, xml)
+        cursor = self.db.cursor()
+        prize_serial = 1
+        tourney_serial = 20
+        cursor.execute("INSERT INTO prizes  (serial, name) VALUES (%d, 'prize1')" % prize_serial)
+        cursor.execute("INSERT INTO prizes  (serial, name) VALUES (2, 'prize2')")
+        cursor.execute("INSERT INTO tourneys_schedule (serial, name) VALUES (%d, 'tourney1')" % tourney_serial)
+        cursor.execute("INSERT INTO tourneys_schedule2prizes (tourneys_schedule_serial, prize_serial) VALUES (%d, %d)" % ( tourney_serial, prize_serial ))
+        class Tourney:
+            pass
+        tourney1 = Tourney()
+        tourney1.serial = tourney_serial
+        tourney2 = Tourney()
+        tourney2.schedule_serial = tourney_serial
+        info = prizes(service, PacketPokerTourneySelect(), [ tourney1, tourney2 ])
+        self.assertEquals([prize_serial], info.serial2prize.keys())
+        self.assertEquals(prize_serial, info.tourneys_schedule2prizes[tourney_serial])
         return service.stopService()
 
 # ------------------------------------------------------
@@ -95,7 +144,8 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test33"
     suite = loader.suiteFactory()
-    suite.addTest(loader.loadClass(PokerPrizesTestBase))
+    suite.addTest(loader.loadClass(PokerPrizesTestCase))
+    suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
                               tracebackFormat='default',
@@ -110,6 +160,6 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status pokerprizes/test-prizes.py ) ; ( cd ../pokerprizes ; make TESTS='coverage-reset test-prizes.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status pokerprizes/test-prizes.py ) ; ( cd ../pokerprizes ; make VERBOSE_T=6 TESTS='coverage-reset test-prizes.py coverage-report' check )"
 # End:
 

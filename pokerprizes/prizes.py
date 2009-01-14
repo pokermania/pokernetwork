@@ -19,22 +19,29 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+from types import *
 
 from pokernetwork.pokernetworkconfig import Config
 
 class PokerPrizes:
-    def __init__(self, service):
-        self.settings = Config(service.settings.dirs).headerGetProperties('/settings')
+    def __init__(self, service, settings_or_xml):
+        self.verbose = service.verbose
+        if type(settings_or_xml) is StringType:
+            settings = Config([])
+            settings.loadFromString(settings_or_xml)
+        else:
+            settings = settings_or_xml
+        self.properties = settings.headerGetProperties('/settings')[0]
         create = False
-        for table in ( self.settings['tourneys_schedule2prizes'], self.settings['prizes'] ):
-            self.db.db.query("SHOW TABLES LIKE '%s'" % table)
-            result = self.db.db.store_result()
+        for table in ( self.properties['tourneys_schedule2prizes'], self.properties['prizes'] ):
+            service.db.db.query("SHOW TABLES LIKE '%s'" % table)
+            result = service.db.db.store_result()
             if result.num_rows() <= 0:
                 create = True
             del result
         if create:
             parameters = service.settings.headerGetProperties("/server/database")[0]            
-            cmd = self.mysql_command + " --host='" + parameters["host"] + "' --user='" + parameters["root_user"] + "' --password='" + parameters["root_password"] + "' '" + parameters["name"] + "' < " + self.settings["schema"]
+            cmd = service.db.mysql_command + " --host='" + parameters["host"] + "' --user='" + parameters["root_user"] + "' --password='" + parameters["root_password"] + "' '" + parameters["name"] + "' < " + self.properties["schema"]
             if self.verbose:
                 self.message(cmd)
             os.system(cmd)
@@ -42,6 +49,5 @@ class PokerPrizes:
     def message(self, string):
         print "PokerPrizes: " + string
 
-    def error(self, string):
-        self.message("*ERROR* " + string)
-        
+#    def error(self, string):
+#        self.message("*ERROR* " + string)

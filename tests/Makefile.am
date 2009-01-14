@@ -42,11 +42,14 @@ EXTRA_DIST = \
 	coverage.py \
 	monitorplugin.py \
 	testfilter.py \
+	testtourney_select_info.py \
+	testtourney_select_info_no_call.py \
 	testerrorfilter.py \
 	finishedfilter.py \
 	test-poker-interface.py \
 	testpackets.py \
 	testmessages.py \
+	testsettings.xml \
 	test-leak.py.in \
 	test-leak-no-trial.py.in \
 	test-leak-reference.py.in \
@@ -83,7 +86,6 @@ TESTS = coverage-reset \
 	test-packets.py \
 	test-attrpack.py \
 	test-userstats.py \
-	test-tourneyattrs.py \
 	test-pokeravatar.py \
 	test-pokerpackets.py \
 	test-pokerclientpackets.py \

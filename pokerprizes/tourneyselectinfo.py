@@ -19,8 +19,34 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 from pokerprizes.prizes import PokerPrizes
+from MySQLdb.cursors import DictCursor
+from pokernetwork.pokerpackets import PacketPokerTourneyInfo
 
 class Handle(PokerPrizes):
 
     def __call__(self, service, packet, tourneys):
-        return None
+        info = PacketPokerTourneyInfo()
+        def schedule_serials(tourney):
+            if hasattr(tourney, 'schedule_serial'):
+                return tourney.schedule_serial
+            else:
+                return tourney.serial
+        serials = map(schedule_serials, tourneys)
+        cursor = service.db.cursor(DictCursor)
+        serials_sql = ",".join(map(lambda serial: str(serial), set(serials)))
+        sql = "SELECT p.* FROM prizes AS p, tourneys_schedule2prizes AS t WHERE p.serial = t.prize_serial AND t.tourneys_schedule_serial IN ( %s ) GROUP BY p.serial" % serials_sql
+        if self.verbose >= 3:
+            self.message(sql)
+        cursor.execute(sql)
+        info.serial2prize = {}
+        for row in cursor.fetchall():
+            info.serial2prize[row['serial']] = row
+        sql = "SELECT * FROM tourneys_schedule2prizes WHERE tourneys_schedule_serial IN ( %s )" % serials_sql
+        if self.verbose >= 3:
+            self.message(sql)
+        cursor.execute(sql)
+        info.tourneys_schedule2prizes = {}
+        for row in cursor.fetchall():
+            info.tourneys_schedule2prizes[row['tourneys_schedule_serial']] = row['prize_serial']
+        cursor.close()
+        return info

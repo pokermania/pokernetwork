@@ -31,7 +31,7 @@ else
   POKER2D_SUBDIRS = 
 endif
 
-SUBDIRS = ${POKER2D_SUBDIRS} pokerweb pokernetwork/munin tests po pokerstats
+SUBDIRS = ${POKER2D_SUBDIRS} pokerweb pokernetwork/munin tests po pokerstats pokerprizes
 
 pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
@@ -243,6 +243,8 @@ all-local:
 	done ; \
 	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/examples/poker.server.xml ${srcdir}/examples/poker.server-monotone.xml ; \
 	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.bot ${srcdir}/examples/poker.bot.xml
+	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/pokerstats/poker.stats.xml.in
+	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/pokerprizes/poker.prizes.xml.in
 
 install-data-local:
 	mkdir -p "${DESTDIR}${pkgsysconfdir}"

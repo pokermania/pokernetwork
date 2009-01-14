@@ -2,7 +2,7 @@
 # -*- mode: python; coding: iso-8859-1 -*-
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C)       2006 Mekensleep <licensing@mekensleep.com>
 #                          24 rue vieille du temple 75004 Paris
@@ -39,6 +39,7 @@ import random
 import locale
 import sets
 from _mysql_exceptions import IntegrityError
+import exceptions
 from pprint import pprint
 from datetime import date
 
@@ -62,7 +63,6 @@ currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.packets import PacketError
 from pokernetwork.userstats import UserStatsRankPercentileLookup
-from pokernetwork.tourneyattrs import TourneyAttrsSponsoredPrizesLookup
 from pokernetwork.attrpack  import AttrsLookup
 from MySQLdb.cursors import DictCursor
 
@@ -127,8 +127,6 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <language value="this_locale_does_not_exist"/>
 
   <stats type="RankPercentile"/>
-
-  <tourney_attrs type="SponsoredPrizes"/>
 
   <refill serial="1" amount="10000000" />
 
@@ -604,7 +602,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500, statsLookupType = UserStatsRankPercentileLookup, statsError = "", tourneyAttrsLookupType = TourneyAttrsSponsoredPrizesLookup, tourneyAttrsError = ""):
+    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500, statsLookupType = UserStatsRankPercentileLookup, statsError = ""):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -633,13 +631,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         else:
             self.failUnless(isinstance(self.service.lookups['stats'], AttrsLookup))
         if statsError != "":
-            self.failUnless(search_output(statsError))
-
-        self.failUnless(isinstance(self.service.lookups['tourney_attrs'], tourneyAttrsLookupType))
-        self.assertEquals(self.service.lookups['tourney_attrs'], self.service.getTourneyAttrsLookup())
-        if not isinstance(self.service.lookups['tourney_attrs'], TourneyAttrsSponsoredPrizesLookup):
-            self.failUnless(isinstance(self.service.lookups['tourney_attrs'], AttrsLookup))
-        if tourneyAttrsError != "":
             self.failUnless(search_output(statsError))
 
         startedOnlyVars = [ ('joined_count', 0),
@@ -733,15 +724,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.configValues(settings_xml.replace('<stats type="RankPercentile"/>', ''), 1000,
                           statsLookupType = AttrsLookup)
 
-    def test00_09_configValues(self):
-        self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>',
-                                               '<tourney_attrs type="SponsoredPrizes"/> <tourney_attrs type="Ignored"/>'), 1000, tourneyAttrsError = "*ERROR* settings include multiple <tourney_attrs> tags; using first one only")
-    def test00_10_configValues(self):
-        self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>',
-                                               '<tourney_attrs type="Missing"/>'), 1000, tourneyAttrsLookupType = AttrsLookup, tourneyAttrsError = "ERROR 'module' object has no attribute 'TourneyAttrsMissingLookup'")
-    def test00_11_configValues(self):
-        self.configValues(settings_xml.replace('<tourney_attrs type="SponsoredPrizes"/>', ''), 1000,
-                          tourneyAttrsLookupType = AttrsLookup)
     def test00_12_badEncoding(self):
         """test00_12_badEncoding
         Check the case where an error occurs due to an encoding requested
@@ -2585,6 +2567,113 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.outfit, 'random')
 
         self.service.db = oldDb
+
+class TourneySelectInfoTestCase(unittest.TestCase):
+
+    def test01_not_found(self):
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <listen tcp="19480" />
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <tourney_select_info>UNLIKELY</tourney_select_info>
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+        try:
+            self.service = pokerservice.PokerService(xml)
+            caught = False
+        except exceptions.IOError:
+            caught = True
+        self.assertEqual(True, caught)
+
+    def test02_no_init(self):
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <listen tcp="19480" />
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <tourney_select_info>../@srcdir@/testfilter.py</tourney_select_info>
+  <users temporary="BOT"/>
+</server>
+"""
+        try:
+            self.service = pokerservice.PokerService(xml)
+            caught = False
+        except exceptions.AttributeError:
+            caught = True
+        self.assertEqual(True, caught)
+
+    def test03_no_handle(self):
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <listen tcp="19480" />
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <tourney_select_info>../@srcdir@/testtourney_select_info_no_call.py</tourney_select_info>
+  <users temporary="BOT"/>
+</server>
+"""
+        try:
+            self.service = pokerservice.PokerService(xml)
+            caught = False
+        except exceptions.AttributeError:
+            caught = True
+        self.assertEqual(True, caught)
+
+    def test04_ok(self):
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <listen tcp="19480" />
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <tourney_select_info settings="../@srcdir@/testsettings.xml">../@srcdir@/testtourney_select_info.py</tourney_select_info>
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+        self.service = pokerservice.PokerService(xml)
+        self.assertEqual(PACKET_POKER_TOURNEY_INFO, self.service.tourneySelectInfo('packet', 'tourneys').type)
+        self.assertEqual('tourneys', self.service.tourney_select_info.tourneys)
+        self.assertEqual('packet', self.service.tourney_select_info.packet)
+        self.assertTrue(self.service.tourney_select_info.settings.path.find('testsettings.xml'))
+
+    def test05_non_specified(self):
+        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <listen tcp="19480" />
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+        self.service = pokerservice.PokerService(xml)
+        self.assertEqual(None, self.service.tourneySelectInfo('packet', 'tourneys'))
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
@@ -2610,6 +2699,7 @@ def Run():
     suite.addTest(loader.loadClass(CleanUpTestCase))
     suite.addTest(loader.loadClass(ResthostTestCase))
     suite.addTest(loader.loadClass(PokerServiceCoverageTests))
+    suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,
@@ -2626,6 +2716,6 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py ) ; ( cd ../tests ; make VERBOSE_T=6 COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice.py coverage-report' check )"
 # End:
 

@@ -16,41 +16,16 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-MAINTAINERCLEANFILES = \
-	Makefile.in
 
-confdir=@pkgdatadir@/conf
+from pokernetwork.pokerpackets import PacketPokerTourneyInfo
 
-conf_DATA = poker.prizes.xml
+class Handle:
+    def __init__(self, service, settings):
+        self.init = True
+        self.settings = settings
+    
+    def __call__(self, service, packet, tourneys):
+        self.packet = packet
+        self.tourneys = tourneys
+        return PacketPokerTourneyInfo()
 
-EXTRA_DIST = \
-	poker.prizes.xml.in
-
-pokerprizesdir = ${pythondir}/pokerprizes
-pokerprizes_PYTHON = \
-	__init__.py \
-	prizes.py \
-	tourneyselectinfo.py 
-
-pokerprizesdbdir=${pkgdatadir}/prizes
-dist_pokerprizesdb_DATA = \
-	database/schema.sql \
-
-TESTS_ENVIRONMENT = ./run
-#
-# Do NOT sort entries because the order matters 
-#
-TESTS = coverage-reset \
-	test-prizes.py \
-	coverage-report
-
-.PHONY: coverage-reset coverage-report
-
-export top_srcdir
-export MYSQL_TEST_DBHOST
-export MYSQL_TEST_DBROOT
-export MYSQL_TEST_DBROOT_PASSWORD
-export MYSQL
-
-clean-local:
-	rm -fr .coverage annotated _trial_temp

@@ -318,7 +318,6 @@ AC_CONFIG_FILES([
         tests/test-attrpack.py
         tests/test-userstats.py
         tests/test-user.py
-        tests/test-tourneyattrs.py
         tests/test-pokercashier.py
         tests/test-pokerclient.py
         tests/test-servercrash.py
@@ -398,6 +397,15 @@ AC_CONFIG_FILES([
         pokerstats/poker.stats.xml
         pokerstats/test-stats.py
         pokerstats/Makefile
+])
+AC_CONFIG_FILES([
+        pokerprizes/run
+], [chmod +x $ac_file])
+AC_CONFIG_FILES([
+        pokerprizes/poker.prizes.xml
+        pokerprizes/test-prizes.py
+        pokerprizes/schema.sql
+        pokerprizes/Makefile
 ])
 AC_OUTPUT
 
