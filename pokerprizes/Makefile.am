@@ -34,7 +34,7 @@ pokerprizes_PYTHON = \
 
 pokerprizesdbdir=${pkgdatadir}/prizes
 dist_pokerprizesdb_DATA = \
-	database/schema.sql \
+	schema.sql
 
 TESTS_ENVIRONMENT = ./run
 #

@@ -99,7 +99,6 @@ pokernetwork_PYTHON = \
 	pokernetwork/proxy.py \
 	pokernetwork/proxyfilter.py \
 	pokernetwork/server.py \
-	pokernetwork/tourneyattrs.py \
 	pokernetwork/upgrade.py \
 	pokernetwork/user.py \
 	pokernetwork/userstats.py \
