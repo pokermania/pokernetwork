@@ -1,6 +1,43 @@
-2009-01-06  Loic Dachary <loic@dachary.org>
+2009-01-14  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
+
+	* pokernetwork/pokerservice.py: when reading the XML from a string,
+	  set the list of directories to ['.'] because it is most likely
+	  useful for test purposes
+	* Makefile.am, pokerprizes/Makefile.am: fix missing or wrong file
+	  names in the distribution list
+	* Makefile.am, conf/poker.server.xml.in, configure.ac,
+	  debian/control, pokernetwork/pokeravatar.py,
+	  pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py,
+	  pokernetwork/tourneyattrs.py, pokerprizes/Makefile.am,
+	  pokerprizes/prizes.py, pokerprizes/schema.sql,
+	  pokerprizes/schema.sql.in, pokerprizes/test-prizes.py.in,
+	  pokerprizes/tourneyselectinfo.py, pokerstats/poker.stats.xml.in,
+	  tests/Makefile.am, tests/test-pokeravatar.py.in,
+	  tests/test-pokerservice.py.in, tests/test-protocol.py.in,
+	  tests/test-tourneyattrs.py.in, tests/testsettings.xml,
+	  tests/testtourney_select_info.py,
+	  tests/testtourney_select_info_no_call.py: stub implementation of
+	  a plugin infrastructure for additional information attached to a
+	  tournament, with an example : prizes
+
+2009-01-13  Loic Dachary <loic@dachary.org>
+
+	* debian/python-poker-prizes.config,
+	  debian/python-poker-prizes.install,
+	  debian/python-poker-prizes.postinst,
+	  debian/python-poker-prizes.postrm,
+	  debian/python-poker-prizes.prerm: python-poker-prizes support
+	  files
+	* pokerprizes, pokerprizes/Makefile.am, pokerprizes/__init__.py,
+	  pokerprizes/poker.prizes.xml.in, pokerprizes/prizes.py,
+	  pokerprizes/run.in, pokerprizes/schema.sql,
+	  pokerprizes/test-prizes.py.in, pokerprizes/tourneyselectinfo.py:
+	  poker prizes stub, as a useful example of information associated
+	  to tournaments
+
+2009-01-06  Loic Dachary <loic@dachary.org>
 
 	* Makefile.am, conf/poker.server.xml.in, configure.ac,
 	  debian/python-poker-network.install, pokernetwork/pokerserver.py,
