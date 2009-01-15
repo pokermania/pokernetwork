@@ -45,6 +45,7 @@ def getSettings(path):
 def runQuery(settings):
     if not settings.headerGet('/server/database/@name'):
             return "Content-type: text/plain\n\n"
+    settings.headerSet('/server/@verbose', '0')
     db = PokerDatabase(settings)
     cgitb.enable()
     form = cgi.FieldStorage()
