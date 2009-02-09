@@ -1,6 +1,20 @@
-2009-01-15  Loic Dachary <loic@dachary.org>
+2009-02-09  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
+
+	* pokernetwork/pokerservice.py: simplify call to pokerprizes and
+	  removed obsolete comment
+	* conf/poker.server.xml.in, pokernetwork/pokerservice.py,
+	  tests/test-pokerservice.py.in: tourneySelectInfo loads is moved
+	  to a separate function that is called by startServices instead of
+	  the __init__ function because the Handle function of the
+	  tourneySelectInfo module may require the database
+
+2009-01-23  Loic Dachary <loic@dachary.org>
+
+	* conf/poker.server.xml.in: TourneyAttr comment & example removed
+
+2009-01-15  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokersql.py: set verbosity level to zero always as
 	  it interferes with the cgi-bin output
