@@ -69,7 +69,7 @@ Architecture: all
 Priority: optional
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${Source-Version}), ucf
 Description: real prizes addon for poker-network
  poker-prizes adds support for real prizes to the poker-network
  multiplayer online poker server.
