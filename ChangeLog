@@ -68,6 +68,12 @@
 	  the admin="false" attribute from the poker.server.xml
 	  configuration file.
 
+2008-12-28  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-tourneytablebalance.py.in
+	(TourneyTableBalanceTestCase.test01_sixPlayersTourney5PerTable):
+	Wrote test.
+
 2008-12-27  Loic Dachary <loic@dachary.org>
 
 	* ChangeLog, NEWS, conf/poker.bot.xml.in, conf/poker.client.xml.in,
