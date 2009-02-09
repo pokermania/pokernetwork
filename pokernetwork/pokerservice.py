@@ -203,23 +203,6 @@ class PokerService(service.Service):
             if lookup == 'stats': myArgs = [ self ]
             self.lookups[lookup] = lookup2factoryClass[lookup]().getClass(settings.headerGet("/server/%s/@type" % lookup))(*myArgs)
 
-        #
-        # load module that provides additional tourney information
-        #
-        self.tourney_select_info = None
-        for path in settings.header.xpathEval("/server/tourney_select_info"):
-            if self.verbose > 0:
-                self.message("trying to load " + path.content)
-            module = imp.load_source("tourney_select_info", path.content)
-            path = settings.headerGet("/server/tourney_select_info/@settings")
-            if path:
-                s = pokernetworkconfig.Config(settings.dirs)
-                s.load(path)
-            else:
-                s = None
-            self.tourney_select_info = module.Handle(self, s)
-            getattr(self.tourney_select_info, '__call__')
-            
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
             self.refill = refill[0]
@@ -238,9 +221,29 @@ class PokerService(service.Service):
             self.monitor_plugins.append(getattr(module, "handle_event"))
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
 
+    def setupTourneySelectInfo(self):
+        #
+        # load module that provides additional tourney information
+        #
+        self.tourney_select_info = None
+        settings = self.settings
+        for path in settings.header.xpathEval("/server/tourney_select_info"):
+            if self.verbose > 0:
+                self.message("trying to load " + path.content)
+            module = imp.load_source("tourney_select_info", path.content)
+            path = settings.headerGet("/server/tourney_select_info/@settings")
+            if path:
+                s = pokernetworkconfig.Config(settings.dirs)
+                s.load(path)
+            else:
+                s = None
+            self.tourney_select_info = module.Handle(self, s)
+            getattr(self.tourney_select_info, '__call__')
+            
     def startService(self):
         self.monitors = []
         self.db = PokerDatabase(self.settings)
+        self.setupTourneySelectInfo()
         self.setupResthost()
         self.cleanupCrashedTables()
         cleanup = self.settings.headerGet("/server/@cleanup")

@@ -2587,6 +2587,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 """
         try:
             self.service = pokerservice.PokerService(xml)
+            self.service.setupTourneySelectInfo()
             caught = False
         except exceptions.IOError:
             caught = True
@@ -2609,6 +2610,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 """
         try:
             self.service = pokerservice.PokerService(xml)
+            self.service.setupTourneySelectInfo()
             caught = False
         except exceptions.AttributeError:
             caught = True
@@ -2631,6 +2633,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 """
         try:
             self.service = pokerservice.PokerService(xml)
+            self.service.setupTourneySelectInfo()
             caught = False
         except exceptions.AttributeError:
             caught = True
@@ -2652,6 +2655,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 </server>
 """
         self.service = pokerservice.PokerService(xml)
+        self.service.setupTourneySelectInfo()
         self.assertEqual(PACKET_POKER_TOURNEY_INFO, self.service.tourneySelectInfo('packet', 'tourneys').type)
         self.assertEqual('tourneys', self.service.tourney_select_info.tourneys)
         self.assertEqual('packet', self.service.tourney_select_info.packet)
@@ -2672,6 +2676,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 </server>
 """
         self.service = pokerservice.PokerService(xml)
+        self.service.setupTourneySelectInfo()
         self.assertEqual(None, self.service.tourneySelectInfo('packet', 'tourneys'))
 
 # ----------------------------------------------------------------

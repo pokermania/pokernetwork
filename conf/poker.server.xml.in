@@ -108,7 +108,7 @@
   <!-- <rest_filter>/usr/share/pyshared/pokernetwork/nullfilter.py</rest_filter> -->
   <!-- <rest_filter>/usr/share/pyshared/pokernetwork/proxyfilter.py</rest_filter> -->
   <!-- <rest_filter>/usr/share/pyshared/pokernetwork/countfilter.py</rest_filter> -->
-  <!-- <tourney_select_info settings="/etc/poker/poker.prizes.xml">/usr/share/pyshared/pokernetwork/tourney_select_info.py</tourney_select_info> -->
+  <!-- <tourney_select_info settings="/etc/poker/poker.prizes.xml">/usr/share/pyshared/pokernetwork/tourneyselectinfo.py</tourney_select_info> -->
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <refill serial="1" amount="5000000"/>
   <database name="@POKER_DATABASE@" host="@POKER_DBHOST@" port="3306" user="@POKER_DBUSER@" password="@POKER_DBUSER_PASSWORD@" root_user="@POKER_DBROOT@" root_password="@POKER_DBROOT_PASSWORD@" schema="@POKER_NETWORK_PKGDATADIR@/schema.sql" command="@MYSQL@"/>
