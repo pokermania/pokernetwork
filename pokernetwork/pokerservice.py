@@ -1047,17 +1047,11 @@ class PokerService(service.Service):
         if self.tourneys.has_key(tourney_serial):
             packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizes()
         else:
-            # What follows really a complete hack.  Since prizes_specs
-            # isn't stored in the database, we don't really know if we
-            # should use "Table" lookup.  There are no checks being done
-            # or anything like that to see if these ranks were actually
-            # payed these amounts.  But it might be good enough to solve
-            # an immediate problem.
             if packet.tourney["sit_n_go"] == 'y':
                 player_count = packet.tourney["players_quota"]
             else:
                 player_count = packet.tourney["registered"]
-            packet.tourney["rank2prize"] = pokerprizes.__dict__["PokerPrizesTable"](
+            packet.tourney["rank2prize"] = pokerprizes.PokerPrizesTable(
                         buy_in_amount = packet.tourney['buy_in'],
                         guarantee_amount = packet.tourney['prize_min'],
                         player_count = player_count,
