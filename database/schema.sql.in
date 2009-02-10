@@ -407,14 +407,14 @@ CREATE TABLE tourneys (
   start_time INT DEFAULT 0,
 
   finish_time INT DEFAULT 0,
-  state VARCHAR(32) DEFAULT "registering",
+  state VARCHAR(16) DEFAULT "registering",
   schedule_serial INT,
   add_on_count INT DEFAULT 0,
   rebuy_count INT DEFAULT 0,
 
   PRIMARY KEY (serial),
   KEY tourneys_start_time_index (start_time),
-  KEY (state)
+  KEY state (state, finish_time)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS user2tourney;
@@ -427,8 +427,9 @@ CREATE TABLE user2tourney (
   rank INT DEFAULT -1,
 
   PRIMARY KEY (user_serial, tourney_serial),
-  KEY (user_serial, currency_serial, tourney_serial),
-  KEY (rank)
+  KEY user_serial (user_serial, currency_serial, tourney_serial),
+  KEY rank (rank),
+  KEY tourney_serial (tourney_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 
 --
