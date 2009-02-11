@@ -1,6 +1,12 @@
-2009-02-09  Loic Dachary <loic@dachary.org>
+2009-02-10  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
+
+	* Makefile.am, database/1.7.3-1.7.4.sql, database/schema.sql.in:
+	  Add index to tourneys and user2tourney for performance and reduce
+	  the size of the state field
+
+2009-02-09  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerservice.py: simplify call to pokerprizes and
 	  removed obsolete comment
