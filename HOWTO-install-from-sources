@@ -21,6 +21,12 @@ Download packages to ~/local/poker/packages (wget)
   http://heanet.dl.sourceforge.net/sourceforge/pyopenssl/pyOpenSSL-0.7.tar.gz
  
   http://download.gna.org/pokersource/sources/poker-network-1.5.0.tar.gz
+
+Patches:
+
+  http://www.mail-archive.com/pokersource-users@gna.org/msg00643/fpconst.dpatch
+  http://www.mail-archive.com/pokersource-users@gna.org/msg00643/future_compat.dpatch
+  http://www.mail-archive.com/pokersource-users@gna.org/msg00643/rm_bogus_shebang.dpatch
   
 In ~/local/poker
   
