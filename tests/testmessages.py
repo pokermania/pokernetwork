@@ -92,13 +92,12 @@ def call_messages():
     for a_class in classes:
         stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
-        class F(a_class):
-            def __init__(self, *args, **kwargs):
-                self._prefix = 'P'
-                self.prefix = 'P'
-                self.id = 1
-                self.name = 'name'
-        F().message('')
+        class Fake:
+            prefix = 'P'
+            _prefix = 'P'
+            id = 1
+            name = 'name'
+        a_class.message.im_func(Fake(), '')
         sys.stdout = stdout
 call_messages()
 
