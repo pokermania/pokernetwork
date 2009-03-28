@@ -1898,6 +1898,9 @@ class PokerService(service.Service):
         return name
 
     def buyInPlayer(self, serial, table_id, currency_serial, amount):
+        if amount == None:
+            self.error("called buyInPlayer with None amount (expected > 0); denying buyin")
+            return 0
         # unaccounted money is delivered regardless
         if not currency_serial: return amount
 

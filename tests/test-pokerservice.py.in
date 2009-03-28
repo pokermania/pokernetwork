@@ -853,7 +853,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         d.addCallback(step2)
         return d
     test04_getUserInfo.timeout = 500
-
     # ----------------------------------------------------------------
     def test05_getPersonalInfo(self):
         self.service.startService()
@@ -1275,6 +1274,18 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(self.service.locale2translationFunc('nl_NL', enc)("Four of a kind %(card)s"), 'Carr\xe9 %(card)s')
         self.assertEquals(self.service.locale2translationFunc('pt_PT', enc)("Rake %(amount)s"), 'Comiss\xe3o %(amount)s')
         self.assertEquals(self.service.locale2translationFunc('sv_SE', enc)("winners share a pot of %(pot)s"), 'vinnarna delar p\xe5 potten %(pot)s')
+    # ----------------------------------------------------------------
+    def test24_buyInPlayerNoneAmount(self):
+        self.service.startService()
+        self.service.refill = None
+        self.createUsers()
+        table_serial = self.service.tables.values()[0].game.id
+        currency_serial = 1
+        self.service.seatPlayer(self.user1_serial, table_serial, 0)
+        clear_all_messages()
+        self.service.buyInPlayer(self.user1_serial, table_serial, currency_serial, None)
+        self.assertTrue("*ERROR*" in get_messages()[0])
+
 ##############################################################################
 class RefillTestCase(unittest.TestCase):
 
