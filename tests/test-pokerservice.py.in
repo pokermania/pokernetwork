@@ -3,9 +3,9 @@
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
-# Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C)       2006 Mekensleep <licensing@mekensleep.com>
-#                          24 rue vieille du temple 75004 Paris
+# Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2006             Mekensleep <licensing@mekensleep.com>
+#                                24 rue vieille du temple 75004 Paris
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -27,7 +27,7 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #  Cedric Pinson <cpinson@freesheep.org>
 #
-import sys, os
+import sys, os, tempfile, shutil
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
@@ -65,6 +65,7 @@ from pokernetwork.packets import PacketError
 from pokernetwork.userstats import UserStatsRankPercentileLookup
 from pokernetwork.attrpack  import AttrsLookup
 from MySQLdb.cursors import DictCursor
+
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
@@ -143,6 +144,45 @@ def fun_name():
         raise ZeroDivisionError
     except ZeroDivisionError:
         return sys.exc_info()[2].tb_frame.f_back.f_code.co_name
+
+class MockCursorBase:
+    def __init__(cursorSelf, testObject, acceptList):
+        cursorSelf.testObject = testObject
+        cursorSelf.rowcount = 0
+        cursorSelf.closedCount = 0
+        cursorSelf.counts = {}
+        cursorSelf.acceptedStatements = acceptList
+        cursorSelf.row = ()
+        for cntType in cursorSelf.acceptedStatements:
+            cursorSelf.counts[cntType] = 0 
+    def close(cursorSelf):
+        cursorSelf.closedCount += 1
+    def statementActions(cursorSelf, sql, statment):
+        raise NotImplementedError("MockCursor subclass must implement this")
+    def execute(*args):
+        cursorSelf = args[0]
+        sql = args[1]
+        found = False
+        for statement in cursorSelf.acceptedStatements:
+            if sql[:len(statement)] == statement:
+                cursorSelf.counts[statement] += 1
+                cursorSelf.rowcount = 0
+                found = True
+                break
+        cursorSelf.row = (None,)
+        cursorSelf.testObject.failUnless(found, "Unknown sql statement: " + sql)
+        cursorSelf.statementActions(sql, statement)
+        return cursorSelf.rowcount
+    def fetchone(cursorSelf): return cursorSelf.row
+
+class MockDatabase:
+    def __init__(dbSelf, cursorClass):
+        class MockInternalDatabase:
+            def literal(intDBSelf, *args): return args[0]
+        dbSelf.db = MockInternalDatabase()
+        dbSelf.cursorValue = cursorClass()
+    def cursor(dbSelf): return dbSelf.cursorValue
+    def literal(dbSelf, val): return dbSelf.db.literal(val)
 
 class PokerServiceTestCaseBase(unittest.TestCase):
 
@@ -746,6 +786,40 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
 
+    def test00_13_anotherBadEncoding(self):
+        """test00_13_anotherBadEncoding
+        Check the case where an error occurs due to an encoding requested
+        for a config language value has an unknown encoding."""
+
+        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>',
+                                                '<language value=".MAGIC-PIXIE-DUST"/>')
+
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
+        clear_all_messages()
+        self.service.startService()
+        self.assertEquals(len(self.service.gettextFuncs), 17)
+        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: .MAGIC-PIXIE-DUST'))
+        self.failUnless(search_output("*ERROR* No translation for language .MAGIC-PIXIE-DUST for .MAGIC-PIXIE-DUST in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        for ii in ('en_US.ISO-8859-1', '.MAGIC-PIXIE-DUST'):
+            self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
+            self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
+
+    def test00_14_languageEmptyStringForSeperate(self):
+        """test00_14_languageEmptyString
+        Check the case where an error occurs due to a language being the empty string."""
+
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.header = settings.doc.xpathNewContext()
+        self.service = pokerservice.PokerService(settings)
+        clear_all_messages()
+        self.service.startService()
+        self.service._separateCodesetFromLocale('')
+        msgs = get_messages()[-2:]
+        self.assertEquals(msgs, ['*ERROR* Unable to find codeset string in language value: ', '*ERROR* Unable to find locale string in language value: '])
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1254,6 +1328,31 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
     # ----------------------------------------------------------------
+    def test23_isShuttingDown(self):
+        from exceptions import AttributeError
+        caughtIt = False
+        try: 
+            self.service.isShuttingDown()
+            self.failIf(True)  # Should not be reached
+        except AttributeError, ae:
+            caughtIt = True
+            self.assertEquals(ae.__str__(),
+                              "PokerService instance has no attribute 'shutting_down'")
+        self.failUnless(caughtIt)
+
+        self.service.startService()
+        self.assertEquals(self.service.isShuttingDown(), False)
+        self.assertEquals(self.service.isShuttingDown(), self.service.shutting_down)
+
+        self.service.stopService()
+        self.assertEquals(self.service.isShuttingDown(), True)
+        self.assertEquals(self.service.isShuttingDown(), self.service.shutting_down)
+    # ----------------------------------------------------------------
+    def test24_stopFactory(self):
+        # Nothing is actually done by stopFactory(), so this test can't
+        # really check anything of use.
+        self.assertEquals(self.service.stopFactory(), None)
+##############################################################################        
     def test23_localeChecks(self):
         self.service.startService()
         for enlo in ('this_locale_does_not_exist', 'en_GB.ISO-8859-1',
@@ -1363,7 +1462,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                game_id = tourney_serial)
         return_packet = self.service.tourneyUnregister(packet)
         self.assertEqual(packet, return_packet)
-
+    # ----------------------------------------------------------------
     def test_does_not_exist(self):
         tourney_serial = 100
         user_serial = 1
@@ -1371,7 +1470,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.DOES_NOT_EXIST, p.code)
-
+    # ----------------------------------------------------------------
     def test_not_registered(self):
         tourney_serial = 100
         user_serial = 1
@@ -1382,7 +1481,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.NOT_REGISTERED, p.code)
-
+    # ----------------------------------------------------------------
     def test_too_late(self):
         tourney_serial = 100
         user_serial = 1
@@ -1396,7 +1495,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.TOO_LATE, p.code)
-
+    # ----------------------------------------------------------------
     def test_no_user2money(self):
         tourney_serial = 100
         user_serial = 1
@@ -1411,7 +1510,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.SERVER_ERROR, p.code)
         self.assertTrue("not in user2money" in p.message)
-
+    # ----------------------------------------------------------------
     def test_no_user2tourney(self):
         tourney_serial = 100
         self.service.startService()
@@ -1426,7 +1525,75 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                                          game_id = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.SERVER_ERROR, p.code)
         self.assertTrue("not in user2tourney" in p.message)
+    # ----------------------------------------------------------------
+    def test_coverDatabaseEvent(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 423
+                mpSelf.game_id = 865
+        class MockTourney:
+            def __init__(mtSelf):
+                mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
+            def isRegistered(mtSelf, serial):
+                self.assertEquals(serial, 423)
+                return True
+            def canUnregister(mtSelf, serial):
+                self.assertEquals(serial, 423)
+                return True
+            def unregister(mtSelf, serial):
+                self.assertEquals(serial, 423)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if sql[:len(statement)] == "UPDATE user2money SET amount = amount + ":
+                    cursorSelf.rowcount = 1
+                elif sql[:len(statement)] == "DELETE FROM user2tourney WHERE user_serial":
+                    cursorSelf.rowcount = 1
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self,
+                                        [ "UPDATE user2money SET amount = amount + ",
+                                          "DELETE FROM user2tourney WHERE user_serial"])
+        self.service = pokerservice.PokerService(self.settings)
 
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 423: client }
+        self.service.tourneys = { 865 : tourney }
+
+        # Not worth making this test cover dbevent, other tests do.  Here,
+        # we make sure it is called as expected
+        oldDbEvent = self.service.databaseEvent
+        global calledDBCount
+        calledDBCount = 0
+        def dbEventMock(event = None, param1 = None, param2 = None, param3 = None): 
+            global calledDBCount
+            calledDBCount += 1
+            self.assertEquals(event, PacketPokerMonitorEvent.UNREGISTER)
+            self.assertEquals(param1, 423)
+            self.assertEquals(param2, 10)
+            self.assertEquals(param3, 20)
+
+        self.service.databaseEvent = dbEventMock
+
+        clear_all_messages()
+
+        pack = MockPacket()
+        retPack =  self.service.tourneyUnregister(pack)
+        self.assertEquals(pack, retPack)
+        self.assertEquals(calledDBCount, 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('tourneyUnregister: UPDATE user2money SET amount = amount + 20') >= 0)
+        self.failUnless(msgs[1].find('tourneyUnregister: DELETE FROM user2tourney WHERE user_serial = 423') >= 0)
+        self.service.db = oldDb
+        self.service.databaseEvent = oldDbEvent
+# ----------------------------------------------------------------
 class TourneyCancelTestCase(PokerServiceTestCaseBase):
     def test_ok(self):
         class Tournament:
@@ -1438,9 +1605,8 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
         self.service.tourneyCancel(Tournament())
         if verbose < 0:
             self.assertTrue(search_output('tourneyCancel:'))
-
+# ----------------------------------------------------------------
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
-
     class ClientMockup:
         def __init__(self, serial):
             self.serial = serial
@@ -1452,7 +1618,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
 
         def sendPacketVerbose(self, packet):
             self.packets.append(packet)
-
+    # ----------------------------------------------------------------
     def test01_no_rank(self):
         self.service.startService()
         self.service.verbose = 6
@@ -1488,7 +1654,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                  'table_serial': table_serial,
                                  'name' : 'user1',
                                  'money': table_money}}, packet.user2properties)
-
+    # ----------------------------------------------------------------
     def test02_no_money_no_table(self):
         self.service.startService()
         self.createUsers()
@@ -1506,7 +1672,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                                  'table_serial': None,
                                  'name' : 'user1',
                                  'money': -1}}, packet.user2properties)
-
+    # ----------------------------------------------------------------
     def test03_player_removed(self):
         self.service.startService()
         self.createUsers()
@@ -1522,7 +1688,63 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         packet = self.service.tourneyManager(tourney_serial)
         self.assertEqual(tourney_serial, packet.tourney['serial'])
         self.assertEqual(1, packet.tourney['registered'])
-        self.assertEqual(0, len(packet.table2serials))
+        self.assertEqual(0, len(packet.table2serials))        
+    # ----------------------------------------------------------------
+    def test04_coverOldMySQLByMockUp(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'INSERT INTO tourneys',
+                                                  'UPDATE tourneys_schedule',
+                                                  'REPLACE INTO route']
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def insert_id(cSelf): return 15
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                cursorSelf.rowcount = 0
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service.startService()
+        self.createUsers()
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+        realSpawnTourneyInCore = self.service.spawnTourneyInCore
+        self.service.spawnTourneyInCore = lambda a, x, y, z: True
+
+        clear_all_messages()
+        self.service.spawnTourney(schedule)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 1)
+        self.assertEquals(msgs[0].find("spawnTourney: {'"), 0)
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          {'INSERT INTO tourneys': 1,
+                           'UPDATE tourneys_schedule': 0, 'REPLACE INTO route': 1})
+        self.service.db = oldDb
+        self.service.spawnTourneyInCore = realSpawnTourneyInCore
     # ------------------------------------------------------------------------
     def test04_bogusTourneySerial(self):
         self.service.startService()
@@ -1535,14 +1757,43 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEquals(packet.code, PacketPokerGetTourneyManager.DOES_NOT_EXIST)
     # ------------------------------------------------------------------------
     def test05_moreThanOneTourneyRow(self):
-        # FIXME: BKUHN needs to fix this later.  the line:
-        # !             self.message("tourneyManager: tourney_serial(%d) has more than one row in tourneys table, using first row returned" % tourney_serial)
+        validStatements = ["SELECT user_serial, table_serial, rank FROM user2tourney WHERE tourney_serial =",
+                           'SELECT user_serial, name FROM user2tourney, users WHERE user2tourney.tourney_serial',
+                           "SELECT * FROM tourneys WHERE serial = "
+                           ]
+        class MockCursor(MockCursorBase):
+            def fetchall(mcSelf): return mcSelf.rows
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "SELECT * FROM tourneys WHERE serial = ":
+                    cursorSelf.rowcount = 6
+                    cursorSelf.rows = []
+                    cursorSelf.row = {'sit_n_go' : 'n', 'buy_in' : 0, 'prize_min' : 0,
+                                      }
+                else:
+                    cursorSelf.rowcount = 0
+                    cursorSelf.rows = [ ]
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+        class MockDBWithDifferentCursorMethod(MockDatabase):
+            def cursor(dbSelf, dummy = None):
+                # Needed because tourneyManger() calls with argument "DictCursor"
+                return MockDatabase.cursor(dbSelf)
 
-        # is not covered.  I was in a bit of a hurry, but I'm working on
-        # full coverage for service in another branch anyway, and this is
-        # just a self.message() anyway and converage can wait; I'm in a
-        # hurry.
-        pass
+        self.service = pokerservice.PokerService(self.settings)
+        self.service.startService()
+
+        oldDb = self.service.db
+        self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
+        self.service.tourneys = {}
+        tourney_serial = 17735
+        clear_all_messages()
+        packet = self.service.tourneyManager(tourney_serial)
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 1, "We should get at least one error message")
+        self.assertEquals(msgs[0], 'tourneyManager: tourney_serial(17735) has more than one row in tourneys table, using first row returned')
+        self.assertEquals(packet.type, PACKET_POKER_TOURNEY_MANAGER)
+        
+        self.service.db = oldDb
     # ------------------------------------------------------------------------
     def test06_prizes_tourney_regular(self):
         self.service.startService()
@@ -1896,7 +2147,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.assertEqual(False, self.service.tourneyFinished(tournament))
         if verbose < 0:
             self.assertTrue(search_output("bailor failed to provide requested money"))
-
+##############################################################################        
     def test_bailor_zero(self):
         class Tournament:
             def __init__(self):
@@ -2504,7 +2755,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tourney.remaining = 120
         self.service.tourneyBreakCheck(tourney)
         self.failUnless("2 minute" in table.message)
-
+##############################################################################        
 class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 
     def test_updatePlayerRake(self):
@@ -2518,7 +2769,38 @@ class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
         self.assertEqual(15, row['rake'])
         self.assertEqual(15, row['points'])
         cursor.close()
+##############################################################################        
+class PokerFactoryFromPokerServiceTestCase(unittest.TestCase):
+    def test01_createService(self):
+        class MockServiceSmall():
+            def __init__(servSelf):
+                servSelf.verbose = 9
+                servSelf.createAvatarCount = 0
+                servSelf.destroyAvatarCount = 0
+            def createAvatar(servSelf):
+                servSelf.createAvatarCount += 1
+            def destroyAvatar(servSelf, mockAvatar):
+                servSelf.destroyAvatarCount += 1
+                self.assertEquals(mockAvatar, "MOCK MY AVATAR UP")
+            
+        mockServ = MockServiceSmall()
+        pokerFactory = pokerservice.PokerFactoryFromPokerService(mockServ)
+        self.assertEquals(pokerFactory.service, mockServ)
+        self.assertEquals(pokerFactory.verbose, mockServ.verbose)
+        self.assertEquals(mockServ.createAvatarCount, 0)
+        self.assertEquals(mockServ.destroyAvatarCount, 0)
 
+        pokerFactory.createAvatar()
+        self.assertEquals(mockServ.createAvatarCount, 1)
+        self.assertEquals(mockServ.destroyAvatarCount, 0)
+
+        pokerFactory.destroyAvatar("MOCK MY AVATAR UP")
+        self.assertEquals(mockServ.createAvatarCount, 1)
+        self.assertEquals(mockServ.destroyAvatarCount, 1)
+
+        self.assertEquals(pokerservice.PokerFactoryFromPokerService.protocol,
+                          pokerservice.PokerServerProtocol)
+        # FIXME?: cover registerAdapater line???
 ##############################################################################
 class PokerServiceCoverageTests(unittest.TestCase):
     # ----------------------------------------------------------------
@@ -2533,6 +2815,848 @@ class PokerServiceCoverageTests(unittest.TestCase):
             d = self.service.stopService()
             return d
     # ----------------------------------------------------------------
+    def test01_statsWithHands(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT MAX(serial)' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                if str == 'SELECT MAX(serial)' and cursorSelf.counts[str] == 1:
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = (8,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+        self.service.avatars =  [ 'a', 'b', 'c' ]
+
+        pack = self.service.stats("THIS ARG IS IGNORED")
+        self.assertEquals(pack.players, 3)
+        self.assertEquals(pack.hands, 8)
+        self.assertEquals(pack.bytesin, 0)
+        self.assertEquals(pack.bytesout, 0)
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test02_statsWithoutHands(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'SELECT MAX(serial)' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                if str == 'SELECT MAX(serial)' and cursorSelf.counts[str] == 1:
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+        self.service.avatars =  [ 'a', 'b', 'c' ]
+
+        pack = self.service.stats("THIS ARG IS IGNORED")
+        self.assertEquals(pack.players, 3)
+        self.assertEquals(pack.hands, 0)
+        self.assertEquals(pack.bytesin, 0)
+        self.assertEquals(pack.bytesout, 0)
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test04_createAvatar(self):
+        from pokernetwork.pokeravatar import PokerAvatar
+        self.service = pokerservice.PokerService(self.settings)
+        self.service.avatars = []
+        a = self.service.createAvatar()
+        self.failUnless(isinstance(a, PokerAvatar))
+        self.assertEquals(self.service.avatars, [a])
+    # ----------------------------------------------------------------
+    class MockAvatar:
+        def __init__(maSelf):
+            maSelf.connectionLostArgs = []
+        def connectionLost(maSelf, val):
+            maSelf.connectionLostArgs.append(val)
+    # ----------------------------------------------------------------
+    def test05_forceAvatarDestory_notInAnyList(self):
+        self.service = pokerservice.PokerService(self.settings)
+        ma = PokerServiceCoverageTests.MockAvatar()
+        self.assertEquals(ma.connectionLostArgs, [])
+
+        self.service.avatars = []
+        self.service.monitors = []
+
+
+        # This will cause a reactor timeout if this deferred is never
+        # called back.
+        testDestroyCalledDefer = defer.Deferred()
+        def testDestroyCalled():
+            msgs = get_messages()
+            self.assertEquals(len(msgs), 1)
+            self.assertEquals(msgs[0].find('*ERROR* avatar <__main__.MockAvatar instance at '), 0)
+            self.failUnless(msgs[0].find(' is not in the list of known avatars') > 0)
+            self.assertEquals(ma.connectionLostArgs, [ 'Disconnected' ])
+            self.assertEquals(self.service.avatars, [])
+            self.assertEquals(self.service.monitors, [])
+            testDestroyCalledDefer.callback(True)
+
+        clear_all_messages()
+        self.service.forceAvatarDestroy(ma)
+        reactor.callLater(5, testDestroyCalled)
+        return testDestroyCalledDefer
+    # ----------------------------------------------------------------
+    def test06_forceAvatarDestory_inAvatarsListOnly(self):
+        self.service = pokerservice.PokerService(self.settings)
+        ma = PokerServiceCoverageTests.MockAvatar()
+        self.assertEquals(ma.connectionLostArgs, [])
+
+        self.service.avatars = [ma]
+        self.service.monitors = []
+
+        # This will cause a reactor timeout if this deferred is never
+        # called back.
+        testDestroyCalledDefer = defer.Deferred()
+        def testDestroyCalled():
+            self.assertEquals(get_messages(), [])
+            self.assertEquals(ma.connectionLostArgs, [ 'Disconnected' ])
+            self.assertEquals(self.service.avatars, [])
+            self.assertEquals(self.service.monitors, [])
+            testDestroyCalledDefer.callback(True)
+
+        clear_all_messages()
+        self.service.forceAvatarDestroy(ma)
+        reactor.callLater(5, testDestroyCalled)
+
+        return testDestroyCalledDefer
+    # ----------------------------------------------------------------
+    def test07_forceAvatarDestory_inMonitorsAndAvatars(self):
+        self.service = pokerservice.PokerService(self.settings)
+        ma = PokerServiceCoverageTests.MockAvatar()
+        self.assertEquals(ma.connectionLostArgs, [])
+
+        self.service.avatars = [ma]
+        self.service.monitors = []
+        pack = self.service.monitor(ma)
+        self.assertEquals(pack.type, PACKET_ACK)
+        self.assertEquals(self.service.monitors, [ma])
+
+        # This will cause a reactor timeout if this deferred is never
+        # called back.
+        testDestroyCalledDefer = defer.Deferred()
+        def testDestroyCalled():
+            self.assertEquals(get_messages(), [])
+            self.assertEquals(ma.connectionLostArgs, [ 'Disconnected' ])
+            self.assertEquals(self.service.avatars, [])
+            self.assertEquals(self.service.monitors, [])
+            testDestroyCalledDefer.callback(True)
+
+        clear_all_messages()
+        self.service.forceAvatarDestroy(ma)
+        reactor.callLater(5, testDestroyCalled)
+
+        return testDestroyCalledDefer
+    # ----------------------------------------------------------------
+    def test08_sessionStartSucceed(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'insert into session' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                cursorSelf.rowcount = 1
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args):
+                        return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        self.failUnless(self.service.sessionStart(5, '192.168.0.1'))
+        self.assertEquals(get_messages(), ["sessionStart(5, 192.168.0.1): "])
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          {'insert into session' : 1 })
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test09_sessionStartFail(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'insert into session' ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                cursorSelf.rowcount = 0
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        self.failUnless(self.service.sessionStart(7, '192.168.0.2'))
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0], 'sessionStart(7, 192.168.0.2): ')
+        self.assertEquals(msgs[1].find("*ERROR* modified 0 rows (expected 1): insert into session ( user_serial, started, ip ) values ( 7, "), 0)
+        self.failUnless(msgs[1].find(", '192.168.0.2')") > 0)
+
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          {'insert into session' : 1 })
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test10_sessionEndSucceed(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'insert into session_history',
+                                                  'delete from session']
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                cursorSelf.rowcount = 1
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        self.failUnless(self.service.sessionEnd(9))
+        self.assertEquals(get_messages(), ['sessionEnd(9): '])
+
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          { 'insert into session_history' : 1,
+                            'delete from session' : 1 })
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test11_sessionEndInsertFailsDeleteSucceeds(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'insert into session_history',
+                                                  'delete from session']
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                if sql[:len(str)] == 'insert into session_history':
+                    cursorSelf.rowcount = 3
+                else:
+                    cursorSelf.rowcount = 1
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        self.failUnless(self.service.sessionEnd(9))
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0], 'sessionEnd(9): ')
+        self.assertEquals(msgs[1].find('*ERROR* a) modified 3 rows (expected 1): insert into session_history'), 0)
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          { 'insert into session_history' : 1,
+                            'delete from session' : 1 })
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test12_sessionEndAllSqlFails(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'insert into session_history',
+                                                  'delete from session']
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                cursorSelf.rowcount = 0
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        self.failUnless(self.service.sessionEnd(9))
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 3)
+        self.assertEquals(msgs[0], 'sessionEnd(9): ')
+        self.assertEquals(msgs[1].find('*ERROR* a) modified 0 rows (expected 1): insert into session_history'), 0)
+        self.assertEquals(msgs[2].find('*ERROR* b) modified 0 rows (expected 1): delete from session'), 0)
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          { 'insert into session_history' : 1,
+                            'delete from session' : 1 })
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test13_tourneyNewState_DBFail_forceTourneyDeal(self):
+        self.callCount = 0
+        def ok(tourney): self.callCount += 1
+        def notok(tourney): self.failIf(1)
+
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'update tourneys set']
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                cursorSelf.rowcount = 8
+                cursorSelf.row = (None,)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        
+        self.service.tourneyBreakCheck = notok
+        self.service.tourneyDeal = ok
+        self.service.tourneyBreakWait = notok
+        self.service.tourneyBreakResume = notok
+
+        class MockTourney:
+            def __init__(mtSelf):
+                mtSelf.start_time = 5
+                mtSelf.serial = 19
+        self.service.tourneyNewState(MockTourney(),
+                                     pokertournament.TOURNAMENT_STATE_BREAK_WAIT,
+                                     pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.assertEquals(self.callCount, 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0].find("tourneyNewState: update tourneys set state"), 0)
+        self.assertEquals(msgs[1], "*ERROR* modified 8 rows (expected 1): update tourneys set state = 'running', start_time = 5 where serial = 19 ")
+         
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          {'update tourneys set': 1})
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test14_tourneyFinished_prizeNegative(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ 'UPDATE tourneys SET finish_time']
+
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 1
+                        found = True
+                        break
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
+        class MockTourney:
+            def prizes(mtSelf): return [-5]
+            def __init__(mtSelf):
+                mtSelf.serial = 15
+                mtSelf.prize_min = 0
+                mtSelf.buy_in = 5
+                mtSelf.registered = 1
+                mtSelf.winners = [9]
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        mockTourney = MockTourney()
+
+        # Not worth making this test cover dbevent, other tests do
+        oldDbEvent = self.service.databaseEvent
+        def dbEventMock(event = None, param1 = None): pass
+        self.service.databaseEvent = dbEventMock
+
+        # Same with tourneyDeleteRoute -- we just check that it is called.
+        oldTourneyDeleteRoute = self.service.tourneyDeleteRoute
+        global tourneyDeleteRouteCount
+        tourneyDeleteRouteCount = 0
+        def mockTourneyDeleteRoute(tourney):
+            global tourneyDeleteRouteCount
+            tourneyDeleteRouteCount += 1
+            self.assertEquals(tourney, mockTourney)
+        self.service.tourneyDeleteRoute = mockTourneyDeleteRoute
+            
+        self.service.serial2client = {}
+        clear_all_messages()
+        self.assertEquals(self.service.tourneyFinished(mockTourney), True)
+
+        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          {'UPDATE tourneys SET finish_time' : 1})
+        self.assertEquals(tourneyDeleteRouteCount, 1)
+        self.service.db = oldDb
+        self.service.databaseEvent = oldDbEvent 
+        self.service.tourneyDeleteRoute = oldTourneyDeleteRoute
+    # ----------------------------------------------------------------
+    def test15_tourneyGameFilled_updateTableFail(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "update user2tourney set" ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+        class MockTable:
+            def __init__(mtSelf): mtSelf.updateCount = 0
+            def update(mtSelf):   mtSelf.updateCount += 1
+
+        class MockTourney:
+            def prizes(mtSelf): return [-5]
+            def __init__(mtSelf):
+                mtSelf.serial = 15
+                mtSelf.prize_min = 0
+                mtSelf.buy_in = 5
+                mtSelf.registered = 1
+                mtSelf.winners = [9]
+        class MockGame:
+            class MockPlayer:
+                def __init__(mpSelf): mpSelf.serial = 10
+                def setUserData(mpSelf, values): pass
+            def __init__(mgSelf): mgSelf.id = 22
+            def playersAll(mgSelf): return [ MockGame.MockPlayer() ]
+            def buyIn(mgSelf): return 100
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        oldSeatPlayer = self.service.seatPlayer
+        def mySeatPlayer(x, y, z): pass
+        self.service.seatPlayer = mySeatPlayer
+
+        self.service.serial2client = {}
+        self.service.tables = { 22 : MockTable() }
+
+        clear_all_messages()
+        self.service.tourneyGameFilled(MockTourney(), MockGame())
+
+        self.assertEquals(self.service.db.cursorValue.counts, {'update user2tourney set': 1})
+        self.assertEquals(self.service.tables[22].updateCount, 1)
+
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 3)
+        self.assertEquals(msgs[0], 'tourneyGameFilled: player 10 disconnected')
+        self.assertEquals(msgs[1].find('tourneyGameFilled: update user2tourney set'), 0)
+        self.assertEquals(msgs[2].find('*ERROR* modified 0 rows (expected 1): update user2tourney set'), 0)
+
+        self.service.db = oldDb
+        self.service.seatPlayer = oldSeatPlayer
+    # ----------------------------------------------------------------
+    def test16_tourneyPlayersList_nonExistent(self):
+        self.service = pokerservice.PokerService(self.settings)
+
+        self.service.tourneys = {}
+
+        pack = self.service.tourneyPlayersList(99)
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code, PacketPokerTourneyRegister.DOES_NOT_EXIST)
+        self.assertEquals(pack.message, "Tournament 99 does not exist")
+    # ----------------------------------------------------------------
+    def test17_tourneyPlayersList_sucess(self):
+        """Covers parts of tourneyPlayersList as well as getName()"""
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "select name from users" ]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                if cursorSelf.counts[str] == 1:
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = ("joe",)
+                else:
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = (None,)
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        class MockTourney:
+            def __init__(mtSelf): mtSelf.players = [ 5, 6, 0 ]
+
+        self.service.tourneys = { 77: MockTourney() }
+
+        clear_all_messages()
+        pack = self.service.tourneyPlayersList(77)
+        self.assertEquals(pack.players, [('joe', -1, 0),
+                                         ('UNKNOWN', -1, 0), ('anonymous', -1, 0)])
+        self.assertEquals(pack.type, PACKET_POKER_TOURNEY_PLAYERS_LIST)
+        self.assertEquals(pack.serial, 77)
+        self.assertEquals(get_messages(),
+                          ['*ERROR* getName(6) expected one row got 0'])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test18_tourneyStats_sqlFails(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "SELECT COUNT(*) FROM tourneys",
+                                                  "SELECT COUNT(*) FROM user2tourney"]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                cursorSelf.rowcount = 0
+                cursorSelf.row = (None,)
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+
+        caughtIt = False
+        try:
+            self.service.tourneyStats()
+            self.failIf(True)  # Should not be reached
+        except TypeError, te:
+            self.assertEquals(te.__str__(), "int() argument must be a string or a number, not 'NoneType'")
+            caughtIt = True
+
+        self.failUnless(caughtIt)
+        self.assertEquals(get_messages(), [])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test19_tourneyStats_succeed(self):
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "SELECT COUNT(*) FROM tourneys",
+                                                  "SELECT COUNT(*) FROM user2tourney"]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                cursorSelf.rowcount = 1
+                cursorSelf.row = (9,)
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+
+        clear_all_messages()
+        self.assertEquals(self.service.tourneyStats(), (9,9))
+        self.assertEquals(get_messages(), [])
+
+        self.assertEquals(self.service.db.cursorValue.counts,
+                          {'SELECT COUNT(*) FROM user2tourney': 1,
+                           'SELECT COUNT(*) FROM tourneys': 1})
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test20_tourneyRegister_tourneyMissing(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPacket = pack
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 42
+                mpSelf.game_id = 91
+                
+        client = MockClient()
+        self.service.serial2client = { 42: client }
+        self.service.tourneys = { }
+
+        clear_all_messages()
+
+        self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.assertEquals(get_messages(),
+                          ['*ERROR* type = ERROR(3) message = Tournament 91 does not exist, code = 1, other_type = POKER_TOURNEY_REGISTER'])
+        self.failUnless(hasattr(client, "errorPacket"))
+        self.assertEquals(client.errorPacket.type, PACKET_ERROR)
+        self.assertEquals(client.errorPacket.code,
+                          PacketPokerTourneyRegister.DOES_NOT_EXIST)
+        self.assertEquals(client.errorPacket.message, 
+                          "Tournament 91 does not exist")
+    # ----------------------------------------------------------------
     def test21_getPlayerInfo_validReturns(self):
         class MockCursor:
             def __init__(cursorSelf):
@@ -2541,7 +3665,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.acceptedStatements = [ "select locale,name,skin_url,skin_outfit"]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0
+                    cursorSelf.counts[cntType] = 0 
             def close(cursorSelf): pass
             def execute(*args):
                 cursorSelf = args[0]
@@ -2578,7 +3702,2474 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.outfit, 'random')
 
         self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test22_tourneyRegister_torneyAlreadyRegistering(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 44
+                mpSelf.game_id = 99
+        class MockTourney:
+            def isRegistered(mtSelf, serial):
+                self.assertEquals(serial, 44)
+                return True
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 44: client }
+        self.service.tourneys = { 99 : tourney }
 
+        clear_all_messages()
+
+        self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.failUnless(hasattr(client, "errorPackets"))
+        self.assertEquals(len(client.errorPackets), 1)
+        pack = client.errorPackets[0]
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.failUnless(pack.message.find('Player 44 already registered in tournament 99') == 0)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code,
+                          PacketPokerTourneyRegister.ALREADY_REGISTERED)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 1)
+        self.failUnless(msgs[0].find('*ERROR* type = ERROR(3) message = Player 44 already registered in tournament 99')  == 0)
+        self.failUnless(msgs[0].find('other_type = POKER_TOURNEY_REGISTER') >= 0)
+    # ----------------------------------------------------------------
+    def test23_tourneyRegister_tourneyRefuseRegistration(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 29
+                mpSelf.game_id = 123
+        class MockTourney:
+            def isRegistered(mtSelf, serial):
+                self.assertEquals(serial, 29)
+                return False
+            def canRegister(mtSelf, serial):
+                self.assertEquals(serial, 29)
+                return False
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 29: client }
+        self.service.tourneys = { 123 : tourney }
+
+        clear_all_messages()
+
+        self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.failUnless(hasattr(client, "errorPackets"))
+        self.assertEquals(len(client.errorPackets), 1)
+        pack = client.errorPackets[0]
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.failUnless(pack.message.find('Registration refused in tournament 123') == 0)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code,
+                          PacketPokerTourneyRegister.REGISTRATION_REFUSED)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 1)
+        self.failUnless(msgs[0].find('*ERROR* type = ERROR(3) message = Registration refused in tournament 123')  == 0)
+    # ----------------------------------------------------------------
+    def test24_tourneyRegister_tourneyNotEnoughMoneyToRegister(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 194
+                mpSelf.game_id = 526
+        class MockTourney:
+            def __init__(mtSelf):
+                mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
+            def isRegistered(mtSelf, serial):
+                self.assertEquals(serial, 194)
+                return False
+            def canRegister(mtSelf, serial):
+                self.assertEquals(serial, 194)
+                return True
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "UPDATE user2money SET amount = amount"]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                cursorSelf.rowcount = 0
+                cursorSelf.row = (None,)
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 194: client }
+        self.service.tourneys = { 526 : tourney }
+
+        clear_all_messages()
+
+        self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.failUnless(hasattr(client, "errorPackets"))
+        self.assertEquals(len(client.errorPackets), 1)
+        pack = client.errorPackets[0]
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.failUnless(pack.message.find('Not enough money to enter the tournament 526') == 0)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code, PacketPokerTourneyRegister.NOT_ENOUGH_MONEY)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
+        self.failUnless(msgs[1].find('*ERROR* type = ERROR(3) message = Not enough money to enter the tournament 526')  == 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test25_tourneyRegister_updateMoneyWeirdness(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 194
+                mpSelf.game_id = 526
+        class MockTourney:
+            def __init__(mtSelf):
+                mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
+            def isRegistered(mtSelf, serial):
+                self.assertEquals(serial, 194)
+                return False
+            def canRegister(mtSelf, serial):
+                self.assertEquals(serial, 194)
+                return True
+        class MockCursor:
+            def __init__(cursorSelf):
+                cursorSelf.rowcount = 0
+                cursorSelf.counts = {}
+                cursorSelf.acceptedStatements = [ "UPDATE user2money SET amount = amount"]
+                cursorSelf.row = ()
+                for cntType in cursorSelf.acceptedStatements:
+                    cursorSelf.counts[cntType] = 0 
+            def close(cursorSelf): pass
+            def execute(*args):
+                cursorSelf = args[0]
+                sql = args[1]
+                found = False
+                for str in cursorSelf.acceptedStatements:
+                    if sql[:len(str)] == str:
+                        cursorSelf.counts[str] += 1
+                        cursorSelf.rowcount = 0
+                        found = True
+                        break
+                cursorSelf.rowcount = 2
+                cursorSelf.row = (None,)
+                self.failUnless(found)
+                return cursorSelf.rowcount
+            def fetchone(cursorSelf): return cursorSelf.row
+        class MockDatabase:
+            def __init__(dbSelf):
+                class MockInternalDatabase:
+                    def literal(intDBSelf, *args): return args[0]
+                dbSelf.db = MockInternalDatabase()
+                dbSelf.cursorValue = MockCursor()
+            def cursor(dbSelf): return dbSelf.cursorValue
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase()
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 194: client }
+        self.service.tourneys = { 526 : tourney }
+
+        clear_all_messages()
+
+        self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.failUnless(hasattr(client, "errorPackets"))
+        self.assertEquals(len(client.errorPackets), 1)
+        pack = client.errorPackets[0]
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.failUnless(pack.message.find('Server error') == 0)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code, PacketPokerTourneyRegister.SERVER_ERROR)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
+        self.failUnless(msgs[1].find('*ERROR* modified 2 rows (expected 1): UPDATE user2money SET amount')  == 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test26_tourneyRegister_user2tourneyFailure(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockPacket:
+            def __init__(mpSelf):
+                mpSelf.serial = 423
+                mpSelf.game_id = 865
+        class MockTourney:
+            def __init__(mtSelf):
+                mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
+            def isRegistered(mtSelf, serial):
+                self.assertEquals(serial, 423)
+                return False
+            def canRegister(mtSelf, serial):
+                self.assertEquals(serial, 423)
+                return True
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if sql[:len(statement)] == "UPDATE user2money SET amount = amount":
+                    cursorSelf.rowcount = 1
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self,
+                                        [ "UPDATE user2money SET amount = amount",
+                                       "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 423: client }
+        self.service.tourneys = { 865 : tourney }
+
+        # Not worth making this test cover dbevent, other tests do.  Here,
+        # we make sure it is called as expected
+        oldDbEvent = self.service.databaseEvent
+        def dbEventMock(event = None, param1 = None, param2 = None, param3 = None): 
+            self.assertEquals(event, PacketPokerMonitorEvent.REGISTER)
+            self.assertEquals(param1, 423)
+            self.assertEquals(param2, 10)
+            self.assertEquals(param3, 20)
+
+        self.service.databaseEvent = dbEventMock
+
+        clear_all_messages()
+
+        self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.failUnless(hasattr(client, "errorPackets"))
+        self.assertEquals(len(client.errorPackets), 1)
+        pack = client.errorPackets[0]
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.failUnless(pack.message.find('Server error') == 0)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code, PacketPokerTourneyRegister.SERVER_ERROR)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 3)
+        self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount = amount - 20 WHERE user_serial = 423') >= 0)
+        self.assertEquals(msgs[1], 'tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (423, 10, 865)')
+        self.assertEquals(msgs[2], '*ERROR* insert 0 rows (expected 1): INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (423, 10, 865) ')
+
+        self.service.db = oldDb
+        self.service.databaseEvent = oldDbEvent
+    # ----------------------------------------------------------------
+    def test27_loadHand_noRowFound(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                pass
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.loadHand(5), None)
+        self.assertEquals(get_messages(), ['*ERROR* loadHand(5) expected one row got 0'])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test28_loadHand_row(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                cursorSelf.row = (']',)
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.loadHand(7), None)
+        self.assertEquals(get_messages(), ['*ERROR* loadHand(7) eval failed for ]'])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test29_loadHand_confirm_backslash_r_replaced(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                cursorSelf.row = ("hand_serial\r+5",)
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.loadHand(9), 14)
+        self.assertEquals(get_messages(),[])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test30_loadHand_confirm_working_code(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                # cute trick below... eventually, this gets evaled and the
+                # hand_serial, the arg we send into loadHand() is set to
+                # the arg hand_serial.  So, we can test later to see if
+                # its value.
+                cursorSelf.row = ("hand_serial+5",)
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.loadHand(3), 8)
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test31_getHandSerial_coverCursorWithLastrowid(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                cursorSelf.row = ()
+                cursorSelf.lastrowid = 9.7
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["INSERT INTO hands"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.getHandSerial(), 9)
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test32_getHandSerial_coverCursorWithInsertID(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                cursorSelf.row = ()
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["INSERT INTO hands"])
+            def insert_id(cursorSelf):  return 22.8
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.getHandSerial(), 22)
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test33_getHandHistory_failedLoadHand(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                cursorSelf.row = ("None",)
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        pack = self.service.getHandHistory(723, 99)
+        self.assertEquals(pack.game_id, 723)
+        self.assertEquals(pack.serial, 99)
+        self.assertEquals(pack.code, PacketPokerHandHistory.NOT_FOUND)
+        self.assertEquals(pack.other_type, PACKET_POKER_HAND_HISTORY)
+        self.assertEquals(pack.message, "Hand 723 was not found in history of player 99")
+
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test34_getHandHistory_playerProhibited(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                #!         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips)
+                cursorSelf.row = ('[ ("foo", 3, 988, 1, 100, "he", "1-2-limit", [5, 6, 7], 8, {})]',)
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        pack = self.service.getHandHistory(636, 222)
+        # Note this interesting fact: getHandHistory() returns the
+        # hand_history given in the row from the database, not the one you
+        # passed it.  Theoretically, it should not generate a different
+        # one, but this test confirms that the one from the DB is used
+        # if they are.
+        self.assertEquals(pack.game_id, 988)
+        self.assertEquals(pack.serial, 222)
+        self.assertEquals(pack.code, PacketPokerHandHistory.FORBIDDEN)
+        self.assertEquals(pack.other_type, PACKET_POKER_HAND_HISTORY)
+        self.assertEquals(pack.message, "Player 222 did not participate in hand 988")
+
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test35_getHandHistory_succeedWithCardReplacement(self):
+        from pokerengine.pokercards import PokerCards
+        def mockLoseNotVisible(cardSelf): cardSelf.cards = -1
+        PokerCards.loseNotVisible = mockLoseNotVisible
+        saveFunc = PokerCards.loseNotVisible
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                if statement == "select description from hands where":
+                    # (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips)
+                    cursorSelf.row = ("""[
+("foo", 3, 988, 1, 100, "he", "1-2-limit", [113, 222], 8, {}),
+("round", "preflop", [], { 113 : PokerCards("AsAh"),
+222 : PokerCards("KsKd") }),
+("showdown", [], { 113 : PokerCards("AsAh"),
+222 : PokerCards("KsKd") }),
+("neither", [], { 113 : PokerCards("AsAh"),
+222 : PokerCards("KsKd") }),
+]""",)
+                else:
+                    userSerial =  int(sql[len(statement):])
+                    if userSerial == 113: cursorSelf.row = ("Doyle Brunson",)
+                    elif userSerial == 222: cursorSelf.row = ("Stu Unger",)
+                    else: self.fail("unknown user serial %d" % userSerial)
+
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select description from hands where",
+                                                         "select name from users where serial = "])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        pack = self.service.getHandHistory(696, 222)
+        self.assertEquals(pack.history, "[('foo', 3, 988, 1, 100, 'he', '1-2-limit', [113, 222], 8, {}), ('round', 'preflop', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('showdown', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('neither', [], {113: PokerCards([51]), 222: PokerCards([50])})]")
+        self.assertEquals(pack.serial2name, "{113: 'Doyle Brunson', 222: 'Stu Unger'}")
+        self.assertEquals(pack.type, PACKET_POKER_HAND_HISTORY)
+        self.assertEquals(pack.game_id, 988)
+        self.assertEquals(pack.serial, 222)
+
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+        PokerCards.loseNotVisible = saveFunc
+    # ----------------------------------------------------------------
+    def test36_saveHand_badRowcountOnUpdate(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 5
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["update hands set "])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        pack = self.service.saveHand([
+                ("foo", 3, 991, 1, 100, "he", "1-2-limit", [113, 222], 8, {})], 991)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find("saveHand: update hands set  description = ") == 0)
+        self.failUnless(msgs[1].find('*ERROR* modified 5 rows (expected 1 or 0): update hands') == 0)
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test37_saveHand_coverFailureOfInsert(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                # Make it always 1, so the update succeeds and insert fails
+                cursorSelf.rowcount = 1
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["update hands set ",
+                                                           "insert into user2hand values "])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        pack = self.service.saveHand([
+                ("foo", 3, 991, 1, 100, "he", "1-2-limit", [113, 222], 8, {})], 991)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 3)
+        self.failUnless(msgs[0].find("saveHand: update hands set  description = ") == 0)
+        self.failUnless(msgs[1].find('saveHand: insert into user2hand') == 0)
+        self.failUnless(msgs[2].find('*ERROR* inserted 1 rows (expected exactly 2): insert into user2hand values') == 0)
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test38_eventTable_serialZero(self):
+        class MockCursor(MockCursorBase):
+            def execute(cursorSelf, *args):
+                MockCursorBase.execute(cursorSelf, *args)
+                self.assertEquals(args[1][0], 99)
+                self.assertEquals(args[1][1], 0)
+            def statementActions(cursorSelf, sql, statement):
+                pass
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["REPLACE INTO route"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        class MockGame:
+            def __init__(mgSelf):
+                mgSelf.id = 99
+        class MockTable:
+            def __init__(mtSelf):
+                mtSelf.game = MockGame()
+                mtSelf.tourney = None
+
+        self.service.eventTable(MockTable())
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test39_statsTable(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                # Make it always 1, so the update succeeds and insert fails
+                cursorSelf.rowcount = 1
+
+                if statement == "SELECT COUNT(*) FROM pokertables":
+                    cursorSelf.row = (1235,)
+                elif statement == "SELECT COUNT(*) FROM user2table":
+                    cursorSelf.row = (7356,)
+                else:
+                    self.failIf(1)
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT COUNT(*) FROM pokertables",
+                                                           "SELECT COUNT(*) FROM user2table"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.statsTables(), (7356,1235))
+
+        self.assertEquals(get_messages(), [])
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test40_cleanupTourneys_oneFoundFromPrimarySelect(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 0
+                cursorSelf.row = []
+                if statement == "SELECT * FROM tourneys":
+                    if cursorSelf.counts[statement] <= 1:
+                        cursorSelf.row = { 'buy_in' : 100, 'currency_serial' : 168, 
+                                           'serial' : 732 }
+                        cursorSelf.rowcount = 1
+                    # Second time method does select, we just want 0 rows returned.
+                elif statement == "UPDATE user2money,user2tourney SET amount = amount":
+                    # row count 0 is ok, next check for proper serials in statement
+                    self.failUnless(sql.find("currency_serial = 168") > 0)
+                    self.failUnless(sql.find("tourney_serial = 732") > 0)
+                elif statement == "DELETE FROM tourneys WHERE serial =":
+                    # row count 0 is ok, check for proper serial
+                    self.failUnless(sql.find("serial = 732") > 0)
+                elif statement == "DELETE FROM user2tourney WHERE tourney_serial =":
+                    # row count 0 is ok, check for proper serial
+                    self.failUnless(sql.find("serial = 732") > 0)
+                else:
+                    self.failIf(1, "unknown sql statement: " + statement + " " + sql)
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT * FROM tourneys",
+                                    "UPDATE user2money,user2tourney SET amount = amount",
+                                    "DELETE FROM tourneys WHERE serial =",
+                                    "DELETE FROM user2tourney WHERE tourney_serial ="])
+        class MockDBWithDifferentCursorMethod(MockDatabase):
+            def cursor(dbSelf, dummy = None):
+                # Needed because cleanupTourneys() calls with argument "DictCursor"
+                return MockDatabase.cursor(dbSelf)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
+                
+        clear_all_messages()
+
+        self.service.cleanupTourneys()
+
+        # Make sure the right number of SQL statements got executed; the loop should
+        # have only went once
+        for expectJustOneStr in [ "UPDATE user2money,user2tourney SET amount = amount",
+                                  "DELETE FROM tourneys WHERE serial =",
+                                  "DELETE FROM user2tourney WHERE tourney_serial =" ]:
+            self.assertEquals(self.service.db.cursorValue.counts[expectJustOneStr], 1)
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT * FROM tourneys"], 2)
+
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 5)
+        self.assertEquals(msgs[0].find("cleanupTourneys: SELECT * FROM tourneys WHERE"), 0)
+        self.assertEquals(msgs[1].find('cleanupTourneys: UPDATE user2money,user2tourney'), 0)
+        self.assertEquals(msgs[2].find('cleanupTourneys: DELETE FROM tourneys WHERE'), 0)
+        self.assertEquals(msgs[3].find('cleanupTourneys: DELETE FROM user2tourney'), 0)
+        self.assertEquals(msgs[4].find("cleanupTourneys: SELECT * FROM tourneys  WHERE"), 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test41_getMoney_bigRowCount(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 3
+                cursorSelf.row = []
+                self.failUnless(sql.find("user_serial = 7775") > 0, "user_serial wrong")
+                self.failUnless(sql.find("currency_serial = 2356") > 0,
+                                "currency_serial wrong")
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, 
+                                        ["SELECT amount FROM user2money "])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+                
+        clear_all_messages()
+
+        self.assertEquals(self.service.getMoney(7775, 2356), 0)
+
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT amount FROM user2money "], 1)
+        self.assertEquals(self.service.db.cursorValue.closedCount, 1)
+
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0].find('SELECT amount FROM user2money'), 0)
+        self.failUnless(msgs[0].find("user_serial = 7775") > 0)
+        self.failUnless(msgs[0].find("currency_serial = 2356") > 0)
+        self.assertEquals(msgs[1], '*ERROR* getMoney(7775) expected one row got 3')
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test42_cashQuery(self):
+        class MockCashier():
+            def cashQuery(cashierSelf, packet):
+                cashierSelf.packet = packet
+                return "Called"
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldCashier = self.service.cashier
+
+        cashier = MockCashier()
+        self.service.cashier = cashier
+
+        packet = 'Testing'
+        self.assertEquals(self.service.cashQuery(packet), 'Called')
+        self.assertEquals(cashier.packet, packet)
+
+        self.service.cashier = oldCashier
+    # ----------------------------------------------------------------
+    def test43_cashOutCommit_commitFailure(self):
+        class MockCashier():
+            def cashOutCommit(cashierSelf, packet): return 8675309
+        class MockPacket():
+            def __init__(packetSelf): packetSelf.transaction_id = "Hi There"
+
+        self.service = pokerservice.PokerService(self.settings)
+        oldCashier = self.service.cashier
+
+        cashier = MockCashier()
+        self.service.cashier = cashier
+
+        packet = self.service.cashOutCommit(MockPacket())
+        self.assertEquals(packet.code, PacketPokerCashOutCommit.INVALID_TRANSACTION)
+        self.assertEquals(packet.message, "transaction Hi There affected 8675309 rows instead of zero or one")
+        self.assertEquals(packet.other_type, PACKET_POKER_CASH_OUT_COMMIT)
+        self.assertEquals(packet.type, PACKET_ERROR)
+
+        self.service.cashier = oldCashier
+    # ----------------------------------------------------------------
+    def test44_getPlayerInfo_serialIs0(self):
+        self.service = pokerservice.PokerService(self.settings)
+        packet = self.service.getPlayerInfo(0)
+        self.assertEquals(packet.serial, 0)
+        self.assertEquals(packet.name, "anonymous")
+        self.assertEquals(packet.url, "random")
+        self.assertEquals(packet.outfit, "random")
+        # FIXME_PokerPlayerInfoLocale: (see also sr #2262 )
+        # PokerService.getPlayerInfo() sends locale argument when creating
+        # the PokerPlayerInfo() packet, but that argument is not used.
+        # Should it be?  If it should be, then changes should be made to
+        # pokerpackets.py to use it and the assert below should be put in.
+#        self.assertEquals(packet.locale, "en_US")
+    # ----------------------------------------------------------------
+    def test45_getPlayerInfo_badRowCount(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 3
+                cursorSelf.row = []
+                self.failUnless(sql.find("serial = 235") > 0, "serial wrong")
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, 
+                                      ["select locale,name,skin_url,skin_outfit from users"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        packet = self.service.getPlayerInfo(235)
+        self.assertEquals(get_messages(),
+                          ['*ERROR* getPlayerInfo(235) expected one row got 3'])
+        self.assertEquals(packet.serial, 235)
+        self.assertEquals(packet.name, "anonymous")
+        self.assertEquals(packet.url, "random")
+        self.assertEquals(packet.outfit, "random")
+        # FIXME_PokerPlayerInfoLocale: (see also sr #2262 )
+        # PokerService.getPlayerInfo() sends locale argument when creating
+        # the PokerPlayerInfo() packet, but that argument is not used.
+        # Should it be?  If it should be, then changes should be made to
+        # pokerpackets.py to use it and the assert below should be put in.
+#        self.assertEquals(packet.locale, "en_US")
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test46_getUserInfo_badRowCount(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 3
+                cursorSelf.row = []
+                self.failUnless(sql.find("serial = 765") > 0, "serial wrong")
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, 
+                                      ["SELECT rating,affiliate,email,name FROM users"])
+        class MockDBWithDifferentCursorMethod(MockDatabase):
+            def cursor(dbSelf, dummy = None):
+                # Needed because getUserInfo() calls with argument "DictCursor"
+                return MockDatabase.cursor(dbSelf)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
+
+        clear_all_messages()
+
+        packet = self.service.getUserInfo(765)
+        self.assertEquals(get_messages(),
+                          ['*ERROR* getUserInfo(765) expected one row got 3'])
+        self.assertEquals(packet.serial, 765)
+        self.assertEquals(packet.type, PACKET_POKER_USER_INFO)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test47_setPesonalInfo_badRowCount(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 3
+                cursorSelf.row = []
+                self.failUnless(sql.find("serial = 1854") > 0, "serial wrong")
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, 
+                                      ["UPDATE users_private SET "])
+        class MockPlayerInfo():
+            def __init__(mpSelf):
+                mpSelf.__dict__ = { 'serial' : 1854,
+                                    'firstname' : '', 'lastname' : '', 'addr_street' : '',
+                                    'addr_street2' : '', 'addr_zip' : '',
+                                    'addr_town' : '', 'addr_state' : '', 
+                                    'addr_country' : '', 'phone' : '',
+                                    'gender' : '', 'birthdate' : '' }
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.setPersonalInfo(MockPlayerInfo()))
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0].find("setPersonalInfo: UPDATE users_private SET"), 0)
+        self.assertEquals(msgs[1].find("*ERROR* setPersonalInfo: modified 3 rows (expected 1 or 0): UPDATE users_private"), 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test48_setAccount_badRowcountOnInsert(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 0
+                cursorSelf.row = []
+                if sql == "SELECT serial FROM users WHERE":
+                    self.failUnless(sql.find("name = 'OMGClayAiken'") > 0, "name wrong")
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, 
+                                        ["SELECT serial FROM users WHERE",
+                                         "INSERT INTO users"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        class MockPacket():
+            def __init__(mpSelf):
+                mpSelf.name = "OMGClayAiken"
+                mpSelf.email = "OMGClayAiken@example.org"
+                mpSelf.password = "foobalg352"
+                mpSelf.affiliate = 0
+                mpSelf.type = PACKET_POKER_SET_ACCOUNT
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        packet = self.service.setAccount(MockPacket())
+        self.assertEquals(packet.type, PACKET_ERROR)
+        self.assertEquals(packet.message, 'inserted 0 rows (expected 1)')
+        self.assertEquals(packet.code, PacketPokerSetAccount.SERVER_ERROR)
+        self.assertEquals(packet.other_type, PACKET_POKER_SET_ACCOUNT)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test49_setAccount_lastrowidFailure(self):
+        class MockCursor(MockCursorBase):
+            def insert_id(mcSelf): return 22
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 0
+                cursorSelf.row = []
+                if statement == "SELECT serial FROM users WHERE name":
+                    self.failUnless(sql.find("name = 'durrrr'") > 0, "name wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+                elif statement == "INSERT INTO users ":
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = []
+                elif statement == "INSERT INTO users_private":
+                    self.failUnless(sql.find("VALUES ('22')") > 0, "serial for users_private wrong")
+                elif statement == "SELECT serial FROM users WHERE email":
+                    self.failUnless(sql.find("email = 'durrrr@example.org'") > 0, "name wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, 
+                                        ["SELECT serial FROM users WHERE name",
+                                         "SELECT serial FROM users WHERE email",
+                                         "INSERT INTO users ",
+                                         "INSERT INTO users_private"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        class MockPacket():
+            def __init__(mpSelf):
+                mpSelf.name = "durrrr"
+                mpSelf.email = "durrrr@example.org"
+                mpSelf.password = "blash535"
+                mpSelf.affiliate = 0
+                mpSelf.type = PACKET_POKER_SET_ACCOUNT
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        inputPacket = MockPacket()
+        def mockSetPersonalInfo(packet):
+            self.assertEquals(inputPacket, packet)
+            return True
+        def mockGetPersonalInfo(serial):
+            self.assertEquals(22, serial)
+            return "IT WORKED!!!"
+
+        saveSetPersonalInfo = self.service.setPersonalInfo
+        saveGetPersonalInfo = self.service.getPersonalInfo
+        self.service.setPersonalInfo = mockSetPersonalInfo
+        self.service.getPersonalInfo = mockGetPersonalInfo
+        
+        self.assertEquals("IT WORKED!!!",
+                          self.service.setAccount(inputPacket))
+
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT serial FROM users WHERE name"], 1)
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT serial FROM users WHERE email"], 1)
+        self.assertEquals(self.service.db.cursorValue.counts["INSERT INTO users "], 1)
+        self.assertEquals(self.service.db.cursorValue.counts["INSERT INTO users_private"], 1)
+
+        self.service.setPersonalInfo = saveSetPersonalInfo
+        self.service.getPersonalInfo = saveGetPersonalInfo
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test50_setPlayerInfo_success(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 1
+                if statement == "update users set ":
+                    self.failUnless(sql.find("name = 'Pham'") > 0, "name wrong")
+                    self.failUnless(sql.find("skin_url = 'http://example.org'") > 0, "url wrong")
+                    self.failUnless(sql.find("skin_outfit = 'naked'") > 0, "outfit wrong")
+                    self.failUnless(sql.find("serial = 2891") > 0, "serial wrong")
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["update users set "])
+        self.service = pokerservice.PokerService(self.settings)
+
+        class MockPlayerInfo():
+            def __init__(mpSelf):
+                mpSelf.name = 'Pham'
+                mpSelf.url = 'http://example.org'
+                mpSelf.outfit = 'naked'
+                mpSelf.serial = 2891
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failUnless(self.service.setPlayerInfo(MockPlayerInfo()))
+        self.assertEquals(self.service.db.cursorValue.counts["update users set "], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 1)
+        self.failUnless(msgs[0].find('setPlayerInfo: update users set') == 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test51_setPlayerInfo_badUpdateValue(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "update users set ":
+                    self.failUnless(sql.find("name = 'Pham'") > 0, "name wrong")
+                    self.failUnless(sql.find("skin_url = 'http://example.org'") > 0, "url wrong")
+                    self.failUnless(sql.find("skin_outfit = 'naked'") > 0, "outfit wrong")
+                    self.failUnless(sql.find("serial = 2891") > 0, "serial wrong")
+                    cursorSelf.rowcount = 3
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["update users set "])
+        self.service = pokerservice.PokerService(self.settings)
+
+        class MockPlayerInfo():
+            def __init__(mpSelf):
+                mpSelf.name = 'Pham'
+                mpSelf.url = 'http://example.org'
+                mpSelf.outfit = 'naked'
+                mpSelf.serial = 2891
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.setPlayerInfo(MockPlayerInfo()), "setPlayerInfo should fail here")
+        self.assertEquals(self.service.db.cursorValue.counts["update users set "], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('setPlayerInfo: update users set') == 0)
+        self.failUnless(msgs[1].find('*ERROR* setPlayerInfo: modified 3 rows (expected 1 or 0): update users set') == 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test52_getPlayerImage_serial0(self):
+        clear_all_messages()
+        self.service = pokerservice.PokerService(self.settings)
+        pack = self.service.getPlayerImage(0)
+        self.assertEquals(pack.type, PACKET_POKER_PLAYER_IMAGE)
+        self.assertEquals(pack.serial, 0)
+        self.assertEquals(pack.image, '')
+        self.assertEquals(pack.image_type, 'image/png')
+
+        self.assertEquals(get_messages(), [])
+    # ----------------------------------------------------------------
+    def test53_getPlayerImage_selectRowCount3(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "select skin_image,":
+                    self.failUnless(sql.find("serial = 825") > 0, "serial wrong")
+                    cursorSelf.rowcount = 3
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["select skin_image,"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        pack = self.service.getPlayerImage(825)
+        self.assertEquals(pack.type, PACKET_POKER_PLAYER_IMAGE)
+        self.assertEquals(pack.serial, 825)
+        self.assertEquals(pack.image, '')
+        self.assertEquals(pack.image_type, 'image/png')
+
+        self.assertEquals(self.service.db.cursorValue.counts["select skin_image,"], 1)
+        self.assertEquals(get_messages(), ['*ERROR* getPlayerImage(825) expected one row got 3'])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test54_setPlayerImage_rowcountwrong(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "update users set":
+                    self.failUnless(sql.find("serial = 277") > 0, "serial wrong")
+                    self.failUnless(sql.find("skin_image = 'Picture'") > 0, "skin_image wrong")
+                    self.failUnless(sql.find("skin_image_type = 'image/png'") > 0, "image_type wrong")
+                    cursorSelf.rowcount = 3
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["update users set"])
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        class MockPlayerImage():
+            def __init__(mpSelf):
+                mpSelf.image = 'Picture'
+                mpSelf.image_type = 'image/png'
+                mpSelf.serial = 277
+
+        clear_all_messages()
+
+        self.failIf(self.service.setPlayerImage(MockPlayerImage()), 'with row returning 3, this should fail')
+
+        self.assertEquals(self.service.db.cursorValue.counts["update users set"], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find("setPlayerInfo: update users set") == 0,
+                        'first message should be verbose output')
+        self.failUnless(msgs[1].find("*ERROR* setPlayerImage: modified 3 rows (expected 1 or 0): update users set") == 0,
+                        'second message should be error about rows')
+
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test55_buyInPlayer_currencySerialNone(self):
+        self.service = pokerservice.PokerService(self.settings)
+        self.assertEquals(self.service.buyInPlayer(775, 232, None, 2330), 2330)
+    # ----------------------------------------------------------------
+    def test56_buyInPlayer_updateRowcountBad(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "UPDATE user2money,user2table SET ":
+                    self.failUnless(sql.find("user2table.money = user2table.money + 4") > 0, "money wrong")
+                    self.failUnless(sql.find("user2money.amount = user2money.amount - 4") > 0, "amount wrong")
+                    self.failUnless(sql.find("user2money.user_serial = 634") > 0, "serial wrong")
+                    self.failUnless(sql.find("user2money.currency_serial = 222") > 0, "currency_serial wrong")
+                    self.failUnless(sql.find("user2table.user_serial = 634") > 0, "serial wrong")
+                    self.failUnless(sql.find("user2table.table_serial = 123") > 0, "table serial wrong")
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["UPDATE user2money,user2table SET "])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        def mockGetMoney(serial, currency_serial): return 4
+        def mockDBEvent(event, param1, param2, param3):
+            self.assertEquals(param3, 4)
+            self.assertEquals(param2, 123)
+            self.assertEquals(param1, 634)
+            self.assertEquals(event, PacketPokerMonitorEvent.BUY_IN)
+
+        saveGetMoney = self.service.getMoney
+        saveDBEvent = self.service.databaseEvent
+        self.service.getMoney = mockGetMoney
+        self.service.databaseEvent = mockDBEvent
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.assertEquals(4, self.service.buyInPlayer(634, 123, 222, 500))
+
+        self.assertEquals(self.service.db.cursorValue.counts["UPDATE user2money,user2table SET "], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find("buyInPlayer: UPDATE user2money,user2table SET ") == 0,
+                        'first message should be verbose output')
+        self.failUnless(msgs[1].find("*ERROR* modified 1 rows (expected 0 or 2): UPDATE user2money,user2table SET ") == 0,
+                        'second message should be error about rows')
+
+        self.service.getMoney = saveGetMoney
+        self.service.databaseEvent = saveDBEvent
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test57_seatPlayer_insertRowcountBad(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "INSERT INTO user2table":
+                    self.failUnless(sql.find("654, 936, 100") > 0, "values wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["INSERT INTO user2table"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        def mockDBEvent(event, param1, param2):
+            self.assertEquals(param2, 936)
+            self.assertEquals(param1, 654)
+            self.assertEquals(event, PacketPokerMonitorEvent.SEAT)
+
+        saveDBEvent = self.service.databaseEvent
+        self.service.databaseEvent = mockDBEvent
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.seatPlayer(654, 936, 100), "bad rows should cause error")
+
+        self.assertEquals(self.service.db.cursorValue.counts["INSERT INTO user2table"], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find("seatPlayer: INSERT INTO user2table") == 0,
+                        'first message should be verbose output')
+        self.failUnless(msgs[1].find("*ERROR* inserted 0 rows (expected 1): INSERT INTO user2table") == 0,
+                        'second message should be error about rows')
+
+        self.service.databaseEvent = saveDBEvent
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test58_movePlayer_selectRowCount0WithMoneyNone(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "SELECT money FROM user2table":
+                    self.failUnless(sql.find("user_serial = 9356") > 0, "user_serial wrong")
+                    self.failUnless(sql.find("table_serial = 1249") > 0, "from_table_serial wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = (None,)
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT money FROM user2table"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.assertEquals(None, self.service.movePlayer(9356, 1249, 6752))
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT money FROM user2table"], 1)
+        self.assertEquals(get_messages(), ["movePlayer(9356) expected one row got 0"])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test59_movePlayer_selectRowCount1WithMoneyPositiveUpdateRowCount3(self):
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                self.failUnless(sql.find("user_serial = 8356") > 0, "user_serial wrong")
+                if statement == "SELECT money FROM user2table":
+                    self.failUnless(sql.find("table_serial = 2249") > 0, "from_table_serial wrong")
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = (6000,)
+                if statement == "UPDATE user2table":
+                    self.failUnless(sql.find("table_serial = 2249") > 0, "from_table_serial wrong")
+                    self.failUnless(sql.find("SET table_serial = 6752") > 0, "to_table_serial wrong")
+                    cursorSelf.rowcount = 3
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT money FROM user2table",
+                                                           "UPDATE user2table"])
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.assertEquals(-1, self.service.movePlayer(8356, 2249, 6752))
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT money FROM user2table"], 1)
+        self.failUnless(msgs[0].find("movePlayer: UPDATE user2table") == 0, "first message wrong")
+        self.failUnless(msgs[1].find("*ERROR* modified 3 rows (expected 1): UPDATE user2table") == 0,
+                        "second message wrong")
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test60_leavePlayer_updateRowCountTooHigh(self):
+        validStatements = ["UPDATE user2money,user2table,pokertables",
+                           'DELETE from user2table']
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == 'DELETE from user2table':
+                    pass
+                elif statement == "UPDATE user2money,user2table,pokertables":
+                    self.failUnless(sql.find("tables.serial = 6543") > 0, "table_serial wrong")
+                    self.failUnless(sql.find("table_serial = 6543") > 0, "table_serial wrong")
+                    self.failUnless(sql.find("user_serial = 236") > 0, "user_serial wrong")
+                    cursorSelf.rowcount = 12
+                    cursorSelf.row = []
+                elif statement == "UPDATE user2table":
+                    self.failUnless(sql.find("table_serial = 2249") > 0, "from_table_serial wrong")
+                    self.failUnless(sql.find("SET table_serial = 6752") > 0, "to_table_serial wrong")
+                    cursorSelf.rowcount = 3
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        def mockDBEvent(event, param1, param2):
+            self.assertEquals(param2, 6543)
+            self.assertEquals(param1, 236)
+            self.assertEquals(event, PacketPokerMonitorEvent.LEAVE)
+
+        saveDBEvent = self.service.databaseEvent
+        self.service.databaseEvent = mockDBEvent
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.leavePlayer(236, 6543, 8999))
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 4)
+        self.failUnless(msgs[0].find('leavePlayer UPDATE user2money,user2table,pokertables') == 0)
+        self.failUnless(msgs[1].find('*ERROR* modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,pokertables') == 0)
+        self.failUnless(msgs[2].find('leavePlayer DELETE from user2table') == 0)
+        self.failUnless(msgs[3].find('*ERROR* modified 0 rows (expected 1): DELETE from user2table') == 0)
+
+        self.service.db = oldDb
+        self.service.databaseEvent = saveDBEvent
+    # ----------------------------------------------------------------
+    def test61_updatePlayerRake_amountAsZero(self):
+        self.service = pokerservice.PokerService(self.settings)
+        clear_all_messages()
+        self.failUnless(self.service.updatePlayerRake(7355, 1026, 0))
+        self.assertEquals(get_messages(), [])
+    # ----------------------------------------------------------------
+    def test62_updatePlayerRake_updateReturns0Rows(self):
+        validStatements = ["UPDATE user2money SET"]
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "UPDATE user2money SET":
+                    self.failUnless(sql.find("rake + 77") > 0, "amount value wrong")
+                    self.failUnless(sql.find("points + 77") > 0, "amount value wrong")
+                    self.failUnless(sql.find("user_serial = 742") > 0, "user_serial wrong")
+                    self.failUnless(sql.find("currency_serial = 852") > 0, "currency_serial wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.updatePlayerRake(852, 742, 77))
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('updatePlayerRake: UPDATE user2money SET') == 0, 
+                        "Missing expected string in: " + msgs[0])
+        self.failUnless(msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2money SET') == 0,
+                        "Missing expected string in: " +  msgs[1])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test63_updatePlayerMoney_amountAsZero(self):
+        self.service = pokerservice.PokerService(self.settings)
+        clear_all_messages()
+        self.failUnless(self.service.updatePlayerMoney(7355, 1026, 0))
+        self.assertEquals(get_messages(), [])
+    # ----------------------------------------------------------------
+    def test64_updatePlayerMoney_updateReturns0Rows(self):
+        validStatements = ["UPDATE user2table SET"]
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "UPDATE user2table SET":
+                    self.failUnless(sql.find("money + 77") > 0, "amount value wrong")
+                    self.failUnless(sql.find("bet - 77") > 0, "amount value wrong")
+                    self.failUnless(sql.find("user_serial = 742") > 0, "user_serial wrong")
+                    self.failUnless(sql.find("table_serial = 852") > 0, "currency_serial wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.updatePlayerMoney(742, 852, 77))
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
+                        "Missing expected string in: " + msgs[0])
+        self.failUnless(msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2table SET') == 0,
+                        "Missing expected string in: " +  msgs[1])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test64_updatePlayerMoney_updateReturns0Rows(self):
+        validStatements = ["UPDATE user2table SET"]
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "UPDATE user2table SET":
+                    self.failUnless(sql.find("money + 77") > 0, "amount value wrong")
+                    self.failUnless(sql.find("bet - 77") > 0, "amount value wrong")
+                    self.failUnless(sql.find("user_serial = 742") > 0, "user_serial wrong")
+                    self.failUnless(sql.find("table_serial = 852") > 0, "currency_serial wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.failIf(self.service.updatePlayerMoney(742, 852, 77))
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        msgs = get_messages()
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
+                        "Missing expected string in: " + msgs[0])
+        self.failUnless(msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2table SET') == 0,
+                        "Missing expected string in: " +  msgs[1])
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test65_createTable_insertFailsAndLasRowNotThere(self):
+        validStatements = ["INSERT pokertables", 'REPLACE INTO route']
+        class MockCursor(MockCursorBase):
+            def insert_id(mcBase): return 1567
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "INSERT pokertables":
+                    cursorSelf.rowcount = 0
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+
+        self.service = pokerservice.PokerService(self.settings)
+        self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.service.tables = {}
+        table = self.service.createTable("bobby", { 'seats' : 7, 'currency_serial' : 2663,
+                                                    'name': "This", 'variant' : 'omaha',
+                                                    'betting_structure' : "2-4-limit" })
+        self.assertEquals(self.service.tables[1567], table)
+        self.assertEquals(table.owner, 'bobby')
+        self.assertEquals(table.game.name, "This")
+        self.assertEquals(table.game.variant, "omaha")
+        self.assertEquals(table.game.max_players, 7)
+        self.assertEquals(table.currency_serial, 2663)
+
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
+        self.failUnless(search_output('createTable: INSERT pokertables'))
+        self.failUnless(search_output('*ERROR* inserted 0 rows (expected 1): INSERT pokertables'))
+        self.failUnless(search_output('table created : This'))
+        
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+        # NOTE: these test below (65a) can be used to replace
+        # the above test 65 above if sr #2273 is ever closed.
+
+#     def test65a_createTable_insertFailsProperly(self):
+#         validStatements = ["INSERT pokertables"]
+#         class MockCursor(MockCursorBase):
+#             def insert_id(mcBase): return 1567
+#             def statementActions(cursorSelf, sql, statement):
+#                 if statement == "INSERT pokertables":
+#                     cursorSelf.rowcount = 0
+#                     cursorSelf.row = []
+#             def __init__(cursorSelf):
+#                 MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+
+#         self.service = pokerservice.PokerService(self.settings)
+#         self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+
+#         oldDb = self.service.db
+#         self.service.db = MockDatabase(MockCursor)
+
+#         clear_all_messages()
+
+#         self.service.tables = {}
+#         table = self.service.createTable("bobby", { 'seats' : 7, 'currency_serial' : 2663,
+#                                                     'name': "This", 'variant' : 'omaha',
+#                                                     'betting_structure' : "2-4-limit" })
+#         self.failIf(self.service.tables.has_key(1567), "Table Should not have been created, INSERT 0 rows!")
+#         self.assertEquals(table, None)
+
+#         for statement in validStatements:
+#             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+#         msgs = get_messages()
+#         self.failUnless(len(msgs) >= 2, "There should be at least two output messages")
+#         self.failUnless(search_output('createTable: INSERT pokertables'))
+#         self.failUnless(search_output('*ERROR* inserted 0 rows (expected 1): INSERT pokertables'))
+        
+#         self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test65b_createTable_insertSucceedsWithLargerThan1ReturnedWithLastRowThere(self):
+        validStatements = ["INSERT pokertables", 'REPLACE INTO route']
+        class MockCursor(MockCursorBase):
+            def insert_id(mcBase): return 1567
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "INSERT pokertables":
+                    cursorSelf.rowcount = 3
+                    cursorSelf.row = []
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+
+        self.service = pokerservice.PokerService(self.settings)
+        self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        clear_all_messages()
+
+        self.service.tables = {}
+        table = self.service.createTable("bobby", { 'seats' : 7, 'currency_serial' : 2663,
+                                                    'name': "This", 'variant' : 'omaha',
+                                                    'betting_structure' : "2-4-limit" })
+        self.assertEquals(self.service.tables[1567], table)
+        self.assertEquals(table.owner, 'bobby')
+        self.assertEquals(table.game.name, "This")
+        self.assertEquals(table.game.variant, "omaha")
+        self.assertEquals(table.game.max_players, 7)
+        self.assertEquals(table.currency_serial, 2663)
+
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
+        self.failUnless(search_output('createTable: INSERT pokertables'))
+        self.failUnless(search_output('*ERROR* inserted 3 rows (expected 1): INSERT pokertables'))
+        self.failUnless(search_output('table created : This'))
+        
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test66_deleteTable_deleteRowsNot1(self):
+        validStatements = ["delete from  pokertables"]
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "delete from  pokertables":
+                    cursorSelf.rowcount = 3
+                    cursorSelf.row = []
+                    self.failUnless(sql.find("serial = 7775") > 0, "serial value wrong")
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        class MockGame():
+            def __init__(mgSelf):
+                mgSelf.id = 7775
+                mgSelf.name =  "Mocky"
+        game = MockGame()
+        self.service.tables = {7775: game}
+        class MockTable():
+            def __init__(mtSelf): mtSelf.game = game
+
+        clear_all_messages()
+
+        table = self.service.deleteTable(MockTable())
+
+        self.assertEquals(self.service.tables, {})
+
+        for statement in validStatements:
+            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+
+        msgs = get_messages()
+        self.failUnless(len(msgs) == 3, "Expected excatly three messages")
+        self.assertEquals(msgs[0], 'table Mocky/7775 removed from server')
+        self.failUnless(msgs[1].find('deleteTable: delete from  pokertables') == 0)
+        self.failUnless(msgs[2].find('*ERROR* deleted 3 rows (expected 1): delete from  pokertables') == 0)
+
+        self.service.db = oldDb
+    # ----------------------------------------------------------------
+    def test67_broadcast(self):
+        """test67_broadcast
+        Full Coverage for the PokerService broadcast method"""
+        class MockPacket(): pass
+        packet = MockPacket()
+
+        class MockAvatar():
+            def __init__(maSelf, desc):
+                maSelf.name = desc
+                maSelf.packets = []
+            def __str__(maSelf): return maSelf.name
+            def setProtocol(maSelf, val): maSelf.protocol = val
+            def sendPacketVerbose(maSelf, packet): maSelf.packets.append(packet)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        avatarList = []
+        avatarList.append(MockAvatar("Without protocol"))
+        avatarList.append(MockAvatar("Protocol is None"))
+        avatarList[1].setProtocol(None)
+        avatarList.append(MockAvatar("Protocol is False"))
+        avatarList[2].setProtocol(False)
+        avatarList.append(MockAvatar("Protocol is True"))
+        avatarList[3].setProtocol(True)
+
+        self.service.avatars = avatarList
+
+        clear_all_messages()
+        self.service.broadcast(packet)
+        msgs = get_messages()
+
+        for ii in [ 0, 1, 2]: self.assertEquals(avatarList[ii].packets, [])
+        self.assertEquals(avatarList[3].packets, [packet])
+
+        self.failUnless(len(msgs) == 3, "Expected exactly three messages")
+        for (ii, value) in [ (0, "Without protocol"), (1, "Protocol is None"),
+                             (2, "Protocol is False")]:
+            self.assertEquals(msgs[ii], "broadcast: avatar %s excluded" % value)
+    # ----------------------------------------------------------------
+    def test68_messageCheck(self):
+        validStatements = ["SELECT serial,message FROM messages",
+                           "UPDATE messages SET"]
+        class MockCursor(MockCursorBase):
+            def fetchall(mcSelf): return mcSelf.rows
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "SELECT serial,message FROM messages":
+                    cursorSelf.rowcount = 2
+                    cursorSelf.rows = [ (7325, "Greeting 1"), (22235, "Goodbye") ]
+                elif statement == "UPDATE messages SET":
+                    if cursorSelf.counts["UPDATE messages SET"] == 1:
+                        self.failUnless(sql.find('serial = 7325') > 0, "first serial in update wrong")
+                    else:
+                        self.failUnless(sql.find('serial = 22235') > 0, "second serial in update wrong")
+                    cursorSelf.rowcount = 0
+                    cursorSelf.rows = [ ]
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, validStatements)
+        class MockAvatar():
+            def __init__(maSelf, desc):
+                maSelf.name = desc
+                maSelf.packets = []
+                maSelf.protocol = True
+            def sendPacketVerbose(maSelf, packet): maSelf.packets.append(packet)
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        self.service.avatars = [ MockAvatar("Joe") ]
+
+        # Set up Deffered to be sure callback worked.  We should get a
+        # reactor/deferred error on the test if the timer works wrong.
+        deferredMessageCheck = defer.Deferred()
+        def testThatMessageCheckTimerWorked():
+            self.assertEquals(get_messages(), [])
+            deferredMessageCheck.callback(True)
+            self.service.db = oldDb
+
+        # Set up fake message Check for callback.
+        self.service.realMessageCheck = self.service.messageCheck
+        self.service.messageCheck = testThatMessageCheckTimerWorked
+
+        clear_all_messages()
+        self.service.delays['messages'] = 3
+
+        self.service.realMessageCheck()
+
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT serial,message FROM messages"], 1)
+        self.assertEquals(self.service.db.cursorValue.counts["UPDATE messages SET"], 2)
+        self.assertEquals(len(self.service.avatars[0].packets), 2)
+        self.assertEquals(self.service.avatars[0].packets[0].string, "Greeting 1")
+        self.assertEquals(self.service.avatars[0].packets[1].string, "Goodbye")
+
+        self.assertEquals(get_messages(), [])
+
+        clear_all_messages()
+        return deferredMessageCheck
+##############################################################################
+class SSLContextFactoryCoverage(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def test01_initNoHeader(self):
+        class MockSettings():
+            def headerGet(msSelf, path): return ""
+        scf = pokerservice.SSLContextFactory(MockSettings())
+        self.assertEquals(scf.pem_file, None)
+    # ----------------------------------------------------------------
+    def test02_initNoneExist(self):
+        class MockSettings():
+            def headerGet(msSelf, path): return "/this/goes/nowhere /and/this/does/not/either"
+        scf = pokerservice.SSLContextFactory(MockSettings())
+        self.assertEquals(scf.pem_file, None)
+    # ----------------------------------------------------------------
+    def test03_oneGoodFile(self):
+        tmpdir = tempfile.mkdtemp()
+        filename = os.path.join(tmpdir, "poker.pem")
+        f = open(filename, "w")
+        f.close()
+        class MockSettings():
+            def headerGet(msSelf, path): return tmpdir
+        scf = pokerservice.SSLContextFactory(MockSettings())
+        self.assertEquals(scf.pem_file, filename)
+
+        shutil.rmtree(tmpdir)
+    # ----------------------------------------------------------------
+    def test04_secondFileFavored(self):
+        tmpdir1 = tempfile.mkdtemp()
+        filename1 = os.path.join(tmpdir1, "poker.pem")
+        f = open(filename1, "w")
+        f.close()
+        tmpdir2 = tempfile.mkdtemp()
+        filename2 = os.path.join(tmpdir2, "poker.pem")
+        f = open(filename2, "w")
+        f.close()
+        class MockSettings():
+            def headerGet(msSelf, path): return tmpdir1 + " " + tmpdir2
+        scf = pokerservice.SSLContextFactory(MockSettings())
+        self.assertEquals(scf.pem_file, filename2)
+
+        shutil.rmtree(tmpdir1)
+        shutil.rmtree(tmpdir2)
+    # ----------------------------------------------------------------
+    def test05_getContext(self):
+        from OpenSSL import SSL
+        tmpdir = tempfile.mkdtemp()
+        filename = os.path.join(tmpdir, "poker.pem")
+        f = open(filename, "w")
+        f.close()
+
+        class MockSettings():
+            def headerGet(msSelf, path): return tmpdir
+
+        scf = pokerservice.SSLContextFactory(MockSettings())
+        self.assertEquals(scf.pem_file, filename)
+
+        class MockContext():
+            def __init__(mcSelf, val):
+                self.assertEquals(SSL.SSLv23_METHOD, val)
+                mcSelf.testerData = "Stuff"
+            def use_certificate_file(mcSelf, file):
+                self.assertEquals(scf.pem_file, file)
+            def use_privatekey_file(mcSelf, file):
+                self.assertEquals(scf.pem_file, file)
+
+        saveContext = SSL.Context
+        SSL.Context = MockContext
+
+        context = scf.getContext()
+        self.assertEquals(context.testerData, "Stuff")
+
+        SSL.Context = saveContext
+        shutil.rmtree(tmpdir)
+##############################################################################
+from pokernetwork.pokerservice import PokerTree, PokerSOAP, PokerREST, PokerXMLRPC
+class MockRequestBase():
+    def __init__(mrSelf):
+        mrSelf.method = "GET"
+class PokerTreeCoverageTestCase(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+    # ----------------------------------------------------------------
+    def tearDown(self):
+        if hasattr(self, 'service'):
+            d = self.service.stopService()
+            return d
+    # ----------------------------------------------------------------
+    def test01_init(self):
+        self.service = pokerservice.PokerService(self.settings)
+        pt = pokerservice.PokerTree(self.service)
+        self.assertEquals(pt.service, self.service)
+        for (child, cl) in [ ("RPC2", PokerXMLRPC), ("REST", PokerREST), ("SOAP", PokerSOAP) ]:
+            self.failUnless(pt.children.has_key(child), "Missing child of PokerTree: " + child)
+            self.failUnless(isinstance(pt.children[child], cl))
+            self.assertEquals(pt.getChildWithDefault(child, MockRequestBase()).service, self.service)
+    # ----------------------------------------------------------------
+    def test02_initNoSoap(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockPokerSOAP():
+            def __init__(mpsSelf, service):
+                self.assertEquals(self.service, service)
+                raise Exception("Force SOAP unavailable")
+        savePokerSoap = pokerservice.PokerSOAP
+        pokerservice.PokerSOAP = MockPokerSOAP
+
+        pt = pokerservice.PokerTree(self.service)
+
+        for (childStr, cl) in [ ("RPC2", PokerXMLRPC), ("REST", PokerREST) ]:
+            self.failUnless(pt.children.has_key(childStr), "Missing child of PokerTree: " + childStr)
+            self.failUnless(isinstance(pt.children[childStr], cl))
+            self.assertEquals(pt.getChildWithDefault(childStr, MockRequestBase()).service, self.service)
+
+        self.failIf(pt.children.has_key("SOAP"), "SOAP should be disabled")
+        child = pt.getChildWithDefault('SOAP', MockRequestBase())
+        self.assertEquals(child.code, 404)
+        self.assertEquals(child.brief, 'No Such Resource')
+
+        pokerservice.PokerSOAP = savePokerSoap
+    # ----------------------------------------------------------------
+    def test03_render(self):
+        self.service = pokerservice.PokerService(self.settings)
+        pt = pokerservice.PokerTree(self.service)
+        self.assertEquals(pt.render(MockRequestBase()), "Use /RPC2 or /SOAP or /REST")
+##############################################################################
+from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource
+class PokerRestTreeCoverageTestCase(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+    # ----------------------------------------------------------------
+    def tearDown(self):
+        if hasattr(self, 'service'):
+            d = self.service.stopService()
+            return d
+    # ----------------------------------------------------------------
+    def test01_init(self):
+        self.service = pokerservice.PokerService(self.settings)
+        prt = pokerservice.PokerRestTree(self.service)
+        self.assertEquals(prt.service, self.service)
+        self.assertEquals(prt.verbose, self.service.verbose)
+        for (child, cl) in [ ("POKER_REST", PokerResource), ("UPLOAD", PokerImageUpload),
+                             ("AVATAR", PokerAvatarResource) ]:
+            self.failUnless(prt.children.has_key(child), "Missing child of PokerTree: " + child)
+            self.failUnless(isinstance(prt.children[child], cl))
+            self.assertEquals(prt.getChildWithDefault(child, MockRequestBase()).service, self.service)
+    # ----------------------------------------------------------------
+    def test02_render(self):
+        self.service = pokerservice.PokerService(self.settings)
+        prt = pokerservice.PokerRestTree(self.service)
+        self.assertEquals(prt.render(MockRequestBase()), "Use /POKER_REST")
+##############################################################################
+# The following Mockups are used for PokerXML and its subclasses.
+
+class MockAvatarForPokerXML():
+    def __init__(self, val):
+        self.name = val
+        self.packetList = []
+        self.packetsQueuedCount = 0
+    def handlePacket(self, packet):
+        self.packetList.append(packet)
+        return [ PacketPing() ]
+    def queuePackets(self):
+        self.packetsQueuedCount += 1
+
+class MockSessionForPokerXML():
+    pass
+
+# To use MockRequestForPokerXML, you should expect to test the contents of
+# the following variables after running your test function:
+#    service.avatar
+#    service.createAvatarCount
+#    service.oldAvatars
+class MockServiceForPokerXML():
+    def __init__(self, avatar = None):
+        self.verbose = 6
+        if avatar:
+            self.avatar = avatar
+        else:
+            self.avatar = None
+        self.createAvatarCount = 0
+        self.oldAvatars = []
+        self.destroyedAvatars = []
+
+    def createAvatar(self):
+        if hasattr(self, 'avatar') and self.avatar:
+            self.oldAvatars.append(self.avatar)
+        self.avatar = MockAvatarForPokerXML("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
+        self.createAvatarCount += 1
+        return self.avatar
+
+    def destroyAvatar(self, avatar):
+        self.destroyedAvatars.append(avatar)
+
+# To use MockRequestForPokerXML, you should expect to test the contents of
+# the following variables after running your test function:
+#    request.headerData
+class MockRequestForPokerXML():
+    def __init__(self, content):
+        self.content = content
+        self.headerData = {}
+
+    def setHeader(self, header, value):
+        if not self.headerData.has_key(header):
+            self.headerData[header] = []
+        self.headerData[header].append(value)
+
+class MockContentForPokerXML():
+    def __init__(self, data):
+        self.data = data
+    def read(self):
+        return self.data
+    def seek(self, start, finish):
+        pass
+
+class PokerXMLCoverageTestCase(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def setUp(self):
+        testclock._seconds_reset()
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        self.settings.header = self.settings.doc.xpathNewContext()
+    # ----------------------------------------------------------------
+    def tearDown(self):
+        if hasattr(self, 'service'):
+            d = self.service.stopService()
+            return d
+    # ----------------------------------------------------------------
+    def test01_getRequestCookie_hasInstanceVariable(self):
+        class MockRequestWithCookie(MockRequestBase):
+            def __init__(mrSelf):
+                mrSelf.cookies = [ 'thisone', 'notthisone' ]
+
+        self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie()),
+                          'thisone')
+    # ----------------------------------------------------------------
+    def test02_getRequestCookie_callsGetCookie(self):
+        class MockRequestWithCookie(MockRequestBase):
+            def __init__(mrSelf, val):
+                mrSelf.cookies = None
+                mrSelf.sitepath = val
+            def getCookie(mrSelf, stuff):
+                self.assertEquals(stuff, "TWISTED_SESSION_one_two_three")
+                return "called_getcookie"
+
+        caughtIt = False
+        try:
+            self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie("notalist")),
+                              'thisone')
+            self.failIf(True, "We should have caught a TypeError")
+        except TypeError, te:
+            self.assertEquals(te.__str__(), 'can only concatenate list (not "str") to list')
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught a TypeError!")
+
+        self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie(['one', 'two', 'three'])),
+                           "called_getcookie")
+    # ----------------------------------------------------------------
+    def test03_init(self):
+        self.service = pokerservice.PokerService(self.settings)
+        px = pokerservice.PokerXML(self.service)
+        self.assertEquals(px.service, self.service)
+        self.assertEquals(px.verbose, self.service.verbose)
+        self.assertNotEquals(pokerservice.PokerXML.encoding, "")
+        self.assertNotEquals(pokerservice.PokerXML.encoding, None)
+    # ----------------------------------------------------------------
+    def test04_render(self):
+        service = MockServiceForPokerXML()
+        pxml = pokerservice.PokerXML(service)
+        request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
+
+        clear_all_messages()
+
+        caughtIt = False
+        try:
+            pxml.render(request)
+            self.failIf(True, "We should have caught a NotImplementedError")
+        except NotImplementedError:
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
+
+        self.assertEquals(request.headerData,
+                          {'Content-type': ['text/xml; charset="ISO-8859-1"']})
+        self.failUnless(search_output('render hello'), "render hello should occur in output!")
+    # ----------------------------------------------------------------
+    def test04a_maps2result(self):
+        service = MockServiceForPokerXML()
+        pxml = pokerservice.PokerXML(service)
+        request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
+
+        caughtIt = False
+        try:
+            pxml.maps2result(request, {})
+            self.failIf(True, "We should have caught a NotImplementedError")
+        except NotImplementedError:
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
+    # ----------------------------------------------------------------
+    def test05_render_noEncoding(self):
+        service = MockServiceForPokerXML()
+        pxml = pokerservice.PokerXML(service)
+        request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
+
+        clear_all_messages()
+
+        caughtIt = False
+        pxml.encoding = None
+        try:
+            pxml.render(request)
+            self.failIf(True, "We should have caught a NotImplementedError")
+        except NotImplementedError:
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
+
+        self.assertEquals(request.headerData, {'Content-type': ['text/xml']})
+
+        self.assertEquals(get_messages(), ['render hello'])
+    # ----------------------------------------------------------------
+    def test06_errorFunction(self):
+        service = MockServiceForPokerXML()
+        pxml = pokerservice.PokerXML(service)
+
+        clear_all_messages()
+        pxml.error("Test an error")
+        self.assertEquals(get_messages(), ['*ERROR* Test an error'])
+##############################################################################
+class PokerXMLRPCCoverageTestCase(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def test01_render_dummyXMLCall(self):
+        service = MockServiceForPokerXML()
+        pxmlrpc = pokerservice.PokerXMLRPC(service)
+        request = MockRequestForPokerXML(MockContentForPokerXML("""<?xml version="1.0"?>
+<methodCall>
+<methodName>examples.Nothing</methodName>
+<params>
+<param>  <value><i4>41</i4></value>  </param>
+</params></methodCall>"""))
+
+        clear_all_messages()
+        self.assertEquals(pxmlrpc.render(request), """<?xml version='1.0'?>
+<methodResponse>
+<params>
+<param>
+<value><array><data>
+</data></array></value>
+</param>
+</params>
+</methodResponse>
+""")
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.destroyedAvatars[0].name, "MOCK_CREATE_AVATAR_0")
+        self.assertEquals(service.destroyedAvatars[0], service.avatar)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['138'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 2, "Missing Message Output")
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string '), "Missing result_string output")
+    # ----------------------------------------------------------------
+##############################################################################
+# Mock Ups for PokerREST
+
+# Variables to check after tests for MockRequestForPokerREST
+#   expireCount, notifyFunctions
+#   (you should call each notifyFunction and make sure it DTRT
+
+class MockRequestForPokerREST(MockRequestForPokerXML):
+    def __init__(mrSelf, content):
+        mrSelf.args = {}
+        mrSelf.cookieRequests = []
+        MockRequestForPokerXML.__init__(mrSelf, content)
+    def getCookie(mrSelf, stuff):
+        mrSelf.cookieRequests.append(stuff)
+        return "DUMMY_COOKIE_%d" % len(mrSelf.cookieRequests)
+
+# Variables to check after tests for MockSessionForPokerREST:
+#   expireCount, notifyFunctions
+#   (you should call each notifyFunction and make sure it DTRT
+class MockSessionForPokerREST(MockSessionForPokerXML):
+    def __init__(msSelf):
+        msSelf.expireCount = 0
+        msSelf.notifyFunctions = []
+    def expire(msSelf): msSelf.expireCount += 1
+    def notifyOnExpire(msSelf, fun):
+        msSelf.notifyFunctions.append(fun)
+        
+class MockRequestForRESTWithSession(MockRequestForPokerREST):
+    def getSession(mrSelf):
+        if not hasattr(mrSelf, 'session') or not mrSelf.session:
+            mrSelf.session = MockSessionForPokerREST()
+        return mrSelf.session
+
+class PokerRESTCoverageTestCase(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def test01_render_dummyRESTCall(self):
+        service = MockServiceForPokerXML()
+        prest = pokerservice.PokerREST(service)
+        request = MockRequestForPokerREST(MockContentForPokerXML("""
+{"type" : "41"}
+"""))
+
+        clear_all_messages()
+        val = prest.render(request)
+        self.assertEquals(val, """[{"message": "Invalid type name 41", "code": 0, "type": "PacketError", "other_type": 3}]""")
+
+        self.assertEquals(request.cookieRequests, [])
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.destroyedAvatars[0].name, "MOCK_CREATE_AVATAR_0")
+        self.assertEquals(service.destroyedAvatars[0], service.avatar)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['88'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 2, "Missing Message Output")
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string '), "Missing result_string output")
+    # ----------------------------------------------------------------
+    def test02_render_withNewSession_withjsonp(self):
+        class MockServiceWithoutAvatar(MockServiceForPokerXML):
+            def __init__(self, avatar = None):
+                MockServiceForPokerXML.__init__(self, avatar)
+                if hasattr(self, "avatar") and not avatar:
+                    del self.avatar
+
+        service = MockServiceWithoutAvatar()
+        prest = pokerservice.PokerREST(service)
+        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
+{"type" : "41"}
+"""))
+        request.args = { 'session' : ['new'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
+                         'packet' : ["""{ "type" : "PacketPing" }"""] }
+        
+        clear_all_messages()
+        val = prest.render(request)
+        self.assertEquals(val, """JSON_PREFIX([{"type": "PacketPing"}])""")
+
+        self.assertEquals(request.session.expireCount, 0)
+        self.assertEquals(len(request.session.notifyFunctions), 1)
+        self.failUnless(hasattr(request.session, 'avatar'))
+        
+        self.assertEquals("""JSON_PREFIX([{"type": "PacketPing"}])""", val)
+        self.assertEquals(len(service.destroyedAvatars), 0)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(service.avatar.packetList), 1)
+        self.assertEquals(service.avatar.packetList[0].type, PACKET_PING)
+        self.assertEquals(service.avatar.packetsQueuedCount, 1)
+        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
+
+        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe'])
+        self.assertEquals(request.cookies, [])
+        self.assertEquals(request.sitepath, ['joe'])
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['37'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 2, "Missing Message Output")
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string JSON_PREFIX'), "Missing result_string output")
+
+        # Now call the notifyFunction and see if does what is expected:
+        request.session.notifyFunctions[0]()
+
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+        self.failIf(hasattr(request.session, 'avatar'))
+    # ----------------------------------------------------------------
+    def test03_render_withSessionYes_HandleMultiplePackets(self):
+        class MockAvatarWithMultipleHandle(MockAvatarForPokerXML):
+            def handlePacket(self, packet):
+                MockAvatarForPokerXML.handlePacket(self, packet)
+                return [PacketSerial(serial = 12), PacketPing()]
+
+        class MockServiceWithMultipleHandleAvatar(MockServiceForPokerXML):
+            def __init__(self, avatar = None):
+                MockServiceForPokerXML.__init__(self, avatar)
+                if hasattr(self, "avatar") and not avatar:
+                    del self.avatar
+
+            def createAvatar(self):
+                if hasattr(self, 'avatar') and self.avatar:
+                    self.oldAvatars.append(self.avatar)
+                self.avatar = MockAvatarWithMultipleHandle("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
+                self.createAvatarCount += 1
+                return self.avatar
+
+        service = MockServiceWithMultipleHandleAvatar()
+        prest = pokerservice.PokerREST(service)
+        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
+{"type" : "41"}
+"""))
+        request.args = { 'session' : ['yes'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
+                         'packet' : ["""{ "type" : "PacketPing" }"""] }
+        request.cookies = None
+        
+        clear_all_messages()
+        val = prest.render(request)
+
+        self.assertEquals(request.session.expireCount, 0)
+        self.assertEquals(len(request.session.notifyFunctions), 1)
+        self.failUnless(hasattr(request.session, 'avatar'))
+        
+        self.assertEquals('JSON_PREFIX([{"type": "PacketSerial", "serial": 12, "cookie": "DUMMY_COOKIE_2"}, {"type": "PacketPing"}])', val)
+        self.assertEquals(len(service.destroyedAvatars), 0)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(service.avatar.packetList), 1)
+        self.assertEquals(service.avatar.packetList[0].type, PACKET_PING)
+        self.assertEquals(service.avatar.packetsQueuedCount, 1)
+        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
+
+        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe', 'TWISTED_SESSION_joe'])
+        self.assertEquals(request.cookies, None)
+        self.assertEquals(request.sitepath, ['joe'])
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['105'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 3, "Missing Message Output")
+        self.failUnless(search_output('receive session cookie DUMMY_COOKIE_1'),
+                         'Missing receive session cookie')
+        self.failUnless(search_output('send session cookie DUMMY_COOKIE_2'),
+                         'Missing send session cookie')
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string JSON_PREFIX'), "Missing result_string output")
+
+        # Now call the notifyFunction and see if does what is expected:
+        request.session.notifyFunctions[0]()
+
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+        self.failIf(hasattr(request.session, 'avatar'))
+    # ----------------------------------------------------------------
+    def test04_render_withSessionYes_logout(self):
+        class MockAvatarLogout(MockAvatarForPokerXML):
+            def handlePacket(self, packet):
+                MockAvatarForPokerXML.handlePacket(self, packet)
+                return [PacketLogout()]
+
+        class MockServiceLogout(MockServiceForPokerXML):
+            def __init__(self, avatar = None):
+                MockServiceForPokerXML.__init__(self, avatar)
+                if hasattr(self, "avatar") and not avatar:
+                    del self.avatar
+
+            def createAvatar(self):
+                if hasattr(self, 'avatar') and self.avatar:
+                    self.oldAvatars.append(self.avatar)
+                self.avatar = MockAvatarLogout("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
+                self.createAvatarCount += 1
+                return self.avatar
+
+        service = MockServiceLogout()
+        prest = pokerservice.PokerREST(service)
+        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
+{"type" : "41"}
+"""))
+        request.args = { 'session' : ['yes'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
+                         'packet' : ["""{ "type" : "PacketLogout" }"""] }
+        request.cookies = None
+        
+        clear_all_messages()
+        val = prest.render(request)
+        self.assertEquals(val, """JSON_PREFIX([{"type": "PacketLogout"}])""")
+
+        self.assertEquals(request.session.expireCount, 1)
+        self.assertEquals(len(request.session.notifyFunctions), 1)
+        self.failUnless(hasattr(request.session, 'avatar'))
+        
+        self.assertEquals(len(service.destroyedAvatars), 0)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(service.avatar.packetList), 1)
+        self.assertEquals(service.avatar.packetList[0].type, PACKET_LOGOUT)
+        self.assertEquals(service.avatar.packetsQueuedCount, 0)
+        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
+
+        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe'])
+        self.assertEquals(request.cookies, None)
+        self.assertEquals(request.sitepath, ['joe'])
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['39'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 3, "Missing Message Output")
+        self.failUnless(search_output('receive session cookie DUMMY_COOKIE_1'),
+                         'Missing receive session cookie')
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string JSON_PREFIX'), "Missing result_string output")
+
+        # Now call the notifyFunction and see if does what is expected:
+        request.session.notifyFunctions[0]()
+
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+        self.failIf(hasattr(request.session, 'avatar'))
+    # ----------------------------------------------------------------
+    def test05_render_withSessionYes_Deferred(self):
+        resultDeferred = defer.Deferred()
+        class MockAvatarDeferred(MockAvatarForPokerXML):
+            def handlePacket(self, packet):
+                MockAvatarForPokerXML.handlePacket(self, packet)
+                return [resultDeferred]
+
+        class MockServiceDeferredAvatar(MockServiceForPokerXML):
+            def __init__(self, avatar = None):
+                MockServiceForPokerXML.__init__(self, avatar)
+                if hasattr(self, "avatar") and not avatar:
+                    del self.avatar
+
+            def createAvatar(self):
+                if hasattr(self, 'avatar') and self.avatar:
+                    self.oldAvatars.append(self.avatar)
+                self.avatar = MockAvatarDeferred("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
+                self.createAvatarCount += 1
+                return self.avatar
+
+        class MockRequestRESTForCallback(MockRequestForRESTWithSession):
+            def __init__(mrSelf, data):
+                MockRequestForRESTWithSession.__init__(mrSelf, data)
+                mrSelf.finishCount = 0
+                mrSelf.writtenData = ""
+            def finish(mrSelf):
+                mrSelf.finishCount += 1
+            def write(mrSelf, data):
+                mrSelf.writtenData += data
+
+        service = MockServiceDeferredAvatar()
+        prest = pokerservice.PokerREST(service)
+        request = MockRequestRESTForCallback(MockContentForPokerXML("""
+{"type" : "41"}
+"""))
+        request.args = { 'session' : ['yes'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
+                         'packet' : ["""{ "type" : "PacketPing" }"""] }
+        request.cookies = None
+        
+        clear_all_messages()
+        val = prest.render(request)
+        self.assertEquals(val, twisted.web.server.NOT_DONE_YET)
+
+        self.assertEquals(request.session.expireCount, 0)
+        self.assertEquals(len(request.session.notifyFunctions), 1)
+        self.failUnless(hasattr(request.session, 'avatar'))
+        
+        self.assertEquals(len(service.destroyedAvatars), 0)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(service.avatar.packetList), 1)
+        self.assertEquals(service.avatar.packetList[0].type, PACKET_PING)
+        self.assertEquals(service.avatar.packetsQueuedCount, 0)
+        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
+
+        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe'])
+        self.assertEquals(request.cookies, None)
+        self.assertEquals(request.sitepath, ['joe'])
+
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 2, "Missing Message Output")
+        self.failUnless(search_output('receive session cookie DUMMY_COOKIE_1'),
+                         'Missing receive session cookie')
+        self.failUnless(search_output('render '), "Missing render output")
+
+        # Now call the notifyFunction and see if does what is expected:
+        request.session.notifyFunctions[0]()
+
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+        self.failIf(hasattr(request.session, 'avatar'))
+
+        # Finally, let's make sure our deferred does the right thing,
+        # first testing to verify it has not been rendered, and then
+        # calling back and making sure it was rendered
+
+        self.assertEquals(len(request.headerData.keys()), 1)
+        self.failIf(request.headerData.has_key('Content-length'))
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        self.assertEquals(request.writtenData, "")
+        self.assertEquals(request.finishCount, 0)
+
+        resultDeferred.callback(PacketLogout())
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['39'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        self.assertEquals(request.writtenData, 'JSON_PREFIX([{"type": "PacketLogout"}])')
+        self.assertEquals(request.finishCount, 1)
+    # ----------------------------------------------------------------
+    def test06_render_clearSessions(self):
+        service = MockServiceForPokerXML()
+        prest = pokerservice.PokerREST(service)
+        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
+{"type" : "PacketPing"}
+"""))
+        request.args = { 'session' : ['clear'] }
+
+        clear_all_messages()
+        val = prest.render(request)
+        self.assertEquals(val, '[{"type": "PacketPing"}]')
+
+        self.assertEquals(request.cookieRequests, [])
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.destroyedAvatars[0].name, "MOCK_CREATE_AVATAR_0")
+        self.assertEquals(service.destroyedAvatars[0], service.avatar)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['24'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 2, "Missing Message Output")
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string '), "Missing result_string output")
+    # ----------------------------------------------------------------
+##############################################################################
+class PokerSOAPCoverageTestCase(unittest.TestCase):
+    # ----------------------------------------------------------------
+    def test01_render_dummySOAPCall(self):
+        service = MockServiceForPokerXML()
+        psoap = pokerservice.PokerSOAP(service)
+        request = MockRequestForPokerXML(MockContentForPokerXML("""<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+<SomeMethod>
+<Result>
+<Packet>
+   <type>PacketPing</type>
+</Packet>
+</Result>
+</SomeMethod>
+</soap:Body>
+</soap:Envelope>"""))
+
+        clear_all_messages()
+        val = psoap.render(request)
+        self.assertEquals(val, """<?xml version="1.0" encoding="ISO-8859-1"?>
+<SOAP-ENV:Envelope
+  SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+>
+<SOAP-ENV:Body>
+<returnPacket SOAP-ENC:root="1">
+<Result SOAP-ENC:arrayType="ns1:SOAPStruct[0]" xsi:type="SOAP-ENC:Array" xmlns:ns1="http://soapinterop.org/xsd">
+</Result>
+</returnPacket>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+""")
+        self.assertEquals(len(service.destroyedAvatars), 1)
+        self.assertEquals(service.destroyedAvatars[0].name, "MOCK_CREATE_AVATAR_0")
+        self.assertEquals(service.destroyedAvatars[0], service.avatar)
+        self.assertEquals(service.oldAvatars, [])
+        self.assertEquals(service.createAvatarCount, 1)
+
+        self.assertEquals(len(request.headerData.keys()), 2)
+        self.assertEquals(request.headerData['Content-length'],  ['538'])
+        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
+        msgs = get_messages()
+        self.failUnless(len(msgs) >= 2, "Missing Message Output")
+        self.failUnless(search_output("args = [{'Packet': {'type': 'PacketPing'}}]"),
+                        'Missing args')
+        self.failUnless(search_output('render '), "Missing render output")
+        self.failUnless(search_output('result_string '), "Missing result_string output")
+    # ----------------------------------------------------------------
+##############################################################################
 class TourneySelectInfoTestCase(unittest.TestCase):
 
     def test01_not_found(self):
@@ -2693,7 +6284,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+#    loader.methodPrefix = "test_trynow"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
@@ -2714,7 +6305,15 @@ def Run():
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
     suite.addTest(loader.loadClass(CleanUpTestCase))
     suite.addTest(loader.loadClass(ResthostTestCase))
+    suite.addTest(loader.loadClass(PokerFactoryFromPokerServiceTestCase))
     suite.addTest(loader.loadClass(PokerServiceCoverageTests))
+    suite.addTest(loader.loadClass(SSLContextFactoryCoverage))
+    suite.addTest(loader.loadClass(PokerTreeCoverageTestCase))
+    suite.addTest(loader.loadClass(PokerRestTreeCoverageTestCase))
+    suite.addTest(loader.loadClass(PokerXMLCoverageTestCase))
+    suite.addTest(loader.loadClass(PokerXMLRPCCoverageTestCase))
+    suite.addTest(loader.loadClass(PokerRESTCoverageTestCase))
+    suite.addTest(loader.loadClass(PokerSOAPCoverageTestCase))
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
@@ -2732,6 +6331,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py ) ; ( cd ../tests ; make VERBOSE_T=6 COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py tests/test-pokerservice-load.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice.py test-pokerservice-load.py coverage-report' check )"
 # End:
-

@@ -1,3 +1,219 @@
+2009-03-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerservice.py (PokerXML.getArguments)
+	(PokerXML.maps2result): raise error rather than pass on these
+	methods. Fixes sr #2274
+
+	* tests/test-pokerservice.py.in
+	(PokerXMLCoverageTestCase.test04_render): Replaced with
+	alternative version.
+	(PokerXMLCoverageTestCase.test04a_map2result): Added test from
+	alternative list.
+
+	* tests/test-pokerservice-load.py.in
+	(LogicThatOccursDuringLoadTestCase.test01_openSSLMissing_badTwistedLoad_soapPyMissing):
+	Renamed and added soapPy coverage.
+
+	* tests/test-pokerservice.py.in
+	(PokerXMLCoverageTestCase.test06_errorFunction): Wrote test.
+
+2009-03-15  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice-load.py.in (MissingOpenSSLTestCase):
+	Created TestCase.
+	(MissingOpenSSLTestCase.test01_openSSLMissing): Wrote test.
+	(MissingOpenSSLTestCase.test01_openSSLMissing_badTwistedLoad):
+	combined test02 into this one.
+
+	* pokernetwork/pokerservice.py: Removed OpenSSL.SSL import that
+	was above the try block.  The try block will execute it, and works
+	correctly without failure when it is not present.
+
+2009-03-14  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test00_14_languageEmptyStringForSeperate):
+	Wrote test.
+	(TourneyManagerTestCase.test05_moreThanOneTourneyRow): Wrote test.
+
+2009-03-08  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerSOAPCoverageTestCase.test01_render_dummySOAPCall): Created test.
+
+2009-03-07  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (PokerRESTCoverageTestCase.test02_render_withNewSession_withjsonp.MockServiceWithoutAvatar.__init__):
+	Created avatar shouldn't be None because hasattr is used PokerXML.render()
+	to see if it needs creation.
+	(MockSessionForPokerREST): Should derive from
+	MockSessionForPokerXML, not MockServiceForPokerXML
+	(MockServiceForPokerXML.createAvatar): Check that you have avatar
+	attribute; subclasses may not have it.
+	(MockRequestForRESTWithSession.getSession): saved session created
+	for later testing.
+	(PokerRESTCoverageTestCase.test03_render_withSessionYes_HandleMultiplePackets):
+	Wrote test.
+	(PokerRESTCoverageTestCase.test04_render_withSessionYes_logout):
+	Wrote test.
+	(PokerRESTCoverageTestCase.test05_render_withSessionYes_Deferred):
+	Wrote test.
+	(PokerRESTCoverageTestCase.test06_render_clearSessions): Wrote test.
+
+	* tests/test-pokerservice.py.in
+	(MockAvatarForPokerXML.handlePacket): Wrote method.
+
+2009-03-06  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerRESTCoverageTestCase.test01_render_dummyRESTCall): Wrote test.
+
+2009-02-17  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (MockSessionForPokerXML): Created
+	mockup class.
+	(MockServiceForPokerXML): Created mockup class.
+	(MockRequestForPokerXML): Created mockup class.
+	(PokerXMLCoverageTestCase.test04_render): Wrote test.
+	(PokerXMLCoverageTestCase.test05_render_noEncoding): Wrote test.
+	(PokerXMLCoverageTestCase.alternative_test04_render): Created
+	alternative test, see sr #2274.
+	(PokerXMLCoverageTestCase.alternative_test04a_map2result): Created
+	alternative test, see sr #2274.
+	(PokerXMLCoverageTestCase.alternative_test05_render_noEncoding): Created
+	alternative test, see sr #2274.
+	(PokerXMLRPCCoverageTestCase.test_trynow_01_render_dummyXMLCall):
+	Wrote test.
+
+2009-02-16  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (PokerRestTreeCoverageTestCase):
+	Created test case class.
+	(PokerRestTreeCoverageTestCase.setUp): Cut-and-pasted method.
+	(PokerRestTreeCoverageTestCase.tearDown): Cut-and-pasted method.
+	(PokerRestTreeCoverageTestCase.test01_init): Wrote test.
+	(PokerRestTreeCoverageTestCase.test02_render): Wrote test.
+	(Run): Added PokerRestTreeCoverageTestCase.
+	(PokerXMLCoverageTestCase): Create test case class.
+	(PokerXMLCoverageTestCase.setUp): Cut-and-pasted method.
+	(PokerXMLCoverageTestCase.tearDown): Cut-and-pasted method.
+	(Run): Added PokerXMLCoverageTestCase.
+	(PokerXMLCoverageTestCase.test01_getRequestCookie_hasInstanceVariable):
+	Wrote test.
+	(PokerXMLCoverageTestCase.test02_getRequestCookie_callsGetCookie):
+	Wrote test.
+	(PokerXMLCoverageTestCase.test03_init): Wrote test.
+
+	* pokernetwork/pokerservice.py (PokerService.createTable): Added
+	comment about sr #2273.
+
+	* tests/test-pokerservice.py.in
+	(PokerTreeCoverageTestCase.test03_render): Wrote test.
+	(PokerServiceCoverageTests.test65_createTable_insertFailsAndLasRowNotThere):
+	Only three lines of output sometimes; removed duplication of this test.
+	(PokerServiceCoverageTests.test66_deleteTable_deleteRowsNot1.MockCursor.statementActions):
+	Removed extraneous print.
+	(PokerServiceCoverageTests.test65a_createTable_insertFailsProperly):
+	Wrote test, but commented out (see sr #2773).
+	(PokerServiceCoverageTests.test65b_createTable_insertSucceedsWithLargerThan1ReturnedWithLastRowThere):
+	Wrote test.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.variousPacketsWithStringOrSinglePacketReturn):
+	Fixed comment that was incorrectly mentioning a stdout
+	redirection.
+
+2009-02-15  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test66_deleteTable_deleteRowsNot1):
+	Wrote test.
+	(PokerServiceCoverageTests.test67_broadcast): Wrote test.
+	(PokerServiceCoverageTests.test68_messageCheck): Wrote test.
+	(SSLContextFactoryCoverage): Created new test set.
+	(SSLContextFactoryCoverage.test01_initNoHeader): Wrote test.
+	(SSLContextFactoryCoverage.test02_initNoneExist): Wrote test.
+	(SSLContextFactoryCoverage.test03_oneGoodFile): Wrote test.
+	(SSLContextFactoryCoverage.test04_secondFileFavored): Wrote test.
+	(SSLContextFactoryCoverage.test05_getContext): Wrote test.
+	(PokerTreeCoverageTestCase): Created new test set.
+	(PokerTreeCoverageTestCase.setUp): Wrote method.
+	(PokerTreeCoverageTestCase.tearDown): Wrote method.
+	(PokerTreeCoverageTestCase.test01_init): Wrote test.
+	(PokerTreeCoverageTestCase.test02_initNoSoap): Wrote test.
+
+2009-02-14  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test49_setAccount_lastrowidFailure):
+	Wrote test.
+	(PokerServiceCoverageTests.test50_setPlayerInfo_success): Wrote
+	test.
+	(PokerServiceCoverageTests.test51_setPlayerInfo_badUpdateValue):
+	Wrote test.
+	(PokerServiceCoverageTests.test52_getPlayerImage_serial0): Wrote
+	test.
+	(PokerServiceCoverageTests.test53_getPlayerImage_selectRowCount3):
+	Wrote test.
+	(PokerServiceCoverageTests.test54_setPlayerImage_rowcountwrong):
+	Wrote test.
+	(PokerServiceCoverageTests.test55_buyInPlayer_currencySerialNone):
+	Wrote test.
+	(PokerServiceCoverageTests.test56_buyInPlayer_updateRowcountBad):
+	Wrote test.
+	(PokerServiceCoverageTests.test57_buyInPlayer_insertRowcountBad):
+	Wrote test.
+	(PokerServiceCoverageTests.test58_movePlayer_selectRowCount0WithMoneyNone):
+	Wrote test.
+	(PokerServiceCoverageTests.test59_movePlayer_selectRowCount1WithMoneyPositiveUpdateRowCount3):
+	Wrote test.
+	(PokerServiceCoverageTests.test60_leavePlayer_updateRowCountTooHigh):
+	Wrote test.
+	(PokerServiceCoverageTests.test61_updatePlayerRake_amountAsZero):
+	Wrote test.
+	(PokerServiceCoverageTests.test62_updatePlayerRake_updateReturns0Rows):
+	Wrote test.
+	(PokerServiceCoverageTests.test63_updatePlayerMoney_amountAsZero):
+	Wrote test.
+	(PokerServiceCoverageTests.test64_updatePlayerMoney_updateReturns0Rows):
+	Wrote test.
+	(PokerServiceCoverageTests.test65_createTable_insertFailsAndLasRowNotThere):
+	Wrote test.
+
+2009-02-12  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test48_setAccount_badRowcountOnInsert):
+	Wrote test.
+
+2009-02-11  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test44_getPlayerInfo_serialIs0): Wrote test.
+	(PokerServiceCoverageTests.test45_getPlayerInfo_badRowCount):
+	Wrote test.
+	(PokerServiceCoverageTests.test46_getUserInfo_badRowCount): Wrote
+	test.
+	(PokerServiceCoverageTests.test47_setPesonalInfo_badRowCount):
+	Wrote test.
+
+	* pokernetwork/pokerservice.py (PokerService.getPlayerInfo): Added
+	coment about locale argument.
+
+	* pokernetwork/pokerpackets.py (PacketPokerPlayerInfo): Added
+	comment note about locale argument.
+
+	* tests/test-pokerservice.py.in (MockCursorBase.execute): Added
+	sql statement on failUnless.
+	(PokerServiceCoverageTests.test40_cleanupTourneys_oneFoundFromPrimarySelect):
+	Wrote test.
+	(MockCursorBase.close, MockCursorBase.__init__): Added closedCount
+	instance variable.
+	(PokerServiceCoverageTests.test41_getMoney_bigRowCount): Wrote test.
+	(PokerServiceCoverageTests.test42_cashQuery): Wrote test.
+	(PokerServiceCoverageTests.test43_cashOutCommit_commitFailure):
+	Wrote test.
+
 2009-02-10  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
@@ -15,6 +231,49 @@
 	  to a separate function that is called by startServices instead of
 	  the __init__ function because the Handle function of the
 	  tourneySelectInfo module may require the database
+
+2009-02-06  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test38_eventTable_serialZero): Wrote test.
+	(PokerServiceCoverageTests.test39_statsTable): Wrote test.
+
+2009-02-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test36_saveHand_badRowcountOnUpdate):
+	Wrote test.
+
+2009-02-01  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test34_getHandHistory_playerProhibited):
+	Wrote test.
+
+2009-01-29  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test32_getHandSerial_coverCursorWithInsertID):
+	Wrote test.
+	(PokerServiceCoverageTests.test31_getHandSerial_coverCursorWithLastrowid):
+	Wrote test.
+	(PokerServiceCoverageTests.test33_getHandHistory_failedLoadHand):
+	Wrote test.
+
+2009-01-27  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (PokerServiceCoverageTests): Wrote
+	test.
+	(PokerServiceCoverageTests.test29_loadHand_confirm_backslash_r_replaced):
+	This test had weirdness.  fixed.
+
+2009-01-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test27_loadHand_noRowFound): Wrote test.
+	(PokerServiceCoverageTests.test28_loadHand_row.): Wrote test.
+	(PokerServiceCoverageTests.test29_loadHand_confirm_backslash_r_replaced):
+	Wrote test.
 
 2009-01-23  Loic Dachary <loic@dachary.org>
 
@@ -126,6 +385,15 @@
 	  discard explain instance, and schedule avatar destruction, when
 	  pokeravatar.explain throws
 
+2008-12-22  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (MockDatabase): Took class out of
+	tests for reuse.
+	(MockCursorBase): Abstracted MockCursor.
+	(PokerServiceCoverageTests.test26_tourneyRegister_user2tourneyFailure):
+	Adapted test to use new classes.
+	(TourneyUnregisterTestCase): Wrote test.
+
 2008-12-22  Loic Dachary <loic@dachary.org>
 
 	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
@@ -138,6 +406,18 @@
 	* ChangeLog, NEWS, debian/changelog, pokernetwork/__init__.py: bump
 	  version 1.7.3
 	* tests/test-string.py.in: avoid translation sensitivity
+
+2008-12-21  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test14_tourneyFinished_prizeNegative.MockDatabase):
+	added literal method.
+	(PokerServiceCoverageTests.test14_tourneyFinished_prizeNegative):
+	Fixed tourneyDeleteRoute() failures here.
+	(PokerServiceTestCase.test00_13_anotherBadEncoding): Added another
+	coverage for badEncoding names.
+	(PokerServiceCoverageTests.test26_tourneyRegister_user2tourneyFailure):
+	Wrote test.
 
 2008-12-21  Loic Dachary <loic@dachary.org>
 
@@ -541,6 +821,22 @@
 
 2008-11-23  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test23_isShuttingDown): Renumbered test
+	after merge from trunk.
+	(PokerServiceTestCase.test23_isShuttingDown): Renumbered test
+	after merge from trunk.
+	(TourneyManagerTestCase.test04_coverOldMySQLByMockUp):
+	spawnTourneyInCore() now tags another argument.
+	(PokerServiceCoverageTests.test22_tourneyRegister_torneyAlreadyRegistering):
+	Wrote test.
+	(PokerServiceCoverageTests.test23_tourneyRegister_tourneyRefuseRegistration.MockPacket):
+	Wrote test.
+	(PokerServiceCoverageTests.test24_tourneyRegister_tourneyNotEnoughMoneyToRegister):
+	Wrote test.
+	(PokerServiceCoverageTests.test25_tourneyRegister_updateMoneyWeirdness):
+	Wrote test.
+
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.forceDbToLocaleValue): Wrote function.
 
@@ -624,6 +920,40 @@
 	  error code and messages. There is no reason to expire the session
 	  before and it's more error prone.
 
+2008-11-09  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceCoverageTests.test05_forceAvatarDestory_notInAnyList):
+	Wrote test.
+	(PokerServiceCoverageTests.test06_forceAvatarDestory_inAvatarsListOnly):
+	Wrote test.
+	(PokerServiceCoverageTests.test07_forceAvatarDestory_inMonitorsAndAvatars):
+	Wrote test.
+	(PokerServiceCoverageTests.test08_sessionStartSucceed): Wrote
+	test.
+	(PokerServiceCoverageTests.test09_sessionStartFail): Wrote test.
+	(PokerServiceCoverageTests.test10_sessionEndSucceed): Wrote test.
+	(PokerServiceCoverageTests.test11_sessionEndInsertFailsDeleteSucceeds):
+	Wrote test.
+	(PokerServiceCoverageTests.test12_sessionEndAllSqlFails): Wrote test.
+	(TourneyManagerTestCase.test04_coverOldMySQLByMockUp): Wrote test.
+	(PokerServiceCoverageTests.test13_tourneyNewState_DBFail_forceTourneyDeal):
+	Wrote test.
+	(PokerServiceCoverageTests.test14_tourneyFinished_prizeNegative):
+	Wrote test.
+	(PokerServiceCoverageTests.test15_tourneyGameFilled_updateTableFail):
+	Wrote test.
+	(PokerServiceCoverageTests.test16_tourneyPlayersList_nonExistent):
+	Wrote test.
+	(PokerServiceCoverageTests.test17_tourneyPlayersList_sucess):
+	Wrote test.
+	(PokerServiceCoverageTests.test18_tourneyStats_sqlFails): Wrote
+	test.
+	(PokerServiceCoverageTests.test19_tourneyStats_succeed): Wrote
+	test.
+	(PokerServiceCoverageTests.test20_tourneyRegister_tourneyMissing):
+	Wrote test.
+
 2008-11-08  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokeravatar.py: verbosity control (connection lost
@@ -703,6 +1033,14 @@
 	* tests/test-pokerlock.py.in: comment out test02 because it fails
 	  under unknown conditions
 
+2008-11-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (PokerServiceCoverageTests):
+	Created class.
+	(PokerServiceCoverageTests.test01_statsWithHands): Wrote test.
+	(PokerServiceCoverageTests.test02_statsWithoutHands): Wrote test.
+	(PokerServiceCoverageTests.test03_createAvatar): Wrote test.
+
 2008-10-31  Johan Euphrosine <proppy@aminche.com>
 
 	* pokerstats/stats.py, pokerstats/test-stats.py.in: add --one-time
@@ -740,6 +1078,13 @@
 	* po/fr.po: make update-po in poker-network
 	* po/ChangeLog:
 	* po/fr.po: poker-network french translation update
+
+2008-10-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerFactoryFromPokerServiceTestCase): Created test class.
+	(PokerServiceTestCase.test20_isShuttingDown): Wrote test.
+	(PokerServiceTestCase.test21_stopFactory): Wrote test.
 
 2008-10-25  Bradley M. Kuhn  <bkuhn@ebb.org>
 

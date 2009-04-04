@@ -2,7 +2,7 @@
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple 75004 Paris
 #
@@ -41,7 +41,10 @@ import simplejson
 import imp
 from traceback import print_exc
 
-from OpenSSL import SSL
+
+from twisted.application import service
+from twisted.internet import protocol, reactor, defer
+from twisted.python.runtime import seconds
 
 try:
     from OpenSSL import SSL
@@ -49,11 +52,6 @@ try:
 except:
     print "openSSL not available."
     HAS_OPENSSL=False
-
-
-from twisted.application import service
-from twisted.internet import protocol, reactor, defer
-from twisted.python.runtime import seconds
 
 try:
     # twisted-2.0
@@ -1609,6 +1607,16 @@ class PokerService(service.Service):
                                             name = "anonymous",
                                             url= "random",
                                             outfit = "random",
+                                            # FIXME_PokerPlayerInfoLocale:
+                                            # (see also sr #2262 )
+                                            # this sets locale but
+                                            # PacketPokerPlayerInfo()
+                                            # doesn't currently use locale
+                                            # argument.  I am unsure why I
+                                            # added this here (it was
+                                            # probably me that added it).
+                                            # It needs investigation.
+                                            #  -- bkuhn
                                             locale = "en_US")
         if serial == 0:
             return placeholder
@@ -1783,10 +1791,10 @@ class PokerService(service.Service):
                 # Impossible except for a sudden database corruption, because of the
                 # above SQL statements
                 #
-                self.error("setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql )) #pragma: no cover
-                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR, #pragma: no cover
-                                   message = "inserted %d rows (expected 1)" % cursor.rowcount, #pragma: no cover
-                                   other_type = packet.type) #pragma: no cover
+                self.error("setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
+                                   message = "inserted %d rows (expected 1)" % cursor.rowcount,
+                                   other_type = packet.type)
             #
             # Accomodate for MySQLdb versions < 1.1
             #
@@ -2192,6 +2200,7 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+            # FIXME: sr #2273 notes that this should return None from right here if rowcount == 0
         if hasattr(cursor, "lastrowid"):
             id = cursor.lastrowid
         else:
@@ -2461,10 +2470,10 @@ class PokerXML(resource.Resource):
             return result_string
 
     def getArguments(self, request):
-        pass
+        raise NotImplementedError("PokerXML is pure base class, subclass an implement getArguments")
 
     def maps2result(self, request, maps):
-        pass
+        raise NotImplementedError("PokerXML is pure base class, subclass an implement maps2result")
 
 import xmlrpclib
 

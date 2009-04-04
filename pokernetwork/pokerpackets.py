@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple 75004 Paris
 #
@@ -1799,6 +1799,14 @@ serial: integer uniquely identifying a player.
    info = PacketPokerId.info + ( ('name', 'noname', 's'),
                                  ('outfit', 'random', 's'),
                                  ('url', 'random', 's'),
+                                 # FIXME_PokerPlayerInfoLocale: 
+                                 # (see also sr #2262 )
+                                 # should "locale" be here?  It's
+                                 #  referenced in
+                                 #  PokerService.getPlayerInfo().  I'm the
+                                 #  one who probably added that, but I am
+                                 #  unclear as to why right now, but
+                                 #  wanted to note I notced. -- bkuhn
                                  )
    
    def __init__(self, *args, **kwargs):

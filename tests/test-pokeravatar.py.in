@@ -2541,9 +2541,8 @@ class PokerAvatarTestCase(unittest.TestCase):
                                                         serial = client.getSerial()) },
             }
         # Next, we loop through all the serial-related bad pack list,
-        # attempting to handle each one.  Setup stdout to go to a string
-        # so that we can test if they generate the right printed output.
-        # Also, catch any error packets for those we expect to receive.
+        # attempting to handle each one.  Also, catch any error packets
+        # for those we expect to receive.
         for (key, info) in packetTests.iteritems():
             avatar.resetPacketsQueue()
             avatar.queuePackets()
