@@ -1,3 +1,7 @@
+2009-04-04  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/Makefile.am (TESTS): added test-pokerservice-load.py to list.
+
 2009-03-29  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/pokerservice.py (PokerXML.getArguments)
