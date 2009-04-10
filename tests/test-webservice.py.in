@@ -352,8 +352,8 @@ class RESTPokerServiceTestCase(PokerServiceTestCase):
             else:
                 cookiename = "TWISTED_SESSION"
             headers['Cookie'] = cookiename + "=" + self.rest_cookies['TWISTED_SESSION'] + "; Path=/"
-        else:
-            headers['Cookie'] = None
+#        else:
+#            headers['Cookie'] = None
         factory = client.HTTPClientFactory(url, postdata = postdata, headers = headers)
         reactor.connectTCP(host, port, factory)
         def json_decode(*args):
@@ -432,9 +432,9 @@ def GetTestedModule():
 # -----------------------------------------------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "testREST02"
+#    loader.methodPrefix = "testREST03"
     suite = loader.suiteFactory()
-#    suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
+    suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
     suite.addTest(loader.loadClass(RESTPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
