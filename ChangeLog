@@ -1,3 +1,13 @@
+2009-04-10  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.4
+
+	* tests/test-webservice.py.in: Do not set cookie to None because
+	  twisted-8.2 barks on it.
+	  Restore XMLRPCPokerServiceTestCase tests.
+	* pokernetwork/proxyfilter.py: setResponsCode must be a long/int as
+	  of python-2.5
+
 2009-04-04  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/Makefile.am (TESTS): added test-pokerservice-load.py to list.
@@ -219,8 +229,6 @@
 	Wrote test.
 
 2009-02-10  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.4
 
 	* Makefile.am, database/1.7.3-1.7.4.sql, database/schema.sql.in:
 	  Add index to tourneys and user2tourney for performance and reduce
@@ -8758,5 +8766,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2009-01-01/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2009-04-01/p'"
 End:
