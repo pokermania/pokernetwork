@@ -47,7 +47,7 @@ class ProxyClient(http.HTTPClient):
         self.transport.write(self.data)
 
     def handleStatus(self, version, code, message):
-        self.father.setResponseCode(code, message)
+        self.father.setResponseCode(int(code), message)
 
     def handleHeader(self, key, value):
         self.father.setHeader(key, value)
