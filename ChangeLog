@@ -2,6 +2,9 @@
 
  	* Release 1.7.4
 
+	* debian/python-poker2d.install: do not ship useless .la
+	* debian/control, debian/control.unstable: add python-central to
+	  source list
 	* tests/test-webservice.py.in: Do not set cookie to None because
 	  twisted-8.2 barks on it.
 	  Restore XMLRPCPokerServiceTestCase tests.
