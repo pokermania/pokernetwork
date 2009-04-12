@@ -39,7 +39,7 @@ fi
 prevver="$2" 
 
 init_munin() {
-    if type munin-node-configure > /dev/null 2>&1 ; then
+    if which munin-node-configure > /dev/null 2>&1 ; then
         if [ "$prevver" ]; then
                 echo -n "Initializing new munin.."
                 munin-node-configure --families poker-network --shell --newer "${prevver%-*}" | sh
@@ -75,9 +75,9 @@ case "$1" in
 	    echo "done."
 	fi
 
-        /usr/sbin/pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network/conf /etc/poker-network 
+        pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network/conf /etc/poker-network 
 	for file in bot client server ; do
-            /usr/sbin/pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network/upgrades/poker.$file /etc/poker-network/poker.$file.xml
+            pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network/upgrades/poker.$file /etc/poker-network/poker.$file.xml
 	done
 
         db_get "python-poker-network/host"
