@@ -1,6 +1,28 @@
-2009-04-10  Loic Dachary <loic@dachary.org>
+2009-04-12  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
+
+	* pokerclient2d/python-poker2d.desktop: Miniicon is not a valid
+	  keywork
+	* pokerclient2d/poker2d.6.in, pokernetwork/pokerbot.8.in,
+	  pokernetwork/pokerserver.8.in: change comments for nroff files
+	* debian/python-poker-prizes.install: do not include .pyc
+	* debian/python-poker-network.postinst: use which instead of type
+	  do not use absolute path names for binaries
+	* debian/poker-web.preinst: do not explicitly include debconf
+	  script
+	* debian/control, debian/control.unstable: fix dependencies to
+	  match current policy
+	* debian/compat: compat 4 is obsolete
+	* debian/changelog: fix pending debian bugs
+	* debian/po/sv.po: Swedish strings for poker-network debconf
+	* debian/python-poker-network.init: pv=$(python -c 'import sys;
+	  print sys.version[:3]')
+	  botscript=/usr/lib/python$pv/site-packages/pokernetwork/pokerbot.py
+	  
+	  instead of wrong guessing
+
+2009-04-10  Loic Dachary <loic@dachary.org>
 
 	* debian/python-poker2d.install: do not ship useless .la
 	* debian/control, debian/control.unstable: add python-central to
