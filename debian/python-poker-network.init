@@ -55,6 +55,7 @@ name=poker-network
 desc='poker server '
 
 python=/usr/bin/python
+pv=$(python -c 'import sys; print sys.version[:3]')
 
 lockfile=/etc/poker-network/lockfile
 
@@ -65,18 +66,11 @@ serverplugin=pokerserver
 
 botpidfile=/var/run/poker-network-bot.pid
 botlogfile=/var/log/poker-network-bot.log
-botscript=/usr/lib/python/site-packages/pokernetwork/pokerbot.py
-if ! test -f $botscript ; then
-    botscript=/usr/share/pycentral/python-poker-network/site-packages/pokernetwork/pokerbot.py
-fi
-if ! test -f $botscript ; then
-    botscript=`pycentral pycentraldir python-poker-network`/pokernetwork/pokerbot.py
-fi
+botscript=/usr/lib/python$pv/site-packages/pokernetwork/pokerbot.py
 
 more_args=--no_save
 
 test -x ${twistd} || exit 0
-test -r ${serverscript} || exit 0
 test -r ${botscript} || exit 0
 
 set -e
