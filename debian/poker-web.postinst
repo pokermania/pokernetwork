@@ -116,7 +116,7 @@ if [ "$1" = "configure" ]; then
     db_get "poker-web/host"
     poker_network_host="$RET"
     sed -e "s/\%HOST\%/$poker_network_host/" < /usr/share/poker-web/constants.php.ref > /etc/poker-web/constants.php.new
-    ucf /etc/poker-web/constants.php.new /etc/poker-web/constants.php
+    ucf --debconf-ok /etc/poker-web/constants.php.new /etc/poker-web/constants.php
 
     chown www-data:www-data /var/cache/poker-web
 
