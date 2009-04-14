@@ -1,3 +1,10 @@
+poker-network (1.7.4-2) unstable; urgency=low
+
+  * diffs have been integrated (Closes: #499090).
+  * add --debconf-ok option to ucf (Closes: #523991).
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 14 Apr 2009 13:48:25 +0200
+
 poker-network (1.7.4-1) unstable; urgency=low
 
   * upstream sync
