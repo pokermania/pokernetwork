@@ -1,8 +1,8 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2006, 2007, 2008       Loic Dachary <loic@dachary.org>
+# Copyright (C)             2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -522,14 +522,29 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals(None, self.table.scheduleAutoDeal())
 
     # -------------------------------------------------------------------
-#     def test01_7_testClientsBogusPokerProcessingHand(self):
-#         """Test specific situation in autodeal when poker clients send a Processing Hand before a Ready To Play"""
-#         player = {}
-#         for ii in [1, 2, 3, 4]:
-#             player[ii] = self.createPlayer(ii)
-#         player[1].sendPacket(PacketPokerProcessingHand())
-#         player[1].sendPacket(PacketPokerReadyToPlay())
-#         self.table.scheduleAutoDeal()
+    def test01_8_testClientsBogusPokerProcessingHand(self):
+        """Test specific situation in autodeal when poker clients send a Processing Hand before a Ready To Play"""
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
+        self.table.processingHand(1)
+        self.table.scheduleAutoDeal()
+        threeGetsStart = self.clients[3].waitFor(PACKET_POKER_START)
+        verboseVal = self.table.factory.verbose
+        if self.table.factory.verbose < 2:
+            self.table.factory.verbose = 2
+        def checkValues(value):
+            search_output('Player 1 marked as having a bugous PokerProcessingHand protocol')
+            self.failUnless(player[1].bugous_processing_hand, "1 should have bugous_processing_hand")
+            for ii in [ 2, 3, 4]:
+                self.failIf(player[ii].bugous_processing_hand,
+                            "%d should not have bugous_processing_hand" % ii)
+
+        threeGetsStart.addCallback(checkValues)
+
+        clear_all_messages()
+        return defer.DeferredList((self.clients[2].waitFor(PACKET_POKER_START),
+                                   threeGetsStart))
     # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
@@ -1258,7 +1273,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEquals("FAIL", e.message)
         self.assertEquals(0, self.table.history_index)
         self.assertEquals(True, exception_occurred)
-
     # -------------------------------------------------------------------
     def test42_update_recursion(self):
         """Test if update is protected against recursion"""
@@ -1270,7 +1284,122 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals("ok", self.table.update())
         self.assertEquals(True, search_output('unexpected recursion'))
         self.assertEquals(True, self.table.prot)
+    # -------------------------------------------------------------------
+    def test43_gameStateIsMuckonAutoDealSched(self):
+        """If game state is muck when autodeal tries to schedule, it should fail"""
+        from pokerengine.pokergame import GAME_STATE_MUCK
+        player = {}
+        for ii in [1, 2, 3, 4]:
+            player[ii] = self.createPlayer(ii)
 
+        verboseVal = self.table.factory.verbose
+        if self.table.factory.verbose < 3: self.table.factory.verbose = 4
+        clear_all_messages()
+        self.table.game.state = GAME_STATE_MUCK
+        self.table.scheduleAutoDeal()
+        self.table.factory.verbose = verboseVal
+
+        # No packets should be received if we tried to autodeal in
+        # GAME_STATE_MUCK
+        for ii in [1, 2, 3, 4]:
+            self.assertEquals(player[ii].packets, [])
+
+        search_output("Not autodealing %d because game is in muck state" % self.table.game.id)
+    # -------------------------------------------------------------------
+    def test44_muckTimeoutTimer_hollowedOutGameWithMuckableSerials(self):
+        from pokerengine.pokergame import GAME_STATE_MUCK
+        class MockGame():
+            def __init__(mgSelf):
+                mgSelf.muckable_serials = [ 1, 2 ]
+                mgSelf.mucked = {}
+                mgSelf.id = 77701
+                mgSelf.state = GAME_STATE_MUCK
+            def muck(mgSelf, serial, want_to_muck = False):
+                mgSelf.mucked[serial] = want_to_muck
+
+            # Rest MockGame methods below are dummy methods needed when
+            # self.table.update() gets called.
+            def historyGet(mgSelf): return []
+            def isRunning(mgSelf): return False
+            def potAndBetsAmount(mgSelf): return 0
+
+        self.table.timer_info["muckTimeout"] = None
+        origGame = self.table.game
+        self.table.game = MockGame()
+        verboseVal = self.table.factory.verbose
+        if self.table.factory.verbose <= 0: self.table.factory.verbose = 1
+        clear_all_messages()
+
+        self.table.muckTimeoutTimer()
+
+        self.assertEquals(len(self.table.game.mucked.keys()), 2)
+        for ii in [ 1, 2 ]:
+            self.failUnless(self.table.game.mucked[ii], "Serial %d should be mucked" % ii)
+        self.assertEquals(get_messages()[0], 'muck timed out')
+        self.table.factory.verbose = verboseVal
+        self.table.game = origGame
+    # -------------------------------------------------------------------
+    def test45_cancelMuckTimer_hollowedOutTimer(self):
+        class AMockTime(): # Spot the ST:TOS reference. :-) -- bkuhn
+            def __init__(amtSelf):
+                amtSelf.cancelCalledCount = 0
+                amtSelf.activeCalledCount = 0
+            def active(amtSelf):
+                amtSelf.activeCalledCount += 1
+                return True
+            def cancel(amtSelf):
+                amtSelf.cancelCalledCount += 1
+        saveTimerInfo = self.table.timer_info
+
+        aMockTimer = AMockTime()
+        self.table.timer_info = { 'muckTimeout' : aMockTimer }
+
+        clear_all_messages()
+        self.table.cancelMuckTimer()
+
+        self.assertEquals(self.table.timer_info['muckTimeout'], None)
+        self.assertEquals(aMockTimer.cancelCalledCount, 1)
+        self.assertEquals(aMockTimer.activeCalledCount, 1)
+        self.assertEquals(get_messages(), [])
+
+        self.table.timer_info = saveTimerInfo
+    # -------------------------------------------------------------------
+    def test46_updatePlayerTimers_hollowedOutGameAndMockedTableVals(self):
+        from pokerengine.pokergame import GAME_STATE_MUCK
+        class MockGame():
+            def __init__(mgSelf):
+                mgSelf.muckable_serials = [ 1, 2 ]
+                mgSelf.mucked = {}
+                mgSelf.id = 77701
+                mgSelf.state = GAME_STATE_MUCK
+            def isRunning(mgSelf): return True
+            def getSerialInPosition(mgSelf): return 664
+            def historyGet(mgSelf): return [ "" ]
+
+        self.table.game = MockGame() 
+        self.table.playerTimeout = 100
+        self.table.history_index = -1
+        deferredMustBeCalledBackForSuccess = defer.Deferred()
+        def myPlayerTimeout(serial):
+            self.assertEquals(self.tableSave.timer_info["playerTimeoutSerial"], serial)
+            self.assertEquals(serial, 664)
+            deferredMustBeCalledBackForSuccess.callback(True)
+            self.assertEquals(get_messages(), [])
+
+        self.table.playerWarningTimer = myPlayerTimeout
+        def failedToCancelTimeout():
+            self.fail("existing playerTimeout was not replaced as expected")
+
+        self.table.timer_info = { 'playerTimeout' : 
+                                  reactor.callLater(20, failedToCancelTimeout), 
+                                  'playerTimeoutSerial' : 229 }
+                                  # Note: serial is diff from one in position
+        clear_all_messages()
+        self.table.updatePlayerTimers()
+
+        self.tableSave = self.table
+
+        return deferredMustBeCalledBackForSuccess
 # -------------------------------------------------------------------
 
 # I seriously considered not having *all* the same tests run with
@@ -1293,6 +1422,11 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.createPlayer(2)
         # Nothing should happen, we don't have autodeal
         self.assertEqual(None, self.table.scheduleAutoDeal())
+    # -------------------------------------------------------------------
+    def test01_8_testClientsBogusPokerProcessingHand(self):
+        """Test specific situation in autodeal when poker clients send a
+        Processing Hand before a Ready To Play: not needed when autodeal is off"""
+        pass
     # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
@@ -1725,7 +1859,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test42"
+#    loader.methodPrefix = "test_trynow"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerTableTestCase))

@@ -19,7 +19,6 @@
 	* debian/python-poker-network.init: pv=$(python -c 'import sys;
 	  print sys.version[:3]')
 	  botscript=/usr/lib/python$pv/site-packages/pokernetwork/pokerbot.py
-	  
 	  instead of wrong guessing
 
 2009-04-10  Loic Dachary <loic@dachary.org>
@@ -33,7 +32,25 @@
 	* pokernetwork/proxyfilter.py: setResponsCode must be a long/int as
 	  of python-2.5
 
+2009-04-05  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/run.in (COVERAGE_100_PERCENT): Added pokertable.py!
+
+	* tests/test-pokertable.py.in
+	(PokerTableTestCase.test43_gameStateIsMuckonAutoDealSched): Added
+	test for being in GAME_STATE_MUCK when autodeal is requested.
+	(PokerTableTestCase.test45_cancelMuckTimer_hollowedOutTimer):
+	Wrote test.
+	(PokerTableTestCase.test46_updatePlayerTimers_hollowedOutGameAndMockedTableVals):
+	Wrote test.
+
 2009-04-04  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokertable.py.in
+	(PokerTableTestCase.test01_8_testClientsBogusPokerProcessingHand):
+	Wrote test to cover uncovered section in pokertable.autoDeal()
+	(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal.test01_8_testClientsBogusPokerProcessingHand):
+	override this method.
 
 	* tests/Makefile.am (TESTS): added test-pokerservice-load.py to list.
 
