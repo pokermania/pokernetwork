@@ -2,7 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep <licensing@mekensleep.com>
 #                    24 rue vieille du temple, 75004 Paris
 #
@@ -295,6 +295,21 @@ class PokerDatabaseTestCase(unittest.TestCase):
         except pokerdatabase.ExceptionUpgradeFailed, euf:
             self.assertEquals(euf.args[0], "upgrade failed")
         self.assertEquals(self.db.getVersion(), "0.0.5")
+    # ----------------------------------------------------------------------------
+    def test11_confirmLiteralMethodPassThrough(self):
+        """test11_confirmLiteralMethodPassThrough
+        The method "literal" in the database class should simply pass
+        through to the internal representation method of the same name."""
+        class MockDatabaseWithOnlyLiteral():
+            def literal(mdSelf, args): return "LITERAL TEST " + args
+
+        self.db = pokerdatabase.PokerDatabase(self.settings)
+        saveRealDb = self.db.db
+        self.db.db = MockDatabaseWithOnlyLiteral()
+
+        self.assertEquals(self.db.literal("ahoy hoy!"),  "LITERAL TEST ahoy hoy!")
+        self.db.db = saveRealDb
+        
 # --------------------------------------------------------------------------------
 def GetTestSuite():
     suite = runner.TestSuite(PokerDatabaseTestCase)

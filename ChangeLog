@@ -1,3 +1,33 @@
+2009-04-19  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/run.in (COVERAGE_100_PERCENT): Added pokermemchache.py.
+
+	* tests/test-pokermemcache.py.in
+	(MemcacheTestCase.test03_checkKeyNoString): Wrote test.
+
+2009-04-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/run.in (COVERAGE_100_PERCENT): added currencyclient!
+
+	* tests/test-currencyclient.py.in
+	(CurrencyClientTestCase.test07_1_breakNote_oddLeftOver): Wrote test.
+	(Run): Test classes were not loaded correctly.
+	(ErrorCondtionsCurrencyClientTestCase): Created additional test class.
+	(ErrorCondtionsCurrencyClientTestCase.test01_parseResultNote_InvalidResult):
+	Wrote test.
+	(ErrorCondtionsCurrencyClientTestCase.test02_commit_multiLineResult):
+	Wrote test.
+	(FakeCurrencyClientTestCase.test10_breakNote_FakeCurrencyFailure):
+	Wrote test.
+	(ErrorCondtionsCurrencyClientTestCase.test03_checkNote_checkNoteResultIsFalse):
+	Wrote test.
+	(ErrorCondtionsCurrencyClientTestCase.test04_commit_commitResultIsFalse):
+	Wrote test.
+
+	* tests/test-pokerdatabase.py.in
+	(PokerDatabaseTestCase.test11_confirmLiteralMethodPassThrough):
+	Wrote test, yielding 100% coverage.
+
 2009-04-12  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.4
