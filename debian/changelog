@@ -1,3 +1,9 @@
+poker-network (1.7.5-1) unstable; urgency=low
+
+  * upstream sync
+
+ -- Loic Dachary (OuoU) <loic@debian.org>  Tue, 05 May 2009 17:59:57 +0200
+
 poker-network (1.7.4-2) unstable; urgency=low
 
   * diffs have been integrated (Closes: #499090).

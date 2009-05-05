@@ -1,5 +1,7 @@
 2009-05-05  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+ 	* Release 1.7.5
+
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test15_runTourney)
 	(TourneyManagerTestCase.test01_no_rank): use search_output instead
