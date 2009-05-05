@@ -1171,8 +1171,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
                                                                 game_id = heads_up.serial))
-        self.assertEquals(get_messages(), ['tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = %d AND        currency_serial = 1 AND        amount >= 300000' % self.user1_serial,
-'tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, 1, 1)' % self.user1_serial])
+        self.failUnless(search_output('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = %d AND        currency_serial = 1 AND        amount >= 300000' % self.user1_serial), "UPDATE user2money notice not  found in verbose output")
+        self.failUnless(search_output('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, 1, 1)' % self.user1_serial), "INSERT INTO user2tourney notice not found in verbose output")
         clear_all_messages()
         self.assertEquals(len(client1.packets), 1)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
@@ -1634,7 +1634,8 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
                                                                 game_id = tourney_serial))
-        self.assertEquals(get_messages(), ['tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND        currency_serial = 1 AND        amount >= 300000', 'tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (4, 1, 1)'])
+        self.failUnless(search_output('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND        currency_serial = 1 AND        amount >= 300000'), "UPDATE user2money expected verbose output not found")
+        self.failUnless(search_output('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (4, 1, 1)'), "INSERT INTO user2tourney")
         self.assertEquals(len(client1.packets), 1)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(client1.packets[0].serial, self.user1_serial)

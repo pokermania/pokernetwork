@@ -1,3 +1,11 @@
+2009-05-05  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(PokerServiceTestCase.test15_runTourney)
+	(TourneyManagerTestCase.test01_no_rank): use search_output instead
+	of direct comparison to get_messages() in case other verbosity
+	causes confusion.
+
 2009-04-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/run.in (COVERAGE_100_PERCENT): Added pokermemchache.py.
