@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poker2d VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-12-03 11:46+0100\n"
+"POT-Creation-Date: 2009-04-14 18:20+0200\n"
 "PO-Revision-Date: 2008-11-25 16:30+0200\n"
 "Last-Translator: devteam <devteam@orbus.fr>\n"
 "Language-Team: <pokersource-users@gna.org>\n"
@@ -90,7 +90,8 @@ msgstr "VENT PÅ BIG BLIND"
 
 # Translation #55251 (da)
 #: pokerclient2d/data/interface/interface.glade:894
-msgid "Which amount do you want to bring at the table ?"
+#, fuzzy
+msgid "Which amount do you want to bring to the table ?"
 msgstr "Hvilket beløb vil du tage med til bordet?"
 
 # Translation #55252 (da)
@@ -783,7 +784,8 @@ msgstr ""
 
 # Translation #55362 (da)
 #: pokerui/pokerrenderer.py:1392
-msgid "Which amount do you want to bring at the table?"
+#, fuzzy
+msgid "Which amount do you want to bring to the table?"
 msgstr "Hvilket beløb vil du tage med til bordet?"
 
 # Translation #55363 (da)
