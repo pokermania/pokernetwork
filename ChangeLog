@@ -1,6 +1,24 @@
-2009-05-05  Bradley M. Kuhn  <bkuhn@ebb.org>
+2009-05-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* po/da.po, po/de.po, po/en.po, po/en_CA.po, po/en_US.po, po/es.po,
+	  po/fi.po, po/fr.po, po/fr_BE.po, po/fr_CA.po, po/fr_FX.po,
+	  po/it.po, po/nb.po, po/nl.po, po/pt.po, po/sv.po: updated
+	  translations
+	* tests/conf/poker.client.xml.in: bump version 1.7.5
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  conf/poker.server.xml.in, examples/poker.bot.xml,
+	  examples/poker.server-monotone.xml, examples/poker.server.xml,
+	  pokerclient2d/poker2d.xml.in, pokerprizes/poker.prizes.xml.in,
+	  pokerstats/poker.stats.xml.in: bump version 1.7.5
+
+2009-05-05  Loic Dachary <loic@dachary.org>
+
+	* ChangeLog, NEWS, debian/changelog, pokernetwork/__init__.py: bump
+	  version to 1.7.5
+
+2009-05-05  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in
 	(PokerServiceTestCase.test15_runTourney)
@@ -37,6 +55,13 @@
 	* tests/test-pokerdatabase.py.in
 	(PokerDatabaseTestCase.test11_confirmLiteralMethodPassThrough):
 	Wrote test, yielding 100% coverage.
+
+2009-04-14  Loic Dachary <loic@dachary.org>
+
+	* po/poker2d.pot: the .pot must be in the SVN tree to avoid
+	  recomputation
+	* debian/poker-web.postinst, debian/python-poker-network.postrm:
+	  add --debconf-ok option to ucf
 
 2009-04-12  Loic Dachary <loic@dachary.org>
 
