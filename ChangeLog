@@ -1,3 +1,10 @@
+2009-05-10  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-currencyclient.py.in
+	(ErrorCondtionsCurrencyClientTestCase.test04_commit_commitResultIsFalse.verifyError)
+	(ErrorCondtionsCurrencyClientTestCase.test03_checkNote_checkNoteResultIsFalse.verifyError):
+	reactor callback may occur after tearDown().
+
 2009-05-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5

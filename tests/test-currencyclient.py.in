@@ -620,7 +620,8 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
             self.assertEquals(err.getErrorMessage(),
                               "this exception ends up in checknotes errback")
             forceTimeoutErrorIfNotCalledBack.callback(True)
-            self.client.check_note_result = True
+            if hasattr(self, 'client'):
+                self.client.check_note_result = True
 
         def executeCheckNote(value):
             self.assertEquals(value.check(PropogatedException), PropogatedException)
@@ -658,7 +659,8 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
             self.assertEquals(err.getErrorMessage(),
                               "this exception ends up in commit errback")
             forceTimeoutErrorIfNotCalledBack.callback(True)
-            self.client.commit_result = True
+            if hasattr(self, 'client'):
+                self.client.commit_result = True
 
         def executeCommit(value):
             self.assertEquals(value.check(PropogatedException), PropogatedException)
