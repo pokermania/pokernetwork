@@ -341,6 +341,7 @@ AC_CONFIG_FILES([
         tests/test-pokerauth.py
         tests/test-pokersql.py
         tests/test-pokertable.py
+        tests/test-proxy.py
         tests/test-proxyfilter.py
         tests/test-countfilter.py
         tests/test-string.py

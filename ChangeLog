@@ -1,9 +1,37 @@
+2009-05-16  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/Makefile.am (TESTS): Added test-proxy.py.
+
+	* configure.ac: Added test-proxy.py.
+
+	* tests/run.in (COVERAGE_100_PERCENT): Added
+	pokernetwork/proxy.py!
+
 2009-05-10  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-currencyclient.py.in
 	(ErrorCondtionsCurrencyClientTestCase.test04_commit_commitResultIsFalse.verifyError)
 	(ErrorCondtionsCurrencyClientTestCase.test03_checkNote_checkNoteResultIsFalse.verifyError):
 	reactor callback may occur after tearDown().
+	* tests/test-proxy.py.in (ConnectorTestCase): Created class.
+	(ConnectorTestCase.test01_connector_setProxyHost_noColon): Wrote
+	test.
+	(ConnectorTestCase.test02_connector_setProxyHost_colonOnRight):
+	Wrote test.
+	(ConnectorTestCase.test03_connector_setProxyHost_portIsNotInt):
+	Wrote test.
+	(ConnectorTestCase.test04_connector_setProxyHost_colonOnLeft):
+	Wrote test.
+	(ConnectorTestCase.test05_connector_setProxyHost_fullyValid):
+	Wrote test.
+	(ConnectorTestCase.test07_connector_getDestination_contextIsNone):
+	Wrote test.
+	(ConnectorTestCase.test08_connector_getDestination_contextIsFalse):
+	Wrote test.
+	(ConnectorTestCase.test09_connector_getDestination_contextIsString):
+	Wrote test.
+	(ConnectorTestCase.test10_connector_getDestination_contextIsTrue):
+	Wrote test.
 
 2009-05-06  Loic Dachary <loic@dachary.org>
 
@@ -32,6 +60,72 @@
 	(TourneyManagerTestCase.test01_no_rank): use search_output instead
 	of direct comparison to get_messages() in case other verbosity
 	causes confusion.
+
+2009-05-03  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-proxy.py.in
+	(ProxyClientProtocoTestCase.test05_Client_getPeer_contextIsNone):
+	Wrote test.
+	(ProxyClientProtocoTestCase.test06_Client_getPeer_contextIsFalse):
+	Wrote test.
+	(ProxyClientProtocoTestCase.test07_Client_getPeer_contextIsString):
+	Wrote test.
+	(ProxyClientProtocoTestCase.test08_Client_getPeer_contextIsTrue):
+	Wrote test.
+	(ProxyClientProtocoTestCase.setUp.sslClientInit): Added assignment
+	of clientSelf.addr
+	(ProxyClientProtocoTestCase.setUp.sslClientStartReading): Added
+	method; set ssl.Client.startReading to it on setUp().
+	(ProxyClientProtocoTestCase.tearDown): Restored
+	ssl.Client.startReading
+	(ProxyClientProtocoTestCase.test09_Client_connectDone_usesProxy):
+	Wrote test.
+	(ProxyClientProtocoTestCase.setUp.connectProtocolMakeConnection):
+	Wrote method.
+	(ProxyClientProtocoTestCase.tearDown): Added
+	ConnectProtocol.makeConnection.
+	(ProxyClientTestCase.setUp, ProxyClientTestCase.tearDown): Added
+	startTLS and startWriting replacements.
+	(ProxyClientTestCase.setUp): Switched callCounts as a dict
+	(ProxyClientTestCase.test10_Client_connectDone_noProxy_noContextFactory):
+	Wrote test.
+	(ProxyClientTestCase.test11_Client_connectDone_noProxy_withContextFactory):
+	Wrote test.
+
+2009-05-02  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-proxy.py.in (ProxyClientProtocoTestCase): Created
+	class.
+	(ProxyConnectProtocolTestCase): Renamed ProxyTestCase ->
+	ProxyConnectProtocolTestCase.
+	(ProxyClientProtocoTestCase.setUp): Wrote method.
+	(ProxyClientProtocoTestCase.tearDown): Wrote method.
+	(ProxyClientProtocoTestCase.test00_Client_init): Wrote test.
+	(MockSocket): Created class.
+	(ProxyClientProtocoTestCase.test01_Client_getHost_contextIsNone):
+	Wrote test.
+	(ProxyClientProtocoTestCase.test02_Client_getHost_contextIsFalse):
+	Wrote test.
+	(ProxyClientProtocoTestCase.test03_Client_getHost_contextIsString):
+	Wrote test.
+
+2009-04-26  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-proxy.py.in
+	(ProxyTestCase.test00_ConnectProtocol_init): Wrote test.
+	(MockTransport): Created mock up.
+	(ProxyTestCase.test01_ConnectProtocol_connectionMade): Wrote test.
+	(MockTransport._proxyConnectDone): Added method.
+	(ProxyTestCase.test02_ConnectProtocol_dataReceived_noNewlinesThere):
+	Wrote test.
+	(ProxyTestCase.test03_ConnectProtocol_dataReceived_newlinesThere_badString):
+	Wrote test.
+	(ProxyTestCase.test04_ConnectProtocol_dataReceived_newlinesThere_GoodHTTPString):
+	Wrote test.
+	(ProxyTestCase.test05_ConnectProtocol_dataReceived_HTTP10ConsideredHarmful):
+	Wrote test.
+	(ProxyConnectProtocolTestCase): Renamed ProxyTestCase to
+	ProxyConnectProtocolTestCase.
 
 2009-04-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 

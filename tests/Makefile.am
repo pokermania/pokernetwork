@@ -119,6 +119,7 @@ TESTS = coverage-reset \
 	test-pokersite.py \
 	test-pokermemcache.py \
 	test-proxyfilter.py \
+	test-proxy.py \
 	test-pokerserver.py \
 	testcurrency.php \
 	testpoker.php \
