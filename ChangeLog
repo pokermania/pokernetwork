@@ -1,4 +1,66 @@
+2009-05-19  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/run.in (COVERAGE_100_PERCENT): pokerserver.py now covered
+	100%!
+
+	* pokernetwork/pokerserver.py (__main__): Added pragma No cover
+	for main.
+
+2009-05-18  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerserver-run-load.py.in
+	(PokerServerLoadingSSLTestCase.test01_openSSLMissing): Wrote basic
+	test to cover OpenSSL missing.
+
+2009-05-17  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerserver.py.in
+	(PokerServerMakeApplicationCoverageTestCase.test02_validConfig):
+	Wrote test.
+	(PokerServerMakeApplicationCoverageTestCase.test01_missingConfigFileGivenOnCLI_sysVersionDitched):
+	Wrote test.
+	(PokerServerMakeApplicationCoverageTestCase.test00_missingConfigFileGivenOnCLI):
+	Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test08_plainREST): Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test09_plainHTTP): Wrote test.
+	(PokerServerMakeApplicationCoverageTestCase): Wrote test class.
+	(PokerServerMakeServiceCoverageTestCase.test_trynow_10_everythingOn):
+	Wrote test.
+	(PokerServerRunCoverageTestCase): Created class.
+	(PokerServerRunCoverageTestCase.test00_missingConfigFileGivenOnCLI):
+	Wrote test.
+	(PokerServerRunCoverageTestCase.test01_missingConfigFileGivenOnCLI_forceReactorInstall):
+	Wrote test.
+
 2009-05-16  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerserver.py.in (PokerServerMakeServiceTestCase):
+	Renamed class.
+	(PokerServerMakeServiceCoverageTestCase): Created class.
+	(PokerServerMakeServiceCoverageTestCase.test00_missingSettingsFile):
+	Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test01_emptySettingsFile):
+	Wrote test.
+	(PokerServerMakeServiceManholeTestCase.test01_manhole): Added
+	additional asserts.
+	(PokerServerMakeServiceCoverageTestCase.test02_tcpSsl_hasSSL):
+	Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test03_tcpSsl_hasSSL_noPemFile):
+	Wrote test.
+	(PokerServerMakeServiceManholeTestCase.tearDown): Changed
+	os.remove() to shutil.rmtree()
+	(PokerServerMakeServiceCoverageTestCase.createPemFile): Created
+	helper method.
+	(PokerServerMakeServiceCoverageTestCase.createConfig): Created
+	helper method.
+	(PokerServerMakeServiceCoverageTestCase.test04_httpSSL_hasSSL_noPemFile):
+	Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test05_httpSSL_hasSSL):
+	Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test06_restSSL_hasSSL_noPemFile):
+	Wrote test.
+	(PokerServerMakeServiceCoverageTestCase.test07_restSSL_hasSSL):
+	Wrote test.
 
 	* tests/Makefile.am (TESTS): Added test-proxy.py.
 

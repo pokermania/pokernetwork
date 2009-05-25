@@ -147,4 +147,5 @@ def run():
     reactor.run()
 
 if __name__ == '__main__':
-    run()
+    run() # pragma: no cover
+          # Do not need coverage since we call run directly in the tests.

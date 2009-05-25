@@ -121,6 +121,7 @@ TESTS = coverage-reset \
 	test-proxyfilter.py \
 	test-proxy.py \
 	test-pokerserver.py \
+	test-pokerserver-run-load.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
