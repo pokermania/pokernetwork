@@ -1,3 +1,12 @@
+2009-06-01  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.5
+
+	* conf/poker.server.xml.in: explain the ratio that must be
+	  maintained between timeout values
+	* Makefile.am: pokerconfigupgrade must be called with PYTHONPATH
+	  for prizes and stats
+
 2009-05-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/run.in (COVERAGE_100_PERCENT): pokerserver.py now covered
@@ -96,8 +105,6 @@
 	Wrote test.
 
 2009-05-06  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.5
 
 	* po/da.po, po/de.po, po/en.po, po/en_CA.po, po/en_US.po, po/es.po,
 	  po/fi.po, po/fr.po, po/fr_BE.po, po/fr_CA.po, po/fr_FX.po,
