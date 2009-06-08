@@ -1274,13 +1274,6 @@ class PokerExplainTestCase(unittest.TestCase):
         poker_start = PacketPokerStart(game_id = game_id, hand_serial = 1)
         self.explain.explain(poker_start)
         self.assertEquals(hint, game.player_list)
-        self.explain.explain(PacketPokerPosition(game_id = game_id, position = 0, serial = 0))
-        self.explain.explain(PacketPokerBlind(serial = serial2, game_id = game_id, amount = 1, dead = 0))
-        self.explain.explain(PacketPokerPosition(game_id = game_id, position = 1, serial = 0))
-        self.explain.explain(PacketPokerBlind(serial = serial3, game_id = game_id, amount = 2, dead = 0))
-        self.explain.explain(PacketPokerPosition(game_id = game_id, position = -1, serial = 0))
-        self.explain.explain(PacketPokerState(serial = 0, game_id = game_id, string = 'pre-flop'))
-        self.assertEquals(hint, game.player_list)
 
 # ----------------------------------------------------------------
 def Run():
