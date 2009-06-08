@@ -236,6 +236,8 @@ class PokerExplain:
 
     def handleSerial(self, packet):
         self.serial = packet.serial
+        if self._prefix == '':
+            self.setPrefix('[%i]' % packet.serial)
 
     def getSerial(self):
         return self.serial
