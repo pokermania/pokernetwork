@@ -2,6 +2,17 @@
 
  	* Release 1.7.5
 
+	* tests/test-pokerserver-run-load.py.in: rework test to take into
+	  account that there is no duplicate of SSL import statement
+	* pokernetwork/pokerserver.py: SSLContextFactor can only be
+	  imported if SSL succeeds
+	* tests/test-pokerserver.py.in: Do not fetch poker-network
+	  configuration files in the installed directories. This will cause
+	  problems if poker-network is installed on the machine where the
+	  tests run when testing for the absence of poker.pem.
+	* pokernetwork/pokerserver.py: remove double and unprotected import
+	  of SSL
+	* Makefile.am: Add database/1.7.4-1.7.5.sql to the distribution
 	* tests/test-pokerservice.py.in: test the new
 	  tourneySatelliteSelectPlayer and tourneySatelliteWaitingList
 	  pokerservice functions
