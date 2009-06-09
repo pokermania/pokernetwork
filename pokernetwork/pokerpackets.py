@@ -3121,6 +3121,7 @@ NOT_ENOUGH_MONEY : the "serial" player does not have enough money
                  to pay the "game_id" tournament.
 SERVER_ERROR : the server failed to register the player because the
                database is inconsistent.
+VIA_SATELLITE : registration is only allowed by playing a satellite
 
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a tournament.
@@ -3130,6 +3131,7 @@ game_id: integer uniquely identifying a tournament.
     REGISTRATION_REFUSED = 3
     NOT_ENOUGH_MONEY = 4
     SERVER_ERROR = 5
+    VIA_SATELLITE = 6
 
     type = PACKET_POKER_TOURNEY_REGISTER
 
