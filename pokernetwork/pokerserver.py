@@ -34,8 +34,6 @@ import platform
 from os.path import exists
 from types import *
 
-from OpenSSL import SSL
-
 try:
         from OpenSSL import SSL
         HAS_OPENSSL=True
