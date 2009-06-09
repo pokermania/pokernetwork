@@ -122,21 +122,14 @@ class PokerServerLoadingSSLTestCase(unittest.TestCase):
             if sys.modules.has_key(mod): del sys.modules[mod]
 
         realImporter = __builtins__.__import__
-        global sslImportCounter
-        sslImportCounter = 0
 
-        def succeedOnceThenFailSSLImport(moduleName, *args, **kwargs):
-            global sslImportCounter
-            if moduleName == "OpenSSL" and sslImportCounter == 0:
-                sslImportCounter += 1
-                return realImporter(moduleName, *args, **kwargs)
-            elif moduleName == "OpenSSL" and sslImportCounter == 1:
-                sslImportCounter += 1
-                raise Exception("SSL was imported again")
+        def failSSLImport(moduleName, *args, **kwargs):
+            if moduleName == "OpenSSL":
+                raise Exception("SSL was imported")
             else:
                 return realImporter(moduleName, *args, **kwargs)
 
-        __builtins__.__import__  = succeedOnceThenFailSSLImport
+        __builtins__.__import__  = failSSLImport
 
         oldStout = sys.stdout
         sys.stdout = StringIO()
@@ -147,7 +140,7 @@ class PokerServerLoadingSSLTestCase(unittest.TestCase):
         sys.stdout = oldStout
 
         self.failIf(ps.HAS_OPENSSL, "HAS_OPENSSL should be False when OpenSSL.SSL is not available")
-        self.assertEquals(value, 'openSSL not available.\n')
+        self.failUnless('openSSL not available.' in value)
 
         __builtins__.__import__  = realImporter
 # ------------------------------------------------------------
