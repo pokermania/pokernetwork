@@ -968,6 +968,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     class ClientMockup:
         def __init__(self, serial):
+            self.via_satellite = 0
             self.serial = serial
             self.packet_end_tournament = None
             self.packets = []
@@ -1000,6 +1001,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     class TourneyMockup:
         def __init__(self):
+            self.satellite_of = 0
             self.call_rank = None
             self.serial = 10
             self.schedule_serial = 1
@@ -1455,6 +1457,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
                                                   dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
         tourney.currency_serial = 1
+        tourney.via_satellite = 0
         self.service.tourneys[tourney_serial] = tourney
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
                                                                 game_id = tourney_serial))
@@ -2085,6 +2088,134 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
             return status
         d.addCallback(f)
         return d
+
+class TourneySatelliteTestCase(PokerServiceTestCaseBase):
+
+    def test_WaitingList_nop(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = 0
+
+        self.service.startService()
+        self.assertEqual(False, self.service.tourneySatelliteWaitingList(Tournament()), 'tourneySatelliteWaitingList does nothing')
+
+    def test_WaitingList_no_players_left(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = 1
+                self.satellite_registrations = [ 1 ]
+                self.satellite_player_count = 1
+
+        self.service.startService()
+        self.assertEqual(False, self.service.tourneySatelliteWaitingList(Tournament()), 'tourneySatelliteWaitingList does nothing')
+
+    def test_WaitingList(self):
+
+        self.service.startService()
+        self.createUsers()
+        user1_serial = self.user1_serial
+        
+        tourney_serial, schedule = self.service.tourneys.items()[0]
+
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = tourney_serial
+                self.satellite_registrations = [ 505 ]
+                self.satellite_player_count = 2
+                self.winners = [ 505, user1_serial ]
+                self.serial = tourney_serial
+
+        tournament = Tournament()
+        self.failUnless(self.service.tourneySatelliteWaitingList(tournament), 'tourneySatelliteWaitingList adds player 2')
+        self.assertEquals([505, self.user1_serial], tournament.satellite_registrations)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
+        self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
+        cursor.close()
+
+    def test_SelectPlayer_nop(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = 0
+
+        self.service.startService()
+        self.assertEqual(False, self.service.tourneySatelliteSelectPlayer(Tournament(), 0, 0), 'tourneySatelliteSelectPlayer does nothing')
+
+    def test_SelectPlayer(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_player_count = 10
+                self.satellite_registrations = []
+
+        self.service.startService()
+        self.createUsers()
+        tournament = Tournament()
+        tourney_serial, schedule = self.service.tourneys.items()[0]
+        tournament.satellite_of = tourney_serial
+
+        rank = 1
+        cursor = self.db.cursor()
+
+        cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
+        self.assertEqual(0, cursor.rowcount, 'user %d not registered' % self.user1_serial)
+
+        self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, self.user1_serial, rank), 'tourneySatelliteSelectPlayer')
+
+        self.assertEqual([ self.user1_serial ], tournament.satellite_registrations, 'registrations')
+        cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
+        self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
+        cursor.close()
+
+    def test_SelectPlayer_duplicate_user(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_player_count = 10
+                self.satellite_registrations = []
+
+        class ClientMockup:
+            def __init__(self, serial):
+                self.serial = serial
+                self.packets = []
+
+            def sendPacketVerbose(self, packet):
+                self.packets.append(packet)
+
+        self.service.startService()
+        self.createUsers()
+        client1 = ClientMockup(self.user1_serial)
+        self.service.serial2client[self.user1_serial] = client1
+        tournament = Tournament()
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        tournament.satellite_of = tourney_serial
+
+        rank = 1
+        cursor = self.db.cursor()
+
+        cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
+        self.assertEqual(0, cursor.rowcount, 'user %d not registered' % self.user1_serial)
+
+        #
+        # The user is registered to satellite_of
+        #
+        self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, self.user1_serial, rank), 'tourneySatelliteSelectPlayer')
+        self.assertEqual(1, len(client1.packets))
+        self.assertEqual(PACKET_POKER_TOURNEY_REGISTER, client1.packets[0].type)
+        self.assertEqual([ self.user1_serial ], tournament.satellite_registrations, 'registrations')
+
+        cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
+        self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
+
+        #
+        # Another attempt to register the same user returns an error packet
+        #
+        self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, self.user1_serial, rank), 'tourneySatelliteSelectPlayer')
+        self.assertEqual(2, len(client1.packets))
+        self.assertEqual(PACKET_ERROR, client1.packets[1].type)
+        self.assertEqual(PacketPokerTourneyRegister.ALREADY_REGISTERED, client1.packets[1].code)
+
+        cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
+        self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
+        cursor.close()
 
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 
@@ -3704,7 +3835,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
-    def test22_tourneyRegister_torneyAlreadyRegistering(self):
+    def test22_tourneyRegister_tourneyAlreadyRegistering(self):
         self.service = pokerservice.PokerService(self.settings)
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
@@ -3714,6 +3845,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.serial = 44
                 mpSelf.game_id = 99
         class MockTourney:
+            via_satellite = 0
             def isRegistered(mtSelf, serial):
                 self.assertEquals(serial, 44)
                 return True
@@ -3749,6 +3881,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.serial = 29
                 mpSelf.game_id = 123
         class MockTourney:
+            via_satellite = 0
             def isRegistered(mtSelf, serial):
                 self.assertEquals(serial, 29)
                 return False
@@ -3775,6 +3908,30 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 1)
         self.failUnless(msgs[0].find('*ERROR* type = ERROR(3) message = Registration refused in tournament 123')  == 0)
+
+    # ----------------------------------------------------------------
+    def test22_tourneyRegister_viaSatellite(self):
+        self.service = pokerservice.PokerService(self.settings)
+        class MockClient:
+            def __init__(mcSelf): mcSelf.errorPackets = []
+            def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+        class MockTourney:
+            def __init__(self):
+                self.via_satellite = 1
+                
+        client = MockClient()
+        tourney = MockTourney()
+        self.service.serial2client = { 44: client }
+        self.service.tourneys = { 99 : tourney }
+
+        self.failIf(self.service.tourneyRegister(PacketPokerTourneyRegister(serial = 44, game_id = 99)))
+        self.assertEquals(len(client.errorPackets), 1)
+        pack = client.errorPackets[0]
+        self.assertEquals(pack.type, PACKET_ERROR)
+        self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
+        self.assertEquals(pack.code,
+                          PacketPokerTourneyRegister.VIA_SATELLITE)
+        
     # ----------------------------------------------------------------
     def test24_tourneyRegister_tourneyNotEnoughMoneyToRegister(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -3786,6 +3943,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.serial = 194
                 mpSelf.game_id = 526
         class MockTourney:
+            via_satellite = 0
             def __init__(mtSelf):
                 mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
             def isRegistered(mtSelf, serial):
@@ -3863,6 +4021,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.serial = 194
                 mpSelf.game_id = 526
         class MockTourney:
+            via_satellite = 0
             def __init__(mtSelf):
                 mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
             def isRegistered(mtSelf, serial):
@@ -3940,6 +4099,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.serial = 423
                 mpSelf.game_id = 865
         class MockTourney:
+            via_satellite = 0
             def __init__(mtSelf):
                 mtSelf.currency_serial = mtSelf.buy_in = mtSelf.rake = 10
             def isRegistered(mtSelf, serial):
@@ -6295,6 +6455,7 @@ def Run():
     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
     suite.addTest(loader.loadClass(TourneyCancelTestCase))
+    suite.addTest(loader.loadClass(TourneySatelliteTestCase))
     suite.addTest(loader.loadClass(TourneyManagerTestCase))
     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
     suite.addTest(loader.loadClass(ListHandsTestCase))
