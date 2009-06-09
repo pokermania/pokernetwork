@@ -1,6 +1,30 @@
-2009-06-01  Loic Dachary <loic@dachary.org>
+2009-06-09  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* tests/test-pokerservice.py.in: test the new
+	  tourneySatelliteSelectPlayer and tourneySatelliteWaitingList
+	  pokerservice functions
+	* pokernetwork/pokertable.py: Do not call scheduleAutoDeal if
+	  withing a table.update nested call (it will be called later in
+	  the table.update function anyway) to prevent harmless but noisy
+	  stack trace warning
+	* pokernetwork/pokerservice.py: Implement
+	  tourneySatelliteSelectPlayer and tourneySatelliteWaitingList to
+	  register satellite tournament winners
+	* pokernetwork/pokerpackets.py: Add VIA_SATELLITE error to tourney
+	  registration packet
+	* database/1.7.4-1.7.5.sql, database/schema.sql.in: Add satellite
+	  fields to tourneys tables.
+	* NEWS: Note about satellite tournaments implementation
+
+2009-06-08  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/test-pokerexplain.py.in: revert accidental commit
+	* pokernetwork/pokerexplain.py, tests/test-pokerexplain.py.in: add
+	  [serial] prefix to PokerExplain instance
+
+2009-06-01  Loic Dachary <loic@dachary.org>
 
 	* conf/poker.server.xml.in: explain the ratio that must be
 	  maintained between timeout values
