@@ -488,7 +488,10 @@ class PokerService(service.Service):
 
     def databaseEvent(self, **kwargs):
         event = PacketPokerMonitorEvent(**kwargs)
-        self.db.db.query("INSERT INTO monitor (event, param1, param2, param3) VALUES (%d, %d, %d, %d)" % ( kwargs['event'], kwargs.get('param1', 0), kwargs.get('param2', 0), kwargs.get('param3', 0) ))
+        sql = "INSERT INTO monitor (event, param1, param2, param3) VALUES (%d, %d, %d, %d)" % ( kwargs['event'], kwargs.get('param1', 0), kwargs.get('param2', 0), kwargs.get('param3', 0) )
+        if self.verbose > 3:
+            self.message(sql)
+        self.db.db.query(sql)
         for avatar in self.monitors:
             if hasattr(avatar, "protocol") and avatar.protocol:
                 avatar.sendPacketVerbose(event)
@@ -656,9 +659,9 @@ class PokerService(service.Service):
             currency_serial = long(self.today().strftime(currency_serial_from_date_format))
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
-                       " (resthost_serial, schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time)"
+                       " (resthost_serial, schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time, via_satellite, satellite_of, satellite_player_count)"
                        " VALUES "
-                       " (%s,              %s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,           %s,              %s,              %s,          %s,     %s,           %s )",
+                       " (%s,              %s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,           %s,              %s,              %s,          %s,     %s,           %s,         %s,            %s,           %s )",
                        ( schedule['resthost_serial'],
                          schedule['serial'],
                          schedule['name'],
@@ -682,7 +685,10 @@ class PokerService(service.Service):
                          schedule['rebuy_delay'],
                          schedule['add_on'],
                          schedule['add_on_delay'],
-                         schedule['start_time'] ) )
+                         schedule['start_time'],
+                         schedule['via_satellite'],
+                         schedule['satellite_of'],
+                         schedule['satellite_player_count']) )
         if self.verbose > 2:
             self.message("spawnTourney: " + str(schedule))
         #
@@ -708,6 +714,10 @@ class PokerService(service.Service):
         tourney.currency_serial = currency_serial
         tourney.bailor_serial = tourney_map['bailor_serial']
         tourney.player_timeout = int(tourney_map['player_timeout'])
+        tourney.via_satellite = int(tourney_map['via_satellite'])
+        tourney.satellite_of = int(tourney_map['satellite_of'])
+        tourney.satellite_player_count = int(tourney_map['satellite_player_count'])
+        tourney.satellite_registrations = []
         tourney.callback_new_state = self.tourneyNewState
         tourney.callback_create_game = self.tourneyCreateTable
         tourney.callback_game_filled = self.tourneyGameFilled
@@ -827,6 +837,7 @@ class PokerService(service.Service):
     def tourneyEndTurn(self, tourney, game_id):
         if not tourney.endTurn(game_id):
             self.tourneyFinished(tourney)
+            self.tourneySatelliteWaitingList(tourney)
 
 
     def tourneyFinished(self, tourney):
@@ -986,13 +997,39 @@ class PokerService(service.Service):
         table = self.getTable(game_id)
         table.kickPlayer(serial)
         cursor = self.db.cursor()
-        sql = "update user2tourney set rank = %d, table_serial = -1 where user_serial = %d and tourney_serial = %d" % ( tourney.getRank(serial), serial, tourney.serial )
+        sql = "UPDATE user2tourney SET rank = %d, table_serial = -1 WHERE user_serial = %d AND tourney_serial = %d" % ( rank, serial, tourney.serial )
         if self.verbose > 4:
             self.message("tourneyRemovePlayer: " + sql)
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
         cursor.close()
+        self.tourneySatelliteSelectPlayer(tourney, serial, rank)
+
+    def tourneySatelliteSelectPlayer(self, tourney, serial, rank):
+        if tourney.satellite_of == 0:
+            return False
+        if rank <= tourney.satellite_player_count:
+            packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.satellite_of)
+            if self.tourneyRegister(packet = packet, via_satellite = True):
+                tourney.satellite_registrations.append(serial)
+        return True
+
+    def tourneySatelliteWaitingList(self, tourney):
+        """If the satellite did not register enough players, presumably because of a registration error
+         for some of the winners (for instance if they were already registered), register the remaining
+         players with winners that are not in the top satellite_player_count."""
+        if tourney.satellite_of == 0:
+            return False
+        registrations = tourney.satellite_player_count - len(tourney.satellite_registrations)
+        if registrations <= 0:
+            return False
+        serials = filter(lambda serial: serial not in tourney.satellite_registrations, tourney.winners)
+        for serial in serials[:registrations]: 
+            packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.serial)
+            if self.tourneyRegister(packet = packet, via_satellite = True):
+                tourney.satellite_registrations.append(serial)
+        return True
 
     def tourneyManager(self, tourney_serial):
         packet = PacketPokerTourneyManager()
@@ -1119,7 +1156,7 @@ class PokerService(service.Service):
         else:
             return None
     
-    def tourneyRegister(self, packet):
+    def tourneyRegister(self, packet, via_satellite = False):
         serial = packet.serial
         tourney_serial = packet.game_id
         client = self.serial2client.get(serial, None)
@@ -1133,6 +1170,14 @@ class PokerService(service.Service):
             return False
         tourney = self.tourneys[tourney_serial]
 
+        if tourney.via_satellite and not via_satellite:
+            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                                code = PacketPokerTourneyRegister.VIA_SATELLITE,
+                                message = "Player %d must register to %d via a satellite" % ( serial, tourney_serial ) )
+            self.error(error)
+            if client: client.sendPacketVerbose(error)
+            return False
+            
         if tourney.isRegistered(serial):
             error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
                                 code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
