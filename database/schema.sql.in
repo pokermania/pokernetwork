@@ -275,7 +275,6 @@ CREATE TABLE tourneys_schedule (
   add_on_delay INT DEFAULT 60,
   -- Unix timestamp of the tournament start.
   start_time INT DEFAULT 0,
-
   -- Unix timestamp of the registration start.
   register_time INT DEFAULT 0,
   -- n : the tournament is ignored by the server, y : the tournament
@@ -290,6 +289,28 @@ CREATE TABLE tourneys_schedule (
   -- The string can only contain %Y (2008) %m (03) or %d (07)
   -- Example: '%Y%m' 
   currency_serial_from_date_format VARCHAR(16) DEFAULT NULL,
+  --
+  -- If 0 the tournament is not a satellite, if > 0 the tournament
+  -- is a satellite and satellite_player_count is
+  -- taken into account. The value is a reference to the serial  
+  -- field of the tourneys table. 
+  --
+  satellite_of INT UNSIGNED DEFAULT 0,
+  --
+  -- If 1 the users cannot register to the tournament unless they
+  -- participated in a satellite. See the TourneyRegister packet
+  -- for more information. If 0 the users can register if they pay
+  -- the buyin.
+  -- 
+  via_satellite TINYINT DEFAULT 0,
+  --
+  -- The number of tournament winners that will be registered to the
+  -- satellite_of tournament. The winners that are already registered
+  -- to satellite_of are ignored. If satellite_player_count is 10 
+  -- and 2 of the top 10 are already registered, the remaining 2
+  -- will be drawn from the top 12 winners.
+  --
+  satellite_player_count INT UNSIGNED DEFAULT 0,
 
   PRIMARY KEY (serial),
   KEY tourneys_schedule_active_index (active),
@@ -405,6 +426,9 @@ CREATE TABLE tourneys (
   add_on INT DEFAULT 0,
   add_on_delay INT DEFAULT 60,
   start_time INT DEFAULT 0,
+  satellite_of INT UNSIGNED DEFAULT 0,
+  via_satellite TINYINT DEFAULT 0,
+  satellite_player_count INT UNSIGNED DEFAULT 0,
 
   finish_time INT DEFAULT 0,
   state VARCHAR(16) DEFAULT "registering",
