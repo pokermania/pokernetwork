@@ -1,6 +1,13 @@
-2009-06-09  Loic Dachary <loic@dachary.org>
+2009-06-10  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* debian/python-poker-network.links: links to SQL upgrades must
+	  have a name that matches the version
+	* debian/python-poker-network.links: fix links to SQL upgrades
+	* debian/python-poker-network.links: add links to SQL upgrades
+
+2009-06-09  Loic Dachary <loic@dachary.org>
 
 	* tests/test-pokerserver-run-load.py.in: rework test to take into
 	  account that there is no duplicate of SSL import statement
