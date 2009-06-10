@@ -1,4 +1,8 @@
 usr/share/poker-network/schema.sql usr/share/dbconfig-common/data/python-poker-network/install/mysql
+usr/share/poker-network/1.4.0-1.5.0.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.4.0/upgrade.sql
+usr/share/poker-network/1.6.0-1.7.0.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.6.0/upgrade.sql
+usr/share/poker-network/1.7.3-1.7.4.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.7.3/upgrade.sql
+usr/share/poker-network/1.7.4-1.7.5.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.7.4/upgrade.sql
 usr/share/poker-network/1.0.5-1.0.6.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.0.6/upgrade.sql
 usr/share/poker-network/1.0.6-1.0.7.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.0.7/upgrade.sql
 usr/share/poker-network/1.0.7-1.0.8.sql usr/share/dbconfig-common/data/python-poker-network/upgrade/mysql/1.0.8/upgrade.sql
