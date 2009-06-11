@@ -1,6 +1,17 @@
-2009-06-10  Loic Dachary <loic@dachary.org>
+2009-06-11  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* pokernetwork/pokerpackets.py, tests/test-pokeravatar.py.in:
+	  schedule_serial is added to PACKET_POKER_TOURNEY in a way that
+	  preserves the backward compatibility with the binary protocol
+	  (this field is not available in the binary protocol).
+	* debian/python-poker-network.postinst,
+	  debian/python-poker-network.postrm: Conf file must not be copied
+	  and generated at the same time as it creates conflicts with ucf.
+	  When purging, make sure the config files are actually removed.
+
+2009-06-10  Loic Dachary <loic@dachary.org>
 
 	* debian/python-poker-network.links: links to SQL upgrades must
 	  have a name that matches the version
