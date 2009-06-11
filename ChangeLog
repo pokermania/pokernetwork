@@ -2,6 +2,32 @@
 
  	* Release 1.7.5
 
+	* pokernetwork/pokerexplain.py, pokernetwork/pokergameclient.py,
+	  tests/test-pokerexplain.py.in, tests/test-pokergameclient.py.in:
+
+            The general rule is that PokerExplain will always set the player_list
+            according to the content of the InGame packet sent by the server. When
+            an InGame packet is received, the player list is stored in the poker
+            game. All subsequent calls to buildPlayerList ( happens when
+            beginTurn, initRound or _talkedBlindAnte are called ) will use the
+            stored value instead of computing it.
+
+            There are three situations to consider when reasoning about the player
+            list in the context of a client.
+
+            1) the client receives a batch stream that ends at the blind/ante stage
+               it will receive a InGame before the Start packet and the players referenced
+               by all the packets sent by the server up to the Stream packet will be consistent.
+               Afterwards, if one of the players declined to pay the blinds, the player list may
+               be recomputed by the server. It will be sent before moving to the next round and after
+               the blind/ante are finished.
+            2) the client receives a batch stream that ends after pre-flop. Even if one of the
+               players declined to pay the blind, the game history in the server has been rewritten
+               to remove him. The InGame packet sent before the Start packet will not show the
+               player at all. And there will be no additional InGame packet before going to pre-flop.
+            3) the client receives a InGame and Start packet but not in a batch stream, meaning it
+               has seen a game already. The situation is essentially the same as 1)
+
 	* pokernetwork/pokerpackets.py, tests/test-pokeravatar.py.in:
 	  schedule_serial is added to PACKET_POKER_TOURNEY in a way that
 	  preserves the backward compatibility with the binary protocol
