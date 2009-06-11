@@ -321,15 +321,6 @@ class PokerExplain:
                     game.setHandsCount(packet.hands_count)
                     game.setLevel(packet.level)
                     game.beginTurn(packet.hand_serial)
-                    if game.player_list_hint != None and game.player_list_hint != game.player_list:
-                        player_list_hint = set(game.player_list_hint)
-                        player_list = set(game.player_list)
-                        if not player_list_hint.issubset(player_list):
-                            raise ListHintSubset, "%s is not a subset of %s" % ( game.player_list_hint, game.player_list )
-                        if self.verbose >= 3:
-                            self.message("player_list_hint discards %s" % ( player_list_hint ^ player_list ))
-                        game.player_list = game.player_list_hint
-                    game.player_list_hint = None
                     game.position_info[PokerNetworkGameClient.POSITION_OBSOLETE] = True
                     if not self.no_display_packets:
                         forward_packets.append(PacketPokerBoardCards(game_id = game.id, serial = self.getSerial()))
@@ -428,7 +419,7 @@ class PokerExplain:
                 forward_packets.remove(packet)
 
             elif packet.type == PACKET_POKER_IN_GAME:
-                game.player_list_hint = packet.players[:]
+                game.setStaticPlayerList(packet.players)
                 for serial in game.serialsAll():
                     player = game.getPlayer(serial)
                     wait_for = player.wait_for

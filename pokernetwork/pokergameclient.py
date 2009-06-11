@@ -28,5 +28,32 @@ class PokerNetworkGameClient(PokerGameClient):
         self.level_skin = ""
         self.currency_serial = 0
         self.history_index = 0
-        self.player_list_hint = None
         self.position_info = [ 0, 0 ]
+
+    def reset(self):
+        PokerGameClient.reset(self)
+        self.resetStaticPlayerList()
+
+    def cancelState(self):
+        self.resetStaticPlayerList()
+        return PokerGameClient.cancelState(self)
+
+    def endState(self):
+        self.resetStaticPlayerList()
+        return PokerGameClient.endState(self)
+
+    def resetStaticPlayerList(self):
+        self.static_player_list = None
+
+    def setStaticPlayerList(self, player_list):
+        self.static_player_list = player_list[:]
+
+    def getStaticPlayerList(self):
+        return self.static_player_list
+      
+    def buildPlayerList(self, with_wait_for):
+        self.player_list = self.getStaticPlayerList()
+        if self.verbose >= 3:
+            self.message("buildPlayerList " + str(self.player_list))
+        assert self.player_list == filter(lambda x: self.serial2player[x].isSit(), self.player_list)
+        return True

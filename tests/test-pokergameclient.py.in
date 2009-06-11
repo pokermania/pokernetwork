@@ -33,11 +33,47 @@ from pokernetwork.pokergameclient import PokerNetworkGameClient
 class PokerNetworkGameClientTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.games = PokerNetworkGameClient("poker.%s.xml", [])
+        self.game = PokerNetworkGameClient("poker.%s.xml", [])
+        self.game.verbose = int(os.environ.get('VERBOSE_T', '-1'))
 
-    def test_all(self):
-        pass
-    
+    def test_init(self):
+        for key in ( 'currency_serial', 'history_index', 'position_info' ):
+            self.failUnless(hasattr(self.game, key))
+
+    def test_reset(self):
+        player_list = ['oups']
+        self.game.setStaticPlayerList(player_list)
+        self.game.reset()
+        self.assertEqual(None, self.game.getStaticPlayerList())
+        
+    def test_endState(self):
+        player_list = ['oups']
+        self.game.setStaticPlayerList(player_list)
+        self.game.endTurn = lambda: True
+        self.game.endState()
+        self.assertEqual(None, self.game.getStaticPlayerList())
+        
+    def test_cancelState(self):
+        player_list = ['oups']
+        self.game.setStaticPlayerList(player_list)
+        self.game.cancelState()
+        self.assertEqual(None, self.game.getStaticPlayerList())
+
+    def test_buildPlayerList(self):
+        player_serial = 10
+        player_list = [10]
+        self.failUnless(self.game.addPlayer(player_serial, 1))
+        self.game.getPlayer(player_serial).sit_out = False
+        self.game.setStaticPlayerList(player_list)
+        self.failUnless(self.game.buildPlayerList(True))
+        self.assertEqual(self.game.getStaticPlayerList(), self.game.player_list)
+        self.failUnless(self.game.buildPlayerList(False))
+        self.assertEqual(self.game.getStaticPlayerList(), self.game.player_list)
+        self.game.getPlayer(player_serial).sit_out = True
+        self.assertRaises(AssertionError, self.game.buildPlayerList, True)
+        self.game.setStaticPlayerList([200])
+        self.assertRaises(KeyError, self.game.buildPlayerList, True)
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
@@ -58,6 +94,6 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokergameclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokergameclient.py' TESTS='coverage-reset test-pokergameclient.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokergameclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokergameclient.py' VERBOSE_T=-1 TESTS='coverage-reset test-pokergameclient.py coverage-report' check )"
 # End:
 

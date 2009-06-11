@@ -978,7 +978,7 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_IN_GAME, self.explain.forward_packets[0].type)
         self.assertEqual(PACKET_POKER_SIT, self.explain.forward_packets[1].type)
         self.assertEqual(PACKET_POKER_WAIT_FOR, self.explain.forward_packets[2].type)
-        self.assertEqual([player_serial], game.player_list_hint)
+        self.assertEqual([player_serial], game.getStaticPlayerList())
 
         #
         # player not in game and wait for
@@ -1214,71 +1214,10 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, self.explain.forward_packets[1].type)
         
-    def test41_player_list_hint_subset(self):
-        game_id = 1
-        self.assertTrue(self.explain.explain(PacketPokerTable(id = game_id,
-                                                              betting_structure = '1-2-no-limit',
-                                                              variant = 'holdem')))
-        game = self.explain.games.getOrCreateGame(game_id)
-        serial1 = 102
-        self.failUnless(game.addPlayer(serial1, 1))
-        self.failUnless(game.payBuyIn(serial1, game.maxBuyIn()))
-        self.failUnless(game.sit(serial1))
-        serial2 = 202
-        self.failUnless(game.addPlayer(serial2, 2))
-        self.failUnless(game.payBuyIn(serial2, game.maxBuyIn()))
-        self.failUnless(game.sit(serial2))
-
-        #
-        # [505] is not a subset of the player_list
-        #
-        unrelated = [505]
-        game.player_list_hint = unrelated
-        
-        poker_start = PacketPokerStart(game_id = game_id, hand_serial = 1)
-
-        caught = False
-        try:
-            self.explain.explain(poker_start)
-        except pokerexplain.ListHintSubset, e:
-            caught = True
-            self.assertSubstring(str(unrelated), str(e))
-        self.assertTrue(caught)
-
-    def test42_player_list_hint(self):
-        game_id = 1
-        self.assertTrue(self.explain.explain(PacketPokerTable(id = game_id,
-                                                              betting_structure = '1-2-no-limit',
-                                                              variant = 'holdem')))
-        game = self.explain.games.getOrCreateGame(game_id)
-        serial1 = 102
-        self.failUnless(game.addPlayer(serial1, 1))
-        self.failUnless(game.payBuyIn(serial1, game.maxBuyIn()))
-        self.failUnless(game.sit(serial1))
-        serial2 = 202
-        self.failUnless(game.addPlayer(serial2, 2))
-        self.failUnless(game.payBuyIn(serial2, game.maxBuyIn()))
-        self.failUnless(game.sit(serial2))
-        serial3 = 302
-        self.failUnless(game.addPlayer(serial3, 3))
-        self.failUnless(game.payBuyIn(serial3, game.maxBuyIn()))
-        self.failUnless(game.sit(serial3))
-        game.first_turn = False
-
-        #
-        # serial2 is not in the hint and is discarded from player_list
-        #
-        hint = [serial2, serial3]
-        game.player_list_hint = hint[:]
-        
-        poker_start = PacketPokerStart(game_id = game_id, hand_serial = 1)
-        self.explain.explain(poker_start)
-        self.assertEquals(hint, game.player_list)
-
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test4"
+#    loader.methodPrefix = "test42"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerGamesTestCase))
     suite.addTest(loader.loadClass(PokerExplainTestCase))
