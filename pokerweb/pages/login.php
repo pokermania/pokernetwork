@@ -59,23 +59,23 @@ if($poker_error) {
 		<table>
 			<tr>
 				<td></td>
-				<td><? echo _('Login') ?></td>
+				<td><?php echo _('Login') ?></td>
 			</tr>
 			<tr>
-				<td><b><? echo _('Login') ?>:</b></td>
+				<td><b><?php echo _('Login') ?>:</b></td>
 				<td><input type="text" maxlength="32" name="login" value="<?php echo $name?>" /></td>
 			</tr>
 			<tr>
-				<td><b><? echo _('Password') ?>:</b></td>
+				<td><b><?php echo _('Password') ?>:</b></td>
 				<td><input type="password" maxlength="32" name="password" id="password" /></td>
 			</tr>
 			<tr>
 				<td></td>
-				<td><a href="create_account.php"><? echo _('Create Account') ?></a></td>
+				<td><a href="create_account.php"><?php echo _('Create Account') ?></a></td>
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type="submit" name='submit' value="<? echo _('Ok') ?>" /></td>
+				<td><input type="submit" name='submit' value="<?php echo _('Ok') ?>" /></td>
 			</tr>
 		</table>
 	</form>
