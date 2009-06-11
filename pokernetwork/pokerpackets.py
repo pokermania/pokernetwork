@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple 75004 Paris
@@ -2926,6 +2926,7 @@ class PacketPokerTourney(Packet):
     type = PACKET_POKER_TOURNEY
 
     info = Packet.info + ( ('serial', 0, 'I'),
+                           ('schedule_serial', 0, 'no net'),
                            ('buy_in', 10, 'H'),
                            ('start_time', 0, 'I'),
                            ('sit_n_go', 'y', 'cbool'),
@@ -2950,6 +2951,7 @@ class PacketPokerTourney(Packet):
         self.variant = kwargs.get("variant", "holdem")
         self.state = kwargs.get("state", "announced")
         self.serial = kwargs.get("serial", 0)
+        self.schedule_serial = kwargs.get("schedule_serial", 0)
         self.buy_in = kwargs.get("buy_in", 10)
         self.start_time = kwargs.get("start_time", 0)
         self.sit_n_go = kwargs.get("sit_n_go", 'y')
@@ -2984,7 +2986,7 @@ class PacketPokerTourney(Packet):
         return Packet.calcsize(self) + PacketPokerTourney.format_size + self.calcsizestring(self.description_short) + self.calcsizestring(self.variant) + self.calcsizestring(self.state) + self.calcsizestring(self.name)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tserial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d, breaks_first = %d, breaks_interval = %d, breaks_duration = %d " % ( self.serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration )
+        return Packet.__str__(self) + "\n\tserial = %s, schedule_serial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d, breaks_first = %d, breaks_interval = %d, breaks_duration = %d " % ( self.serial, self.schedule_serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration )
 
 PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
 

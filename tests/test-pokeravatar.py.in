@@ -114,7 +114,7 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <vprogram>yes</vprogram>
   
   <user path="~/.poker2d"/>
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ </path> 
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
@@ -199,7 +199,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def tearDown(self):
         d = self.service.stopService()
         d.addCallback(lambda x: self.p.stopListening())
-#        d.addCallback(self.destroyDb)
+        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
         return d
     # -------------------------------------------------------------------------
@@ -1821,6 +1821,7 @@ class PokerAvatarTestCase(unittest.TestCase):
             if packet.type == PACKET_POKER_TOURNEY_LIST:
                 count = 0
                 for p in packet.packets:
+                    self.assert_(hasattr(p, 'schedule_serial'))
                     assert p.name.find("sitngo") >= 0 or  p.name.find("egular")
                     assert p.name.find("registering") >= 0 or  p.name.find("announced")
                     count += 1
@@ -3895,5 +3896,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokeravatar.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py ../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py ../pokernetwork/pokerclient.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokeravatar.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokeravatar.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py' TESTS='coverage-reset test-pokeravatar.py coverage-report' check )"
 # End:
