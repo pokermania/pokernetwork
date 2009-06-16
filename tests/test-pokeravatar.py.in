@@ -1,9 +1,9 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
+# Copyright (C) 2007, 2008 Loic Dachary     <loic@dachary.org>
+# Copyright (C) 2008, 2009 Bradley M. Kuhn  <bkuhn@ebb.org>
+# Copyright (C) 2008       Johan Euphrosine <proppy@aminche.com>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -120,17 +120,17 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <handlist start="0" count="10"/>
 </settings>
 """
-
-class PokerAvatarTestCase(unittest.TestCase):
+##############################################################################
+class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
-    def setUpServer(self):
+    def setUpServer(self, serverSettings = settings_xml_server):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
+        settings.doc = libxml2.parseMemory(serverSettings, len(serverSettings))
         settings.header = settings.doc.xpathNewContext()
         #
         # Setup server
@@ -142,7 +142,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.p = reactor.listenTCP(0, factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
-
+    # ------------------------------------------------------
     def setUpClient(self, index):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
@@ -154,7 +154,6 @@ class PokerAvatarTestCase(unittest.TestCase):
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
         return d
-
     # ------------------------------------------------------
     def setUp(self):
         testclock._seconds_reset()        
@@ -166,21 +165,22 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.destroyDb()
         self.setUpServer()
         self.client_factory = [None, None, None]
-        # Third client currently only used by test63 and test73, but put it here
-        # because it was easier and didn't slow things down too much.
-        def connectClient2(client): 
-            reactor.connectTCP('127.0.0.1', self.port, self.client_factory[2])
-            return client
-
-        def connectClient1(client): 
-            reactor.connectTCP('127.0.0.1', self.port, self.client_factory[1])
-            return client
+    # -------------------------------------------------------------------------
+    def createClients(self, numClients):
+        if numClients == 0:
+            return
+        self.failIf(numClients <= 0, "Need to create at least one client")
+        # A wish for a multi-line lambda()
+        def make_connector(ii):
+            def connector_func(client):
+                reactor.connectTCP('127.0.0.1', self.port, self.client_factory[ii])
+                return client
+            return connector_func
 
         d = self.setUpClient(0)
-        d.addCallback(connectClient1)
-        d = self.setUpClient(1)
-        d.addCallback(connectClient2)
-        self.setUpClient(2)
+        for ii in range(1, numClients):
+            d.addCallback(make_connector(ii))
+            d = self.setUpClient(ii)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
     # -------------------------------------------------------------------------
     def cleanSessions(self, arg):
@@ -213,6 +213,11 @@ class PokerAvatarTestCase(unittest.TestCase):
             return client.connection_lost_deferred
         else:
             raise UserWarning, "quit does not have transport %d" % client.getSerial()
+##############################################################################
+class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
+    # -------------------------------------------------------------------------
+    def setUpServer(self):
+        PokerAvatarTestCaseBaseClass.setUpServer(self)
     # -------------------------------------------------------------------------
     def ping(self, client):
         client.sendPacket(PacketPing())
@@ -220,6 +225,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test01_ping(self):
         """ test01_ping """
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.ping)
         d.addCallback(self.quit)
@@ -228,7 +234,6 @@ class PokerAvatarTestCase(unittest.TestCase):
     def sendRolePlay(self, (client, packet)):
         client.sendPacket(PacketPokerSetRole(serial = client.getSerial(), roles = PacketPokerSetRole.PLAY))
         return client.packetDeferred(True, PACKET_POKER_ROLES)
-
     # -------------------------------------------------------------------------
     def sendExplain(self, client):
         client.sendPacket(PacketPokerExplain(value = PacketPokerExplain.ALL))
@@ -249,6 +254,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test02_explain(self):
         """ test02_explain """
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.explain)
@@ -270,6 +276,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test03_login_again(self):
         """ test03_login """
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -280,6 +287,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test04_createTable(self):
         """Tests receipt of a table creation packet, followed by creation of a
            table once the avatar is logged in."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -302,6 +310,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test05_testStrInterpolation(self):
         """Tests to make sure the string output of an avatar is accurate"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -330,6 +339,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test06_setRoles(self):
         """Tests setting of roles"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.normalSetRoles, 0, PacketPokerRoles.PLAY, "PLAY")
@@ -350,6 +360,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # undefined, this test might need to be updated later to test for
         # the undefined behavior we see. ;) Perhaps testing for things
         # that aren't defined with this.
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -383,6 +394,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test06_7_setUnknownRole(self):
         """Tests setting of a role that is unknown."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         # This error message will need to be fixed if you add additional valid roles 
@@ -394,6 +406,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test06_8_setRoleAfterAnotherUserHas(self):
         """Tests setting of a role that is unknown."""
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.normalSetRoles, 0, PacketPokerRoles.PLAY, "PLAY")
@@ -409,6 +422,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test07_getImage(self):
         """Tests player getting its image"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -461,6 +475,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test08_joinTable(self):
         """Tests table joining."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -503,6 +518,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test09_00_seatTable(self):
         """Tests table joining table and sitting down."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -521,6 +537,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test09_01_seatTableWithRankTable(self):
         """Tests joining table and sitting down, with a stats packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -549,6 +566,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test10_explainFailsOnceAtTable(self):
         """Tests to be sure setting explain fails when you are already
         connected to to table."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -562,6 +580,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test10_explainTwiceIsOk(self):
         """Tests to be sure setting explain twice succeeds if already set."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -599,6 +618,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test11_loginWithPasswordTooLong(self):
         """Tests to be sure setting explain fails when you are already
         connected to to table."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.loginWithPasswordTooLong, 0)
@@ -624,6 +644,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test12_buyIntoGame(self):
         """Tests to be sure once sat down, the user can buy into the game"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -651,6 +672,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test13_stats(self):
         """Test stats request"""
+        self.createClients(3)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -905,6 +927,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.setLocale, "fr_FR")
@@ -966,6 +989,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test15a_handPlay_dbLocalesAndOverridesThereof(self):
         """Test playing an actual hand all the way through when locale changes"""
+        self.createClients(2)
 
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
@@ -1004,6 +1028,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
         after being at a table."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -1030,6 +1055,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client,)
     # -------------------------------------------------------------------------
     def test17_pingAndUnpriv(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.pingThenUnprivRegisterTourney)
@@ -1276,6 +1302,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # -------------------------------------------------------------------------
     def test18_badAttempts(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -1307,6 +1334,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test19_badBuyIn(self):
         """Test to cover the condition where the buyIn fails"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -1337,6 +1365,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test20_turningOffAutoBlind(self):
         """Test to cover a player turning off their autoBlindAnte Setting"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -1369,6 +1398,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -1418,6 +1448,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -1454,6 +1485,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -1507,6 +1539,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test24_personalInfo(self):
         """Test lookup of personal information."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1551,6 +1584,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         """Test for hand listing."""
         # It might be better to improve this test so that a few hands have
         # actually been played and therfore an actual hand list is available.
+        self.createClients(3)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1604,6 +1638,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test26_listTables(self):
         """Test for table listing."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1626,6 +1661,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test27_playerInfoNotLoggedIn(self):
         """Test for getting player info before login has occurred."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.getPlayerInfoError, 0)
@@ -1651,6 +1687,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test28_setPokerPlayerInfo(self):
         """Test for setting poker player info."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1682,6 +1719,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test29_errorSetPokerPlayerInfo(self):
         """Test for errors when setting poker player info."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1724,6 +1762,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test30_setPlayerImage(self):
         """Test for setting the player image."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1732,6 +1771,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test31_errorSetPlayerImage(self):
         """Test for setting the player image."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1759,6 +1799,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test32_cashIn(self):
         """Test for doing a cash in operation."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1783,6 +1824,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test33_cashQuery(self):
         """Test for a cash query operation; it's designed to fail and get a packet error."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1806,6 +1848,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test34_setPokerAccount(self):
         """Test sending the set poker account packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1830,6 +1873,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test35_tourneys(self):
         """Test sending the set poker account packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -1857,6 +1901,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test36_cashOut(self):
         """Test for doing a cash out operation."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1882,6 +1927,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test37_cashOutCommit(self):
         """Test for doing a cash out commit operation."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1903,6 +1949,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test38_tourneyPlayerList(self):
         """Test for listing players in a tourney."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1924,6 +1971,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test39_tablePlayerList(self):
         """Test for listing players in at a table."""
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -1963,6 +2011,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test40_tourneyRegister(self):
         """Test for registering a players in a tourney."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -1985,6 +2034,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test41_tourneyUnregister(self):
         """Test for unregistering players from a tourney."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2016,6 +2066,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     #          https://gna.org/bugs/index.php?11149
     def test42_handSelectAll(self):
         """Test sending hand select all packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -2041,6 +2092,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test43_handHistory(self):
         """Test for hand history packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2085,6 +2137,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2137,6 +2190,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2186,6 +2240,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test46_processingHand(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2310,6 +2365,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         self.assertEqual(search_output('Not autodealing %d because game is running' % gameId), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2358,6 +2414,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test48_seatPackets(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2365,7 +2422,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         d.addCallback(self.badSeatTable, 0, 2)
         return d
-
+    # ------------------------------------------------------------------------
     def seatTableNoRole(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
@@ -2385,6 +2442,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test48_1_seatPacketNoRole(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2421,6 +2479,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test49_badRebuy(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2447,6 +2506,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test50_chat(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2476,6 +2536,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test51_doLeave(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2562,6 +2623,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test52_variousPackets(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2586,6 +2648,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test53_autoMuck(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2614,6 +2677,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test54_doTableQuit(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2647,6 +2711,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test55_tableJoinWhenFails(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2663,6 +2728,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test56_handReplyNoTable(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2682,6 +2748,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test57_doFullQuit(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2716,6 +2783,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # ------------------------------------------------------------------------
     def test58_packetLogoutSucceed(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2728,6 +2796,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # ------------------------------------------------------------------------
     def test59_packetLogoutFailed(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.doLogoutFail, 0)
@@ -2735,6 +2804,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test60_handSelectAllWithWhere(self):
         """Test sending hand select all packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -2766,6 +2836,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test61_tableCreateFails(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2797,6 +2868,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -2854,6 +2926,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         # where a third client joined while two were already playing a
         # hand.  This test does that.  Note it's the only test that uses
         # the third client.
+        self.createClients(3)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2888,6 +2961,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test64_testTinyFunctions(self):
         """Test a few small functions that are not otherwise called"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -2904,6 +2978,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test65_monitor(self):
         """Test monitor request"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2924,6 +2999,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test66_tourneyPlayerList(self):
         """Test for listing players in a tourney."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -2931,6 +3007,7 @@ class PokerAvatarTestCase(unittest.TestCase):
         return d
     # ------------------------------------------------------------------------
     def test67_getPlayerInfoBug(self):
+        self.createClients(2)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
@@ -2959,6 +3036,7 @@ class PokerAvatarTestCase(unittest.TestCase):
 
     # ------------------------------------------------------------------------
     def test68_handlePacketDefer(self):
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
@@ -3046,6 +3124,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test69_getPlayerPlaces(self):
         """Test lookup of where the player is playing."""
+        self.createClients(2)
         d1 = self.client_factory[0].established_deferred
         d1.addCallback(self.sendExplain)
         d1.addCallback(self.sendRolePlay)
@@ -3076,6 +3155,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test70_poll(self):
         """Test poll packet."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -3095,6 +3175,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test70_1_pollTourneyFinished(self):
         """Test poll packet when tourney is finished."""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -3132,6 +3213,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test71_setLocaleAlwaysValid(self):
         """Tests setting of roles"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.setLocale, "en_US", 0)
@@ -3140,6 +3222,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test72_setLocaleAlwaysFail(self):
         """Tests setting of roles"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.setLocale, "Klingon_Kronos", 0, False)
@@ -3231,6 +3314,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     def test73_playerTimeoutAndThenViewsQueuedPackets(self):
         """Test when a player was in a hand, reconnects after other hands
         have been played, and expects certain packet playback  packets."""
+        self.createClients(3)
         table = self.service.getTable(2)
         table.autodeal = False
         d = self.client_factory[0].established_deferred
@@ -3329,6 +3413,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test74_tooManyPacketsGrowOnObserver(self):
         """Test when a player merely observes, the packet queue grows and grows"""
+        self.createClients(3)
         table = self.service.getTable(2)
         table.autodeal = False
         d = self.client_factory[0].established_deferred
@@ -3427,6 +3512,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test75_playerSitsBrieflyThenOut(self):
         """Test when a player sits in briefly, then sits out.  Packet queue grows?"""
+        self.createClients(3)
         table = self.service.getTable(2)
         table.autodeal = False
         d = self.client_factory[0].established_deferred
@@ -3544,6 +3630,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test76_forceObserverDisconnectPacketQueue(self):
         """Tests packet queue growth and cutoff by setting max leng small"""
+        self.createClients(3)
         saveClientQueueMax = self.service.client_queued_packet_max
         self.service.client_queued_packet_max = 21
         table = self.service.getTable(2)
@@ -3595,6 +3682,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test77_getStatsWhenLoggedIn(self):
         """Test for get statistics when the user asking is logged in."""
+        self.createClients(2)
         statsExpected = [{ 'rank' : 60, 'percentile' : 80, 'serial' : 4}]
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
@@ -3634,6 +3722,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test78_getStatsError(self):
         """Test for failed get statistics packet"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
@@ -3658,6 +3747,7 @@ class PokerAvatarTestCase(unittest.TestCase):
     # ------------------------------------------------------------------------
     def test79_getStatsIgnoredWhenNotAtTable(self):
         """Test for failed get statistics packet"""
+        self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)

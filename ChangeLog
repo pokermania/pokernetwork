@@ -1,3 +1,19 @@
+2009-06-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCaseBaseClass):
+	Created class.
+	(PokerAvatarTestCaseBaseClass.destroyDb,
+	(PokerAvatarTestCaseBaseClass.setUpServer,
+	(PokerAvatarTestCaseBaseClass.setUpClient,
+	(PokerAvatarTestCaseBaseClass.setUp,
+	(PokerAvatarTestCaseBaseClass.cleanSessions,
+	(PokerAvatarTestCaseBaseClass.tearDown,
+	(PokerAvatarTestCaseBaseClass.quit): Moved from
+	PokerAvatarTestCase into base class.
+	(PokerAvatarTestCase.setUpServer): Rewrote to use base class.
+	(PokerAvatarTestCaseBaseClass.createClients): Wrote method; added
+	call to it in every test in PokerAvatarTestCase.
+
 2009-06-11  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
