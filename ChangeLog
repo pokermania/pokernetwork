@@ -1,3 +1,12 @@
+2009-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in (PokerServiceTestCaseBase.setUp):
+	Changed to take settingsFile as an argument for easier overriding
+	in subclasses.
+	(ListTablesTestCase.setUp): Wrote method.
+	(ListTablesTestCase): Rewrote all tests in class to use new xml
+	data with five tables.
+
 2009-06-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in (PokerAvatarTestCaseBaseClass):

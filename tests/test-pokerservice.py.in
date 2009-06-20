@@ -193,11 +193,11 @@ class PokerServiceTestCaseBase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
     # ----------------------------------------------------------------
-    def setUp(self):
+    def setUp(self, settingsFile = settings_xml):
         testclock._seconds_reset()
         self.destroyDb()
         self.settings = settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
+        settings.doc = libxml2.parseMemory(settingsFile, len(settingsFile))
         settings.header = settings.doc.xpathNewContext()
         self.db = pokerdatabase.PokerDatabase(settings)
         self.service = pokerservice.PokerService(settings)
@@ -315,8 +315,35 @@ class CleanUpTestCase(PokerServiceTestCaseBase):
         self.assertEqual(1, cursor.fetchone()[0])
         cursor.close()
 
-class ListTablesTestCase(PokerServiceTestCaseBase):
+list_table_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
+  <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="6" player_timeout="60" currency_serial="1" />
+  <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="2" />
+  <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="6" player_timeout="60" currency_serial="2" />
+  <table name="Stud 8-max 2/4" variant="7stud" betting_structure="2-4-limit" seats="8" player_timeout="60" currency_serial="2" />
+
+  <listen tcp="19480" />
+
+  <language value="en_US.ISO-8859-1"/>
+
+  <stats type="RankPercentile"/>
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+class ListTablesTestCase(PokerServiceTestCaseBase):
+    def setUp(self):
+        PokerServiceTestCaseBase.setUp(self, settingsFile = list_table_xml)
     # ----------------------------------------------------------------
     def test01_my(self):
         self.service.startService()
@@ -326,48 +353,55 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
         tables = self.service.listTables('my', serial)
         self.assertEqual(1, len(tables))
         self.assertEqual(tables[0]['serial'], TABLE1)
-
     # ----------------------------------------------------------------
     def test02_currency(self):
         self.service.startService()
         tables = self.service.listTables('50', 0)
         self.assertEqual(0, len(tables))
-        currency_serial = '1'
-        tables = self.service.listTables(currency_serial, 0)
+        tables = self.service.listTables('1', 0)
         self.assertEqual(2, len(tables))
-
+        tables = self.service.listTables('2', 0)
+        self.assertEqual(3, len(tables))
     # ----------------------------------------------------------------
     def test03_currency_and_variant(self):
         self.service.startService()
         tables = self.service.listTables('1\tfakevariant', 0)
         self.assertEqual(0, len(tables))
+        tables = self.service.listTables('2\tfakevariant', 0)
+        self.assertEqual(0, len(tables))
         tables = self.service.listTables('1\tholdem', 0)
         self.assertEqual(2, len(tables))
-
+        tables = self.service.listTables('2\tholdem', 0)
+        self.assertEqual(2, len(tables))
+        tables = self.service.listTables('1\t7stud', 0)
+        self.assertEqual(0, len(tables))
+        tables = self.service.listTables('2\t7stud', 0)
+        self.assertEqual(1, len(tables))
     # ----------------------------------------------------------------
     def test04_variant(self):
         self.service.startService()
         tables = self.service.listTables('\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('\tholdem', 0)
-        self.assertEqual(2, len(tables))
-
+        self.assertEqual(4, len(tables))
+        tables = self.service.listTables('\t7stud', 0)
+        self.assertEqual(1, len(tables))
     # ----------------------------------------------------------------
     def test05_all(self):
         self.service.startService()
         tables = self.service.listTables('', 0)
-        self.assertEqual(2, len(tables))
+        self.assertEqual(5, len(tables))
         tables = self.service.listTables('all', 0)
-        self.assertEqual(2, len(tables))
-
+        self.assertEqual(5, len(tables))
     # ----------------------------------------------------------------
     def test06_name(self):
         self.service.startService()
         tables = self.service.listTables('fakename', 0)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('Table1', 0)
-        self.assertEqual(1, len(tables))
-
+        for name in [ "NL HE 10-max 100/200", "NL HE 6-max 100/200",
+                      "Limit HE 10-max 2/4", "Limit HE 6-max 2/4", "Stud 8-max 2/4" ]:
+            tables = self.service.listTables(name, 0)
+            self.assertEqual(1, len(tables))
 class TourneySelectTestCase(PokerServiceTestCaseBase):
 
     def test00_all(self):
