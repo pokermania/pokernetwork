@@ -2,7 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 #
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
-# Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C)             2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
 #                                24 rue vieille du temple 75004 Paris
@@ -31,6 +31,7 @@
 
 from string import join
 import sets
+import re
 
 from twisted.internet import defer
 
@@ -570,12 +571,12 @@ class PokerAvatar:
             return
 
         elif packet.type == PACKET_POKER_TABLE_JOIN:
-            table = self.service.getTable(packet.game_id)
-            if table:
-                if not table.joinPlayer(self, self.getSerial()):
-                    self.sendPacketVerbose(PacketPokerTable())
+            self.performPacketPokerTableJoin(packet)
             return
 
+        elif packet.type == PACKET_POKER_TABLE_PICKER:
+            self.performPacketPokerTablePicker(packet)
+            return
 
         table = self.packet2table(packet)
             
@@ -620,32 +621,10 @@ class PokerAvatar:
                     self.message("player %d tried to start a new game but is not the owner of the table" % self.getSerial())
 
             elif packet.type == PACKET_POKER_SEAT:
-                if PacketPokerRoles.PLAY not in self.roles:
-                    self.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                            serial = packet.serial,
-                                                            code = PacketPokerSeat.ROLE_PLAY,
-                                                            message = "PACKET_POKER_ROLES must set the role to PLAY before chosing a seat",
-                                                            other_type = PACKET_POKER_SEAT))
-                elif ( self.getSerial() == packet.serial or
-                     self.getSerial() == table.owner ):
-                    if not table.seatPlayer(self, packet.serial, packet.seat):
-                        packet.seat = -1
-                    else:
-                        packet.seat = game.getPlayer(packet.serial).seat
-                    self.getUserInfo(packet.serial)
-                    self.sendPacketVerbose(packet)
-                else:
-                    self.message("attempt to get seat for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
-                
+                self.performPacketPokerSeat(packet, table, game)
+
             elif packet.type == PACKET_POKER_BUY_IN:
-                if self.getSerial() == packet.serial:
-                    self.service.autorefill(packet.serial)
-                    if not table.buyInPlayer(self, packet.amount):
-                        self.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                                serial = packet.serial,
-                                                                other_type = PACKET_POKER_BUY_IN))
-                else:
-                    self.message("attempt to bring money for player %d by player %d" % ( packet.serial, self.getSerial() ))
+                self.performPacketPokerBuyIn(packet, table, game)
 
             elif packet.type == PACKET_POKER_REBUY:
                 if self.getSerial() == packet.serial:
@@ -670,10 +649,7 @@ class PokerAvatar:
                     self.message("attempt to leave for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
 
             elif packet.type == PACKET_POKER_SIT:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.sitPlayer(self, packet.serial)
-                else:
-                    self.message("attempt to sit back for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
+                self.performPacketPokerSit(packet, table)
                 
             elif packet.type == PACKET_POKER_SIT_OUT:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
@@ -793,7 +769,130 @@ class PokerAvatar:
                 self.sendPacketVerbose(PacketError(code = PacketLogout.NOT_LOGGED_IN,
                                                    message = "Not logged in",
                                                    other_type = PACKET_LOGOUT))
-            
+
+    # The "perform" methods below are designed so that the a minimal
+    # amount of code related to receiving a packet that appears in the
+    # handlePacketLogic() giant if statement above.  The primary motive
+    # for this is for things like PacketTablePicker(), that need to
+    # perform operations *as if* the client has sent additional packets.
+    # The desire is to keep completely parity between what the individual
+    # packets do by themselves, and what "super-packets" like
+    # PacketTablePicker() do.  A secondary benefit is that it makes that
+    # giant if statement in handlePacketLogic() above a bit smaller.
+    # -------------------------------------------------------------------------
+    def performPacketPokerTableJoin(self, packet, table = None):
+        """Perform the operations that must occur when a
+        PACKET_POKER_TABLE_JOIN is received."""
+        if not table:
+            table = self.service.getTable(packet.game_id)
+        if table:
+            if not table.joinPlayer(self, self.getSerial()):
+                self.sendPacketVerbose(PacketPokerTable())
+        return table
+    # -------------------------------------------------------------------------
+    def performPacketPokerSeat(self, packet, table, game):
+        """Perform the operations that must occur when a PACKET_POKER_SEAT
+        is received."""
+
+        if PacketPokerRoles.PLAY not in self.roles:
+            self.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                                                    serial = packet.serial,
+                                                    code = PacketPokerSeat.ROLE_PLAY,
+                                                    message = "PACKET_POKER_ROLES must set the role to PLAY before chosing a seat",
+                                                    other_type = PACKET_POKER_SEAT))
+            return False
+        elif ( self.getSerial() == packet.serial or self.getSerial() == table.owner ):
+            if not table.seatPlayer(self, packet.serial, packet.seat):
+                packet.seat = -1
+            else:
+                packet.seat = game.getPlayer(packet.serial).seat
+            self.getUserInfo(packet.serial)
+            self.sendPacketVerbose(packet)
+            return (packet.seat != -1)
+        else:
+            self.message("attempt to get seat for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
+            return False
+    # -------------------------------------------------------------------------
+    def performPacketPokerBuyIn(self, packet, table, game):
+        if self.getSerial() == packet.serial:
+            self.service.autorefill(packet.serial)
+            if not table.buyInPlayer(self, packet.amount):
+                self.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                                                        serial = packet.serial,
+                                                        other_type = PACKET_POKER_BUY_IN))
+                return False
+            else:
+                return True
+        else:
+            self.message("attempt to bring money for player %d by player %d" % ( packet.serial, self.getSerial() ))
+            return False
+    # -------------------------------------------------------------------------
+    def performPacketPokerSit(self, packet, table):
+        if self.getSerial() == packet.serial or self.getSerial() == table.owner:
+            table.sitPlayer(self, packet.serial)
+            return True
+        else:
+            self.message("attempt to sit back for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
+            return False
+    # -------------------------------------------------------------------------
+    def performPacketPokerTablePicker(self, packet):
+        mySerial = self.getSerial()
+        if mySerial != packet.serial:
+            self.message("attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial ))
+            self.sendPacketVerbose(PacketPokerTable())
+        else:
+            # Call autorefill() first before checking for a table,
+            # since the amount of money we have left will impact the
+            # table selection, and in a play-money scenario, we want
+            # to have whatever play-money we can get before picking.
+            self.service.autorefill(packet.serial)
+
+            table = self.service.getTableBestByCriteria(mySerial,
+                self._convertTablePickerArgsToListTableQuery(packet.min_players,
+                      packet.currency_serial, packet.variant, packet.betting_structure))
+
+            if not table or not table.game.canAddPlayer(mySerial):
+                # If we cannot find a table or if for some weird reason,
+                # the table we get can't take us just send back an empty
+                # PackerPokerTable packet.
+                self.sendPacketVerbose(PacketPokerTable())
+            else:
+                # Otherwise, we perform the sequence of operations
+                # that is defined by the semantics of this packet in
+                # pokerpacket.py.  Basically, we perform:
+                #   PacketTableJoin(), and if it succeeds,
+                #   PacketPokerSeat(), and if it succeeds,
+                #   We figure out our best buy-in choice, buyIn, then perform:
+                #   PacketPokerBuyIn(amount = buyIn), and if it succeeds, 
+                #   PacketPokerSit()
+                if self.performPacketPokerTableJoin(
+                     PacketPokerTableJoin(serial = mySerial,
+                                          game_id = table.game.id), table):
+
+                    # Giving no seat argument at all for the packet should cause
+                    # us to get any available seat.
+                    if self.performPacketPokerSeat(
+                        PacketPokerSeat(serial = mySerial, game_id = table.game.id),
+                        table, table.game):
+
+                        # Next, determine if player can afford the "best"
+                        # buy in.  If the player can't, give them the
+                        # minimum buyin.
+
+                        buyIn = table.game.bestBuyIn()
+                        if self.service.getMoney(mySerial, table.currency_serial) < buyIn:
+                            buyIn = table.game.buyIn()
+                            # No need to check above if we have that,
+                            # since our answer on this table came from
+                            # self.service.getTableByBestCriteria(), which
+                            # promises us that we have at least minimum.
+                        if self.performPacketPokerBuyIn(
+                            PacketPokerBuyIn(serial = mySerial, amount = buyIn,
+                                 game_id = table.game.id), table, table.game):
+                            self.performPacketPokerSit(
+                               PacketPokerSit(serial = mySerial, game_id = table.game.id),
+                               table)
+    # -------------------------------------------------------------------------
     def setPlayerInfo(self, packet):
         self.user.url = packet.url
         self.user.outfit = packet.outfit
@@ -1060,3 +1159,53 @@ class PokerAvatar:
         else:
             return False
         
+    def _convertTablePickerArgsToListTableQuery(self, minPlayers, currencySerial, 
+                                                variant, bettingStructure):
+        """Takes the arguments given and converts them into a string
+        suitable for input to PokerService.listTables():
+
+        Arguments in order are:
+            minPlayers:       an integer 0 or greater.  Anything else is
+                              means it is as if currencySerial was None.
+
+            currencySerial:   an integer 0 or greater.  Anything else is
+                              means it is as if currencySerial was None.
+            variant:          A string containing any characters except \t.
+                              If a \t occurs in variant, it will be as if
+                              variant was None.
+            bettingStructure: A string containing any characters except \t.
+                              If a \t occurs in bettingStructure, it will be
+                               as if bettingStructure was None.
+        """
+        # queryString will be built from the back first, because it's
+        # easier to ignore items that are not present when building that
+        # way.
+        queryString = ""
+        if minPlayers != None and minPlayers > 0:
+            queryString = "\t%d" % minPlayers
+
+        if (not bettingStructure) or bettingStructure == "":
+            if queryString != "": queryString = "\t" + queryString
+        elif bettingStructure.find("\t") >= 0:
+            self.error("no tabs permitted in table query fields, '%s' ignored." %
+                       bettingStructure)
+            if queryString != "": queryString = "\t" + queryString
+        else:
+            queryString = "\t" + bettingStructure + queryString
+
+        if (not variant) or variant == "":
+            if queryString != "": queryString = "\t" + queryString
+        elif variant.find("\t") >= 0:
+            self.error("no tabs permitted in table query fields, '%s' ignored." %
+                       variant)
+            if queryString != "": queryString = "\t" + queryString
+        else:
+            queryString = "\t" + variant + queryString
+
+        if currencySerial != None and currencySerial > 0:
+            if queryString == "":
+                queryString = "%d" % currencySerial
+            else:
+                queryString = "%d%s" % (currencySerial, queryString)
+
+        return queryString

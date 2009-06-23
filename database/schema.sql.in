@@ -175,8 +175,11 @@ CREATE TABLE pokertables (
   tourney_serial INT UNSIGNED DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (serial),
-  KEY (name),
-  KEY (variant),
+  KEY pokertables_name (name),
+  KEY pokertables_variant (variant),
+  KEY pokertables_players (players),
+  KEY pokertables_betting_structure (betting_structure),
+  KEY pokertables_currency_serial (currency_serial),
   KEY (resthost_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
 

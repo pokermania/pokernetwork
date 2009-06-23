@@ -1,3 +1,172 @@
+2009-06-22  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.test10_tablePicker_sitOutCausesNoMatchesFound):
+	Wrote test.
+
+	* tests/test-pokerservice.py.in
+	(GetTableBestByCriteriaTestCase.test07_noneDueToSittingOut): Wrote test.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables): Hold on
+	to min_players value in self._listTables_min_players_cached.
+	(PokerService.getTableBestByCriteria): Skip tables where not
+	enough players are sitting in.
+
+	* tests/test-pokerservice.py.in
+	(GetTableBestByCriteriaTestCase.test05_noneDueToAskingForPlayers):
+	Wrote test.
+	(GetTableBestByCriteriaTestCase.test06_oneSpecificDueToPlayerSittingOut):
+	Wrote test.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables): Added
+	"order by serial", so that lower table numbers are earlier in
+	list.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.test05_tablePicker_emptyTableLowestNumberWhenEverythingIsEmpty):
+	Corrected test.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTablePicker): proppy
+	pointed out the first paragraph of the semantics description was
+	incomplete.  Fixed.  (via proppy as patch) other documentation
+	improvements.
+
+2009-06-21  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTestCaseBaseClass.setUp)
+	(PokerAvatarTestCaseBaseClass.setUpClient): Moved initialization
+	of self.client_factory entries from setUp to setUpClient.
+	(PokerAvatarTablePickerTestCase.tablePickerSucceeds): Assertions
+	assumed the variant, max_players, and betting_structure was wrong.
+	(PokerAvatarTestCaseBaseClass.joinTable): Added variant, and
+	max_players arguments.
+	(PokerAvatarTestCaseBaseClass.seatTable): Added seatNumber request
+	parameter.
+	(PokerAvatarTablePickerTestCase.test04_tablePicker_twoPossibleGivesMostEmpty):
+	Fixed to actually test the situation it purports to.
+
+	* pokernetwork/pokeravatar.py
+	(PokerAvatar.performPacketPokerTableJoin): Added optional second
+	parameter to allow using of cached version of a table for call
+	from performPacketPokerTablePicker().
+	(PokerAvatar.performPacketPokerSeat)
+	(PokerAvatar.performPacketPokerBuyIn)
+	(PokerAvatar.performPacketPokerSit): Added return value of
+	True/False for status for use when called from
+	performPacketPokerTablePicker().
+
+	* tests/test-pokerservice.py.in
+	(GetTableBestByCriteriaTestCase.test04_nothingFoundDueToFullness):
+	Wrote test.
+
+	* pokernetwork/pokerservice.py
+	(PokerService.getTableBestByCriteria): Skip full tables.
+
+	* tests/test-pokerservice.py.in (GetTableBestByCriteriaTestCase):
+	Created test class.
+	(GetTableBestByCriteriaTestCase.test00_nothingReturnedDueToNoTableMatchingString):
+	Wrote test.
+	(GetTableBestByCriteriaTestCase.test01_nothingReturnedDueToNotEnoughMoney):
+	Wrote test.
+	(GetTableBestByCriteriaTestCase.test02_onlySubSetPossibleDueToLimitedFunds):
+	Wrote test.
+	(GetTableBestByCriteriaTestCase.test03_manyChoicesDueToWealth):
+	Wrote test.
+
+	* pokernetwork/pokerservice.py
+	(PokerService.getTableBestByCriteria): Wrote method.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.performPacketPokerSeat)
+	(PokerAvatar.performPacketPokerBuyIn)
+	(PokerAvatar.performPacketPokerSit)
+	(PokerAvatar.performPacketPokerTableJoin)
+	(PokerAvatar.performPacketPokerTablePicker): Pulled method body
+	from handlePacketLogic().
+
+	* pokernetwork/pokerpackets.py (PacketPokerTablePicker): Added
+	documentation information on possible intervening operation
+	failures.
+
+	* pokernetwork/pokeravatar.py
+	(PokerAvatar._convertTablePickerArgsToListTableQuery): Wrote method.
+	(PokerAvatar.handlePacketLogic): Added handling of
+	PACKET_POKER_TABLE_PICKER as specified in pokerpackets.py
+	Semantics for that packet.
+
+	* tests/test-pokeravatar.py.in
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.setUp):
+	Fixed method name and added import for PokerAvatar.
+
+	* tests/test-pokeravatar.py.in (ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test00_convertTablePickerArgs_currencySerialOnly)
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test01_convertTablePickerArgs_minPlayersOnly)
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test02_convertTablePickerArgs_variantOnly)
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test03_convertTablePickerArgs_bettingStructureOnly)
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test04_convertTablePickerArgs_various)
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test05_errorExpected_various):
+	Expect no output messages.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test07_noTabsAllowed):
+	Wrote test.
+
+	* tests/test-pokerservice.py.in
+	(ListTablesTestCase.test10_tooMany): Wrote test.
+	(ListTablesTestCase.test11_currencySerialIsNotAnInteger): Wrote test.
+	(ListTablesTestCase.test12_minPlayersIsNotAnInteger): Wrote test.
+	(ListTablesTestCase.test14_sqlInjectionInParametersShouldNotWork):
+	Wrote test.
+	(ListTablesTestCase.test09_currency_and_variant_and_bettingStructure_and_count_withSome):
+	Fixed 0 min_player tests, which were not properly drafted.  Fixed
+	UPDATE SQL statements as needed.  Added messages check.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables): Extended
+	implementation to include betting structure and user count.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.test09_tablePicker_noTableDueToLackofFunds):
+	Wrote test.
+
+2009-06-20  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.tablePickerSucceeds): Added
+	PACKET_POKER_SIT check.  Added check of money amount setting.
+	(PokerAvatarTablePickerTestCase.tablePickerFails): Added failure
+	if PACKET_POKER_TABLE_PICKER failure sends back something other
+	than any empty PACKET_POKER_TABLE.
+	(PokerAvatarTablePickerTestCase.setMoneyForPlayer): Wrote method.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTablePicker): Created
+	new packet.
+
+	* tests/test-pokeravatar.py.in (Run): Added PokerAvatarNoClientServerTestCase.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase):
+	Created coverage class.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.setup):
+	Wrote method.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase): Wrote test.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test01_convertTablePickerArgs_minPlayersOnly):
+	Wrote test.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test02_convertTablePickerArgs_variantOnly):
+	Wrote test.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test03_convertTablePickerArgs_bettingStructureOnly):
+	Wrote test.
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase.test04_convertTablePickerArgs_various):
+	Wrote test.
+
+	* tests/test-pokerservice.py.in
+	(ListTablesTestCase.test09_currency_and_variant_and_bettingStructure_and_count_withSome):
+	Wrote test.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables): Added a
+	docstring and comment for this method.
+
+2009-06-15  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerservice.py.in
+	(ListTablesTestCase.test07_currency_and_variant_and_bettingStructure):
+	Wrote test.
+	(ListTablesTestCase.test08_currency_and_variant_and_bettingStructure_and_count_noOne):
+	Wrote test.
+
 2009-06-14  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokerservice.py.in (PokerServiceTestCaseBase.setUp):
@@ -6,6 +175,29 @@
 	(ListTablesTestCase.setUp): Wrote method.
 	(ListTablesTestCase): Rewrote all tests in class to use new xml
 	data with five tables.
+
+	* tests/test-protocol.py.in
+	(UGAMEProtocolTestCase.testHandleData): 165 will be the
+	TablePicker packet.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.test01_tablePicker_failure_by_variant):
+	Wrote test.
+	(PokerAvatarTablePickerTestCase.test00_tablePicker_failure_by_min):
+	Renamed test.
+	(PokerAvatarTablePickerTestCase.test02_tablePicker_failure_by_structure):
+	Wrote test.
+	(PokerAvatarTablePickerTestCase.test03_tablePicker_onlyOnePossible):
+	Wrote test.
+	(PokerAvatarTablePickerTestCase.test04_tablePicker_twoPossibleGivesMostEmpty):
+	Wrote test.
+	(PokerAvatarTablePickerTestCase.test05_tablePicker_emptyTableLowestNumberWhenEverythingIsEmpty):
+	Wrote test.
+	(PokerAvatarTestCaseBaseClass.sitOut): Moved to BaseClass.
+	(PokerAvatarTablePickerTestCase.test06_tablePicker_shouldNoticeWhenSitOutMakesTableBadChoice):
+	Wrote test.
+	(PokerAvatarTablePickerTestCase.test07_tablePicker_shouldNotPickFullTableEvenIfPlayerSitsOut):
+	Wrote test.
 
 2009-06-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -22,6 +214,16 @@
 	(PokerAvatarTestCase.setUpServer): Rewrote to use base class.
 	(PokerAvatarTestCaseBaseClass.createClients): Wrote method; added
 	call to it in every test in PokerAvatarTestCase.
+	(PokerAvatarTablePickerTestCase.tablePickerSucceeds): Wrote
+	method.
+	(PokerAvatarTablePickerTestCase.tablePickerFails): Wrote method.
+	(PokerAvatarTablePickerTestCase.startPlayerSeatedAndPlaying):
+	Wrote method.
+	(PokerAvatarTestCaseBaseClass.seatTable)
+	(PokerAvatarTestCase.setLocale): successive ifs should be elifs.
+	(PokerAvatarTablePickerTestCase.test00_tablePickerFailure): Wrote test.
+	(PokerAvatarTablePickerTestCase.preparePlayerForTablePickerSend):
+	Wrote method.
 
 2009-06-11  Loic Dachary <loic@dachary.org>
 

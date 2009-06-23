@@ -1,8 +1,8 @@
 #
 # Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
-# Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
-#                                24 rue vieille du temple 75004 Paris
+# Copyright (C)             2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2004, 2005, 2006       Mekensleep <licensing@mekensleep.com>
+#                                      24 rue vieille du temple 75004 Paris
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -47,6 +47,10 @@
 #     PACKET_POKER_BUY_IN
 #     PACKET_POKER_AUTO_BLIND_ANTE
 #     PACKET_POKER_SIT
+#
+#     How to quickly get to a cash game table that fits certain criteria?
+#
+#     PACKET_POKER_TABLE_PICKER
 #
 #     How to leave a cash game table ?
 #
@@ -4384,6 +4388,84 @@ Direction: server =>  client
     pass
     
 Packet.infoDeclare(globals(), PacketPokerTourneyInfo, Packet, "POKER_TOURNEY_INFO", 164) # 164 # 0xa4 # %SEQ%
+
+########################################
+class PacketPokerTablePicker(PacketPokerId):
+    """\
+
+Semantics: The player "serial" wishes to join a table that matches the
+           criteria sent.  Empty or non existing entries in criteria
+           means "match any".
+
+           Note that the player has to be logged in order to pick a table,
+           the "serial" field is mandatory.
+
+           An additional criterion that is *not* sent by the user (but
+           rather inferred by the server) is as follows: cash game tables
+           whose minimum buy-in is less than the amount of money available
+           to the player in a given currency are eliminated from
+           consideration.
+
+           If a table matching the criteria is available, it will be as if
+           the client had sent the following sequence of packets (plus
+           performed the pseudo-code logic below on client side):
+
+               Send: PacketPokerTableJoin()
+               Send: PacketPokerSeat()
+               Receive: PacketPokerBuyInLimits() [ returning "best", "min" ]
+               if player.money_available < best:
+                    Send: PacketPokerBuyIn(amount = min)
+               else:
+                    Send: PacketPokerBuyIn(amount = best)
+               Send: PacketPokerSit()
+
+           In this case of success, the client can expect to receive all
+           the packets that it would expect to receive in response to any
+           of the packets listed in "Send" above.  These include:
+                  PacketPokerBuyInLimits()  # still sent despite mention in pseudo-code above
+                  PacketPokerPlayerArrive() # for client.serial
+                  PacketPokerPlayerChips()  # for client.serial
+                  PacketPokerSit()          # for client.serial
+                  PacketPokerSeats()
+              
+           If a table matching the criteria is *not* available, an empty
+           PacketPokerTable() will be sent (which matches the semantics of
+           certain PacketPokerTableJoin() fails, and that's why we do it
+           here.).
+
+           Thus, the key packet the client should look for after sending a
+           PacketPokerTablePicker is a PacketPokerTable().  That packet
+           will be empty if the picker couldn't find a seat matching the
+           criteria, and will be full of info if it was successful.
+
+           Even if a valid PacketPokerTable() is received, it's possible,
+           although unlikely, that the intervening operations --
+           PacketPokerSeat(), PacketPokerBuyIn() and PacketPokerSit() --
+           might fail.  If one of them fails, the client should expect to
+           receive the normal errors it would receive if such an operation
+           failed.  Clients are advised, upon receiving a valid
+           PacketPokerTable() in response, to use the same handling
+           routines that it uses for PacketPokerSeat(), PacketPokerBuyIn()
+           and PacketPokerSit() to keep parity with the operations the
+           server is performing on the client's behalf.
+
+Direction: server <=  client
+
+Context:
+
+serial: integer uniquely identifying a player.
+currency_serial: int currency id (criteria for search)
+variant: base name of the variant sought.
+betting_structure: base name of the betting structure.
+"""
+    info = PacketPokerId.info + (
+        ('currency_serial', 0, 'I'),
+        ('min_players', 0, 'I'),
+        ('variant', '', 's'),
+        ('betting_structure', '', 's'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerTablePicker, Packet, "POKER_TABLE_PICKER", 165) # 165 # 0xa5 # %SEQ%
 
 _TYPES = range(50,169)
 

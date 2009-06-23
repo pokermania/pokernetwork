@@ -1444,7 +1444,75 @@ class PokerService(service.Service):
         return ( players, tables )
 
     def listTables(self, string, serial):
-        criterion = split(string, "\t")
+        """listTables() takes two arguments:
+
+                 string : which is the ad-hoc query string for the tables
+                          sought (described in detail below), and
+                 serial : which is the user serial, used only when string == "my"
+
+           The ad-hoc format of the query string deserves special
+           documentation.  It works as follows:
+
+               0. If string is the empty string, or excatly 'all', then
+                  all tables in the system are returned.
+
+               1. If string is 'my', then all tables that user identified
+                  by serial has joined are returned.
+
+               2. If string (a) contains *no* TAB (\t) characters AND (b)
+                  contains any non-numeric characters (aka is a string of
+                  letters, optionally with numbers, with no tabs), then it
+                  assumed to be a specific table name, and only table(s)
+                  with the specific name exactly equal to the string are
+                  returned.
+
+               3. Otherwise, the string is interpreted as a tab-separated
+                  group of criteria for selecting which tables to be
+                  returned.  Two rules to keep in mind when constructing the string:
+
+                     (a) If any field is the empty string (i.e., nothing
+                         between the tab characters for that field), then
+                         the given criterion is not used for table
+                         selection.
+
+                     (b) Any fields that are left completely off (by
+                         simply having fewer than the maximum tab
+                         characters) are treated as if they were present
+                         but empty strings (i.e., they are not used as a
+                         criterion for table selection).
+
+                     (c) Any additional fields are ignored, but an error
+                         message is generated.
+
+                  The tab-separated query string currently accepts four fields:
+                  "currency_serial\tvariant\tbetting_structure\tmin_players"
+
+                  Note that the 'min_players' criterion is a >= setting.
+                  The rest are exactly = to setting.
+
+                  Note further that min_players and currency_serial *must
+                  be* integer values in decimal greater than 0.  (Also, if
+                  sent in equal to 0, no error will be generated, but it
+                  will be as if you didn't send them at all).
+
+           One final note: sneakily, this method sets an internal variable
+           which is left around for use by self.getTableBestByCriteria().
+           self.getTableBestByCriteria() clears it before and after its
+           call to this method.  No other methods should rely on it
+           without changing this docstring.
+           """
+        # It appears to me that the original motivation for this \t
+        # seperated format for string was that the string would front-load
+        # with more commonly used criteria, and put less frequently used
+        # ones further to the back.  Thus, the query string can be
+        # effeciently constructed by callers.  During implementation of
+        # the table-picker feature, I wrote the documentation above and I
+        # heavily extended this method to account for additional criteria
+        # that table-picker wanted to use.  dachary and I discussed a bit
+        # whether it was better not to expand this method, but I felt it
+        # was close enough that it was.  Our discussion happened on IRC
+        # circa 2009-06-20 and following. -- bkuhn, 2009-06-20
+        criteria = split(string, "\t")
         cursor = self.db.cursor(DictCursor)
         if string == '' or string == 'all':
             cursor.execute("SELECT * FROM pokertables")
@@ -1452,12 +1520,69 @@ class PokerService(service.Service):
             cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s", serial)
         elif re.match("^[0-9]+$", string):
             cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s", string)
-        elif len(criterion) > 1:
-            ( currency_serial, variant ) = criterion
-            if currency_serial:
-                cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s AND variant = %s", (currency_serial, variant))
+        elif len(criteria) > 1:
+            # Next, unpack the various possibilities in the tab-separated
+            # criteria, starting with everything set to None.  This helps
+            # organize building the query string that follows.
+            whereValues = { 'currency_serial' : None, 'variant' : None,
+                            'betting_structure' : None, 'min_players' : None }
+            if len(criteria) == 2:
+                ( whereValues['currency_serial'], whereValues['variant'] ) = criteria
+            elif len(criteria) == 3:
+                ( whereValues['currency_serial'], whereValues['variant'],
+                  whereValues['betting_structure'] ) = criteria
+            elif len(criteria) == 4:
+                ( whereValues['currency_serial'], whereValues['variant'],
+                 whereValues['betting_structure'], whereValues['min_players'] ) = criteria
             else:
-                cursor.execute("SELECT * FROM pokertables WHERE variant = %s", variant)
+                self.error("Following listTables() criteria string has more parameters than expected, ignoring third one and beyond in: " + string)
+                ( whereValues['currency_serial'], whereValues['variant'],
+                 whereValues['betting_structure'], whereValues['min_players'] ) = criteria[:4]
+            # Next, do some minor format verification for those values that are
+            # supposed to be integers.
+            for kk in [ 'currency_serial', 'min_players' ]:
+                if whereValues[kk] != None and whereValues[kk] != '':
+                    if not re.match("^[0-9]+$", whereValues[kk]):
+                        self.error("listTables(): %s parameter must be an integer, instead was: %s" % (kk, whereValues[kk]))
+                        return []
+
+            # Next, this is a bit nasty. Hold on to the min_players value
+            # in self._listTables_min_players_cached
+            if (whereValues['min_players'] != None and whereValues['min_players'] != ''):
+                self._listTables_min_players_cached = int(whereValues['min_players'])
+            else:
+                self._listTables_min_players_cached = 0
+
+            # Now build the SQL statement we need.
+            sql = "SELECT * FROM pokertables"
+            sqlQuestionMarkParameterList = []
+            startLen = len(sql)
+            for (kk, vv) in whereValues.iteritems():
+                if vv == None or vv == '' or (kk == 'currency_serial' and int(vv) == 0):
+                    # We skip any value that is was not given to us (is
+                    # still None), was entirely empty when it came in, or,
+                    # in the case of currency_serial, is 0, since a 0
+                    # currency_serial is not valid.
+                    continue
+                # Next, if we have an sql statement already from previous
+                # iteration of this loop, add an "AND", otherwise,
+                # initialze the sql string with the beginning of the
+                # SELECT statement.
+                if len(sql) > startLen:
+                    sql += " AND "
+                else:
+                    sql += " WHERE "
+                # Next, we handle the fact that min_players is a >=
+                # parameter, unlike the others which are = parameters.
+                # Also, note here that currency_serial and min_players are
+                # integer values.
+                if kk == 'min_players':
+                    sql += " players >= " + "%s"
+                else:
+                    sql += kk + " = " + "%s"
+                sqlQuestionMarkParameterList.append(vv)
+            sql += " order by serial"
+            cursor.execute(sql, sqlQuestionMarkParameterList)
         else:
             cursor.execute("SELECT * FROM pokertables WHERE name = %s", string)
         result = cursor.fetchall()
@@ -2221,6 +2346,80 @@ class PokerService(service.Service):
 
     def getTable(self, game_id):
         return self.tables.get(game_id, False)
+
+    def getTableBestByCriteria(self, serial, list_table_query_str):
+        """Return a PokerTable object optimal table based on the given
+        criteria in list_table_query_str plus the amount of currency the
+        user represented by serial has.  The caller is assured that the
+        user represented by serial can afford at least the minimum buy-in
+        for the table returned (if one is returned).
+
+        Arguments in order:
+
+             serial:               a user_serial for the user who
+                                   wants a good table.
+             list_table_query_str: a query string suitable for input to
+                                   self.listTables()
+
+        General algorithm used by this method:
+
+          First, a list of tables is requested from
+          self.listTables(list_table_query_str).  If an empty list is
+          returned by listTables(), then None is returned here.
+
+          Second, this method iterates across the tables returned from
+          listTables() and eliminates any tables for which the user
+          represented by serial has less than the minimum buy-in, and
+          those that have too many users sitting out such that the
+          criteria from the user is effectively not met.
+
+          If there are multiple tables found, the first one from the list
+          coming from listTables() that the user can buy into is returned.
+
+          Methods of interest used by this method:
+
+            self.getMoney() :       used to find out how much money the
+                                    serial has.
+
+            table.game.sitCount() : used to find out how many users are
+                                    sitting out.
+
+            table.game.all() :      used to shortcut away from tables that
+                                    are full and should not be considered.
+        """
+        bestTable = None
+
+        # money_results dict is used to store lookups made to self.getMoney()
+        money_results = {}
+
+        # A bit of a cheat, listTables() caches the value for min_players
+        # when it does parsing so that we can use it here.
+        self._listTables_min_players_cached = 0
+        for rr in self.listTables(list_table_query_str, serial):
+            table = self.getTable(rr['serial'])
+
+            # Skip considering table entirely if it is full.
+            if table.game.full():
+                continue
+
+            # Check to see that the players sitting out don't effecitvely
+            # cause the user to fail to meet the number of players
+            # criteria.
+            if table.game.sitCount() < self._listTables_min_players_cached:
+                continue
+
+            buy_in = table.game.buyIn()
+            currency_serial = rr['currency_serial']
+            if not money_results.has_key(currency_serial):
+                money_results[currency_serial] = self.getMoney(serial, currency_serial)
+
+            if money_results[currency_serial] > buy_in:
+                # If the user can afford the buy_in, we've found a table for them!
+                bestTable = table
+                break
+
+        del self._listTables_min_players_cached
+        return bestTable
 
     def createTable(self, owner, description):
 
