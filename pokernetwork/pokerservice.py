@@ -895,7 +895,7 @@ class PokerService(service.Service):
             self.cancelTimer(key)
             for serial in tourney.players:
                 player = self.serial2client.get(serial, None)
-                if player:
+                if player and tourney.serial in player.tourneys:
                     player.tourneys.remove(tourney.serial)
             self.tourneyDeleteRouteActual(tourney.serial)
         self.timer[key] = reactor.callLater(max(self._ping_delay*2, wait*2), doTourneyDeleteRoute)

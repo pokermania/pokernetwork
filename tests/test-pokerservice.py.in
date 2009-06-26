@@ -2782,7 +2782,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial)
-        client1.tourneys = [1, 2, 3]
+        client1.tourneys = []
         client2 = self.ClientMockup(self.user2_serial)
         client2.tourneys = [1, 2]
         self.service.serial2client[self.user1_serial] = client1
