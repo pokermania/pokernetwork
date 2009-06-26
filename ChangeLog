@@ -1,3 +1,18 @@
+2009-06-26  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.5
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  Fixes https://gna.org/bugs/index.php?13769
+	  user A is disconnected, tourney T finishes, user A connects (
+	  because tourney T is finished, it will now be added to user A
+	  tourneys list ), doTourneyDeleteRoute runs (was scheduled to run
+	  after a delay)
+	* debian/python-poker-network.postinst,
+	  debian/python-poker-network.postrm: Fixes
+	  https://gna.org/bugs/?13765
+	  poker-network debian installation/upgrade delete poker.server.xml
+
 2009-06-22  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-pokeravatar.py.in
@@ -226,8 +241,6 @@
 	Wrote method.
 
 2009-06-11  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.5
 
 	* pokernetwork/pokerexplain.py, pokernetwork/pokergameclient.py,
 	  tests/test-pokerexplain.py.in, tests/test-pokergameclient.py.in:
