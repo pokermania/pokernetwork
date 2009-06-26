@@ -75,11 +75,13 @@ case "$1" in
 	    echo "done."
 	fi
 
-        pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network/conf /etc/poker-network 
         server_conf=/etc/poker-network/poker.server.xml
         if [ ! -f $server_conf ] ; then
             server_conf_did_not_exist=true
+        else
+            server_conf_did_not_exist=false
         fi
+        pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network/conf /etc/poker-network 
 	for file in bot client server ; do
             pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network/upgrades/poker.$file /etc/poker-network/poker.$file.xml
 	done

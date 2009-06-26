@@ -15,7 +15,8 @@ if [ -f /usr/share/debconf/confmodule ]; then
 
     if [ "$1" = "purge" ]; then
         for file in /etc/poker-network/poker.bot.xml /etc/poker-network/poker.client.xml /etc/poker-network/poker.server.xml ; do
-            ucf --debconf-ok --purge $file >/dev/null 2>&1 || rm -f $file
+            ucf --debconf-ok --purge $file >/dev/null 2>&1
+            rm -f $file
         done
         rm -f /etc/poker-network/poker.pem
         rm -f /etc/poker-network/lockfile
