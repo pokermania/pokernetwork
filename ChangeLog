@@ -1,5 +1,17 @@
 2009-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/pokerpackets.py (PacketPokerTablePicker):
+	Documented how the appropriate table is selected.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables): Added
+	ORDER BY players desc, serial
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.test04_tablePicker_twoPossibleGivesMostEmpty):
+	Renamed test and enabled.
+	(PokerAvatarTablePickerTestCase.test12_tablePicker_twoPossibleGivesMostFullWithSeatsButNotFullOne):
+	Wrote test.
+
 	* pokernetwork/pokerservice.py (PokerService.tourneyGameFilled):
 	Added reason argument to client.join() call.
 	(PokerService.tourneyMovePlayer): added reason argument to

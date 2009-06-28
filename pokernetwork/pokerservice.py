@@ -1496,6 +1496,11 @@ class PokerService(service.Service):
                   sent in equal to 0, no error will be generated, but it
                   will be as if you didn't send them at all).
 
+                  Finally, the query is sorted such that tables with the
+                  most players are at the top of the list.  Note that
+                  other methods rely on this, so don't change it.  The
+                  secondary sorting key is the ascending table serial.
+
            One final note: sneakily, this method sets an internal variable
            which is left around for use by self.getTableBestByCriteria().
            self.getTableBestByCriteria() clears it before and after its
@@ -1513,14 +1518,15 @@ class PokerService(service.Service):
         # whether it was better not to expand this method, but I felt it
         # was close enough that it was.  Our discussion happened on IRC
         # circa 2009-06-20 and following. -- bkuhn, 2009-06-20
+        orderBy = " ORDER BY players desc, serial"
         criteria = split(string, "\t")
         cursor = self.db.cursor(DictCursor)
         if string == '' or string == 'all':
-            cursor.execute("SELECT * FROM pokertables")
+            cursor.execute("SELECT * FROM pokertables" + orderBy)
         elif string == 'my':
-            cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s", serial)
+            cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s" + orderBy, serial)
         elif re.match("^[0-9]+$", string):
-            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s", string)
+            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s" + orderBy, string)
         elif len(criteria) > 1:
             # Next, unpack the various possibilities in the tab-separated
             # criteria, starting with everything set to None.  This helps
@@ -1582,7 +1588,7 @@ class PokerService(service.Service):
                 else:
                     sql += kk + " = " + "%s"
                 sqlQuestionMarkParameterList.append(vv)
-            sql += " order by serial"
+            sql += orderBy
             cursor.execute(sql, sqlQuestionMarkParameterList)
         else:
             cursor.execute("SELECT * FROM pokertables WHERE name = %s", string)
@@ -2398,7 +2404,6 @@ class PokerService(service.Service):
         self._listTables_min_players_cached = 0
         for rr in self.listTables(list_table_query_str, serial):
             table = self.getTable(rr['serial'])
-
             # Skip considering table entirely if it is full.
             if table.game.full():
                 continue

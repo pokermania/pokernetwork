@@ -4321,17 +4321,15 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
     # ------------------------------------------------------------------------
-    # NOTE: Test below not operational.  Proposed for a later improvement.
-    def test04_tablePicker_twoPossibleGivesMostEmpty(self):
-        return True
+    def test04_tablePicker_twoPossibleGivesMostFullWithSeats(self):
         self.createClients(8)
 
         playersDeferreds = []
-        for ii in [ 0, 1, 2, 3 ]:
+        for ii in [ 0, 1, 2 ]:
             playersDeferreds.append(
                 self.startPlayerSeatedAndPlaying(ii, 1, "NL HE 10-max 100/200",
                                                  "100-200-no-limit", "holdem", 10, 1))
-        for ii in [ 4, 5, 6 ]:
+        for ii in [ 3, 4, 5, 6 ]:
             playersDeferreds.append(
                 self.startPlayerSeatedAndPlaying(ii, 2, "NL HE 6-max 100/200",
                                                  "100-200-no-limit", "holdem", 6, 1))
@@ -4339,7 +4337,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         pickerDeferred = self.preparePlayerForTablePickerSend(7)
         pickerDeferred.addCallback(self.setMoneyForPlayer, 7, 1, "over_best", 1)
         pickerDeferred.addCallback(self.tablePickerSucceeds, 7, 3, 0,
-                                    "holdem", "100-200-no-limit", 1, "NL HE 6-max 100/200")
+                                    "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
     # ------------------------------------------------------------------------
@@ -4465,6 +4463,31 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         pickerDeferred.addCallback(self.tablePickerFails, 3, 3, 0,
                                     "7stud", "2-4-limit", 5)
         pickerDeferred.addCallback(self.restoreTableCanAddPlayer, 5)
+        playersDeferreds.append(pickerDeferred)
+        return defer.DeferredList(playersDeferreds)
+    # ------------------------------------------------------------------------
+    def test12_tablePicker_twoPossibleGivesMostFullWithSeatsButNotFullOne(self):
+        self.createClients(18)
+
+        playersDeferreds = []
+        for ii in [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]:
+            playersDeferreds.append(
+                self.startPlayerSeatedAndPlaying(ii, 1, "NL HE 10-max 100/200",
+                                                 "100-200-no-limit", "holdem", 10, 1))
+        for ii in [ 10, 11, 12 ]:
+            playersDeferreds.append(
+                self.startPlayerSeatedAndPlaying(ii, 2, "NL HE 6-max 100/200",
+                                                 "100-200-no-limit", "holdem", 6, 1))
+        for ii in [ 13, 14, 15, 16 ]:
+            playersDeferreds.append(
+                self.startPlayerSeatedAndPlaying(ii, 5, "Stud 8-max 2/4",
+                                             "2-4-limit", "7stud", 8, 2))
+
+        pickerDeferred = self.preparePlayerForTablePickerSend(17)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, 17, 1, "over_best", 1)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, 17, 2, "over_best", 5)
+        pickerDeferred.addCallback(self.tablePickerSucceeds, 17, 0, 0,
+                                    "", "", 5, "Stud 8-max 2/4")
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
 # -----------------------------------------------------------------------------

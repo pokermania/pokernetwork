@@ -4448,8 +4448,13 @@ class PacketPokerTablePicker(PacketPokerId):
     """\
 
 Semantics: The player "serial" wishes to join a table that matches the
-           criteria sent.  Empty or non existing entries in criteria
-           means "match any".
+           criteria sent.  Empty or non existing entries in criteria means
+           "match any".  The table that matches the given criteria, and
+           has the most players already seated (but with a seat available
+           for the requesting player) will be returned.  An error is
+           returned if such a table cannot be found.  If multiple tables
+           are equally appropriate, the one with the smallest serial is
+           returned.
 
            Note that the player has to be logged in order to pick a table,
            the "serial" field is mandatory.
