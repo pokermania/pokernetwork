@@ -1406,13 +1406,15 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
 
     class ClientMockup:
-        def __init__(self, serial):
+        def __init__(self, serial, testObject):
             self.via_satellite = 0
             self.serial = serial
             self.packet_end_tournament = None
             self.packets = []
             self.tables = {}
             self.joinedTables = []
+            self.testObject = testObject
+            self.expectedReason = ""
 
         def sendPacketVerbose(self, packet):
             # packet_end_tournament was an expected field by some tests
@@ -1421,9 +1423,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.packet_end_tournament = packet
             self.packets.append(packet)
 
-        def join(self, table):
+        def join(self, table, reason = ""):
             self.joinedTables.append(table)
             self.tables[table.game.id] = table
+            self.testObject.assertEquals(self.expectedReason, reason)
 
         def getSerial(self):
             return self.serial
@@ -1464,7 +1467,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             return table
 
         tourney = self.TourneyMockup()
-        self.service.client = self.ClientMockup(self.user1_serial)
+        self.service.client = self.ClientMockup(self.user1_serial, self)
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
         self.assertEquals(self.service.client.packet_end_tournament == None, True)
@@ -1480,7 +1483,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         tourney = self.TourneyMockup()
         tourney.players = [2, self.user1_serial, 10]
-        client = self.ClientMockup(self.user1_serial)
+        client = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
@@ -1501,7 +1504,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         tourney = self.TourneyMockup()
         tourney.rank = 2
-        client = self.ClientMockup(self.user1_serial)
+        client = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, 0, self.user1_serial)
@@ -1605,9 +1608,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
 
-        client1 = self.ClientMockup(self.user1_serial)
+        client1 = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client1
-
+        client1.expectedReason = PacketPokerTable.REASON_TOURNEY_START
         (heads_up,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
         clear_all_messages()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
@@ -2050,13 +2053,16 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
     class ClientMockup:
-        def __init__(self, serial):
+        def __init__(self, serial, testObject):
             self.serial = serial
             self.tableJoined = None
             self.packets = []
+            self.testObject = testObject
+            self.expectedReason = ""
 
-        def join(self, table):
+        def join(self, table, reason = ""):
             self.tableJoined = table
+            self.testObject.assertEquals(self.expectedReason, reason)
 
         def sendPacketVerbose(self, packet):
             self.packets.append(packet)
@@ -2070,7 +2076,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         table_money = 140
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
         # One client (user1) has a Client logged in
-        client1 = TourneyManagerTestCase.ClientMockup(self.user1_serial)
+        client1 = TourneyManagerTestCase.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client1
         self.service.spawnTourney(schedule)
         clear_all_messages()
@@ -2301,15 +2307,16 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
             self.serial = TourneyMovePlayerTestCase.tourney_serial
 
     class Table:
-        def __init__(self):
+        def __init__(self, testObject):
             self.serial2client = {}
+            self.testObj = testObject
 
-        def movePlayer(self, client, serial, to_game_id):
-            pass
+        def movePlayer(self, client, serial, to_game_id, reason = ""):
+            self.testObj.assertEquals(reason, PacketPokerTable.REASON_TOURNEY_MOVE)
 
     def test_ok(self):
         self.service.startService()
-        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table()
+        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table(self)
         user_serial = 1
         table_serial = 100
         cursor = self.db.cursor()
@@ -2319,7 +2326,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
     def test_missing_db_record(self):
         self.service.startService()
-        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table()
+        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table(self)
         user_serial = 1
         table_serial = 100
         cursor = self.db.cursor()
@@ -2659,13 +2666,16 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 
     class ClientMockup:
-        def __init__(self, serial):
+        def __init__(self, serial, testObject):
             self.serial = serial
 #            self.tableJoined = None
             self.packets = []
+            self.testObject = testObject
+            self.expectedReason = ""
 
-        def join(self, table):
+        def join(self, table, reason = ""):
             self.tableJoined = table
+            self.assertEquals(self.execptedReason, reason)
 
         def sendPacketVerbose(self, packet):
             self.packets.append(packet)
@@ -2684,7 +2694,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
-        client1 = self.ClientMockup(self.user1_serial)
+        client1 = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client1
         tournament = Tournament()
         winner_serial = self.user1_serial
@@ -2754,7 +2764,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
-        client1 = self.ClientMockup(self.user1_serial)
+        client1 = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client1
         tournament = Tournament()
         winner_serial = self.user1_serial
@@ -2781,9 +2791,9 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
-        client1 = self.ClientMockup(self.user1_serial)
+        client1 = self.ClientMockup(self.user1_serial, self)
         client1.tourneys = []
-        client2 = self.ClientMockup(self.user2_serial)
+        client2 = self.ClientMockup(self.user2_serial, self)
         client2.tourneys = [1, 2]
         self.service.serial2client[self.user1_serial] = client1
         self.service.serial2client[self.user2_serial] = client2
@@ -2829,7 +2839,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
-        client1 = self.ClientMockup(self.user1_serial)
+        client1 = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client1
         tournament = Tournament()
         winner_serial = self.user1_serial
@@ -2868,9 +2878,9 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 return [self.prize_min]
         self.service.startService()
         self.createUsers()
-        client1 = self.ClientMockup(self.user1_serial)
+        client1 = self.ClientMockup(self.user1_serial, self)
         self.service.serial2client[self.user1_serial] = client1
-        client2 = self.ClientMockup(self.user2_serial)
+        client2 = self.ClientMockup(self.user2_serial, self)
         self.service.serial2client[self.user2_serial] = client2
         tournament = Tournament()
         winner_serial = self.user1_serial

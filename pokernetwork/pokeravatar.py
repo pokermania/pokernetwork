@@ -572,6 +572,7 @@ class PokerAvatar:
 
         elif packet.type == PACKET_POKER_TABLE_JOIN:
             self.performPacketPokerTableJoin(packet)
+
             return
 
         elif packet.type == PACKET_POKER_TABLE_PICKER:
@@ -747,14 +748,17 @@ class PokerAvatar:
             table.update()
 
         elif not table and packet.type == PACKET_POKER_HAND_REPLAY:
-            table = self.createTable(PacketPokerTable())
+            table = self.createTable(PacketPokerTable(
+                        reason = PacketPokerTable.REASON_HAND_REPLAY))
             if table:
                 table.handReplay(self, packet.serial)
 
         elif packet.type == PACKET_POKER_TABLE:
+            packet.reason = PacketPokerTable.REASON_TABLE_CREATE
             table = self.createTable(packet)
             if table:
-                table.joinPlayer(self, self.getSerial())
+                table.joinPlayer(self, self.getSerial(),
+                                 reason = PacketPokerTable.REASON_TABLE_CREATE)
             
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
@@ -782,15 +786,17 @@ class PokerAvatar:
     # -------------------------------------------------------------------------
     def performPacketPokerTableJoin(self, packet, table = None,
                                     deprecatedEmptyTableBehavior = True,
-                                    requestorPacketType = PACKET_POKER_TABLE_JOIN):
+                                    requestorPacketType = PACKET_POKER_TABLE_JOIN,
+                                    reason = PacketPokerTable.REASON_TABLE_JOIN):
         """Perform the operations that must occur when a
         PACKET_POKER_TABLE_JOIN is received."""
         if not table:
             table = self.service.getTable(packet.game_id)
         if table:
-            if not table.joinPlayer(self, self.getSerial()):
+            if not table.joinPlayer(self, self.getSerial(),
+                                    reason = reason):
                 if deprecatedEmptyTableBehavior:
-                    self.sendPacketVerbose(PacketPokerTable())
+                    self.sendPacketVerbose(PacketPokerTable(reason = reason))
                 self.sendPacketVerbose(
                   PacketPokerError(code = PacketPokerTableJoin.GENERAL_FAILURE,
                                    message = "Unable to join table for unknown reason",
@@ -896,7 +902,8 @@ class PokerAvatar:
                 if self.performPacketPokerTableJoin(
                      PacketPokerTableJoin(serial = mySerial,
                                           game_id = table.game.id), table,
-                       deprecatedEmptyTableBehavior = False):
+                       deprecatedEmptyTableBehavior = False,
+                       reason = PacketPokerTable.REASON_TABLE_PICKER):
 
                     # Giving no seat argument at all for the packet should cause
                     # us to get any available seat.
@@ -991,6 +998,7 @@ class PokerAvatar:
                                       waiting = int(table['waiting']),
                                       skin = table['skin'],
                                       currency_serial = int(table['currency_serial']),
+                                      reason = PacketPokerTable.REASON_TABLE_LIST,
                                       )
             packet.tourney_serial = int(table['tourney_serial'])
             packets.append(packet)
@@ -1040,17 +1048,20 @@ class PokerAvatar:
             "player_timeout": packet.player_timeout,
             "muck_timeout": packet.muck_timeout,
             "currency_serial": packet.currency_serial,
-            "skin": packet.skin })
+            "skin": packet.skin,
+            "reason" : packet.reason})
         if not table:
-            self.sendPacket(PacketPokerTable())
+            self.sendPacket(PacketPokerTable(reason = packet.reason))
         return table            
 
-    def join(self, table):
+    def join(self, table, reason = ""):
         game = table.game
         
         self.tables[game.id] = table
 
-        self.sendPacketVerbose(table.toPacket())
+        packet = table.toPacket()
+        packet.reason = reason
+        self.sendPacketVerbose(packet)
         self.sendPacketVerbose(PacketPokerBuyInLimits(game_id = game.id,
                                                       min = game.buyIn(),
                                                       max = game.maxBuyIn(),

@@ -885,9 +885,10 @@ class PokerTable:
             game.getPlayer(serial).money = serial2chips[serial]
             game.sit(serial)
         if self.isJoined(client):
-            client.join(self)
+            client.join(self, reason = PacketPokerTable.REASON_HAND_REPLAY)
         else:
-            self.joinPlayer(client, client.getSerial())
+            self.joinPlayer(client, client.getSerial(),
+                            reason = PacketPokerTable.REASON_HAND_REPLAY)
         serial = client.getSerial()
         cache = self.createCache()
         for packet in self.history2packets(history, game.id, cache):
@@ -1033,7 +1034,7 @@ class PokerTable:
 
         return True
         
-    def movePlayer(self, client, serial, to_game_id):
+    def movePlayer(self, client, serial, to_game_id, reason = ""):
         game = self.game
         #
         # We are safe because called from within the server under
@@ -1055,7 +1056,7 @@ class PokerTable:
             self.error("movePlayer: player %d money %d in database, %d in memory" % ( serial, money_check, money ))
 
         if client:
-            client.join(other_table)
+            client.join(other_table, reason = reason)
         other_table.movePlayerTo(serial, money, sit_out)
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
@@ -1130,14 +1131,14 @@ class PokerTable:
         game.comeBack(serial)
         return True
             
-    def joinPlayer(self, client, serial):
+    def joinPlayer(self, client, serial, reason = ""):
         game = self.game
         #
         # Nothing to be done except sending all packets
         # Useful in disconnected mode to resume a session.
         #
         if self.isJoined(client):
-            client.join(self);
+            client.join(self, reason = reason);
             return True
 
         # Next, test to see if we have reached the server-wide maximum for
@@ -1163,7 +1164,7 @@ class PokerTable:
         # Player is now an observer, unless he is seated
         # at the table.
         #
-        client.join(self)
+        client.join(self, reason = reason)
         self.factory.joinedCountIncrease()
         if not self.game.isSeated(client.getSerial()):
             self.observers.append(client)

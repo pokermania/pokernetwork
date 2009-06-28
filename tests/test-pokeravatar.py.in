@@ -246,7 +246,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         return client.packetDeferred(True, PACKET_POKER_PLAYER_INFO)
     # -------------------------------------------------------------------------
     def joinTable(self, (client, packet), id, gameId, name, struct, statsExpected = [],
-                  variant = 'holdem', max_players = 10):
+                  variant = 'holdem', max_players = 10, reason = PacketPokerTable.REASON_TABLE_JOIN):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         avatar.queuePackets()
@@ -257,6 +257,9 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TABLE:
                 found += 1
+                self.assertEquals(packet.betting_structure, struct)
+                self.assertEquals(packet.variant, variant)
+                self.assertEquals(packet.reason, reason)
                 for  (kk, vv) in avatar.tables.items():
                     self.assertEquals(vv.game.id, table.game.id)
                     self.assertEquals(vv.game.name, name)
@@ -446,18 +449,26 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         def handleTable((client, packet)):
             avatar = self.service.avatars[0]
-            avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
-                    name = "A Testing Cash Table", variant = "holdem",
-                    betting_structure = '2-4-limit', player_timeout =  6,
-                    currency_serial = 0))
+            packets = avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
+                        name = "A Testing Cash Table", variant = "holdem",
+                        betting_structure = '2-4-limit', player_timeout =  6,
+                        currency_serial = 0))
             self.assertEquals(len(avatar.tables), 1)
             for  (kk, vv) in avatar.tables.items():
                 self.assertEquals(vv.game.name, "A Testing Cash Table")
                 self.assertEquals(vv.game.max_players, 5)
                 self.assertEquals(vv.game.variant, 'holdem')
                 self.assertEquals(vv.game.betting_structure, '2-4-limit')
+            found = False
+            for packet in packets:
+                if packet.type == PACKET_POKER_TABLE:
+                    found = True
+                    self.assertEquals(packet.betting_structure, '2-4-limit')
+                    self.assertEquals(packet.variant, 'holdem')
+                    self.assertEquals(packet.name, "A Testing Cash Table")
+                    self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_CREATE)
+            self.failUnless(found, "PACKET_POKER_TABLE not present")
             return (client, packet)
-
         d.addCallback(handleTable)
         return d
     # -------------------------------------------------------------------------
@@ -1620,6 +1631,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 count = 0
                 for p in packet.packets:
                     count += 1
+                    self.assertEquals(p.reason, PacketPokerTable.REASON_TABLE_LIST)
                     self.assertEquals(p.average_pot,  0)
                     self.assertEquals(p.hands_per_hour, 0)
                     self.assertEquals(p.percent_flop, 0)
@@ -2710,7 +2722,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
 
         table = self.service.getTable(gameId)
-        def forceFalse(self, amount):
+        def forceFalse(self, amount, reason = ""):
             return False
         originalJoin = table.joinPlayer
         table.joinPlayer = forceFalse
@@ -2730,6 +2742,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 found += 1
                 self.assertEquals(packet.id, 0)
                 self.assertEquals(packet.name, "noname")
+                self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_JOIN)
             elif packet.type == PACKET_POKER_ERROR:
                 found += 1
                 self.assertEquals(packet.serial, client.getSerial())
@@ -2739,6 +2752,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 self.failUnless(len(packet.message) > 0,
                                 "some message should be included")
         self.assertEquals(found, 2)
+
         return (client, packet)
     # ------------------------------------------------------------------------
     def test55_tableJoinWhenFails(self):
@@ -2862,6 +2876,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 self.assertEquals(packet.id, 0)
                 self.assertEquals(packet.seats, 10)
                 self.assertEquals(packet.name, 'noname')
+                self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_CREATE)
         self.assertEquals(found, True)
         self.service.createTable = originalCreate
         return (client, packet)
@@ -2920,6 +2935,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TABLE:
                 found += 1
+                self.assertEquals(packet.variant, 'holdem')
+                self.assertEquals(packet.betting_structure, struct)
+                self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_JOIN)
                 for  (kk, vv) in avatar.tables.items():
                     self.assertEquals(vv.game.id, table.game.id)
                     self.assertEquals(vv.game.name, name)
@@ -4110,19 +4128,22 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TABLE:
                 found += 1
+                self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_PICKER)
                 for  (kk, vv) in avatar.tables.items():
                     self.assertEquals(vv.game.id, table.game.id)
                     self.assertEquals(vv.game.name, gameName)
-                    if variant != '':
-                        self.assertEquals(vv.game.variant, variant)
-                    else:
-                        self.failUnless(vv.game.variant in [ 'holdem', '7stud' ])
-                    if structure != '':
-                        self.assertEquals(vv.game.betting_structure, structure)
-                    else:
-                        self.failUnless(vv.game.betting_structure in [ '100-200-no-limit',
+                    for ourVariant in [ vv.game.variant, packet.variant ]:
+                        if variant != '':
+                            self.assertEquals(ourVariant, variant)
+                        else:
+                            self.failUnless(ourVariant in [ 'holdem', '7stud' ])
+                    for ourStruct in [ packet.betting_structure, vv.game.betting_structure ]:
+                        if structure != '':
+                            self.assertEquals(ourStruct, structure)
+                        else:
+                            self.failUnless(ourStruct in [ '100-200-no-limit',
                                                              '2-4-limit' ],
-                              "strange struct: \"" + vv.game.betting_structure + "\"")
+                                "strange struct: \"" + ourStruct + "\"")
                     self.failUnless(vv.game.max_players in [ 8, 10, 6 ])
             elif packet.type == PACKET_POKER_SEATS:
                 self.assertEquals(packet.game_id, table.game.id)

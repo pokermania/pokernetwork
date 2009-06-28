@@ -926,7 +926,7 @@ class PokerService(service.Service):
                 # now be at the table, but table.joinPlayer() was never
                 # called (which is where the increase usually happens).
                 self.joinedCountIncrease()
-                client.join(table)
+                client.join(table, reason = PacketPokerTable.REASON_TOURNEY_START)
             sql = "update user2tourney set table_serial = %d where user_serial = %d and tourney_serial = %d" % ( game.id, serial, tourney.serial )
             if self.verbose > 4:
                 self.message("tourneyGameFilled: " + sql)
@@ -963,7 +963,8 @@ class PokerService(service.Service):
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
         from_table = self.getTable(from_game_id)
-        from_table.movePlayer(from_table.serial2client.get(serial, None), serial, to_game_id)
+        from_table.movePlayer(from_table.serial2client.get(serial, None), serial,
+                        to_game_id, reason = PacketPokerTable.REASON_TOURNEY_MOVE)
         cursor = self.db.cursor()
         sql = "UPDATE user2tourney SET table_serial = %d WHERE user_serial = %d AND tourney_serial = %d" % ( to_game_id, serial, tourney.serial )
         if self.verbose > 4:

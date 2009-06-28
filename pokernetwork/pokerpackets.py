@@ -1278,7 +1278,19 @@ player_timeout: the number of seconds after which a player in position is forced
 muck_timeout: the number of seconds after which a player is forced to muck.
 currency_serial: int currency id
 skin: name of the level model to use
+reason: string representing the reason that this packet is being sent to
+        the client.  Possible values are ("", "TableList", "TablePicker",
+        "TourneyMove", "TourneyStart", "TableJoin", "TableCreate", "HandReplay")
 """
+
+    REASON_TABLE_LIST    = "TableList"
+    REASON_TABLE_PICKER  = "TablePicker"
+    REASON_TOURNEY_MOVE  = "TourneyMove"
+    REASON_TOURNEY_START = "TourneyStart"
+    REASON_TABLE_JOIN    = "TableJoin"
+    REASON_TABLE_CREATE  = "TableCreate"
+    REASON_HAND_REPLAY   = "HandReplay"
+    REASON_NONE          = ""
 
     type = PACKET_POKER_TABLE
 
@@ -1297,6 +1309,7 @@ skin: name of the level model to use
                            ('variant', 'holdem', 's'),
                            ('betting_structure', '2-4-limit', 's'),
                            ('skin', 'default', 's'),
+                           ('reason', '', 's'),
                            ('tourney_serial', 0, 'no net')
                            )
     
@@ -1318,6 +1331,7 @@ skin: name of the level model to use
         self.player_timeout = kwargs.get("player_timeout", 0)
         self.muck_timeout = kwargs.get("muck_timeout", 0)
         self.skin = kwargs.get("skin", "default")
+        self.reason = kwargs.get("reason", "")
         self.currency_serial = kwargs.get("currency_serial", 0)
         self.tourney_serial = kwargs.get("tourney_serial", 0)
 
@@ -1328,6 +1342,7 @@ skin: name of the level model to use
         block += self.packstring(self.variant)
         block += self.packstring(self.betting_structure)
         block += self.packstring(self.skin)
+        block += self.packstring(self.reason)
         return block
 
     def unpack(self, block):
@@ -1338,13 +1353,14 @@ skin: name of the level model to use
         (block, self.variant) = self.unpackstring(block)
         (block, self.betting_structure) = self.unpackstring(block)
         (block, self.skin) = self.unpackstring(block)
+        (block, self.reason) = self.unpackstring(block)
         return block
 
     def calcsize(self):
-        return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin)
+        return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin) + self.calcsizestring(self.reason)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s, tourney_serial = %i" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin, self.tourney_serial )
+        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s, tourney_serial = %i, reason = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin, self.tourney_serial, self.reason )
 
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 

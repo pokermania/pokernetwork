@@ -315,7 +315,7 @@ class MockClient:
         def isLogged(self):
             return True
         
-    def __init__(self, serial):
+    def __init__(self, serial, testObject, expectedReason = ""):
         self.serial = serial
         self.deferred = None
         self.raise_if_packet = None
@@ -323,6 +323,8 @@ class MockClient:
         self.tables = {}
         self.packets = []
         self.user = MockClient.User()
+        self.testObject = testObject
+        self.reasonExpected = expectedReason
 
     def __str__(self):
         return "MockClient of Player%d" % self.serial
@@ -347,8 +349,8 @@ class MockClient:
     def error(self, message):
         self.message("error " + message)
 
-    def join(self, table):
-        pass
+    def join(self, table, reason = ""):
+        self.testObject.assertEquals(reason, self.reasonExpected)
 
     # Loic indicates that it's the job of the Client to pass along a few
     # things, including "player removes", and various clients settings, to
@@ -417,14 +419,13 @@ class MockClientBot(MockClient):
         return "BOT%d" % self.serial
 # --------------------------------------------------------------------------------
 class MockClientWithTableDict(MockClient):
-    def __init__(self, serial):
+    def __init__(self, serial, testObject):
         self.tables = {}
-        MockClient.__init__(self, serial)
+        MockClient.__init__(self, serial, testObject)
 
     def addPlayer(self, table, seat):
         MockClient.addPlayer(self, table, seat)
         self.tables[table.game.id] = seat
-
 # --------------------------------------------------------------------------------
 class MockClientWithRemoveTable(MockClient):
     def removeTable(self, gameId):
@@ -485,10 +486,13 @@ class PokerTableTestCaseBase(unittest.TestCase):
     def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
         if table == None:
             table = self.table
-        client = clientClass(serial)
+        client = clientClass(serial, self)
         self.clients[serial] = client
         if getReadyToPlay:
-            self.assertEqual(True, table.joinPlayer(client, serial))
+            client.reasonExpected = "MockCreatePlayerJoin"
+            self.assertEqual(True, table.joinPlayer(client, serial, 
+                                       reason  = "MockCreatePlayerJoin"))
+            client.reasonExpected = ""
             self.assertEqual(True, table.seatPlayer(client, serial, -1))
             self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
             self.table.sitPlayer(client, serial)
@@ -839,6 +843,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         # To get coverage of a player who isn't joined to the table requesting.
         player2 = self.createPlayer(2, False)
 
+        player1.reasonExpected = "HandReplay"
+        player2.reasonExpected = "HandReplay"
         for player in (player1, player2):
             self.table.handReplay(player, myHandId)
             checkHandSerial(player.lookForPacket(PACKET_POKER_START))
@@ -1519,7 +1525,7 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         """Player join a second time : packets sent twice"""
         player = self.createPlayer(1)
         self.assertEqual(True, self.table.isJoined(player))
-        def join(table):
+        def join(table, reason = ""):
             player.joined = True
         player.join = join
         self.assertEqual(True, self.table.joinPlayer(player, player.serial))
@@ -1579,9 +1585,11 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
     def createPlayer(self, serial, getReadyToPlay=True, clientClass=MockClient, table=None):
         if table == None:
             table = self.table
-        client = clientClass(serial)
+        client = clientClass(serial, self)
         self.clients[serial] = client
-        table.joinPlayer(client, serial)
+        client.reasonExpected = "MockTransientCreatePlayer"
+        table.joinPlayer(client, serial, reason = "MockTransientCreatePlayer")
+        client.reasonExpected = ""
         if getReadyToPlay:
             self.assertEqual(True, table.seatPlayer(client, serial, -1))
             table.sitPlayer(client, serial)
@@ -1837,6 +1845,8 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
     def test15_moveTo(self):
         """Make sure a player can move from one place to another"""
         player = self.createPlayer(1)
+        player.reasonExpected = "MockMoveTest"
+
         otherTablePlayer = self.createPlayer(2, table=self.table2)
 
         expectPlayerDeferred = otherTablePlayer.waitFor(PACKET_POKER_PLAYER_ARRIVE)
@@ -1852,7 +1862,8 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         # called as a side effect of moving the player to the table2
         #
         self.table2.timer_info['dealTimeout'] = reactor.callLater(200000, lambda: True)
-        self.table.movePlayer(player, 1, self.table2.game.id)
+        self.table.movePlayer(player, 1, self.table2.game.id,
+                              reason = "MockMoveTest")
 
         return expectPlayerDeferred
 # --------------------------------------------------------------------------------

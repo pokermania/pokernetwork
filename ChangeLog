@@ -1,4 +1,73 @@
+2009-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerservice.py (PokerService.tourneyGameFilled):
+	Added reason argument to client.join() call.
+	(PokerService.tourneyMovePlayer): added reason argument to
+	movePlayer() call.
+
+	* tests/test-pokerservice.py.in (PokerServiceTestCase.ClientMockup)
+	(TourneyManagerTestCase.ClientMockup)
+	(TourneyFinishedTestCase.ClientMockup): Added reason argument to
+	mock-up.
+	(PokerServiceTestCase.test15_runTourney): Added expectedReason for
+	tourney start.
+	(TourneyMovePlayerTestCase.Table): Added reason support for
+	Table.moveTable() mock-up.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.createTable)
+	(PokerAvatar.handlePacketLogic)
+	(PokerAvatar.performPacketPokerTableJoin)
+	(PokerAvatar.performPacketPokerTablePicker)
+	(PokerAvatar.listTables, PokerAvatar.join): Added support for
+	PacketPokerTable() reason field throughout.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test04_createTable): Added packet checks,
+	including checking for reason.
+	(PokerAvatarTestCase.joinTableForceFail.forceFalse): Added reason
+	argument for mock-up.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTable.__init__)
+	(PacketPokerTable.pack, PacketPokerTable.unpack)
+	(PacketPokerTable.calcsize, PacketPokerTable.__str__): Added
+	reason field.
+
+	* pokernetwork/pokeravatar.py (PokerAvatar.join): Added support
+	for reasons on joins.
+
+	* pokernetwork/pokertable.py (PokerTable.handReplay)
+	(PokerTable.movePlayer, PokerTable.joinPlayer): Added support for
+	reasons on joins.
+
+	* tests/test-pokertable.py.in
+	(PokerTableTestCaseBase.createPlayer)
+	(PokerTableTestCase.test18_handReplay)
+	(PokerTableTestCaseTransient.createPlayer)
+	(PokerTableMoveTestCase.test15_moveTo, MockClient.join)
+	(MockClient.__init__):  Added support for reasons on joins.
+	(MockClientWithTableDict.__init__): Added test object argument.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTable): Added
+	REASON_HAND_REPLAY.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCaseBaseClass.joinTable): Added reason argument
+	and asserts for packet information.
+	(PokerAvatarTestCase.listTables): Added test for packet.reason.
+	(PokerAvatarTestCase.joinTableForceFail.forceFalse): Added test
+	for packet.reason.
+	(PokerAvatarTablePickerTestCase.tablePickerFails): Added test for
+	packet.reason.
+	(PokerAvatarTablePickerTestCase.tablePickerSucceeds): Added test
+	for packet.reason.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTable): Created
+	constants for reasons.
+
 2009-06-27  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* pokernetwork/pokerpackets.py (PacketPokerTable): Added reason
+	field and documented it.
 
 	* pokernetwork/pokeravatar.py
 	(PokerAvatar.performPacketPokerTablePicker): added support for
