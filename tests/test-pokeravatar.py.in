@@ -4080,7 +4080,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         return (client, packet)
     # -------------------------------------------------------------------------
     def tablePickerSucceeds(self, (client, packet), id, numPlayers, currencySerial,
-                            variant, structure, gameId, gameName):
+                            variant, structure, gameId, gameName, autoBlindAnte = False):
         table = self.service.getTable(gameId)
 
         # Save the amount of money the player has, because, later, we may
@@ -4091,12 +4091,15 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerTablePicker(serial = client.getSerial(),
-                                                        currency_serial = currencySerial,
-                                                        min_players = numPlayers,
-                                                        variant = variant,
-                                                        betting_structure = structure))
+        avatar.handlePacketLogic(
+            PacketPokerTablePicker(serial = client.getSerial(),
+                                   currency_serial = currencySerial,
+                                   min_players = numPlayers,
+                                   variant = variant,
+                                   betting_structure = structure,
+                                   auto_blind_ante = autoBlindAnte))
         total = 7
+        if autoBlindAnte: total += 1
         found = 0
         seatNumber = None
         # next three vars for implementing tests about buyIn amounts.  See
@@ -4172,6 +4175,13 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
                 self.assertEquals(packet.game_id, gameId)
                 if packet.serial == client.getSerial():
                     found += 1
+            elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, gameId)
+                found += 1
+                self.failUnless(autoBlindAnte,
+                        "should not see an autoBlindAnte since it was not asked for")
+
         self.assertEquals(found, total,
                           "only found %d packet (if that's just 1, then likely the table pick failed rather than succeeded" % found)
 
@@ -4285,7 +4295,8 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         pickerDeferred = self.preparePlayerForTablePickerSend(3)
         pickerDeferred.addCallback(self.setMoneyForPlayer, 3, 2, "over_min_under_best", 5)
         pickerDeferred.addCallback(self.tablePickerSucceeds, 3, 3, 0,
-                                    "7stud", "2-4-limit", 5, "Stud 8-max 2/4")
+                                    "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
+                                   autoBlindAnte = True)
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
     # ------------------------------------------------------------------------

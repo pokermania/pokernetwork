@@ -2377,14 +2377,17 @@ PacketNames[PACKET_POKER_AUTO_BLIND_ANTE] = "POKER_AUTO_BLIND_ANTE"
 
 class PacketPokerAutoBlindAnte(PacketPokerId):
     """\
-Semantics: the player "serial" asks the server to automatically
-post the blinds or/and antes for game "game_id".
+
+Semantics: the player "serial" asks the server to automatically post the
+           blinds or/and antes for game "game_id".  In response to this
+           packet, the server sends PacketPokerAutoBlindAnte() if
+           AutoBlindAnte has been successfully turned on, otherwise, it
+           sends PacketPokerNoautoBlindAnte().
 
 Direction: server <=  client
 
-Context: by default the server will not automatically post
-the blinds or/and antes. The server will not send any packet
-back.
+Context: by default the server will not automatically post the blinds
+or/and antes. 
 
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
@@ -2401,9 +2404,14 @@ PacketNames[PACKET_POKER_NOAUTO_BLIND_ANTE] = "POKER_NOAUTO_BLIND_ANTE"
 
 class PacketPokerNoautoBlindAnte(PacketPokerId):
     """\
-Semantics: the player "serial" asks the server to send
-a PACKET_POKER_BLIND_REQUEST or/and PACKET_POKER_ANTE_REQUEST
-when a blind or/and ante for game "game_id" must be paid.
+Semantics: the player "serial" asks the server to send a
+           PACKET_POKER_BLIND_REQUEST or/and PACKET_POKER_ANTE_REQUEST
+           when a blind or/and ante for game "game_id" must be paid.
+
+           In response ot this packet, the server sends
+           PacketPokerNoautoBlindAnte() if AutoBlindAnte has been
+           successfully turned off, otherwise, it sends
+           PacketPokerAautoBlindAnte().
 
 Direction: server <=  client
 
@@ -4442,6 +4450,8 @@ Semantics: The player "serial" wishes to join a table that matches the
 
                Send: PacketPokerTableJoin()
                Send: PacketPokerSeat()
+               if auto_blind_ante: # in original packet
+                    Send: PacketPokerAutoBlindAnte()
                Receive: PacketPokerBuyInLimits() [ returning "best", "min" ]
                if player.money_available < best:
                     Send: PacketPokerBuyIn(amount = min)
@@ -4466,6 +4476,8 @@ Semantics: The player "serial" wishes to join a table that matches the
                   PacketPokerBuyInLimits()  # still sent despite mention in pseudo-code above
                   PacketPokerPlayerArrive() # for client.serial
                   PacketPokerPlayerChips()  # for client.serial
+                  if auto_blind_ante:
+                    PacketPokerAutoBlindAnte()
                   PacketPokerSit()          # for client.serial
                   PacketPokerSeats()
               
@@ -4488,12 +4500,16 @@ serial: integer uniquely identifying a player.
 currency_serial: int currency id (criteria for search)
 variant: base name of the variant sought.
 betting_structure: base name of the betting structure.
+autoblind_ante: boolean, if True server will act as if
+                PacketPokerAutoBlindAnte() were also sent by client.
+                Defaults to False.
 """
     info = PacketPokerId.info + (
         ('currency_serial', 0, 'I'),
         ('min_players', 0, 'I'),
         ('variant', '', 's'),
         ('betting_structure', '', 's'),
+        ('auto_blind_ante', False, 'bool'),
         )
 
 Packet.infoDeclare(globals(), PacketPokerTablePicker, Packet, "POKER_TABLE_PICKER", 165) # 165 # 0xa5 # %SEQ%

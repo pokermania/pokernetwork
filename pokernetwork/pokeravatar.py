@@ -918,6 +918,8 @@ class PokerAvatar:
                         if self.performPacketPokerBuyIn(
                             PacketPokerBuyIn(serial = mySerial, amount = buyIn,
                                  game_id = table.game.id), table, table.game):
+                            if packet.auto_blind_ante:
+                                table.autoBlindAnte(self, packet.serial, True)
                             self.performPacketPokerSit(
                                PacketPokerSit(serial = mySerial, game_id = table.game.id),
                                table)

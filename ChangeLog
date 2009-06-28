@@ -1,5 +1,22 @@
 2009-06-27  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* pokernetwork/pokeravatar.py
+	(PokerAvatar.performPacketPokerTablePicker): added support for
+	auto_blind_ante setting in packet.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTablePickerTestCase.tablePickerSucceeds): Added
+	autoBlindAnte argument.
+	(PokerAvatarTablePickerTestCase.test03_tablePicker_onlyOnePossible):
+	Set autoBlindAnte to True for this test.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTablePicker):
+	Documented and added new auto_blind_ante boolean in packet.
+	(PacketPokerAutoBlindAnte): Correctly documented what server sends
+	back.
+	(PacketPokerNoautoBlindAnte): Correctly documented what server
+	sends back.
+
 	* tests/test-pokeravatar.py.in
 	(PokerAvatarTestCase.requestsWithWrongSerial): Changed err_type
 	expected for table_picker to PACKET_POKER_ERROR.
