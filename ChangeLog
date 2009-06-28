@@ -1,3 +1,37 @@
+2009-06-27  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.requestsWithWrongSerial): Changed err_type
+	expected for table_picker to PACKET_POKER_ERROR.
+	(PokerAvatarTablePickerTestCase.tablePickerFails): Now expect only
+	a PACKET_POKER_ERROR on failure.
+	(PokerAvatarTablePickerTestCase): Wrote method.
+	(PokerAvatarTablePickerTestCase.restoreTableCanAddPlayer): Wrote
+	method.
+	(PokerAvatarTablePickerTestCase.test11_tablePicker_failureFromTableCannotAddPlayer):
+	Wrote test.
+
+	* pokernetwork/pokeravatar.py
+	(PokerAvatar.performPacketPokerTablePicker): Added
+	deprecatedEmptyTableBehavior and requestorPacketType arguments to
+	performPacketPokerTableJoin() call.  Error conditions that once
+	sent PacketPokerTable() now return PacketPokerError().
+	(PokerAvatar.performPacketPokerTableJoin): Added
+	deprecatedEmptyTableBehavior and requestorPacketType arguments.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTablePicker):
+	Documented the new packet error return for failures.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.joinTableForceFail): Added check for new
+	PACKET_POKER_ERROR when TableJoin() fails.  Added note about
+	deprecated behavior.
+
+	* pokernetwork/pokerpackets.py (PacketPokerTableJoin): Added
+	GENERAL_FAILURE error code for PacketPokerTableJoin().  Documented
+	new error response.  Documented deprecation of empty PokerTable()
+	return for errors.
+
 2009-06-26  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5

@@ -780,14 +780,23 @@ class PokerAvatar:
     # PacketTablePicker() do.  A secondary benefit is that it makes that
     # giant if statement in handlePacketLogic() above a bit smaller.
     # -------------------------------------------------------------------------
-    def performPacketPokerTableJoin(self, packet, table = None):
+    def performPacketPokerTableJoin(self, packet, table = None,
+                                    deprecatedEmptyTableBehavior = True,
+                                    requestorPacketType = PACKET_POKER_TABLE_JOIN):
         """Perform the operations that must occur when a
         PACKET_POKER_TABLE_JOIN is received."""
         if not table:
             table = self.service.getTable(packet.game_id)
         if table:
             if not table.joinPlayer(self, self.getSerial()):
-                self.sendPacketVerbose(PacketPokerTable())
+                if deprecatedEmptyTableBehavior:
+                    self.sendPacketVerbose(PacketPokerTable())
+                self.sendPacketVerbose(
+                  PacketPokerError(code = PacketPokerTableJoin.GENERAL_FAILURE,
+                                   message = "Unable to join table for unknown reason",
+                                   other_type = requestorPacketType,
+                                   serial     = self.getSerial(),
+                                   game_id    = 0))
         return table
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
@@ -838,8 +847,14 @@ class PokerAvatar:
     def performPacketPokerTablePicker(self, packet):
         mySerial = self.getSerial()
         if mySerial != packet.serial:
-            self.message("attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial ))
-            self.sendPacketVerbose(PacketPokerTable())
+            errMsg = "attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial )
+            self.message(errMsg)
+            self.sendPacketVerbose(
+                PacketPokerError(code       = PacketPokerTableJoin.GENERAL_FAILURE,
+                                 message    = errMsg,
+                                 other_type = PACKET_POKER_TABLE_PICKER,
+                                 serial     = mySerial,
+                                 game_id    = 0))
         else:
             # Call autorefill() first before checking for a table,
             # since the amount of money we have left will impact the
@@ -851,11 +866,24 @@ class PokerAvatar:
                 self._convertTablePickerArgsToListTableQuery(packet.min_players,
                       packet.currency_serial, packet.variant, packet.betting_structure))
 
-            if not table or not table.game.canAddPlayer(mySerial):
-                # If we cannot find a table or if for some weird reason,
-                # the table we get can't take us just send back an empty
-                # PackerPokerTable packet.
-                self.sendPacketVerbose(PacketPokerTable())
+            if not table:
+                # If we cannot find a table, tell user we were unable to
+                # find a table matching their criteria
+                self.sendPacketVerbose(
+                  PacketPokerError(code       = PacketPokerTableJoin.GENERAL_FAILURE,
+                                   message    = "No table found matching given criteria",
+                                   other_type = PACKET_POKER_TABLE_PICKER,
+                                   serial     = mySerial,
+                                   game_id    = 0))
+            elif not table.game.canAddPlayer(mySerial):
+                # If the table we found just can't take us, tell user we
+                # could not add them.
+                self.sendPacketVerbose(
+                  PacketPokerError(code      = PacketPokerTableJoin.GENERAL_FAILURE,
+                                   message   = "Found matching table, but unable to join it.",
+                                   other_type = PACKET_POKER_TABLE_PICKER,
+                                   serial     = mySerial,
+                                   game_id    = table.game.id))
             else:
                 # Otherwise, we perform the sequence of operations
                 # that is defined by the semantics of this packet in
@@ -867,7 +895,8 @@ class PokerAvatar:
                 #   PacketPokerSit()
                 if self.performPacketPokerTableJoin(
                      PacketPokerTableJoin(serial = mySerial,
-                                          game_id = table.game.id), table):
+                                          game_id = table.game.id), table,
+                       deprecatedEmptyTableBehavior = False):
 
                     # Giving no seat argument at all for the packet should cause
                     # us to get any available seat.

@@ -1119,35 +1119,64 @@ class PacketPokerTableJoin(PacketPokerId):
 Semantics: player "serial" wants to become an observer
 of the game "game_id".
 
-The packets sent to the client when successfully joining the
-table are as follows:
+There are three possible outcomes for the client in response to a
+PacketPokerTableJoin():
 
-PACKET_POKER_TABLE
-PACKET_POKER_BATCH_MODE
-for each player in the game:
-  PACKET_POKER_PLAYER_ARRIVE
-  if the player is playing:
-     PACKET_POKER_PLAYER_CHIPS
-  if the player is sit:
-     PACKET_POKER_SIT
-  PACKET_POKER_SEATS
-  if the game is running:
-     the exact packet sequence that lead to the current
-     state of the game. Varies according to the game.
-PACKET_POKER_STREAM_MODE
+  (0) In the case that the join is completely successful, or if the player
+      had already joined the table, the following packets are sent:
 
-If the player cannot join the table for any reason, the packet
-PacketPokerTable with serial 0 will be sent. It won't be filled with
-any meaningfull information.
+          PACKET_POKER_TABLE
+          PACKET_POKER_BATCH_MODE
+          for each player in the game:
+               PACKET_POKER_PLAYER_ARRIVE
+          if the player is playing:
+                PACKET_POKER_PLAYER_CHIPS
+          if the player is sit:
+                PACKET_POKER_SIT
+          PACKET_POKER_SEATS
+          if the game is running:
+                the exact packet sequence that lead to the current state
+                of the game. Varies according to the game.
+          PACKET_POKER_STREAM_MODE
 
-If the reason that the player was unable to join is specifically that the
-server has reached the maximum number of joined players, in addition to
-the empty PacketPokerTable sent above, the client will also receive a
-PacketPokerError with the code of PacketPokerTableJoin.FULL.
+      Note clearly that if the player had already previously joined the
+      table, the packets above will be sent as if the player just joined.
+      However, in that case, the packet will have no side effect.
 
-If the player has already joined the table, the packets will be sent
-as if the player just joined. In this case the packet will have no
-side effect.
+
+   (1) If the the player was unable to join the table specifically that
+       the server has reached the maximum number of joined players, two
+       packets will be sent to the client, the second of which is
+       deprecated:
+
+        (a) the following packet (recommended way of testing for failure):
+            PacketPokerError(code      = PacketPokerTableJoin.FULL,
+                            message   = "This server has too many seated players and observers.",
+                           other_type = PACKET_POKER_TABLE_JOIN,
+                           serial     = <player's serial id>,
+                           game_id    = <id of the table>)
+
+        (b) a packet, PACKET_POKER_TABLE, with serial 0 will be sent.  It
+            will contain no meaningful information.  (THIS BEHAVIOR IS
+            DEPRECATED, and is left only for older clients such as
+            poker2d.  New clients should not rely on this behavior.)
+
+  (2) If the player cannot join the table for any reason (other than the
+      table is FULL (as per (1) above), two packets will be sent to the
+      client, one of which is deprecated:
+
+       (a) the following packet (recommended way of testing for failure):
+           PacketPokerError(code      = PacketPokerTableJoin.GENERAL_FAILURE,
+                            message   = <some string of non-zero length, for use
+                                        in displaying to the user>,
+                           other_type = PACKET_POKER_TABLE_JOIN,
+                           serial     = <player's serial id>,
+                           game_id    = 0)
+
+       (b) a packet, PACKET_POKER_TABLE, with serial 0 will be sent.  It
+           will contain no meaningful information.  (THIS BEHAVIOR IS
+           DEPRECATED, and is left only for older clients such as poker2d.
+           New clients should not rely on this behavior.)
 
 Direction: server <= client
 
@@ -1156,6 +1185,7 @@ game_id: integer uniquely identifying a game.
 """
 
     FULL = 1
+    GENERAL_FAILURE = 2
     type = PACKET_POKER_TABLE_JOIN
 
 PacketFactory[PACKET_POKER_TABLE_JOIN] = PacketPokerTableJoin
@@ -4419,27 +4449,28 @@ Semantics: The player "serial" wishes to join a table that matches the
                     Send: PacketPokerBuyIn(amount = best)
                Send: PacketPokerSit()
 
+           In the case of failure, an error packet as follows will be sent
+           to the client:
+             PacketPokerError(code      = PacketPokerTableJoin.GENERAL_FAILURE,
+                              message   = <some string of non-zero length, for use
+                                          in displaying to the user>,
+                             other_type = PACKET_POKER_TABLE_PICKER,
+                             serial     = <player's serial id>,
+                             game_id    = <if failure occured before table matching criteria was identified: 0
+                                           else: game.id for table where join was attempted>)
+
            In this case of success, the client can expect to receive all
            the packets that it would expect to receive in response to any
            of the packets listed in "Send" above.  These include:
+                  PacketPokerTable()        # info about the table joined
                   PacketPokerBuyInLimits()  # still sent despite mention in pseudo-code above
                   PacketPokerPlayerArrive() # for client.serial
                   PacketPokerPlayerChips()  # for client.serial
                   PacketPokerSit()          # for client.serial
                   PacketPokerSeats()
               
-           If a table matching the criteria is *not* available, an empty
-           PacketPokerTable() will be sent (which matches the semantics of
-           certain PacketPokerTableJoin() fails, and that's why we do it
-           here.).
-
-           Thus, the key packet the client should look for after sending a
-           PacketPokerTablePicker is a PacketPokerTable().  That packet
-           will be empty if the picker couldn't find a seat matching the
-           criteria, and will be full of info if it was successful.
-
-           Even if a valid PacketPokerTable() is received, it's possible,
-           although unlikely, that the intervening operations --
+           Note even if a valid PacketPokerTable() is received, it's
+           possible, although unlikely, that the intervening operations --
            PacketPokerSeat(), PacketPokerBuyIn() and PacketPokerSit() --
            might fail.  If one of them fails, the client should expect to
            receive the normal errors it would receive if such an operation

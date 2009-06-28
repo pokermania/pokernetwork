@@ -1190,7 +1190,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             'table_picker' : { 'output':
                            "%sattempt to run table picker%s" % (messageStart, \
                             forPlayerByPlayer),
-                           'err_type' : PACKET_POKER_TABLE,
+                           'err_type' : PACKET_POKER_ERROR,
                             'packet' :
                                 PacketPokerTablePicker(serial = someoneElseSerial) },
             'rebuy' : { 'output':
@@ -2718,13 +2718,27 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
                                                       game_id = gameId))
-        found = False
+        found = 0
         for packet in avatar.resetPacketsQueue():
+            # Note: the behavior below, tested in the "if", of returning
+            # an empty PacketTable() on error is deprecated, per
+            # documentation in pokerpackets.py.  This functionality is
+            # left in and supported for old clients.  The Error packet (in
+            # the elif below) is the proper way to test for an error
+            # return on PacketPokerTableJoin()
             if packet.type == PACKET_POKER_TABLE:
-                found = True
+                found += 1
                 self.assertEquals(packet.id, 0)
                 self.assertEquals(packet.name, "noname")
-        self.assertEquals(found, True)
+            elif packet.type == PACKET_POKER_ERROR:
+                found += 1
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, 0)
+                self.assertEquals(packet.other_type, PACKET_POKER_TABLE_JOIN)
+                self.assertEquals(packet.code, PacketPokerTableJoin.GENERAL_FAILURE)
+                self.failUnless(len(packet.message) > 0,
+                                "some message should be included")
+        self.assertEquals(found, 2)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test55_tableJoinWhenFails(self):
@@ -4041,7 +4055,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         return (client, packet)
     # ------------------------------------------------------------------------
     def tablePickerFails(self, (client, packet), id, numPlayers = 0, currencySerial = 0,
-                         variant = '', structure = ''):
+                         variant = '', structure = '', gameId = 0):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTablePicker(serial = client.getSerial(),
@@ -4051,14 +4065,18 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
                                                         betting_structure = structure))
         found = 0
         for packet in avatar.resetPacketsQueue():
-            if packet.type == PACKET_POKER_TABLE:
-                found += 1
-                self.assertEquals(packet.id, 0)
-                self.assertEquals(packet.name, "noname")
+            found += 1
+            if packet.type == PACKET_POKER_ERROR:
+                self.assertEquals(packet.serial, client.getSerial())
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.other_type, PACKET_POKER_TABLE_PICKER)
+                self.assertEquals(packet.code, PacketPokerTableJoin.GENERAL_FAILURE)
+                self.failUnless(len(packet.message) > 0,
+                                "some message should be included")
             else:
-                self.fail("Unexpected packet found when only empty PACKET_POKER_TABLE"
+                self.fail("Unexpected packet found when only PACKET_POKER_ERROR"
                           + " was expected: " + packet.__str__())
-        self.assertEquals(found, 1)
+        self.assertEquals(found, 1, "expected only PACKET_POKER_ERROR")
         return (client, packet)
     # -------------------------------------------------------------------------
     def tablePickerSucceeds(self, (client, packet), id, numPlayers, currencySerial,
@@ -4183,6 +4201,21 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
             self.assertEquals(bestBuyInAmount, amountBoughtIn)
         else:
             self.assertEquals(minBuyInAmount, amountBoughtIn)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def dummyTableCanAddPlayer(self, (client, packet), tableNumber):
+        table = self.service.getTable(tableNumber)
+        self.savedCanAddPlayer = table.game.canAddPlayer
+        def mockCanAddPlayer(serial):
+            return False
+        table.game.canAddPlayer = mockCanAddPlayer
+
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def restoreTableCanAddPlayer(self, (client, packet), tableNumber):
+        table = self.service.getTable(tableNumber)
+        table.game.canAddPlayer  = self.savedCanAddPlayer
+
         return (client, packet)
     # ------------------------------------------------------------------------
     def startPlayerSeatedAndPlaying(self, playerNumber, tableNumber, tableName,
@@ -4383,6 +4416,23 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         pickerDeferred.addCallback(self.setMoneyForPlayer, 3, 1, "over_min_under_best", 2)
         pickerDeferred.addCallback(self.tablePickerFails, 3, 3, 0,
                                     "holdem", "NL HE 6-max 100/200")
+        playersDeferreds.append(pickerDeferred)
+        return defer.DeferredList(playersDeferreds)
+    # ------------------------------------------------------------------------
+    def test11_tablePicker_failureFromTableCannotAddPlayer(self):
+        self.createClients(4)
+
+        playersDeferreds = []
+        for ii in [ 0, 1, 2 ]:
+            playersDeferreds.append(
+                self.startPlayerSeatedAndPlaying(ii, 5, "Stud 8-max 2/4",
+                                             "2-4-limit", "7stud", 8, 2))
+        pickerDeferred = self.preparePlayerForTablePickerSend(3)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, 3, 2, "over_min_under_best", 5)
+        pickerDeferred.addCallback(self.dummyTableCanAddPlayer, 5)
+        pickerDeferred.addCallback(self.tablePickerFails, 3, 3, 0,
+                                    "7stud", "2-4-limit", 5)
+        pickerDeferred.addCallback(self.restoreTableCanAddPlayer, 5)
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
 # -----------------------------------------------------------------------------
