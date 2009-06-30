@@ -716,6 +716,7 @@ class PokerService(service.Service):
         tourney.player_timeout = int(tourney_map['player_timeout'])
         tourney.via_satellite = int(tourney_map['via_satellite'])
         tourney.satellite_of = int(tourney_map['satellite_of'])
+        tourney.satellite_of, reason = self.tourneySatelliteLookup(tourney)
         tourney.satellite_player_count = int(tourney_map['satellite_player_count'])
         tourney.satellite_registrations = []
         tourney.callback_new_state = self.tourneyNewState
@@ -1007,6 +1008,23 @@ class PokerService(service.Service):
         cursor.close()
         self.tourneySatelliteSelectPlayer(tourney, serial, rank)
 
+    def tourneySatelliteLookup(self, tourney):
+        if tourney.satellite_of == 0:
+            return ( 0, None )
+        found = None
+        for candidate in self.tourneys.values():
+            if candidate.schedule_serial == tourney.satellite_of:
+                found = candidate
+                break
+        if found:
+            if found.state != TOURNAMENT_STATE_REGISTERING:
+                self.error("tourney %d is a satellite of %d but %d is in state %s instead of the expected state %s" % 
+                           ( tourney.serial, found.schedule_serial, found.schedule_serial, found.state, TOURNAMENT_STATE_REGISTERING) )
+                return ( 0, TOURNAMENT_STATE_REGISTERING )
+            return ( found.serial, None )
+        else:
+            return ( 0, False )
+                
     def tourneySatelliteSelectPlayer(self, tourney, serial, rank):
         if tourney.satellite_of == 0:
             return False

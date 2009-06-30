@@ -2537,6 +2537,52 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
 
 class TourneySatelliteTestCase(PokerServiceTestCaseBase):
 
+    def test_lookup_nop(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = 0
+
+        self.service.startService()
+        self.assertEqual((0, None), self.service.tourneySatelliteLookup(Tournament()), 'tourneySatelliteLookup does nothing')
+
+    def test_lookup_not_found(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = 12345
+
+        self.service.startService()
+        self.assertEqual((0, False), self.service.tourneySatelliteLookup(Tournament()), 'tourneySatelliteLookup does not find the tournament for which it is a satellite')
+
+    def test_lookup_found_wrong_state(self):
+        class Tournament:
+            def __init__(self):
+                self.serial = 234
+                self.satellite_of = 12345
+
+        class TournamentCandidate:
+            def __init__(self):
+                self.schedule_serial = 12345
+                self.state = pokertournament.TOURNAMENT_STATE_RUNNING
+
+        self.service.startService()
+        self.service.tourneys = { 12345: TournamentCandidate() }
+        self.assertEqual((0, pokertournament.TOURNAMENT_STATE_REGISTERING), self.service.tourneySatelliteLookup(Tournament()), 'tourneySatelliteLookup find a tournament which is not in the expected state')
+
+    def test_lookup(self):
+        class Tournament:
+            def __init__(self):
+                self.satellite_of = 12345
+
+        class TournamentCandidate:
+            def __init__(self):
+                self.serial = 4343
+                self.schedule_serial = 12345
+                self.state = pokertournament.TOURNAMENT_STATE_REGISTERING
+
+        self.service.startService()
+        self.service.tourneys = { 12345: TournamentCandidate() }
+        self.assertEqual((4343, None), self.service.tourneySatelliteLookup(Tournament()), 'tourneySatelliteLookup finds a tournament')
+
     def test_WaitingList_nop(self):
         class Tournament:
             def __init__(self):
