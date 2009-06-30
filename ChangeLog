@@ -1,3 +1,18 @@
+2009-06-30  Loic Dachary <loic@dachary.org>
+
+ 	* Release 1.7.5
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  https://gna.org/bugs/index.php?13821
+	  In pokerservice.py:spawnTourneyInCore, instead of setting
+	  satellite_of from the serial in the database, it is first
+	  translated from a tourneys_schedule.serial into a
+	  tourneys.serial. A number of checks can be made at this time and
+	  if something fails (such as the tourney not being in registering
+	  state), an error message is printed in the logs and the serial 0
+	  is returned (which means this tournament is no longer considered
+	  a satellite).
+
 2009-06-28  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* pokernetwork/pokerpackets.py (PacketPokerTablePicker):
@@ -131,8 +146,6 @@
 	return for errors.
 
 2009-06-26  Loic Dachary <loic@dachary.org>
-
- 	* Release 1.7.5
 
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
 	  Fixes https://gna.org/bugs/index.php?13769
@@ -9492,5 +9505,5 @@ Fri May 06 2005  Loic Dachary  <loic@gnu.org>
 	* Release 1.0.0
 
 Local Variables:
-compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2009-04-01/p'"
+compile-command: "svn update ; svn2cl --group-by-day --authors=$(echo $HOME)/.svn2cl --stdout | head -2000 | sed -n '0,/^2009-06-01/p'"
 End:
