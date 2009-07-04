@@ -1338,12 +1338,383 @@ class SettingMockup:
         return None
 
 # ------------------------------------------------------
+from pokernetwork.pokerclient import PokerSkin
+
+class PokerSkinMethodUnitTest(unittest.TestCase):
+    # ---------------------------------------------------------------------------
+    def setUp(self):
+        pass
+    # ---------------------------------------------------------------------------
+    def tearDown(self):
+        pass
+    # ---------------------------------------------------------------------------
+    def test00_destroyDoesNothing(self):
+        skin = PokerSkin(settings = 'testing')
+        skin.destroy()
+        self.assertEquals(skin.url, "random")
+        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.settings, "testing")
+    # ---------------------------------------------------------------------------
+    def test01_interfaceReadyDoesNothing(self):
+        skin = PokerSkin(settings = 'testing')
+        skin.interfaceReady(None, None)
+        self.assertEquals(skin.url, "random")
+        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.settings, "testing")
+    # ---------------------------------------------------------------------------
+    def test02_getAndSetURL(self):
+        skin = PokerSkin(settings = 'testing')
+        self.assertEquals(skin.getUrl(), "random")
+        skin.setUrl("http://www.example.org/poker")
+        self.assertEquals(skin.getUrl(), "http://www.example.org/poker")
+    # ---------------------------------------------------------------------------
+    def test03_getAndSetOutfit(self):
+        skin = PokerSkin(settings = 'testing')
+        self.assertEquals(skin.getOutfit(), "random")
+        skin.setOutfit("naked")
+        self.assertEquals(skin.getOutfit(), "naked")
+    # ---------------------------------------------------------------------------
+    def test04_hideOutfitEditorDoesNothing(self):
+        skin = PokerSkin(settings = 'testing')
+        skin.hideOutfitEditor()
+        self.assertEquals(skin.url, "random")
+        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.settings, "testing")
+    # ---------------------------------------------------------------------------
+    def test05_showOutfitEditorDoesNothing(self):
+        skin = PokerSkin(settings = 'testing')
+        skin.showOutfitEditor(None)
+        self.assertEquals(skin.url, "random")
+        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.settings, "testing")
+# ------------------------------------------------------
+class PokerClientLogErrorFunctionTestCase(unittest.TestCase):
+    # ---------------------------------------------------------------------------
+    def setUp(self):
+        pass
+    # ---------------------------------------------------------------------------
+    def tearDown(self):
+        pass
+    # ---------------------------------------------------------------------------
+    def test00_errLogTest(self):
+        from twisted.python import log as twistedLog
+        from pokernetwork import pokerclient as pc
+
+        saveLogErr = pc.log_err
+
+        global myLogErrorCallCount
+        myLogErrorCallCount = 0
+        def myLogErr(firstArg, secondArg, thirdArg = None):
+            global myLogErrorCallCount
+            myLogErrorCallCount += 1
+            self.assertEquals(firstArg, "FirstOne")
+            self.assertEquals(secondArg, "SecondOne")
+            self.assertEquals(thirdArg, "ThirdOne")
+        pc.log_err  = myLogErr
+
+        self.failIf(twistedLog.error_occurred,
+                    "Twisted Log should not have an error occurred yet")
+
+        pc.err("FirstOne", "SecondOne", thirdArg = "ThirdOne")
+        self.assertEquals(myLogErrorCallCount, 1)
+        self.failUnless(twistedLog.error_occurred,
+                    "Twisted Log should have logged an error occurred")
+
+        pc.log_err = saveLogErr
+# ------------------------------------------------------
+settings_xml_client_noChatNoDelays = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
+  <screen fullscreen="no" width="1024" height="768"/>
+  <name>user1</name>
+  <passwd>password1</passwd>
+  <remember>yes</remember>
+  <muck>yes</muck>
+  <auto_post>no</auto_post>
+  <web browser="/usr/bin/firefox">http://localhost/poker-web/</web>
+  <sound>yes</sound>
+  <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
+  <lobby currency_serial="1" type="holdem" sort="name"/>
+  <shadow>yes</shadow>
+  <vprogram>yes</vprogram>
+
+  <user path="~/.poker2d"/>
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
+  <data path="data" sounds="data/sounds"/>
+  <handlist start="0" count="10"/>
+</settings>
+"""
+
+settings_xml_client_delaysWithRoundNoBlindAnte = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
+   <delays position="66" round="42" begin_round="77" end_round="99" end_round_last="0" showdown="0" lag="60"/> 
+  <screen fullscreen="no" width="1024" height="768"/>
+  <name>user1</name>
+  <passwd>password1</passwd>
+  <remember>yes</remember>
+  <muck>yes</muck>
+  <auto_post>no</auto_post>
+  <web browser="/usr/bin/firefox">http://localhost/poker-web/</web>
+  <sound>yes</sound>
+  <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
+  <lobby currency_serial="1" type="holdem" sort="name"/>
+  <shadow>yes</shadow>
+  <vprogram>yes</vprogram>
+
+  <user path="~/.poker2d"/>
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
+  <data path="data" sounds="data/sounds"/>
+  <handlist start="0" count="10"/>
+</settings>
+"""
+
+class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
+    """These tests cover the methods in PokerClientFactory that are not
+    otherwise covered by other tests in this file.  They are not
+    particularly "aware" tests, they simply exercise various parts of the
+    code to be sure the expected behavior occurs in the context of the
+    individual methods."""
+    # ---------------------------------------------------------------------------
+    def setUp(self):
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
+        self.settings.header = self.settings.doc.xpathNewContext()
+    # ---------------------------------------------------------------------------
+    def tearDown(self): pass
+    # ---------------------------------------------------------------------------
+    def test00_initWithBadConfig(self):
+        config_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<nothing/>"""
+        config = pokernetworkconfig.Config([])
+        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
+        config.header = config.doc.xpathNewContext()
+        caughtIt = False
+        try:
+            clientFactory = pokerclient.PokerClientFactory(
+                settings = self.settings, config = config)
+            self.fail("previous line should have thrown exception")
+        except UserWarning, uw:
+            self.assertEquals(uw.__str__(), "PokerClientFactory: no /sequence/chips found in None")
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught an Exception")
+    # ---------------------------------------------------------------------------
+    def test01_initWithEmptySequence(self):
+        config_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<sequence>
+</sequence>"""
+        config = pokernetworkconfig.Config([])
+        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
+        config.header = config.doc.xpathNewContext()
+        caughtIt = False
+        try:
+            clientFactory = pokerclient.PokerClientFactory(
+                settings = self.settings, config = config)
+            self.fail("previous line should have thrown exception")
+        except UserWarning, uw:
+            self.assertEquals(uw.__str__(), "PokerClientFactory: no /sequence/chips found in None")
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught an Exception")
+    # ---------------------------------------------------------------------------
+    def test02_initWithstringValues(self):
+        config_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<sequence>
+<chips>10 bar</chips>
+</sequence>"""
+        config = pokernetworkconfig.Config([])
+        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
+        config.header = config.doc.xpathNewContext()
+        caughtIt = False
+        try:
+            clientFactory = pokerclient.PokerClientFactory(
+                settings = self.settings, config = config)
+            self.fail("previous line should have thrown exception")
+        except ValueError, ve:
+            self.assertEquals(ve.__str__(),
+                              "invalid literal for int() with base 10: 'bar'")
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught an Exception")
+    # ---------------------------------------------------------------------------
+    def test03_init_configWithProperInts(self):
+        config_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<sequence>
+<chips>5 200 10 15 20</chips>
+</sequence>"""
+        config = pokernetworkconfig.Config([])
+        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
+        config.header = config.doc.xpathNewContext()
+
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings,
+                                                 config = config)
+        self.assertEquals(clientFactory.chips_values,
+                          [5, 200, 10, 15, 20])
+    # ---------------------------------------------------------------------------
+    def test04_init_missingChatMissingDelays(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_client_noChatNoDelays,
+                                           len(settings_xml_client_noChatNoDelays))
+        settings.header = settings.doc.xpathNewContext()
+        clientFactory = pokerclient.PokerClientFactory(settings = settings)
+        self.assertEquals(clientFactory.delays, {})
+        self.assertEquals(clientFactory.chat_config, {})
+    # ---------------------------------------------------------------------------
+    def test05_init_roundPositionOverrides(self):
+        settings = pokernetworkconfig.Config([])
+        settings.doc = libxml2.parseMemory(settings_xml_client_delaysWithRoundNoBlindAnte,
+                                           len(settings_xml_client_delaysWithRoundNoBlindAnte))
+        settings.header = settings.doc.xpathNewContext()
+
+        # Confirm the delays are properly read from the file before init'ing
+        # PokerClientFactory
+        delays = settings.headerGetProperties("/settings/delays")[0]
+        for (key, value) in delays.iteritems():
+            delays[key] = float(value)
+        self.assertEquals(delays["end_round"], 99)
+        self.assertEquals(delays["begin_round"], 77)
+        self.assertEquals(delays["round"], 42)
+        self.assertEquals(delays["position"], 66)
+        self.failIf(delays.has_key("blind_ante_position"))
+
+        clientFactory = pokerclient.PokerClientFactory(settings = settings)
+
+        self.assertEquals(len(clientFactory.delays.keys()), 7)
+        self.assertEquals(clientFactory.delays['lag'], 60.0)
+        self.assertEquals(clientFactory.delays['end_round_last'], 0.0)
+        self.assertEquals(clientFactory.delays['showdown'], 0.0)
+        self.assertEquals(clientFactory.delays['blind_ante_position'], 66.0)
+        self.assertEquals(clientFactory.delays['begin_round'], 42.0)
+        self.assertEquals(clientFactory.delays['position'], 66.0)
+        self.assertEquals(clientFactory.delays['end_round'], 42.0)
+    # ---------------------------------------------------------------------------
+    def test06_delRemovesGames(self):
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
+        global mockGamesDelCount
+        mockGamesDelCount = 0
+        class MockGames():
+            def __del__(self):
+                global mockGamesDelCount
+                mockGamesDelCount += 1
+        clientFactory.games = MockGames()
+        clientFactory.__del__()
+        self.assertEquals(mockGamesDelCount, 1)
+    # ---------------------------------------------------------------------------
+    def test07_resolve(self):
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
+
+        realResolve = reactor.resolve
+
+        global myResolveCallCount
+        myResolveCallCount = 0
+        def myResolve(url, stuff):
+            global myResolveCallCount
+            myResolveCallCount += 1
+            self.assertEquals(url, "http://example.org")
+            self.assertEquals(stuff, (1,1))
+
+        reactor.resolve = myResolve
+        clientFactory.resolve("http://example.org")
+        reactor.resolve = realResolve
+        self.assertEquals(myResolveCallCount, 1)
+    # ---------------------------------------------------------------------------
+    def test08_checkNetwork_ForceHostNotResolved(self):
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
+
+        realResolve = reactor.resolve
+        saveNetworkNotAvailable = clientFactory.networkNotAvailable
+
+        resolveDeferred = defer.Deferred()
+        def myResolve(url, stuff):
+            return resolveDeferred
+
+        mustGetCalledBackForTestSuccessDefferred = defer.Deferred()
+        def myNetworkNotAvailable():
+            reactor.resolve = realResolve  # Restore reactor's resolve
+            clientFactory.networkNotAvailable = saveNetworkNotAvailable
+            mustGetCalledBackForTestSuccessDefferred.callback(True)
+
+        reactor.resolve = myResolve
+        clientFactory.networkNotAvailable = myNetworkNotAvailable
+
+        resolveDeferred.errback(True)
+        return defer.DeferredList([
+            clientFactory.checkNetwork("http://example.org"),
+            mustGetCalledBackForTestSuccessDefferred])
+    # ---------------------------------------------------------------------------
+    def test09_upgradeTick(self):
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
+        class MockDisplay():
+            def tickProgressBar(mdSelf, ratio, message):
+                self.assertEquals(ratio, "TEST RATIO")
+                self.assertEquals(message, "TEST MESSAGE")
+        clientFactory.display = MockDisplay()
+        clientFactory.upgradeTick("TEST RATIO", "TEST MESSAGE")
+    # ---------------------------------------------------------------------------
+    def test10_upgradeTick_noDisplay(self):
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
+        caughtIt = False
+        try:
+            clientFactory.upgradeTick("TEST RATIO", "TEST MESSAGE")
+            self.fail("previous line should have thrown exception")
+        except AttributeError, ae:
+            self.assertEquals(ae.__str__(),
+                              "'NoneType' object has no attribute 'tickProgressBar'")
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught an Exception")
+    # ---------------------------------------------------------------------------
+    # Next two helper fuctions are for coverage tests on restart()
+    def setupMockChildrenReactorOs(self, clientFactory):
+        import os
+        class MockChildren():
+            def __init__(mcSelf): mcSelf.killallCount = 0
+            def killall(mcSelf):  mcSelf.killallCount += 1
+
+        clientFactory.children = MockChildren()
+
+        self.reactorDisconnectAllCount = 0
+        def mockReactorDisconnectAll():
+            self.reactorDisconnectAllCount += 1
+
+        self.saveReactorDisconnectAll = reactor.disconnectAll
+        reactor.disconnectAll = mockReactorDisconnectAll
+
+        self.saveSysArgv = sys.argv
+        self.saveExecutable = sys.executable
+        sys.executable = "testprogram_should_not_ever_exist"
+        sys.argv = ['onearg', 'twoarg', 'threearg' ]
+
+    # ---------------------------------------------------------------------------
+    def restoreReactorOs(self):
+        sys.argv = self.saveSysArgv
+        sys.executable = self.saveExecutable
+        reactor.disconnectAll = self.saveReactorDisconnectAll
+    # ---------------------------------------------------------------------------
+    def test11_restartNoDisplay(self):
+        import exceptions
+        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
+
+        clientFactory.display = None
+
+        os = self.setupMockChildrenReactorOs(clientFactory)
+        caughtIt = False
+        try:
+            clientFactory.restart()
+        except exceptions.OSError, oe:
+            caughtIt = True
+            self.assertEquals(oe.__str__(), '[Errno 2] No such file or directory')
+        self.failUnless(caughtIt, "restart() call should have caught exceptions.OSError")
+        self.assertEquals(clientFactory.children.killallCount, 1)
+        self.assertEquals(self.reactorDisconnectAllCount, 1)
+        self.restoreReactorOs()
+# ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test_trynow_"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
+    suite.addTest(loader.loadClass(PokerSkinMethodUnitTest))
+    suite.addTest(loader.loadClass(PokerClientLogErrorFunctionTestCase))
+    suite.addTest(loader.loadClass(PokerClientFactoryUnitMethodCoverageTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
@@ -1359,5 +1730,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokeravatar.py ../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py ../pokernetwork/pokerclient.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerclient.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
 # End:

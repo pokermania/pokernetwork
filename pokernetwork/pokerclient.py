@@ -198,10 +198,10 @@ class PokerClientFactory(UGAMEClientFactory):
         self.networkAvailable()
 
     def networkNotAvailable(self):
-        pass
+        pass #pragma: no cover
     
     def networkAvailable(self):
-        pass
+        pass #pragma: no cover
         
     def upgradeTick(self, ratio, message):
         self.display.tickProgressBar(ratio, message)

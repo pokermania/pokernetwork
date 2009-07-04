@@ -7,6 +7,12 @@
 
 2009-07-03  Bradley M. Kuhn  <bkuhn@ebb.org>
 
+	* tests/test-pokerclient.py.in
+	(PokerClientFactoryUnitMethodCoverageTestCase.test11_restartNoDisplay):
+	Finished test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.setupMockChildrenReactorOs):
+	No longer mock-up os.
+
 	* tests/test-pokeravatar.py.in
 	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase):
 	Removed now-superfluous tests.
@@ -519,6 +525,56 @@
 	  maintained between timeout values
 	* Makefile.am: pokerconfigupgrade must be called with PYTHONPATH
 	  for prizes and stats
+
+2009-06-06  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerclient.py.in
+	(PokerClientFactoryUnitMethodCoverageTestCase.test09_upgradeTick):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test10_upgradeTick_noDisplay):
+	Wrote test.
+
+	* pokernetwork/pokerclient.py
+	(PokerClientFactory.networkNotAvailable): "no cover".  pass
+	statements cannot be covered.
+	(PokerClientFactory.networkAvailable): "no cover".  pass
+	statements cannot be covered.
+
+	* tests/test-pokerclient.py.in
+	(PokerClientFactoryUnitMethodCoverageTestCase.test08_checkNetwork_ForceHostNotResolved):
+	Wrote test.
+
+2009-05-31  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokerclient.py.in (PokerSkinMethodUnitTest): Created
+	test class.
+	(PokerSkinMethodUnitTest.test00_destroyDoesNothing): Wrote test.
+	(PokerSkinMethodUnitTest.test01_interfaceReadyDoesNothing):
+	Wrote test.
+	(PokerSkinMethodUnitTest.test02_getAndSetURL): Wrote test.
+	(PokerSkinMethodUnitTest.test04_hideOutfitEditorDoesNothing):
+	Wrote test.
+	(PokerSkinMethodUnitTest.test05_showOutfitEditorDoesNothing):
+	Wrote test.
+	(PokerClientLogErrorFunctionTestCase): Created test class.
+	(PokerClientLogErrorFunctionTestCase.test00_errLogTest): Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase): Created test class.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test00_initWithBadConfig):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test01_initWithEmptySequence):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test02_initWithstringValues):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test03_init_configWithProperInts):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test04_init_missingChatMissingDelays):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test05_init_roundPositionOverrides):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test07_resolve):
+	Wrote test.
+	(PokerClientFactoryUnitMethodCoverageTestCase.test06_delRemovesGames):
+	Wrote test.
 
 2009-05-19  Bradley M. Kuhn  <bkuhn@ebb.org>
 
