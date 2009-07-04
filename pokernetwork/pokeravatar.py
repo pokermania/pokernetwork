@@ -869,8 +869,8 @@ class PokerAvatar:
             self.service.autorefill(packet.serial)
 
             table = self.service.getTableBestByCriteria(mySerial,
-                self._convertTablePickerArgsToListTableQuery(packet.min_players,
-                      packet.currency_serial, packet.variant, packet.betting_structure))
+                      min_players = packet.min_players, currency_serial = packet.currency_serial,
+                      variant = packet.variant, betting_structure = packet.betting_structure)
 
             if not table:
                 # If we cannot find a table, tell user we were unable to
@@ -1201,53 +1201,3 @@ class PokerAvatar:
         else:
             return False
         
-    def _convertTablePickerArgsToListTableQuery(self, minPlayers, currencySerial, 
-                                                variant, bettingStructure):
-        """Takes the arguments given and converts them into a string
-        suitable for input to PokerService.listTables():
-
-        Arguments in order are:
-            minPlayers:       an integer 0 or greater.  Anything else is
-                              means it is as if currencySerial was None.
-
-            currencySerial:   an integer 0 or greater.  Anything else is
-                              means it is as if currencySerial was None.
-            variant:          A string containing any characters except \t.
-                              If a \t occurs in variant, it will be as if
-                              variant was None.
-            bettingStructure: A string containing any characters except \t.
-                              If a \t occurs in bettingStructure, it will be
-                               as if bettingStructure was None.
-        """
-        # queryString will be built from the back first, because it's
-        # easier to ignore items that are not present when building that
-        # way.
-        queryString = ""
-        if minPlayers != None and minPlayers > 0:
-            queryString = "\t%d" % minPlayers
-
-        if (not bettingStructure) or bettingStructure == "":
-            if queryString != "": queryString = "\t" + queryString
-        elif bettingStructure.find("\t") >= 0:
-            self.error("no tabs permitted in table query fields, '%s' ignored." %
-                       bettingStructure)
-            if queryString != "": queryString = "\t" + queryString
-        else:
-            queryString = "\t" + bettingStructure + queryString
-
-        if (not variant) or variant == "":
-            if queryString != "": queryString = "\t" + queryString
-        elif variant.find("\t") >= 0:
-            self.error("no tabs permitted in table query fields, '%s' ignored." %
-                       variant)
-            if queryString != "": queryString = "\t" + queryString
-        else:
-            queryString = "\t" + variant + queryString
-
-        if currencySerial != None and currencySerial > 0:
-            if queryString == "":
-                queryString = "%d" % currencySerial
-            else:
-                queryString = "%d%s" % (currencySerial, queryString)
-
-        return queryString

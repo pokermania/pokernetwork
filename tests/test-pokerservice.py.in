@@ -341,7 +341,7 @@ list_table_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-class ListTablesTestCase(PokerServiceTestCaseBase):
+class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
     def setUp(self):
         PokerServiceTestCaseBase.setUp(self, settingsFile = list_table_xml)
     # ----------------------------------------------------------------
@@ -405,44 +405,44 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test07_currency_and_variant_and_bettingStructure(self):
         self.service.startService()
-        tables = self.service.listTables('1\tfakevariant\tfakebetting', 0)
+        tables = self.service.searchTables(1, 'fakevariant', 'fakebetting')
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('2\tfakevariant\t2-4-limit', 0)
+        tables = self.service.searchTables(2, 'fakevariant', '2-4-limit')
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\tfakevariant\t2-4-limit', 0)
+        tables = self.service.searchTables(None, 'fakevariant', '2-4-limit')
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\t\t2-4-limit', 0)
+        tables = self.service.searchTables(None, None, '2-4-limit')
         self.assertEqual(3, len(tables))
-        tables = self.service.listTables('\t\t100-200-no-limit', 0)
+        tables = self.service.searchTables(None, None, '100-200-no-limit')
         self.assertEqual(2, len(tables))
-        tables = self.service.listTables('\tholdem\t100-200-no-limit', 0)
+        tables = self.service.searchTables(None, 'holdem', '100-200-no-limit')
         self.assertEqual(2, len(tables))
-        tables = self.service.listTables('\tholdem\t2-4-limit', 0)
+        tables = self.service.searchTables(None, 'holdem', '2-4-limit')
         self.assertEqual(2, len(tables))
-        tables = self.service.listTables('\t7stud\t2-4-limit', 0)
+        tables = self.service.searchTables(None, '7stud', '2-4-limit')
         self.assertEqual(1, len(tables))
-        tables = self.service.listTables('\t7stud\t100-200-no-limit', 0)
+        tables = self.service.searchTables(None, '7stud', '100-200-no-limit')
         self.assertEqual(0, len(tables))
     # ----------------------------------------------------------------
     def test08_currency_and_variant_and_bettingStructure_and_count_noOne(self):
         self.service.startService()
-        tables = self.service.listTables('1\tfakevariant\tfakebetting\t2', 0)
+        tables = self.service.searchTables(1,'fakevariant', 'fakebetting', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('2\tfakevariant\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(2, 'fakevariant', '2-4-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\tfakevariant\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(None, 'fakevariant', '2-4-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\t\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(None, None, '2-4-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\t\t100-200-no-limit\t2', 0)
+        tables = self.service.searchTables(None, None, '100-200-no-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\tholdem\t100-200-no-limit\t2', 0)
+        tables = self.service.searchTables(None, 'holdem', '100-200-no-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\tholdem\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(None, 'holdem', '2-4-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\t7stud\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(None, '7stud', '2-4-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\t7stud\t100-200-no-limit\t2', 0)
+        tables = self.service.searchTables(None, '7stud', '100-200-no-limit', 2)
         self.assertEqual(0, len(tables))
     # ----------------------------------------------------------------
     def test09_currency_and_variant_and_bettingStructure_and_count_withSome(self):
@@ -461,54 +461,59 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
         db.db.query(insertSql % (2, limitHE24Currency2))
         db.db.query(insertSql % (1, stud24Currency2))
 
-        tables = self.service.listTables('\t\t\t0', 0)
+        tables = self.service.searchTables(None, None, None, 0)
         self.assertEqual(5, len(tables))
-        tables = self.service.listTables('\t\t2-4-limit\t0', 0)
+        tables = self.service.searchTables(None, None, '2-4-limit', 0)
         self.assertEqual(3, len(tables))
 
-        for query in [ '\t\t2-4-limit\t1', '\t\t\t1' ]:
-            tables = self.service.listTables(query, 0)
-            self.assertEqual(3, len(tables), "listTables() query: %s" % query)
+        tables = self.service.searchTables(None, None, '2-4-limit', 1)
+        self.assertEqual(3, len(tables), "searchTables() should return 3 for 2-4-limit w/ <= 1 player")
+        tables = self.service.searchTables(None, None, None, 1)
+        self.assertEqual(3, len(tables), "searchTables() query should return 3 for <= 1 player")
 
-        for query in [ '\t\t2-4-limit\t2', '\t\t\t2' ]:
-            tables = self.service.listTables(query, 0)
-            self.assertEqual(2, len(tables))
+        tables = self.service.searchTables(None, None, '2-4-limit', 2)
+        self.assertEqual(2, len(tables))
+        tables = self.service.searchTables(None, None, None, 2)
+        self.assertEqual(2, len(tables))
 
         for ii in [ 3, 4, 5, 6 ]:
-            for query in [ '\t\t2-4-limit\t%d', '\t\t\t%d' ]:
-                query = query % ii
-                tables = self.service.listTables(query, 0)
-                self.assertEqual(0, len(tables))
+            tables = self.service.searchTables(None, None, '2-4-limit', ii)
+            self.assertEqual(0, len(tables))
+            tables = self.service.searchTables(None, None, None, ii)
+            self.assertEqual(0, len(tables))
 
-        tables = self.service.listTables('\tholdem\t\t0', 0)
+        tables = self.service.searchTables(None, 'holdem', None, 0)
         self.assertEqual(4, len(tables))
-        tables = self.service.listTables('\tholdem\t2-4-limit\t0', 0)
+        tables = self.service.searchTables(None, 'holdem', '2-4-limit', 0)
         self.assertEqual(2, len(tables))
 
         for ii in [ 1, 2 ]:
-            for query in [ '\tholdem\t2-4-limit\t%d', '\tholdem\t\t%d' ]:
-                query = query % ii
-                tables = self.service.listTables(query, 0)
-                self.assertEqual(2, len(tables), "listTables() query: %s" % query)
+            tables = self.service.searchTables(None, 'holdem', '2-4-limit', ii)
+            self.assertEqual(2, len(tables), "holdem 2-4-limit <= %d players should be 2" % ii)
+            tables = self.service.searchTables(None, 'holdem', None, ii)
+            self.assertEqual(2, len(tables), "holdem <= %d players should be 2" % ii)
 
         for ii in [ 3, 4, 5, 6 ]:
-            for query in [ '\tholdem\t2-4-limit\t%d', '\tholdem\t\t%d' ]:
-                query = query % ii
-                tables = self.service.listTables(query, 0)
-                self.assertEqual(0, len(tables))
+            tables = self.service.searchTables(None, 'holdem', '2-4-limit', ii)
+            self.assertEqual(0, len(tables))
+            tables = self.service.searchTables(None, 'holdem', None, ii)
+            self.assertEqual(0, len(tables))
 
         # The 100-200 NL tables have no one initially, check that, then
         # add two players to each, checking that now a search for at least
         # two works.
 
         for query in [ '\t\t100-200-no-limit\t0',  '\tholdem\t100-200-no-limit\t0']:
-            tables = self.service.listTables(query, 0)
-            self.assertEqual(2, len(tables), "listTables() query: %s" % query)
+            tables = self.service.searchTables(None, None, '100-200-no-limit', 0)
+            self.assertEqual(2, len(tables), "100-200-no-limit should be 2")
+            tables = self.service.searchTables(None, 'holdem', '100-200-no-limit', 0)
+            self.assertEqual(2, len(tables), "100-200-no-limit w/ holdem should be 2")
 
         for ii in [ 1, 2, 3, 4, 5, 6]:
             for query in [ '\t\t100-200-no-limit\t%d',  '\tholdem\t100-200-no-limit\t%d']:
-                query = query % ii
-                tables = self.service.listTables(query, 0)
+                tables = self.service.searchTables(None, None, '100-200-no-limit', ii)
+                self.assertEqual(0, len(tables))
+                tables = self.service.searchTables(None, 'holdem', '100-200-no-limit', ii)
                 self.assertEqual(0, len(tables))
 
         db.db.query(insertSql % (3, nlHe100Currency1))
@@ -516,18 +521,17 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
 
         for ii in [ 0, 1, 2 ]:
             for query in  [ '\t\t100-200-no-limit\t%d', '\tholdem\t100-200-no-limit\t%d']:
-                query = query % ii
-                tables = self.service.listTables(query, 0)
-                self.assertEqual(2, len(tables))
+                for variant in [ None, 'holdem' ]:
+                    tables = self.service.searchTables(None, variant, '100-200-no-limit', ii)
+                    self.assertEqual(2, len(tables))
 
-        for query in [ '\t\t100-200-no-limit\t3', '\tholdem\t100-200-no-limit\t3']:
-            tables = self.service.listTables(query, 0)
+        for variant in [ None, 'holdem' ]:
+            tables = self.service.searchTables(None, variant, '100-200-no-limit', 3)
             self.assertEqual(1, len(tables))
 
         for ii in [ 4, 5, 6 ]:
-            for query in ['\t\t100-200-no-limit\t%d', '\tholdem\t100-200-no-limit\t%d']:
-                query =  query % ii
-                tables = self.service.listTables(query, 0)
+            for variant in [ None, 'holdem' ]:
+                tables = self.service.searchTables(None, variant, '100-200-no-limit', ii)
                 self.assertEqual(0, len(tables))
 
         # Now we have a variety of holdem tables, so we can search for
@@ -536,115 +540,120 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
         # with at least 3 people.
 
         for ii in [ 0, 1, 2 ]:
-            tables = self.service.listTables('\tholdem\t\t%d' % ii, 0)
+            tables = self.service.searchTables(None, 'holdem', None, ii)
             self.assertEqual(4, len(tables),
-              "listTables() query: '\tholdem\t\t%d' yields %d not 4" % (ii, len(tables)))
+              "searchTables() query: holdem w/ players <= %d yields %d not 4" % (ii, len(tables)))
 
-        tables = self.service.listTables('\tholdem\t\t3', 0)
+        tables = self.service.searchTables(None, 'holdem', None, 3)
         self.assertEqual(1, len(tables))
 
         for ii in [ 4, 5, 6 ]:
-            tables = self.service.listTables('\tholdem\t\t%d' % ii, 0)
+            tables = self.service.searchTables(None, 'holdem', None, ii)
             self.assertEqual(0, len(tables))
 
         # Stud only has one player, check that, then add one and see result change.
-        tables = self.service.listTables('\t7stud\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(None, '7stud', '2-4-limit', 2)
         self.assertEqual(0, len(tables))
         db.db.query(insertSql % (2, stud24Currency2))
-        tables = self.service.listTables('\t7stud\t2-4-limit\t2', 0)
+        tables = self.service.searchTables(None, '7stud', '2-4-limit', 2)
         self.assertEqual(1, len(tables))
 
         # Tests with currency serial tests in place
 
-        tables = self.service.listTables('1', 0)
+        tables = self.service.searchTables(1, None, None, 0)
         self.assertEqual(2, len(tables), "search for currency_serial 1 yields %d not 4"
                          % len(tables))
         for ii in [ 0, 1, 2 ]:
-            tables = self.service.listTables('1\t\t\t%d' % ii, 0)
+            tables = self.service.searchTables(1, None, None, ii)
             self.assertEqual(2, len(tables))
-            tables = self.service.listTables('1\tholdem\t\t%d' % ii, 0)
+            tables = self.service.searchTables(1, 'holdem', None, ii)
             self.assertEqual(2, len(tables))
-            tables = self.service.listTables('1\tholdem\t100-200-no-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(1, 'holdem', '100-200-no-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.listTables('1\tholdem\t2-4-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(1, 'holdem', '2-4-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.listTables('1\t\t2-4-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(1, None, '2-4-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.listTables('1\t7stud\t\t%d' % ii, 0)
+            tables = self.service.searchTables(1, '7stud', None, ii)
             self.assertEqual(0, len(tables))
-            tables = self.service.listTables('1\t7stud\t2-4-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(1, '7stud', '2-4-limit', ii)
             self.assertEqual(0, len(tables))
 
-        tables = self.service.listTables('2', 0)
+        tables = self.service.searchTables(2, None, None, 0)
         self.assertEqual(3, len(tables))
         for ii in [ 0, 1, 2 ]:
-            tables = self.service.listTables('2\t\t\t%d' % ii, 0)
+            tables = self.service.searchTables(2, None, None, ii)
             self.assertEqual(3, len(tables))
-            tables = self.service.listTables('2\tholdem\t\t%d' % ii, 0)
+            tables = self.service.searchTables(2, 'holdem', None, ii)
             self.assertEqual(2, len(tables))
-            tables = self.service.listTables('2\tholdem\t100-200-no-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(2, 'holdem', '100-200-no-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.listTables('2\tholdem\t2-4-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(2, 'holdem', '2-4-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.listTables('2\t\t2-4-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(2, None, '2-4-limit', ii)
             self.assertEqual(2, len(tables))
-            tables = self.service.listTables('2\t7stud\t\t%d' % ii, 0)
+            tables = self.service.searchTables(2, '7stud', None, ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.listTables('2\t7stud\t2-4-limit\t%d' % ii, 0)
+            tables = self.service.searchTables(2, '7stud', '2-4-limit', ii)
             self.assertEqual(1, len(tables))
 
         # The threes are different: all currency two queries with holdem
         # don't have three.  Also, all stud queries on currency 1 have no one, because
         # there are no currency 1 stud tables.
-        for query in [ '2\t\t\t3', '2\tholdem\t\t3', '2\t\t\t3',
-                       '2\tholdem\t100-200-no-limit\t3', '2\tholdem\t2-4-limit\t3',
-                       '2\t\t2-4-limit\t3', '1\t7stud\t\t3', '1\t7stud\t2-4-limit\t3' ]:
-            tables = self.service.listTables(query, 0)
-            self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(2, None, None, 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(2, 'holdem', None, 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(2, 'holdem', '100-200-no-limit', 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(2, 'holdem', '2-4-limit', 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(2, None, '2-4-limit', 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(1, '7stud', None, 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(1, '7stud', '2-4-limit', 3)
+        self.assertEqual(0, len(tables))
 
-        for query in [ '1\t\t\t3', '1\tholdem\t\t3', '1\tholdem\t100-200-no-limit\t3' ]:
-            tables = self.service.listTables(query, 0)
-            self.assertEqual(1, len(tables), "listTables() query: '%s' yields %d not 1"
-                             % (query, len(tables)))
+        tables = self.service.searchTables(1, None, None, 3)
+        self.assertEqual(1, len(tables), "searchTables() query: yields %d not 1" % len(tables))
+        tables = self.service.searchTables(1, 'holdem', None, 3)
+        self.assertEqual(1, len(tables), "searchTables() query: yields %d not 1" % len(tables))
+        tables = self.service.searchTables(1, 'holdem', '100-200-no-limit', 3)
+        self.assertEqual(1, len(tables), "searchTables() query: yields %d not 1" % len(tables))
+
         # The rest have zero
-        for query in ['1\tholdem\t2-4-limit\t3', '1\t\t2-4-limit\t3', '1\t7stud\t\t3' ]:
-            tables = self.service.listTables(query, 0)
-            self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(1, 'holdem', '2-4-limit', 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(1, None, '2-4-limit', 3)
+        self.assertEqual(0, len(tables))
+        tables = self.service.searchTables(1, '7stud', None, 3)
+        self.assertEqual(0, len(tables))
 
         # Finally, no query beyond 3 users should be anything but zero.
         for ii in [ 4, 5, 6 ]:
-            for currencySerial in [ 1, 2 ]:
-                for query in ['%d\t\t\t%d', '%d\tholdem\t\t%d',
-                    '%d\tholdem\t100-200-no-limit\t%d', '%d\tholdem\t2-4-limit\t%d',
-                    '%d\t\t2-4-limit\t%d', '%d\t7stud\t\t%d', '%d\t7stud\t2-4-limit\t%d']:
-                    thisQuery = query % (currencySerial, ii)
-                    tables = self.service.listTables(thisQuery, 0)
-                    self.assertEqual(0, len(tables), "listTables() query: '%s' yields %d not 0" % (thisQuery, len(tables)))
+            for currencySerial in [ 1, 2, None ]:
+                for variant in [ None, 'holdem', '7stud', '' ]:
+                    for betting in [ None, '', '2-4-limit', '100-200-no-limit' ]:
+                        tables = self.service.searchTables(currencySerial, variant, betting, ii)
+                        self.assertEqual(0, len(tables))
         self.assertEquals(get_messages(), [])
     # ----------------------------------------------------------------
     def test10_tooMany(self):
         self.service.startService()
 
         clear_all_messages()
-        tables = self.service.listTables('\t\t2-4-limit\t\t\t\t', 0)
-        self.assertEqual(3, len(tables))
-        self.assertEquals(get_messages(), ["*ERROR* Following listTables() criteria string has more parameters than expected, ignoring third one and beyond in: \t\t2-4-limit\t\t\t\t"])
+        tables = self.service.listTables('\tholdem\t', 0)
+        self.assertEqual(4, len(tables))
+        self.assertEquals(get_messages(), ["*ERROR* Following listTables() criteria string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
     # ----------------------------------------------------------------
     def test11_currencySerialIsNotAnInteger(self):
         self.service.startService()
 
         clear_all_messages()
-        tables = self.service.listTables("hithere\t\t\t", 0)
+        tables = self.service.listTables("hithere\t", 0)
         self.assertEqual(0, len(tables))
         self.assertEquals(get_messages(), ["*ERROR* listTables(): currency_serial parameter must be an integer, instead was: hithere"])
-    # ----------------------------------------------------------------
-    def test12_minPlayersIsNotAnInteger(self):
-        self.service.startService()
-
-        clear_all_messages()
-        tables = self.service.listTables("\t\t\thothere", 0)
-        self.assertEqual(0, len(tables))
-        self.assertEquals(get_messages(), ["*ERROR* listTables(): min_players parameter must be an integer, instead was: hothere"])
     # ----------------------------------------------------------------
     def test13_emptyArgsShouldGenerateSameAsSelectAll(self):
         self.service.startService()
@@ -656,7 +665,7 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
         self.assertEquals(get_messages(), [])
 
         clear_all_messages()
-        tables = self.service.listTables("\t\t", 0)
+        tables = self.service.listTables("\t", 0)
         self.assertEqual(allSelectCount, len(tables))
         self.assertEquals(get_messages(), [])
     # ----------------------------------------------------------------
@@ -664,12 +673,12 @@ class ListTablesTestCase(PokerServiceTestCaseBase):
         self.service.startService()
 
         clear_all_messages()
-        tables = self.service.listTables("\tholdem'; DELETE from pokertables WHERE variant = 'holdem\t\t", 0)
+        tables = self.service.listTables("\tholdem'; DELETE from pokertables WHERE variant = 'holdem", 0)
         self.assertEqual(0, len(tables))
         self.assertEquals(get_messages(), [])
 
         clear_all_messages()
-        tables = self.service.listTables("\tholdem\t\t", 0)
+        tables = self.service.listTables("\tholdem", 0)
         self.assertEqual(4, len(tables))
         self.assertEquals(get_messages(), [])
 ###############################################################################
@@ -699,14 +708,14 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
         self.giveUserMoney(22, 1, 100000)
 
         # There are no tables that take currency 3. 
-        self.assertEquals(self.service.getTableBestByCriteria(22, "3"), None)
+        self.assertEquals(self.service.getTableBestByCriteria(22, 3), None)
     # ----------------------------------------------------------------
     def test01_nothingReturnedDueToNotEnoughMoney(self):
         self.giveUserMoney(22, 1, 999)
         self.giveUserMoney(22, 2, 999)
 
-        self.assertEquals(self.service.getTableBestByCriteria(22, "1"), None)
-        self.assertEquals(self.service.getTableBestByCriteria(22, "2"), None)
+        self.assertEquals(self.service.getTableBestByCriteria(22, 1), None)
+        self.assertEquals(self.service.getTableBestByCriteria(22, 2), None)
     # ----------------------------------------------------------------
     def test02_onlySubSetPossibleDueToLimitedFunds(self):
         from pokernetwork.pokertable import PokerTable
@@ -714,8 +723,8 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
         self.giveUserMoney(22, 1, 5000)
         self.giveUserMoney(22, 2, 5000)
 
-        tableCurrency1 = self.service.getTableBestByCriteria(22, "1")
-        tableCurrency2 = self.service.getTableBestByCriteria(22, "2")
+        tableCurrency1 = self.service.getTableBestByCriteria(22, 1)
+        tableCurrency2 = self.service.getTableBestByCriteria(22, 2)
 
         self.failUnless(isinstance(tableCurrency1, PokerTable))
         self.failUnless(isinstance(tableCurrency2, PokerTable))
@@ -729,8 +738,8 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
         self.giveUserMoney(22, 1, 200000)
         self.giveUserMoney(22, 2, 200000)
 
-        tableCurrency1 = self.service.getTableBestByCriteria(22, "1")
-        tableCurrency2 = self.service.getTableBestByCriteria(22, "2")
+        tableCurrency1 = self.service.getTableBestByCriteria(22, 1)
+        tableCurrency2 = self.service.getTableBestByCriteria(22, 2)
 
         self.failUnless(isinstance(tableCurrency1, PokerTable))
         self.failUnless(isinstance(tableCurrency2, PokerTable))
@@ -746,12 +755,12 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
         for ii in range(table.game.max_players):
             table.game.serial2player[ii] = MockPlayerForCriteria()
 
-        self.assertEquals(self.service.getTableBestByCriteria(22, "1"), None)
+        self.assertEquals(self.service.getTableBestByCriteria(22, 1), None)
     # ----------------------------------------------------------------
     def test05_noneDueToAskingForPlayers(self):
         self.giveUserMoney(22, 1, 200000)
 
-        self.assertEquals(self.service.getTableBestByCriteria(22, "1\t\t\t3"), None)
+        self.assertEquals(self.service.getTableBestByCriteria(22, 1, min_players = 3), None)
     # ----------------------------------------------------------------
     def test06_oneSpecificDueToPlayerSittingOut(self):
         self.giveUserMoney(99, 1, 200000)
@@ -775,7 +784,7 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
 
         from pokernetwork.pokertable import PokerTable
 
-        foundTable = self.service.getTableBestByCriteria(99, "1\t\t\t3")
+        foundTable = self.service.getTableBestByCriteria(99, 1, min_players = 3)
 
         self.failUnless(isinstance(foundTable, PokerTable))
 
@@ -803,7 +812,7 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
 
         from pokernetwork.pokertable import PokerTable
 
-        foundTable = self.service.getTableBestByCriteria(99, "1\t\t\t3")
+        foundTable = self.service.getTableBestByCriteria(99, 1, min_players = 3)
 
         self.assertEquals(foundTable, None)
 #####################################################################
@@ -6956,7 +6965,7 @@ def Run():
     suite.addTest(loader.loadClass(SetAccountTestCase))
     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
     suite.addTest(loader.loadClass(MonitorTestCase))
-    suite.addTest(loader.loadClass(ListTablesTestCase))
+    suite.addTest(loader.loadClass(ListTablesSearchTablesTestCases))
     suite.addTest(loader.loadClass(GetTableBestByCriteriaTestCase))
     suite.addTest(loader.loadClass(TourneySelectTestCase))
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))

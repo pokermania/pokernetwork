@@ -1,3 +1,47 @@
+2009-07-03  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(ConvertTablePickerArgsToListTablesQueryStringUnitTestCase):
+	Removed now-superfluous tests.
+
+	* pokernetwork/pokeravatar.py
+	(PokerAvatar._convertTablePickerArgsToListTableQuery): Removed
+	now-superfluous method.
+	(PokerAvatar.performPacketPokerTablePicker): Changed to use new
+	PokerService.getTableBestByCriteria() function prototype.
+
+	* tests/test-pokerservice.py.in (GetTableBestByCriteriaTestCase):
+	Reworked tests to use proper arguments for
+	getTableBestByCriteria().
+
+	* pokernetwork/pokerservice.py
+	(PokerService.getTableBestByCriteria): Changed documentation and
+	switched from using listTables() to searchTables(), including
+	change to function prototype.
+
+	* tests/test-pokerservice.py.in
+	(ListTablesSearchTablesTestCases.test10_tooMany): Fixed to use
+	variant rather that betting_structure since listTables() no longer
+	takes variant.
+	(ListTablesSearchTablesTestCases.test09_currency_and_variant_and_bettingStructure_and_count_withSome):
+	Fixed typo in test conversion.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables):
+	Refactored method and generated searchTables()
+	(PokerService.searchTables): Wrote method.
+
+	* tests/test-pokerservice.py.in (ListTablesSearchTablesTestCases):
+	Renamed test case class.
+	(ListTablesSearchTablesTestCases.test07_currency_and_variant_and_bettingStructure)
+	(ListTablesSearchTablesTestCases.test08_currency_and_variant_and_bettingStructure_and_count_noOne)
+	(ListTablesSearchTablesTestCases.test09_currency_and_variant_and_bettingStructure_and_count_withSome):
+	Reworked tests to use searchTables.
+
+	* pokernetwork/pokerservice.py (PokerService.listTables): Improved
+	docstring to indicate that listTables() is going back to the "old
+	way" with the string arg, and will have a helper function for the
+	other functionality.
+
 2009-06-30  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
