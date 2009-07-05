@@ -69,6 +69,7 @@ COVERAGE_100_PERCENT="
 ../pokernetwork/pokergameclient
 ../pokernetwork/pokernetworkconfig
 ../pokernetwork/pokerclientpackets
+../pokernetwork/OLDpokerclientpackets
 ../pokernetwork/currencyclient
 ../pokernetwork/pokerpackets
 ../pokernetwork/pokeravatar
@@ -83,6 +84,7 @@ COVERAGE_100_PERCENT="
 ../pokernetwork/client
 ../pokernetwork/proxy
 ../pokernetwork/countfilter
+../pokernetwork/proxyfilter
 ../pokernetwork/pokercashier
 ../pokernetwork/pokerauthmysql
 ../pokernetwork/user

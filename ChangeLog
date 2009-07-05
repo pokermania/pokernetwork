@@ -1,6 +1,26 @@
 2009-07-04  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/run.in (COVERAGE_100_PERCENT): Added
+	../pokernetwork/proxyfilter.
+
+	* tests/test-proxyfilter.py.in
+	(ProxyFilterTestCase.test02_forceInitCoverHeaderReplace): Wrote test.
+	(ProxyFilterTestCase.test03_checkbadReason.MockDeferred.errback):
+	Wrote test.
+
+	* tests/run.in (COVERAGE_100_PERCENT): Added
+	../pokernetwork/OLDpokerclientpackets.
+
+	* tests/test-pokerclientpackets.py.in: Added
+	OLDpokerclientpackets.py to the COVERAGE_FILES list.
+	(PokerClientPacketsTestCase.test_chips2amount_old): Wrote test.
+
+	* configure.ac, tests/Makefile.am (TESTS): Added
+	test-nullfilter.py.
+
+	* tests/test-nullfilter.py.in: Added file and wrote tests.
+
+	* tests/run.in (COVERAGE_100_PERCENT): Added
 	../pokernetwork/countfilter.
 
 	* tests/Makefile.am (TESTS): Added test-countfilter.py.

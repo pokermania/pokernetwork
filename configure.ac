@@ -1,8 +1,8 @@
 #
 # Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
-# Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
-#                                24 rue vieille du temple, 75004 Paris
+# Copyright (C)             2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2004, 2005, 2006       Mekensleep <licensing@mekensleep.com>
+#                                      24 rue vieille du temple, 75004 Paris
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -344,6 +344,7 @@ AC_CONFIG_FILES([
         tests/test-proxy.py
         tests/test-proxyfilter.py
         tests/test-countfilter.py
+        tests/test-nullfilter.py
         tests/test-string.py
         tests/test-pokerchildren.py
         tests/test-webservice.py

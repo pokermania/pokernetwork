@@ -120,6 +120,7 @@ TESTS = coverage-reset \
 	test-pokermemcache.py \
 	test-proxyfilter.py \
 	test-countfilter.py \
+	test-nullfilter.py \
 	test-proxy.py \
 	test-pokerserver.py \
 	test-pokerserver-run-load.py \
