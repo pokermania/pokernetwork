@@ -85,7 +85,6 @@ COVERAGE_100_PERCENT="
 ../pokernetwork/client
 ../pokernetwork/proxy
 ../pokernetwork/countfilter
-../pokernetwork/proxyfilter
 ../pokernetwork/pokercashier
 ../pokernetwork/pokerauthmysql
 ../pokernetwork/user
