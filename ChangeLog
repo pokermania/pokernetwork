@@ -1,6 +1,28 @@
-2009-07-05  Loic Dachary  <loic@pokerdev.call.tld>
+2009-07-06  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* tests/test-protocol.py.in: add missing POKER_PLAYER_HAND_STRENGTH
+	* tests/run.in: ../pokernetwork/proxyfilter is 100%
+
+2009-07-06  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokerclientpackets.py: update
+	  PacketPokerPlayerHandStrength with bkuhn documentation
+	* pokernetwork/pokerexplain.py, tests/test-pokerexplain.py.in:
+	  pokerexplain send PacketPokerPlayerHandStrength on each street
+	* pokernetwork/pokerclientpackets.py: add
+	  PacketPokerPlayerHandStrength
+
+2009-07-06  Loic Dachary <loic@dachary.org>
+
+	* tests/run.in: ../pokernetwork/proxyfilter not yet 100%
+	* pokernetwork/pokerclientpackets.py: add missing trailing ) to
+	  perl generation helper
+	* ChangeLog: *** empty log message ***
+	* tests/test-countfilter.py.in: use @srcdir@ instead of hardwired .
+
+2009-07-05  Loic Dachary  <loic@pokerdev.call.tld>
 
 	* tests/test-countfilter.py.in: add @srcdir@
 
