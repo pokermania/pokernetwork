@@ -824,5 +824,5 @@ _TYPES = range(170,254)
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 169 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[) \\w#]+#/$s # $h #/; }' pokerclientpackets.py"
+# compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 169 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[) \\w#]+#/$s) # $h #/; }' pokerclientpackets.py"
 # End:
