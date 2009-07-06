@@ -1213,6 +1213,92 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertTrue(self.explain.explain(PacketPokerId(game_id = game_id)))
         self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_SELF_LOST_POSITION, self.explain.forward_packets[1].type)
+
+    def test41_explain_state_flop_hand_strength(self):
+        game_id = 1
+        self.explain.explain(PacketPokerTable(id = game_id,
+                                              betting_structure = '1-2-no-limit',
+                                              variant = 'holdem'))
+        def addPlayer(player_serial, seat):
+            self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
+                                                         serial = player_serial,
+                                                         seat = seat,
+                                                         name = 'name',
+                                                         url = 'url',
+                                                         outfit = 'outfit',
+                                                         auto_blind_ante = 1,
+                                                         wait_for = 0))
+            self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                        serial = player_serial,
+                                                        money = 20000))
+            self.explain.explain(PacketPokerSit(game_id = game_id,
+                                                serial = player_serial))
+        addPlayer(42, 1)
+        addPlayer(43, 2)
+        self.explain.explain(PacketSerial(serial = 42))
+        self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                               players = [42, 43]))
+        self.explain.explain(PacketPokerStart(game_id = game_id, hand_serial = 11))
+        self.explain.explain(PacketPokerPlayerCards(game_id = game_id,
+                                                    serial = 42,
+                                                    cards = [ 1, 2 ]))
+        self.explain.explain(PacketPokerPlayerCards(game_id = game_id,
+                                                    serial = 43,
+                                                    cards = [ 3, 4 ]))
+        self.explain.explain(PacketPokerState(game_id = game_id,
+                                              string = pokergame.GAME_STATE_PRE_FLOP))
+        self.explain.explain(PacketPokerCheck(game_id = game_id, serial = 43))
+        self.explain.explain(PacketPokerCheck(game_id = game_id, serial = 42))
+        self.explain.explain(PacketPokerBoardCards(game_id = game_id,
+                                                   cards = [ 5, 6, 7 ]))
+        self.explain.explain(PacketPokerState(game_id = game_id,
+                                              string = pokergame.GAME_STATE_FLOP))
+        self.assertEqual(7, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_HAND_STRENGTH, self.explain.forward_packets[2].type)
+        self.assertEqual('Flush Nine high: 9h, 8h, 7h, 4h, 3h', self.explain.forward_packets[2].hand)
+
+    def test42_explain_state_flop_hand_strength_not_in_game(self):
+        game_id = 1
+        self.explain.explain(PacketPokerTable(id = game_id,
+                                              betting_structure = '1-2-no-limit',
+                                              variant = 'holdem'))
+        def addPlayer(player_serial, seat):
+            self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
+                                                         serial = player_serial,
+                                                         seat = seat,
+                                                         name = 'name',
+                                                         url = 'url',
+                                                         outfit = 'outfit',
+                                                         auto_blind_ante = 1,
+                                                         wait_for = 0))
+            self.explain.explain(PacketPokerPlayerChips(game_id = game_id,
+                                                        serial = player_serial,
+                                                        money = 20000))
+            self.explain.explain(PacketPokerSit(game_id = game_id,
+                                                serial = player_serial))
+        addPlayer(42, 1)
+        addPlayer(43, 2)
+        self.explain.explain(PacketSerial(serial = 44))
+        self.explain.explain(PacketPokerInGame(game_id = game_id,
+                                               players = [42, 43]))
+        self.explain.explain(PacketPokerStart(game_id = game_id, hand_serial = 11))
+        self.explain.explain(PacketPokerPlayerCards(game_id = game_id,
+                                                    serial = 42,
+                                                    cards = [ 1, 2 ]))
+        self.explain.explain(PacketPokerPlayerCards(game_id = game_id,
+                                                    serial = 43,
+                                                    cards = [ 3, 4 ]))
+        self.explain.explain(PacketPokerState(game_id = game_id,
+                                              string = pokergame.GAME_STATE_PRE_FLOP))
+        self.explain.explain(PacketPokerCheck(game_id = game_id, serial = 43))
+        self.explain.explain(PacketPokerCheck(game_id = game_id, serial = 42))
+        self.explain.explain(PacketPokerBoardCards(game_id = game_id,
+                                                   cards = [ 5, 6, 7 ]))
+        self.explain.explain(PacketPokerState(game_id = game_id,
+                                              string = pokergame.GAME_STATE_FLOP))
+        self.assertEqual(5, len(self.explain.forward_packets))
+        for packet in self.explain.forward_packets:
+            self.assertNotEqual(PACKET_POKER_PLAYER_HAND_STRENGTH, packet.type)
         
 # ----------------------------------------------------------------
 def Run():

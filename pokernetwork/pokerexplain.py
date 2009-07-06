@@ -593,6 +593,12 @@ class PokerExplain:
                                                                       serial = player.serial,
                                                                       cards = cards))
 
+                if not self.no_display_packets:
+                    if game.isRunning() and game.cardsDealt() and self.getSerial() != 0 and game.isPlaying(self.getSerial()) and (packet.string == "flop" or packet.string == "turn" or packet.string == "river"):
+                        forward_packets.append(PacketPokerPlayerHandStrength(game_id = game.id,
+                                                                             serial = self.getSerial(),
+                                                                             hand = game.readablePlayerBestHands(self.getSerial())))
+
                 if ( packet.string != "end" and not game.isBlindAnteRound() ):
                     if not self.no_display_packets:
                         forward_packets.extend(self.updateBetLimit(game))
