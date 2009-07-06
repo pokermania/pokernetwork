@@ -824,7 +824,13 @@ Packet.infoDeclare(globals(), PacketPokerAllinShowdown, Packet, "POKER_ALLIN_SHO
 
 class PacketPokerPlayerHandStrength(PacketPokerId):
     """\
-Semantics: the player "serial" has the current "hand" strength in game "game_id".
+Semantics: "hand" is the human-readable description of the best
+possible poker hand the player (represented by "serial") can currently
+make in current hand being played in game, "game_id".  This
+description includes only 'made' poker hands, not draws or potential
+hands.  This description will be sent in the the language of the
+players currently set locale (see PacketPokerSetLocale()), or "en.US"
+if no translation is available.
 
 Direction: client <=> client
 
