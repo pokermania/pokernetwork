@@ -820,6 +820,27 @@ game_id: integer uniquely identifying a game.
 
 Packet.infoDeclare(globals(), PacketPokerAllinShowdown, Packet, "POKER_ALLIN_SHOWDOWN", 209) # 0xd1 # %SEQ%
 
+########################################
+
+class PacketPokerPlayerHandStrength(PacketPokerId):
+    """\
+Semantics: the player "serial" has the current "hand" strength in game "game_id".
+
+Direction: client <=> client
+
+Context: inferred on each street.
+
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+hand: readable player best hand.
+"""
+
+    info = PacketPokerId.info + (
+        ('hand', '', 's'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerPlayerHandStrength, PacketPokerId, "POKER_PLAYER_HAND_STRENGTH", 210) # 0xd2 # %SEQ%
+
 _TYPES = range(170,254)
 
 # Interpreted by emacs
