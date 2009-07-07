@@ -2,6 +2,14 @@
 
  	* Release 1.7.5
 
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: The
+	  list of candidates for registration in the waiting list of a
+	  satellite tournament includes the players that were rejected
+	  because they were already registered. The waiting list must try
+	  all candidates in order (meaning try again the winners that were
+	  rejected) and stop either when there are no players left or when
+	  the tournament quota is reached.
+	* ChangeLog: *** empty log message ***
 	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: when
 	  handling the waiting list of a satellite tournament, registration
 	  must be against satellite_of, not serial
