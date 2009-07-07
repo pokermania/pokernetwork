@@ -2614,24 +2614,23 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
 
         self.service.startService()
         self.createUsers()
-        user1_serial = self.user1_serial
-        user2_serial = self.user2_serial
         
-        tourney_serial, schedule = self.service.tourneys.items()[1]
+        tourney_serial, tourney = self.service.tourneys.items()[0]
+        tourney.players_quota = 10
 
         class Tournament:
-            def __init__(self):
-                self.satellite_of = tourney_serial
-                self.satellite_registrations = [ ]
-                self.satellite_player_count = 2
-                self.winners = [ user2_serial, user1_serial, 100, 200 ]
+            def __init__(Tself):
+                Tself.satellite_of = tourney_serial
+                Tself.satellite_registrations = [ ]
+                Tself.satellite_player_count = 2
+                Tself.winners = [ self.user2_serial, self.user1_serial, self.user3_serial, 200 ]
 
         tournament = Tournament()
-        self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, user2_serial, 1), 'tourneySatelliteSelectPlayer')
-        self.assertEqual([user2_serial], tournament.satellite_registrations)
+        self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, self.user2_serial, 1), 'tourneySatelliteSelectPlayer')
+        self.assertEqual([self.user2_serial], tournament.satellite_registrations)
         tournament.satellite_registrations = [] # pretend the user was registered as a a side effect of a previous tournament
-        self.failUnless(self.service.tourneySatelliteWaitingList(tournament), 'tourneySatelliteWaitingList adds player ' + str(user1_serial))
-        self.assertEquals([user1_serial, 100], tournament.satellite_registrations)
+        self.failUnless(self.service.tourneySatelliteWaitingList(tournament), 'tourneySatelliteWaitingList adds player ' + str(self.user1_serial))
+        self.assertEquals([self.user1_serial, self.user3_serial], tournament.satellite_registrations)
         cursor = self.db.cursor()
         cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
         self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
@@ -2786,7 +2785,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.assertEqual(False, self.service.tourneyFinished(tournament))
         if verbose < 0:
             self.assertTrue(search_output("bailor failed to provide requested money"))
-##############################################################################        
+
     def test_bailor_zero(self):
         class Tournament:
             def __init__(self):
