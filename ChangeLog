@@ -1,6 +1,14 @@
-2009-07-06  Loic Dachary <loic@dachary.org>
+2009-07-07  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: when
+	  handling the waiting list of a satellite tournament, registration
+	  must be against satellite_of, not serial
+	* tests/run.in: for some reason ../pokernetwork/proxyfilter is not
+	  100% for loic
+
+2009-07-06  Loic Dachary <loic@dachary.org>
 
 	* tests/test-protocol.py.in: add missing POKER_PLAYER_HAND_STRENGTH
 	* tests/run.in: ../pokernetwork/proxyfilter is 100%
