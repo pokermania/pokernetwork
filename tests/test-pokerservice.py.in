@@ -2624,7 +2624,6 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
                 self.satellite_registrations = [ 505 ]
                 self.satellite_player_count = 2
                 self.winners = [ 505, user1_serial ]
-                self.serial = tourney_serial
 
         tournament = Tournament()
         self.failUnless(self.service.tourneySatelliteWaitingList(tournament), 'tourneySatelliteWaitingList adds player 2')

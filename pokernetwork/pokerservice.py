@@ -1045,7 +1045,7 @@ class PokerService(service.Service):
             return False
         serials = filter(lambda serial: serial not in tourney.satellite_registrations, tourney.winners)
         for serial in serials[:registrations]: 
-            packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.serial)
+            packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.satellite_of)
             if self.tourneyRegister(packet = packet, via_satellite = True):
                 tourney.satellite_registrations.append(serial)
         return True
