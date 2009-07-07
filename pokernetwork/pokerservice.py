@@ -1044,10 +1044,13 @@ class PokerService(service.Service):
         if registrations <= 0:
             return False
         serials = filter(lambda serial: serial not in tourney.satellite_registrations, tourney.winners)
-        for serial in serials[:registrations]: 
+        for serial in serials: 
             packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.satellite_of)
             if self.tourneyRegister(packet = packet, via_satellite = True):
                 tourney.satellite_registrations.append(serial)
+                registrations -= 1
+                if registrations <= 0:
+                    break
         return True
 
     def tourneyManager(self, tourney_serial):
@@ -1184,7 +1187,8 @@ class PokerService(service.Service):
             error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
                                 code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
                                 message = "Tournament %d does not exist" % tourney_serial)
-            self.error(error)
+            if not via_satellite or self.verbose > 0:
+                self.error(error)
             if client: client.sendPacketVerbose(error)
             return False
         tourney = self.tourneys[tourney_serial]
