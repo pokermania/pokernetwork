@@ -1,3 +1,23 @@
+2009-07-11  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCase.test42_0_handSelectAll_MissingPrivsCauseFail):
+	Wrote test.
+	(PokerAvatarTestCase.handSelectAllMissingPrivsMakesItFail): Wrote
+	method.
+	(PokerAvatarTestCase.pingThenUnprivRegisterTourney): Renamed
+	method to pingThenExpectPrivilegeFailure.
+	(PokerAvatarTestCase.tourneyRegisterUnpriv)
+	(PokerAvatarTestCase.seatUnpriv)
+	(PokerAvatarTestCase.userInfoUnpriv)
+	(PokerAvatarTestCase.personalInfoUnpriv)
+	(PokerAvatarTestCase.playerInfoUnpriv)
+	(PokerAvatarTestCase.test17_0_tourneyRegisterUnpriv): Rewrote test.
+	(PokerAvatarTestCase.test17_1_seatUnpriv)
+	(PokerAvatarTestCase.test17_2_userInfoUnpriv)
+	(PokerAvatarTestCase.test17_3_personalInfoUnpriv)
+	(PokerAvatarTestCase.test17_4_tourneyTourneyRegisterUnpriv): Wrote test.
+
 2009-07-07  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5

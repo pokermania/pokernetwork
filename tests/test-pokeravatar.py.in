@@ -1079,12 +1079,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplainTooLate)
         return d
     # -------------------------------------------------------------------------
-    def pingThenUnprivRegisterTourney(self, (client, packet)):
-        avatar = self.service.avatars[0]
+    def pingThenExpectPrivilegeFailure(self, (client, packet), sendingPacket, id = 0):
+        avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPing())
-        avatar.handlePacketLogic(PacketPokerTourneyRegister(serial = client.getSerial(),
-                                                            game_id = 3))
+        avatar.handlePacketLogic(sendingPacket)
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_AUTH_REQUEST:
@@ -1092,11 +1091,61 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEquals(found, True)
         return (client,)
     # -------------------------------------------------------------------------
-    def test17_pingAndUnpriv(self):
+    def tourneyRegisterUnpriv(self, (client, packet)):
+        return self.pingThenExpectPrivilegeFailure((client, packet), 
+            PacketPokerTourneyRegister(serial = client.getSerial(), game_id = 3))
+    # -------------------------------------------------------------------------
+    def test17_0_tourneyRegisterUnpriv(self):
         self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
-        d.addCallback(self.pingThenUnprivRegisterTourney)
+        d.addCallback(self.tourneyRegisterUnpriv)
+        return d
+    # -------------------------------------------------------------------------
+    def seatUnpriv(self, (client, packet)):
+        return self.pingThenExpectPrivilegeFailure((client, packet), 
+                   PacketPokerSeat(serial = client.getSerial(),
+                                   seat = 0, game_id = 3))
+    # -------------------------------------------------------------------------
+    def test17_1_seatUnpriv(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.seatUnpriv)
+        return d
+    # -------------------------------------------------------------------------
+    def userInfoUnpriv(self, (client, packet)):
+        return self.pingThenExpectPrivilegeFailure((client, packet), 
+             PacketPokerGetUserInfo(serial = client.getSerial()))
+    # -------------------------------------------------------------------------
+    def test17_2_userInfoUnpriv(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.userInfoUnpriv)
+        return d
+    # -------------------------------------------------------------------------
+    def personalInfoUnpriv(self, (client, packet)):
+        return self.pingThenExpectPrivilegeFailure((client, packet), 
+             PacketPokerGetPersonalInfo(serial= client.getSerial()))
+    # -------------------------------------------------------------------------
+    def test17_3_personalInfoUnpriv(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.personalInfoUnpriv)
+        return d
+    # -------------------------------------------------------------------------
+    def playerInfoUnpriv(self, (client, packet)):
+        return self.pingThenExpectPrivilegeFailure((client, packet), 
+            PacketPokerPlayerInfo(serial= client.getSerial(), name = "The Naked Guy",
+                                  outfit = "Naked", url = "http://example.org"))
+    # -------------------------------------------------------------------------
+    def test17_4_tourneyTourneyRegisterUnpriv(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.playerInfoUnpriv)
         return d
     # -------------------------------------------------------------------------
     def requestsWithWrongSerial(self, (client, packet), avid, gameId):
@@ -2091,8 +2140,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.user.privilege = oldPriv
         return (client, packet)
     # ------------------------------------------------------------------------
-    # This test currently fails but probably shouldn't, see
-    #          https://gna.org/bugs/index.php?11149
+    def handSelectAllMissingPrivsMakesItFail(self, (client, packet), id):
+        return self.pingThenExpectPrivilegeFailure((client, packet),
+             PacketPokerHandSelectAll(serial = client.getSerial(),
+                                      string = ""), id)
+    # ------------------------------------------------------------------------
     def test42_handSelectAll(self):
         """Test sending hand select all packet."""
         self.createClients(1)
@@ -2100,6 +2152,16 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         d.addCallback(self.handSelectAll, 0)
+        return d
+    # ------------------------------------------------------------------------
+    def test42_0_handSelectAll_MissingPrivsCauseFail(self):
+        """Test failing hand select packet because it has only regular
+        privs, no admin privs."""
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.handSelectAllMissingPrivsMakesItFail, 0)
         return d
     # ------------------------------------------------------------------------
     def handHistory(self, (client, packet), id, gameId ):
