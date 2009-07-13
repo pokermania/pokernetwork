@@ -213,6 +213,15 @@ class PokerResourceTestCase(PokerSiteBase):
 
             self.assertSubstring('\r\n\r\nFUN([])', r.transport.getvalue())
 
+      def test05_render_content(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            r.gotLength(0)
+            r.handleContentChunk('')
+            r.requestReceived('GET', '/?packet={"type":"PacketPing"}', '')
+
+            self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
+
       def test06_render_expire_logged(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site

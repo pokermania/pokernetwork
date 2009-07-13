@@ -199,6 +199,8 @@ class PokerResource(resource.Resource):
         jsonp = request.args.get('jsonp', [''])[0]
         if jsonp:
             data = request.args.get('packet', [''])[0]
+        elif request.args.has_key('packet'):
+            data = request.args['packet'][0];
         else:
             data = request.content.read()
         if self.verbose >= 3:
