@@ -1769,8 +1769,27 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.close()
         self.assertEqual(currency_serial_from_date, currency_serial)
         tourney = self.service.tourneys[tourney_serial]
-        self.assertEqual(False, hasattr(tourney, currency_serial_from_date_format))
         self.assertEqual(currency_serial_from_date, tourney.currency_serial)
+    # ----------------------------------------------------------------
+    def test20_spawnTourneyPrizeCurrencyFromDateFormat(self):
+        cursor = self.db.cursor()
+        prize_currency_from_date_format = '%W'
+        cursor.execute("UPDATE tourneys_schedule SET prize_currency_from_date_format = '%s' WHERE name = 'sitngo2'" % prize_currency_from_date_format)
+        self.assertEqual(1, cursor.rowcount)
+        cursor.close()
+        self.service.today = lambda: date(1970, 1, 8)
+        prize_currency_from_date = 1L
+        self.service.startService()
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.assertEqual(prize_currency_from_date_format, schedule["prize_currency_from_date_format"])
+        cursor = self.db.cursor()
+        cursor.execute("SELECT prize_currency from tourneys WHERE name = '%s'" % 'sitngo2')
+        self.assertEqual(1, cursor.rowcount)
+        prize_currency = cursor.fetchone()[0]
+        cursor.close()
+        self.assertEqual(prize_currency_from_date, prize_currency)
+        tourney = self.service.tourneys[tourney_serial]
+        self.assertEqual(prize_currency_from_date, tourney.prize_currency)
     # ----------------------------------------------------------------
     def test21_today(self):
         self.assertEqual(self.service.today(), date.today())
@@ -1778,6 +1797,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test22_spawnTourneyBadCurrencySerialFromDateFormat(self):
         cursor = self.db.cursor()
         cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
+        cursor.close()
+        self.assertRaises(UserWarning, self.service.startService)
+    # ----------------------------------------------------------------
+    def test22_spawnTourneyBadPrizeCurrencyFromDateFormat(self):
+        cursor = self.db.cursor()
+        cursor.execute("UPDATE tourneys_schedule SET prize_currency_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
     # ----------------------------------------------------------------
@@ -2191,7 +2216,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         oldDb = self.service.db
         self.service.db = MockDatabase()
         realSpawnTourneyInCore = self.service.spawnTourneyInCore
-        self.service.spawnTourneyInCore = lambda a, x, y, z: True
+        self.service.spawnTourneyInCore = lambda a, x, y, z, zz: True
 
         clear_all_messages()
         self.service.spawnTourney(schedule)
@@ -2744,6 +2769,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.players = []
 
@@ -2764,6 +2790,35 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.assertEqual(self.default_money + tournament.prize_min, amount)
         cursor.close()
 
+    def test_prize_currency(self):
+        prize_currency = 2
+        class Tournament:
+            def __init__(self):
+                self.prize_min = 10
+                self.buy_in = 0
+                self.registered = 2
+                self.currency_serial = 1
+                self.prize_currency = prize_currency
+                self.serial = 1
+                self.players = []
+                self.bailor_serial = 0
+
+            def prizes(self):
+                return [self.prize_min]
+        self.service.startService()
+        self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial, self)
+        self.service.serial2client[self.user1_serial] = client1
+        tournament = Tournament()
+        winner_serial = self.user1_serial
+        tournament.winners = [ winner_serial ]
+        self.service.tourneyFinished(tournament)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT amount FROM user2money WHERE user_serial = %d AND currency_serial = %d" % ( winner_serial, prize_currency ))
+        (amount,) = cursor.fetchone()
+        self.assertEqual(tournament.prize_min, amount)
+        cursor.close()
+
     def test_no_bailor(self):
         class Tournament:
             def __init__(self):
@@ -2771,6 +2826,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.players = []
 
@@ -2793,6 +2849,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.players = []
 
@@ -2813,6 +2870,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.finish_time = testclock._seconds_value
                 self.players = []
@@ -2841,6 +2899,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.players = []
 
@@ -2889,6 +2948,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.players = []
 
@@ -2928,6 +2988,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
                 self.buy_in = 0
                 self.registered = 2
                 self.currency_serial = 1
+                self.prize_currency = 0
                 self.serial = 1
                 self.players = []
 
@@ -3984,6 +4045,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(mtSelf):
                 mtSelf.serial = 15
                 mtSelf.prize_min = 0
+                mtSelf.prize_currency = 0
+                mtSelf.currency_serial = 1
                 mtSelf.buy_in = 5
                 mtSelf.registered = 1
                 mtSelf.winners = [9]
@@ -6950,7 +7013,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test_trynow"
+    # loader.methodPrefix = "test2"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

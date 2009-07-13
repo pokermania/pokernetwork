@@ -1,6 +1,6 @@
 -- -*-sql-*- 
 --
--- Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+-- Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
 -- Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 --                                24 rue vieille du temple, 75004 Paris
 --
@@ -252,6 +252,8 @@ CREATE TABLE tourneys_schedule (
   player_timeout INT DEFAULT 60,
   -- Serial of the currency required to pay the buyin.
   currency_serial INT,
+  -- Serial of the currency in which the prizes will be payed (same as currency_serial if zero)
+  prize_currency INT UNSIGNED DEFAULT 0,
   -- Minimum prize pool in cents.
   prize_min INT DEFAULT 0,
   -- Serial number of the player (serial field of the users table) 
@@ -288,10 +290,28 @@ CREATE TABLE tourneys_schedule (
   respawn CHAR DEFAULT 'n',
   -- Unused.
   respawn_interval INT DEFAULT 0,
-  -- Format string to override currency serial from date 
-  -- The string can only contain %Y (2008) %m (03) or %d (07)
+  -- Format string to override the currency_serial field from date 
+  -- %d 	Day of the month as a decimal number [01,31]. 	 
+  -- %H 	Hour (24-hour clock) as a decimal number [00,23]. 	 
+  -- %I 	Hour (12-hour clock) as a decimal number [01,12]. 	 
+  -- %j 	Day of the year as a decimal number [001,366]. 	 
+  -- %m 	Month as a decimal number [01,12]. 	 
+  -- %M 	Minute as a decimal number [00,59]. 	 
+  -- %S 	Second as a decimal number [00,61]. 
+  -- %U 	Week number of the year (Sunday as the first day of the week) as a decimal number [00,53]. All days in a new year preceding the first Sunday are considered to be in week 0.
+  -- %w 	Weekday as a decimal number [0(Sunday),6]. 	 
+  -- %W 	Week number of the year (Monday as the first day of the week) as a decimal number [00,53]. All days in a new year preceding the first Monday are considered to be in week 0.
+  -- %y 	Year without century as a decimal number [00,99]. 	 
+  -- %Y 	Year with century as a decimal number. 	 
+  -- The string can only contain the placeholders documented above
   -- Example: '%Y%m' 
+  --
   currency_serial_from_date_format VARCHAR(16) DEFAULT NULL,
+  --
+  -- Format string to override the prize_currency field from date.
+  -- The semantics is the same as currency_serial_from_date_format.
+  --
+  prize_currency_from_date_format VARCHAR(16) DEFAULT NULL,
   --
   -- If 0 the tournament is not a satellite, if > 0 the tournament
   -- is a satellite and satellite_player_count is
@@ -417,6 +437,7 @@ CREATE TABLE tourneys (
   seats_per_game INT DEFAULT 10,
   player_timeout INT DEFAULT 60,
   currency_serial INT,
+  prize_currency INT UNSIGNED DEFAULT 0,
   prize_min INT DEFAULT 0,
   bailor_serial INT DEFAULT 0,
   buy_in INT DEFAULT 0,

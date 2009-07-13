@@ -650,18 +650,30 @@ class PokerService(service.Service):
         return date.today()
 
     def spawnTourney(self, schedule):
+        currency_from_date_format_regexp = '(%[dHIjmMSUwWyY])+'
+        #
+        # buy-in currency
+        #
         currency_serial = schedule['currency_serial']
         currency_serial_from_date_format = schedule['currency_serial_from_date_format']
         if currency_serial_from_date_format:
-            currency_serial_from_date_format_regexp = '(%[Ymd])+'
-            if not re.match(currency_serial_from_date_format_regexp, currency_serial_from_date_format):
-                raise UserWarning, "bad tourney_schedule.currency_serial_from_date_format format string: %s" % currency_serial_from_date_format
+            if not re.match(currency_from_date_format_regexp, currency_serial_from_date_format):
+                raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, currency_from_date_format_regexp )
             currency_serial = long(self.today().strftime(currency_serial_from_date_format))
+        #
+        # prize pool currency
+        #
+        prize_currency = schedule['prize_currency']
+        prize_currency_from_date_format = schedule['prize_currency_from_date_format']
+        if prize_currency_from_date_format:
+            if not re.match(currency_from_date_format_regexp, prize_currency_from_date_format):
+                raise UserWarning, "tourney_schedule.prize_currency_from_date_format format string %s does not match %s" % ( prize_currency_from_date_format, currency_from_date_format_regexp )
+            prize_currency = long(self.today().strftime(prize_currency_from_date_format))
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
-                       " (resthost_serial, schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time, via_satellite, satellite_of, satellite_player_count)"
+                       " (resthost_serial, schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time, via_satellite, satellite_of, satellite_player_count)"
                        " VALUES "
-                       " (%s,              %s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,        %s,            %s,     %s,   %s,       %s,           %s,              %s,              %s,          %s,     %s,           %s,         %s,            %s,           %s )",
+                       " (%s,              %s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,             %s,        %s,            %s,     %s,   %s,       %s,           %s,              %s,              %s,          %s,     %s,           %s,         %s,            %s,           %s )",
                        ( schedule['resthost_serial'],
                          schedule['serial'],
                          schedule['name'],
@@ -674,6 +686,7 @@ class PokerService(service.Service):
                          schedule['seats_per_game'],
                          schedule['player_timeout'],
                          currency_serial,
+                         prize_currency,
                          schedule['prize_min'],
                          schedule['bailor_serial'],
                          schedule['buy_in'],
@@ -702,9 +715,9 @@ class PokerService(service.Service):
             cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s" % schedule['serial'])
         cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
         cursor.close()
-        self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial)
+        self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial, prize_currency)
 
-    def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial, currency_serial):
+    def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial, currency_serial, prize_currency):
         tourney_map['start_time'] = int(tourney_map['start_time'])
         tourney_map['register_time'] = int(tourney_map.get('register_time', 0))
         tourney = PokerTournament(dirs = self.dirs, **tourney_map)
@@ -712,6 +725,7 @@ class PokerService(service.Service):
         tourney.verbose = self.verbose
         tourney.schedule_serial = schedule_serial
         tourney.currency_serial = currency_serial
+        tourney.prize_currency = prize_currency
         tourney.bailor_serial = tourney_map['bailor_serial']
         tourney.player_timeout = int(tourney_map['player_timeout'])
         tourney.via_satellite = int(tourney_map['via_satellite'])
@@ -846,6 +860,13 @@ class PokerService(service.Service):
         winners = tourney.winners[:len(prizes)]
         cursor = self.db.cursor()
         #
+        # If prize_currency is non zero, use it instead of currency_serial
+        #
+        if tourney.prize_currency > 0:
+            prize_currency = tourney.prize_currency
+        else:
+            prize_currency = tourney.currency_serial
+        #
         # Guaranteed prize pool is withdrawn from a given account if and only if
         # the buy in of the players is not enough.
         #
@@ -853,7 +874,7 @@ class PokerService(service.Service):
         if bail > 0 and tourney.bailor_serial > 0:
             sql = ( "UPDATE user2money SET amount = amount - " + str(bail) + " WHERE " +
                     "       user_serial = " + str(tourney.bailor_serial) + " AND " +
-                    "       currency_serial = " + str(tourney.currency_serial) + " AND " +
+                    "       currency_serial = " + str(prize_currency) + " AND " +
                     "       amount >= " + str(bail) )
             if self.verbose > 2:
                 self.message("tourneyFinished: bailor pays " + sql)
@@ -868,17 +889,17 @@ class PokerService(service.Service):
             serial = winners.pop(0)
             if prize <= 0:
                 continue
-            sql = "UPDATE user2money SET amount = amount + " + str(prize) + " WHERE user_serial = " + str(serial) + " AND currency_serial = " + str(tourney.currency_serial)
+            sql = "UPDATE user2money SET amount = amount + " + str(prize) + " WHERE user_serial = " + str(serial) + " AND currency_serial = " + str(prize_currency)
             if self.verbose > 2:
                 self.message("tourneyFinished: " + sql)
             cursor.execute(sql)
             if cursor.rowcount == 0:
                 sql = ( "INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, %d, %d)" %
-                        ( serial, tourney.currency_serial, prize ) )
+                        ( serial, prize_currency, prize ) )
                 if self.verbose > 2:
                     self.message("tourneyFinished: " + sql)
                 cursor.execute(sql)
-            self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = tourney.currency_serial, param3 = prize)
+            self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = prize_currency, param3 = prize)
 
         #added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
         if not hasattr(tourney, "finish_time"):
@@ -1753,7 +1774,7 @@ class PokerService(service.Service):
         for x in xrange(cursor.rowcount):
             row = cursor.fetchone()
             if self.verbose >= 0: message = "cleanupTourneys: restoring %s(%s) with players" % ( row['name'], row['serial'],  )
-            tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'])
+            tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
             cursor1 = self.db.cursor()
             sql = "SELECT user_serial FROM user2tourney WHERE tourney_serial = " + str(row['serial'])
             if self.verbose > 2:

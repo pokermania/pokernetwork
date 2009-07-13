@@ -2,6 +2,12 @@ UPDATE server SET version = '1.7.5';
 --
 -- different currencies for buyin and prizes
 --
+ALTER TABLE `tourneys_schedule` ADD `prize_currency` INT UNSIGNED DEFAULT 0;
+ALTER TABLE `tourneys_schedule` ADD `prize_currency_from_date_format` VARCHAR(16) DEFAULT NULL;
+ALTER TABLE `tourneys` ADD `prize_currency` INT UNSIGNED DEFAULT 0;
+--
+-- satellite tournaments
+--
 ALTER TABLE `tourneys_schedule` ADD `via_satellite` TINYINT DEFAULT 0;
 ALTER TABLE `tourneys_schedule` ADD `satellite_of` INT UNSIGNED DEFAULT 0;
 ALTER TABLE `tourneys_schedule` ADD `satellite_player_count` INT UNSIGNED DEFAULT 0;
