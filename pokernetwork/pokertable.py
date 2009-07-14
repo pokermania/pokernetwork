@@ -84,8 +84,8 @@ class PokerTable:
 
         # max_missed_round can be configured on a per table basis, which
         # overrides the server-wide default
-        self.max_missed_round = description.get("max_missed_round",
-                                                factory.getMissedRoundMax())
+        self.max_missed_round = int(description.get("max_missed_round",
+                                                    factory.getMissedRoundMax()))
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
