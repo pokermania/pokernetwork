@@ -705,11 +705,11 @@ class PokerRendererTests(unittest.TestCase):
             global currentSuite
             currentSuite.assertEquals(currentSuite.renderer, renderer)
 
-        def render(self, packet):
+        def render(self, pack):
             global currentSuite
             newList = []
             for p in self.expectPackets:
-                dd = pack.__dict__
+                dd = dict(pack.__dict__)
                 for (kk, vv) in p.__dict__.iteritems():
                     if dd.has_key(kk) and dd[kk] == vv:
                         del dd[kk]
