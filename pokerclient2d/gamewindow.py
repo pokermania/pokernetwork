@@ -23,6 +23,7 @@
 #
 
 import gtk
+import gtk.glade
 import unittest
 
 class GameWindowGlade:
@@ -145,7 +146,7 @@ class GameWindowGlade:
             if method: widget.connect("clicked", method)
 
 if __name__ == '__main__':
-    glade = GameWindowGlade('data/interface/table/mockup.glade')
+    glade = GameWindowGlade(gtk.glade.XML('data/interface/table/mockup.glade'))
     event_box = glade.get_widget('game_window')
     window = gtk.Window()
     window.add(event_box)

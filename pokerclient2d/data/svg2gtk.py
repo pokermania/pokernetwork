@@ -24,35 +24,36 @@
 #
 
 import sys
-sys.path.append('/usr/lib/python%s/site-packages/oldxml' % sys.version[:3])
 from xml.sax import parseString
 from xml.sax.handler import ContentHandler
-from xml.dom import minidom
-from xml.xpath import Evaluate
+import libxml2
 import string
 import re
 
 class SVGParse(ContentHandler):
-    def __init__(self, string): 
+    def __init__(self, xml): 
         self.root = ""
         self.formats = []
         self.tuples = []
-        self.doc = minidom.parseString(string)
-        parseString(string, self)
+        self.doc = libxml2.parseMemory(xml, len(xml))
+        parseString(xml, self)
     def __str__(self):
         return string.join(map(lambda format, tuple: format % tuple, self.formats, self.tuples), '')
-    def startElement(self, name, attrs):
+    def startElement(self, name, node):
+        nodeAttrs = dict([(key, value) for key, value in node._attrs.iteritems()])
         if name == "svg":
-            self.startElementSvg(attrs)
+            self.startElementSvg(nodeAttrs)
         elif name == "image":
-            self.startElementImage(attrs)
+            self.startElementImage(nodeAttrs)            
         elif name == "use":
-            self.startElementUse(attrs)
+            self.startElementUse(nodeAttrs)
     def startElementUse(self, attrs):
-        nodes = Evaluate('//g[@id="'+attrs['xlink:href'][1:]+'"]/image', self.doc)
+        context = self.doc.xpathNewContext()
+        path = '//g[@id="'+attrs['xlink:href'][1:]+'"]/image'
+        nodes = context.xpathEval(path)
         for node in nodes:
-            nodeAttrs = {}
-            for key, attribute in node.attributes._attrs.iteritems(): nodeAttrs[key] = attribute.value
+            nodeAttrs = dict([(p.get_name(), p.get_content()) for p in node.properties])
+            if nodeAttrs.has_key('href'): nodeAttrs['xlink:href'] = nodeAttrs['href']
             (groupPrefix, groupSuffix) = attrs['id'].split('_')
             (nodePrefix, nodeSuffix) = nodeAttrs['id'].split('_')
             nodeAttrs['id'] = nodeAttrs['id'].replace(nodeSuffix, groupSuffix)
