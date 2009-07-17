@@ -21,7 +21,7 @@
 #
 
 import sys, os, tempfile, shutil
-sys.path.insert(0, "./..")
+sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 import unittest
 from pokernetwork import nullfilter
