@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2006, 2007, 2008       Loic Dachary <loic@dachary.org>
 # Copyright (C)             2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C)                   2009 Johan Euphrosine <proppy@aminche.com>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -149,6 +150,7 @@ class MockService:
         self.testObject = None
         self.joined_count = 0
         self.joined_max = 1000
+        self.chat_messages = []
 
     def getMissedRoundMax(self):
         return 5  # if you change this, change it in settings_xml above
@@ -307,6 +309,9 @@ class MockService:
     def databaseEvent(self, event, param1, param2):
         if self.testObject:
             self.testObject.assertEqual(PacketPokerMonitorEvent.HAND, event)
+
+    def chatMessageArchive(self, player_serial, game_id, message):
+        self.chat_messages.append((player_serial, game_id, message))
             
 if verbose < 0: redirect_messages(MockService)
 
@@ -692,6 +697,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         d = self.table.getPlayerInfo(2)
         self.failUnlessSubstring("Player2", d.name)
         self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
+        self.assertEquals(1, self.service.chat_messages[0][0])
+        self.assertEquals(table1ID, self.service.chat_messages[0][1])
+        self.assertEquals("Hi, I am the One.", self.service.chat_messages[0][2])
         x = p[ii].waitFor(PACKET_POKER_CHAT)
         def chatCatch(packet):
             self.assertEqual(serial, 1)

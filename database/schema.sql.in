@@ -1,6 +1,7 @@
 -- -*-sql-*- 
 --
 -- Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
+-- Copyright (C)       2009 Johan Euphrosine <proppy@aminche.com>
 -- Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 --                                24 rue vieille du temple, 75004 Paris
 --
@@ -551,6 +552,19 @@ CREATE TABLE messages (
   sent CHAR DEFAULT 'n',
 
   PRIMARY KEY (serial, send_date, sent)
+) ENGINE=InnoDB CHARSET=utf8;
+
+
+DROP TABLE IF EXISTS chat_messages;
+
+CREATE TABLE chat_messages (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  player_serial INT UNSIGNED NOT NULL,
+  game_id INT UNSIGNED NOT NULL,
+  message TEXT DEFAULT '',
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
+
+  PRIMARY KEY (serial)
 ) ENGINE=InnoDB CHARSET=utf8;
 
 DROP TABLE IF EXISTS monitor;

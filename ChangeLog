@@ -1,6 +1,15 @@
-2009-07-14  Loic Dachary <loic@dachary.org>
+2009-07-17  Johan Euphrosine  <proppy@aminche.com>
 
  	* Release 1.7.5
+
+	* database/schema.sql.in: 
+	* pokernetwork/pokerservice.py (PokerService.chatMessageArchive): 
+	* tests/test-pokerservice.py.in (PokerServiceTestCase.test25_chatMessageArchive): 
+	* pokernetwork/pokertable.py (PokerTable.chatPlayer): 
+	* tests/test-pokertable.py.in (PokerTableTestCase.test10_info_and_chat): 
+	add database archiving of chat messages.
+
+2009-07-14  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokertable.py: https://gna.org/bugs/index.php?13950
 	  The max_missed_round variable always ends up being a string if

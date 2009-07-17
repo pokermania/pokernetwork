@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C)             2009 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple 75004 Paris
 #
@@ -2575,6 +2576,10 @@ class PokerService(service.Service):
         self.cancelTimer('messages')
         delay = int(self.delays.get('messages', 60))
         self.timer['messages'] = reactor.callLater(delay, self.messageCheck)
+
+    def chatMessageArchive(self, player_serial, game_id, message):
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO chat_messages (player_serial, game_id, message) VALUES (%s, %s, %s)", (player_serial, game_id, message))
 
 if HAS_OPENSSL:
     class SSLContextFactory:
