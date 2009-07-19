@@ -119,6 +119,8 @@ In CPAN
   
 In ~/local/poker/poker-network
 
+        autoreconf -fi
+
 	./configure --prefix=/usr/local/poker \
 		--with-poker-database=pokernetwork \
 		--with-poker-dbuser=<user> \
