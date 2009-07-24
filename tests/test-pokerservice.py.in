@@ -6243,7 +6243,7 @@ class PokerTreeCoverageTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(self.settings)
         pt = pokerservice.PokerTree(self.service)
         self.assertEquals(pt.service, self.service)
-        for (child, cl) in [ ("RPC2", PokerXMLRPC), ("REST", PokerREST), ("SOAP", PokerSOAP) ]:
+        for (child, cl) in [ ("RPC2", PokerXMLRPC), ("SOAP", PokerSOAP) ]:
             self.failUnless(pt.children.has_key(child), "Missing child of PokerTree: " + child)
             self.failUnless(isinstance(pt.children[child], cl))
             self.assertEquals(pt.getChildWithDefault(child, MockRequestBase()).service, self.service)
@@ -6259,7 +6259,7 @@ class PokerTreeCoverageTestCase(unittest.TestCase):
 
         pt = pokerservice.PokerTree(self.service)
 
-        for (childStr, cl) in [ ("RPC2", PokerXMLRPC), ("REST", PokerREST) ]:
+        for (childStr, cl) in [ ("RPC2", PokerXMLRPC) ]:
             self.failUnless(pt.children.has_key(childStr), "Missing child of PokerTree: " + childStr)
             self.failUnless(isinstance(pt.children[childStr], cl))
             self.assertEquals(pt.getChildWithDefault(childStr, MockRequestBase()).service, self.service)
