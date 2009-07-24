@@ -1628,7 +1628,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.checkTourneysSchedule()
         self.assertEquals(pokertournament.TOURNAMENT_STATE_CANCELED, heads_up_before.state)
         (heads_up_after1, heads_up_after2) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
-        self.assertEquals(register_time, heads_up_after2.register_time)
+        self.failUnless(abs(register_time - heads_up_after2.register_time) <= 1)
         self.assertEquals(heads_up_before.serial, heads_up_after1.serial)
         self.assertNotEqual(heads_up_before.serial, heads_up_after2.serial)
         self.assertEqual(heads_up_before.schedule_serial, heads_up_after2.schedule_serial)
