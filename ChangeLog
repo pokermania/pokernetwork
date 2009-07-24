@@ -1,6 +1,20 @@
-2009-07-17  Johan Euphrosine  <proppy@aminche.com>
+2009-07-24  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
+
+	* conf/poker.server.xml.in, pokernetwork/pokerservice.py,
+	  tests/test-pokerservice.py.in, tests/test-webservice.py.in: 1)
+	  remove obsolete /REST poker service and associated tests
+	  2) The sng_timeout attribute has been added to poker.server.xml
+	  and default to one hour. Poker-network has been modified to
+	  cancel any sng for which register time exceeded sng_timeout.
+
+2009-07-19  Loic Dachary <loic@dachary.org>
+
+	* conf/poker.bot.xml.in: default for bots it to use the autorefill
+	* HOWTO-install-from-sources: add missing autoreconf -fi
+
+2009-07-17  Johan Euphrosine  <proppy@aminche.com>
 
 	* database/schema.sql.in: 
 	* pokernetwork/pokerservice.py (PokerService.chatMessageArchive): 
