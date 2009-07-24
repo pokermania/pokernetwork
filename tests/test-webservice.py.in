@@ -1,7 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep <licensing@mekensleep.com>
 #                    24 rue vieille du temple, 75004 Paris
 #
@@ -321,110 +321,6 @@ class SOAPPokerServiceTestCase(PokerServiceTestCase):
     def query(self, *args):
         pass # not implemented
 
-class RESTPokerServiceTestCase(PokerServiceTestCase):
-
-    def setUp(self):
-        PokerServiceTestCase.setUp(self)
-        self.rest_cookies = None
-        
-    def query(self, use_sessions, packet, jsonp = None):
-        session_name = None
-        if type(use_sessions) == ListType:
-            session, session_name = use_sessions
-        elif use_sessions == 'no sessions':
-            session = 'no'
-        elif use_sessions == 'use sessions':
-            session = 'yes'
-        url = 'http://127.0.0.1:' + str(self.port) + '/REST?session=' + session
-        if session_name:
-            url += '&name=' + session_name
-        if jsonp:
-            url += '&jsonp=' + jsonp
-            url += '&packet=' + urllib.quote(Packet.JSON.encode(packet))
-            postdata = None
-        else:
-            postdata = Packet.JSON.encode(packet)
-        scheme, host, port, path = client._parse(url)
-        headers = {}
-        if self.rest_cookies:
-            if session_name:
-                cookiename = "TWISTED_SESSION_" + session_name
-            else:
-                cookiename = "TWISTED_SESSION"
-            headers['Cookie'] = cookiename + "=" + self.rest_cookies['TWISTED_SESSION'] + "; Path=/"
-#        else:
-#            headers['Cookie'] = None
-        factory = client.HTTPClientFactory(url, postdata = postdata, headers = headers)
-        reactor.connectTCP(host, port, factory)
-        def json_decode(*args):
-            if not self.rest_cookies:
-                self.rest_cookies = factory.cookies
-            if jsonp:
-                return args[0] # jsonp is a JS contruct and cannot be JSON decoded
-            else:
-                json = args[0]
-                return pokersite.fromutf8(simplejson.JSONDecoder().decode(json), pokerservice.PokerXML.encoding)
-        factory.deferred.addCallback(json_decode)
-        return factory.deferred
-
-    def testREST01_sessions(self):
-        self.service.startService()
-        d1 = self.query('use sessions', { 'type': 'PacketPing' })
-        def session_set(*args):
-            self.assertIn('TWISTED', str(self.rest_cookies))
-        d1.addCallback(session_set)
-        def clearSession(*args):
-            d2 = self.query(['clear', None], { 'type': 'PacketPing' })
-            self.rest_cookies = None
-            def session_not_set(*args):
-                self.assertNotIn('TWISTED', str(self.rest_cookies))
-            d2.addCallback(session_not_set)
-            return d2
-        d1.addCallback(clearSession)
-        return d1
-
-    def testREST02_sessions(self):
-        self.service.startService()
-        d1 = self.query('use sessions', { 'type': 'PacketPing' })
-        def session_set(arg):
-            self.assertIn('TWISTED', str(self.rest_cookies))
-            return self.rest_cookies
-        d1.addCallback(session_set)
-        def newSession(cookies):
-            d2 = self.query(['new', None], { 'type': 'PacketPing' })
-            self.rest_cookies = None
-            def session_is_new(*args):
-                self.assertIn('TWISTED', str(self.rest_cookies))
-                self.assertNotEquals(cookies, self.rest_cookies)
-            d2.addCallback(session_is_new)
-            return d2
-        d1.addCallback(newSession)
-        return d1
-
-    def testREST03_jsonp(self):
-        self.service.startService()
-        d1 = self.query('use sessions', { 'type': 'PacketPing' }, 'jsoncall')
-        def session_set(json):
-            self.assertIn('jsoncall', json)
-        d1.addCallback(session_set)
-        return d1
-
-    def testREST04_post(self):
-        self.service.startService()
-        d1 = self.query('use sessions', { 'type': 'PacketPing' })
-        def session_set(json):
-            self.assertEquals([], json);
-        d1.addCallback(session_set)
-        return d1    
-
-    def testREST05_session_name(self):
-        self.service.startService()
-        d1 = self.query(['yes', 'SESSION_NAME'], { 'type': 'PacketPing' })
-        def session_name(json):
-            self.assertIn('SESSION_NAME', str(self.rest_cookies))
-        d1.addCallback(session_name)
-        return d1    
-
 # -----------------------------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
@@ -435,7 +331,6 @@ def Run():
 #    loader.methodPrefix = "testREST03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(XMLRPCPokerServiceTestCase))
-    suite.addTest(loader.loadClass(RESTPokerServiceTestCase))
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',

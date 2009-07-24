@@ -1610,6 +1610,29 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         return defer.DeferredList((d1, d2), fireOnOneErrback = True)
 
+    def test14_sng_timeout(self):
+        settings = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        <server sng_timeout="111">
+        <delays />
+        </server>
+        """
+        service = pokerservice.PokerService(settings)
+        self.assertEqual(111, service.sng_timeout)
+
+    # ----------------------------------------------------------------
+    def test14_checkTourneysSchedule_cancel_sitngo(self):
+        self.service.startService()
+        self.service.sng_timeout = 0
+        (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
+        register_time = int(pokerservice.seconds()) - 1
+        self.service.checkTourneysSchedule()
+        self.assertEquals(pokertournament.TOURNAMENT_STATE_CANCELED, heads_up_before.state)
+        (heads_up_after1, heads_up_after2) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
+        self.assertEquals(register_time, heads_up_after2.register_time)
+        self.assertEquals(heads_up_before.serial, heads_up_after1.serial)
+        self.assertNotEqual(heads_up_before.serial, heads_up_after2.serial)
+        self.assertEqual(heads_up_before.schedule_serial, heads_up_after2.schedule_serial)
+
     # ----------------------------------------------------------------
     def test15_runTourney(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
@@ -6251,7 +6274,7 @@ class PokerTreeCoverageTestCase(unittest.TestCase):
     def test03_render(self):
         self.service = pokerservice.PokerService(self.settings)
         pt = pokerservice.PokerTree(self.service)
-        self.assertEquals(pt.render(MockRequestBase()), "Use /RPC2 or /SOAP or /REST")
+        self.assertEquals(pt.render(MockRequestBase()), "Use /RPC2 or /SOAP")
 ##############################################################################
 from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource
 class PokerRestTreeCoverageTestCase(unittest.TestCase):
@@ -7029,7 +7052,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-    # loader.methodPrefix = "test2"
+#    loader.methodPrefix = "test14_"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))

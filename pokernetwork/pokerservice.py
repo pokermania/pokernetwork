@@ -162,6 +162,9 @@ class PokerService(service.Service):
             # <dachary> because the last stress test show 4000 is the upper limit
             # <dachary> http://pokersource.info/stress-test/2007-08/
             self.joined_max = 4000
+        self.sng_timeout = self.settings.headerGetInt("/server/@sng_timeout")
+        if self.sng_timeout <= 0:
+            self.sng_timeout = 3600
         self.missed_round_max = self.settings.headerGetInt("/server/@max_missed_round")
         if self.missed_round_max <= 0:
             # This default for missed_round_max below (for when it is not
@@ -610,6 +613,13 @@ class PokerService(service.Service):
     def checkTourneysSchedule(self):
         if self.verbose > 3:
             self.message("checkTourneysSchedule")
+        now = seconds()
+        #
+        # Cancel sng that stayed in registering state for too long
+        #
+        for tourney in filter(lambda tourney: tourney.sit_n_go == 'y', self.tourneys.values()):
+            if now - tourney.register_time > self.sng_timeout:
+                tourney.changeState(TOURNAMENT_STATE_CANCELED)
         #
         # Respawning tournaments
         #
@@ -621,7 +631,6 @@ class PokerService(service.Service):
         #
         # One time tournaments
         #
-        now = seconds()
         one_time = []
         for serial in self.tourneys_schedule.keys():
             schedule = self.tourneys_schedule[serial]
@@ -720,7 +729,10 @@ class PokerService(service.Service):
 
     def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial, currency_serial, prize_currency):
         tourney_map['start_time'] = int(tourney_map['start_time'])
-        tourney_map['register_time'] = int(tourney_map.get('register_time', 0))
+        if tourney_map['sit_n_go'] == 'y':
+            tourney_map['register_time'] = int(seconds()) - 1
+        else:
+            tourney_map['register_time'] = int(tourney_map.get('register_time', 0))
         tourney = PokerTournament(dirs = self.dirs, **tourney_map)
         tourney.serial = tourney_serial
         tourney.verbose = self.verbose
@@ -2604,7 +2616,6 @@ class PokerTree(resource.Resource):
         resource.Resource.__init__(self)
         self.service = service
         self.putChild("RPC2", PokerXMLRPC(self.service))
-        self.putChild("REST", PokerREST(self.service))
         try:
             self.putChild("SOAP", PokerSOAP(self.service))
         except:
@@ -2612,7 +2623,7 @@ class PokerTree(resource.Resource):
         self.putChild("", self)
 
     def render_GET(self, request):
-        return "Use /RPC2 or /SOAP or /REST"
+        return "Use /RPC2 or /SOAP"
 
 components.registerAdapter(PokerTree, IPokerService, resource.IResource)
 
