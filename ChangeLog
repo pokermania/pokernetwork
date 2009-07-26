@@ -1,7 +1,18 @@
-2009-07-24  Loic Dachary <loic@dachary.org>
+2009-07-26  Loic Dachary <loic@dachary.org>
 
  	* Release 1.7.5
 
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerpackets.py,
+	  pokernetwork/pokerservice.py, tests/test-pokeravatar.py.in,
+	  tests/test-pokerservice.py.in, tests/test-protocol.py.in:
+	  Implementation of user created tournament with the
+	  PacketPokerCreateTourney packet (task #6657)
+
+2009-07-24  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerservice.py.in: allow for rounding errors
+	* tests/test-pokerservice.py.in: remove tests related to /REST
+	  endpoint
 	* conf/poker.server.xml.in, pokernetwork/pokerservice.py,
 	  tests/test-pokerservice.py.in, tests/test-webservice.py.in: 1)
 	  remove obsolete /REST poker service and associated tests
