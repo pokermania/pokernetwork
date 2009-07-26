@@ -1,7 +1,7 @@
 #
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C)             2009 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
@@ -1087,6 +1087,46 @@ class PokerService(service.Service):
                     break
         return True
 
+    def tourneyCreate(self, packet):
+        cursor = self.db.cursor()
+        cursor.execute("INSERT INTO tourneys_schedule " +
+                       " (resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, players_quota) VALUES " +
+                       " (%s             , %s             , %s     , %s               , %s            , %s            , %s  , %s               , %s             , %s    , %s)",
+                       ( self.resthost_serial,
+                         packet.currency_serial,
+                         packet.variant,
+                         packet.betting_structure,
+                         packet.seats_per_game,
+                         packet.player_timeout,
+                         packet.name,
+                         packet.description_short,
+                         packet.description_long,
+                         packet.buy_in,
+                         len(packet.players)
+                         ))
+        schedule_serial = cursor.lastrowid
+        cursor.close()
+        self.updateTourneysSchedule()
+        #
+        # There can be only one tourney for this tourney_schedule because they are in
+        # not respawned
+        #
+        tourney_serial = self.schedule2tourneys[schedule_serial][0].serial
+        register_packet = PacketPokerTourneyRegister(game_id = tourney_serial)
+        serial_failed = []
+        for serial in packet.players:
+            register_packet.serial = serial
+            if not self.tourneyRegister(register_packet):
+                serial_failed.append(serial)
+        if len(serial_failed) > 0:
+            return PacketPokerError(game_id = schedule_serial,
+                                    serial = tourney_serial,
+                                    other_type = PACKET_POKER_CREATE_TOURNEY,
+                                    code = PacketPokerCreateTourney.REGISTRATION_FAILED,
+                                    message = "registration failed for players %s in tourney %d" % ( str(serial_failed), tourney_serial ))
+        else:
+            return PacketAck()
+        
     def tourneyManager(self, tourney_serial):
         packet = PacketPokerTourneyManager()
         packet.tourney_serial = tourney_serial
@@ -1683,25 +1723,34 @@ class PokerService(service.Service):
             cursor.close()
 
     def packet2resthost(self, packet):
-        if packet.type == PACKET_POKER_POLL:
-            wheres = []
-            if packet.game_id > 0:
-                wheres.append("table_serial = " + str(packet.game_id))
-            if packet.tourney_serial > 0:
-                wheres.append(" tourney_serial = " + str(packet.tourney_serial))
-            where = " AND ".join(wheres)
-        elif packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
-            where = "tourney_serial = " + str(packet.game_id)
-        elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
-            where = "tourney_serial = " + str(packet.tourney_serial)
-        elif hasattr(packet, "game_id"):
-            where = "table_serial = " + str(packet.game_id)
-        else:
-            return None
-
         cursor = self.db.cursor()
-        cursor.execute("SELECT host, port, path FROM route,resthost WHERE " +
-                       " route.resthost_serial = resthost.serial AND " + where)
+        if packet.type == PACKET_POKER_CREATE_TOURNEY:
+            #
+            # Look for the server with the less routes going to it
+            #
+            sql = "SELECT host, port, path FROM route,resthost WHERE route.resthost_serial = resthost.serial GROUP BY route.resthost_serial ORDER BY count(*) ASC LIMIT 1"
+            if self.verbose > 2:
+                self.message("packet2resthost: create tourney " + sql)
+            cursor.execute(sql)
+        else:
+            if packet.type == PACKET_POKER_POLL:
+                wheres = []
+                if packet.game_id > 0:
+                    wheres.append("table_serial = " + str(packet.game_id))
+                if packet.tourney_serial > 0:
+                    wheres.append(" tourney_serial = " + str(packet.tourney_serial))
+                where = " AND ".join(wheres)
+            elif packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
+                where = "tourney_serial = " + str(packet.game_id)
+            elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
+                where = "tourney_serial = " + str(packet.tourney_serial)
+            elif hasattr(packet, "game_id"):
+                where = "table_serial = " + str(packet.game_id)
+            else:
+                return None
+
+            cursor.execute("SELECT host, port, path FROM route,resthost WHERE " +
+                           " route.resthost_serial = resthost.serial AND " + where)
         if cursor.rowcount > 0:
             result = cursor.fetchone()
         else:

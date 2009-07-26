@@ -1,7 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C)             2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
@@ -462,7 +462,7 @@ class PokerAvatar:
                                                        code = PACKET_POKER_PLAYER_IMAGE,
                                                        message = "Failed to save set player image"))
             else:
-                self.message("attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() ))
+                self.message("attempt to set player image for player %d by player %d" % ( packet.serial, self.getSerial() ))
             return
                 
         elif packet.type == PACKET_POKER_PERSONAL_INFO:
@@ -507,6 +507,14 @@ class PokerAvatar:
             if self.getSerial() != packet.serial:
                 packet.serial = 0
             self.sendPacketVerbose(self.service.setAccount(packet))
+            return
+
+        elif packet.type == PACKET_POKER_CREATE_TOURNEY:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.service.tourneyCreate(packet))
+            else:
+                self.message("attempt to create tourney for player %d by player %d" % ( packet.serial, self.getSerial() ))
+                self.sendPacketVerbose(PacketAuthRequest())
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:

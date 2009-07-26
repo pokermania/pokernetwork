@@ -991,15 +991,7 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
 
 class ResthostTestCase(unittest.TestCase):
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-
-    def setUp(self):
-        self.destroyDb()
-        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    xml_with_resthost = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -1018,6 +1010,36 @@ class ResthostTestCase(unittest.TestCase):
   <users temporary="BOT"/>
 </server>
 """
+
+    xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+    def destroyDb(self):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+
+    def setUp(self):
+        self.destroyDb()
+
+    def setUpService(self, xml):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(xml)
         self.service = pokerservice.PokerService(settings)
@@ -1029,6 +1051,7 @@ class ResthostTestCase(unittest.TestCase):
 
     def test00_init(self):
         """ setupResthost twice with the same information gives the same serial """
+        self.setUpService(self.xml_with_resthost)
         self.service.startService()
         self.assertEqual(1, self.service.resthost_serial)
         self.service.resthost_serial = 0
@@ -1036,6 +1059,7 @@ class ResthostTestCase(unittest.TestCase):
         self.assertEqual(1, self.service.resthost_serial)
 
     def test01_packet2resthost(self):
+        self.setUpService(self.xml_with_resthost)
         self.service.startService()
         #
         # ping is never routed
@@ -1087,6 +1111,19 @@ class ResthostTestCase(unittest.TestCase):
         db.db.query("INSERT INTO route VALUES (0, 1, 0, 1)")
         resthost = self.service.packet2resthost(PacketPokerGetTourneyManager(tourney_serial = 1))
         self.assertEqual('HOST', resthost[0])
+
+    def test02_packet2resthost_createTourney(self):
+        self.setUpService(self.xml)
+        self.service.startService()
+        self.failIf(self.service.packet2resthost(PacketPokerCreateTourney()))
+        db = self.service.db
+        db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1')")
+        db.db.query("INSERT INTO route VALUES (0, 100, 0, 10)")
+        db.db.query("INSERT INTO route VALUES (0, 200, 0, 10)")
+        db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2')")
+        db.db.query("INSERT INTO route VALUES (0, 300, 0, 20)")
+        resthost = self.service.packet2resthost(PacketPokerCreateTourney())
+        self.assertEqual('host2', resthost[0])
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
@@ -2369,6 +2406,34 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEquals(int(rank2prize[0]), 7000)
         self.assertEquals(int(rank2prize[1]), 3000)
         self.assertEquals(packet.tourney['registered'], 4)
+
+###########################################################################
+class TourneyCreateTestCase(PokerServiceTestCaseBase):
+
+    def test01_create(self):
+        self.service.startService()
+        self.service.settings.headerSet("/server/@autodeal", "no")
+        self.createUsers()
+        tourney_name = 'testname'
+        packet = PacketPokerCreateTourney(currency_serial = 1,
+                                          name = tourney_name,
+                                          players = [ self.user1_serial, self.user2_serial ])
+        result = self.service.tourneyCreate(packet)
+        self.assertEquals(PACKET_ACK, result.type)
+        places = self.service.getPlayerPlaces(self.user1_serial)
+        tourney = self.service.tourneys[places.tourneys[0]]
+        self.assertEquals(tourney_name, tourney.name)
+
+    def test02_register_failed(self):
+        self.service.startService()
+        self.createUsers()
+        players = [ self.user1_serial, self.user2_serial ]
+        packet = PacketPokerCreateTourney(currency_serial = 1,
+                                          buy_in = self.default_money * 10,
+                                          players = players)
+        result = self.service.tourneyCreate(packet)
+        self.assertEquals(PACKET_POKER_ERROR, result.type)
+        self.assertSubstring(str(players), result.message)
 
 ###########################################################################
 class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
@@ -7064,6 +7129,7 @@ def Run():
     suite.addTest(loader.loadClass(TourneyCancelTestCase))
     suite.addTest(loader.loadClass(TourneySatelliteTestCase))
     suite.addTest(loader.loadClass(TourneyManagerTestCase))
+    suite.addTest(loader.loadClass(TourneyCreateTestCase))
     suite.addTest(loader.loadClass(ShutdownCheckTestCase))
     suite.addTest(loader.loadClass(ListHandsTestCase))
     suite.addTest(loader.loadClass(SetAccountTestCase))

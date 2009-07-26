@@ -4535,6 +4535,69 @@ autoblind_ante: boolean, if True server will act as if
 
 Packet.infoDeclare(globals(), PacketPokerTablePicker, Packet, "POKER_TABLE_PICKER", 165) # 165 # 0xa5 # %SEQ%
 
+########################################
+class PacketPokerCreateTourney(PacketSerial):
+    """\
+
+Semantics: The authorized player represented by "serial",
+           seeks to create a new sit-n-go tournament for the players in
+           the "players" list of serials. Each player in the list will
+           be registered for the new tournament.
+
+           The fields "name", "description_short", "description_long", "variant",
+           "betting_structure", "seats_per_game", "player_timeout", "currency_serial"
+           and "buy_in" have the same semantics as described in the database schema.
+
+           Upon success, the response will be PacketAck() for the new sit-n-go tournament.
+           If the request is issued by a user that is not authentified, the response will be:
+                 PacketAuthRequest()
+           If at least on user cannot be registered, the response will be:
+                 PacketPokerError(
+                   other_type = PACKET_POKER_CREATE_TOURNEY,
+                   code       = REGISTRATION_FAILED 
+                   serial     = the serial of the tournament for which registration failed
+
+                   Note: the list of players for which registration has failed is included
+                   in the message. An error message will be sent to each players for which
+                   registration failed, if they have an active session.
+
+Direction: server <=  client
+
+Context:
+
+serial:            integer uniquely identifying the administrative-level player.
+name:              name for tournament
+description_short: Short description of tournament
+description_long:  Long description of tournament
+variant:           base name of the variant for the new sit-n-go
+betting_structure: base name of the betting structure that must
+                   match a poker.<betting_structure>.xml file containing
+                   a full description of the betting structure.
+seats_per_game:     Maximum number of seats for each table in this tournament.
+player_timeout:    the number of seconds after which a player in position is forced to
+                   play (by folding).
+currency_serial:   int currency id
+buy_in:            Amount, in currency_serial, for buying into this tournament.
+players:	   Serials of the players participating in the tournament.
+"""
+    REGISTRATION_FAILED = 1
+    
+    info = PacketSerial.info + (
+        ('name', 'noname', 's'),
+        ('description_short', 'nodescription_short', 's'),
+        ('description_long', 'nodescription_long', 's'),
+        ('variant', 'holdem', 's'),
+        ('betting_structure', 'level-001', 's'),
+        ('seats_per_game', 10, 'I'),
+        ('player_timeout', 60, 'I'),
+        ('currency_serial', 0, 'I'),
+        ('buy_in', 0, 'I'),
+        ('players', [], 'Il')
+        )
+
+Packet.infoDeclare(globals(), PacketPokerCreateTourney, Packet, "POKER_CREATE_TOURNEY", 166) # 166 # 0xa6 # %SEQ%
+
+
 _TYPES = range(50,169)
 
 # Interpreted by emacs
