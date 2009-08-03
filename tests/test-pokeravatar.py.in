@@ -617,6 +617,34 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
+    def test08_joinTable_pending_packet(self):
+        """Tests table joining, check that packets related to the table and still in the avatar queue are discarded."""
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        game_id = 2
+        def joinTable((client, packet)):
+            avatar = self.service.avatars[0]
+            avatar.queuePackets()
+            avatar.sendPacket(PacketPokerMessage(serial = 111,
+                                                 game_id = 222))
+            avatar.sendPacket(PacketPokerPlayerLeave(seat = 1,
+                                                     serial = 111,
+                                                     game_id = game_id))
+            avatar.sendPacket(PacketPokerMonitor())
+            avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
+                                                          game_id = game_id))
+            packets = avatar.resetPacketsQueue()
+            self.assertEquals(PACKET_POKER_MESSAGE, packets[0].type)
+            self.assertEquals(PACKET_POKER_MONITOR, packets[1].type)
+            self.assertEquals(PACKET_POKER_TABLE, packets[2].type)
+            self.assertEquals(7, len(packets))
+            return (client, packet)
+        d.addCallback(joinTable)
+        d.addCallback(self.quit)
+        return d
+    # ------------------------------------------------------------------------
     def test09_00_seatTable(self):
         """Tests table joining table and sitting down."""
         self.createClients(1)
@@ -4588,7 +4616,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test80"
+#    loader.methodPrefix = "test08"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))

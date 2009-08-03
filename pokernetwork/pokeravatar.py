@@ -263,7 +263,10 @@ class PokerAvatar:
         queue = self._packets_queue
         self._packets_queue = []
         return queue
-    
+
+    def removeGamePacketsQueue(self, game_id):
+        self._packets_queue = filter(lambda packet: not hasattr(packet, "game_id") or packet.game_id != game_id, self._packets_queue)
+
     def sendPacket(self, packet):
         from pokerengine.pokergame import init_i18n as pokergame_init_i18n
         # Note on special processing of locales on packet send:
@@ -798,9 +801,11 @@ class PokerAvatar:
                                     reason = PacketPokerTable.REASON_TABLE_JOIN):
         """Perform the operations that must occur when a
         PACKET_POKER_TABLE_JOIN is received."""
+        
         if not table:
             table = self.service.getTable(packet.game_id)
         if table:
+            self.removeGamePacketsQueue(packet.game_id)
             if not table.joinPlayer(self, self.getSerial(),
                                     reason = reason):
                 if deprecatedEmptyTableBehavior:
