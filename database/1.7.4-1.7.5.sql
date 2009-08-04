@@ -20,3 +20,15 @@ ALTER TABLE `tourneys` ADD `satellite_player_count` INT UNSIGNED DEFAULT 0;
 ALTER TABLE `pokertables` ADD INDEX pokertables_players ( `players` ) ; 
 ALTER TABLE `pokertables` ADD INDEX pokertables_betting_structure ( `betting_structure` ) ; 
 ALTER TABLE `pokertables` ADD INDEX pokertables_currency_serial ( `currency_serial` ) ; 
+--
+-- Archive chat messages
+--
+CREATE TABLE chat_messages (
+  serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  player_serial INT UNSIGNED NOT NULL,
+  game_id INT UNSIGNED NOT NULL,
+  message TEXT DEFAULT '',
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
+
+  PRIMARY KEY (serial)
+) ENGINE=MyISAM CHARSET=utf8;
