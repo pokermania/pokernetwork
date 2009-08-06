@@ -317,7 +317,7 @@ CREATE TABLE tourneys_schedule (
   -- If 0 the tournament is not a satellite, if > 0 the tournament
   -- is a satellite and satellite_player_count is
   -- taken into account. The value is a reference to the serial  
-  -- field of the tourneys table. 
+  -- field of the tourneys_schedule table. 
   --
   satellite_of INT UNSIGNED DEFAULT 0,
   --
