@@ -216,7 +216,7 @@ class LogicTestCase(StatsClientBase):
                          " VALUES " +
                          " ( 5, 10, 200), " +
                          " ( 6, 10, 203), " +
-                         " ( 7, 10, 48), " +
+                         " ( 7, 10, 47), " +
                          " ( 8, 10, 855), " +
                          " ( 9, 10, 48393), " +
                          " ( 10, 10, 22), " +
@@ -246,7 +246,7 @@ class LogicTestCase(StatsClientBase):
         self.assertEqual((15, 10, 84, 8, 3), cursor.fetchone())
         self.assertEqual((14, 10, 72, 9, 3), cursor.fetchone())
         self.assertEqual((12, 10, 48, 10, 4), cursor.fetchone())
-        self.assertEqual((7, 10, 48, 11, 4), cursor.fetchone())
+        self.assertEqual((7, 10, 47, 11, 4), cursor.fetchone())
         self.assertEqual((10, 10, 22, 12, 4), cursor.fetchone())
         cursor.close()
         s.create()
@@ -265,7 +265,7 @@ class LogicTestCase(StatsClientBase):
         self.assertEqual((15, 10, 84, 8, 3), cursor.fetchone())
         self.assertEqual((14, 10, 72, 9, 3), cursor.fetchone())
         self.assertEqual((12, 10, 48, 10, 4), cursor.fetchone())
-        self.assertEqual((7, 10, 48, 11, 4), cursor.fetchone())
+        self.assertEqual((7, 10, 47, 11, 4), cursor.fetchone())
         self.assertEqual((10, 10, 22, 12, 4), cursor.fetchone())
         cursor.close()
 
