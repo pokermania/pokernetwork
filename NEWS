@@ -1,6 +1,24 @@
 Release 1.7.5
 
-Bug fixes.
+New feature : Satellite tournaments.
+New feature : PacketPokerCreateTourney allows for user created tournaments.
+New feature : TablePicker packet chose a table where a player can sit and play.
+New feature : PacketPokerPlayerHandStrength returns the strengh of the hand
+New feature : the prize currency for a tournament can be different from the
+              buy_in currency
+New feature : bots refill by default.
+Backward incompatible change : /REST http endpoint no longer exists.
+Server code has 100% coverage with tests (not including bots and client libraries).
+Improve documentation of poker.server.xml.
+Fix bug where pokerconfigupgrade fails to run.
+Add [serial] to PokerExplain log messages for clarity.
+Fix database upgrade failures while upgrading the debian package.
+Fix inconsistent player list bug.
+Fix agressive deletion of files in /etc/poker-network.
+    https://gna.org/bugs/?13765
+Fix tourney left overs https://gna.org/bugs/index.php?13769
+Fix players never kicked out of the table https://gna.org/bugs/index.php?13950
+Fix extra packets when rejoining a table https://gna.org/bugs/index.php?14026
 
 Satellite tournaments
 
