@@ -1,7 +1,7 @@
 #
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
-# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,

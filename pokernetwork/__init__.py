@@ -1,2 +1,2 @@
-version_number = "1.7.5"
-protocol_number = "1.0.21"
+version_number = "2.0.0"
+protocol_number = "2.0.0"
