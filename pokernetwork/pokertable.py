@@ -44,6 +44,44 @@ from pokerengine.pokercards import PokerCards
 from pokernetwork.pokerpackets import *
 from pokernetwork import pokeravatar
 
+class PokerAvatarCollection:
+
+    def __init__(self, prefix = '', verbose = 0):
+        self.serial2avatars = {}
+        self.verbose = verbose
+        self.prefix = prefix
+
+    def message(self, string):
+        print "PokerAvatarCollection:%s:" % self.prefix + string
+
+    def get(self, serial):
+        return self.serial2avatars.get(serial, [])
+
+    def set(self, serial, avatars):
+        if self.verbose > 3:
+            self.message("set %d %s" % ( serial, str(avatars) ))
+        assert not self.serial2avatars.has_key(serial), "setting %d with %s would override %s" % ( serial, str(avatars), str(self.serial2avatars[serial]) )
+        self.serial2avatars[serial] = avatars[:]
+
+    def add(self, serial, avatar):
+        if self.verbose > 3:
+            self.message("add %d %s" % ( serial, str(avatar) ))
+        if not self.serial2avatars.has_key(serial):
+            self.serial2avatars[serial] = []
+        if avatar not in self.serial2avatars[serial]:
+            self.serial2avatars[serial].append(avatar)
+
+    def remove(self, serial, avatar):
+        if self.verbose > 3:
+            self.message("remove %d %s" % ( serial, str(avatar) ))
+        assert avatar in self.serial2avatars[serial], "expected %d avatar in %s" % ( serial, str(self.serial2avatars[serial]) )
+        self.serial2avatars[serial].remove(avatar)
+        if len(self.serial2avatars[serial]) <= 0:
+            del self.serial2avatars[serial]
+
+    def values(self):
+        return self.serial2avatars.values()
+
 class PokerPredefinedDecks:
     def __init__(self, decks):
         self.decks = decks
@@ -93,7 +131,7 @@ class PokerTable:
         self.temporaryPlayersPattern = settings.headerGet("/server/users/@temporary")
         self.cache = self.createCache()
         self.owner = 0
-        self.serial2client = {}
+        self.avatar_collection = PokerAvatarCollection("Table%d" % id, factory.verbose)
         self.timer_info = {
             "playerTimeout": None,
             "playerTimeoutSerial": 0,
@@ -117,33 +155,33 @@ class PokerTable:
         return hasattr(self, "factory")
 
     def destroy(self):
+        if self.factory.verbose > 1:
+            self.message("destroy table %d" % self.game.id)
         if self.transient:
             self.factory.destroyTable(self.game.id)
             
         self.broadcast(PacketPokerTableDestroy(game_id = self.game.id))
-        for client in self.serial2client.values() + self.observers:
-            del client.tables[self.game.id]
-            # FIXME: I don't think that PokerTable should be reaching into
-            #        the member variables of the client classes.  Really
-            #        the line above should be something like
-            #        client.removeTable(self.game.id).  I did not change
-            #        based on IRC discussions with Loic, but I have
-            #        written tests in ../tests/test-pokertable.py.in that
-            #        should check after this change is made.
+        for avatars in self.avatar_collection.values():
+            for avatar in avatars:
+                del avatar.tables[self.game.id]
+        for avatar in self.observers:
+            del avatar.tables[self.game.id]
             
         self.factory.deleteTable(self)
         del self.factory
 
     def getName(self, serial):
-        if self.serial2client.has_key(serial):
-            name = self.serial2client[serial].getName()
+        avatars = self.avatar_collection.get(serial)
+        if len(avatars) > 0:
+            name = avatars[0].getName()
         else:
             name = self.factory.getName(serial)
         return name
 
     def getPlayerInfo(self, serial):
-        if self.serial2client.has_key(serial) and self.serial2client[serial].user.isLogged():
-            info = self.serial2client[serial].getPlayerInfo()
+        avatars = self.avatar_collection.get(serial)
+        if len(avatars) > 0 and avatars[0].user.isLogged():
+            info = avatars[0].getPlayerInfo()
         else:
             info = self.factory.getPlayerInfo(serial)
         return info
@@ -239,11 +277,10 @@ class PokerTable:
                 #
                 # Player may be in game but disconnected.
                 #
-                if self.serial2client.has_key(serial):
-                    client = self.serial2client[serial]
-                    client.sendPacket(self.private2public(packet, serial))
-            for client in self.observers:
-                client.sendPacket(self.private2public(packet, 0))
+                for avatar in self.avatar_collection.get(serial):
+                    avatar.sendPacket(self.private2public(packet, serial))
+            for avatar in self.observers:
+                avatar.sendPacket(self.private2public(packet, 0))
 
         self.factory.eventTable(self)
 
@@ -653,8 +690,8 @@ class PokerTable:
                 (type, quitters) = event
                 for (serial, seat) in quitters:
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
-                    if self.serial2client.has_key(serial):
-                        self.seated2observer(self.serial2client[serial])
+                    for avatar in self.avatar_collection.get(serial)[:]:
+                        self.seated2observer(avatar)
 
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
         if self.tourney: return
@@ -685,18 +722,17 @@ class PokerTable:
         self.cancelDealTimeout()
         if not self.allReadyToPlay():
             #
-            # All clients that fail to send a PokerReadyToPlay packet
+            # All avatars that fail to send a PokerReadyToPlay packet
             # within imposed delays after sending a PokerProcessingHand
             # are marked as bugous and their next PokerProcessingHand
             # request will be ignored.
             #
             for player in self.game.playersAll():
                 if player.getUserData()['ready'] == False:
-                    if self.serial2client.has_key(player.serial):
-                        client = self.serial2client[player.serial]
+                    for avatar in self.avatar_collection.get(player.serial):
                         if self.factory.verbose > 1:
-                            self.message("Player %d marked as having a bugous PokerProcessingHand protocol" % player.serial)
-                        client.bugous_processing_hand = True
+                            self.message("Player %d marked as having a bugous PokerProcessingHand protocol" %  player.serial)
+                            avatar.bugous_processing_hand = True
             
         self.beginTurn()
         self.update()
@@ -730,13 +766,13 @@ class PokerTable:
             serials =  self.game.serialsAll()
         connected_serials = []
         for serial in serials:
-            if self.serial2client.has_key(serial):
+            if self.avatar_collection.get(serial):
                 connected_serials.append(serial)
         if connected_serials:
             packet = message_type(game_id = self.game.id, string = message)
             for serial in connected_serials:
-                client = self.serial2client[serial]
-                client.sendPacket(packet)
+                for avatar in self.avatar_collection.get(serial):
+                    avatar.sendPacket(packet)
             return True
         return False
     
@@ -862,7 +898,7 @@ class PokerTable:
             self.update_recursion = False
         return "ok"
 
-    def handReplay(self, client, hand):
+    def handReplay(self, avatar, hand):
         history = self.factory.loadHand(hand)
         if not history:
             return
@@ -870,7 +906,7 @@ class PokerTable:
         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = history[0]
         game = self.game
         for player in game.playersAll():
-            client.sendPacketVerbose(PacketPokerPlayerLeave(game_id = game.id,
+            avatar.sendPacketVerbose(PacketPokerPlayerLeave(game_id = game.id,
                                                             serial = player.serial,
                                                             seat = player.seat))
         game.reset()
@@ -885,31 +921,32 @@ class PokerTable:
             game.addPlayer(serial)
             game.getPlayer(serial).money = serial2chips[serial]
             game.sit(serial)
-        if self.isJoined(client):
-            client.join(self, reason = PacketPokerTable.REASON_HAND_REPLAY)
+        if self.isJoined(avatar):
+            avatar.join(self, reason = PacketPokerTable.REASON_HAND_REPLAY)
         else:
-            self.joinPlayer(client, client.getSerial(),
+            self.joinPlayer(avatar, avatar.getSerial(),
                             reason = PacketPokerTable.REASON_HAND_REPLAY)
-        serial = client.getSerial()
+        serial = avatar.getSerial()
         cache = self.createCache()
         for packet in self.history2packets(history, game.id, cache):
             if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial == serial:
                 packet.cards = cache["pockets"][serial].toRawList()
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
                 continue
-            client.sendPacketVerbose(packet)
+            avatar.sendPacketVerbose(packet)
 
-    def isJoined(self, client):
-        return client in self.observers or self.serial2client.has_key(client.getSerial())
+    def isJoined(self, avatar):
+        serial = avatar.getSerial()
+        return avatar in self.observers or avatar in self.avatar_collection.get(serial)
 
-    def isSeated(self, client):
-        return self.isJoined(client) and self.game.isSeated(client.getSerial())
+    def isSeated(self, avatar):
+        return self.isJoined(avatar) and self.game.isSeated(avatar.getSerial())
 
-    def isSit(self, client):
-        return self.isSeated(client) and self.game.isSit(client.getSerial())
+    def isSit(self, avatar):
+        return self.isSeated(avatar) and self.game.isSit(avatar.getSerial())
 
     def isSerialObserver(self, serial):
-        return serial in [ client.getSerial() for client in self.observers ]
+        return serial in [ avatar.getSerial() for avatar in self.observers ]
     
     def isOpen(self):
         return self.game.is_open
@@ -917,41 +954,41 @@ class PokerTable:
     def isRunning(self):
         return self.game.isRunning()
 
-    def seated2observer(self, client):
-        del self.serial2client[client.getSerial()]
-        self.observers.append(client)
+    def seated2observer(self, avatar):
+        self.avatar_collection.remove(avatar.getSerial(), avatar)
+        self.observers.append(avatar)
 
-    def observer2seated(self, client):
-        self.observers.remove(client)
-        self.serial2client[client.getSerial()] = client
+    def observer2seated(self, avatar):
+        self.observers.remove(avatar)
+        self.avatar_collection.add(avatar.getSerial(), avatar)
         
-    def quitPlayer(self, client, serial):
+    def quitPlayer(self, avatar, serial):
         game = self.game
-        if self.isSit(client):
+        if self.isSit(avatar):
             if self.isOpen():
                 game.sitOutNextTurn(serial)
             game.autoPlayer(serial)
         self.update()
-        if self.isSeated(client):
+        if self.isSeated(avatar):
             #
             # If not on a closed table, stand up
             #
             if self.isOpen():
-                if client.removePlayer(self, serial):
-                    self.seated2observer(client)
+                if avatar.removePlayer(self, serial):
+                    self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
                     self.update()
             else:
-                client.message("cannot quit a closed table, request ignored")
+                avatar.message("cannot quit a closed table, request ignored")
                 return False
 
-        if self.isJoined(client):
+        if self.isJoined(avatar):
             #
             # The player is no longer connected to the table
             #
-            self.destroyPlayer(client, serial)
+            self.destroyPlayer(avatar, serial)
 
         return True
 
@@ -968,24 +1005,24 @@ class PokerTable:
         self.factory.leavePlayer(serial, game.id, self.currency_serial)
         self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
 
-        if self.serial2client.has_key(serial):
-            self.seated2observer(self.serial2client[serial])
+        for avatar in self.avatar_collection.get(serial)[:]:
+            self.seated2observer(avatar)
 
         self.broadcast(PacketPokerPlayerLeave(game_id = game.id,
                                               serial = serial,
                                               seat = seat))
 
-    def disconnectPlayer(self, client, serial):
+    def disconnectPlayer(self, avatar, serial):
         game = self.game
 
-        if self.isSeated(client):
+        if self.isSeated(avatar):
             game.getPlayer(serial).getUserData()['ready'] = True
             if self.isOpen():
                 #
                 # If not on a closed table, stand up.
                 #
-                if client.removePlayer(self, serial):
-                    self.seated2observer(client)
+                if avatar.removePlayer(self, serial):
+                    self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
@@ -998,35 +1035,35 @@ class PokerTable:
                 #
                 pass
                 
-        if self.isJoined(client):
+        if self.isJoined(avatar):
             #
             # The player is no longer connected to the table
             #
-            self.destroyPlayer(client, serial)
+            self.destroyPlayer(avatar, serial)
 
         return True
 
-    def leavePlayer(self, client, serial):
+    def leavePlayer(self, avatar, serial):
         game = self.game
-        if self.isSit(client):
+        if self.isSit(avatar):
             if self.isOpen():
                 game.sitOutNextTurn(serial)
             game.autoPlayer(serial)
         self.update()
-        if self.isSeated(client):
+        if self.isSeated(avatar):
             #
             # If not on a closed table, stand up
             #
             if self.isOpen():
-                if client.removePlayer(self, serial):
-                    self.seated2observer(client)
+                if avatar.removePlayer(self, serial):
+                    self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
                     self.update()
             else:
                 self.error("cannot leave a closed table")
-                client.sendPacketVerbose(PacketPokerError(game_id = game.id,
+                avatar.sendPacketVerbose(PacketPokerError(game_id = game.id,
                                                           serial = serial,
                                                           other_type = PACKET_POKER_PLAYER_LEAVE,
                                                           code = PacketPokerPlayerLeave.TOURNEY,
@@ -1035,7 +1072,7 @@ class PokerTable:
 
         return True
         
-    def movePlayer(self, client, serial, to_game_id, reason = ""):
+    def movePlayer(self, avatars, serial, to_game_id, reason = ""):
         game = self.game
         #
         # We are safe because called from within the server under
@@ -1045,19 +1082,20 @@ class PokerTable:
         money = game.serial2player[serial].money
 
         sit_out = self.movePlayerFrom(serial, to_game_id)
-        if client:
-            self.destroyPlayer(client, serial)
+        for avatar in avatars:
+            self.destroyPlayer(avatar, serial)
 
         other_table = self.factory.getTable(to_game_id)
-        if client:
-            other_table.serial2client[serial] = client
+        for avatar in avatars:
+            other_table.observers.append(avatar)
+            other_table.observer2seated(avatar)
 
         money_check = self.factory.movePlayer(serial, game.id, to_game_id)
         if money_check != money:
             self.error("movePlayer: player %d money %d in database, %d in memory" % ( serial, money_check, money ))
 
-        if client:
-            client.join(other_table, reason = reason)
+        for avatar in avatars:
+            avatar.join(other_table, reason = reason)
         other_table.movePlayerTo(serial, money, sit_out)
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
@@ -1124,60 +1162,60 @@ class PokerTable:
         game.removePlayer(serial)
         return sit_out
 
-    def possibleObserverLoggedIn(self, client, serial):
+    def possibleObserverLoggedIn(self, avatar, serial):
         game = self.game
         if not game.getPlayer(serial):
             return False
-        self.observer2seated(client)
+        self.observer2seated(avatar)
         game.comeBack(serial)
         return True
             
-    def joinPlayer(self, client, serial, reason = ""):
+    def joinPlayer(self, avatar, serial, reason = ""):
         game = self.game
         #
         # Nothing to be done except sending all packets
         # Useful in disconnected mode to resume a session.
         #
-        if self.isJoined(client):
-            client.join(self, reason = reason);
+        if self.isJoined(avatar):
+            avatar.join(self, reason = reason);
             return True
 
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
-        if not self.game.isSeated(client.getSerial()) and self.factory.joinedCountReachedMax():
+        if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
             self.error("joinPlayer: %d cannot join game %d because the server is full" %
                        (serial, game.id))
-            client.sendPacketVerbose(PacketPokerError(game_id = game.id,
+            avatar.sendPacketVerbose(PacketPokerError(game_id = game.id,
                                                       serial = serial,
                                                       other_type = PACKET_POKER_TABLE_JOIN,
                                                       code = PacketPokerTableJoin.FULL,
                                                       message = "This server has too many seated players and observers."))
             return False
 
-        # Next, test to see if joining this table will cause the client to
+        # Next, test to see if joining this table will cause the avatar to
         # exceed the maximum permitted by the server.
-        if len(client.tables) >= self.factory.simultaneous:
+        if len(avatar.tables) >= self.factory.simultaneous:
             if self.factory.verbose:
-                self.error("joinPlayer: %d seated at %d tables (max %d)" % ( serial, len(client.tables), self.factory.simultaneous ))
+                self.error("joinPlayer: %d seated at %d tables (max %d)" % ( serial, len(avatar.tables), self.factory.simultaneous ))
             return False
 
         #
         # Player is now an observer, unless he is seated
         # at the table.
         #
-        client.join(self, reason = reason)
+        avatar.join(self, reason = reason)
         self.factory.joinedCountIncrease()
-        if not self.game.isSeated(client.getSerial()):
-            self.observers.append(client)
+        if not self.game.isSeated(avatar.getSerial()):
+            self.observers.append(avatar)
         else:
-            self.serial2client[serial] = client
+            self.avatar_collection.add(serial, avatar)
         #
         # If it turns out that the player is seated
         # at the table already, presumably because he
         # was previously disconnected from a tournament
         # or an ongoing game.
         #
-        if self.isSeated(client):
+        if self.isSeated(avatar):
             #
             # Sit back immediately, as if we just seated
             #
@@ -1185,15 +1223,15 @@ class PokerTable:
             
         return True
 
-    def seatPlayer(self, client, serial, seat):
+    def seatPlayer(self, avatar, serial, seat):
         game = self.game
-        if not self.isJoined(client):
+        if not self.isJoined(avatar):
             self.error("player %d can't seat before joining" % serial)
             return False
         #
         # Do nothing if already seated
         #
-        if self.isSeated(client):
+        if self.isSeated(avatar):
             self.message("player %d is already seated" % serial)
             return False
 
@@ -1212,108 +1250,101 @@ class PokerTable:
         if not self.factory.seatPlayer(serial, game.id, amount):
             return False
 
-        self.observer2seated(client)
+        self.observer2seated(avatar)
 
-        client.addPlayer(self, seat)
+        avatar.addPlayer(self, seat)
         if amount > 0:
-            client.setMoney(self, amount)
+            avatar.setMoney(self, amount)
 
         self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
         return True
 
-    def sitOutPlayer(self, client, serial):
+    def sitOutPlayer(self, avatar, serial):
         game = self.game
-        if not self.isSeated(client):
+        if not self.isSeated(avatar):
             self.error("player %d can't sit out before getting a seat" % serial)
             return False
         #
         # Silently do nothing if already sit out
         #
-        if not self.isSit(client):
+        if not self.isSit(avatar):
             return True
 
-        client.sitOutPlayer(self, serial)
+        avatar.sitOutPlayer(self, serial)
         return True
 
-    def chatPlayer(self, client, serial, message):
+    def chatPlayer(self, avatar, serial, message):
         self.broadcast(PacketPokerChat(game_id = self.game.id,
                                        serial = serial,
                                        message = message + "\n"))
         self.factory.chatMessageArchive(serial, self.game.id, message)
 
-    def autoBlindAnte(self, client, serial, auto):
+    def autoBlindAnte(self, avatar, serial, auto):
         game = self.game
-        if not self.isSeated(client):
+        if not self.isSeated(avatar):
             self.error("player %d can't set auto blind/ante before getting a seat" % serial)
             return False
-        return client.autoBlindAnte(self, serial, auto)
+        return avatar.autoBlindAnte(self, serial, auto)
         
-    def muckAccept(self, client, serial):
+    def muckAccept(self, avatar, serial):
         game = self.game
-        if not self.isSeated(client):
+        if not self.isSeated(avatar):
             self.error("player %d can't accept muck before getting a seat" % serial)
             return False
         return game.muck(serial, want_to_muck = True)
 
-    def muckDeny(self, client, serial):
+    def muckDeny(self, avatar, serial):
         game = self.game
-        if not self.isSeated(client):
+        if not self.isSeated(avatar):
             self.error("player %d can't deny muck before getting a seat" % serial)
             return False
         return game.muck(serial, want_to_muck = False)
     
-    def sitPlayer(self, client, serial):
+    def sitPlayer(self, avatar, serial):
         game = self.game
-        if not self.isSeated(client):
+        if not self.isSeated(avatar):
             self.error("player %d can't sit before getting a seat" % serial)
             return False
 
-        return client.sitPlayer(self, serial)
+        return avatar.sitPlayer(self, serial)
         
-    def destroyPlayer(self, client, serial):
+    def destroyPlayer(self, avatar, serial):
         self.factory.joinedCountDecrease()
-        if client in self.observers:
-            self.observers.remove(client)
+        if avatar in self.observers:
+            self.observers.remove(avatar)
         else:
-            del self.serial2client[serial]
-        del client.tables[self.game.id]
-        # FIXME: I don't think that PokerTable should be reaching into the
-        #        member variables of the client classes.  Really the line
-        #        above should be something like
-        #        client.removeTable(self.game.id).  I did not change based
-        #        on IRC discussions with Loic, but I have written tests in
-        #        ../tests/test-pokertable.py.in that should check after
-        #        this change is made.
+            self.avatar_collection.remove(serial, avatar)
+        del avatar.tables[self.game.id]
 
-    def buyInPlayer(self, client, amount):
+    def buyInPlayer(self, avatar, amount):
         game = self.game
-        if not self.isSeated(client):
-            self.error("player %d can't bring money to a table before getting a seat" % client.getSerial())
+        if not self.isSeated(avatar):
+            self.error("player %d can't bring money to a table before getting a seat" % avatar.getSerial())
             return False
 
-        if client.getSerial() in game.serialsPlaying():
-            self.error("player %d can't bring money while participating in a hand" % client.getSerial())
+        if avatar.getSerial() in game.serialsPlaying():
+            self.error("player %d can't bring money while participating in a hand" % avatar.getSerial())
             return False
 
         if self.transient:
-            self.error("player %d can't bring money to a transient table" % client.getSerial())
+            self.error("player %d can't bring money to a transient table" % avatar.getSerial())
             return False
 
-        player = game.getPlayer(client.getSerial())
+        player = game.getPlayer(avatar.getSerial())
         if player and player.isBuyInPayed():
-            self.error("player %d already payed the buy-in" % client.getSerial())
+            self.error("player %d already payed the buy-in" % avatar.getSerial())
             return False
 
-        amount = self.factory.buyInPlayer(client.getSerial(), game.id, self.currency_serial, max(amount, game.buyIn()))
-        return client.setMoney(self, amount)
+        amount = self.factory.buyInPlayer(avatar.getSerial(), game.id, self.currency_serial, max(amount, game.buyIn()))
+        return avatar.setMoney(self, amount)
         
-    def rebuyPlayerRequest(self, client, amount):
+    def rebuyPlayerRequest(self, avatar, amount):
         game = self.game
-        if not self.isSeated(client):
-            self.error("player %d can't rebuy to a table before getting a seat" % client.getSerial())
+        if not self.isSeated(avatar):
+            self.error("player %d can't rebuy to a table before getting a seat" % avatar.getSerial())
             return False
 
-        serial = client.getSerial()
+        serial = avatar.getSerial()
         player = game.getPlayer(serial)
         if not player.isBuyInPayed():
             self.error("player %d can't rebuy before paying the buy in" % serial)
@@ -1352,7 +1383,7 @@ class PokerTable:
         if game.isRunning() and serial == game.getSerialInPosition():
             timeout = self.playerTimeout / 2;
             #
-            # Compensate the communication lag by always giving the client
+            # Compensate the communication lag by always giving the avatar
             # an extra 2 seconds to react. The warning says that there only is
             # N seconds left but the server will actually timeout after N + 2
             # seconds.

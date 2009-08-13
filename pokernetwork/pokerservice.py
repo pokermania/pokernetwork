@@ -90,7 +90,7 @@ from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8
-from pokernetwork.pokertable import PokerTable
+from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
@@ -255,7 +255,7 @@ class PokerService(service.Service):
         self.cashier.setDb(self.db)
         self.poker_auth = get_auth_instance(self.db, self.settings)
         self.dirs = split(self.settings.headerGet("/server/path"))
-        self.serial2client = {}
+        self.avatar_collection = PokerAvatarCollection("service", self.verbose)
         self.avatars = []
         self.tables = {}
         self.joined_count = 0
@@ -562,11 +562,6 @@ class PokerService(service.Service):
         return True
 
     def auth(self, name, password, roles):
-        for (serial, client) in self.serial2client.iteritems():
-            if client.getName() == name and roles.intersection(client.roles):
-                if self.verbose:
-                    self.message("auth: %s attempt to login more than once with similar roles %s" % ( name, roles.intersection(client.roles) ))
-                return ( False, "Already logged in from somewhere else" )
         ( info, reason ) = self.poker_auth.auth(name, password)
         if info:
             self.autorefill(info[0])
@@ -929,9 +924,9 @@ class PokerService(service.Service):
         def doTourneyDeleteRoute():
             self.cancelTimer(key)
             for serial in tourney.players:
-                player = self.serial2client.get(serial, None)
-                if player and tourney.serial in player.tourneys:
-                    player.tourneys.remove(tourney.serial)
+                for player in self.avatar_collection.get(serial):
+                    if tourney.serial in player.tourneys:
+                        player.tourneys.remove(tourney.serial)
             self.tourneyDeleteRouteActual(tourney.serial)
         self.timer[key] = reactor.callLater(max(self._ping_delay*2, wait*2), doTourneyDeleteRoute)
         
@@ -946,22 +941,22 @@ class PokerService(service.Service):
         for player in game.playersAll():
             serial = player.serial
             player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
-            client = self.serial2client.get(serial, None)
-            if client:
+            avatars = self.avatar_collection.get(serial)
+            if avatars:
                 if self.verbose > 2:
                     self.message("tourneyGameFilled: player %d connected" % serial)
-                table.serial2client[serial] = client
+                table.avatar_collection.set(serial, avatars)
             else:
                 if self.verbose > 2:
                     self.message("tourneyGameFilled: player %d disconnected" % serial)
             self.seatPlayer(serial, game.id, game.buyIn())
 
-            if client:
+            for avatar in avatars:
                 # First, force a count increase, since this player will
                 # now be at the table, but table.joinPlayer() was never
                 # called (which is where the increase usually happens).
                 self.joinedCountIncrease()
-                client.join(table, reason = PacketPokerTable.REASON_TOURNEY_START)
+                avatar.join(table, reason = PacketPokerTable.REASON_TOURNEY_START)
             sql = "update user2tourney set table_serial = %d where user_serial = %d and tourney_serial = %d" % ( game.id, serial, tourney.serial )
             if self.verbose > 4:
                 self.message("tourneyGameFilled: " + sql)
@@ -998,7 +993,7 @@ class PokerService(service.Service):
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
         from_table = self.getTable(from_game_id)
-        from_table.movePlayer(from_table.serial2client.get(serial, None), serial,
+        from_table.movePlayer(from_table.avatar_collection.get(serial), serial,
                         to_game_id, reason = PacketPokerTable.REASON_TOURNEY_MOVE)
         cursor = self.db.cursor()
         sql = "UPDATE user2tourney SET table_serial = %d WHERE user_serial = %d AND tourney_serial = %d" % ( to_game_id, serial, tourney.serial )
@@ -1022,14 +1017,15 @@ class PokerService(service.Service):
         if rank-1 < len(prizes):
             money = prizes[rank-1]
 
-        client = self.serial2client.get(serial, None)
-        if client:
+        avatars = self.avatar_collection.get(serial)
+        if avatars:
             packet = PacketPokerTourneyRank(serial = tourney.serial,
                                             game_id = game_id,
                                             players = players,
                                             rank = rank,
                                             money = money)
-            client.sendPacketVerbose(packet)
+            for avatar in avatars:
+                avatar.sendPacketVerbose(packet)
         table = self.getTable(game_id)
         table.kickPlayer(serial)
         cursor = self.db.cursor()
@@ -1255,7 +1251,7 @@ class PokerService(service.Service):
     def tourneyRegister(self, packet, via_satellite = False):
         serial = packet.serial
         tourney_serial = packet.game_id
-        client = self.serial2client.get(serial, None)
+        avatars = self.avatar_collection.get(serial)
 
         if not self.tourneys.has_key(tourney_serial):
             error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
@@ -1263,7 +1259,8 @@ class PokerService(service.Service):
                                 message = "Tournament %d does not exist" % tourney_serial)
             if not via_satellite or self.verbose > 0:
                 self.error(error)
-            if client: client.sendPacketVerbose(error)
+            for avatar in avatars:
+                avatar.sendPacketVerbose(error)
             return False
         tourney = self.tourneys[tourney_serial]
 
@@ -1272,7 +1269,8 @@ class PokerService(service.Service):
                                 code = PacketPokerTourneyRegister.VIA_SATELLITE,
                                 message = "Player %d must register to %d via a satellite" % ( serial, tourney_serial ) )
             self.error(error)
-            if client: client.sendPacketVerbose(error)
+            for avatar in avatars:
+                avatar.sendPacketVerbose(error)
             return False
             
         if tourney.isRegistered(serial):
@@ -1280,7 +1278,8 @@ class PokerService(service.Service):
                                 code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
                                 message = "Player %d already registered in tournament %d " % ( serial, tourney_serial ) )
             self.error(error)
-            if client: client.sendPacketVerbose(error)
+            for avatar in avatars:
+                avatar.sendPacketVerbose(error)
             return False
 
         if not tourney.canRegister(serial):
@@ -1288,7 +1287,8 @@ class PokerService(service.Service):
                                 code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
                                 message = "Registration refused in tournament %d " % tourney_serial)
             self.error(error)
-            if client: client.sendPacketVerbose(error)
+            for avatar in avatars:
+                avatar.sendPacketVerbose(error)
             return False
 
         cursor = self.db.cursor()
@@ -1310,13 +1310,14 @@ class PokerService(service.Service):
                 error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
                                     code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
                                     message = "Not enough money to enter the tournament %d" % tourney_serial)
-                if client: client.sendPacketVerbose(error)
+                for avatar in avatars:
+                    avatar.sendPacketVerbose(error)
                 self.error(error)
                 return False
             if cursor.rowcount != 1:
                 self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
-                if client:
-                    client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+                for avatar in avatars:
+                    avatar.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
                                                          code = PacketPokerTourneyRegister.SERVER_ERROR,
                                                          message = "Server error"))
                 return False
@@ -1331,15 +1332,16 @@ class PokerService(service.Service):
         if cursor.rowcount != 1:
             self.error("insert %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             cursor.close()
-            if client:
-                client.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
+            for avatar in avatars:
+                avatar.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
                                                      code = PacketPokerTourneyRegister.SERVER_ERROR,
                                                      message = "Server error"))
             return False
         cursor.close()
 
         # notify success
-        if client: client.sendPacketVerbose(packet)
+        for avatar in avatars:
+            avatar.sendPacketVerbose(packet)
         tourney.register(serial)
         return True
 

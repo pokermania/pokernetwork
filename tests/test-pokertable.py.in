@@ -435,6 +435,32 @@ class MockClientWithTableDict(MockClient):
 class MockClientWithRemoveTable(MockClient):
     def removeTable(self, gameId):
         return True
+
+class PokerAvatarCollectionTestCase(unittest.TestCase):
+
+    def test01(self):
+        avatar_collection = pokertable.PokerAvatarCollection(prefix = '', verbose = 6)
+        serial1 = 200
+        serial2 = 400
+        self.assertEquals([], avatar_collection.get(serial1))
+        avatar1 = "a1"
+        avatar2 = "a2"
+        avatars = [ avatar1, avatar2 ]
+        avatar_collection.set(serial1, avatars)
+        self.assertRaises(AssertionError, avatar_collection.set, serial1, avatars)
+        self.assertEquals(avatars, avatar_collection.get(serial1))
+        avatar_collection.remove(serial1, avatar1)
+        self.assertRaises(AssertionError, avatar_collection.remove, serial1, avatar1)
+        self.assertEquals([avatar2], avatar_collection.get(serial1))
+        avatar_collection.add(serial1, avatar2) # add twice is noop
+        self.assertEquals([[avatar2]], avatar_collection.values())
+        avatar_collection.add(serial1, avatar1)
+        self.assertEquals([avatar2, avatar1], avatar_collection.get(serial1))
+        avatar_collection.add(serial2, avatar1)
+        self.assertEquals([avatar1], avatar_collection.get(serial2))
+        avatar_collection.remove(serial2, avatar1)
+        self.assertEquals([], avatar_collection.get(serial2))
+
 # --------------------------------------------------------------------------------
 class PokerTableTestCaseBase(unittest.TestCase):
     # -------------------------------------------------------------------
@@ -738,17 +764,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.disconnectPlayer(p1, 1)
         self.table.disconnectPlayer(p9, 9)
     # -------------------------------------------------------------------
-    def test13altForNewClientAPI_disconnect(self):
-        """Test player disconnection once the client API has a removeTable method
-           This is currently turned off because the change has not been
-           made.  See the FIXME around line 1218 of pokertable.py in
-           pokertable.destroyPlayer
-        """
-        # This is disabled until the API changes
-        return True
-        p1 = self.createPlayer(1, clientClass=MockClientWithRemoveTable)
-        self.table.disconnectPlayer(p1, 1)
-    # -------------------------------------------------------------------
     def test14_closed_games(self):
         """Do typical operations act as expected when the game is closed?"""
         player = {}
@@ -874,7 +889,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             checkMuckSerials(player.lookForPacket(PACKET_POKER_MUCK_REQUEST))
             checkRebuyAmount(player.lookForPacket(PACKET_POKER_REBUY))
     # -------------------------------------------------------------------
-    def test19_serial2clientEmpty(self):
+    def test19_avatar_collection_empty(self):
         """Test replay of hand from pokertable"""
         self.assertEqual("MockServiceName1", self.table.getName(1))
         d = self.table.getPlayerInfo(1)
@@ -1074,10 +1089,10 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEqual(True, self.table.isJoined(players[ii]))
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
-        self.assertEquals(get_messages(), [ x % ('[Server][PokerGame %d] ' % self.table.game.id)
-                                            for x in [ '%splayer 1 get seat 1',
-                                                       '%splayer 2 get seat 6',
-                                                       '%splayer 3 get seat 3']])
+        messages = get_messages()
+        self.failUnlessSubstring('player 1 get seat 1', messages[1])
+        self.failUnlessSubstring('player 2 get seat 6', messages[3])
+        self.failUnlessSubstring('player 3 get seat 3', messages[5])
         clear_all_messages()
 
         for ii in [ 4, 5, 6 ]:
@@ -1261,16 +1276,14 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals("not valid", self.table.update())
         return d
     # -------------------------------------------------------------------
-    def test40altForNewClientAPI_destroy_table(self):
-        """Test table destruction once the client API has a removeTable method
-           This is currently turned off because the change has not been made.
-           See the FIXME around line 117 of pokertable.py in pokertable.destroy
-        """
-        # This is disabled until the API changes
-        return True
-        p1 = self.createPlayer(1, clientClass=MockClientWithRemoveTable)
+    def test40_destroy_table_with_observers(self):
+        """Test table destruction with observers at the table"""
+        p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
+        self.table.seated2observer(p1)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
+         # Make sure we can't update once table is destroyed.
+        self.assertEquals("not valid", self.table.update())
         return d
     # -------------------------------------------------------------------
     def test41_update_exception(self):
@@ -1775,10 +1788,10 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
             self.assertEqual(True, self.table.isJoined(players[ii]))
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
-        self.assertEquals(get_messages(), [ x % ('[Server][PokerGame %d] ' % self.table.game.id)
-                                            for x in [ '%splayer 1 get seat 1',
-                                                       '%splayer 2 get seat 6',
-                                                       '%splayer 3 get seat 3']])
+        messages = get_messages()
+        self.failUnlessSubstring('player 1 get seat 1', messages[1])
+        self.failUnlessSubstring('player 2 get seat 6', messages[3])
+        self.failUnlessSubstring('player 3 get seat 3', messages[5])
         clear_all_messages()
         self.assertEquals(self.table.factory.joined_count, 3)
 
@@ -1870,7 +1883,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         # called as a side effect of moving the player to the table2
         #
         self.table2.timer_info['dealTimeout'] = reactor.callLater(200000, lambda: True)
-        self.table.movePlayer(player, 1, self.table2.game.id,
+        self.table.movePlayer([player], 1, self.table2.game.id,
                               reason = "MockMoveTest")
 
         return expectPlayerDeferred
@@ -1878,9 +1891,10 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test_trynow"
+#    loader.methodPrefix = "test40"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerAvatarCollectionTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal))
     suite.addTest(loader.loadClass(PokerTableTestCaseTransient))

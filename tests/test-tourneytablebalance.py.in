@@ -225,7 +225,7 @@ VALUES ( 'Only6', 'Sit and Go 6 players and only 6 , Holdem', 'Sit and Go 6 play
         clients = {}
         for userSerial in self.user_serials:
             clients[userSerial] = ClientMockup(userSerial)
-            self.service.serial2client[userSerial] = clients[userSerial]
+            self.service.avatar_collection.add(userSerial, clients[userSerial])
             self.service.tourneyRegister(PacketPokerTourneyRegister(serial = userSerial,
                                                                     game_id = tourneySerial))
 

@@ -502,7 +502,7 @@ class PokerClientTestCase(unittest.TestCase):
                         print "checkBugousClient for %d" % client.getSerial()
                     table = self.service.tables.values()[0]
                     has_bugous = False
-                    for (serial, server_client) in table.serial2client.iteritems():
+                    for server_client in table.avatar_collection.get(client.getSerial()):
                         if server_client.bugous_processing_hand == True:
                             has_bugous = True
                     self.assertEqual(True, has_bugous, "has bugous")
@@ -1708,7 +1708,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test_trynow_"
+#    loader.methodPrefix = "test15_0_"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerClientTestCase))
     suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
@@ -1730,5 +1730,5 @@ if __name__ == '__main__':
 
 # Interpreted by emacs
 # Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerclient.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
+# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerclient.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
 # End:

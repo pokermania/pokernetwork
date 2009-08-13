@@ -1,7 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2008 Loic Dachary    <loic@dachary.org>
+# Copyright (C) 2008, 2009 Loic Dachary    <loic@dachary.org>
 # Copyright (C) 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,
@@ -205,15 +205,12 @@ class ProxyTestCase(unittest.TestCase):
             """
             info = self.server_service.auth('user1', 'password1', PacketPokerRoles.PLAY)
             serial = info[0][0]
-            self.proxy_site.memcache.set('session', str(serial))
-            self.proxy_site.memcache.set(str(serial), 'session')
-            headers = { 'Cookie': 'TWISTED_SESSION_name=session' }
+            self.proxy_site.memcache.set('auth', str(serial))
             #
             # Join table
             #
-            d = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
-                               postdata = '{"type":"PacketPokerTableJoin","game_id":1,"serial":' + str(serial) + '}',
-                               headers = headers)
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1,"serial":' + str(serial) + '}')
             def checkTable(result):
                   packets = simplejson.JSONDecoder().decode(result)
                   self.assertEqual('PacketPokerTable', packets[0]['type'])
@@ -224,9 +221,8 @@ class ProxyTestCase(unittest.TestCase):
             # Get a seat
             #
             def seat(result):
-                  d1 = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
-                                     postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":' + str(serial) + '}',
-                                     headers = headers)
+                  d1 = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                                     postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":' + str(serial) + '}')
                   def checkSeat(result):
                         self.assertSubstring('PlayerArrive', result)
                         return True
@@ -257,15 +253,12 @@ class ProxyTestCase(unittest.TestCase):
              
             info = self.server_service.auth('user1', 'password1', PacketPokerRoles.PLAY)
             serial = info[0][0]
-            self.proxy_site.memcache.set('session', str(serial))
-            self.proxy_site.memcache.set(str(serial), 'session')
-            headers = { 'Cookie': 'TWISTED_SESSION_name=session' }
+            self.proxy_site.memcache.set('auth', str(serial))
             #
             # Register tourney
             #
-            d = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
-                               postdata = '{"type":"PacketPokerTourneyRegister","game_id":' + str(tourney_serial) + ',"serial":' + str(serial) + '}',
-                               headers = headers)
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                               postdata = '{"type":"PacketPokerTourneyRegister","game_id":' + str(tourney_serial) + ',"serial":' + str(serial) + '}')
             def checkTable(result):
                   packets = simplejson.JSONDecoder().decode(result)
                   self.assertEqual('PacketPokerTourneyRegister', packets[0]['type'])
@@ -279,14 +272,12 @@ class ProxyTestCase(unittest.TestCase):
             Join a table thru a proxy, using an anonymous session that becomes an
             authenticated session
             """
-            headers = { 'Cookie': 'TWISTED_SESSION_name=session' }
-            self.proxy_site.memcache.set('session', '0')
+            self.proxy_site.memcache.set('auth', '0')
             #
             # Join table
             #
-            d = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
-                               postdata = '{"type":"PacketPokerTableJoin","game_id":1}',
-                               headers = headers)
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
             def checkTable(result):
                   packets = simplejson.JSONDecoder().decode(result)
                   self.assertEqual('PacketPokerTable', packets[0]['type'])
@@ -297,9 +288,8 @@ class ProxyTestCase(unittest.TestCase):
             # Login
             #
             def login(result):
-                  d3 = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
-                                     postdata = '{"type":"PacketLogin","user":"user1","password":"password"}',
-                                     headers = headers)
+                  d3 = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                                     postdata = '{"type":"PacketLogin","user":"user1","password":"password"}')
                   def checkLogin(result):
                         global serial
                         packets = simplejson.JSONDecoder().decode(result)
@@ -313,9 +303,8 @@ class ProxyTestCase(unittest.TestCase):
             #
             def seat(result):
                   global serial
-                  d1 = client.getPage("http://127.0.0.1:19480/POKER_REST?name=name",
-                                     postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":' + str(serial) + '}',
-                                     headers = headers)
+                  d1 = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                                     postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":' + str(serial) + '}')
                   def checkSeat(result):
                         self.assertSubstring('PlayerArrive', result)
                         return True
@@ -418,7 +407,7 @@ class ProxyFilterTestCase(unittest.TestCase):
 ################################################################################
 def Run():
       loader = runner.TestLoader()
-#      loader.methodPrefix = "test_trynow"
+#      loader.methodPrefix = "test06"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(ProxyTestCase))
       suite.addTest(loader.loadClass(ProxyFilterTestCase))

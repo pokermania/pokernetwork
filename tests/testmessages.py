@@ -51,6 +51,7 @@ from pokernetwork import pokerexplain
 classes.append(pokerexplain.PokerExplain)
 from pokernetwork import pokertable
 classes.append(pokertable.PokerTable)
+classes.append(pokertable.PokerAvatarCollection)
 from pokernetwork import pokercashier
 classes.append(pokercashier.PokerCashier)
 from pokernetwork import pokerdatabase

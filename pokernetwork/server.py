@@ -116,7 +116,7 @@ class PokerServerProtocol(UGAMEProtocol):
 
     def protocolInvalid(self, client, server):
         if self.factory.verbose:
-                self.message("client with protocol %s rejected (need %s)" % ( client, server ))
+            self.message("client with protocol %s rejected (need %s)" % ( client, server ))
 
     def ping(self):
         if not hasattr(self, "_ping_timer") or not self._ping_timer:

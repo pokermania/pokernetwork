@@ -58,6 +58,7 @@ from pokernetwork import pokerclient
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerclientpackets import *
+from pokernetwork.pokertable import PokerAvatarCollection
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
@@ -3152,35 +3153,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.tourneyManager, 0, 1)
         return d
     # ------------------------------------------------------------------------
-    def test67_getPlayerInfoBug(self):
-        self.createClients(2)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.setupCallbackChain)
-        d.addCallback(self.sendRolePlay)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 2)
-
-        d2 = self.client_factory[1].established_deferred
-        d2.addCallback(self.setupCallbackChain)
-        d2.addCallback(self.sendRolePlay)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 2)
-        d2.addCallback(self.buyInTable, 1, 2, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 2)
-
-        def logout(x):
-            avatar = self.service.avatars[0]
-            avatar.logout()
-            avatar.join(avatar.tables[2])
-        d2.addCallback(logout)
-
-        return defer.DeferredList((d, d2))
-
-    # ------------------------------------------------------------------------
     def test68_handlePacketDefer(self):
         self.createClients(1)
         d = self.client_factory[0].established_deferred
@@ -3380,7 +3352,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         clients = {}
         table = self.service.getTable(gameId)
         for ii in [ 0, 1, 2]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
             self.sitTable((clients[ii], None), ii, gameId)
         for ii in [ 0, 1, 2]:
@@ -3492,7 +3464,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         clients = {}
         table = self.service.getTable(gameId)
         for ii in [ 0, 1]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
             self.sitTable((clients[ii], None), ii, gameId)
         for ii in [ 0, 1]:
@@ -3517,7 +3489,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
 
         for ii in [ 0, 1, 2]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
 
         table.autodeal = True
@@ -3590,7 +3562,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         clients = {}
         table = self.service.getTable(gameId)
         for ii in [ 0, 1, 2]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
             self.sitTable((clients[ii], None), ii, gameId)
         for ii in [ 0, 1, 2]:
@@ -3616,7 +3588,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             return bbPacket
 
         for ii in [ 0, 1, 2]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
 
         table.autodeal = True
@@ -3691,7 +3663,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         clients = {}
         table = self.service.getTable(gameId)
         for ii in [ 0, 1]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
             self.sitTable((clients[ii], None), ii, gameId)
         for ii in [ 0, 1]:
@@ -3719,7 +3691,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             return bbPacket
 
         for ii in [ 0, 1, 2]:
-            clients[ii] = self.service.serial2client[avatars[ii].getSerial()]
+            clients[ii] = self.service.avatar_collection.get(avatars[ii].getSerial())[0]
             avatars[ii].resetPacketsQueue()
 
         table.autodeal = True
@@ -3768,7 +3740,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 self.assertEquals(pack.game_id, gameId)
             self.assertFalse(av2 in self.service.avatars)
             self.assertFalse(av2 in self.service.monitors)
-            self.assertFalse(self.service.serial2client.has_key(av2.user.serial))
+            self.assertEquals([], self.service.avatar_collection.get(av2.user.serial))
             realLogout()
             checkLogoutDeferred.callback(True)
         av2.user.logout = checkLogout
@@ -3942,7 +3914,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
                 else:
                     return lambda s: "BROKEN FAIL"
             msSelf.locale2translationFunc = transFunc
-            msSelf.serial2client = {}
+            msSelf.avatar_collection = PokerAvatarCollection()
 
         def getClientQueuedPacketMax(self):
             return 200000
@@ -3988,8 +3960,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(avatar.user.privilege, pokeravatar.User.REGULAR)
         self.assertEquals(avatar.tourneys, "MOCKPLACES")
 
-        self.failUnless(service.serial2client.keys(), [1042])
-        self.assertEquals(service.serial2client[1042], avatar)
+        self.assertEquals([avatar], service.avatar_collection.get(1042))
 
         avatar.explain = saveExplain
 
@@ -4018,8 +3989,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(avatar.user.privilege, pokeravatar.User.REGULAR)
         self.assertEquals(avatar.tourneys, "MOCKPLACES")
 
-        self.failUnless(service.serial2client.keys(), [1042])
-        self.assertEquals(service.serial2client[1042], avatar)
+        self.assertEquals([avatar], service.avatar_collection.get(1042))
 
         avatar.explain = saveExplain
 
@@ -4050,8 +4020,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(avatar.user.privilege, pokeravatar.User.REGULAR)
         self.assertEquals(avatar.tourneys, "MOCKPLACES")
 
-        self.failUnless(service.serial2client.keys(), [1042])
-        self.assertEquals(service.serial2client[1042], avatar)
+        self.assertEquals([avatar], service.avatar_collection.get(1042))
 
         avatar.explain = saveExplain
 
@@ -4076,19 +4045,13 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         # pre-existing avatar
         #
         avatar_second = pokeravatar.PokerAvatar(service)
-        def lost(reason):
-            self.assertEquals("Disconnected", reason)
-            avatar_second.HERE = True
-        avatar_second.connectionLost = lost
-        service.serial2client[serial] = avatar_second
+        service.avatar_collection.add(serial, avatar_second)
         
         explain = PokerAvatarNoClientServerTestCase.MockExplain()
         saveExplain = avatar_first.explain
         avatar_first.explain = explain
 
         avatar_first.relogin(serial)
-        
-        self.assertEquals(True, avatar_second.HERE)
         
         self.assertEquals(avatar_first.user.serial, serial)
         self.assertEquals(avatar_first.user.name, 'Doyle Brunson')
@@ -4097,8 +4060,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(avatar_first.user.privilege, pokeravatar.User.REGULAR)
         self.assertEquals(avatar_first.tourneys, "MOCKPLACES")
 
-        self.failUnless(service.serial2client.keys(), [serial])
-        self.assertEquals(service.serial2client[serial], avatar_first)
+        self.assertEquals([avatar_second, avatar_first], service.avatar_collection.get(serial))
 
         avatar_first.explain = saveExplain
 
@@ -4616,7 +4578,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test44"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))

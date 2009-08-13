@@ -131,9 +131,7 @@ class PokerAvatar:
 
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
-        if self.service.serial2client.has_key(serial):
-            self.service.destroyAvatar(self.service.serial2client[serial])
-        self.service.serial2client[serial] = self
+        self.service.avatar_collection.add(serial, self)
         self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)
     
@@ -150,7 +148,7 @@ class PokerAvatar:
 
         self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
         if PacketPokerRoles.PLAY in self.roles:
-            self.service.serial2client[serial] = self
+            self.service.avatar_collection.add(serial, self)
         if self.service.verbose:
             self.message("user %s/%d logged in" % ( self.user.name, self.user.serial ))
         if self.protocol:
@@ -193,7 +191,7 @@ class PokerAvatar:
     def logout(self):
         if self.user.serial:
             if PacketPokerRoles.PLAY in self.roles:
-                del self.service.serial2client[self.user.serial]
+                self.service.avatar_collection.remove(self.user.serial, self)
             if self.has_session:
                 self.service.sessionEnd(self.getSerial())
             self.user.logout()

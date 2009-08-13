@@ -104,32 +104,14 @@ def args2packets(args):
 class Request(server.Request):
 
     def getSession(self):
-        self.sitepath = self.args.get('name', [])
-        uid = self.getCookie(self.cookieName())
-        if uid:
-            #
-            # If the uid is -1 it means this uid has been
-            # blacklisted by another session. It triggers
-            # an error, and the uid is removed from the blacklist.
-            # 
-            memcache = self.site.memcache
-            memcache_serial = memcache.get(uid)
-            if memcache_serial == '-1':
-                memcache.delete(uid)
-                raise BlacklistedSession(uid)
-        return server.Request.getSession(self)
-
-    def cookieName(self):
-        return "_".join(['TWISTED_SESSION'] + self.sitepath)
-
-    def expireSessionCookie(self):
-        cookiename = self.cookieName()
-        sessionCookie = self.getCookie(cookiename)
-        if sessionCookie:
-            self.addCookie(cookiename,
-                           sessionCookie,
-                           expires = time.asctime(time.gmtime(seconds() - 3600)) + ' UTC',
-                           path = '/')
+        uid = self.args.get('uid', [self.site._mkuid()])[0]
+        auth = self.args.get('auth', [self.site._mkuid()])[0]
+        try:
+            self.session = self.site.getSession(uid, auth)
+        except KeyError:
+            self.session = self.site.makeSession(uid, auth)
+        self.session.touch()
+        return self.session
 
     def findProxiedIP(self):
         """Return the IP address of the client who submitted this request,
@@ -151,8 +133,9 @@ class Request(server.Request):
 
 class Session(server.Session):
 
-    def __init__(self, site, uid):
+    def __init__(self, site, uid, auth):
         server.Session.__init__(self, site, uid)
+        self.auth = auth
         self.avatar = site.resource.service.createAvatar()
         self.avatar.queuePackets()
         self.avatar.setExplain(PacketPokerExplain.ALL)
@@ -174,7 +157,7 @@ class Session(server.Session):
             # is not called : this is intended because the
             # session already expired.
             #
-            self.site.getSession(self.uid)
+            self.site.getSession(self.uid, self.auth)
             server.Session.checkExpired(self)
             return True
         except KeyError:
@@ -229,7 +212,6 @@ class PokerResource(resource.Resource):
                 request.setResponseCode(http.INTERNAL_SERVER_ERROR)
                 request.setHeader('content-type',"text/html")
                 request.setHeader('content-length', str(len(body)))
-                request.expireSessionCookie()
                 request.write(body)
             if self.verbose >= 0 and request.code != 200:
                 self.error("(%s:%s) " % request.findProxiedIP() + str(body))
@@ -313,7 +295,6 @@ class PokerImageUpload(resource.Resource):
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-type',"text/html")
             request.setHeader('content-length', str(len(body)))
-            request.expireSessionCookie()
             request.write(body)
             request.connectionLost(reason)
             if self.verbose >= 0:
@@ -371,7 +352,6 @@ class PokerAvatarResource(resource.Resource):
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-type',"text/html")
             request.setHeader('content-length', str(len(body)))
-            request.expireSessionCookie()
             request.write(body)
             request.connectionLost(reason)
             if self.verbose >= 0:
@@ -397,9 +377,6 @@ class PokerAvatarResource(resource.Resource):
             request.write(body)
             request.finish()
             return
-
-class BlacklistedSession(Exception):
-    pass
 
 class PokerSite(server.Site):
 
@@ -460,18 +437,6 @@ class PokerSite(server.Site):
         
     def updateSession(self, session):
         serial = session.avatar.getSerial()
-        if serial > 0:
-            #
-            # blacklist a session previously associated to the serial
-            #
-            memcache_uid = self.memcache.get(str(serial))
-            if memcache_uid != None and session.uid != memcache_uid:
-                #
-                # the lifespan of this blacklisted uid *must* be greater than
-                # self.sessionTimeout
-                #
-                self.memcache.set(memcache_uid, '-1', time = self.cookieTimeout)
-
         #
         # There is no need to consider the case where session.memcache_serial is
         # zero because nothing needs updating in memcache.
@@ -481,13 +446,7 @@ class PokerSite(server.Site):
                 #
                 # if the user has logged out, unbind the serial that was in memcache
                 #
-                self.memcache.delete(str(session.memcache_serial))
-                self.memcache.replace(session.uid, '0', time = self.cookieTimeout)
-            elif serial != session.memcache_serial:
-                #
-                # if the user changed personality, delete old serial
-                #
-                self.memcache.delete(str(session.memcache_serial))
+                self.memcache.replace(session.auth, '0', time = self.cookieTimeout)
             #
             # for consistency, so that updateSession can be called multiple times without
             # side effects
@@ -500,13 +459,14 @@ class PokerSite(server.Site):
             # because it is how each poker server is informed that
             # a given user is logged in
             #
-            self.memcache.set_multi({ session.uid: str(serial),
-                                      str(serial): session.uid }, time = self.cookieTimeout)
+            self.memcache.set(session.auth, str(serial), time = self.cookieTimeout)
 
-    def getSession(self, uid):
+    def getSession(self, uid, auth):
         if not isinstance(uid, str):
             raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
-        memcache_serial = self.memcache.get(uid)
+        if not isinstance(auth, str):
+            raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
+        memcache_serial = self.memcache.get(auth)
         if memcache_serial == None:
             #
             # If the memcache session is gone, trash the current session
@@ -544,20 +504,19 @@ class PokerSite(server.Site):
                 # Create a session with an uid that matches the memcache
                 # key
                 #
-                self.makeSessionFromUid(uid).memcache_serial = memcache_serial
+                self.makeSessionFromUidAuth(uid, auth).memcache_serial = memcache_serial
                 if memcache_serial > 0:
                     self.sessions[uid].avatar.relogin(memcache_serial)
                 
         return self.sessions[uid]
 
-    def makeSessionFromUid(self, uid):
-        session = self.sessions[uid] = self.sessionFactory(self, uid)
+    def makeSessionFromUidAuth(self, uid, auth):
+        session = self.sessions[uid] = self.sessionFactory(self, uid, auth)
         session.startCheckingExpiration(self.sessionCheckTime)
         return session
         
-    def makeSession(self):
-        uid = self._mkuid()
-        session = self.makeSessionFromUid(uid)
+    def makeSession(self, uid, auth):
+        session = self.makeSessionFromUidAuth(uid, auth)
         session.memcache_serial = 0
-        self.memcache.add(uid, str(session.memcache_serial))
+        self.memcache.add(auth, str(session.memcache_serial))
         return session
