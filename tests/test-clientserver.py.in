@@ -610,7 +610,7 @@ class DummyServerTests(unittest.TestCase):
 
         self.assertEquals(get_messages(), ['connectionLost: reason = test08',
                                            'connectionLost: reason = test08',
-                                           'client with protocol different rejected (need 001.021)'])
+                                           'client with protocol different rejected (need 002.000)'])
     # -----------------------------------------------------------------------
     def test09_connectionLostNoPingTimerWithAvatarButNoQueues(self):
         global processQueuesCount
