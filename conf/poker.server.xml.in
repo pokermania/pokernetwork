@@ -6,7 +6,7 @@
    if a PHPSESSID is involved (auth module) cookie_timeout must be 
       greater than PHPSESSID timeout
  -->
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" max_joined="4000" max_queued_client_packets="500" cleanup="yes" simultaneous="4" max_missed_round="5" verbose="0" chat="yes" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="1200" sng_timeout="3600" remove_completed="1" admin="false" poker_network_version="1.7.5">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" max_joined="4000" max_queued_client_packets="500" cleanup="yes" simultaneous="4" max_missed_round="5" verbose="0" chat="yes" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="1200" sng_timeout="3600" remove_completed="1" admin="false" poker_network_version="2.0.0">
 
 <!-- max_queued_client_packets defaults to 500 if you leave it out.
      max_missed_round defaults to 10 if you leave it out.
@@ -114,7 +114,6 @@
 
   <!-- <rest_filter>/usr/share/pyshared/pokernetwork/nullfilter.py</rest_filter> -->
   <!-- <rest_filter>/usr/share/pyshared/pokernetwork/proxyfilter.py</rest_filter> -->
-  <!-- <rest_filter>/usr/share/pyshared/pokernetwork/countfilter.py</rest_filter> -->
   <!-- <tourney_select_info settings="/etc/poker/poker.prizes.xml">/usr/share/pyshared/pokernetwork/tourneyselectinfo.py</tourney_select_info> -->
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <refill serial="1" amount="5000000"/>
