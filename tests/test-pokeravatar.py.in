@@ -48,7 +48,6 @@ from tests.testmessages import restore_all_messages, silence_all_messages, searc
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 if verbose < 0: silence_all_messages()
 
-from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokerservice
@@ -73,7 +72,7 @@ class ConstantPlayerShuffler:
 pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <language value="en_US.ISO-8859-1"/>
@@ -97,7 +96,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 """
 
 settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<settings display2d="yes" display3d="no" ping="15000" verbose="3" delays="true" tcptimeout="2000" upgrades="no">
+<settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
    <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
   <name>user1</name>
@@ -106,7 +105,6 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <muck>yes</muck>
   <auto_post>no</auto_post>
   <chat max_chars="40" line_length="20"/>
-  <web browser="/usr/bin/firefox">http://localhost/poker-web/</web>
   <sound>yes</sound>
   <tournaments currency_serial="1" type="sit_n_go" sort="name"/>
   <lobby currency_serial="1" type="holdem" sort="name"/>
@@ -4097,7 +4095,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(True, forceAvatarDestroyMockup.called)
 ##############################################################################
 settings_xml_table_picker_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="3" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <language value="en_US.ISO-8859-1"/>
@@ -4576,7 +4574,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test44"
+#    loader.methodPrefix = "test0"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))

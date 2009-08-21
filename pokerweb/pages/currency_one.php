@@ -1,6 +1,6 @@
 <?php
 //
-// Copyright (C) 2006, 2007 Loic Dachary <loic@dachary.org>
+// Copyright (C) 2006, 2007, 2009 Loic Dachary <loic@dachary.org>
 // Copyright (C) 2006 Mekensleep <licensing@mekensleep.com>
 //                    24 rue vieille du temple, 75004 Paris
 //

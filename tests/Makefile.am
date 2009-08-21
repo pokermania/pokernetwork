@@ -63,7 +63,6 @@ TESTS = coverage-reset \
 	upgrade \
 	test-clientserver.py \
 	test-currencyclient.py \
-	test-pokernetworkconfig.py \
 	test-packets.py \
 	test-attrpack.py \
 	test-userstats.py \
@@ -78,22 +77,16 @@ TESTS = coverage-reset \
 	test-pokerauth.py \
 	test-user.py \
 	test-pokertable.py \
-	test-pokerchildren.py \
 	test-pokerclient.py \
 	test-pokerexplain.py \
 	test-pokergameclient.py \
 	test-pokerlock.py \
 	test-pokercashier.py \
 	test-webservice.py \
-	test-pokerinteractor.py \
-	test-quit.py \
-	test-pokerrenderer.py \
 	test-protocol.py \
-	test-upgrade.py \
-	test-pokerinterface.py \
-	test-string.py \
 	test-pokersite.py \
 	test-pokermemcache.py \
+	test-pokernetworkconfig.py \
 	test-proxyfilter.py \
 	test-nullfilter.py \
 	test-proxy.py \

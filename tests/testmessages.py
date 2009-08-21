@@ -25,12 +25,8 @@ import sys, os
 
 classes = []
 
-classes.append(pokerrenderer.PokerRenderer)
-classes.append(pokerrenderer.PokerInteractors)
 from pokernetwork import currencyclient
 classes.append(currencyclient.FakeCurrencyClient)
-from pokernetwork import pokerchildren
-classes.append(pokerchildren.PokerChild)
 from pokernetwork import client
 classes.append(client.UGAMEClientFactory)
 from pokernetwork import protocol
@@ -57,9 +53,6 @@ from pokerengine import pokergame
 classes.append(pokergame.PokerGame)
 from pokerengine import pokertournament
 classes.append(pokertournament.PokerTournament)
-from pokernetwork import upgrade
-classes.append(upgrade.CheckClientVersion)
-classes.append(upgrade.Upgrader)
 from pokernetwork import pokersite
 classes.append(pokersite.PokerResource)
 classes.append(pokersite.PokerImageUpload)

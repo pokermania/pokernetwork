@@ -38,7 +38,6 @@ from twisted.internet import reactor, defer
 # will have to be patched too.
 #
 from tests import testclock
-from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
 from tests.testmessages import silence_all_messages

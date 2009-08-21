@@ -48,7 +48,6 @@ from tests.testmessages import silence_all_messages, get_messages, search_output
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 silence_all_messages()
 
-from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokerservice
@@ -1030,43 +1029,6 @@ class PokerClientTestCase(unittest.TestCase):
         clear_all_messages()
         return True
     # ---------------------------------------------------------------------------
-    # Note: this doesn't test the case when PokerClientFactor.display is
-    # "underware" 
-    def test24_upgradeReady(self):
-        global connectionLostMessage
-        connectionLostMessage = "Shutdown immediately"
-        def myExecv(cmd, arglist):
-            if platform.system() == "Windows":
-                self.assertEquals(cmd, "/upgrades/upgrade.exe")
-                self.assertEquals(arglist, ['/upgrades/upgrade.exe', '"/target"',
-                                            '"@PYTHON@"'])
-            else:
-                # FIXME: I did the below because the code was written to
-                #        use /bin/sh explicitly but I actually believe
-                #        this should be in @SHELL@
-                self.assertEquals(cmd, "/bin/sh")
-                self.assertEquals(arglist, ['/upgrades/upgrade', '-x',
-                                            '/upgrades/upgrade', '/upgrades',
-                                            '@PYTHON@', './test-pokerclient.py'])
-        execvSave = os.execv
-        os.execv = myExecv
-
-        def forceWindows():
-            return "Windows"
-        def realOS():
-            return "GNU/Linux"
-
-        for systemFunc in [ realOS, forceWindows ]:
-            saveSystem = platform.system
-            platform.system = systemFunc
-            clear_all_messages()
-            self.client_factory[0].upgradeReady("/target", "/upgrades")
-            self.assertEquals(get_messages(), ['PokerClientFactory::upgradeReady'])
-            clear_all_messages()
-            platform.system = saveSystem
-        os.execv = execvSave
-        return True
-    # ---------------------------------------------------------------------------
     def updatePot(self, (client, packet)):
         class Game:
             def __init__(self):
@@ -1314,14 +1276,6 @@ class PokerClientFactoryTestCase(unittest.TestCase):
         return self.client_factory.checkNetwork("dummy").addErrback(self.checkResultFalse)
 
 
-class InterfaceMockup(dispatch.EventDispatcher):
-    def __init__(self):
-        dispatch.EventDispatcher.__init__(self)
-        self.msg = None
-        
-    def messageBox(self, msg):
-        self.msg = msg
-
 class SettingMockup:
     def __init__(self):
         self.return_batch = False
@@ -1348,13 +1302,6 @@ class PokerSkinMethodUnitTest(unittest.TestCase):
     def test00_destroyDoesNothing(self):
         skin = PokerSkin(settings = 'testing')
         skin.destroy()
-        self.assertEquals(skin.url, "random")
-        self.assertEquals(skin.outfit, "random")
-        self.assertEquals(skin.settings, "testing")
-    # ---------------------------------------------------------------------------
-    def test01_interfaceReadyDoesNothing(self):
-        skin = PokerSkin(settings = 'testing')
-        skin.interfaceReady(None, None)
         self.assertEquals(skin.url, "random")
         self.assertEquals(skin.outfit, "random")
         self.assertEquals(skin.settings, "testing")
@@ -1635,71 +1582,10 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
             clientFactory.checkNetwork("http://example.org"),
             mustGetCalledBackForTestSuccessDefferred])
     # ---------------------------------------------------------------------------
-    def test09_upgradeTick(self):
-        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
-        class MockDisplay():
-            def tickProgressBar(mdSelf, ratio, message):
-                self.assertEquals(ratio, "TEST RATIO")
-                self.assertEquals(message, "TEST MESSAGE")
-        clientFactory.display = MockDisplay()
-        clientFactory.upgradeTick("TEST RATIO", "TEST MESSAGE")
-    # ---------------------------------------------------------------------------
-    def test10_upgradeTick_noDisplay(self):
-        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
-        caughtIt = False
-        try:
-            clientFactory.upgradeTick("TEST RATIO", "TEST MESSAGE")
-            self.fail("previous line should have thrown exception")
-        except AttributeError, ae:
-            self.assertEquals(ae.__str__(),
-                              "'NoneType' object has no attribute 'tickProgressBar'")
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught an Exception")
-    # ---------------------------------------------------------------------------
-    # Next two helper fuctions are for coverage tests on restart()
-    def setupMockChildrenReactorOs(self, clientFactory):
-        import os
-        class MockChildren():
-            def __init__(mcSelf): mcSelf.killallCount = 0
-            def killall(mcSelf):  mcSelf.killallCount += 1
-
-        clientFactory.children = MockChildren()
-
-        self.reactorDisconnectAllCount = 0
-        def mockReactorDisconnectAll():
-            self.reactorDisconnectAllCount += 1
-
-        self.saveReactorDisconnectAll = reactor.disconnectAll
-        reactor.disconnectAll = mockReactorDisconnectAll
-
-        self.saveSysArgv = sys.argv
-        self.saveExecutable = sys.executable
-        sys.executable = "testprogram_should_not_ever_exist"
-        sys.argv = ['onearg', 'twoarg', 'threearg' ]
-
-    # ---------------------------------------------------------------------------
     def restoreReactorOs(self):
         sys.argv = self.saveSysArgv
         sys.executable = self.saveExecutable
         reactor.disconnectAll = self.saveReactorDisconnectAll
-    # ---------------------------------------------------------------------------
-    def test11_restartNoDisplay(self):
-        import exceptions
-        clientFactory = pokerclient.PokerClientFactory(settings = self.settings)
-
-        clientFactory.display = None
-
-        os = self.setupMockChildrenReactorOs(clientFactory)
-        caughtIt = False
-        try:
-            clientFactory.restart()
-        except exceptions.OSError, oe:
-            caughtIt = True
-            self.assertEquals(oe.__str__(), '[Errno 2] No such file or directory')
-        self.failUnless(caughtIt, "restart() call should have caught exceptions.OSError")
-        self.assertEquals(clientFactory.children.killallCount, 1)
-        self.assertEquals(self.reactorDisconnectAllCount, 1)
-        self.restoreReactorOs()
 # ------------------------------------------------------
 def Run():
     loader = runner.TestLoader()

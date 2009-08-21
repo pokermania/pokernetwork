@@ -29,10 +29,6 @@ AC_CONFIG_SRCDIR([pokernetwork/protocol.py])
 
 AM_MAINTAINER_MODE
 
-# GETTEXT STUFF
-AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION(0.13)
-
 POKERNETWORK_AC_PROG_APG(2.2, AC_MSG_ERROR([*** pokernetwork/pokerbotlogic.py requires a working /usr/bin/apg  ***]), , AC_MSG_ERROR([*** apg >= 2.2.0 is not installed - pokernetwork/pokerbotlogic.py needs it. ***]))
 
 AC_PATH_PROG(RSYNC, [rsync])
@@ -77,6 +73,7 @@ AC_SUBST(pkgdatadir, [$pkgdatadir])
 
 AC_PROG_MAKE_SET
 AC_GNU_SOURCE
+AM_PATH_PYTHON([2.4])
 
 PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.3.4,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
 
@@ -269,13 +266,8 @@ AC_CONFIG_FILES([
         tests/test-proxy.py
         tests/test-proxyfilter.py
         tests/test-nullfilter.py
-        tests/test-string.py
         tests/test-webservice.py
-	tests/test-pokerinteractor.py
-	tests/test-pokerrenderer.py
 	tests/test-protocol.py
-	tests/test-upgrade.py
-	tests/test-quit.py
 	tests/test-leak.py
 	tests/test-leak-no-trial.py
 	tests/test-leak-reference.py
@@ -305,7 +297,6 @@ AC_CONFIG_FILES([
         tests/Makefile
         pokernetwork/munin/Makefile
         Makefile
-        po/Makefile.in
 ])
 AC_CONFIG_FILES([
         pokerstats/run

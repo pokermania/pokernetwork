@@ -2,7 +2,7 @@
 #%# family=poker-network
 #%# capabilities=autoconf suggest
 #
-# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2009 Loic Dachary <loic@dachary.org>
 #
 #
 # This software's license gives you freedom; you can copy, convey,

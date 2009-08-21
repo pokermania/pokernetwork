@@ -32,7 +32,7 @@ pkgdatadir=@pkgdatadir@
 pkgsysconfdir=@pkgsysconfdir@
 
 MAINTAINERCLEANFILES = INSTALL Makefile.in aclocal.m4 configure \
-	$(filter-out %.m4,$(wildcard config/[a-z]*)) 
+	$(filter-out config/apg.m4 config/python-depends.m4 config/python.m4,$(wildcard config/[a-z]*)) 
 
 nobase_dist_pkgdata_DATA = \
 	conf/poker.bot.xml \
@@ -85,7 +85,6 @@ pokernetwork_PYTHON = \
 	pokernetwork/proxy.py \
 	pokernetwork/proxyfilter.py \
 	pokernetwork/server.py \
-	pokernetwork/upgrade.py \
 	pokernetwork/user.py \
 	pokernetwork/userstats.py \
 	pokernetwork/version.py

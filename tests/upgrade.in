@@ -38,7 +38,6 @@ export PYTHONPATH=$srcdir/..
 @PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --reference=$srcdir/conf conftest
 chmod u+w conftest
 @PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.bot conftest/poker.bot.xml.in
-@PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.client conftest/poker.client.xml.in
 @PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
 
 # Interpreted by emacs

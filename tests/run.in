@@ -59,7 +59,7 @@ if [ -z "$TZ" ]; then
     export TZ=Europe/Paris
 fi
 
-DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/poker{network,ui,client2d}/*.py) 
+DEFAULT_COVERAGE_FILES=$(echo ${top_srcdir}/pokernetwork/*.py) 
 : ${COVERAGE_FILES:=$DEFAULT_COVERAGE_FILES}
 
 COVERAGE_100_PERCENT="

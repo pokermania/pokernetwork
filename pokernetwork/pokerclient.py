@@ -38,10 +38,8 @@ from pokerengine.pokerchips import PokerChips
 
 from pokerengine.pokerengineconfig import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
-from pokernetwork.pokerchildren import PokerChildren, PokerChildBrowser
 from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokergameclient import PokerNetworkGameClient
-from pokernetwork import upgrade
 from pokernetwork.pokerexplain import PokerGames, PokerExplain
 
 DEFAULT_PLAYER_USER_DATA = { 'delay': 0, 'timeout': None }
@@ -54,9 +52,6 @@ class PokerSkin:
         ( self.url, self.outfit ) = self.interpret("random", "random")
 
     def destroy(self):
-        pass
-
-    def interfaceReady(self, interface, display):
         pass
 
     def interpret(self, url, outfit):
@@ -105,14 +100,11 @@ class PokerClientFactory(UGAMEClientFactory):
         self.config = kwargs.get("config", None)
         #
         # Make sure the attributes exists, should an exception occur before
-        # it is initialized with an instance of PokerChildren and such. This is done
+        # it is initialized. This is done
         # so that the caller does not have to check the existence of the
         # attribute when catching an exception.
         #
         self.crashing = False
-        self.interface = None
-        self.display = None
-        self.children = None
 
         settings = self.settings
         self.ping_delay = settings.headerGetInt("/settings/@ping")
@@ -161,17 +153,6 @@ class PokerClientFactory(UGAMEClientFactory):
         self.first_time = self.settings.headerGet("/settings/name") == "username"
         self.played_time = self.settings.headerGet("/settings/played_time")
 
-        self.children = PokerChildren(self.config, self.settings)
-        self.upgrader = upgrade.Upgrader(self.config, self.settings)
-        self.upgrader.registerHandler(upgrade.TICK, self.upgradeTick)
-        self.upgrader.registerHandler(upgrade.CLIENT_VERSION_OK, self.clientVersionOk)
-        self.upgrader.registerHandler(upgrade.NEED_UPGRADE, self.needUpgrade)
-        self.upgrader.registerHandler(upgrade.UPGRADE_READY, self.upgradeReady)
-        self.upgrader.registerHandler(upgrade.FAILED, self.failedUpgrade)
-        self.upgrader.registerHandler(upgrade.HOST_DOES_NOT_RESPOND, self.failedUpgradeHostDoesNotRespond)
-        self.upgrader.registerHandler(upgrade.NO_NETWORK, self.failedUpgradeNoNetwork)
-        self.interface = None
-
     def __del__(self):
         if hasattr(self, "games"):
             del self.games
@@ -203,22 +184,13 @@ class PokerClientFactory(UGAMEClientFactory):
     def networkAvailable(self):
         pass #pragma: no cover
         
-    def upgradeTick(self, ratio, message):
-        self.display.tickProgressBar(ratio, message)
-
     def restart(self):
-        self.children.killall()
         reactor.disconnectAll()
-        if self.display and hasattr(self.display, "underware") and self.display.underware:
-            self.display.underware.Uninit()
         import sys
         import os
-        if platform.system() == "Windows":
-            os.execv("pok3d.exe", ["pok3d.exe", "--restart"])
-        else:
-            argv = [ sys.executable ]
-            argv.extend(sys.argv)
-            os.execv(sys.executable, argv)
+        argv = [ sys.executable ]
+        argv.extend(sys.argv)
+        os.execv(sys.executable, argv)
 
     def quit(self):
         #
@@ -229,8 +201,6 @@ class PokerClientFactory(UGAMEClientFactory):
         # check as much as it could.
         #        
         self.skin.destroy()
-        packet = PacketQuit()
-        self.display.render(packet)
 
     def getSkin(self):
         return self.skin
@@ -321,46 +291,6 @@ class PokerClientFactory(UGAMEClientFactory):
 
     def gameExists(self, game_id):
         return self.games.gameExists(game_id)
-
-    def browseWeb(self, path):
-        PokerChildBrowser(self.config, self.settings, path)
-
-    def checkClientVersion(self, version):
-        self.upgrader.checkClientVersion(version)
-
-    def clientVersionOk(self):
-        pass
-
-    def failedUpgrade(self, logs, reason):
-        raise UserWarning, "upgrade failed reason:%s logs:%s" % (str(reason), str(logs))
-
-    def needUpgrade(self, version):
-        pass
-
-    def upgrade(self, version, excludes):
-        self.display.showProgressBar()
-        self.upgrader.getUpgrade(version, excludes)
-
-    def failedUpgradeHostDoesNotRespond(self, logs, reason):
-        pass
-
-    def failedUpgradeNoNetwork(self, logs, reason):
-        pass
-
-    def upgradeReady(self, target_dir, upgrades_dir):
-        if self.verbose >= 0:
-            self.message("PokerClientFactory::upgradeReady")
-        self.children.killall()
-        reactor.disconnectAll()
-        if hasattr(self.display, "underware"):
-            self.display.underware.Uninit()
-        import sys
-        import os
-        if platform.system() == "Windows":
-            os.execv(upgrades_dir + "/upgrade.exe", [ upgrades_dir + "/upgrade.exe", '"' + target_dir + '"', '"' + sys.executable + '"' ])
-        else:
-            # FIXME: shouldn't this be an .in file and use @SHELL@ here?
-            os.execv("/bin/sh", [ upgrades_dir + "/upgrade", '-x', upgrades_dir + "/upgrade", upgrades_dir, sys.executable ] + sys.argv)
 
 ABSOLUTE_LAGMAX = 120
 DEFAULT_LAGMAX = 15

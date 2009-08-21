@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2007 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2009 Loic Dachary <loic@dachary.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -16,6 +16,9 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
+
+MAINTAINERCLEANFILES = Makefile.in
+
 munindir = ${datadir}/munin/plugins
 dist_munin_SCRIPTS = \
 	poker_traffic_ \
