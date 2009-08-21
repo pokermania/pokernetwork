@@ -1,6 +1,144 @@
-2009-08-12  Loic Dachary <loic@dachary.org>
+2009-08-21  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* debian/control, debian/control.dapper, debian/control.edgy,
+	  debian/control.etch, debian/control.feisty, debian/control.gutsy,
+	  debian/control.hardy, debian/control.intrepid,
+	  debian/control.jaunty, debian/control.lenny,
+	  debian/control.unstable: no binary means architecture moves from
+	  all to any
+	* Makefile.am, tests/Makefile.am, tests/conf/poker.server.xml.in,
+	  tests/test-pokernetworkconfig.py.in: fix distribution to pass
+	  make distcheck
+	* tests/test-pokernetworkconfig.py.in: add back wrongly removed
+	  file
+	* AUTHORS, Makefile.am, config/ccpython.m4, config/unittest.m4,
+	  configure.ac, examples/run-pokerserver, examples/stress/bots.sh,
+	  examples/stress/report.sh, examples/test-pokerweb,
+	  pokernetwork/dispatch.py, pokernetwork/munin/Makefile.am,
+	  pokernetwork/munin/poker_hands_,
+	  pokernetwork/munin/poker_players_,
+	  pokernetwork/munin/test_poker_hands_,
+	  pokernetwork/munin/test_poker_players_,
+	  pokernetwork/munin/test_poker_traffic_,
+	  pokernetwork/munin/test_wget1, pokernetwork/pokerclient.py,
+	  pokernetwork/upgrade.py, pokerweb/pages/currency_one.php,
+	  tests/Makefile.am, tests/run.in, tests/test-pokeravatar.py.in,
+	  tests/test-pokerclient.py.in,
+	  tests/test-pokernetworkconfig.py.in, tests/test-upgrade.py.in,
+	  tests/test-webservice.py.in, tests/testmessages.py,
+	  tests/upgrade.in: fix tests and makefiles so that all tests run
+	  without errors task #6711
+	* COPYING, HACKING, HOWTO-install-from-sources, Makefile.am,
+	  NIHPHOBIA, README, configure.ac, database/pokerdatabase.5.in,
+	  database/pokerdatabaseupgrade.8.in, debian/control,
+	  debian/control.dapper, debian/control.edgy, debian/control.etch,
+	  debian/control.feisty, debian/control.gutsy,
+	  debian/control.hardy, debian/control.intrepid,
+	  debian/control.jaunty, debian/control.lenny,
+	  debian/control.unstable, debian/copyright,
+	  debian/python-poker-network.install,
+	  debian/python-poker2d.install, debian/python-poker2d.menu,
+	  debian/python-poker2d.postinst, debian/rules,
+	  examples/interface.py, examples/interface_dummy_server.py,
+	  gentoo, po, poker-client-specs.odp, pokerclient2d,
+	  pokernetwork/OLDpokerclientpackets.py,
+	  pokernetwork/currencyclient.py, pokernetwork/nullfilter.py,
+	  pokernetwork/packets.py, pokernetwork/pokerauth.py,
+	  pokernetwork/pokerauthmysql.py, pokernetwork/pokerbot.in,
+	  pokernetwork/pokerbot.py, pokernetwork/pokerbothandeval.py,
+	  pokernetwork/pokerbotlogic.py, pokernetwork/pokercashier.py,
+	  pokernetwork/pokerchildren.py, pokernetwork/pokerclient.py,
+	  pokernetwork/pokerclientpackets.py,
+	  pokernetwork/pokerdatabase.py, pokernetwork/pokerexplain.py,
+	  pokernetwork/pokergameclient.py, pokernetwork/pokerlock.py,
+	  pokernetwork/pokerpackets.py, pokernetwork/pokerserver.py,
+	  pokernetwork/pokertable.py, pokernetwork/protocol.py,
+	  pokernetwork/proxyfilter.py, pokernetwork/server.py,
+	  pokernetwork/upgrade.py, pokerstats/Makefile.am,
+	  pokerstats/pokerstats.1.in, pokerstats/pokerstats.in,
+	  pokerstats/run.in, pokerstats/stats.py, pokerstats/statslogic.py,
+	  pokerstats/test-stats.py.in, pokerui, pokerweb/Makefile.am,
+	  pokerweb/pages/birthday.php, pokerweb/pages/cash_in.php,
+	  pokerweb/pages/cash_out.php, pokerweb/pages/common.php,
+	  pokerweb/pages/create_account.php, pokerweb/pages/currency.php,
+	  pokerweb/pages/edit_account.php, pokerweb/pages/image.php,
+	  pokerweb/pages/index.php, pokerweb/pages/login.php,
+	  pokerweb/pages/logout.php, pokerweb/pages/poker.php,
+	  tests/Makefile.am, tests/conf/client.xml,
+	  tests/conf/poker.client.xml.in, tests/conf/poker2d.xml.in,
+	  tests/finishedfilter.py, tests/io_mockup.c,
+	  tests/monitorplugin.py, tests/poker-interface-sid.supp,
+	  tests/run.in, tests/test-actionscript.py.in,
+	  tests/test-clientserver.py.in, tests/test-currencyclient.py.in,
+	  tests/test-fc.py, tests/test-gamewindow.py.in,
+	  tests/test-javascript.py.in, tests/test-leak-no-trial.py.in,
+	  tests/test-leak-reference.py.in, tests/test-leak.py.in,
+	  tests/test-packets.py.in, tests/test-poker-interface.py,
+	  tests/test-poker2d.py.in, tests/test-pokeravatar.py.in,
+	  tests/test-pokerbothandeval.py.in,
+	  tests/test-pokerbotlogic.py.in, tests/test-pokercashier.py.in,
+	  tests/test-pokerchildren.py.in, tests/test-pokerclient.py.in,
+	  tests/test-pokerclientpackets.py.in,
+	  tests/test-pokerdatabase.py.in, tests/test-pokerdisplay2d,
+	  tests/test-pokerdisplay2d.py.in, tests/test-pokerexplain.py.in,
+	  tests/test-pokergameclient.py.in,
+	  tests/test-pokerinteractor.py.in,
+	  tests/test-pokerinterface.py.in, tests/test-pokerlock.py.in,
+	  tests/test-pokermemcache.py.in,
+	  tests/test-pokernetworkconfig.py.in,
+	  tests/test-pokerpackets.py.in, tests/test-pokerrenderer.py.in,
+	  tests/test-protocol.py.in, tests/test-pygame,
+	  tests/test-pygame.py.in, tests/test-quit.py.in,
+	  tests/test-servercrash.py.in, tests/test-string.py.in,
+	  tests/test-svg2gtk.py.in, tests/test-tourneytablebalance.py.in,
+	  tests/test-unittestgui.cpp, tests/test-unittesthandhistory.cpp,
+	  tests/test-unittestlobby.cpp, tests/test-unittestmain.cpp,
+	  tests/test-unittestoutfits.cpp,
+	  tests/test-unittesttournaments.cpp, tests/test-upgrade.py.in,
+	  tests/testbirthday.php.in, tests/testclock.py,
+	  tests/testcurrency.php.in, tests/testerrorfilter.py,
+	  tests/testfilter.py, tests/testmessages.py, tests/testpackets.py,
+	  tests/testwebservice.php.in, tests/upgrade-rsync,
+	  tests/upgrade.in, tests/vncpasswd: remove all occurences of
+	  poker2d and pokerui related files. task #6711
+	* pokernetwork/pokerdatabase.py, tests/test-pokerdatabase.py.in:
+	  When connecting to MySQL use the reconnect = 1 parameter to
+	  transparently reconnect when the connection is lost.
+	* pokernetwork/pokerpackets.py: s/autoblind_ante/auto_blind_ante/
+	* conf/poker.bot.xml.in, conf/poker.client.xml.in,
+	  examples/poker.bot.xml, examples/poker.server-monotone.xml,
+	  examples/poker.server.xml, pokerprizes/poker.prizes.xml.in,
+	  pokerstats/poker.stats.xml.in: update XML tag to 2.0.0
+
+2009-08-14  Loic Dachary <loic@dachary.org>
+
+	* conf/poker.server.xml.in: remove obsolete example of
+	  countfilter.py
+
+2009-08-13  Loic Dachary <loic@dachary.org>
+
+	* pokerclient2d/poker2d.xml.in, tests/conf/poker.client.xml.in,
+	  tests/test-clientserver.py.in: Bump poker-network to version
+	  2.0.0 ( not backward compatible )
+	* Makefile.am, configure.ac, pokernetwork/countfilter.py,
+	  pokernetwork/pokeravatar.py, pokernetwork/pokermemcache.py,
+	  pokernetwork/pokerservice.py, pokernetwork/pokersite.py,
+	  pokernetwork/pokertable.py, pokernetwork/server.py,
+	  tests/Makefile.am, tests/test-countfilter.py.in,
+	  tests/test-pokeravatar.py.in, tests/test-pokerclient.py.in,
+	  tests/test-pokerservice.py.in, tests/test-pokersite.py.in,
+	  tests/test-pokertable.py.in, tests/test-proxyfilter.py.in,
+	  tests/test-tourneytablebalance.py.in, tests/testmessages.py:
+	  merge -c 6138 -c 6139 -c 6142 into the trunk to implement
+	  multi-session in version 2.0.0 #6690
+
+2009-08-12  Loic Dachary <loic@dachary.org>
+
+	* ChangeLog, NEWS, debian/changelog, pokernetwork/__init__.py,
+	  pokernetwork/pokersite.py: Bump poker-network to version 2.0.0 (
+	  not backward compatible )
 
 2009-08-03  Loic Dachary <loic@dachary.org>
 
