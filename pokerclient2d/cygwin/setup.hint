@@ -1,8 +1,0 @@
-#pokerclient2d
-sdesc: "The client library implements the poker-network protocol for the client."
-ldesc: "The client library implements the poker-network protocol for the client.
-It runs a poker-engine identical to the one used by the server and uses it to simplify the implementation of a client.
-For instance it creates an event indicating that the player lost position although the server does not send such a packet.
-A simple minded bot is provided as an example usage of the client library."
-category: Devel
-requires: cygwin

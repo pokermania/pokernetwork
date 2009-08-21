@@ -25,13 +25,7 @@
 # 
 ACLOCAL_AMFLAGS = -I config
 
-if POKER2D
-  POKER2D_SUBDIRS = pokerclient2d
-else
-  POKER2D_SUBDIRS = 
-endif
-
-SUBDIRS = ${POKER2D_SUBDIRS} pokerweb pokernetwork/munin tests po pokerstats pokerprizes
+SUBDIRS = pokerweb pokernetwork/munin tests pokerstats pokerprizes
 
 pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
@@ -41,7 +35,6 @@ MAINTAINERCLEANFILES = INSTALL Makefile.in aclocal.m4 configure \
 	$(filter-out %.m4,$(wildcard config/[a-z]*)) 
 
 nobase_dist_pkgdata_DATA = \
-	conf/poker.client.xml \
 	conf/poker.bot.xml \
 	conf/poker.server.xml \
 	conf/poker.pem \
@@ -49,12 +42,6 @@ nobase_dist_pkgdata_DATA = \
 	upgrades/poker.bot/1.0.11-1.0.12.xsl \
 	upgrades/poker.bot/1.0.14-1.0.15.xsl \
 	upgrades/poker.bot/1.0.31-1.0.32.xsl \
-	upgrades/poker.client/1.0.5-1.0.6.xsl \
-	upgrades/poker.client/1.0.11-1.0.12.xsl \
-	upgrades/poker.client/1.0.12-1.0.13.xsl \
-	upgrades/poker.client/1.0.14-1.0.15.xsl \
-	upgrades/poker.client/1.0.21-1.0.22.xsl \
-	upgrades/poker.client/1.0.31-1.0.32.xsl \
 	upgrades/poker.server/1.0.5-1.0.6.xsl \
 	upgrades/poker.server/1.0.11-1.0.12.xsl \
 	upgrades/poker.server/1.0.12-1.0.13.xsl \
@@ -116,16 +103,6 @@ sbin_SCRIPTS = \
 cgidir = ${libdir}/cgi-bin/poker-network
 cgi_SCRIPTS = \
 	pokernetwork/pokersql
-
-pokeruidir = ${pythondir}/pokerui
-pokerui_PYTHON = \
-	pokerui/pokerrenderer.py \
-	pokerui/pokerinterface.py \
-	pokerui/pokerinteractor.py \
-	pokerui/pokerdisplay.py \
-	pokerui/__init__.py \
-	pokerui/pokeranimation.py \
-	pokerui/pokerchat.py
 
 twistedpluginsdir = ${pythondir}/twisted/plugins
 twistedplugins_PYTHON = \
@@ -193,8 +170,6 @@ EXTRA_DIST = \
 	examples/poker.server.xml \
 	examples/poker.server-monotone.xml \
 	examples/poker.server-cygwin.xml \
-	examples/interface_dummy_server.py \
-	examples/interface.py \
 	examples/xmlrpc-soap.py \
 	examples/run-pokerserver \
 	examples/stress/bots.sh \
@@ -225,9 +200,7 @@ EXTRA_DIST = \
         database/pokerdatabaseupgrade.8.in \
         database/pokerdatabase.5.in \
         conf/poker.bot.xml.in \
-        conf/poker.client.xml.in \
         conf/poker.server.xml.in \
-	poker-client-specs.odp \
 	po/Makevars.template \
         po/raw.string \
 	HOWTO-install-from-sources

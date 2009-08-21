@@ -1158,8 +1158,8 @@ PacketPokerTableJoin():
 
         (b) a packet, PACKET_POKER_TABLE, with serial 0 will be sent.  It
             will contain no meaningful information.  (THIS BEHAVIOR IS
-            DEPRECATED, and is left only for older clients such as
-            poker2d.  New clients should not rely on this behavior.)
+            DEPRECATED, and is left only for older clients.
+            New clients should not rely on this behavior.)
 
   (2) If the player cannot join the table for any reason (other than the
       table is FULL (as per (1) above), two packets will be sent to the
@@ -1175,7 +1175,7 @@ PacketPokerTableJoin():
 
        (b) a packet, PACKET_POKER_TABLE, with serial 0 will be sent.  It
            will contain no meaningful information.  (THIS BEHAVIOR IS
-           DEPRECATED, and is left only for older clients such as poker2d.
+           DEPRECATED, and is left only for older clients.
            New clients should not rely on this behavior.)
 
 Direction: server <= client

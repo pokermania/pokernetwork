@@ -61,7 +61,6 @@ Other GNU/Linux or Unices :
         ./bootstrap
         ./configure 
         make ; make install
-        If the GTK client is not wanted, ./configure --disable-poker2d
 
         If this is your first installation, you need to fill the
         MySQL root user name and password in ${pkgsysconfdir}/poker.server.xml.
@@ -79,7 +78,6 @@ Usage
 
 Server: /usr/local/sbin/pokerserver
 Poker Bot to practice: /usr/local/sbin/pokerbot
-Client: /usr/local/games/poker2d
 
 ======================================================================
 Requirements

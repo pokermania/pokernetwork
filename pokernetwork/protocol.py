@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #
 # This software's license gives you freedom; you can copy, convey,

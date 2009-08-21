@@ -1,7 +1,7 @@
 #!@PYTHON@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2006 Mekensleep <licensing@mekensleep.com>
 #
@@ -30,7 +30,6 @@ sys.path.insert(0, "..")
 
 import libxml2
 
-#from pokerclient2d.poker2d import PokerClientFactory2D
 import socket
 import time
 from twisted.trial import unittest, runner, reporter
@@ -52,7 +51,6 @@ silence_all_messages()
 from pokernetwork import dispatch
 twisted.internet.base.DelayedCall.debug = True
 
-from pokerui import pokerinterface
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
@@ -108,7 +106,6 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
   
-  <user path="~/.poker2d"/>
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path> 
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
@@ -1437,7 +1434,6 @@ settings_xml_client_noChatNoDelays = """<?xml version="1.0" encoding="ISO-8859-1
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
 
-  <user path="~/.poker2d"/>
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
@@ -1461,7 +1457,6 @@ settings_xml_client_delaysWithRoundNoBlindAnte = """<?xml version="1.0" encoding
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
 
-  <user path="~/.poker2d"/>
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>

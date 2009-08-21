@@ -38,24 +38,9 @@ DEB_MAKE_CHECK_TARGET = $(if $(findstring nocheck,$(DEB_BUILD_OPTIONS)),,check)
 
 is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
 
-#$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
-#	AUTOMAKE=automake-1.9 ACLOCAL=aclocal-1.9 autoreconf --install
-#	chmod a+x $@
-
-# override in order to add dependency to configure (should be a :: rule instead of a : rule)
-#$(DEB_BUILDDIR)/config.status: $(DEB_SRCDIR)/configure
-#	chmod a+x $(DEB_CONFIGURE_SCRIPT)
-#	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
-
 binary-install/python-poker-network::
 	-dh_pycentral -ppython-poker-network
 	dh_python -ppython-poker-network
-
-DEB_DH_MAKESHLIBS_ARGS_python-poker2d := -n
-
-binary-install/python-poker2d::
-	-dh_pycentral -ppython-poker2d
-	dh_python -ppython-poker2d
 
 binary-install/python-poker-stats::
 	-dh_pycentral -ppython-poker-stats

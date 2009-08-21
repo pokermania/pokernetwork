@@ -1,9 +1,0 @@
-# List of source files containing translatable strings.
-#[encoding: UTF-8]
-pokerclient2d/data/interface/interface.glade
-pokerclient2d/lobby.c
-pokerclient2d/tournaments.c
-pokerclient2d/hand_history.c
-pokerui/pokerinterface.py
-pokerui/pokerrenderer.py
-po/raw.string

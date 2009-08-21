@@ -41,10 +41,7 @@ AC_PATH_PROG(TOUCH, [touch])
 AC_PATH_PROG(SLEEP, [sleep])
 AC_PATH_PROG(MYSQL, [mysql])
 AC_SUBST(MYSQL)
-AC_PATH_PROG(VALGRIND, [valgrind])
-AC_PATH_PROG(XVFB, [Xvfb], ,[$PATH:/usr/bin/X11:/usr/X11R6/bin])
 AC_PATH_PROG(PERL, [perl])
-AC_PATH_PROGS(WWWBROWSER, [x-www-browser htmlview firefox iceweasel mozilla konqueror epiphany dillo links])
 
 AC_PATH_PROG(PHP, [php])
 AC_PATH_PROG(PHPUNIT, [phpunit])
@@ -78,60 +75,10 @@ AC_SUBST(pkglibdir, [$pkglibdir])
 pkgdatadir=$datadir/$PACKAGE
 AC_SUBST(pkgdatadir, [$pkgdatadir])
 
-#
-# AC_PROG_CXX & al are only used if poker2d is enabled but needs to be tested outside
-# of the conditional to prevent autoconf misbehaviour. https://gna.org/support/?2197
-#
 AC_PROG_MAKE_SET
 AC_GNU_SOURCE
-AC_PROG_CXX
-AC_PROG_LIBTOOL
 
-AC_ARG_ENABLE(poker2d, [  --disable-poker2d do not build a GTK based client], [
-    poker2d=false			# for AM_CONDITION
-
-    AM_PATH_PYTHON([2.3])
-    AM_CONDITIONAL([PYTHON_2_3], [false])
-    AM_CONDITIONAL([PYTHON_2_4], [false])
-    AM_CONDITIONAL([PYTHON_2_5], [false])
-    AM_CONDITIONAL([PYTHON_2_6], [false])
-
-], [
-    if test "$GXX" = "yes" -a "$ac_test_CXXFLAGS" != set ; then
-      if test "$enable_debug" = "yes" ; then
-        CFLAGS="-pipe -g -Wall -W"
-        CXXFLAGS="-pipe -g -Wall -Wpointer-arith"
-      else
-        CFLAGS="-pipe -O3 -Wall -W"
-        CXXFLAGS="-pipe -O3 -Wall -Wpointer-arith"
-      fi
-    fi
-
-    AC_EXEEXT
-    AC_OBJEXT
-    AC_ISC_POSIX
-    AC_HEADER_STDC
-    AC_C_INLINE
-    
-    AC_LANG(C)
-    
-    test x$prefix = xNONE && prefix="$ac_default_prefix"
-    test x$exec_prefix = xNONE && exec_prefix="$prefix"
-
-    ALL_CC_PYTHON
-    
-    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.0, , [AC_MSG_ERROR(glib2 is a mandatory library)])
-    PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.4.0, , [AC_MSG_ERROR(glade2 is a mandatory library)])
-
-    AC_SUBST(POKER2D_PKGDATADIR, [`eval eval eval echo $pkgdatadir/poker2d`])
-
-    PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk"
-    PYTHON_DEPENDENCIES="$PYTHON_DEPENDENCIES gtk.glade"
-
-    poker2d=true			# for AM_CONDITION
-])
-
-PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.0.21,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
+PKG_CHECK_MODULES(POKER_ENGINE, poker-engine >= 1.3.4,, [AC_MSG_ERROR(poker-engine is a mandatory library)])
 
 python_script="
 import imp
@@ -190,8 +137,6 @@ if ! $found ; then
   AC_MSG_ERROR([None of the python found on the system are able to satisfy the dependencies (check the above error messages for more information)])
 fi
 
-AM_CONDITIONAL([POKER2D], [test x$poker2d = xtrue])	# For use in Makefile.am
-
 AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval eval eval echo $pkgdatadir`])
 AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval eval eval echo $pkglibdir`])
 AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval eval eval echo $pkgsysconfdir`])
@@ -215,12 +160,6 @@ AC_ARG_WITH(poker-www-host,
     [ POKER_WWW_HOST=$with_poker_www_host ],
     [ POKER_WWW_HOST=localhost ] )
 AC_SUBST(POKER_WWW_HOST)
-
-AC_ARG_WITH(wwwbrowser,
-[  --with-wwwbrowser=<browser>
-                     full path of web browser (default autodetect). ],
-    [ WWWBROWSER=$with_wwwbrowser ] )
-AC_SUBST(WWWBROWSER)
 
 AC_ARG_WITH(poker-database,
 [  --with-poker-database=<name>
@@ -295,20 +234,6 @@ AS_IF([test "x$with_test_dbroot_password" != x],
             fi
            ])
 
-AM_UNITTEST
-
-# Generate files
-if test x$poker2d = xtrue ; then
-        AC_CONFIG_FILES([
-        pokerclient2d/Makefile
-        pokerclient2d/poker2d.6
-        pokerclient2d/poker2d
-        pokerclient2d/poker2d.xml
-        pokerclient2d/data/Makefile
-        pokerclient2d/upgrades/1.0.7-1.0.8.xsl
-        ])
-fi
-
 AC_CONFIG_FILES([
         database/pokerdatabaseupgrade
         tests/run
@@ -345,19 +270,12 @@ AC_CONFIG_FILES([
         tests/test-proxyfilter.py
         tests/test-nullfilter.py
         tests/test-string.py
-        tests/test-pokerchildren.py
         tests/test-webservice.py
 	tests/test-pokerinteractor.py
 	tests/test-pokerrenderer.py
 	tests/test-protocol.py
 	tests/test-upgrade.py
 	tests/test-quit.py
-	tests/test-pokerinterface.py
-	tests/test-pokerdisplay2d.py
-	tests/test-pygame.py
-	tests/test-svg2gtk.py
-	tests/test-gamewindow.py
-	tests/test-poker2d.py
 	tests/test-leak.py
 	tests/test-leak-no-trial.py
 	tests/test-leak-reference.py
@@ -382,12 +300,10 @@ AC_CONFIG_FILES([
         database/pokerdatabaseupgrade.8
         database/pokerdatabase.5
         conf/poker.bot.xml
-        conf/poker.client.xml
         conf/poker.server.xml
         pokerweb/Makefile
         tests/Makefile
         pokernetwork/munin/Makefile
-        tests/conf/poker2d.xml
         Makefile
         po/Makefile.in
 ])

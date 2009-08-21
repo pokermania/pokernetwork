@@ -1,7 +1,7 @@
 #!@PYTHON@
 # -*- py-indent-offset: 4; coding: iso-8859-1; mode: python -*-
 #
-# Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of

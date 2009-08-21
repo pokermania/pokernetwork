@@ -1,7 +1,7 @@
 #!@BASH@
 # -*- sh -*-
 #
-# Copyright (C) 2008 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep <licensing@mekensleep.com>x
 #                    24 rue vieille du temple, 75004 Paris
 #
@@ -94,7 +94,6 @@ COVERAGE_100_PERCENT="
 ../pokernetwork/pokersite
 ../pokernetwork/packets
 ../pokernetwork/version
-../pokerui/__init__
 "
 
 case "$1" in 
@@ -124,61 +123,6 @@ case "$1" in
         ;;
 
 *upgrade) ./upgrade ;;
-
-*poker-interface) 
-        FONTPATHS="/usr/share/fonts/X11/misc /usr/share/X11/fonts/misc"
-        fontpath_found=false
-        for fontpath in $FONTPATHS ; do
-            [ -d $fontpath ] && fontpath_found=true
-        done
-        INTERFACE_PORT=19579
-        if [ "@XVFB@" ] && $fontpath_found ; then
-            export DISPLAY=:20
-            killall -9 @XVFB@ 2> /dev/null || /bin/true
-            sleep 1
-	    # -fbdir framebuffer
-            @XVFB@ ${DISPLAY} -ac -nolisten TCP -screen 0 1024x768x24 &
-            xvfb_pid=$!
-            if [ -z "$xvfb_pid" ] ; then
-                echo "there is a problem to start Xvfb (ignored)"
-            fi
-            @PYTHON@ ${srcdir}/test-poker-interface.py --verbose 1 --port ${INTERFACE_PORT} &
-            testpid=$!
-            killbackground="kill -9 $testpid; killall -9 @XVFB@"
-            trap "$killbackground ; exit 1" INT QUIT
-            trap "$killbackground" EXIT
-            sleep 2
-            $VALGRIND ../pokerclient2d/poker-interface --port ${INTERFACE_PORT} --datadir=${top_srcdir}/pokerclient2d/data --gtkrc=${top_srcdir}/pokerclient2d/data/Aero/gtkrc --glade=${top_srcdir}/pokerclient2d/data/interface/interface.glade
-        else
-            echo "skip $1 because Xvfb is not known or none of the $FONTPATHS directories exist"
-        fi
-        ;;
-
-*pokerdisplay2d.py|*gamewindow.py|*svg2gtk.py|*poker2d.py|*unittestmain) 
-        export GLADE_FILE=@top_srcdir@/pokerclient2d/data/interface/interface.glade
-        FONTPATH=/usr/share/fonts/X11/misc
-        INTERFACE_PORT=19579
-        if [ "@XVFB@" -a -d "$FONTPATH" ] ; then
-            export DISPLAY=:21
-            killall -9 @XVFB@ 2> /dev/null || /bin/true
-            sleep 1
-	    # -fbdir framebuffer
-            @XVFB@ ${DISPLAY} -ac -nolisten TCP -screen 0 1024x768x24 &
-            xvfb_pid=$!
-            if [ -z "$xvfb_pid" ] ; then
-                echo "there is a problem to start Xvfb (ignored)"
-            fi
-            if expr "$1" : ".*.py" > /dev/null ; then
-                sleep 2
-                @PYTHON@ -u ${srcdir}/coverage.py -x "$1"
-            else
-                ./$1
-            fi
-            killall -9 @XVFB@
-        else
-            echo "skip $1 because Xvfb is not known or $FONTPATH is not a directory"
-        fi
-        ;;
 
 *.php) 
         file=$(basename $1)

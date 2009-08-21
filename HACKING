@@ -24,8 +24,3 @@ Part of the web pages will work with php4 but some require php5.
 The logs of the server and the bots can be found in pokerserver.log
 and pokerbot.log.
 
-The 2D client can be run as follows:
-
-$ cd pokerclient2d
-$ GTK2_RC_FILES=data/Aero/gtkrc python poker2d poker2d-test.xml
-

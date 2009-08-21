@@ -1,1 +1,0 @@
-Xwnc.exe -localhost -to 200000 -rfbwait 180000 -depth 24 -geometry 1280x1024 :1
