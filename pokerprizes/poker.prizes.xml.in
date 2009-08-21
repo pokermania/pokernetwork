@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.5" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@POKER_NETWORK_PKGDATADIR@/prizes/schema.sql"/>
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="2.0.0" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@POKER_NETWORK_PKGDATADIR@/prizes/schema.sql"/>
