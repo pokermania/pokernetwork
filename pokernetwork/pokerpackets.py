@@ -4521,7 +4521,7 @@ serial: integer uniquely identifying a player.
 currency_serial: int currency id (criteria for search)
 variant: base name of the variant sought.
 betting_structure: base name of the betting structure.
-autoblind_ante: boolean, if True server will act as if
+auto_blind_ante: boolean, if True server will act as if
                 PacketPokerAutoBlindAnte() were also sent by client.
                 Defaults to False.
 """
