@@ -4,6 +4,7 @@
   	autodeal="yes"
 	simultaneous="4"
 	verbose="0"
+        poker_network_version="2.0.0"
 	chat="yes" >
 
   <delays autodeal="3" round="2" position="1" showdown="5" finish="3" />

@@ -41,43 +41,43 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     #--------------------------------------------------------------
     def setUp(self):
         self.Config = pokernetworkconfig.Config(['.'])
-        shutil.copyfile('@srcdir@/conf/poker.client.xml.in', 'poker.client.xml.in')
+        shutil.copyfile('@srcdir@/conf/poker.server.xml.in', 'poker.server.xml.in')
     
     #--------------------------------------------------------------    
     def tearDown(self):
         del self.Config
-        os.remove('poker.client.xml.in')
+        os.remove('poker.server.xml.in')
         
     #--------------------------------------------------------------    
     def test_loadFromString(self):
 
         self.Config.loadFromString("""<?xml version="1.0" encoding="ISO-8859-1"?>
-<sequence>
-</sequence>
+<server>
+</server>
 """)
             
         self.assertNotEqual(self.Config.header, None)
 
     #--------------------------------------------------------------    
     def test_load(self):
-        self.assertEqual(True, self.Config.load("poker.client.xml.in"))
+        self.assertEqual(True, self.Config.load("poker.server.xml.in"))
         pokernetworkconfig.Config.upgrades_repository = '@srcdir@'
-        self.assertEqual(True, self.Config.load("poker.client.xml.in"))
+        self.assertEqual(True, self.Config.load("poker.server.xml.in"))
         self.Config.checkVersion = lambda field, version, repository: False
-        self.assertEqual(False, self.Config.load("poker.client.xml.in"))
+        self.assertEqual(False, self.Config.load("poker.server.xml.in"))
         
     #--------------------------------------------------------------    
     def test_notify(self):
         def f(config):
             pass
         self.Config.loadFromString("""<?xml version="1.0" encoding="ISO-8859-1"?>
-<sequence name='value'>
-</sequence>
+<server name='value'>
+</server>
 """)
         self.Config.notifyUpdates(f)
         self.Config.denotifyUpdates(f)
         self.Config.notifyUpdates(f)
-        self.Config.headerSet("/sequence/@name", "othervalue")
+        self.Config.headerSet("/server/@name", "othervalue")
         
 #--------------------------------------------------------------
 def GetTestSuite():

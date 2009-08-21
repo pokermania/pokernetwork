@@ -30,7 +30,6 @@ EXTRA_DIST = \
 	pokersql.xml \
 	pokersqlfail.xml \
 	poker.test18pokerclient.xml \
-	upgrade-rsync \
 	conf/poker.bot.xml.in \
 	conf/poker.server.xml.in \
 	poker-engine/poker.1-2-no-limit.xml \

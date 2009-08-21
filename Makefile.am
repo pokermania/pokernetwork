@@ -57,7 +57,6 @@ pokernetwork_PYTHON = \
 	pokernetwork/attrpack.py \
 	pokernetwork/client.py \
 	pokernetwork/currencyclient.py \
-	pokernetwork/dispatch.py \
 	pokernetwork/nullfilter.py \
 	pokernetwork/packets.py \
 	pokernetwork/pokerauth.py \
@@ -66,7 +65,6 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerbot.py \
 	pokernetwork/pokerbotlogic.py \
 	pokernetwork/pokercashier.py \
-	pokernetwork/pokerchildren.py \
 	pokernetwork/pokerclient.py \
 	pokernetwork/pokerclientpackets.py \
 	pokernetwork/pokerdatabase.py \
@@ -140,29 +138,9 @@ EXTRA_DIST = \
 	LICENSE \
 	GPLv3 \
 	HACKING \
-	NIHPHOBIA \
+	config/apg.m4 \
 	config/python.m4 \
-	config/ccpython.m4 \
 	config/python-depends.m4 \
-	config/longdouble.m4 \
-	config/xsize.m4 \
-	config/longlong.m4 \
-	config/uintmax_t.m4 \
-	config/inttypes_h.m4 \
-	config/lcmessage.m4 \
-	config/inttypes.m4 \
-	config/size_max.m4 \
-	config/glibc21.m4 \
-	config/inttypes-pri.m4 \
-	config/wchar_t.m4 \
-	config/intdiv0.m4 \
-	config/intmax.m4 \
-	config/ulonglong.m4 \
-	config/wint_t.m4 \
-	config/stdint_h.m4 \
-	config/signed.m4 \
-	config/codeset.m4 \
-	config/printf-posix.m4 \
 	examples/README \
 	examples/memcache-client \
 	examples/poker.bot.xml \
@@ -199,10 +177,7 @@ EXTRA_DIST = \
         database/pokerdatabaseupgrade.8.in \
         database/pokerdatabase.5.in \
         conf/poker.bot.xml.in \
-        conf/poker.server.xml.in \
-	po/Makevars.template \
-        po/raw.string \
-	HOWTO-install-from-sources
+        conf/poker.server.xml.in
 
 clean-local:
 	rm -f */*.py[co]
