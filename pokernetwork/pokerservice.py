@@ -1749,6 +1749,7 @@ class PokerService(service.Service):
             elif hasattr(packet, "game_id"):
                 where = "table_serial = " + str(packet.game_id)
             else:
+                cursor.close()
                 return None
 
             cursor.execute("SELECT host, port, path FROM route,resthost WHERE " +
