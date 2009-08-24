@@ -82,7 +82,7 @@ case "$1" in
             server_conf_did_not_exist=false
         fi
         pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --reference=/usr/share/poker-network/conf /etc/poker-network 
-	for file in bot client server ; do
+	for file in bot server ; do
             pokerconfigupgrade --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=/usr/share/poker-network/upgrades/poker.$file /etc/poker-network/poker.$file.xml
 	done
 
@@ -109,7 +109,7 @@ case "$1" in
             rm -f /etc/poker-network/lockfile
 	fi
 
-        for conf_file in poker.client.xml poker.bot.xml ; do
+        for conf_file in poker.bot.xml ; do
             if egrep '%(HOST|WWW)%' /etc/poker-network/$conf_file > /dev/null
             then
                 sed -e "s/\%HOST\%/$poker_network_host/" \
