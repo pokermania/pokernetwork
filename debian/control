@@ -8,7 +8,7 @@ Standards-Version: 3.8.1
 
 Package: python-poker-network
 Section: python
-Architecture: any
+Architecture: all
 Suggests: mysql-server, munin-node
 Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
@@ -29,7 +29,7 @@ Description: multiplayer poker server and client library
 Package: poker-web
 Section: web
 Priority: optional
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends}, dbconfig-common, ucf, php5 | php5-cgi, php5-mysql, php5-gd, apache2, php-pear, gettext
 Description: Web interface to a poker-network server
  Play poker with other players connected on a poker-network server
@@ -38,7 +38,7 @@ Description: Web interface to a poker-network server
 
 Package: python-poker-stats
 Section: python
-Architecture: any
+Architecture: all
 Priority: optional
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
@@ -50,7 +50,7 @@ Description: statistics poker-network client
 
 Package: python-poker-prizes
 Section: python
-Architecture: any
+Architecture: all
 Priority: optional
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
