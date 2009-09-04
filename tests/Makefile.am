@@ -91,6 +91,7 @@ TESTS = coverage-reset \
 	test-proxy.py \
 	test-pokerserver.py \
 	test-pokerserver-run-load.py \
+	test-pokerrestclient.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \

@@ -274,6 +274,7 @@ AC_CONFIG_FILES([
 	tests/test-leak-exarkun.py
 	tests/test-pokerserver.py
 	tests/test-pokerserver-run-load.py
+	tests/test-pokerrestclient.py
         tests/testcurrency.php
         tests/testpoker.php
         tests/testbirthday.php

@@ -82,6 +82,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/protocol.py \
 	pokernetwork/proxy.py \
 	pokernetwork/proxyfilter.py \
+	pokernetwork/pokerrestclient.py \
 	pokernetwork/server.py \
 	pokernetwork/user.py \
 	pokernetwork/userstats.py \
