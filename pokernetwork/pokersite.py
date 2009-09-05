@@ -2,6 +2,7 @@
 # -*- py-indent-offset: 4; coding: iso-8859-1 -*-
 #
 # Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2009 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,
@@ -406,6 +407,12 @@ class PokerSite(server.Site):
         for path in settings.header.xpathEval("/server/rest_filter"):
             module = imp.load_source("poker_pipe", path.content)
             self.pipes.append(getattr(module, "rest_filter"))
+        resthost = settings.headerGetProperties("/server/resthost")
+        if resthost:
+            resthost = resthost[0]
+            self.resthost = ( resthost['host'], int(resthost['port']), resthost['path'] )
+        else:
+            self.resthost = None
 
     def message(self, string):
         print "PokerSite: " + string
@@ -432,7 +439,11 @@ class PokerSite(server.Site):
     def persistSession(self, session):
         if len(session.avatar.tables) <= 0 and len(session.avatar.tourneys) <= 0:
             session.expire()
+            if self.resthost:
+                self.memcache.delete(session.uid)
             return False
+        if self.resthost:
+            self.memcache.set(session.uid, self.resthost, time = self.cookieTimeout)
         return True
         
     def updateSession(self, session):
@@ -465,7 +476,7 @@ class PokerSite(server.Site):
         if not isinstance(uid, str):
             raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         if not isinstance(auth, str):
-            raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
+            raise Exception("auth is not str: '%s' %s" % (auth, type(auth)))
         memcache_serial = self.memcache.get(auth)
         if memcache_serial == None:
             #

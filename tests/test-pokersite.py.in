@@ -2,6 +2,7 @@
 # -*- mode: python -*-
 #
 # Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2009 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
 # This software's license gives you freedom; you can copy, convey,
@@ -768,13 +769,24 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             the session expires after persistSession, unless there are tables
             """
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6">
+<resthost host="HOST" port="7777" path="PATH" />
+</server>"""
+            settings = pokernetworkconfig.Config([])
+            settings.loadFromString(settings_xml)
+            service = PokerServiceMockup()
+            site = pokersite.PokerSite(settings, pokersite.PokerResource(service))
+
             session = self.site.makeSession('uid', 'auth')
             session.avatar.tables[1] = 'table'
-            self.assertEquals(True, self.site.persistSession(session))
+            self.assertEquals(True, site.persistSession(session))
             self.assertEquals(False, session.expired)
+            self.assertEquals(('HOST', 7777, 'PATH'), site.memcache.get('uid'))
             session.avatar.tables = []
-            self.assertEquals(False, self.site.persistSession(session))
+            self.assertEquals(False, site.persistSession(session))
             self.assertEquals(True, session.expired)
+            self.assertEquals(None, site.memcache.get('uid'))
 
 def Run():
     loader = runner.TestLoader()

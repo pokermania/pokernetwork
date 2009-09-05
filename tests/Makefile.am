@@ -88,6 +88,7 @@ TESTS = coverage-reset \
 	test-pokernetworkconfig.py \
 	test-proxyfilter.py \
 	test-nullfilter.py \
+	test-sessionproxyfilter.py \
 	test-proxy.py \
 	test-pokerserver.py \
 	test-pokerserver-run-load.py \

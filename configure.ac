@@ -265,6 +265,7 @@ AC_CONFIG_FILES([
         tests/test-pokertable.py
         tests/test-proxy.py
         tests/test-proxyfilter.py
+        tests/test-sessionproxyfilter.py
         tests/test-nullfilter.py
         tests/test-webservice.py
 	tests/test-protocol.py
