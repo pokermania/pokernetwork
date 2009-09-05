@@ -4596,6 +4596,20 @@ players:	   Serials of the players participating in the tournament.
         )
 
 Packet.infoDeclare(globals(), PacketPokerCreateTourney, Packet, "POKER_CREATE_TOURNEY", 166) # 166 # 0xa6 # %SEQ%
+########################################
+class PacketPokerLongPoll(Packet):
+    """ """
+    
+    info = Packet.info
+
+Packet.infoDeclare(globals(), PacketPokerLongPoll, Packet, "POKER_LONG_POLL", 167) # 167 # 0xa7 # %SEQ%
+########################################
+class PacketPokerLongPollReturn(Packet):
+    """ """
+    
+    info = Packet.info
+
+Packet.infoDeclare(globals(), PacketPokerLongPollReturn, Packet, "POKER_LONG_POLL_RETURN", 168) # 168 # 0xa8 # %SEQ%
 
 
 _TYPES = range(50,169)
