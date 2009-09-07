@@ -1,3 +1,9 @@
+2009-09-06  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* Makefile.am (install-data-local, all-local): Removed 'client'
+	from list in for loop, since r6200 deleted the files it would
+	refer to.
+
 2009-08-21  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0

@@ -187,7 +187,7 @@ clean-local:
 
 all-local:
 	export PYTHONPATH=${srcdir} ; \
-	for file in bot client server ; do \
+	for file in bot server ; do \
 		${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.$$file ${srcdir}/conf/poker.$$file.xml.in ; \
 	done ; \
 	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/examples/poker.server.xml ${srcdir}/examples/poker.server-monotone.xml ; \
@@ -198,7 +198,7 @@ all-local:
 install-data-local:
 	mkdir -p "${DESTDIR}${pkgsysconfdir}"
 	cp ${srcdir}/conf/poker.pem "${DESTDIR}${pkgsysconfdir}"
-	for file in bot client server ; do \
+	for file in bot server ; do \
 		cp conf/poker.$$file.xml "${DESTDIR}${pkgsysconfdir}" ; \
 		export PYTHONPATH=${srcdir} ; \
 		${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.$$file "${DESTDIR}${pkgsysconfdir}/poker.$$file.xml" ; \
