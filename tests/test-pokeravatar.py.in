@@ -3982,11 +3982,12 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         def handleLongPoll(x):
             avatar = self.service.avatars[0]
+            client = avatar.getOrCreateRestClient(('host', 11111, 'path'), 2)
             d = avatar.handlePacketDefer(PacketPokerLongPoll())
             self.assertEquals(d, avatar._longpoll_deferred)
             self.assertEquals(False, avatar._block_longpoll_deferred)
             avatar._longpoll_deferred.addCallback(lambda packets: self.assertEquals(PACKET_PING, packets[0].type))
-            avatar.sendPacket(PacketPing())
+            client.longPollCallback([PacketPing()])
             return d
         d.addCallback(handleLongPoll)
         return d

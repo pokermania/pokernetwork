@@ -378,10 +378,10 @@ class PokerAvatar:
         ( host, port, path ) = resthost
         if game_id:
             if not self.game_id2rest_client.has_key(game_id):
-                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, self.service.verbose)
+                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, lambda packets: self.incomingDistributedPackets(packets, game_id), self.service.verbose)
             client = self.game_id2rest_client[game_id]
         else:
-            client = PokerRestClient(host, port, path, self.service.verbose)
+            client = PokerRestClient(host, port, path, lambda packets: self.incomingDistributedPackets(packets, game_id), self.service.verbose)
         return client
             
     def distributePacket(self, packet, data, resthost, game_id):
@@ -409,6 +409,9 @@ class PokerAvatar:
         return self.resetPacketsQueue()
 
     def handlePacketDefer(self, packet):
+        if self.service.verbose > 2:
+            self.message("handlePacketDefer(%d): " % self.getSerial() + str(packet))
+
         if packet.type == PACKET_POKER_LONG_POLL:
             return self.longpollDeferred()
 

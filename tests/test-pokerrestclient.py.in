@@ -95,26 +95,88 @@ class PokerRestClientTestCase(unittest.TestCase):
             return d
       # --------------------------------------------------------------
       def test01_longPoll(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST', verbose=6, timeout=10)
+            def longPollCallback(packets):
+                  self.assertEquals(PACKET_PING, packets[0].type)
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 19481, '/POKER_REST', longPollCallback, verbose=6, timeout=10)
+                  def sendPacketData(client, data):
+                        self.assertSubstring('LongPoll', data)
+                        return '[ { "type": "PacketPing" } ]'
+            client = PokerRestClientTest()
             self.assertEquals(True, client.pendingLongPoll)
             self.assertEquals(None, client.timer)
             return client.queue
       # --------------------------------------------------------------
       def test02_longPollReturn(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST', verbose=6, timeout=10)
-            message = client.message
-            def checkMessageString(string):
-                  self.assertSubstring('PacketPokerLongPollReturn', string)
-                  message(string)
-            client.message = checkMessageString
-            client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
+            packets = []
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 19481, '/POKER_REST', lambda packets: None, verbose=6, timeout=10)
+                  def sendPacketData(client, data):
+                        packets.append(data)
+                        return "[]"
+            client = PokerRestClientTest()
+            d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
+            d.addCallback(lambda arg: self.assertSubstring('LongPollReturn', packets[1]))
+            d.addCallback(lambda arg: self.assertNotEquals(None, client.timer))
             return client.queue
       # --------------------------------------------------------------
-      def test03_longPollBis(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST', verbose=6, timeout=10)
+      def test03_longPollSchedule(self):
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 19481, '/POKER_REST', lambda packets: None, verbose=6, timeout=10)
+                  def sendPacketData(client, data):
+                        return "[]"
+            client = PokerRestClientTest()
             client.longPoll()
             self.assertNotEquals(None, client.timer)
+            client.clearTimeout()
             return client.queue
+      # --------------------------------------------------------------
+      def test04_sendPacketData(self):
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 19481, '/POKER_REST', lambda packets: None, verbose=6, timeout=10)
+                  def longPoll(client):
+                        pass
+            client = PokerRestClientTest()
+            d = client.sendPacketData('{"type": "PacketPokerTableSelect"}')
+            d.addCallback(lambda data: self.assertSubstring('PacketPokerTableList', data))
+            return d
+      # --------------------------------------------------------------
+      def test05_sendPacket(self):
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 19481, '/POKER_REST', lambda packets: None, verbose=6, timeout=10)
+                  def longPoll(client):
+                        pass
+            client = PokerRestClientTest()
+            d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
+            d.addCallback(lambda packets: self.assertEquals(PACKET_POKER_TABLE_LIST, packets[0].type))
+            return d
+      # --------------------------------------------------------------
+      def test06_404(self):
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 19481, '/POKER_REST2', lambda packets: None, verbose=6, timeout=10)
+                  def longPoll(client):
+                        pass
+            client = PokerRestClientTest()
+            d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
+            d.addCallback(lambda packets: self.assertEquals(PACKET_ERROR, packets[0].type))
+            return d
+      # --------------------------------------------------------------
+      def test07_connectionFailed(self):
+            class PokerRestClientTest(pokerrestclient.PokerRestClient):
+                  def __init__(client):
+                        pokerrestclient.PokerRestClient.__init__(client, '127.0.0.1', 20000, '/POKER_REST', lambda packets: None, verbose=6, timeout=10)
+                  def longPoll(client):
+                        pass
+            client = PokerRestClientTest()
+            d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
+            d.addCallback(lambda packets: self.assertEquals(PACKET_ERROR, packets[0].type))
+            return d
       
 class MockRequest:
       def finish(self): pass

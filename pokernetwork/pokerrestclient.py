@@ -30,7 +30,7 @@ class RestClientFactory(protocol.ClientFactory):
 
     protocol = client.HTTPPageGetter
     
-    def __init__(self, host, port, path, data, timeout):
+    def __init__(self, host, port, path, data, timeout = 10):
         self.timeout = timeout
         self.agent = "RestClient"
         self.headers = InsensitiveDict()
@@ -84,10 +84,9 @@ class RestClientFactory(protocol.ClientFactory):
             self.deferred.errback(reason)
 
 class PokerRestClient:
-
-    def __init__(self, host, port, path, verbose, timeout):
+    
+    def __init__(self, host, port, path, longPollCallback, verbose, timeout = 10):
         self.verbose = verbose
-        self.received = lambda packets: True;
         self.queue = defer.succeed(True)
         self.pendingLongPoll = False
         self.minLongPollFrequency = 0.01
@@ -98,6 +97,7 @@ class PokerRestClient:
         self.path = path
         self.timer = None
         self.timeout = timeout
+        self.longPollCallback = longPollCallback
         self.longPoll()
 
     def message(self, string):
@@ -108,32 +108,31 @@ class PokerRestClient:
             if self.verbose > 3:
                 self.message('sendPacket PacketPokerLongPollReturn')
             self.sendPacketData('{ "type": "PacketPokerLongPollReturn" }')
+        d = defer.Deferred()
+        d.addCallbacks(self.receivePacket, self.receiveError)
         self.queue.addCallback(lambda status: self.sendPacketData(data))
+        self.queue.chainDeferred(d)
         if packet.type == PACKET_POKER_LONG_POLL:
             self.pendingLongPoll = True
+        return d
 
     def receivePacket(self, data):
-        print "receivePacket", data
         if self.pendingLongPoll:
             self.scheduleLongPoll(0)
         self.pendingLongPoll = False
         args = simplejson.loads(data, encoding = 'UTF-8')
         args = pokersite.fromutf8(args)
         packets = pokersite.args2packets(args)
-        self.received(packets)
+        return packets
 
     def receiveError(self, data):
-        self.errorPacket(data)
-
-    def errorPacket(self, reason):
-        self.received([ PacketError(message = str(reason)) ])
+        return [ PacketError(message = str(data)) ]
     
     def sendPacketData(self, data):
         factory = RestClientFactory(self.host, self.port, self.path, data, self.timeout)
         reactor.connectTCP(self.host, self.port, factory)
-        factory.deferred.addCallbacks(self.receivePacket, self.receiveError)
-        self.queue.addCallback(lambda arg: factory.deferred)
         self.sentTime = seconds()
+        return factory.deferred
 
     def clearTimeout(self):
         if self.timer and self.timer.active():
@@ -150,7 +149,8 @@ class PokerRestClient:
             in_line = len(self.queue.callbacks)
             if in_line <= 0 and delta > self.longPollFrequency:
                 self.clearTimeout()
-                self.sendPacket(PacketPokerLongPoll(),'{ "type": "PacketPokerLongPoll" }');
+                d = self.sendPacket(PacketPokerLongPoll(),'{ "type": "PacketPokerLongPoll" }')
+                d.addCallback(self.longPollCallback)
             else:
                 self.scheduleLongPoll(delta)
         
