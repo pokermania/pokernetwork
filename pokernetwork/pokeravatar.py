@@ -362,6 +362,13 @@ class PokerAvatar:
             d = self._longpoll_deferred
             self._longpoll_deferred = None
             d.callback(packets)
+
+    def longPollReturn(self):
+        if self._longpoll_deferred:
+            packets = self.resetPacketsQueue()
+            d = self._longpoll_deferred
+            self._longpoll_deferred = None
+            d.callback(packets)        
             
     def handleDistributedPacket(self, request, packet, data):
         resthost, game_id = self.service.packet2resthost(packet)
@@ -444,7 +451,7 @@ class PokerAvatar:
             self.message("handlePacketLogic(%d): " % self.getSerial() + str(packet))
 
         if packet.type == PACKET_POKER_LONG_POLL_RETURN:
-            self.flushLongPollDeferred()
+            self.longPollReturn()
             return
 
         if packet.type == PACKET_POKER_EXPLAIN:

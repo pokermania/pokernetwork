@@ -4001,8 +4001,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         def handleLongPollReturn(x):
             avatar = self.service.avatars[0]
             d = avatar.handlePacketDefer(PacketPokerLongPoll())
-            avatar._packets_queue = ['foo']
-            d.addCallback(self.assertEquals, ['foo'])
+            avatar._packets_queue = []
+            d.addCallback(self.assertEquals, [])
             avatar.handlePacketLogic(PacketPokerLongPollReturn())
             return d
         d.addCallback(handleLongPollReturn)
