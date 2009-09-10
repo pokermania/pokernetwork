@@ -42,6 +42,7 @@ from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerexplain import PokerExplain
+from pokernetwork.pokerrestclient import PokerRestClient
 from twisted.internet import protocol, reactor, defer
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
@@ -62,6 +63,9 @@ class PokerAvatar:
         self.has_session = False
         self.bugous_processing_hand = False
         self.noqueuePackets()
+        self._block_longpoll_deferred = False
+        self._longpoll_deferred = None
+        self.game_id2rest_client = {}
 
     def __str__(self):
         return "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
@@ -247,6 +251,7 @@ class PokerAvatar:
         # This method was introduced when we added the force-disconnect as
         # the stop-gap.
         self._packets_queue.extend(newPackets)
+        self.flushLongPollDeferred()
         warnVal = int(.75 * self.service.getClientQueuedPacketMax())
         if len(self._packets_queue) >= warnVal:
             # If we have not warned yet that packet queue is getting long, warn now.
@@ -339,7 +344,74 @@ class PokerAvatar:
         else:
             return False
 
+    def longpollDeferred(self):
+        self._longpoll_deferred = defer.Deferred()
+        self.flushLongPollDeferred()
+        return self._longpoll_deferred
+
+    def blockLongPollDeferred(self):
+        self._block_longpoll_deferred = True
+        
+    def unblockLongPollDeferred(self):
+        self._block_longpoll_deferred = False
+        self.flushLongPollDeferred()
+
+    def flushLongPollDeferred(self):
+        if self._block_longpoll_deferred == False and self._longpoll_deferred and len(self._packets_queue) > 0:
+            packets = self.resetPacketsQueue()
+            d = self._longpoll_deferred
+            self._longpoll_deferred = None
+            d.callback(packets)
+            
+    def handleDistributedPacket(self, request, packet, data):
+        resthost, game_id = self.service.packet2resthost(packet)
+        if resthost:
+            return self.distributePacket(packet, data, resthost, game_id)
+        else:
+            return self.handlePacketDefer(packet)
+
+    def getOrCreateRestClient(self, resthost, game_id):
+        #
+        # no game_id means the request must be delegated for tournament
+        # registration or creation. Not for table interaction.
+        #
+        ( host, port, path ) = resthost
+        if game_id:
+            if not self.game_id2rest_client.has_key(game_id):
+                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, self.service.verbose)
+            client = self.game_id2rest_client[game_id]
+        else:
+            client = PokerRestClient(host, port, path, self.service.verbose)
+        return client
+            
+    def distributePacket(self, packet, data, resthost, game_id):
+        ( host, port, path ) = resthost
+        client = self.getOrCreateRestClient(resthost, game_id)
+        d = client.sendPacket(packet, data)
+        d.addCallback(lambda packets: self.incomingDistributedPackets(packets, game_id))
+        return d
+            
+    def incomingDistributedPackets(self, packets, game_id):
+        if game_id:
+            if game_id not in self.tables:
+                #
+                # discard client if nothing pending and not in the list
+                # of active tables
+                #
+                client = self.game_id2rest_client[game_id]
+                if ( len(client.queue.callbacks) <= 0 or
+                     client.pendingLongPoll ):
+                    del self.game_id2rest_client[game_id]
+        self.blockLongPollDeferred()
+        for packet in packets:
+            self.sendPacket(packet)
+        self.unblockLongPollDeferred()
+        return self.resetPacketsQueue()
+
     def handlePacketDefer(self, packet):
+        if packet.type == PACKET_POKER_LONG_POLL:
+            return self.longpollDeferred()
+
         self.queuePackets()
         self.handlePacketLogic(packet)
         packets = self.resetPacketsQueue()
@@ -367,7 +439,11 @@ class PokerAvatar:
     def handlePacketLogic(self, packet):
         if self.service.verbose > 2 and packet.type != PACKET_PING:
             self.message("handlePacketLogic(%d): " % self.getSerial() + str(packet))
-        
+
+        if packet.type == PACKET_POKER_LONG_POLL_RETURN:
+            self.flushLongPollDeferred()
+            return
+
         if packet.type == PACKET_POKER_EXPLAIN:
             if self.setExplain(packet.value):
                 self.sendPacketVerbose(PacketAck())

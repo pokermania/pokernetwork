@@ -83,6 +83,9 @@ class PokerServiceMockup:
       def getClientQueuedPacketMax(self):
             return 2000
 
+      def packet2resthost(self, packet):
+            return (None, None)
+
 class HelpersTestCase(unittest.TestCase):
 
       def test_fromutf8(self):

@@ -1725,6 +1725,11 @@ class PokerService(service.Service):
             cursor.close()
 
     def packet2resthost(self, packet):
+        #
+        # game_id is only set for packets related to a table and not for
+        # packets that are delegated but related to tournaments.
+        #
+        game_id = None
         cursor = self.db.cursor()
         if packet.type == PACKET_POKER_CREATE_TOURNEY:
             #
@@ -1735,31 +1740,30 @@ class PokerService(service.Service):
                 self.message("packet2resthost: create tourney " + sql)
             cursor.execute(sql)
         else:
-            if packet.type == PACKET_POKER_POLL:
-                wheres = []
-                if packet.game_id > 0:
-                    wheres.append("table_serial = " + str(packet.game_id))
-                if packet.tourney_serial > 0:
-                    wheres.append(" tourney_serial = " + str(packet.tourney_serial))
-                where = " AND ".join(wheres)
-            elif packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
+            if packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
                 where = "tourney_serial = " + str(packet.game_id)
             elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
                 where = "tourney_serial = " + str(packet.tourney_serial)
             elif hasattr(packet, "game_id"):
                 where = "table_serial = " + str(packet.game_id)
+                game_id = packet.game_id
             else:
                 cursor.close()
-                return None
+                return (None, None)
 
-            cursor.execute("SELECT host, port, path FROM route,resthost WHERE " +
-                           " route.resthost_serial = resthost.serial AND " + where)
+            cursor.execute("SELECT host, port, path FROM route,resthost " +
+                           " WHERE route.resthost_serial = resthost.serial " +
+                           #
+                           # exclude the routes that go to this server
+                           #
+                           " AND resthost.serial != " + str(self.resthost_serial) +
+                           " AND " + where)
         if cursor.rowcount > 0:
             result = cursor.fetchone()
         else:
             result = None
         cursor.close()
-        return result
+        return ( result, game_id )
 
     def cleanUp(self, temporary_users = ''):
         cursor = self.db.cursor()

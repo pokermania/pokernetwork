@@ -1062,69 +1062,80 @@ class ResthostTestCase(unittest.TestCase):
     def test01_packet2resthost(self):
         self.setUpService(self.xml_with_resthost)
         self.service.startService()
+        
+        db = self.service.db
+        db.db.query("INSERT INTO resthost VALUES (2, 'two', 'host2', 2222, 'path2')")
+        db.db.query("INSERT INTO route VALUES (102, 0, 0, 2)")
+
         #
         # ping is never routed
         #
-        resthost = self.service.packet2resthost(PacketPing())
+        resthost, game_id = self.service.packet2resthost(PacketPing())
         self.assertEqual(None, resthost)
+        self.assertEqual(None, game_id)
         #
-        # poll (or any packet with a valid game_id) is routed
+        # packet with a valid game_id is routed if resthost is != from server
         #
-        resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 1))
-        self.assertEqual('HOST', resthost[0])
+        resthost, game_id = self.service.packet2resthost(PacketPokerCheck(game_id = 102))
+        self.assertEqual('host2', resthost[0])
+        self.assertEqual(102, game_id)
         #
-        # poll to an unknown game_id is not routed
+        # packet is not routed if resthost point to the same server
         #
-        resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 888))
+        resthost, game_id = self.service.packet2resthost(PacketPokerCheck(game_id = 1))
         self.assertEqual(None, resthost)
+        self.assertEqual(1, game_id)
         #
-        # poll to a tourney is routed
+        # packet with an unknown game_id is not routed
+        #
+        resthost, game_id = self.service.packet2resthost(PacketPokerCheck(game_id = 888))
+        self.assertEqual(None, resthost)
+        self.assertEqual(888, game_id)
+        #
+        # packet to a tourney is routed if resthost is != from server
         #
         db = self.service.db
-        db.db.query("INSERT INTO route VALUES (0, 484, 1, 1)")
-        resthost = self.service.packet2resthost(PacketPokerPoll(tourney_serial = 484))
-        self.assertEqual('HOST', resthost[0])
+        db.db.query("INSERT INTO route VALUES (0, 484, 1, 2)")
+        resthost, game_id = self.service.packet2resthost(PacketPokerGetTourneyManager(tourney_serial = 484))
+        self.assertEqual('host2', resthost[0])
         #
-        # poll to a tourney table is routed
+        # packet to a tourney is routed if resthost is != from server
         #
-        db = self.service.db
-        db.db.query("INSERT INTO route VALUES (232, 484, 1, 1)")
-        resthost = self.service.packet2resthost(PacketPokerPoll(game_id = 232))
-        self.assertEqual('HOST', resthost[0])
+        resthost, game_id = self.service.packet2resthost(PacketPokerTourneyRegister(game_id = 484))
+        self.assertEqual('host2', resthost[0])
         #
-        # poll to an unknown tourney_serial is not routed
+        # packet to a tourney table is routed if resthost is != from server
         #
-        resthost = self.service.packet2resthost(PacketPokerPoll(tourney_serial = 999))
+        db.db.query("INSERT INTO route VALUES (232, 484, 1, 2)")
+        resthost, game_id = self.service.packet2resthost(PacketPokerCheck(game_id = 232))
+        self.assertEqual('host2', resthost[0])
+        self.assertEqual(232, game_id)
+        #
+        # packet to an unknown tourney_serial is not routed
+        #
+        resthost, game_id = self.service.packet2resthost(PacketPokerGetTourneyManager(tourney_serial = 999))
         self.assertEqual(None, resthost)
         #
-        # PACKET_POKER_TOURNEY_REGISTER
+        # packet to an unknown tourney_serial is not routed
         #
-        resthost = self.service.packet2resthost(PacketPokerTourneyRegister(game_id = 484))
-        self.assertEqual('HOST', resthost[0])
-        #
-        # packet with a game_id
-        #
-        resthost = self.service.packet2resthost(PacketPokerCall(game_id = 1))
-        self.assertEqual('HOST', resthost[0])
-        #
-        # PACKET_POKER_GET_TOURNEY_MANAGER
-        #
-        db.db.query("INSERT INTO route VALUES (0, 1, 0, 1)")
-        resthost = self.service.packet2resthost(PacketPokerGetTourneyManager(tourney_serial = 1))
-        self.assertEqual('HOST', resthost[0])
+        resthost, game_id = self.service.packet2resthost(PacketPokerTourneyRegister(game_id = 999))
+        self.assertEqual(None, resthost)
 
     def test02_packet2resthost_createTourney(self):
         self.setUpService(self.xml)
         self.service.startService()
-        self.failIf(self.service.packet2resthost(PacketPokerCreateTourney()))
+        resthost, game_id = self.service.packet2resthost(PacketPokerCreateTourney())
+        self.failIf(resthost)
+        self.failIf(game_id)
         db = self.service.db
         db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1')")
         db.db.query("INSERT INTO route VALUES (0, 100, 0, 10)")
         db.db.query("INSERT INTO route VALUES (0, 200, 0, 10)")
         db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2')")
         db.db.query("INSERT INTO route VALUES (0, 300, 0, 20)")
-        resthost = self.service.packet2resthost(PacketPokerCreateTourney())
+        resthost, game_id = self.service.packet2resthost(PacketPokerCreateTourney())
         self.assertEqual('host2', resthost[0])
+        self.assertEqual(None, game_id)
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 

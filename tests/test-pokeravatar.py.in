@@ -57,6 +57,7 @@ from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokertable import PokerAvatarCollection
+from pokernetwork.pokerrestclient import PokerRestClient
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
@@ -3893,6 +3894,119 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.tourneyCreate, 0)
         return d
 
+    PokerRestClient.longPoll = lambda arg: arg
+    PokerRestClient.deferred = None
+    PokerRestClient.sendPacket = lambda client, packet, data: PokerRestClient.deferred
+
+    # ------------------------------------------------------------------------
+    def test81_distributePacket(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleDistributedPacket(x):
+            avatar = self.service.avatars[0]
+            self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), 2)
+            d = defer.Deferred()
+            PokerRestClient.deferred = d
+            r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
+            r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
+            r.addCallback(lambda arg: self.assertEquals(True, avatar.game_id2rest_client.has_key(2)))
+            d.callback(['foo'])
+            return d
+        d.addCallback(handleDistributedPacket)
+        return d
+    # ------------------------------------------------------------------------
+    def test82_distributePacketNoMoreActiveTable(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleDistributedPacket(x):
+            avatar = self.service.avatars[0]
+            self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), 2)
+            d = defer.Deferred()
+            def clearActiveTable(arg):
+                avatar.tables = {}
+                return arg
+            d.addCallback(clearActiveTable)
+            PokerRestClient.deferred = d
+            r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
+            r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
+            r.addCallback(lambda arg: self.assertEquals({}, avatar.game_id2rest_client))
+            d.callback(['foo'])
+            return d
+        d.addCallback(handleDistributedPacket)
+        return d
+    # ------------------------------------------------------------------------
+    def test83_distributePacketNoGameId(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleDistributedPacket(x):
+            avatar = self.service.avatars[0]
+            self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), None)
+            d = defer.Deferred()
+            PokerRestClient.deferred = d
+            r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
+            r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
+            r.addCallback(lambda arg: self.assertEquals({}, avatar.game_id2rest_client))
+            d.callback(['foo'])
+            return d
+        d.addCallback(handleDistributedPacket)
+        return d
+    # ------------------------------------------------------------------------
+    def test84_distributePacketNoRestHost(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleDistributedPacket(x):
+            avatar = self.service.avatars[0]
+            self.service.packet2resthost = lambda packet: (None, None)
+            r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
+            self.assertEquals([], r)
+        d.addCallback(handleDistributedPacket)
+        return d
+    # ------------------------------------------------------------------------
+    def test85_longPoll(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleLongPoll(x):
+            avatar = self.service.avatars[0]
+            d = avatar.handlePacketDefer(PacketPokerLongPoll())
+            self.assertEquals(d, avatar._longpoll_deferred)
+            self.assertEquals(False, avatar._block_longpoll_deferred)
+            avatar._longpoll_deferred.addCallback(lambda packets: self.assertEquals(PACKET_PING, packets[0].type))
+            avatar.sendPacket(PacketPing())
+            return d
+        d.addCallback(handleLongPoll)
+        return d
+    # ------------------------------------------------------------------------
+    def test86_longPollReturn(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleLongPollReturn(x):
+            avatar = self.service.avatars[0]
+            d = avatar.handlePacketDefer(PacketPokerLongPoll())
+            avatar._packets_queue = ['foo']
+            d.addCallback(self.assertEquals, ['foo'])
+            avatar.handlePacketLogic(PacketPokerLongPollReturn())
+            return d
+        d.addCallback(handleLongPollReturn)
+        return d
+
 ##############################################################################
 class PokerAvatarNoClientServerTestCase(unittest.TestCase):
     class MockPlayerInfo:
@@ -4574,7 +4688,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test0"
+#    loader.methodPrefix = "test8"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))

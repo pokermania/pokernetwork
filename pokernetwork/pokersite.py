@@ -226,18 +226,18 @@ class PokerResource(resource.Resource):
             #
             return True
 
-        deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet))
+        deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet, data))
         deferred.addErrback(pipesFailed)
         return server.NOT_DONE_YET
 
-    def deferRender(self, request, jsonp, packet):
+    def deferRender(self, request, jsonp, packet, data):
         if request.finished:
             #
             # For instance : the request was reverse-proxied to a server.
             #
             return True
         session = request.getSession()
-        d = defer.maybeDeferred(session.avatar.handlePacketDefer, packet)
+        d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         def render(packets):
             #
             # update the session information if the avatar changed
