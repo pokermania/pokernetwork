@@ -346,8 +346,7 @@ class PokerAvatar:
 
     def longpollDeferred(self):
         self._longpoll_deferred = defer.Deferred()
-        self.flushLongPollDeferred()
-        return self._longpoll_deferred
+        return self.flushLongPollDeferred()
 
     def blockLongPollDeferred(self):
         self._block_longpoll_deferred = True
@@ -359,13 +358,19 @@ class PokerAvatar:
     def flushLongPollDeferred(self):
         if self._block_longpoll_deferred == False and self._longpoll_deferred and len(self._packets_queue) > 0:
             packets = self.resetPacketsQueue()
+            if self.service.verbose > 3:
+                self.message("flushLongPollDeferred(%s): " % str(packets))
             d = self._longpoll_deferred
             self._longpoll_deferred = None
             d.callback(packets)
+            return d
+        return self._longpoll_deferred
 
     def longPollReturn(self):
         if self._longpoll_deferred:
             packets = self.resetPacketsQueue()
+            if self.service.verbose > 3:
+                self.message("longPollReturn(%s): " % str(packets))
             d = self._longpoll_deferred
             self._longpoll_deferred = None
             d.callback(packets)        

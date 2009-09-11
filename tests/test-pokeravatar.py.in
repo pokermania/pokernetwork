@@ -4007,6 +4007,21 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             return d
         d.addCallback(handleLongPollReturn)
         return d
+    # ------------------------------------------------------------------------
+    def test87_flushLongPollDeferred(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleLongPoll(x):
+            avatar = self.service.avatars[0]
+            avatar._packets_queue = ['foo']
+            d = avatar.handlePacketDefer(PacketPokerLongPoll())
+            self.assertNotEquals(None, d)
+            return d
+        d.addCallback(handleLongPoll)
+        return d
 
 ##############################################################################
 class PokerAvatarNoClientServerTestCase(unittest.TestCase):
