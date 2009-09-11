@@ -247,6 +247,21 @@ class PokerResourceTestCase(PokerSiteBase):
             r.requestReceived('GET', '/', '')
             return d
 
+      def test06_1_render_do_not_expire_if_long_poll_return(self):
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = '{"type": "PacketPokerLongPollReturn"}'
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            d = r.notifyFinish()
+            r.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
+            session = r.getSession()
+            def finish(result):
+                  self.assertEqual(False, session.expired)
+            d.addCallback(finish)
+            r.requestReceived('GET', '/?uid=uid&auth=auth', '')
+            return d
+
       def test07_message_prefix(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
