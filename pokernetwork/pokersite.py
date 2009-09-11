@@ -242,10 +242,11 @@ class PokerResource(resource.Resource):
             #
             # update the session information if the avatar changed
             #
-            session.site.updateSession(session)
-            # do not expire/persist session if handling
+            # *do not* update/expire/persist session if handling
             # PacketPokerLongPollReturn
+            #
             if packet.type != PACKET_POKER_LONG_POLL_RETURN:
+                session.site.updateSession(session)
                 session.site.persistSession(session)
             #
             # Format answer
