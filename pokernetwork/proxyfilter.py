@@ -119,7 +119,7 @@ def rest_filter(site, request, packet):
         #
         return True
     service = site.resource.service
-    resthost = service.packet2resthost(packet)
+    resthost, game_id = service.packet2resthost(packet)
     if resthost:
         ( host, port, path ) = resthost
         parts = request.uri.split('?', 1)

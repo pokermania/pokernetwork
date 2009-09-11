@@ -373,7 +373,7 @@ class PokerAvatar:
                 self.message("longPollReturn(%s): " % str(packets))
             d = self._longpoll_deferred
             self._longpoll_deferred = None
-            d.callback(packets)        
+            d.callback(packets)
             
     def handleDistributedPacket(self, request, packet, data):
         resthost, game_id = self.service.packet2resthost(packet)
