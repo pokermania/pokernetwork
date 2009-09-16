@@ -93,12 +93,19 @@ TESTS = coverage-reset \
 	test-pokerserver.py \
 	test-pokerserver-run-load.py \
 	test-pokerrestclient.py \
+	test-bug-14139.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
 	testwebservice.php \
 	coverage-report      
 
+# Regarding XFAIL_TESTS: the only items we typically list here are tests
+# designed to cover open bugs.  We expect them to fail until the bug is
+# closed.  If you close a bug, be sure to remove the test-bug-NUMBER.py
+# entry from XFAIL_TESTS below.
+
+XFAIL_TESTS = test-bug-14139.py
 
 .PHONY: coverage-reset coverage-report
 

@@ -1,0 +1,426 @@
+#!@PYTHON@
+# -*- mode: python -*-
+#
+# Copyright (C) 2009 Bradley M. Kuhn  <bkuhn@ebb.org>
+#
+# This software's license gives you freedom; you can copy, convey,
+# propagate, redistribute and/or modify this program under the terms of
+# the GNU Affero General Public License (AGPL) as published by the Free
+# Software Foundation (FSF), either version 3 of the License, or (at your
+# option) any later version of the AGPL published by the FSF.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program in a file in the toplevel directory called
+# "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
+#
+import sys, os, tempfile, shutil, signal
+sys.path.insert(0, "@srcdir@/..")
+sys.path.insert(0, "..")
+sys.path.insert(0, ".")
+
+import locale
+import libxml2
+from types import *
+import socket
+import time
+from twisted.trial import unittest, runner, reporter
+import twisted.internet.base
+from twisted.internet import reactor, defer, error, base
+from twisted.python import failure, runtime
+from twisted.python.runtime import seconds
+
+from tests import testclock
+from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
+#os.environ['VERBOSE_T'] = '0'
+verbose = int(os.environ.get('VERBOSE_T', '-1'))
+if verbose < 0: silence_all_messages()
+
+twisted.internet.base.DelayedCall.debug = True
+
+from pokernetwork import pokerservice
+from pokernetwork.pokerclientpackets import *
+from pokernetwork import pokernetworkconfig
+
+# Note that since import doesn't allow -'s in indentifiers, I have to do
+# the following trick to import another test file.
+test_pokeravatar = __import__('test-pokeravatar', globals(), locals(),
+                                             ['PokerAvatarTablePickerBaseClass'], -1)
+PokerAvatarTablePickerBaseClass = test_pokeravatar.PokerAvatarTablePickerBaseClass
+
+settings_bot_xml = """
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" watch="no" level="1" cash_in="no" ping="10" verbose="0" no_display_packets="yes" rebuy="yes" name_prefix="BOT" poker_network_version="2.0.0">
+  <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15"/>
+  <name>test</name>
+  <passwd>test</passwd>
+  <servers>%(serverInfo)s</servers>
+  <muck>yes</muck>
+  <currency id="0"></currency>
+  <auto_post>yes</auto_post>
+n  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ </path> 
+
+  <verbose>6</verbose>
+  <table name="Play Money NL HE 10-max 1/2" count="%(botCount)d"/>
+</settings>
+"""
+# -----------------------------------------------------------------------------
+class PokerAvatarTablePickerDoesNotDealHandTestCase(PokerAvatarTablePickerBaseClass):
+    # -------------------------------------------------------------------------
+    # I had serious weirdness trying to call
+    # PokerAvatarTablePickerBaseClass.tearDown(self), so I had to copy the
+    # tearDown code from the base class.  I think this problem had 
+    def tearDown(self):
+        if hasattr(self, 'tmpdir'):
+            shutil.rmtree(self.tmpdir)
+        if hasattr(self, 'botPid'):
+            os.kill(self.botPid, signal.SIGHUP)
+            os.kill(self.botPid, signal.SIGINT)
+            os.kill(self.botPid, signal.SIGTERM)
+            os.kill(self.botPid, signal.SIGKILL)
+        # Rest stupidly copied from super class, see above
+        d = self.service.stopService()
+        d.addCallback(lambda x: self.p.stopListening())
+        d.addCallback(self.destroyDb)
+        d.addCallback(self.cleanSessions)
+        return d
+    # -------------------------------------------------------------------------
+    def setUpBots(self, botCount):
+        # Next, create the bot application so that we have bots joining
+        # the any tables specificed in the settings_bot_xml above
+        self.tmpdir = tempfile.mkdtemp()
+        outFile = os.path.join(self.tmpdir, "poker.bot.xml")
+        outFH = open(outFile, "w")
+        botConfigData = settings_bot_xml % { 'serverInfo': "127.0.0.1:%d" % self.port,
+                                             'botCount' : botCount }
+        outFH.write(botConfigData)
+        outFH.close()
+        pid = os.fork()
+        if not pid:
+            # The child simply execs the bot code.
+            saveArgv = sys.argv
+            sys.argv.append(outFile)
+            newEnviorn = os.environ
+            newEnviorn['PYTHONPATH'] = ".:@srcdir@/../../"
+            os.execlp("@PYTHON@", "@srcdir@/../../pokernetwork/pokerbot", 
+                      "@srcdir@/../../pokernetwork/pokerbot", outFile)
+        else:
+            # In the parent, we continue with the test
+            self.botPid = pid
+    # -------------------------------------------------------------------------
+    # I copied the startHandAndReceiveCards from PokerAvatarTestCase
+    # rather than moving it into PokerAvatarTestCaseBaseClass because
+    # there were some changes to be made due to the fact that when
+    # TablePicker is used, a different player gets the button.  I am not
+    # sure why this is, really, and it may be part of what is going on in
+    # the bug.
+    def startHandAndReceiveCards(self, (client, packet), gameId, bigBlindAmount = 200,
+                                 smallBlindAmount = 100):
+        table = self.service.getTable(gameId)
+
+        lang2strings = { 'default' : [ "Dealer: user1 pays %(smallBlind)d blind\n",
+                                       "Dealer: user0 pays %(bigBlind)d blind\n",
+                                       "Dealer: pre-flop, %(numPlayers)d players\n" ], 
+                         'en_US' : [ "Dealer: user1 pays %(smallBlind)d blind\n",
+                                           "Dealer: user0 pays %(bigBlind)d blind\n",
+                                           "Dealer: pre-flop, %(numPlayers)d players\n" ], 
+                         'fr_FR' : [ "Dealer: user1 paye %(smallBlind)d de blind\n",
+                                           "Dealer: user0 paye %(bigBlind)d de blind\n",
+                                           "Dealer: pre-flop, %(numPlayers)d joueurs\n" ] }
+        for lang in lang2strings.keys():
+            for ii in range(0, len(lang2strings[lang])):
+                lang2strings[lang][ii] = lang2strings[lang][ii] % {'bigBlind': bigBlindAmount / 100, 'smallBlind' : smallBlindAmount / 100, 'numPlayers' : 2 }
+        avatar = []
+        avatar.append(self.service.avatars[0])
+
+        found = 0
+        ignored = 0
+        for packet in avatar[0].resetPacketsQueue():
+            if packet.type == PACKET_POKER_BLIND:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.dead, 0)
+            elif packet.type == PACKET_POKER_CHIPS_PLAYER2BET:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.cookie, "")
+                if (packet.serial == avatar[0].getSerial()):
+                    self.assertEquals(packet.chips, [smallBlindAmount, 2])
+                else:
+                    assert("unknown serial in player2bet packet: %d" 
+                           % packet.serial)
+            elif packet.type == PACKET_POKER_CHIPS:
+                found += 1
+                self.assertEquals(packet.serial, mySerial)
+                self.assertEquals(packet.game_id, gameId)
+            elif packet.type == PACKET_POKER_CHAT:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                if (packet.message not in lang2strings[self.avatarLocales[0]]):
+                    self.fail("Unexpected and/or Wrong Language (expected %s) message: %s for avatar %d" 
+                              % (self.avatarLocales[0], packet.message, 0))
+            elif packet.type == PACKET_POKER_STATE:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.string, "pre-flop")
+            elif packet.type == PACKET_POKER_BEGIN_ROUND:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.cookie, "")
+
+            elif packet.type == PACKET_POKER_PLAYER_CARDS:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(len(packet.cards), 2)
+            elif packet.type == PACKET_POKER_BET_LIMIT:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.cookie, "")
+                self.assertEquals(packet.step, smallBlindAmount)
+                self.assertEquals(packet.min, bigBlindAmount)
+                self.assertEquals(packet.max, 180000)
+                self.assertEquals(packet.allin, packet.max)
+                self.assertEquals(packet.pot, smallBlindAmount + bigBlindAmount)
+                self.assertEquals(packet.call, 0)
+            else:
+                ignored += 1
+        self.assertEquals(found, 14, """Expected 14, but got %d.  If we
+get nothing here, it means the hand play was not started.  It is this
+failure we should see to exhibit bug#14139.  If we do not get this failure
+for test02, then something else is wrong with test02"""  % found)
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    # The below was seriously hacked from
+    # PokerAvatarTestCaseBaseClass.beginHandSetup.  It might read a little
+    # weird because I did not adjust it carefully to consider only the single player.
+    def beginHandSetupOnePlayer(self, (client, packet), gameId, dealerAssigned = 1):
+        table = self.service.getTable(gameId)
+        avatars = self.service.avatar_collection.get(client.getSerial())
+        self.failUnless(len(avatars) ==  1, "Only one avatar should have this serial")
+        avatar = avatars[0]
+        avatar.queuePackets()
+        # Handle the packets that initially arrive.  I learned what to
+        # expect from "What to expect while a hand is being played?" in
+        # pokerpackets.py
+        packetList = []
+        packetList.extend(avatar.resetPacketsQueue())
+        playersExpect = [ avatar.getSerial() ]
+        playersExpect.sort()
+        if len(self.service.avatars) > 1:
+            avatar1 = self.service.avatars[1]
+            avatar1.queuePackets()
+            packetList.extend(avatar1.resetPacketsQueue())
+        found = 0
+        for packet in packetList:
+            if packet.type == PACKET_POKER_IN_GAME:
+                found += 1
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.game_id, gameId)
+                self.failUnless(avatar.getSerial() in packet.players,
+                                "Should find myself in the player list")
+                self.failUnless(len(packet.players) > 1,
+                                "Should have bots or second player here")
+                packet.players.sort()
+            elif packet.type == PACKET_POKER_DEALER:
+                found += 1
+                self.assertEquals(packet.dealer, dealerAssigned)
+                self.assertEquals(packet.previous_dealer, -1)
+                self.assertEquals(packet.game_id, gameId)
+            elif packet.type == PACKET_POKER_START:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.level, 0)
+                self.assertEquals(packet.hand_serial, 1)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.hands_count, 0)
+                self.assertEquals(packet.time, 0)
+            elif packet.type == PACKET_POKER_POSITION:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+            elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
+                found += 1
+                self.assertEquals(packet.cookie, "")
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.length, 11)
+                self.assertEquals(packet.serial, 0)
+            elif packet.type == PACKET_POKER_BLIND_REQUEST:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.dead, 0)
+            elif packet.type == PACKET_POKER_SELF_IN_POSITION:
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.position, -1)
+                self.assertEquals(packet.length, 8)
+            elif packet.type == PACKET_POKER_BOARD_CARDS:
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(True, packet.serial == avatar.getSerial() )
+                self.assertEquals(packet.cards, [])
+            # When I was writing this loop, I also saw a number of:
+            # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
+            # serial 5, but I thought it was safe to ignore them here.
+
+        self.failUnless(found >= 7, "Got %d, expected at least 7." % found)
+        avatar.queuePackets()
+        if len(self.service.avatars) > 1:
+            avatar1.queuePackets()
+        return (client, packet)
+    # -------------------------------------------------------------------------
+    def test01_tablePicker_allHuman_playSucceeds(self):
+        """test01_tablePicker_playSuceeds
+        This test should succeed even before bug 14139 is closed.  It's a
+        bit of a control group -- to make sure that when the players are
+        all human, that both using table picker suceed in having a hand
+        started.  This test is basically a "mix" of
+        PokerAvatarTestCase.test15_handPlay() and
+        PokerAvatarTablePickerTestCase.test03_tablePicker_onlyOnePossible()"""
+        self.createClients(2)
+
+        playersDeferreds = []
+        for ii in [ 0, 1 ]:
+            iiDeferred = self.preparePlayerForTablePickerSend(ii)
+            playersDeferreds.append(iiDeferred)
+            iiDeferred.addCallback(self.setMoneyForPlayer, ii, 1, "over_min_under_best", 1)
+            iiDeferred.addCallback(self.tablePickerSucceeds, ii, ii, 0,
+                                    "holdem", "100-200-no-limit", 1, "NL HE 10-max 100/200",
+                                   autoBlindAnte = (ii == 0))
+            iiDeferred.addCallback(self.readyToPlay, ii, 1)
+
+        # Next, add items to start playing to last user added.
+        iiDeferred.addCallback(self.dealTable, 1)
+        iiDeferred.addCallback(self.beginHandSetupOnePlayer, 1, dealerAssigned = 0)
+        iiDeferred.addCallback(self.doBlindPost, 1, 1)
+        iiDeferred.addCallback(self.startHandAndReceiveCards, 1,
+                               smallBlindAmount = 10000, bigBlindAmount = 20000 )
+        return defer.DeferredList(playersDeferreds)
+    # -------------------------------------------------------------------------
+    def nBotsAndOneLivePlayer(self, botCount):
+        """The code here uses a serious of reactor.callLater()'s and two
+        deferreds to be sure that the user-controlled player does not get
+        created until the bots have fully joined.  We must do this sort of
+        delay because we don't know how long the subprocess of bots will
+        take to have enough bots
+        """
+
+        self.setUpBots(botCount)
+
+        finishedDeferred = defer.Deferred()
+        
+        def setupPlayerIfBotsAtTable():
+            table = self.service.getTable(6)
+            numberJoined = len(table.avatar_collection.serial2avatars.keys())
+            
+            if (numberJoined < botCount):
+                return None
+            else:
+                self.createClients(1)
+                playerDeferred = self.preparePlayerForTablePickerSend(0)
+                playerDeferred.addCallback(self.setMoneyForPlayer, 0, 0, "over_min_under_best", 6)
+                playerDeferred.addCallback(self.tablePickerSucceeds, 0, 0, 0,
+                                   "holdem", "1-2-no-limit", 6, "Play Money NL HE 10-max 1/2",
+                                   autoBlindAnte = False)
+                playerDeferred.addCallback(self.readyToPlay, 0, 6)
+                playerDeferred.addCallback(self.dealTable, 6)
+                playerDeferred.addCallback(self.beginHandSetupOnePlayer, 6, dealerAssigned = 0)
+                playerDeferred.addCallback(self.doBlindPost, 0, 6)
+                playerDeferred.addCallback(self.startHandAndReceiveCards, 6,
+                                   smallBlindAmount = 100, bigBlindAmount = 200 )
+                playerDeferred.addCallback(lambda : finishedDeferred.callback(True))
+                return playerDeferred
+
+        def checkWaitforFinished():
+            playerDeferred = setupPlayerIfBotsAtTable()
+            if playerDeferred != None:
+                return playerDeferred
+            else:
+                reactor.callLater(5, checkWaitforFinished)
+
+        reactor.callLater(5, checkWaitforFinished)
+        return finishedDeferred
+    # -------------------------------------------------------------------------
+    def test02_tablePicker_someBots_playShouldSucceed_1bot(self):
+        """test02_tablePicker_someBots_playShouldSucceed_1bot
+        This is the actual test for bug #14139.  Similar to the previous
+        test, but instead we create a bot server.  The code in this test
+        uses a serious of reactor.callLater()'s and two deferreds to be
+        sure that the user-controlled player does not get created until
+        the bots have fully joined.  We must do this sort of delay because
+        we don't know how long the subprocess of bots will take to have enough bots 
+        """
+        return self.nBotsAndOneLivePlayer(1)
+    # -------------------------------------------------------------------------
+    def test03_tablePicker_someBots_playShouldSucceed_2bot(self):
+        """test03_tablePicker_someBots_playShouldSucceed_2bot
+        This is the actual test for bug #14139.  Similar to the previous
+        test, but instead we create a bot server.  The code in this test
+        uses a serious of reactor.callLater()'s and two deferreds to be
+        sure that the user-controlled player does not get created until
+        the bots have fully joined.  We must do this sort of delay because
+        we don't know how long the subprocess of bots will take to have enough bots 
+        """
+        return self.nBotsAndOneLivePlayer(2)
+    # -------------------------------------------------------------------------
+    def test04_tablePicker_someBots_playShouldSucceed_3bot(self):
+        """test04_tablePicker_someBots_playShouldSucceed_3bot
+        This is the actual test for bug #14139.  Similar to the previous
+        test, but instead we create a bot server.  The code in this test
+        uses a serious of reactor.callLater()'s and two deferreds to be
+        sure that the user-controlled player does not get created until
+        the bots have fully joined.  We must do this sort of delay because
+        we don't know how long the subprocess of bots will take to have enough bots 
+        """
+        return self.nBotsAndOneLivePlayer(3)
+    # -------------------------------------------------------------------------
+    def test05_tablePicker_someBots_playShouldSucceed_4bot(self):
+        """test05_tablePicker_someBots_playShouldSucceed_4bot
+        This is the actual test for bug #14139.  Similar to the previous
+        test, but instead we create a bot server.  The code in this test
+        uses a serious of reactor.callLater()'s and two deferreds to be
+        sure that the user-controlled player does not get created until
+        the bots have fully joined.  We must do this sort of delay because
+        we don't know how long the subprocess of bots will take to have enough bots 
+        """
+        return self.nBotsAndOneLivePlayer(4)
+    # -------------------------------------------------------------------------
+    def test06_tablePicker_someBots_playShouldSucceed_5bot(self):
+        """test06_tablePicker_someBots_playShouldSucceed_5bot
+        This is the actual test for bug #14139.  Similar to the previous
+        test, but instead we create a bot server.  The code in this test
+        uses a serious of reactor.callLater()'s and two deferreds to be
+        sure that the user-controlled player does not get created until
+        the bots have fully joined.  We must do this sort of delay because
+        we don't know how long the subprocess of bots will take to have enough bots 
+        """
+        return self.nBotsAndOneLivePlayer(5)
+##############################################################################
+def Run():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test02"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerAvatarTablePickerDoesNotDealHandTestCase))
+    return runner.TrialRunner(
+        reporter.VerboseTextReporter,
+#                              tracebackFormat='verbose',
+                              tracebackFormat='default',
+                              ).run(suite)
+
+# ------------------------------------------------------
+if __name__ == '__main__':
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+# Interpreted by emacs
+# Local Variables:
+# compile-command: "( cd .. ; ./config.status tests/test-bug-14139.py tests/test-pokeravatar.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokeravatar.py' TESTS='coverage-reset test-bug-14139.py coverage-report' check )"
+# End:
+
+# I have this set to cover pokerpackets because this isn't really a
+# coverage test and therefore I would rather not have errors when it fails
+# to cover some particular file.

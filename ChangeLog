@@ -1,4 +1,65 @@
+2009-09-13  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-bug-14139.py.in
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.nBotsAndOneLivePlayer):
+	Abstracted test02 code into this method.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test02_tablePicker_someBots_playShouldSucceed_1bot):
+	Wrote test.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test03_tablePicker_someBots_playShouldSucceed_2bot):
+	Wrote test.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test04_tablePicker_someBots_playShouldSucceed_3bot):
+	Wrote test.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test05_tablePicker_someBots_playShouldSucceed_4bot):
+	Wrote test.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test06_tablePicker_someBots_playShouldSucceed_5bot):
+	Wrote test.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCaseBaseClass.readyToPlay)
+	(PokerAvatarTablePickerBaseClass.tablePickerSucceeds): Use
+	getSerial() to lookup avatar serial.
+	(settings_xml_table_picker_server): Added play money table to
+	settings.
+	(PokerAvatarTablePickerBaseClass.tablePickerSucceeds): Ignore play
+	money buy-ins.
+
+	* tests/test-bug-14139.py.in
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test02_tablePicker_someBots_playShouldSucceed):
+	Wrote test.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.setUpBots): Wrote method.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.startHandAndReceiveCards):
+	Wrote test.
+
+2009-09-07  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-bug-14139.py.in
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.startHandAndReceiveCards):
+	Tweaked method from PokerAvatarTestCase.startHandAndReceiveCards
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test01_tablePicker_allHuman_playSucceeds):
+	Wrote test.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.tearDown): Wrote
+	method.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.beginHandSetupOnePlayer):
+	Wrote method, mostly cut-and-paste from
+	PokerAvatarTestCaseBaseClass.beginHandSetup.
+	(PokerAvatarTablePickerDoesNotDealHandTestCase.test01_tablePicker_allHuman_playSucceeds):
+	Switched to new SetupOnePlayer, for better contrast with Bot
+	players present.
+
+	* tests/test-pokeravatar.py.in
+	(PokerAvatarTestCaseBaseClass.beginHandSetup)
+	(PokerAvatarTestCaseBaseClass.dealTable)
+	(PokerAvatarTestCaseBaseClass.doBlindPost): Moved methods into
+	base class.
+	(PokerAvatarTestCaseBaseClass.beginHandSetup): Added
+	dealerAssigned argument.
+
+	* tests/test-bug-14139.py.in: Created test file.
+
 2009-09-06  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/test-pokeravatar.py.in (PokerAvatarTablePickerBaseClass):
+	Abstracted out some code from PokerAvatarTablePickerTestCase.
 
 	* Makefile.am (install-data-local, all-local): Removed 'client'
 	from list in for loop, since r6200 deleted the files it would

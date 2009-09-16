@@ -356,7 +356,9 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         return (client, packet)
     # ------------------------------------------------------------------------
     def readyToPlay(self, (client, packet), id, gameId ):
-        avatar = self.service.avatars[id]
+        avatars = self.service.avatar_collection.get(client.getSerial())
+        self.failUnless(len(avatars) ==  1, "Only one avatar should have this serial")
+        avatar = avatars[0]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerReadyToPlay(serial = client.getSerial(),
                                                         game_id = gameId))
@@ -381,6 +383,97 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
             elif packet.type == PACKET_POKER_CHAT:
                 print packet
         self.assertEquals(found, True)
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def dealTable(self, (client, packet), gameId):
+        table = self.service.getTable(gameId)
+        table.beginTurn()
+        table.update()
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def beginHandSetup(self, (client, packet), gameId, dealerAssigned = 1,
+                       blindAmount = 100, blindExpected = 'small'):
+        table = self.service.getTable(gameId)
+        avatar0 = self.service.avatars[0]
+        avatar1 = self.service.avatars[1]
+        avatar0.queuePackets()
+        avatar1.queuePackets()
+        # Handle the packets that initially arrive.  I learned what to
+        # expect from "What to expect while a hand is being played?" in
+        # pokerpackets.py
+        packetList = []
+        packetList.extend(avatar0.resetPacketsQueue())
+        packetList.extend(avatar1.resetPacketsQueue())
+        playersExpect = [ avatar0.getSerial(), avatar1.getSerial() ]
+        playersExpect.sort()
+        found = 0
+        for packet in packetList:
+            if packet.type == PACKET_POKER_IN_GAME:
+                found += 1
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.game_id, gameId)
+                packet.players.sort()
+                self.assertEquals(packet.players, playersExpect)
+            elif packet.type == PACKET_POKER_DEALER:
+                found += 1
+                self.assertEquals(packet.dealer, dealerAssigned)
+                self.assertEquals(packet.previous_dealer, -1)
+                self.assertEquals(packet.game_id, gameId)
+            elif packet.type == PACKET_POKER_START:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.level, 0)
+                self.assertEquals(packet.hand_serial, 1)
+                self.assertEquals(packet.serial, 0)
+                self.assertEquals(packet.hands_count, 0)
+                self.assertEquals(packet.time, 0)
+            elif packet.type == PACKET_POKER_POSITION:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(True, packet.serial == avatar0.getSerial() 
+                                        or packet.serial == avatar1.getSerial())
+            elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
+                found += 1
+                self.assertEquals(packet.cookie, "")
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.length, 11)
+                self.assertEquals(packet.serial, 0)
+            elif packet.type == PACKET_POKER_BLIND_REQUEST:
+                found += 1
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.dead, 0)
+                self.assertEquals(packet.serial, avatar1.getSerial())
+                self.assertEquals(packet.amount, blindAmount)
+                self.assertEquals(packet.state, blindExpected)
+            elif packet.type == PACKET_POKER_SELF_IN_POSITION:
+                self.assertEquals(packet.serial, avatar1.getSerial())
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(packet.position, -1)
+                self.assertEquals(packet.length, 8)
+            elif packet.type == PACKET_POKER_BOARD_CARDS:
+                self.assertEquals(packet.game_id, gameId)
+                self.assertEquals(True, packet.serial == avatar0.getSerial() 
+                                        or packet.serial == avatar1.getSerial())
+                
+                self.assertEquals(packet.cards, [])
+            # When I was writing this loop, I also saw a number of:
+            # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
+            # serial 5, but I thought it was safe to ignore them here.
+        self.assertEquals(found, 14)
+        avatar0.queuePackets()
+        avatar1.queuePackets()
+        return (client, packet)
+    # ------------------------------------------------------------------------
+    def doBlindPost(self, (client, packet), id, gameId):
+        # By now, we should have seen as noted above, a request for the
+        # blinds for avatar1 for 100 small blind.  Here we send it.
+        avatars = self.service.avatar_collection.get(client.getSerial())
+        self.failUnless(len(avatars) ==  1, "Only one avatar should have this serial")
+        avatar = avatars[0]
+        avatar.queuePackets()
+        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(),
+                                                   game_id = gameId, dead = 0,
+                                                   amount = 100))
         return (client, packet)
 ##############################################################################
 class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
@@ -787,94 +880,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.statsQuery, 0)
         return d
-    # ------------------------------------------------------------------------
-    def dealTable(self, (client, packet), gameId):
-        table = self.service.getTable(gameId)
-        table.beginTurn()
-        table.update()
-        return (client, packet)
-    # ------------------------------------------------------------------------
-    def beginHandSetup(self, (client, packet), gameId):
-        table = self.service.getTable(gameId)
-        avatar0 = self.service.avatars[0]
-        avatar1 = self.service.avatars[1]
-        avatar0.queuePackets()
-        avatar1.queuePackets()
-        # Handle the packets that initially arrive.  I learned what to
-        # expect from "What to expect while a hand is being played?" in
-        # pokerpackets.py
-        packetList = []
-        packetList.extend(avatar0.resetPacketsQueue())
-        packetList.extend(avatar1.resetPacketsQueue())
-        playersExpect = [ avatar0.getSerial(), avatar1.getSerial() ]
-        playersExpect.sort()
-        found = 0
-        for packet in packetList:
-            if packet.type == PACKET_POKER_IN_GAME:
-                found += 1
-                self.assertEquals(packet.serial, 0)
-                self.assertEquals(packet.game_id, gameId)
-                packet.players.sort()
-                self.assertEquals(packet.players, playersExpect)
-            elif packet.type == PACKET_POKER_DEALER:
-                found += 1
-                self.assertEquals(packet.dealer, 1)
-                self.assertEquals(packet.previous_dealer, -1)
-                self.assertEquals(packet.game_id, gameId)
-            elif packet.type == PACKET_POKER_START:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.level, 0)
-                self.assertEquals(packet.hand_serial, 1)
-                self.assertEquals(packet.serial, 0)
-                self.assertEquals(packet.hands_count, 0)
-                self.assertEquals(packet.time, 0)
-            elif packet.type == PACKET_POKER_POSITION:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(True, packet.serial == avatar0.getSerial() 
-                                        or packet.serial == avatar1.getSerial())
-            elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
-                found += 1
-                self.assertEquals(packet.cookie, "")
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.length, 11)
-                self.assertEquals(packet.serial, 0)
-            elif packet.type == PACKET_POKER_BLIND_REQUEST:
-                found += 1
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.dead, 0)
-                self.assertEquals(packet.serial, avatar1.getSerial())
-                self.assertEquals(packet.amount, 100)
-                self.assertEquals(packet.state, 'small')
-            elif packet.type == PACKET_POKER_SELF_IN_POSITION:
-                self.assertEquals(packet.serial, avatar1.getSerial())
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.position, -1)
-                self.assertEquals(packet.length, 8)
-            elif packet.type == PACKET_POKER_BOARD_CARDS:
-                self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(True, packet.serial == avatar0.getSerial() 
-                                        or packet.serial == avatar1.getSerial())
-                
-                self.assertEquals(packet.cards, [])
-            # When I was writing this loop, I also saw a number of:
-            # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
-            # serial 5, but I thought it was safe to ignore them here.
-        self.assertEquals(found, 14)
-        avatar0.queuePackets()
-        avatar1.queuePackets()
-        return (client, packet)
-    # ------------------------------------------------------------------------
-    def doBlindPost(self, (client, packet), id, gameId):
-        # By now, we should have seen as noted above, a request for the
-        # blinds for avatar1 for 100 small blind.  Here we send it.
-        avatar = self.service.avatars[id]
-        avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(),
-                                                   game_id = gameId, dead = 0,
-                                                   amount = 100))
-        return (client, packet)
     # ------------------------------------------------------------------------
     def startHandAndReceiveCards(self, (client, packet), gameId):
         table = self.service.getTable(gameId)
@@ -4238,7 +4243,7 @@ settings_xml_table_picker_server = """<?xml version="1.0" encoding="ISO-8859-1"?
   <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="2" />
   <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="6" player_timeout="60" currency_serial="2" />
   <table name="Stud 8-max 2/4" variant="7stud" betting_structure="2-4-limit" seats="8" player_timeout="60" currency_serial="2" />
-
+  <table name="Play Money NL HE 10-max 1/2" variant="holdem" betting_structure="1-2-no-limit" seats="10" player_timeout="60" currency_serial="0" />
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
@@ -4250,7 +4255,7 @@ settings_xml_table_picker_server = """<?xml version="1.0" encoding="ISO-8859-1"?
 </server>
 """
 # -----------------------------------------------------------------------------
-class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
+class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
     # Timeout needs to be higher for this test case because some of the
     # later tests add so many clients that 240 isn't enough.
     timeout = 540
@@ -4318,7 +4323,9 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 
         preBuyInBalance = self.service.getMoney(client.getSerial(), table.currency_serial)
 
-        avatar = self.service.avatars[id]
+        avatars = self.service.avatar_collection.get(client.getSerial())
+        self.failUnless(len(avatars) ==  1, "Only one avatar should have this serial")
+        avatar = avatars[0]
         avatar.queuePackets()
         avatar.handlePacketLogic(
             PacketPokerTablePicker(serial = client.getSerial(),
@@ -4433,8 +4440,9 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
                     "best buy in amount is undefined or 0")
         self.failIf(minBuyInAmount == None or minBuyInAmount <= 0,
                     "min buy in amount is undefined or 0")
-        self.assertEquals(preBuyInBalance - amountBoughtIn, 
-                        self.service.getMoney(client.getSerial(), table.currency_serial))
+        if table.currency_serial > 0:
+            self.assertEquals(preBuyInBalance - amountBoughtIn, 
+                              self.service.getMoney(client.getSerial(), table.currency_serial))
         # Next, we should never have been allowed to buy in at a table with
         # a minimum less than we have.
         self.failUnless(preBuyInBalance > minBuyInAmount)
@@ -4487,6 +4495,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, playerNumber)
 
         return d
+class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
     # ------------------------------------------------------------------------
     def test00_tablePicker_failure_by_min(self):
         self.createClients(1)
@@ -4626,6 +4635,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
     # ------------------------------------------------------------------------
+
     def test09_tablePicker_noTableDueToLackofFunds(self):
         self.createClients(4)
 
@@ -4704,6 +4714,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTestCaseBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
+#    loader.methodPrefix = "test15"
 #    loader.methodPrefix = "test8"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))

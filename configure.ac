@@ -276,6 +276,7 @@ AC_CONFIG_FILES([
 	tests/test-pokerserver.py
 	tests/test-pokerserver-run-load.py
 	tests/test-pokerrestclient.py
+	tests/test-bug-14139.py
         tests/testcurrency.php
         tests/testpoker.php
         tests/testbirthday.php
