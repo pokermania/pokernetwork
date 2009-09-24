@@ -1769,7 +1769,7 @@ Direction: server <=  client.
 
 Context: this packet must occur after a successfull PACKET_POKER_BUY_IN
 The minimum/maximum rebuy are determined by the betting structure of
-the game, as specifiede in the PACKET_POKER_TABLE packet. The player
+the game, as specified in the PACKET_POKER_TABLE packet. The player
 may rebuy at any moment if he has less than the maximum amount of money
 allowed by the betting structure.
 
