@@ -54,7 +54,7 @@ EXTRA_DIST = \
 	__init__.py \
 	setupMysqlVariables
 
-TESTS_ENVIRONMENT = ./run
+TESTS_ENVIRONMENT = XFAIL_TESTS="$(XFAIL_TESTS)" ./run
 #
 # Do NOT sort entries because the order matters 
 #
@@ -105,7 +105,7 @@ TESTS = coverage-reset \
 # closed.  If you close a bug, be sure to remove the test-bug-NUMBER.py
 # entry from XFAIL_TESTS below.
 
-export XFAIL_TESTS = test-bug-14139.py
+XFAIL_TESTS = test-bug-14139.py
 
 .PHONY: coverage-reset coverage-report
 
