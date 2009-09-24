@@ -31,7 +31,11 @@ echo "RUNNING: $*"
 
 if ! $MYSQL_ROOT_CMD -e "show databases" >/dev/null 2>&1 ; then
     echo "skipped because $MYSQL_ROOT_CMD -e \"show databases\" fails"
-    exit 0
+    if echo $XFAIL_TESTS | grep "$1" > /dev/null ; then
+        exit 1
+    else
+        exit 0
+    fi
 fi
 #
 # User for currency test
