@@ -46,6 +46,7 @@ EXTRA_DIST = \
 	testmessages.py \
 	testsettings.xml \
 	test-leak.py.in \
+	test-bug-14139.py \
 	test-leak-no-trial.py.in \
 	test-leak-reference.py.in \
 	test-leak-exarkun.py.in \
@@ -54,7 +55,7 @@ EXTRA_DIST = \
 	__init__.py \
 	setupMysqlVariables
 
-TESTS_ENVIRONMENT = XFAIL_TESTS="$(XFAIL_TESTS)" ./run
+TESTS_ENVIRONMENT = ./run
 #
 # Do NOT sort entries because the order matters 
 #
@@ -93,7 +94,6 @@ TESTS = coverage-reset \
 	test-pokerserver.py \
 	test-pokerserver-run-load.py \
 	test-pokerrestclient.py \
-	test-bug-14139.py \
 	testcurrency.php \
 	testpoker.php \
 	testbirthday.php \
@@ -105,7 +105,7 @@ TESTS = coverage-reset \
 # closed.  If you close a bug, be sure to remove the test-bug-NUMBER.py
 # entry from XFAIL_TESTS below.
 
-XFAIL_TESTS = test-bug-14139.py
+#XFAIL_TESTS = test-bug-14139.py
 
 .PHONY: coverage-reset coverage-report
 
