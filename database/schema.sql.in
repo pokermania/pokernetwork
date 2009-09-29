@@ -609,7 +609,7 @@ CREATE TABLE route (
   KEY (tourney_serial),
   KEY (modified),
   KEY (resthost_serial)
-) ENGINE=MEMORY;
+) ENGINE=MyISAM;
 
 -- CREATE TABLE lastpoll (
 --   session CHAR(32) NOT NULL,
