@@ -594,7 +594,7 @@ CREATE TABLE resthost (
   path VARCHAR(255),
 
   PRIMARY KEY (serial)
-) ENGINE=MEMORY;
+) ENGINE=MyISAM;
 
 DROP TABLE IF EXISTS route;
 
