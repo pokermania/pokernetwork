@@ -30,8 +30,8 @@ require_once 'PHPUnit/Framework/TestCase.php';
 require_once 'currency.php';
 
 $GLOBALS['currency_db_base'] = 'currencytest';
-$GLOBALS['currency_db_user'] = 'root';
-$GLOBALS['currency_db_password'] = '';
+$GLOBALS['currency_db_user'] = '@MYSQL_TEST_DBROOT@';
+$GLOBALS['currency_db_password'] = '@MYSQL_TEST_DBROOT_PASSWORD@';
 
 function test_extension_loaded($what) {
   return false;
