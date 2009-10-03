@@ -53,7 +53,8 @@ EXTRA_DIST = \
 	test-pokerdatabase \
 	testclock.py \
 	__init__.py \
-	setupMysqlVariables
+	setupMysqlVariables \
+	chameleon.png
 
 TESTS_ENVIRONMENT = ./run
 #

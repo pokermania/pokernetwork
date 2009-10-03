@@ -193,11 +193,11 @@ class testpoker extends PHPUnit_Framework_TestCase
     $poker = new poker('fakehost');
     $poker->verbose = VERBOSE;
     $poker->login('user', 'password');
-    $poker->setPlayerImage('@top_srcdir@/pokerclient2d/data/Aero/radio-s.png', 'image/png', 100, 100);
+    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 100, 100);
     $poker->getPlayerImage($poker->serial);
-    $poker->setPlayerImage('@top_srcdir@/pokerclient2d/data/Aero/radio-s.png', 'image/png', 2, 100);
-    $poker->setPlayerImage('@top_srcdir@/pokerclient2d/data/Aero/radio-s.png', 'image/png', 100, 2);
-    $poker->setPlayerImage('@top_srcdir@/pokerclient2d/data/Aero/radio-s.png', 'image/png', 2, 2);
+    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 2, 100);
+    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 100, 2);
+    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 2, 2);
   }
 
   public function test03_fail_connect()
@@ -383,7 +383,7 @@ class testpoker extends PHPUnit_Framework_TestCase
     $poker->login('user', 'password');
     $poker->client->e_image_ack = true;
     try {
-      $poker->setPlayerImage('@top_srcdir@/pokerclient2d/data/Aero/radio-s.png', 'image/png');
+      $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png');
     } catch (Exception $e) {
       if($e->getCode() == poker::E_IMAGE_ACK)
         return;
@@ -395,12 +395,12 @@ class testpoker extends PHPUnit_Framework_TestCase
   public function test17_cashIn() {
     $poker = new poker('fakehost');
     $poker->login('user', 'password');
-    $poker->cashIn(array('moneyurl', 1000, 'cryptoname', 100));
+    $poker->cashIn(array('moneyurl', 1000, 'cryptoname', 100), '');
     $this->assertEquals(100, $poker->client->wallets[$poker->serial]);
 
     try {
       $poker->client->e_cash_in_info_answer = true;
-      $poker->cashIn(array('moneyurl', 1001, 'cryptoname', 300));
+      $poker->cashIn(array('moneyurl', 1001, 'cryptoname', 300), '');
     } catch (Exception $e) {
       if($e->getCode() == poker::E_CASH_IN_INFO_ANSWER)
         return;
@@ -412,12 +412,12 @@ class testpoker extends PHPUnit_Framework_TestCase
   public function test18_cashOut() {
     $poker = new poker('fakehost');
     $poker->login('user', 'password');
-    $poker->cashOut('moneyurl', 100);
+    $poker->cashOut('moneyurl', 100, '');
     $this->assertEquals(-100, $poker->client->wallets[$poker->serial]);
 
     try {
       $poker->client->e_cash_out_info_answer = true;
-      $poker->cashOut('moneyurl', 100);
+      $poker->cashOut('moneyurl', 100, '');
     } catch (Exception $e) {
       if($e->getCode() == poker::E_CASH_OUT_INFO_ANSWER)
         return;
