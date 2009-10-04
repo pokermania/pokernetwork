@@ -54,7 +54,6 @@ nobase_dist_pkgdata_DATA = \
 pokernetworkdir = ${pythondir}/pokernetwork
 pokernetwork_PYTHON = \
 	pokernetwork/__init__.py \
-	pokernetwork/attrpack.py \
 	pokernetwork/client.py \
 	pokernetwork/currencyclient.py \
 	pokernetwork/nullfilter.py \
@@ -86,7 +85,6 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokerrestclient.py \
 	pokernetwork/server.py \
 	pokernetwork/user.py \
-	pokernetwork/userstats.py \
 	pokernetwork/version.py
 
 man_MANS = \
