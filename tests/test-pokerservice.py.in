@@ -63,8 +63,6 @@ from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.packets import PacketError
-from pokernetwork.userstats import UserStatsRankPercentileLookup
-from pokernetwork.attrpack  import AttrsLookup
 from pokernetwork.pokertable  import PokerAvatarCollection
 from MySQLdb.cursors import DictCursor
 
@@ -1140,7 +1138,7 @@ class ResthostTestCase(unittest.TestCase):
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     # ----------------------------------------------------------------
-    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500, statsLookupType = UserStatsRankPercentileLookup, statsError = ""):
+    def configValues(self, settings_data, joined_max, missed_round_max=10, delaysValue=-1, queuedPacketMax = 500):
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_data, len(settings_data))
         settings.header = settings.doc.xpathNewContext()
@@ -1159,17 +1157,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(missed_round_max, self.service.getMissedRoundMax())
         self.assertEquals(queuedPacketMax, self.service.client_queued_packet_max)
         self.assertEquals(queuedPacketMax, self.service.getClientQueuedPacketMax())
-
-        # Check that statsLookupType is correct
-        self.failUnless(isinstance(self.service.lookups['stats'], statsLookupType))
-        self.assertEquals(self.service.lookups['stats'], self.service.getUserStatsLookup())
-
-        if isinstance(self.service.lookups['stats'], UserStatsRankPercentileLookup):
-            self.assertEquals(self.service.getUserStatsLookup().service, self.service)
-        else:
-            self.failUnless(isinstance(self.service.lookups['stats'], AttrsLookup))
-        if statsError != "":
-            self.failUnless(search_output(statsError))
 
         startedOnlyVars = [ ('joined_count', 0),
                             ('tables', 2), ('tourney_table_serial', 1),
@@ -1251,16 +1238,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test00_05_configValues(self):
         self.configValues(settings_xml.replace('delays',
                                                'delays extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="60"'), 1000, delaysValue=60)
-
-    def test00_06_configValues(self):
-        self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
-                                               '<stats type="RankPercentile"/> <stats type="Ignored"/>'), 1000, statsError = "*ERROR* settings include multiple <stats> tags; using first one only")
-    def test00_07_configValues(self):
-        self.configValues(settings_xml.replace('<stats type="RankPercentile"/>',
-                                               '<stats type="Missing"/>'), 1000, statsLookupType = AttrsLookup, statsError = "ERROR 'module' object has no attribute 'UserStatsMissingLookup'")
-    def test00_08_configValues(self):
-        self.configValues(settings_xml.replace('<stats type="RankPercentile"/>', ''), 1000,
-                          statsLookupType = AttrsLookup)
 
     def test00_12_badEncoding(self):
         """test00_12_badEncoding
@@ -7134,6 +7111,39 @@ class TourneySelectInfoTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(xml)
         self.service.setupTourneySelectInfo()
         self.assertEqual(None, self.service.tourneySelectInfo('packet', 'tourneys'))
+##############################################################################
+class LadderTestCase(PokerServiceTestCaseBase):
+
+    def createRank(self):
+        self.db.db.query("CREATE TABLE rank ( " +
+                          "  user_serial INT UNSIGNED NOT NULL," +
+                          "  currency_serial INT UNSIGNED NOT NULL," +
+                          "  amount BIGINT NOT NULL," +
+                          "  rank INT UNSIGNED NOT NULL," +
+                          "  percentile TINYINT UNSIGNED DEFAULT 0 NOT NULL )")
+        
+    def test01_setupLadder(self):
+        self.createRank()
+        self.service.startService()
+        self.assertEqual(True, self.service.setupLadder())
+        self.db.db.query("DROP TABLE rank")
+        self.assertEqual(False, self.service.setupLadder())
+        self.assertEqual(False, self.service.has_ladder)
+
+    def test02_getLadder(self):
+        self.createRank()
+        self.service.startService()
+        self.assertEqual(True, self.service.setupLadder())
+        packet = self.service.getLadder(0, 0, 0)
+        self.assertEqual(PACKET_POKER_ERROR, packet.type)
+        self.db.db.query("INSERT INTO rank VALUES (1, 2, 3, 4, 5)")
+        packet = self.service.getLadder(None, 2, 1)
+        self.assertEqual(PACKET_POKER_PLAYER_STATS, packet.type)
+        self.assertEqual(0, packet.game_id)
+        game_id = 10
+        packet = self.service.getLadder(game_id, 2, 1)
+        self.assertEqual(game_id, packet.game_id)
+
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
@@ -7171,6 +7181,7 @@ def Run():
     suite.addTest(loader.loadClass(PokerRESTCoverageTestCase))
     suite.addTest(loader.loadClass(PokerSOAPCoverageTestCase))
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
+    suite.addTest(loader.loadClass(LadderTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
 #       reporter.TextReporter,

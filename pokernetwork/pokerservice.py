@@ -95,7 +95,6 @@ from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
-from pokernetwork.userstats import UserStatsFactory
 from pokerauth import get_auth_instance
 from datetime import date
 
@@ -195,16 +194,6 @@ class PokerService(service.Service):
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
 
-        self.lookups = {}
-
-        lookup2factoryClass = { 'stats' : UserStatsFactory }
-        for lookup in lookup2factoryClass.keys():
-            if len(self.settings.headerGetProperties("/server/%s" % lookup)) > 1:
-                self.error("settings include multiple <%s> tags; using first one only" % lookup)
-            myArgs = []
-            if lookup == 'stats': myArgs = [ self ]
-            self.lookups[lookup] = lookup2factoryClass[lookup]().getClass(settings.headerGet("/server/%s/@type" % lookup))(*myArgs)
-
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
             self.refill = refill[0]
@@ -217,12 +206,41 @@ class PokerService(service.Service):
         self.down = True
         self.shutdown_deferred = None
         self.resthost_serial = 0
+        self.has_ladder = None
         self.monitor_plugins = []
         for monitor in settings.header.xpathEval("/server/monitor"):
             module = imp.load_source("monitor", monitor.content)
             self.monitor_plugins.append(getattr(module, "handle_event"))
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
 
+    def setupLadder(self):
+        cursor = self.db.cursor()
+        cursor.execute("SHOW TABLES LIKE 'rank'")
+        self.has_ladder = cursor.rowcount == 1
+        cursor.close()
+        return self.has_ladder
+
+    def getLadder(self, game_id, currency_serial, user_serial):
+        cursor = self.db.cursor()
+        cursor.execute("SELECT rank,percentile FROM rank WHERE currency_serial = %s AND user_serial = %s", ( currency_serial, user_serial ))
+        if cursor.rowcount == 1:
+            row = cursor.fetchone()
+            packet = PacketPokerPlayerStats(currency_serial = currency_serial,
+                                            serial = user_serial,
+                                            rank = row[0],
+                                            percentile = row[1])
+        else:
+            packet = PacketPokerError(serial = user_serial,
+                                      other_type = PACKET_POKER_PLAYER_STATS,
+                                      code = PacketPokerPlayerStats.NOT_FOUND,
+                                      message = "no ladder entry for player %d and currency %d" % ( user_serial, currency_serial ))
+        if game_id:
+            packet.game_id = game_id
+        else:
+            packet.game_id = 0
+        cursor.close()
+        return packet
+        
     def setupTourneySelectInfo(self):
         #
         # load module that provides additional tourney information
@@ -246,6 +264,7 @@ class PokerService(service.Service):
         self.monitors = []
         self.db = PokerDatabase(self.settings)
         self.setupTourneySelectInfo()
+        self.setupLadder()
         self.setupResthost()
         self.cleanupCrashedTables()
         cleanup = self.settings.headerGet("/server/@cleanup")
@@ -364,9 +383,6 @@ class PokerService(service.Service):
 
     def getMissedRoundMax(self):
         return self.missed_round_max
-
-    def getUserStatsLookup(self):
-        return self.lookups['stats']
 
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max

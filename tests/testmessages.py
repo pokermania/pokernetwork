@@ -58,14 +58,6 @@ classes.append(pokersite.PokerResource)
 classes.append(pokersite.PokerImageUpload)
 classes.append(pokersite.PokerAvatarResource)
 classes.append(pokersite.PokerSite)
-from pokernetwork import userstats
-classes.append(userstats.UserStatsFactory)
-classes.append(userstats.UserStatsRankPercentileAccessor)
-classes.append(userstats.UserStatsRankPercentileLookup)
-from pokernetwork import attrpack
-classes.append(attrpack.AttrsFactory)
-classes.append(attrpack.AttrsAccessor)
-classes.append(attrpack.AttrsLookup)
 # that does not work because it gets imported in two different ways
 #from pokernetwork import proxyfilter
 #classes.append(proxyfilter.ProxyClientFactory)

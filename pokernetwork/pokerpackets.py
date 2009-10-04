@@ -4282,154 +4282,42 @@ game_id: integer uniquely identifying a game.
 
 
 Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 155 # 0x9b # %SEQ%
+
 ########################################
-PACKET_POKER_GET_ATTRS = 156 # 0x9c # %SEQ%
-PacketNames[PACKET_POKER_GET_ATTRS] = "POKER_GET_ATTRS"
-
-class PacketPokerGetAttrs(PacketPokerId):
-    """base class to go along with attrspack.py"""
-
-    NOT_LOGGED = 1
-
-    type = PACKET_POKER_GET_ATTRS
-
-PacketFactory[PACKET_POKER_GET_ATTRS] = PacketPokerGetAttrs
-###########################################################################
-PACKET_POKER_ATTRS = 157 # 0x9d # %SEQ%
-PacketNames[PACKET_POKER_ATTRS] = "POKER_ATTRS"
-class PacketPokerAttrs(PacketSerial):
-    """base class to go along with attrspack.py"""
-    type = PACKET_POKER_ATTRS
-
-    def __init__(self, *args, **kwargs):
-        # FIXME: this is a hack that will work fine with
-        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
-        # binary protocol.  The binary protocol folks will always get a
-        # response with just a serial in it.
-        PacketSerial.__init__(self, *args, **kwargs)
-        if kwargs.has_key('attrsDict'):
-            for (kk, vv) in kwargs['attrsDict'].iteritems():
-                self.__dict__[kk] = vv
-    #---------------------------------------------------------------
-    def __str__(self):
-        retStr =  PacketSerial.__str__(self)
-        klist = self.__dict__.keys()
-        klist.sort()
-        for kk in klist:
-            if kk != "serial" and kk != "cookie":
-                retStr += " %s = %s" % ( kk, self.__dict__[kk] ) 
-        return retStr
-PacketFactory[PACKET_POKER_ATTRS] = PacketPokerAttrs
-########################################
-class PacketPokerGetSupportedAttrs(Packet):
-    """base class to go along with attrspack.py"""
-    
-    info = Packet.info
-
-Packet.infoDeclare(globals(), PacketPokerGetSupportedAttrs, Packet, "POKER_GET_SUPPORTED_ATTRS", 158) # 158 # 0x9e # %SEQ%
-########################################
-class PacketPokerSupportedAttrs(Packet):
-    """base class to go along with attrspack.py"""
-    
-    info = Packet.info + (
-        # FIXME: this is a hack that will work fine with
-        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
-        # binary protocol.  The binary protocol folks will always get an
-        # empty packet response.
-        ('attrs', [], 'Il'),
-        )
-
-Packet.infoDeclare(globals(), PacketPokerSupportedAttrs, Packet, "POKER_SUPPORTED_ATTRS", 159) # 159 # 0x9f # %SEQ%
-###########################################################################
-PACKET_POKER_GET_PLAYER_STATS = 160 # 0xa0 # %SEQ%
-PacketNames[PACKET_POKER_GET_PLAYER_STATS] = "POKER_GET_PLAYER_STATS"
-
-class PacketPokerGetPlayerStats(PacketPokerGetAttrs):
-    """\
-Semantics: ask the server for a PacketPokerPlayerStats packet describing
-the player that is logged in with this connection.
-
-If the user is not logged in the following packet is returned
-
-PacketError(code = PacketPokerGetPlayerStats.NOT_LOGGED,
-            message = "Not logged in",
-            other_type = PACKET_POKER_GET_PLAYER_STATS)
-
-If the user is logged in a PacketPokerPlayerStats packet is sent
-to the client.
-
-If the user is not at a table yet, the packet is completely and silently
-ignored.  This packet only works when the user is at a table.
-
-Direction: server <= client
-
-Context:
-
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-"""
-
-    type = PACKET_POKER_GET_PLAYER_STATS
-
-PacketFactory[PACKET_POKER_GET_PLAYER_STATS] = PacketPokerGetPlayerStats
-########################################
-PACKET_POKER_PLAYER_STATS = 161 # 0xa1 # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_STATS] = "POKER_PLAYER_STATS"
-class PacketPokerPlayerStats(PacketPokerAttrs):
+class PacketPokerPlayerStats(PacketPokerId):
     """\
 
-Semantics: Packet sent by server will contain key/value pairs of all
-           statistical information currently supported by the server.
-           This can vary depending on what stats are supported by the
-           server configuration.  Clients that want to know what values to
-           expect should send PacketPokerGetSupportedStats first to get a
-           list of what to expect.  This packet can be ignored by clients
-           if they so choose; no mandatory game information is contained
-           in it.
+Semantics: the "rank" and "percentile" of the player "serial"
+for the "currency_serial" currency. The player with the largest
+amount of "currency_serial" money has "rank" 1. The "rank" is therefore
+in the range [1..n] where n is the total number of players registered
+on the poker server. The players are divided in G groups and the "percentile" is
+the number of the player group. For instance, if the players are divided in 4 groups
+the top 25% players will be in "percentile" 0, the next
+25% will be in "percentile" 1 and the last
+25% will be in "percentile" 3. The player with "rank" is always in
+"percentile" 0 and the player with least chips in the "currency_serial"
+money is always in the last "percentile".
 
 Direction: server  => client
 
 Context: 
 
 serial: integer uniquely identifying a player.
-key: value (for each statistic supported)
+game_id: integer uniquely identifying a game. (optional)
+currency_serial: int currency id
+rank: rank of the player 
+percentile: percentile of the player
 """
-    type = PACKET_POKER_PLAYER_STATS
+    NOT_FOUND = 1
 
-PacketFactory[PACKET_POKER_PLAYER_STATS] = PacketPokerPlayerStats
-########################################
-class PacketPokerGetSupportedPlayerStats(PacketPokerGetSupportedAttrs):
-    """\
-
-Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
-
-Direction: server <=  client
-"""
-    
-    info = Packet.info
-
-Packet.infoDeclare(globals(), PacketPokerGetSupportedPlayerStats, Packet, "POKER_GET_SUPPORTED_PLAYER_STATS", 162) # 162 # 0xa2 # %SEQ%
-########################################
-class PacketPokerSupportedPlayerStats(PacketPokerSupportedAttrs):
-    """\
-
-Semantics: request the list of statistics that the server currently supports.
-The answer is a possibly empty PACKET_POKER_SUPPORTED_PLAYER_STATS packet.
-
-Direction: server <=  client
-"""
-
-    
-    info = Packet.info + (
-        # FIXME: this is a hack that will work fine with
-        # XMLRPC/SOAP/REST/JSON clients but not with anyone using the
-        # binary protocol.  The binary protocol folks will always get an
-        # empty packet response.
-        ('attrs', [], 'Il'),
+    info = PacketPokerId.info + (
+        ('currency_serial', 0, 'I'),
+        ('rank', 0, 'I'),
+        ('percentile', 0, 'I')
         )
 
-Packet.infoDeclare(globals(), PacketPokerSupportedPlayerStats, Packet, "POKER_SUPPORTED_PLAYER_STATS", 163) # 163 # 0xa3 # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerPlayerStats, Packet, "POKER_PLAYER_STATS", 161) # 161 # 0xa1 # %SEQ%
 
 ########################################
 class PacketPokerTourneyInfo(Packet):

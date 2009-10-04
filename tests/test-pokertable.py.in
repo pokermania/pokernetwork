@@ -1847,21 +1847,21 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         """
         return True
 # --------------------------------------------------------------------------------
-class MockServiceWithUserStats(MockService):
+class MockServiceWithLadder(MockService):
     def __init__(self, settings):
         MockService.__init__(self, settings)
-        self.calledStatsMockup = None
+        self.has_ladder = True
+        self.calledLadderMockup = None
 
-    def getUserStatsLookup(self):
-        class UserStatsMockup:
-            def getAttrsAsPacket(userStatsSelf, table = None, serial = None):
-                self.calledStatsMockup = serial
-                return PacketPokerPlayerStats(serial = serial, statsDict = {})
-        return UserStatsMockup()
+    def getLadder(self, game_id, currency_serial, user_serial):
+        self.calledLadderMockup = user_serial
+        return PacketPokerPlayerStats()
+
 # --------------------------------------------------------------------------------
 class PokerTableMoveTestCase(PokerTableTestCaseBase):
-    def setUp(self, ServiceClass = MockServiceWithUserStats):
-        PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithUserStats)
+    def setUp(self, ServiceClass = MockServiceWithLadder):
+        PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
+
     # -------------------------------------------------------------------
     def test15_moveTo(self):
         """Make sure a player can move from one place to another"""
@@ -1874,7 +1874,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         def checkReturnPacket(packet):
             self.assertEqual(packet.name, "Player1")
             self.assertEqual(packet.game_id, self.table2_value)
-            self.assertEquals(self.service.calledStatsMockup, packet.serial)
+            self.assertEquals(self.service.calledLadderMockup, packet.serial)
             self.assertEquals(self.table2.timer_info.has_key('dealTimeout'), False)
         expectPlayerDeferred.addCallback(checkReturnPacket)
 

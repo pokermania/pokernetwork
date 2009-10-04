@@ -59,9 +59,6 @@ from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.packets import PacketError
-from pokernetwork.userstats import UserStatsRankPercentileLookup
-from pokernetwork.tourneyattrs import TourneyAttrsSponsoredPrizesLookup
-from pokernetwork.attrpack  import AttrsLookup
 from MySQLdb.cursors import DictCursor
 
 class ConstantDeckShuffler:

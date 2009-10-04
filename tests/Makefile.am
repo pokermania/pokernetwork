@@ -65,8 +65,6 @@ TESTS = coverage-reset \
 	test-clientserver.py \
 	test-currencyclient.py \
 	test-packets.py \
-	test-attrpack.py \
-	test-userstats.py \
 	test-pokeravatar.py \
 	test-pokerpackets.py \
 	test-pokerclientpackets.py \
