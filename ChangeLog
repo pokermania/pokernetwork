@@ -1,3 +1,19 @@
+2009-10-04  Loic Dachary <loic@dachary.org>
+
+ 	* Release 2.0.0
+
+	* configure.ac, pokernetwork/attrpack.py,
+	  pokernetwork/pokeravatar.py, pokernetwork/pokerpackets.py,
+	  pokernetwork/pokerservice.py, pokernetwork/pokertable.py,
+	  pokernetwork/userstats.py, tests/Makefile.am,
+	  tests/test-attrpack.py.in, tests/test-pokeravatar.py.in,
+	  tests/test-pokerpackets.py.in, tests/test-pokerservice.py.in,
+	  tests/test-pokertable.py.in, tests/test-protocol.py.in,
+	  tests/test-tourneytablebalance.py.in, tests/test-userstats.py.in,
+	  tests/testmessages.py: Fix the PLAYER_STATS implementation so
+	  that it carries the game_id. Improve performances to reduce by
+	  two the number of SQL requests.
+
 2009-10-04  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/Makefile.am (XFAIL_TESTS): variable must be exported to
@@ -5,6 +21,32 @@
 
 	* tests/run.in: Added "basename $1" call when searching in
 	XFAIL_TESTS on show database failure.
+
+2009-10-03  Loic Dachary <loic@dachary.org>
+
+	* tests/Makefile.am, tests/chameleon.png, tests/testpoker.php.in:
+	  cashIn and cashOut prototype changed. Add image for tests because
+	  poker2d images are gone
+	* tests/testcurrency.php.in: currency_db_user and
+	  currency_db_password must use the configure defined values
+
+2009-09-29  Loic Dachary <loic@dachary.org>
+
+	* database/1.7.5-2.0.0.sql: turn MEMORY tables into MYISAM tables
+	* database/schema.sql.in: ENGINE=MEMORY does not play well with
+	  replicated servers
+	* Makefile.am: add database/1.7.5-2.0.0.sql
+	* database/schema.sql.in: resthost table must persist accross mysql
+	  restarts
+
+2009-09-24  Loic Dachary <loic@dachary.org>
+
+	* tests/Makefile.am: exclude test-bug-14139.py
+	* tests/Makefile.am: export XFAIL_TESTS
+	* tests/Makefile.am: export XFAIL_TESTS
+	* tests/run.in: if there is no database, tests expected to fail
+	  must fail
+	* pokernetwork/pokerpackets.py: typo
 
 2009-09-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
@@ -74,8 +116,6 @@
 	refer to.
 
 2009-08-21  Loic Dachary <loic@dachary.org>
-
- 	* Release 2.0.0
 
 	* debian/control, debian/control.dapper, debian/control.edgy,
 	  debian/control.etch, debian/control.feisty, debian/control.gutsy,
