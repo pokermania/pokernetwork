@@ -99,6 +99,7 @@ TESTS = coverage-reset \
 	testpoker.php \
 	testbirthday.php \
 	testwebservice.php \
+	test-bug-14139.py \
 	coverage-report      
 
 # Regarding XFAIL_TESTS: the only items we typically list here are tests
@@ -106,7 +107,7 @@ TESTS = coverage-reset \
 # closed.  If you close a bug, be sure to remove the test-bug-NUMBER.py
 # entry from XFAIL_TESTS below.
 
-#XFAIL_TESTS = test-bug-14139.py
+export XFAIL_TESTS := test-bug-14139.py
 
 .PHONY: coverage-reset coverage-report
 

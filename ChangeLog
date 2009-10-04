@@ -1,3 +1,11 @@
+2009-10-04  Bradley M. Kuhn  <bkuhn@ebb.org>
+
+	* tests/Makefile.am (XFAIL_TESTS): variable must be exported to
+	environment for tests/run.in to receive it.
+
+	* tests/run.in: Added "basename $1" call when searching in
+	XFAIL_TESTS on show database failure.
+
 2009-09-13  Bradley M. Kuhn  <bkuhn@ebb.org>
 
 	* tests/test-bug-14139.py.in

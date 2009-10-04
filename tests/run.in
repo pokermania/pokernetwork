@@ -31,7 +31,7 @@ echo "RUNNING: $*"
 
 if ! $MYSQL_ROOT_CMD -e "show databases" >/dev/null 2>&1 ; then
     echo "skipped because $MYSQL_ROOT_CMD -e \"show databases\" fails"
-    if echo $XFAIL_TESTS | grep "$1" > /dev/null ; then
+    if echo $XFAIL_TESTS | fgrep `basename "$1"` > /dev/null ; then
         exit 1
     else
         exit 0
