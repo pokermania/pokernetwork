@@ -36,6 +36,8 @@ classes.append(pokerservice.PokerService)
 classes.append(pokerservice.PokerXML)
 from pokernetwork import pokerauth
 classes.append(pokerauth.PokerAuth)
+from pokernetwork import pokerauthmysql
+classes.append(pokerauthmysql.PokerAuth)
 from pokernetwork import pokerlock
 classes.append(pokerlock.PokerLock)
 from pokernetwork import pokeravatar
@@ -82,6 +84,7 @@ def call_messages():
             name = 'name'
         a_class.message.im_func(Fake(), '')
         sys.stdout = stdout
+    pokerauth.message('')
 call_messages()
 
 messages_needle = ''
@@ -113,20 +116,25 @@ class2message = {
     }
 messages_out = []
 
-def redirect_messages(a_class):
-    if not hasattr(a_class, 'orig_message'):
-        a_class.orig_message = [ ]
-    a_class.orig_message.append(a_class.message)
-    a_class.message = class2message.get(a_class, lambda self, string: messages_append(string))
-    
+def redirect_messages(obj, is_class = True):
+    if not hasattr(obj, 'orig_message'):
+        obj.orig_message = [ ]
+    obj.orig_message.append(obj.message)
+    if is_class:
+        obj.message = class2message.get(obj, lambda self, string: messages_append(string))
+    else:
+        obj.message = lambda string: messages_append(string)
+
 def silence_all_messages():
     messages_out = []
     for a_class in classes:
-        redirect_messages(a_class)
-
+        redirect_messages(a_class, True)
+    redirect_messages(pokerauth, False)
+    
 def restore_all_messages():
     for a_class in classes:
         a_class.message = a_class.orig_message.pop()
+    pokerauth.message = pokerauth.orig_message.pop()
 
 def search_output(what):
     if verbose > 1:

@@ -30,6 +30,9 @@
 from pokernetwork.user import User
 from twisted.python.runtime import seconds
 
+def message(string):
+    print "PokerAuth: " + string
+    
 class PokerAuth:
 
     def __init__(self, db, settings):
@@ -104,18 +107,19 @@ _get_auth_instance = None
 def get_auth_instance(db, settings):
     global _get_auth_instance
     if _get_auth_instance == None:
-        verbose = settings.headerGet("/server/@verbose")
-        def message(string):
-            print "PokerAuth: " + string
+        verbose = settings.headerGetInt("/server/@verbose")
         import imp
         script = settings.headerGet("/server/auth/@script")
         try:
-            if verbose > 1: message("get_auth_instance: trying to load: '%s'" % script)
+            if verbose > 1:
+                message("get_auth_instance: trying to load: '%s'" % script)
             module = imp.load_source("user_defined_pokerauth", script)
             get_instance = getattr(module, "get_auth_instance")
-            if verbose > 1: message("get_auth_instance: using custom implementation of get_auth_instance: %s" % script)
+            if verbose > 1:
+                message("get_auth_instance: using custom implementation of get_auth_instance: %s" % script)
             _get_auth_instance = get_instance
         except:
-            if verbose > 1: message("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'" % script)
+            if verbose > 1:
+                message("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'" % script)
             _get_auth_instance = lambda db, settings: PokerAuth(db, settings)
     return apply(_get_auth_instance, [db, settings])

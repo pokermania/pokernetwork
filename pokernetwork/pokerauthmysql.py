@@ -46,7 +46,7 @@ class PokerAuth:
                                   db = self.parameters["db"])
 
     def message(self, string):
-        print "PokerAuth: " + string
+        print "PokerAuthMysql: " + string
 
     def error(self, string):
         self.message("*ERROR* " + string)
