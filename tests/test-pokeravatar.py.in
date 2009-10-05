@@ -4140,7 +4140,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
 ##############################################################################
 settings_xml_table_picker_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+  <delays autodeal="2000" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <language value="en_US.ISO-8859-1"/>
   <language value="fr_FR.ISO-8859-1"/>
@@ -4433,18 +4433,23 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return playerDeferred
     # ------------------------------------------------------------------------
     def test03_tablePicker_onlyOnePossible(self):
-        self.createClients(4)
+        self.createClients(2)
 
         playersDeferreds = []
-        for ii in [ 0, 1, 2 ]:
+        for ii in [ 0 ]:
             playersDeferreds.append(
                 self.startPlayerSeatedAndPlaying(ii, 5, "Stud 8-max 2/4",
                                              "2-4-limit", "7stud", 8, 2))
-        pickerDeferred = self.preparePlayerForTablePickerSend(3)
-        pickerDeferred.addCallback(self.setMoneyForPlayer, 3, 2, "over_min_under_best", 5)
-        pickerDeferred.addCallback(self.tablePickerSucceeds, 3, 3, 0,
+        pickerDeferred = self.preparePlayerForTablePickerSend(1)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, 1, 2, "over_min_under_best", 5)
+        pickerDeferred.addCallback(self.tablePickerSucceeds, 1, 1, 0,
                                     "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
                                    autoBlindAnte = True)
+        def autodeal((client, packet), gameId):
+            table = self.service.getTable(gameId)
+            self.assertTrue(table.timer_info.has_key("dealTimeout"))
+            return (client, packet)
+        pickerDeferred.addCallback(autodeal, 5)
         playersDeferreds.append(pickerDeferred)
         return defer.DeferredList(playersDeferreds)
     # ------------------------------------------------------------------------
@@ -4621,7 +4626,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15"
+#    loader.methodPrefix = "test03"
 #    loader.methodPrefix = "test09_01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))

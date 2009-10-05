@@ -1029,6 +1029,8 @@ class PokerAvatar:
                             self.performPacketPokerSit(
                                PacketPokerSit(serial = mySerial, game_id = table.game.id),
                                table)
+                            table.update()
+
     # -------------------------------------------------------------------------
     def setPlayerInfo(self, packet):
         self.user.url = packet.url
