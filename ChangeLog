@@ -1,6 +1,27 @@
-2009-10-04  Loic Dachary <loic@dachary.org>
+2009-10-05  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* tests/test-pokerservice.py.in: replace the cashier with a mockup
+	  to avoid timing problems when testing getUserInfo
+	* tests/test-pokerclient.py.in: increase the playTourney timeout
+	  limit
+	* pokernetwork/pokerpackets.py: Change the type of the buy-in to
+	  int as it can exceed the capacity of a short. Convert time to int
+	  instead of float to get rid of deprecation warnings.
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  pokerservice must use seconds() instead of time.time()
+	* tests/test-pokeravatar.py.in: Reduce the verbosity of pokerauth
+	  tests and in production too.
+	  remove spurious import time
+	* tests/test-pokerauth.py.in: Reduce the verbosity of pokerauth
+	  tests and in production too.
+	* pokernetwork/pokerauth.py, pokernetwork/pokerauthmysql.py,
+	  tests/testmessages.py: Reduce the verbosity of pokerauth tests
+	  and in production too.
+	* pokernetwork/pokerauth.py: be less verbose about auth loading
+
+2009-10-04  Loic Dachary <loic@dachary.org>
 
 	* configure.ac, pokernetwork/attrpack.py,
 	  pokernetwork/pokeravatar.py, pokernetwork/pokerpackets.py,
