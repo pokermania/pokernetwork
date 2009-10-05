@@ -694,7 +694,7 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
-    test15_0_playTourney.timeout = 200
+    test15_0_playTourney.timeout = 500
 
     def check_breaks(self, (client, packet),):
         self.assertEqual(PACKET_POKER_TOURNEY_LIST, packet.type)
@@ -1251,6 +1251,7 @@ class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
 class PokerClientFactoryTestCase(unittest.TestCase):
 
     def setUp(self):
+        testclock._seconds_reset()        
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
         settings.header = settings.doc.xpathNewContext()
