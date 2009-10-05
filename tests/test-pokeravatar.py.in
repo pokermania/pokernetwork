@@ -29,7 +29,6 @@ import locale
 import libxml2
 from types import *
 import socket
-import time
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer, error, base
