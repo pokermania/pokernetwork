@@ -937,7 +937,7 @@ game_id: integer uniquely identifying a game.
 
     def __init__(self, *args, **kwargs):
         self.hands_count = kwargs.get("hands_count",0)
-        self.time = kwargs.get("time",0)
+        self.time = int(kwargs.get("time",0))
         self.hand_serial = kwargs.get("hand_serial",0)
         self.level = kwargs.get("level",0)
         PacketPokerId.__init__(self, *args, **kwargs)
@@ -2985,7 +2985,7 @@ class PacketPokerTourney(Packet):
 
     info = Packet.info + ( ('serial', 0, 'I'),
                            ('schedule_serial', 0, 'no net'),
-                           ('buy_in', 10, 'H'),
+                           ('buy_in', 10, 'I'),
                            ('start_time', 0, 'I'),
                            ('sit_n_go', 'y', 'cbool'),
                            ('players_quota', 0, 'H'),
@@ -3000,7 +3000,7 @@ class PacketPokerTourney(Packet):
                            ('name', 'noname', 's'),
                            )
     
-    format = "!IHIBHHIHHH"
+    format = "!IIIBHHIHHH"
     format_size = calcsize(format)
 
     def __init__(self, **kwargs):
@@ -3011,7 +3011,7 @@ class PacketPokerTourney(Packet):
         self.serial = kwargs.get("serial", 0)
         self.schedule_serial = kwargs.get("schedule_serial", 0)
         self.buy_in = kwargs.get("buy_in", 10)
-        self.start_time = kwargs.get("start_time", 0)
+        self.start_time = int(kwargs.get("start_time", 0))
         self.sit_n_go = kwargs.get("sit_n_go", 'y')
         self.players_quota = kwargs.get("players_quota", 0)
         self.registered = kwargs.get("registered", 0)
