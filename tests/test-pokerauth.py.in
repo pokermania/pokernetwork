@@ -38,7 +38,7 @@ import unittest
 import os.path
 import types
 
-from tests.testmessages import silence_all_messages, clear_all_messages, get_messages
+from tests.testmessages import silence_all_messages, clear_all_messages, get_messages, search_output
 silence_all_messages()
 
 from twisted.python.runtime import seconds
@@ -154,7 +154,7 @@ class PokerAuthTestCase(unittest.TestCase):
                                        'creating user joe_schmoe', 'create user with serial 4'])
         self.failUnless(len(self.checkIfUserExistsInDB('joe_schmoe')) == 1)
     # -----------------------------------------------------------------------------------------------------    
-    def test04_authWithoutAutoCreate(self, expectedMessages = ['user john_smith does not exist']):
+    def test04_authWithoutAutoCreate(self, expectedMessage = 'user john_smith does not exist'):
         """test04_authWithoutAutoCreate
         Test Poker auth : Try basic auth with autocreate on"""
         auth = pokerauth.get_auth_instance(self.db, self.settings)
@@ -162,7 +162,8 @@ class PokerAuthTestCase(unittest.TestCase):
         clear_all_messages()
 
         self.assertEquals(auth.auth('john_smith', 'blah'), (False, 'Invalid login or password'))
-        self.assertEquals(get_messages(), expectedMessages)
+        if expectedMessage:
+            self.assertTrue(search_output(expectedMessage))
         self.failUnless(len(self.checkIfUserExistsInDB('john_smith')) == 0)
     # -----------------------------------------------------------------------------------------------------    
     def test05_authWhenDoubleEntry(self):
@@ -220,7 +221,8 @@ class PokerAuthTestCase(unittest.TestCase):
         clear_all_messages()
         auth = pokerauth.get_auth_instance(MockDatabase(), self.settings)
         self.assertEquals(auth.userCreate("nobody", "nothing"), 4815)
-        self.assertEquals(get_messages(), ['creating user nobody', 'create user with serial 4815'])
+        self.assertTrue(search_output('creating user nobody'))
+        self.assertTrue(search_output('create user with serial 4815'))
     # -----------------------------------------------------------------------------------------------------    
     def test08_mysqlbeyond11userCreate(self):
         """test08_mysqlbeyond11userCreate
@@ -239,7 +241,8 @@ class PokerAuthTestCase(unittest.TestCase):
         clear_all_messages()
         auth = pokerauth.get_auth_instance(MockDatabase(), self.settings)
         self.assertEquals(auth.userCreate("somebody", "something"), 162342)
-        self.assertEquals(get_messages(), ['creating user somebody', 'create user with serial 162342'])
+        self.assertTrue(search_output('creating user somebody'))
+        self.assertTrue(search_output('create user with serial 162342'))
     # -----------------------------------------------------------------------------------------------------    
     def test09_setAndGetLevel(self):
         """test09_setAndGetLevel
@@ -312,7 +315,7 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
     def test04_authWithoutAutoCreate(self):
         """test04_authWithoutAutoCreate
         Test Poker auth : Try basic auth with autocreate on"""
-        PokerAuthTestCase.test04_authWithoutAutoCreate(self, expectedMessages = [])
+        PokerAuthTestCase.test04_authWithoutAutoCreate(self, expectedMessage = '')
     # -----------------------------------------------------------------------------------------------------    
     def test05_authWhenDoubleEntry(self):
         """test05_authWhenDoubleEntry
