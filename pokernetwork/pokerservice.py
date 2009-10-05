@@ -807,12 +807,7 @@ class PokerService(service.Service):
                 # eek, should I really be digging down into tourney's
                 # member variables in this next assignment?
                 secsLeft = tourney.breaks_duration
-            resumeTime = time.time() + secsLeft
-            # I saw at time of writing the above line that
-            # tournament_seconds() returns time.time(), but I think I
-            # actually *want* time.time() here since I'm expecting to send
-            # the "real world" time.  Perhaps I've however misunderstood
-            # the purpose of tournament_seconds()
+            resumeTime = seconds() + secsLeft
             for gameId in map(lambda game: game.id, tourney.games):
                 table = self.getTable(gameId)
                 table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = gameId, resume_time = resumeTime))

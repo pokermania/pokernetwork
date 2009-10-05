@@ -3353,8 +3353,6 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tables = {}
         tables[1] = Table()
         tables[2] = Table()
-        #the following gives me syntax error
-        #class  Game:
         class Game:
             def __init__(self, newId=0):
                 self.id = newId
@@ -3363,10 +3361,11 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 elif  gameId == 2: return tables[2]
                 else: self.failIf(True)
 
+        breaks_duration = 120
         class Tournament(BreakTestCase.Tournament):
             def __init__(self, remainingSeconds = None):
                 self.remaining_secs = remainingSeconds
-                self.breaks_duration = 120
+                self.breaks_duration = breaks_duration
                 self.games = [ Game(1), Game(2) ]
                 BreakTestCase.Tournament.__init__(self)
 
@@ -3389,12 +3388,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         # is None, thus yielding a return of None from
         # tourney.remainingBreakSeconds().  In this case, we should see
         # the resume_time as the current time, plus whatever
-        # tourney.breaks_duration is.  Note that we also force a constant
-        # resume_time by overriding time.time() to make sure it returns a
-        # constant value.
+        # tourney.breaks_duration is.  
 
-        saveTime = time.time         # Time, time see what's become of me...
-        time.time = lambda : 42
+        now = pokerservice.seconds()
         self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
         self.assertEquals(self.callCount, 1)
         for ii in [ 1, 2 ]:
@@ -3402,8 +3398,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
             pp = tables[ii].broadcastedPackets[0]
             self.assertEquals(pp.game_id, ii)
             self.assertEquals(pp.type, PACKET_POKER_TABLE_TOURNEY_BREAK_BEGIN)
-            self.assertEquals(pp.resume_time, 42 + 120)
-
+            self.assertTrue(abs((pp.resume_time - now) - breaks_duration) < 1.0)
 
         # Reset for next test below
         self.callCount = 0
@@ -3415,8 +3410,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         # in __init__.  We should get a resume_time of the current time
         # plus the remaining seconds.
 
-        time.time = lambda : 222
-        self.service.tourneyNewState(Tournament(remainingSeconds = 111),
+        now = pokerservice.seconds()
+        remainingSeconds = 111
+        self.service.tourneyNewState(Tournament(remainingSeconds = remainingSeconds),
                                      pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
         self.assertEquals(self.callCount, 1)
         for ii in [ 1, 2 ]:
@@ -3424,12 +3420,12 @@ class BreakTestCase(PokerServiceTestCaseBase):
             pp = tables[ii].broadcastedPackets[0]
             self.assertEquals(pp.game_id, ii)
             self.assertEquals(pp.type, PACKET_POKER_TABLE_TOURNEY_BREAK_BEGIN)
-            self.assertEquals(pp.resume_time, 111+222)
+            self.assertTrue(abs((pp.resume_time - now) - remainingSeconds) < 1.0)
         self.callCount = 0
 
         self.service.tourneyBreakCheck = notok
         self.service.db = saveDb
-        time.time = saveTime
+
     # ------------------------------------------------------------------------
     def test_tourneyDeal(self):
         class Game:
@@ -7147,7 +7143,7 @@ class LadderTestCase(PokerServiceTestCaseBase):
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01_"
+#    loader.methodPrefix = "test08_"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
