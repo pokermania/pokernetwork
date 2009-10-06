@@ -1,6 +1,12 @@
-2009-10-05  Loic Dachary <loic@dachary.org>
+2009-10-06  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* pokernetwork/pokerpackets.py, tests/test-pokerpackets.py.in:
+	  PacketPokerSetLocale are not proxified because the base class of
+	  the packet is incorrect (bug #13576)
+
+2009-10-05  Loic Dachary <loic@dachary.org>
 
 	* tests/test-pokerservice.py.in: replace the cashier with a mockup
 	  to avoid timing problems when testing getUserInfo
