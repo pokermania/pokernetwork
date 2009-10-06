@@ -95,6 +95,11 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
     def test_PacketPokerTable(self):
         packet = pokerpackets.PacketPokerTable(tourney_serial = 2)
         self.failUnless("tourney_serial = 2" in str(packet))
+    #--------------------------------------------------------------    
+    def test_PacketPokerSetLocale(self):
+        packet = pokerpackets.PacketPokerSetLocale(serial = 42, locale = "fr_FR", game_id = 100)
+        self.packUnpack(packet, 'game_id')
+        self.failUnless("100" in str(packet))
 #--------------------------------------------------------------    
     def test_verifyfactory(self):
         from pokernetwork.pokerpackets import PacketNames, PacketFactory

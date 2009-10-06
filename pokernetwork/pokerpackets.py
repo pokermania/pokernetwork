@@ -4234,7 +4234,7 @@ serial: integer uniquely identifying a player.
 """
 # locale: string representing fully qualified locale and encoding, such as "fr_FR.UTF-8"
 
-    info = PacketSerial.info + ( ('locale', 'en_US', 's'), )
+    info = PacketPokerId.info + ( ('locale', 'en_US', 's'), )
 
 Packet.infoDeclare(globals(), PacketPokerSetLocale, PacketSerial, "POKER_SET_LOCALE", 153) # 153 # 0x99 # %SEQ%
 
