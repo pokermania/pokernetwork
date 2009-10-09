@@ -1,6 +1,32 @@
-2009-10-06  Loic Dachary <loic@dachary.org>
+2009-10-09  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* tests/test-pokerlock.py.in: create locker2 after locker is
+	  acquired to prevent race condition that could change the ordering
+	  of output messages
+	* pokernetwork/pokercashier.py, tests/Makefile.am,
+	  tests/test-pokercashier.py.in, tests/test-pokerclient.py.in,
+	  tests/test-webservice.py.in, tests/testlock.py: pokerlock is
+	  using threads and the exact order in which operations are
+	  executed cannot be determined. For this reason a pokerlock mockup
+	  is created and used whereever pokerlock is used, directly or
+	  indirectly. The exception is the pokercashier and the pokerlock
+	  tests themselves because they are carefully implemented to take
+	  this particularity into account.
+	* pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py,
+	  pokernetwork/pokersite.py, tests/test-pokerservice.py.in,
+	  tests/test-pokersite.py.in, tests/test-protocol.py.in,
+	  tests/testmessages.py: When a tournament begins, the server
+	  responsible for the tournament notifies all the servers in the
+	  resthost table by sending an HTTP request on the /TOURNEY_START
+	  end point. When a server receives a request on /TOURNEY_START, it
+	  looks for all logged in avatars in explain mode which
+	  participates in the tournament and sends them a
+	  PacketPokerTourneyStart event with the tournament serial as well
+	  as the table serial (to which the logged in avatar is seated).
+
+2009-10-06  Loic Dachary <loic@dachary.org>
 
 	* pokernetwork/pokerpackets.py, tests/test-pokerpackets.py.in:
 	  PacketPokerSetLocale are not proxified because the base class of
