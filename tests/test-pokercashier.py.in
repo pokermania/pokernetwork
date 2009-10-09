@@ -1183,7 +1183,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
                     lockSelf.acquireCounts[name] = 1
                 return "ACQUIRED %s: %d" % (name, lockSelf.acquireCounts[name])
 
-        pokerlock.PokerLock = MockLock
+        pokercashier.PokerLock = MockLock
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         self.settings.header = self.settings.doc.xpathNewContext()

@@ -52,6 +52,7 @@ EXTRA_DIST = \
 	test-leak-exarkun.py.in \
 	test-pokerdatabase \
 	testclock.py \
+	testlock.py \
 	__init__.py \
 	setupMysqlVariables \
 	chameleon.png

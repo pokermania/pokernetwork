@@ -71,6 +71,8 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
 from twisted.web import xmlrpc, server, client, http, resource
 
+from tests import testlock
+
 #
 # Override QueryProtocol from xmlrpc because it lacks
 # the Cookie header.

@@ -34,6 +34,8 @@ from pokernetwork import currencyclient
 from pokernetwork import pokerlock
 from pokernetwork.pokerpackets import *
 
+PokerLock = pokerlock.PokerLock
+
 class PokerCashier:
 
     def __init__(self, settings):
@@ -42,7 +44,7 @@ class PokerCashier:
         self.currency_client = currencyclient.CurrencyClient()
         self.parameters = settings.headerGetProperties("/server/cashier")[0]
         if self.parameters.has_key('pokerlock_queue_timeout'):
-            pokerlock.PokerLock.queue_timeout = int(self.parameters['pokerlock_queue_timeout'])
+            PokerLock.queue_timeout = int(self.parameters['pokerlock_queue_timeout'])
         self.db = None
         self.db_parameters = settings.headerGetProperties("/server/database")[0]
         self.locks = {}
@@ -414,7 +416,7 @@ class PokerCashier:
         else:
             create_lock = True
         if create_lock:
-            self.locks[name] = pokerlock.PokerLock(self.db_parameters)
+            self.locks[name] = PokerLock(self.db_parameters)
             self.locks[name].verbose = self.verbose
             self.locks[name].start()
 
