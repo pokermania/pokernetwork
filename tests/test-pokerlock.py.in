@@ -65,12 +65,8 @@ class PokerLockTestCase(unittest.TestCase):
         self.locker = pokerlock.PokerLock(self.parameters)
         if verbose >= 0: self.locker.verbose = verbose;
         self.locker.start()
-        self.locker2 = pokerlock.PokerLock(self.parameters)
-        if verbose >= 0: self.locker2.verbose = verbose;
-        self.locker2.start()
     # ----------------------------------------------------------------    
     def tearDown(self):
-        self.locker2.close()
         self.locker.close()
     # ----------------------------------------------------------------    
     def test01_simple(self):
@@ -107,9 +103,13 @@ class PokerLockTestCase(unittest.TestCase):
             self.locker.release('lock01')
             self.assertTrue(isinstance(result, failure.Failure))
             self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
-            
+            self.locker2.close()
+
         def locker2():
             clear_all_messages()
+            self.locker2 = pokerlock.PokerLock(self.parameters)
+            self.locker2.start()
+            self.locker2.verbose = 6
             d = self.locker2.acquire('lock01', 0)
             d.addCallback(locker2_succeeded)
             d.addErrback(locker2_failed)
@@ -453,7 +453,7 @@ def GetTestedModule():
 # ----------------------------------------------------------------
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test02"
     suite = loader.loadClass(PokerLockTestCase)
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
