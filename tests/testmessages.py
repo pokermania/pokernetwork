@@ -59,6 +59,7 @@ from pokernetwork import pokersite
 classes.append(pokersite.PokerResource)
 classes.append(pokersite.PokerImageUpload)
 classes.append(pokersite.PokerAvatarResource)
+classes.append(pokersite.PokerTourneyStartResource)
 classes.append(pokersite.PokerSite)
 # that does not work because it gets imported in two different ways
 #from pokernetwork import proxyfilter

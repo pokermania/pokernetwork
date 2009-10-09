@@ -1381,26 +1381,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         info = self.service.getPersonalInfo(self.user1_serial)
         self.assertEquals(self.user1_serial, info.serial)
 
-    def cashOutCommit(self, packet):
-        packet = PacketPokerCashOutCommit(transaction_id = packet.name)
-        self.assertEquals(PacketAck(), self.service.cashOutCommit(packet))
-        return 1
-
-    def cashOut(self, result):
-        self.assertEquals([ (True, PacketAck()), (True, PacketAck()), (True, PacketAck()) ], result)
-        packet = PacketPokerCashOut(serial = self.user1_serial,
-                                    url = "ONE",
-                                    value = 30)
-        def validate(packet):
-            self.assertEquals("ONE", packet.url)
-            self.assertEquals(30, packet.value)
-            return packet
-
-        d = self.service.cashOut(packet)
-        d.addCallback(validate)
-        d.addCallback(self.cashOutCommit)
-        return d
-
     # ----------------------------------------------------------------
     def test07_cashInOut(self):
         self.service.startService()
@@ -1409,6 +1389,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 self.cashIn_called = True
             def cashOut(self, packet):
                 self.cashOut_called = True
+            def cashOutCommit(self, packet):
+                return packet.count
             def close(self):
                 pass
         self.service.cashier = Cashier()
@@ -1417,6 +1399,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertTrue(self.service.cashier.cashIn_called)
         self.service.cashOut(Packet())
         self.assertTrue(self.service.cashier.cashOut_called)
+        packet = PacketPokerCashOutCommit()
+        packet.count = 0
+        self.assertEqual(PACKET_ACK, self.service.cashOutCommit(packet).type)
+        packet.count = 2
+        self.assertEqual(PACKET_ERROR, self.service.cashOutCommit(packet).type)
 
     # ----------------------------------------------------------------
 
@@ -2441,6 +2428,164 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
         wrong_user_serial = 2
         self.assertFalse(self.service.tourneyMovePlayer(TourneyMovePlayerTestCase.Tournament(), table_serial, 200, wrong_user_serial))
         cursor.close()
+
+# ----------------------------------------------------------------
+class TourneyNotifyTestCase(PokerServiceTestCaseBase):
+    # ----------------------------------------------------------------
+    def startTournament(self, table_serial, table_money):
+        #
+        # start tournament
+        #
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.service.spawnTourney(schedule)
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
+                                                                game_id = tourney_serial))
+        self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
+        self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
+        self.service.tourneys[tourney_serial].can_register = False
+        packet = self.service.tourneyManager(tourney_serial)
+        self.assertEqual(tourney_serial, packet.tourney['serial'])
+        self.assertNotEqual(None, packet.tourney['rank2prize'])
+        self.assertEqual(1, packet.tourney['registered'])
+        self.assertEqual({'4' : {'rank': -1,
+                                 'table_serial': table_serial,
+                                 'name' : 'user1',
+                                 'money': table_money}}, packet.user2properties)
+
+    def test01_notifyStart(self):
+        self.service.startService()
+        self.service.verbose = 6
+        self.createUsers()
+        user_serial = self.user1_serial
+        table_serial = 606
+        table_money = 140
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        #
+        # user isLogged and in explain mode
+        #
+        avatar1 = self.service.createAvatar()
+        avatar1.queuePackets()
+        avatar1.relogin(self.user1_serial)
+        avatar1.setExplain(True)
+        #
+        # user isLogged but not in explain mode
+        #
+        avatar2 = self.service.createAvatar()
+        avatar1.queuePackets()
+        avatar2.relogin(self.user2_serial)
+
+        self.startTournament(table_serial, table_money)
+        
+        #
+        # tourneyNotifyStart only notifies user1
+        #
+        avatar1.resetPacketsQueue()
+        avatar2.resetPacketsQueue()
+        self.assertEquals(1, len(self.service.tourneyNotifyStart(tourney_serial)))
+        #
+        # If user2 is notified, it will be called and raise an error
+        #
+        def deferredCanceled(packets):
+            self.assertEqual(None, packets)
+            
+        def check(packets):
+            self.assertEqual(1, len(packets))
+            self.assertEqual(PACKET_POKER_TOURNEY_START, packets[0].type)
+            self.assertEqual(tourney_serial, packets[0].tourney_serial)
+            self.assertEqual(table_serial, packets[0].table_serial)
+            self.assertEqual([], avatar2.resetPacketsQueue())
+            self.assertEqual(0, avatar2.flushLongPollDeferred().called)
+            avatar2.flushLongPollDeferred().callback(None)
+            return packets
+        d2 = avatar2.longpollDeferred()
+        d2.addCallback(deferredCanceled)
+        d1 = avatar1.longpollDeferred()
+        d1.addCallback(check)
+        return defer.DeferredList((d1, d2), fireOnOneErrback = True)
+
+    def test02_no_explain(self):
+        self.service.startService()
+        self.service.verbose = 6
+        self.createUsers()
+        user_serial = self.user1_serial
+        table_serial = 606
+        table_money = 140
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        #
+        # user isLogged and in explain mode
+        #
+        avatar1 = self.service.createAvatar()
+        avatar1.queuePackets()
+        avatar1.relogin(self.user1_serial)
+        avatar1.setExplain(True)
+
+        self.startTournament(table_serial, table_money)
+        avatar1.resetPacketsQueue()
+        self.assertEquals(1, len(self.service.tourneyNotifyStart(tourney_serial)))
+        #
+        # When the actual notification occurs (scheduled with callLater) it
+        # will not be broadcasted because the avatar is no longer in explain mode.
+        #
+        avatar1.setExplain(None)
+        #
+        # If user1 is notified, it will be called and raise an error
+        #
+        def mustNotBeCalled(packets):
+            self.assertEqual(None, packets)
+        avatar1.longpollDeferred().addCallback(mustNotBeCalled)
+
+    def test03_not_logged_in(self):
+        self.service.startService()
+        self.service.verbose = 6
+        self.createUsers()
+        user_serial = self.user1_serial
+        table_serial = 606
+        table_money = 140
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        #
+        # user isLogged and in explain mode
+        #
+        avatar1 = self.service.createAvatar()
+        avatar1.queuePackets()
+        avatar1.relogin(self.user1_serial)
+        avatar1.setExplain(True)
+
+        self.startTournament(table_serial, table_money)
+        self.assertEquals(1, len(self.service.tourneyNotifyStart(tourney_serial)))
+        #
+        # When the actual notification occurs (scheduled with callLater) it
+        # will not be broadcasted because the avatar is no longer logged in.
+        #
+        avatar1.logout()
+        avatar1.resetPacketsQueue()
+        #
+        # If user1 is notified, it will be called and raise an error
+        #
+        def mustNotBeCalled(packets):
+            self.assertEqual(None, packets)
+        avatar1.longpollDeferred().addCallback(mustNotBeCalled)
+
+    def test04_wrong_tourney(self):
+        self.service.startService()
+        caughtIt = False
+        try:
+            self.service.tourneyNotifyStart(48484848)
+            self.failIf(True, "We should have caught a UserWarning")
+        except UserWarning:
+            caughtIt = True
+        self.failUnless(caughtIt, "Should have caught a UserWarning!")
+
+    def test05_broadcast_start(self):
+        self.service.startService()
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        host = 'hostname'
+        port = '80'
+        tourney_serial = str(tourney_serial)
+        self.service.db.db.query("INSERT INTO resthost (name, host, port) VALUES ('name', '%s', %s)" % ( host, port ))
+        def getPage(url):
+            self.assertEqual('http://' + host + ':' + port + '/TOURNEY_START?tourney_serial=' + tourney_serial, url)
+        self.service.getPage = getPage
+        self.service.tourneyBroadcastStart(tourney_serial)
 
 class ListHandsTestCase(PokerServiceTestCaseBase):
 
@@ -6341,7 +6486,7 @@ class PokerRestTreeCoverageTestCase(unittest.TestCase):
     def test02_render(self):
         self.service = pokerservice.PokerService(self.settings)
         prt = pokerservice.PokerRestTree(self.service)
-        self.assertEquals(prt.render(MockRequestBase()), "Use /POKER_REST")
+        self.assertEquals(prt.render(MockRequestBase()), "Use /POKER_REST or /UPLOAD or /AVATAR or /TOURNEY_START")
 ##############################################################################
 # The following Mockups are used for PokerXML and its subclasses.
 
@@ -7156,6 +7301,7 @@ def Run():
     suite.addTest(loader.loadClass(PokerRESTCoverageTestCase))
     suite.addTest(loader.loadClass(PokerSOAPCoverageTestCase))
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
+    suite.addTest(loader.loadClass(TourneyNotifyTestCase))
     suite.addTest(loader.loadClass(LadderTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,

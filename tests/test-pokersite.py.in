@@ -70,6 +70,9 @@ class PokerServiceMockup:
 
       def getPlayerPlaces(self, serial):
             return PacketPokerPlayerPlaces(serial = serial)
+
+      def tourneyNotifyStart(self, tourney_serial):
+            self.tourney_serial = tourney_serial
       
       player_image = None
       def setPlayerImage(self, player_image):
@@ -320,6 +323,46 @@ class PokerResourceTestCase(PokerSiteBase):
             r.getSession().avatar.handlePacketLogic = handlePacketLogic
             r.requestReceived('GET', '/?uid=uid&auth=auth', '')
             return d
+
+class PokerTourneyStartTestCase(unittest.TestCase):
+
+      class Transport:
+            def getPeer(self):
+                  return None
+            def getHost(self):
+                  return None
+
+      class Channel:
+            def __init__(self, site):
+                  self.transport = PokerTourneyStartTestCase.Transport()
+                  self.site = site
+
+      def setUp(self):
+            testclock._seconds_reset()        
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" />
+"""
+            self.settings = pokernetworkconfig.Config([])
+            self.settings.loadFromString(settings_xml)
+            pokermemcache.memcache = pokermemcache.MemcacheMockup
+            pokermemcache.memcache_singleton.clear()
+            pokermemcache.memcache_expiration_singleton.clear()
+            self.service = PokerServiceMockup()
+            self.site = pokersite.PokerSite(self.settings, pokersite.PokerTourneyStartResource(self.service))
+
+      def tearDown(self):
+            pass
+
+      def test01_render(self):            
+            r = pokersite.Request(self.Channel(self.site), True)
+            r.site = r.channel.site
+            input = ''
+            r.gotLength(len(input))
+            r.handleContentChunk(input)
+            r.requestReceived('GET', '/?tourney_serial=666', '')
+            self.assertSubstring('\nOK', r.transport.getvalue())
+            self.assertEquals(666, self.service.tourney_serial)
+            r.getSession().expire()
 
 class PokerImageUploadTestCase(unittest.TestCase):
 
@@ -849,6 +892,7 @@ def Run():
     suite.addTest(loader.loadClass(RequestTestCase))
     suite.addTest(loader.loadClass(PokerSiteTestCase))
     suite.addTest(loader.loadClass(HelpersTestCase))
+    suite.addTest(loader.loadClass(PokerTourneyStartTestCase))
     return runner.TrialRunner(
         reporter.VerboseTextReporter,
         tracebackFormat='default',

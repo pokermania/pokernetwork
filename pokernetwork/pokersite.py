@@ -331,6 +331,29 @@ class PokerImageUpload(resource.Resource):
             request.finish()
             return
 
+class PokerTourneyStartResource(resource.Resource):
+
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.verbose = service.verbose
+        self.deferred = defer.succeed(None)
+        self.isLeaf = True
+
+    def message(self, string):
+        print "PokerTourneyStart: " + string
+
+    def render(self, request):
+        if self.verbose > 3:
+            self.message("render " + str(request))
+        tourney_serial = request.args['tourney_serial'][0]
+        self.service.tourneyNotifyStart(int(tourney_serial))
+        body = 'OK'
+        request.setHeader('content-type',"text/html")
+        request.setHeader('content-length', str(len(body)))
+        request.write(body)
+        return True
+
 class PokerAvatarResource(resource.Resource):
 
     def __init__(self, service):

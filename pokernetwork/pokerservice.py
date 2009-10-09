@@ -45,6 +45,7 @@ from traceback import print_exc
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
+from twisted.web.client import getPage
 from twisted.python.runtime import seconds
 
 try:
@@ -89,7 +90,7 @@ from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -212,6 +213,7 @@ class PokerService(service.Service):
             module = imp.load_source("monitor", monitor.content)
             self.monitor_plugins.append(getattr(module, "handle_event"))
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
+        self.getPage = getPage
 
     def setupLadder(self):
         cursor = self.db.cursor()
@@ -819,6 +821,7 @@ class PokerService(service.Service):
             else:
                 self.tourneyResumeAndDeal(tourney)
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
+            reactor.callLater(0.01, self.tourneyBroadcastStart, tourney.serial)
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
             # since we only want this behavior before the first deal.
             wait = int(self.delays.get('extra_wait_tourney_start', 0))
@@ -1133,6 +1136,33 @@ class PokerService(service.Service):
                                     message = "registration failed for players %s in tourney %d" % ( str(serial_failed), tourney_serial ))
         else:
             return PacketAck()
+
+    def tourneyBroadcastStart(self, tourney_serial):
+        tourney_serial = str(tourney_serial)
+        cursor = self.db.cursor(DictCursor)
+        cursor.execute("SELECT * FROM resthost")
+        for row in cursor.fetchall():
+            self.getPage('http://' + row['host'] + ':' + str(row['port']) + '/TOURNEY_START?tourney_serial=' + tourney_serial)
+        cursor.close()
+        
+    def tourneyNotifyStart(self, tourney_serial):
+        manager = self.tourneyManager(tourney_serial)
+        if manager.type != PACKET_POKER_TOURNEY_MANAGER:
+            raise UserWarning, str(manager)
+        user2properties = manager.user2properties
+        def send(avatar):
+            #
+            # check again because the call is delayed and the user may have logged out
+            # or the avatar may have been destroyed in the meantime
+            #
+            if avatar.isLogged() and avatar.explain:
+                avatar.sendPacket(PacketPokerTourneyStart(tourney_serial = tourney_serial, table_serial = user2properties[str(avatar.getSerial())]['table_serial']))
+        calls = []
+        for avatars in self.avatar_collection.values():
+            for avatar in avatars:
+                if user2properties.has_key(str(avatar.getSerial())) and avatar.explain:
+                    calls.append(reactor.callLater(0.01, send, avatar))
+        return calls
         
     def tourneyManager(self, tourney_serial):
         packet = PacketPokerTourneyManager()
@@ -2702,11 +2732,12 @@ class PokerRestTree(resource.Resource):
         self.verbose = service.verbose
         self.putChild("POKER_REST", PokerResource(self.service))
         self.putChild("UPLOAD", PokerImageUpload(self.service))
+        self.putChild("TOURNEY_START", PokerTourneyStartResource(self.service))
         self.putChild("AVATAR", PokerAvatarResource(self.service))
         self.putChild("", self)
 
     def render_GET(self, request):
-        return "Use /POKER_REST"
+        return "Use /POKER_REST or /UPLOAD or /AVATAR or /TOURNEY_START"
 
 def _getRequestCookie(request):
     if request.cookies:

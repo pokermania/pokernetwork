@@ -4284,6 +4284,31 @@ game_id: integer uniquely identifying a game.
 Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_TABLE_TOURNEY_BREAK_DONE", 155) # 155 # 0x9b # %SEQ%
 
 ########################################
+
+class PacketPokerTourneyStart(Packet):
+    """\
+
+Semantics: the "tourney_serial" tournament started and
+the player is seated at table "table_serial".
+
+Direction: server  => client
+
+Context: this packet is sent to the client when it is
+logged in. The player seated at the table "table_serial"
+is implicitly the logged in player.
+
+tourney_serial: integer uniquely identifying a tournament.
+table_serial: integer uniquely identifying a game.
+"""
+    
+    info = Packet.info + (
+            ('tourney_serial', 0, 'I'),
+            ('table_serial', 0, 'I')
+            )
+
+Packet.infoDeclare(globals(), PacketPokerTourneyStart, Packet, "POKER_TOURNEY_START", 156) # 0x9c # %SEQ%
+
+########################################
 class PacketPokerPlayerStats(PacketPokerId):
     """\
 
