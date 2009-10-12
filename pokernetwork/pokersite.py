@@ -107,10 +107,11 @@ class Request(server.Request):
     def getSession(self):
         uid = self.args.get('uid', [self.site._mkuid()])[0]
         auth = self.args.get('auth', [self.site._mkuid()])[0]
+        explain = self.args.get('explain', ['yes'])[0] == 'yes'
         try:
-            self.session = self.site.getSession(uid, auth)
+            self.session = self.site.getSession(uid, auth, explain)
         except KeyError:
-            self.session = self.site.makeSession(uid, auth)
+            self.session = self.site.makeSession(uid, auth, explain)
         self.session.touch()
         return self.session
 
@@ -134,12 +135,14 @@ class Request(server.Request):
 
 class Session(server.Session):
 
-    def __init__(self, site, uid, auth):
+    def __init__(self, site, uid, auth, explain):
         server.Session.__init__(self, site, uid)
         self.auth = auth
         self.avatar = site.resource.service.createAvatar()
+        self.explain_default = explain
         self.avatar.queuePackets()
-        self.avatar.setExplain(PacketPokerExplain.ALL)
+        if self.explain_default:
+            self.avatar.setExplain(PacketPokerExplain.ALL)
         self.avatar.roles.add(PacketPokerRoles.PLAY)
         self.expired = False
 
@@ -158,7 +161,7 @@ class Session(server.Session):
             # is not called : this is intended because the
             # session already expired.
             #
-            self.site.getSession(self.uid, self.auth)
+            self.site.getSession(self.uid, self.auth, self.explain_default)
             server.Session.checkExpired(self)
             return True
         except KeyError:
@@ -499,7 +502,7 @@ class PokerSite(server.Site):
             #
             self.memcache.set(session.auth, str(serial), time = self.cookieTimeout)
 
-    def getSession(self, uid, auth):
+    def getSession(self, uid, auth, explain):
         if not isinstance(uid, str):
             raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         if not isinstance(auth, str):
@@ -542,19 +545,19 @@ class PokerSite(server.Site):
                 # Create a session with an uid that matches the memcache
                 # key
                 #
-                self.makeSessionFromUidAuth(uid, auth).memcache_serial = memcache_serial
+                self.makeSessionFromUidAuth(uid, auth, explain).memcache_serial = memcache_serial
                 if memcache_serial > 0:
                     self.sessions[uid].avatar.relogin(memcache_serial)
                 
         return self.sessions[uid]
 
-    def makeSessionFromUidAuth(self, uid, auth):
-        session = self.sessions[uid] = self.sessionFactory(self, uid, auth)
+    def makeSessionFromUidAuth(self, uid, auth, explain):
+        session = self.sessions[uid] = self.sessionFactory(self, uid, auth, explain)
         session.startCheckingExpiration(self.sessionCheckTime)
         return session
         
-    def makeSession(self, uid, auth):
-        session = self.makeSessionFromUidAuth(uid, auth)
+    def makeSession(self, uid, auth, explain):
+        session = self.makeSessionFromUidAuth(uid, auth, explain)
         session.memcache_serial = 0
         self.memcache.add(auth, str(session.memcache_serial))
         return session

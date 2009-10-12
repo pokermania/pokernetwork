@@ -655,11 +655,52 @@ class SessionTestCase(PokerSiteBase):
       def test01_checkExpired(self):
             uid = 'uid'
             auth = 'auth'
-            session = self.site.makeSessionFromUidAuth(uid, auth)
+            session = self.site.makeSessionFromUidAuth(uid, auth, False)
             self.site.memcache.set(auth, '0')
             self.assertEqual(True, session.checkExpired())
             self.site.memcache.delete(auth)
             self.assertEqual(False, session.checkExpired())
+
+class SessionExplainTestCase(PokerSiteBase):
+
+      def test01_explain_missing_yes(self):
+            class Channel:
+                  def __init__(self, site):
+                        self.site = site
+            
+            r = pokersite.Request(Channel(self.site), True)
+            r.site = r.channel.site
+            r.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
+            session = r.getSession()
+            self.assertNotEquals(None, session.avatar.explain)
+            session.expire()
+            self.assertEqual(True, session.expired)
+
+      def test02_explain_yes(self):
+            class Channel:
+                  def __init__(self, site):
+                        self.site = site
+            
+            r = pokersite.Request(Channel(self.site), True)
+            r.site = r.channel.site
+            r.args = { 'uid': [ 'uid' ], 'auth': ['auth'], 'explain': ['yes'] }
+            session = r.getSession()
+            self.assertNotEquals(None, session.avatar.explain)
+            session.expire()
+            self.assertEqual(True, session.expired)
+
+      def test02_explain_no(self):
+            class Channel:
+                  def __init__(self, site):
+                        self.site = site
+            
+            r = pokersite.Request(Channel(self.site), True)
+            r.site = r.channel.site
+            r.args = { 'uid': [ 'uid' ], 'auth': ['auth'], 'explain': ['no'] }
+            session = r.getSession()
+            self.assertEquals(None, session.avatar.explain)
+            session.expire()
+            self.assertEqual(True, session.expired)
 
 class RequestTestCase(PokerSiteBase):
 
@@ -731,7 +772,7 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             uid = 'uid'
             auth = 'auth'
-            session = self.site.makeSession(uid, auth)
+            session = self.site.makeSession(uid, auth, False)
             self.site.memcache.delete(auth)
             exception = False
             try:
@@ -746,7 +787,7 @@ class PokerSiteTestCase(PokerSiteBase):
             A session exists in core and in memcache. The memcache serial
             is set from the outside.
             """
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             serial = 111
             self.site.memcache.set(session.auth, str(serial))
             self.site.getSession(session.uid, session.auth)
@@ -765,7 +806,7 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             nothing happened and user logged out
             """
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             self.site.updateSession(session)
             self.assertEquals('0', self.site.memcache.get(session.auth))
 
@@ -775,7 +816,7 @@ class PokerSiteTestCase(PokerSiteBase):
             The memcache must be updated accordingly by updating the session id
             entry with the serial
             """
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             serial = 100
             session.avatar.user.serial = serial
             self.site.updateSession(session)
@@ -787,7 +828,7 @@ class PokerSiteTestCase(PokerSiteBase):
             memcache serial is > 0 and serial is == 0, meaning the user logged out
             the memcache must be updated by setting the session id entry to 0
             """
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             #
             # login
             #
@@ -810,7 +851,7 @@ class PokerSiteTestCase(PokerSiteBase):
             memcache serial is > 0 and serial is > 0 and memcache_serial != serial, 
             serial wins and take over
             """
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             #
             # login
             #
@@ -846,7 +887,7 @@ class PokerSiteTestCase(PokerSiteBase):
 
       def test08_memcache_key_not_string(self):
             exceptionCaught = False
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             self.assertRaises(Exception, self.site.memcache.get, unicode(session.auth))
             self.assertRaises(Exception, self.site.getSession, unicode(session.uid), session.auth)
             self.assertRaises(Exception, self.site.getSession, session.uid, unicode(session.auth))
@@ -868,7 +909,7 @@ class PokerSiteTestCase(PokerSiteBase):
             service = PokerServiceMockup()
             site = pokersite.PokerSite(settings, pokersite.PokerResource(service))
 
-            session = self.site.makeSession('uid', 'auth')
+            session = self.site.makeSession('uid', 'auth', False)
             session.avatar.tables[1] = 'table'
             self.assertEquals(True, site.persistSession(session))
             self.assertEquals(False, session.expired)
@@ -889,6 +930,7 @@ def Run():
     suite.addTest(loader.loadClass(PokerImageUploadTestCase))
     suite.addTest(loader.loadClass(PokerAvatarResourceTestCase))
     suite.addTest(loader.loadClass(SessionTestCase))
+    suite.addTest(loader.loadClass(SessionExplainTestCase))
     suite.addTest(loader.loadClass(RequestTestCase))
     suite.addTest(loader.loadClass(PokerSiteTestCase))
     suite.addTest(loader.loadClass(HelpersTestCase))

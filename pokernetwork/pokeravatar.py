@@ -388,8 +388,13 @@ class PokerAvatar:
         # registration or creation. Not for table interaction.
         #
         ( host, port, path ) = resthost
+        path += '?explain=no'
+        if self.service.verbose > 3:
+            self.message("getOrCreateRestClient(%s, %d, %s, %s)" % ( host, port, path, str(game_id) ))
         if game_id:
             if not self.game_id2rest_client.has_key(game_id):
+                if self.service.verbose > 1:
+                    self.message("getOrCreateRestClient(%s, %d, %s, %s): create" % ( host, port, path, str(game_id) ))
                 self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, lambda packets: self.incomingDistributedPackets(packets, game_id), self.service.verbose)
             client = self.game_id2rest_client[game_id]
         else:
@@ -404,6 +409,8 @@ class PokerAvatar:
         return d
             
     def incomingDistributedPackets(self, packets, game_id):
+        if self.service.verbose > 3:
+            self.message("incomingDistributedPackets(%s, %s)" % ( str(packets), str(game_id) ))
         if game_id:
             if game_id not in self.tables:
                 #
@@ -413,6 +420,8 @@ class PokerAvatar:
                 client = self.game_id2rest_client[game_id]
                 if ( len(client.queue.callbacks) <= 0 or
                      client.pendingLongPoll ):
+                    if self.service.verbose > 1:
+                        self.message("incomingDistributedPackets: del %d" % game_id)
                     del self.game_id2rest_client[game_id]
         self.blockLongPollDeferred()
         for packet in packets:
