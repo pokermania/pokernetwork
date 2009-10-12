@@ -105,8 +105,6 @@ class PokerRestClient:
 
     def sendPacket(self, packet, data):
         if self.pendingLongPoll:
-            if self.verbose > 3:
-                self.message('sendPacket PacketPokerLongPollReturn')
             self.sendPacketData('{ "type": "PacketPokerLongPollReturn" }')
         d = defer.Deferred()
         d.addCallbacks(self.receivePacket, self.receiveError)
@@ -117,6 +115,8 @@ class PokerRestClient:
         return d
 
     def receivePacket(self, data):
+        if self.verbose > 3:
+            self.message('receivePacket ' + data)
         if self.pendingLongPoll:
             self.scheduleLongPoll(0)
         self.pendingLongPoll = False
@@ -129,6 +129,8 @@ class PokerRestClient:
         return [ PacketError(message = str(data)) ]
     
     def sendPacketData(self, data):
+        if self.verbose > 3:
+            self.message('sendPacket ' + data)
         factory = RestClientFactory(self.host, self.port, self.path, data, self.timeout)
         reactor.connectTCP(self.host, self.port, factory)
         self.sentTime = seconds()
