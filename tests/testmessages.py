@@ -55,6 +55,9 @@ from pokerengine import pokergame
 classes.append(pokergame.PokerGame)
 from pokerengine import pokertournament
 classes.append(pokertournament.PokerTournament)
+from pokernetwork import pokerrestclient
+classes.append(pokerrestclient.PokerRestClient)
+classes.append(pokerrestclient.PokerProxyClientFactory)
 from pokernetwork import pokersite
 classes.append(pokersite.PokerResource)
 classes.append(pokersite.PokerImageUpload)
@@ -79,6 +82,9 @@ def call_messages():
         stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
         class Fake:
+            host = 'H'
+            port = 'port'
+            serial = 1
             prefix = 'P'
             _prefix = 'P'
             id = 1
