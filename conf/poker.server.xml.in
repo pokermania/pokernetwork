@@ -113,7 +113,7 @@
   <!-- <auth script="/usr/local/share/poker-network/pokerauth.py"/> -->
 
   <!-- <rest_filter>/usr/share/pyshared/pokernetwork/nullfilter.py</rest_filter> -->
-  <!-- <rest_filter>/usr/share/pyshared/pokernetwork/proxyfilter.py</rest_filter> -->
+  <!-- <rest_filter>/usr/share/pyshared/pokernetwork/sessionproxyfilter.py</rest_filter> -->
   <!-- <tourney_select_info settings="/etc/poker/poker.prizes.xml">/usr/share/pyshared/pokernetwork/tourneyselectinfo.py</tourney_select_info> -->
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <refill serial="1" amount="5000000"/>
