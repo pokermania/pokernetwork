@@ -70,7 +70,8 @@ class PokerLock(threading.Thread):
         try:
             reactor.addSystemEventTrigger('during', 'shutdown', self.stopping)
             while 1:
-                if self.verbose > 2: self.message("loop, queue size " + str(self.q.qsize()))
+                if self.verbose > 2:
+                    self.message("loop, queue size " + str(self.q.qsize()))
                 if not self.running and self.q.empty():
                     self.message("stopped")
                     break
