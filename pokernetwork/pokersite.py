@@ -242,6 +242,8 @@ class PokerResource(resource.Resource):
         session = request.getSession()
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         def render(packets):
+            if self.verbose > 3:
+                self.message("(%s:%s) " % request.findProxiedIP() + "render " + data + " returns " + str(packets))
             #
             # update the session information if the avatar changed
             #
