@@ -3896,7 +3896,12 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         def handleLongPoll(x):
             avatar = self.service.avatars[0]
+            uid = 'ZUID'
+            auth = 'ZAUTH'
+            avatar.setDistributedArgs(uid, auth)
             client = avatar.getOrCreateRestClient(('host', 11111, 'path'), 2)
+            self.failUnlessSubstring(uid, client.path)
+            self.failUnlessSubstring(auth, client.path)
             d = avatar.handlePacketDefer(PacketPokerLongPoll())
             self.assertEquals(d, avatar._longpoll_deferred)
             self.assertEquals(False, avatar._block_longpoll_deferred)
@@ -4627,7 +4632,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"
-#    loader.methodPrefix = "test09_01"
+#    loader.methodPrefix = "test85"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))

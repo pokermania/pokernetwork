@@ -141,6 +141,7 @@ class Session(server.Session):
         self.avatar = site.resource.service.createAvatar()
         self.explain_default = explain
         self.avatar.queuePackets()
+        self.avatar.setDistributedArgs(uid, auth)
         if self.explain_default:
             self.avatar.setExplain(PacketPokerExplain.ALL)
         self.avatar.roles.add(PacketPokerRoles.PLAY)

@@ -66,7 +66,11 @@ class PokerAvatar:
         self._block_longpoll_deferred = False
         self._longpoll_deferred = None
         self.game_id2rest_client = {}
+        self.distributed_args = '?explain=no'
 
+    def setDistributedArgs(self, uid, auth):
+        self.distributed_args = '?explain=no&uid=%s&auth=%s' % ( uid, auth )
+        
     def __str__(self):
         return "PokerAvatar serial = %s, name = %s" % ( self.getSerial(), self.getName() )
 
@@ -388,7 +392,7 @@ class PokerAvatar:
         # registration or creation. Not for table interaction.
         #
         ( host, port, path ) = resthost
-        path += '?explain=no'
+        path += self.distributed_args
         if self.service.verbose > 3:
             self.message("getOrCreateRestClient(%s, %d, %s, %s)" % ( host, port, path, str(game_id) ))
         if game_id:

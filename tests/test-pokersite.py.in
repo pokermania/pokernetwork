@@ -661,6 +661,14 @@ class SessionTestCase(PokerSiteBase):
             self.site.memcache.delete(auth)
             self.assertEqual(False, session.checkExpired())
 
+      def test02_checkDistributedArgs(self):
+            uid = 'ZUID'
+            auth = 'ZAUTH'
+            session = self.site.makeSessionFromUidAuth(uid, auth, False)
+            self.failUnlessSubstring(uid, session.avatar.distributed_args)
+            self.failUnlessSubstring(auth, session.avatar.distributed_args)
+            session.expire()
+
 class SessionExplainTestCase(PokerSiteBase):
 
       def test01_explain_missing_yes(self):
