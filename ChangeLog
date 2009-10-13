@@ -1,6 +1,32 @@
-2009-10-09  Loic Dachary <loic@dachary.org>
+2009-10-13  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py,
+	  tests/test-pokeravatar.py.in, tests/test-pokersite.py.in: the uid
+	  & auth args are set when a request is distributed by the avatar
+	  to other servers
+
+2009-10-12  Loic Dachary <loic@dachary.org>
+
+	* tests/testmessages.py: control verbosity of pokerrestclient
+	  classes
+	* tests/test-pokerrestclient.py.in: add explain=no to each path
+	* pokernetwork/pokersite.py: add a message displaying the packets
+	  returned
+	* pokernetwork/pokerrestclient.py: improve verbosity
+	* pokernetwork/pokerlock.py: message on a separate line
+	* conf/poker.server.xml.in: change the example to reflect the new
+	  sessionproxyfilter
+	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py,
+	  tests/test-pokersite.py.in: The explain argument to the
+	  POKER_REST end point allows to control the activation of the
+	  explain mode. If explain is not set or if it is set to "yes",
+	  then the session avatar is in explain mode. If explain is set to
+	  "no", then the session avatar is not in explain mode. (bug
+	  #14504)
+
+2009-10-09  Loic Dachary <loic@dachary.org>
 
 	* tests/test-pokerlock.py.in: create locker2 after locker is
 	  acquired to prevent race condition that could change the ordering
