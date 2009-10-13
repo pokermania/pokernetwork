@@ -798,7 +798,7 @@ class PokerSiteTestCase(PokerSiteBase):
             session = self.site.makeSession('uid', 'auth', False)
             serial = 111
             self.site.memcache.set(session.auth, str(serial))
-            self.site.getSession(session.uid, session.auth, False)
+            self.site.getSession(session.uid, session.auth, True)
             self.assertEquals(serial, session.avatar.getSerial())
             self.assertNotEquals(None, session.avatar.explain)
             self.assertEquals(serial, session.avatar.explain.serial)
