@@ -807,7 +807,7 @@ class PokerSiteTestCase(PokerSiteBase):
             Memcache serial changed and becomes inconsistent.
             """
             self.site.memcache.set(session.auth, str(serial + 1))
-            session = self.site.getSession(session.uid, session.auth)
+            session = self.site.getSession(session.uid, session.auth, True)
             self.assertEquals(serial + 1, session.avatar.getSerial())
 
       def test04_updateSession_noop(self):
