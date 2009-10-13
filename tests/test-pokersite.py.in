@@ -790,6 +790,34 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEqual(True, exception)
             self.assertEqual(True, session.expired)
 
+      def test03_01_getSession_uid_not_string(self):
+            """
+            Try to get a session with a numeric uid instead of a string
+            """
+            uid = 111
+            auth = 'auth'
+            exception = False
+            try:
+                  self.site.getSession(uid, auth, False)
+            except Exception, e:
+                  self.failUnlessSubstring('uid is not str', str(e))
+                  exception = True
+            self.assertEqual(True, exception)
+
+      def test03_01_getSession_auth_not_string(self):
+            """
+            Try to get a session with a numeric auth instead of a string
+            """
+            uid = 'uid'
+            auth = 111
+            exception = False
+            try:
+                  self.site.getSession(uid, auth, False)
+            except Exception, e:
+                  self.failUnlessSubstring('auth is not str', str(e))
+                  exception = True
+            self.assertEqual(True, exception)
+
       def test03_02_getSession(self):
             """
             A session exists in core and in memcache. The memcache serial
