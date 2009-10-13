@@ -795,7 +795,7 @@ class PokerSiteTestCase(PokerSiteBase):
             A session exists in core and in memcache. The memcache serial
             is set from the outside.
             """
-            session = self.site.makeSession('uid', 'auth', False)
+            session = self.site.makeSession('uid', 'auth', True)
             serial = 111
             self.site.memcache.set(session.auth, str(serial))
             self.site.getSession(session.uid, session.auth, True)
