@@ -353,11 +353,14 @@ class PokerAvatar:
         self._longpoll_deferred = defer.Deferred()
         d = self.flushLongPollDeferred()
         if not d.called:
-            def f():
+            def longPollDeferredTimeout():
                 self.longPollTimer = None
                 self._longpoll_deferred = None
-                d.callback([])
-            self.longPollTimer = reactor.callLater(self.service.long_poll_timeout, f)
+                packets = self.resetPacketsQueue()
+                if self.service.verbose > 3:
+                    self.message("longPollDeferredTimeout(%s): " % str(packets))
+                d.callback(packets)
+            self.longPollTimer = reactor.callLater(self.service.long_poll_timeout, longPollDeferredTimeout)
         return d
 
     def blockLongPollDeferred(self):
@@ -388,6 +391,8 @@ class PokerAvatar:
             d = self._longpoll_deferred
             self._longpoll_deferred = None
             d.callback(packets)
+            if self.longPollTimer and self.longPollTimer.active():
+                self.longPollTimer.cancel()
             
     def handleDistributedPacket(self, request, packet, data):
         resthost, game_id = self.service.packet2resthost(packet)
