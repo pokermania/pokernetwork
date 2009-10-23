@@ -214,6 +214,9 @@ class PokerService(service.Service):
             self.monitor_plugins.append(getattr(module, "handle_event"))
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
         self.getPage = getPage
+        self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
+        if self.long_poll_timeout <= 0:
+            self.long_poll_timeout = 20
 
     def setupLadder(self):
         cursor = self.db.cursor()

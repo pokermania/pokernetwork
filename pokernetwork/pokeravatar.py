@@ -67,6 +67,7 @@ class PokerAvatar:
         self._longpoll_deferred = None
         self.game_id2rest_client = {}
         self.distributed_args = '?explain=no'
+        self.longPollTimer = None        
 
     def setDistributedArgs(self, uid, auth):
         self.distributed_args = '?explain=no&uid=%s&auth=%s' % ( uid, auth )
@@ -350,7 +351,14 @@ class PokerAvatar:
 
     def longpollDeferred(self):
         self._longpoll_deferred = defer.Deferred()
-        return self.flushLongPollDeferred()
+        d = self.flushLongPollDeferred()
+        if not d.called:
+            def f():
+                self.longPollTimer = None
+                self._longpoll_deferred = None
+                d.callback([])
+            self.longPollTimer = reactor.callLater(self.service.long_poll_timeout, f)
+        return d
 
     def blockLongPollDeferred(self):
         self._block_longpoll_deferred = True
@@ -367,6 +375,8 @@ class PokerAvatar:
             d = self._longpoll_deferred
             self._longpoll_deferred = None
             d.callback(packets)
+            if self.longPollTimer and self.longPollTimer.active():
+                self.longPollTimer.cancel()
             return d
         return self._longpoll_deferred
 

@@ -6,7 +6,7 @@
    if a PHPSESSID is involved (auth module) cookie_timeout must be 
       greater than PHPSESSID timeout
  -->
-<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" max_joined="4000" max_queued_client_packets="500" cleanup="yes" simultaneous="4" max_missed_round="5" verbose="0" chat="yes" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="1200" sng_timeout="3600" remove_completed="1" admin="false" poker_network_version="2.0.0">
+<server xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="server.xsd" ping="20" autodeal="yes" max_joined="4000" max_queued_client_packets="500" cleanup="yes" simultaneous="4" max_missed_round="5" verbose="0" chat="yes" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="1200" sng_timeout="3600" long_poll_timeout="20" remove_completed="1" admin="false" poker_network_version="2.0.0">
 
 <!-- max_queued_client_packets defaults to 500 if you leave it out.
      max_missed_round defaults to 10 if you leave it out.
