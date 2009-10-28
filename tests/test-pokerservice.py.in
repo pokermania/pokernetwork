@@ -2498,8 +2498,10 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
             avatar2.flushLongPollDeferred().callback(None)
             return packets
         d2 = avatar2.longpollDeferred()
+        avatar2.longPollTimer.cancel()
         d2.addCallback(deferredCanceled)
         d1 = avatar1.longpollDeferred()
+        avatar1.longPollTimer.cancel()
         d1.addCallback(check)
         return defer.DeferredList((d1, d2), fireOnOneErrback = True)
 
@@ -2533,6 +2535,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         def mustNotBeCalled(packets):
             self.assertEqual(None, packets)
         avatar1.longpollDeferred().addCallback(mustNotBeCalled)
+        avatar1.longPollTimer.cancel()
 
     def test03_not_logged_in(self):
         self.service.startService()
@@ -2564,6 +2567,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         def mustNotBeCalled(packets):
             self.assertEqual(None, packets)
         avatar1.longpollDeferred().addCallback(mustNotBeCalled)
+        avatar1.longPollTimer.cancel()
 
     def test04_wrong_tourney(self):
         self.service.startService()

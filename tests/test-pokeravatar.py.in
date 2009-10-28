@@ -1057,6 +1057,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         cursor.close()
         return (client, packet)
     # ------------------------------------------------------------------------
+    # RANDOM
     def test15a_handPlay_dbLocalesAndOverridesThereof(self):
         """Test playing an actual hand all the way through when locale changes"""
         self.createClients(2)
@@ -4658,8 +4659,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
-#    loader.methodPrefix = "test85"
+#    loader.methodPrefix = "test15a"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
