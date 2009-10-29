@@ -414,10 +414,10 @@ class PokerAvatar:
             if not self.game_id2rest_client.has_key(game_id):
                 if self.service.verbose > 1:
                     self.message("getOrCreateRestClient(%s, %d, %s, %s): create" % ( host, port, path, str(game_id) ))
-                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, lambda packets: self.incomingDistributedPackets(packets, game_id), self.service.verbose)
+                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, longPollCallback = lambda packets: self.incomingDistributedPackets(packets, game_id), verbose = self.service.verbose)
             client = self.game_id2rest_client[game_id]
         else:
-            client = PokerRestClient(host, port, path, lambda packets: self.incomingDistributedPackets(packets, game_id), self.service.verbose)
+            client = PokerRestClient(host, port, path, longPollCallback = None, verbose = self.service.verbose)
         return client
             
     def distributePacket(self, packet, data, resthost, game_id):
@@ -430,6 +430,10 @@ class PokerAvatar:
     def incomingDistributedPackets(self, packets, game_id):
         if self.service.verbose > 3:
             self.message("incomingDistributedPackets(%s, %s)" % ( str(packets), str(game_id) ))
+        self.blockLongPollDeferred()
+        for packet in packets:
+            self.sendPacket(packet)
+        self.unblockLongPollDeferred()
         if game_id:
             if game_id not in self.tables:
                 #
@@ -441,11 +445,8 @@ class PokerAvatar:
                      client.pendingLongPoll ):
                     if self.service.verbose > 1:
                         self.message("incomingDistributedPackets: del %d" % game_id)
+                    self.game_id2rest_client[game_id].clearTimeout()
                     del self.game_id2rest_client[game_id]
-        self.blockLongPollDeferred()
-        for packet in packets:
-            self.sendPacket(packet)
-        self.unblockLongPollDeferred()
         return self.resetPacketsQueue()
 
     def handlePacketDefer(self, packet):

@@ -70,6 +70,7 @@ class ConstantPlayerShuffler:
         what.sort()
 
 pokertournament.shuffler = ConstantPlayerShuffler()
+PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -3809,10 +3810,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.tourneyCreate, 0)
         return d
 
-    PokerRestClient.longPoll = lambda arg: arg
-    PokerRestClient.deferred = None
-    PokerRestClient.sendPacket = lambda client, packet, data: PokerRestClient.deferred
-
     # ------------------------------------------------------------------------
     def test81_distributePacket(self):
         self.createClients(1)
@@ -3823,8 +3820,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
             self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), 2)
+            getOrCreateRestClient = avatar.getOrCreateRestClient
             d = defer.Deferred()
-            PokerRestClient.deferred = d
+            def getOrCreateRestClientMockup(resthost, game_id):
+                client = getOrCreateRestClient(resthost, game_id)
+                client.sendPacket = lambda packet, data: d
+                return client
+            avatar.getOrCreateRestClient = getOrCreateRestClientMockup
             r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
             r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
             r.addCallback(lambda arg: self.assertEquals(True, avatar.game_id2rest_client.has_key(2)))
@@ -3842,15 +3844,24 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
             self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), 2)
+            getOrCreateRestClient = avatar.getOrCreateRestClient
+            clients = {}
             d = defer.Deferred()
+            def getOrCreateRestClientMockup(resthost, game_id):
+                clients[game_id] = getOrCreateRestClient(resthost, game_id)
+                clients[game_id].sendPacket = lambda packet, data: d
+                return clients[game_id]
+            avatar.getOrCreateRestClient = getOrCreateRestClientMockup
             def clearActiveTable(arg):
                 avatar.tables = {}
                 return arg
             d.addCallback(clearActiveTable)
-            PokerRestClient.deferred = d
             r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
             r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
             r.addCallback(lambda arg: self.assertEquals({}, avatar.game_id2rest_client))
+            r.addCallback(lambda arg: self.assertEquals(None, clients[2].timer))
+            def f(x): PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
+            r.addCallback(f)
             d.callback(['foo'])
             return d
         d.addCallback(handleDistributedPacket)
@@ -3862,11 +3873,19 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = 0.1
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
             self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), None)
+            getOrCreateRestClient = avatar.getOrCreateRestClient
             d = defer.Deferred()
-            PokerRestClient.deferred = d
+            def getOrCreateRestClientMockup(resthost, game_id):
+                client = getOrCreateRestClient(resthost, game_id)
+                self.assertEquals(None, client.longPollCallback)
+                self.assertEquals(-1, client.longPollFrequency)
+                client.sendPacket = lambda packet, data: d
+                return client
+            avatar.getOrCreateRestClient = getOrCreateRestClientMockup
             r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
             r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
             r.addCallback(lambda arg: self.assertEquals({}, avatar.game_id2rest_client))
@@ -3925,6 +3944,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             auth = 'ZAUTH'
             avatar.setDistributedArgs(uid, auth)
             client = avatar.getOrCreateRestClient(('host', 11111, 'path'), 2)
+            client.sendPacket = lambda packet, data: defer.Deferred()
             self.failUnlessSubstring(uid, client.path)
             self.failUnlessSubstring(auth, client.path)
             d = avatar.handlePacketDefer(PacketPokerLongPoll())

@@ -30,7 +30,7 @@ class RestClientFactory(protocol.ClientFactory):
 
     protocol = client.HTTPPageGetter
     
-    def __init__(self, host, port, path, data, timeout = 10):
+    def __init__(self, host, port, path, data, timeout = 60):
         self.timeout = timeout
         self.agent = "RestClient"
         self.headers = InsensitiveDict()
@@ -84,13 +84,13 @@ class RestClientFactory(protocol.ClientFactory):
             self.deferred.errback(reason)
 
 class PokerRestClient:
+    DEFAULT_LONG_POLL_FREQUENCY = 0.1
     
-    def __init__(self, host, port, path, longPollCallback, verbose, timeout = 10):
+    def __init__(self, host, port, path, longPollCallback, verbose = 0, timeout = 60):
         self.verbose = verbose
         self.queue = defer.succeed(True)
         self.pendingLongPoll = False
         self.minLongPollFrequency = 0.01
-        self.longPollFrequency = 0.1
         self.sentTime = 0
         self.host = host
         self.port = port
@@ -98,7 +98,11 @@ class PokerRestClient:
         self.timer = None
         self.timeout = timeout
         self.longPollCallback = longPollCallback
-        self.longPoll()
+        if longPollCallback:
+            self.longPollFrequency = PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY
+            self.scheduleLongPoll(0)
+        else:
+            self.longPollFrequency = -1
 
     def message(self, string):
         print 'PokerRestClient(%s) %s' % ( self.host + ':' + str(self.port), string )
@@ -130,7 +134,7 @@ class PokerRestClient:
     
     def sendPacketData(self, data):
         if self.verbose > 3:
-            self.message('sendPacket ' + data)
+            self.message('sendPacketData ' + data)
         factory = RestClientFactory(self.host, self.port, self.path, data, self.timeout)
         reactor.connectTCP(self.host, self.port, factory)
         self.sentTime = seconds()
