@@ -1427,6 +1427,27 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.tableSave = self.table
 
         return deferredMustBeCalledBackForSuccess
+    # -------------------------------------------------------------------
+    def test48_muckTimeoutTimerShouldEmptyMuckableSerials(self):
+        """
+        See https://gna.org/bugs/?13898
+        """
+        from pokerengine.pokergame import GAME_STATE_MUCK
+
+        self.table.timer_info["muckTimeout"] = None
+        if self.table.factory.verbose <= 0: self.table.factory.verbose = 1
+        clear_all_messages()
+
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.beginTurn()
+
+        self.table.game.state = GAME_STATE_MUCK
+        self.table.game.muckable_serials = [1,2]
+        self.table.syncDatabase = lambda: None
+        self.table.muckTimeoutTimer()
+        self.assertEquals([], self.table.game.muckable_serials)
+
 # -------------------------------------------------------------------
 
 # I seriously considered not having *all* the same tests run with

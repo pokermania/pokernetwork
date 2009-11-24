@@ -1423,7 +1423,7 @@ class PokerTable:
         if self.factory.verbose:
             self.message("muck timed out")
         # timer expires, force muck on muckables not responding
-        for serial in self.game.muckable_serials:
+        for serial in self.game.muckable_serials[:]:
             self.game.muck(serial, want_to_muck = True)
         self.cancelMuckTimer()
         self.update()
