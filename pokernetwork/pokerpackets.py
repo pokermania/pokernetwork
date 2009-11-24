@@ -2811,18 +2811,6 @@ players: list of player serials participating in "game_id"
         return size
 
 Packet.format_info['players'] = {
-    #
-    # List of seated players, length of the list as a 2 byte unsigned integer in the range [0-65535]
-    # Each player description is a list of a string (name of the player), a 4 bytes unsigned integer
-    #  (number of chips) and a one byte in
-    #  currency
-    #  bankroll
-    #  in_game
-    #  points
-    # Example: {} <=> \x00
-    #          {5: (2, 3, 4)} <=> \x01\x05\x02\x03\x04
-    #          {5: (2, 3, 4), 10: (1, 1, 1)} <=> \x02\x05\x02\x03\x04\x0a\x01\x01\x01
-    #
     'pack': PacketPokerPlayersList.packplayers,
     'unpack': PacketPokerPlayersList.unpackplayers,
     'calcsize': PacketPokerPlayersList.calcsizeplayers,
