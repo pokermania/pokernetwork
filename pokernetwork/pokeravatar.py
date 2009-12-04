@@ -425,6 +425,7 @@ class PokerAvatar:
         client = self.getOrCreateRestClient(resthost, game_id)
         d = client.sendPacket(packet, data)
         d.addCallback(lambda packets: self.incomingDistributedPackets(packets, game_id))
+        d.addCallback(lambda x: self.resetPacketsQueue())
         return d
             
     def incomingDistributedPackets(self, packets, game_id):
@@ -447,7 +448,6 @@ class PokerAvatar:
                         self.message("incomingDistributedPackets: del %d" % game_id)
                     self.game_id2rest_client[game_id].clearTimeout()
                     del self.game_id2rest_client[game_id]
-        return self.resetPacketsQueue()
 
     def handlePacketDefer(self, packet):
         if self.service.verbose > 2:

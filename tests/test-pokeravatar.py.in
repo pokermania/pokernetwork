@@ -3992,6 +3992,23 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(handleLongPoll)
         return d
     # ------------------------------------------------------------------------
+    def test85_2_longPollCallback(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleLongPoll(x):
+            avatar = self.service.avatars[0]
+            uid = 'ZUID'
+            auth = 'ZAUTH'
+            avatar.setDistributedArgs(uid, auth)
+            client = avatar.getOrCreateRestClient(('host', 11111, 'path'), 2)
+            client.longPollCallback([PacketPing()])   
+            self.assertEquals(1, len(avatar._packets_queue))
+        d.addCallback(handleLongPoll)
+        return d
+    # ------------------------------------------------------------------------
     def test86_longPollReturn(self):
         self.createClients(1)
         d = self.client_factory[0].established_deferred
