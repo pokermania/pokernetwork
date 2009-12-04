@@ -453,10 +453,11 @@ class PokerAvatar:
         if self.service.verbose > 2:
             self.message("handlePacketDefer(%d): " % self.getSerial() + str(packet))
 
+        self.queuePackets()
+
         if packet.type == PACKET_POKER_LONG_POLL:
             return self.longpollDeferred()
 
-        self.queuePackets()
         self.handlePacketLogic(packet)
         packets = self.resetPacketsQueue()
         if len(packets) == 1 and isinstance(packets[0], defer.Deferred):
