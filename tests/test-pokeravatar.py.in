@@ -3867,6 +3867,39 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(handleDistributedPacket)
         return d
     # ------------------------------------------------------------------------
+    def test82_1_distributePacketNoMoreActiveGame(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)                
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleDistributedPacket(x):
+            avatar = self.service.avatars[0]
+            self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), 2)
+            getOrCreateRestClient = avatar.getOrCreateRestClient
+            clients = {}
+            d = defer.Deferred()
+            def getOrCreateRestClientMockup(resthost, game_id):
+                clients[game_id] = getOrCreateRestClient(resthost, game_id)
+                clients[game_id].sendPacket = lambda packet, data: d
+                return clients[game_id]
+            avatar.getOrCreateRestClient = getOrCreateRestClientMockup
+            def clearActiveTable(arg):
+                avatar.tables = {}
+                avatar.explain.games.games = {}
+                return arg
+            d.addCallback(clearActiveTable)
+            r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
+            r.addCallback(lambda packets: self.assertEquals(PACKET_PING, packets[0].type))
+            r.addCallback(lambda arg: self.assertEquals({}, avatar.game_id2rest_client))
+            r.addCallback(lambda arg: self.assertEquals(None, clients[2].timer))
+            def f(x): PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
+            r.addCallback(f)
+            d.callback([PacketPing()])
+            return d
+        d.addCallback(handleDistributedPacket)
+        return d
+    # ------------------------------------------------------------------------
     def test83_distributePacketNoGameId(self):
         self.createClients(1)
         d = self.client_factory[0].established_deferred

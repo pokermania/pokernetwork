@@ -955,6 +955,39 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(True, session.expired)
             self.assertEquals(None, site.memcache.get('uid'))
 
+      def test10_persistSessionExplain(self):
+            """
+            the session expires after persistSession, unless there are games in explain
+            """
+            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6">
+<resthost host="HOST" port="7777" path="PATH" />
+</server>"""
+            settings = pokernetworkconfig.Config([])
+            settings.loadFromString(settings_xml)
+            service = PokerServiceMockup()
+            site = pokersite.PokerSite(settings, pokersite.PokerResource(service))
+            
+            session = self.site.makeSession('uid', 'auth', False)
+            session.avatar.tables = []
+            session.avatar.setExplain(PacketPokerExplain.ALL)
+            session.avatar.explain.games.games[1] = 'table'
+            self.assertEquals(True, site.persistSession(session))
+            self.assertEquals(False, session.expired)
+            self.assertEquals(('HOST', 7777, 'PATH'), site.memcache.get('uid'))
+
+            session.avatar.explain.games.games = {}
+            self.assertEquals(False, site.persistSession(session))
+            self.assertEquals(True, session.expired)
+            self.assertEquals(None, site.memcache.get('uid'))
+
+            session = self.site.makeSession('uid', 'auth', False)
+            session.avatar.explain = None
+            self.assertEquals(False, site.persistSession(session))
+            self.assertEquals(True, session.expired)
+            self.assertEquals(None, site.memcache.get('uid'))
+            
+
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"

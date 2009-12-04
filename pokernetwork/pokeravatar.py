@@ -435,7 +435,7 @@ class PokerAvatar:
             self.sendPacket(packet)
         self.unblockLongPollDeferred()
         if game_id:
-            if game_id not in self.tables:
+            if game_id not in self.tables and (not(self.explain) or not(self.explain.games.gameExists(game_id))):
                 #
                 # discard client if nothing pending and not in the list
                 # of active tables
