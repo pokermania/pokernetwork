@@ -301,10 +301,7 @@ class PokerAvatar:
 
         global _
         if self.localeFunc:
-            try:
-                avatarSavedUnder = _
-            except NameError:
-                avatarSavedUnder = None
+            avatarSavedUnder = _
             _ = self.localeFunc
             pokergameSavedUnder = pokergame_init_i18n('', self.localeFunc)
 	if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
