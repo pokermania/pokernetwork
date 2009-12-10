@@ -355,7 +355,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.win)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-    test04_playHand.timeout = 200
     
     def getUserInfo(self, (client, packet)):
         if verbose > 0:
@@ -388,7 +387,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.printUserInfo)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-    test05_userInfo.timeout = 200
     
     def test06_cannotGetSeat(self):
         """ test06_cannotGetSeat """
@@ -509,7 +507,6 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(checkBugousClient)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-    test08_processing_readytoplay.timeout = 200
     
     def test09_serverShutdown(self):
         """ test04_serverShutdown : the clients are still seated """
@@ -521,7 +518,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.sit)
             d[index].addCallback(self.allIn)
         return defer.DeferredList(d)
-    test09_serverShutdown.timeout = 200
     
     def test10_playerImage(self):
         """ test10_login """
@@ -697,7 +693,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
-    test15_0_playTourney.timeout = 500
 
     def check_breaks(self, (client, packet),):
         self.assertEqual(PACKET_POKER_TOURNEY_LIST, packet.type)
@@ -766,7 +761,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.quit)
 
         return defer.DeferredList(d)
-    test16_playTourney_sitout_sit.timeout = 300
     
     # -----------------------------------------------
     def test17_playTourney_timeout_sit(self):
@@ -889,7 +883,6 @@ class PokerClientTestCase(unittest.TestCase):
                 d[index].addCallback(waitWin)
             d[index].addCallback(self.quit)
         return defer.DeferredList(d)
-    test18_blindAllIn.timeout = 200
     
     def test19_setPlayerDelay(self):
         d = self.client_factory[0].established_deferred
