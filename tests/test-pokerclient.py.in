@@ -119,6 +119,8 @@ TABLE3 = 3
 
 class PokerClientTestCase(unittest.TestCase):
 
+    timeout = 500
+    
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -1251,6 +1253,8 @@ class PokerClientFactoryMockup(pokerclient.PokerClientFactory):
 
 class PokerClientFactoryTestCase(unittest.TestCase):
 
+    timeout = 500
+    
     def setUp(self):
         testclock._seconds_reset()        
         settings = pokernetworkconfig.Config([])
@@ -1294,6 +1298,9 @@ class SettingMockup:
 from pokernetwork.pokerclient import PokerSkin
 
 class PokerSkinMethodUnitTest(unittest.TestCase):
+
+    timeout = 500
+    
     # ---------------------------------------------------------------------------
     def setUp(self):
         pass
@@ -1335,6 +1342,9 @@ class PokerSkinMethodUnitTest(unittest.TestCase):
         self.assertEquals(skin.settings, "testing")
 # ------------------------------------------------------
 class PokerClientLogErrorFunctionTestCase(unittest.TestCase):
+
+    timeout = 500
+    
     # ---------------------------------------------------------------------------
     def setUp(self):
         pass
@@ -1419,6 +1429,9 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
     particularly "aware" tests, they simply exercise various parts of the
     code to be sure the expected behavior occurs in the context of the
     individual methods."""
+
+    timeout = 500
+    
     # ---------------------------------------------------------------------------
     def setUp(self):
         self.settings = pokernetworkconfig.Config([])
