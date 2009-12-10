@@ -131,25 +131,25 @@ class PokerRestClientTestCase(unittest.TestCase):
             return client.queue
       # --------------------------------------------------------------
       def test04_sendPacketData(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', lambda packets: None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', None, verbose=6)
             d = client.sendPacketData('{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda data: self.assertSubstring('PacketPokerTableList', data))
             return d
       # --------------------------------------------------------------
       def test05_sendPacket(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', lambda packets: None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', None, verbose=6)
             d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda packets: self.assertEquals(PACKET_POKER_TABLE_LIST, packets[0].type))
             return d
       # --------------------------------------------------------------
       def test06_404(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST2', lambda packets: None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST2', None, verbose=6)
             d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda packets: self.assertEquals(PACKET_ERROR, packets[0].type))
             return d
       # --------------------------------------------------------------
       def test07_connectionFailed(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 20000, '/POKER_REST?explain=no', lambda packets: None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 20000, '/POKER_REST?explain=no', None, verbose=6)
             d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda packets: self.assertEquals(PACKET_ERROR, packets[0].type))
             return d
@@ -237,7 +237,7 @@ class PokerProxyClientFactoryTestCase(unittest.TestCase):
 
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
+#    loader.methodPrefix = "test05"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerRestClientTestCase))
     suite.addTest(loader.loadClass(PokerProxyClientFactoryTestCase))
