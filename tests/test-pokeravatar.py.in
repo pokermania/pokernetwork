@@ -72,6 +72,16 @@ class ConstantPlayerShuffler:
 pokertournament.shuffler = ConstantPlayerShuffler()
 PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
 
+class PokerAvatarLocaleTestCase(unittest.TestCase):
+    def test01_gettext_underscore_not_defined(self):
+        from pokernetwork import pokeravatar
+        service = PokerAvatarNoClientServerTestCase.MockService()
+        avatar = pokeravatar.PokerAvatar(service)
+        avatar.localeFunc = lambda x: x
+        avatar.queuePackets()
+        avatar.sendPacket(Packet())
+        self.assertEquals(None, avatar._avatarSavedUnder)
+
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
@@ -4737,6 +4747,7 @@ def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test06_5"
     suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTablePickerTestCase))

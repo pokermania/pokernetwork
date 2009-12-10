@@ -298,10 +298,22 @@ class PokerAvatar:
         #    file.  However, should we have them later, we'd obviously
         #    want those strings to be localized for the client, at least
         #    during packet sending.
+        #
+        #    Note that _ default value depends of locale installation
+        #    by pokerservice, as
+        #    http://docs.python.org/library/gettext.html point out,
+        #    gettext.install installs the function _() in Python’s
+        #    builtins namespace. Assigning it to self.localeFunc
+        #    convert it to a global that is file wise (as pointed
+        #    above).
 
         global _
         if self.localeFunc:
-            avatarSavedUnder = _
+            # First, if our _() has never been defined, we simply set it to None
+            try:
+                self._avatarSavedUnder = _
+            except NameError:
+                self._avatarSavedUnder = None
             _ = self.localeFunc
             pokergameSavedUnder = pokergame_init_i18n('', self.localeFunc)
 	if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
@@ -326,7 +338,7 @@ class PokerAvatar:
 	    for packet in packets:
                 self.protocol.sendPacket(packet)
         if self.localeFunc:
-            _ = avatarSavedUnder
+            _ = self._avatarSavedUnder
             pokergame_init_i18n('', pokergameSavedUnder)
 
     # Below, we assign the method queueDeferred() is the same as
