@@ -118,6 +118,8 @@ settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
 """
 ##############################################################################
 class PokerAvatarTestCaseBaseClass(unittest.TestCase):
+    timeout = 500
+
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -4044,6 +4046,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
 ##############################################################################
 class PokerAvatarNoClientServerTestCase(unittest.TestCase):
+    timeout = 500
+    
     class MockPlayerInfo:
         def __init__(mpiSelf):
             mpiSelf.url = "http://example.org/"
@@ -4731,7 +4735,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test15a"
+#    loader.methodPrefix = "test06_5"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
