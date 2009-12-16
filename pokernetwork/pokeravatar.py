@@ -1278,7 +1278,9 @@ class PokerAvatar:
         game = table.game
         player = game.getPlayer(serial)
         seat = player and player.seat
-        if game.removePlayer(serial):
+        avatars = table.avatar_collection.get(serial)
+        self_is_last_avatar = len(avatars) == 1 and avatars[0] == self
+        if self_is_last_avatar and game.removePlayer(serial):
             #
             # If the player is not in a game, the removal will be effective
             # immediately and can be announced to all players, including
