@@ -67,7 +67,8 @@ class PokerAvatar:
         self._longpoll_deferred = None
         self.game_id2rest_client = {}
         self.distributed_args = '?explain=no'
-        self.longPollTimer = None        
+        self.longPollTimer = None
+        self._flush_next_longpoll = False
 
     def setDistributedArgs(self, uid, auth):
         self.distributed_args = '?explain=no&uid=%s&auth=%s' % ( uid, auth )
@@ -383,7 +384,8 @@ class PokerAvatar:
         self.flushLongPollDeferred()
 
     def flushLongPollDeferred(self):
-        if self._block_longpoll_deferred == False and self._longpoll_deferred and len(self._packets_queue) > 0:
+        if self._block_longpoll_deferred == False and self._longpoll_deferred and (len(self._packets_queue) > 0 or self._flush_next_longpoll):
+            self._flush_next_longpoll = False
             packets = self.resetPacketsQueue()
             if self.service.verbose > 3:
                 self.message("flushLongPollDeferred(%s): " % str(packets))
@@ -405,6 +407,8 @@ class PokerAvatar:
             d.callback(packets)
             if self.longPollTimer and self.longPollTimer.active():
                 self.longPollTimer.cancel()
+        else:
+            self._flush_next_longpoll = True
             
     def handleDistributedPacket(self, request, packet, data):
         resthost, game_id = self.service.packet2resthost(packet)
