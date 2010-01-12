@@ -1029,6 +1029,26 @@ class ResthostTestCase(unittest.TestCase):
 </server>
 """
 
+    xml_with_resthost_name = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19480" />
+
+  <resthost host="HOST" port="7777" path="/PATH" name="explain1" />
+  <refill serial="1" amount="10000000" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
     def destroyDb(self):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
@@ -1056,6 +1076,31 @@ class ResthostTestCase(unittest.TestCase):
         self.service.resthost_serial = 0
         self.service.setupResthost()
         self.assertEqual(1, self.service.resthost_serial)
+        db = self.service.db        
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM resthost WHERE serial = 1")        
+        self.assertEqual(1, cursor.rowcount)
+        (serial,name,host,port,path) = cursor.fetchone()
+        self.assertEqual(1, serial)
+        self.assertEqual('HOST', host)
+        self.assertEqual(7777, port)
+        self.assertEqual('/PATH', path)
+        self.assertEqual(None, name)
+
+    def test001_init_with_name(self):
+        """ setupResthost with name """
+        self.setUpService(self.xml_with_resthost_name)
+        self.service.startService()
+        db = self.service.db
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM resthost WHERE serial = 1")        
+        self.assertEqual(1, cursor.rowcount)
+        (serial,name,host,port,path) = cursor.fetchone()
+        self.assertEqual(1, serial)
+        self.assertEqual('HOST', host)
+        self.assertEqual(7777, port)
+        self.assertEqual('/PATH', path)
+        self.assertEqual('explain1', name)        
 
     def test01_packet2resthost(self):
         self.setUpService(self.xml_with_resthost)

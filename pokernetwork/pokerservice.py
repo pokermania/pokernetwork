@@ -1753,11 +1753,15 @@ class PokerService(service.Service):
             resthost = resthost[0]
             cursor = self.db.cursor()
             values = ( resthost['host'], resthost['port'], resthost['path'] )
+            name = resthost.get('name', None)
             cursor.execute("SELECT serial FROM resthost WHERE host = %s AND port = %s AND path = %s", values)
             if cursor.rowcount > 0:
                 self.resthost_serial = cursor.fetchone()[0]
             else:
-                cursor.execute("INSERT INTO resthost (host, port, path) VALUES (%s, %s, %s)", values)
+                if not name:
+                    cursor.execute("INSERT INTO resthost (host, port, path) VALUES (%s, %s, %s)", values)
+                else:
+                    cursor.execute("INSERT INTO resthost (name, host, port, path) VALUES (%s, %s, %s, %s)", (name, ) + values)
                 self.resthost_serial = cursor.lastrowid
             cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
             cursor.close()
