@@ -37,6 +37,11 @@ def rest_filter(site, request, packet):
 
     if uid:                                                                     #pragma: no cover
         resthost = site.memcache.get(uid)                                       #pragma: no cover
+        if not resthost:                                                        #pragma: no cover
+            cursor = service.db.cursor()                                        #pragma: no cover
+            cursor.execute("SELECT host,port,path FROM resthost WHERE name LIKE 'explain%' ORDER BY RAND()") #pragma: no cover
+            if cursor.rowcount > 0:                                             #pragma: no cover
+                resthost = cursor.fetchone()                                    #pragma: no cover
         if resthost:                                                            #pragma: no cover
             (host, port, path) = [str(s) for s in resthost]                     #pragma: no cover
             parts = request.uri.split('?', 1)                                   #pragma: no cover
