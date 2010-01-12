@@ -38,6 +38,7 @@ def check_key(key, key_extra_len=0):
                 "mystring.encode(charset)!")
 
 memcache_singleton = {}
+memcache_log_singleton = []
 memcache_expiration_singleton = {}
 
 class MemcacheMockup:
@@ -46,6 +47,7 @@ class MemcacheMockup:
             self.addresses = addresses
             self.cache = memcache_singleton
             self.expiration = memcache_expiration_singleton
+            self.log = memcache_log_singleton
 
         def get(self, key):
             check_key(key)
@@ -65,6 +67,7 @@ class MemcacheMockup:
             check_key(key)
             self.cache[key] = value
             self.expiration[key] = time
+            self.log.append(('set', (key, value, time)))
 
         def set_multi(self, kwargs, time = 0):
             self.cache.update(kwargs)

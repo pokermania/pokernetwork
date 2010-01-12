@@ -48,6 +48,9 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
 from pokernetwork import sessionproxyfilter
 from pokernetwork.pokerpackets import *
+from pokernetwork.pokerrestclient import PokerRestClient
+PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
+import time
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -55,6 +58,21 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
+  <listen tcp="19482" />
+  <resthost host="127.0.0.1" port="19482" path="/POKER_REST" />
+
+  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
+            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <users temporary="BOT"/>
+</server>
+"""
+
+settings_xml_explain = """<?xml version="1.0" encoding="ISO-8859-1"?>
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <listen tcp="19481" />
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
@@ -96,7 +114,16 @@ class SessionProxyFilterTestCase(unittest.TestCase):
             self.server_service.disconnectAll = lambda: True
             self.server_service.startService()
             self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
-            self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
+            self.server_port = reactor.listenTCP(19482, self.server_site, interface="127.0.0.1")
+      # --------------------------------------------------------------
+      def initExplain(self):
+            settings = pokernetworkconfig.Config([])
+            settings.loadFromString(settings_xml_explain)
+            self.explain_service = pokerservice.PokerService(settings)
+            self.explain_service.disconnectAll = lambda: True
+            self.explain_service.startService()
+            self.explain_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.explain_service))
+            self.explain_port = reactor.listenTCP(19481, self.explain_site, interface="127.0.0.1")            
       # --------------------------------------------------------------
       def initProxy(self):
             settings = pokernetworkconfig.Config([])
@@ -111,14 +138,23 @@ class SessionProxyFilterTestCase(unittest.TestCase):
             testclock._seconds_reset()
             pokermemcache.memcache = pokermemcache.MemcacheMockup
             pokermemcache.memcache_singleton = {}
+            pokermemcache.memcache_singleton_expiration = {}
+            pokermemcache.memcache_singleton_log = []
             self.destroyDb()
             self.initServer()
-            self.initProxy()
+            self.initExplain()
+            self.initProxy()            
       # --------------------------------------------------------------
       def tearDownServer(self):
             self.server_site.stopFactory()
             d = self.server_service.stopService()
             d.addCallback(lambda x: self.server_port.stopListening())
+            return d
+      # --------------------------------------------------------------
+      def tearDownExplain(self):
+            self.proxy_site.stopFactory()
+            d = self.explain_service.stopService()
+            d.addCallback(lambda x: self.explain_port.stopListening())
             return d
       # --------------------------------------------------------------
       def tearDownProxy(self):
@@ -130,7 +166,8 @@ class SessionProxyFilterTestCase(unittest.TestCase):
       def tearDown(self):
             d = defer.DeferredList((
                   self.tearDownServer(),
-                  self.tearDownProxy()
+                  self.tearDownExplain(),
+                  self.tearDownProxy()                  
                   ))
             d.addCallback(self.destroyDb)
             d.addCallback(lambda x: reactor.disconnectAll())
@@ -151,20 +188,45 @@ class SessionProxyFilterTestCase(unittest.TestCase):
             """
             Join a table thru a proxy.
             """
-            self.proxy_site.memcache.set('1bebebaffe', ('127.0.0.1', 19481, '/POKER_REST'))
-            d = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=1bebebaffe&auth=deadbeef",
+            uid = '1bebebaffe'
+            session = 'deadbeef'
+            resthost = ('127.0.0.1', 19481, '/POKER_REST')
+            self.proxy_site.memcache.set(uid, resthost)
+            d = client.getPage("http://127.0.0.1:19480/POKER_REST?uid=%s&auth=%s" % (uid, session),
                                postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
             def checkTable(result):
                   packets = simplejson.JSONDecoder().decode(result)
                   self.assertEqual('PacketPokerTable', packets[0]['type'])
                   self.assertEqual('Table1', packets[0]['name'])
+                  self.assertEqual(resthost, self.proxy_site.memcache.get(uid))
+                  set_uid_log = [v for (l, (k, v, t)) in self.proxy_site.memcache.log if k == uid]
+                  self.assertFalse(('127.0.0.1', 19482, '/POKER_REST') in set_uid_log)
             d.addCallback(checkTable)
             return d
+      # --------------------------------------------------------------
+      def test03_tableJoinNoRestHost(self):
+            """
+            Join a table thru an explain server without reshost being set for the session.
+            """
+            uid = '1bebebaffe'
+            session = 'deadbeef'
+            resthost = ('127.0.0.1', 19481, '/POKER_REST')
+            d = client.getPage("http://127.0.0.1:19481/POKER_REST?uid=%s&auth=%s" % (uid, session),
+                               postdata = '{"type":"PacketPokerTableJoin","game_id":1}')
+            def checkTable(result):
+                  packets = simplejson.JSONDecoder().decode(result)
+                  self.assertEqual('PacketPokerTable', packets[0]['type'])
+                  self.assertEqual('Table1', packets[0]['name'])
+                  self.assertEqual(resthost, self.proxy_site.memcache.get(uid))
+                  set_uid_log = [v for (l, (k, v, t)) in self.proxy_site.memcache.log if k == uid]
+                  self.assertFalse(('127.0.0.1', 19482, '/POKER_REST') in set_uid_log)
+            d.addCallback(checkTable)
+            return d      
 
 ################################################################################
 def Run():
       loader = runner.TestLoader()
-#      loader.methodPrefix = "test06"
+#      loader.methodPrefix = "test02"
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(SessionProxyFilterTestCase))
       return runner.TrialRunner(

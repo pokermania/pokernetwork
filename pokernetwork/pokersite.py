@@ -475,8 +475,12 @@ class PokerSite(server.Site):
             if self.resthost:
                 self.memcache.delete(session.uid)
             return False
-        if self.resthost:
-            self.memcache.set(session.uid, self.resthost, time = self.cookieTimeout)
+        is_explain_resthost = self.resthost and session.avatar.explain
+        if is_explain_resthost:
+            session_resthost = self.memcache.get(session.uid)
+            is_new_or_same_resthost = not session_resthost or session_resthost == self.resthost
+            if is_new_or_same_resthost:
+                self.memcache.set(session.uid, self.resthost, time = self.cookieTimeout)
         return True
         
     def updateSession(self, session):

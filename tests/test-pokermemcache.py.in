@@ -69,6 +69,12 @@ class MemcacheTestCase(unittest.TestCase):
                   "Keys must be str()'s, notunicode.  Convert your unicode strings using mystring.encode(charset)!")
                   caughtIt = True
             self.failUnless(caughtIt, "MemcachedStringEncodingError was not caught")
+      def test04_log(self):
+            memcache = MemcacheMockup.Client([''])
+            memcache.log = []
+            memcache.set('a', 'b', time = 1)
+            memcache.set('a', 'c', time = 2)
+            self.assertEquals(memcache.log, [('set', ('a', 'b', 1)), ('set', ('a', 'c', 2))])
 
 #--------------------------------------------------------------
 def GetTestSuite():
