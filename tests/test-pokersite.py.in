@@ -949,7 +949,8 @@ class PokerSiteTestCase(PokerSiteBase):
             session.avatar.tables[1] = 'table'
             self.assertEquals(True, site.persistSession(session))
             self.assertEquals(False, session.expired)
-            self.assertEquals(('HOST', 7777, 'PATH'), site.memcache.get('uid'))
+            # persistSession should not set memcache entry if avatar has no explain bug#14883
+            self.assertEquals(None, site.memcache.get('uid'))
             session.avatar.tables = []
             self.assertEquals(False, site.persistSession(session))
             self.assertEquals(True, session.expired)
