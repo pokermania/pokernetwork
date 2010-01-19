@@ -710,6 +710,16 @@ class SessionExplainTestCase(PokerSiteBase):
             session.expire()
             self.assertEqual(True, session.expired)
 
+      def test02_expireFromTwisted(self):
+            uid = 'uid'
+            auth = 'auth'
+            session = self.site.makeSessionFromUidAuth(uid, auth, 'yes')
+            self.site.memcache.set(uid, '0')
+            self.site.memcache.set(auth, '0')
+            session.lastModified = 0
+            session.expire()
+            session.checkExpired()
+
 class RequestTestCase(PokerSiteBase):
 
       def test01_name(self):

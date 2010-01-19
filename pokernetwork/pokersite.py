@@ -154,6 +154,8 @@ class Session(server.Session):
         self.expired = True
     
     def checkExpired(self):
+        if self.expired:
+            return False
         try:
             #
             # The session may expire as a side effect of the
