@@ -686,6 +686,23 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_PLAYER_ARRIVE, self.explain.forward_packets[0].type)
         self.assertEqual(PACKET_POKER_SEATS, self.explain.forward_packets[1].type)
 
+    def test26_1_explain_player_arrive_no_seats_left(self):
+        game_id = 1
+        game = self.explain.games.getOrCreateGame(game_id)
+        game.seats_left = []
+        player_serial = 3
+        self.assertTrue(self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
+                                                                     serial = player_serial,
+                                                                     seat = 2,
+                                                                     name = 'name',
+                                                                     url = 'url',
+                                                                     outfit = 'outfit',
+                                                                     auto_blind_ante = 1,
+                                                                     wait_for = 0)))
+        self.assertEqual(2, len(self.explain.forward_packets))
+        self.assertEqual(PACKET_POKER_PLAYER_ARRIVE, self.explain.forward_packets[0].type)
+        self.assertEqual(PACKET_POKER_SEATS, self.explain.forward_packets[1].type)
+        
     def test27_explain_player_leave(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)

@@ -341,15 +341,15 @@ class PokerExplain:
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
 
             elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
-                game.addPlayer(packet.serial, packet.seat)
-                player = game.getPlayer(packet.serial)
-                player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
-                player.name = packet.name
-                player.url = packet.url
-                player.outfit = packet.outfit
-                player.auto_blind_ante = packet.auto_blind_ante
-                player.wait_for = packet.wait_for
-                player.auto = packet.auto
+                if game.addPlayer(packet.serial, packet.seat):
+                    player = game.getPlayer(packet.serial)
+                    player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
+                    player.name = packet.name
+                    player.url = packet.url
+                    player.outfit = packet.outfit
+                    player.auto_blind_ante = packet.auto_blind_ante
+                    player.wait_for = packet.wait_for
+                    player.auto = packet.auto
                 if not self.no_display_packets:
                     self.forward_packets.append(PacketPokerSeats(game_id = game.id,
                                                                  seats = game.seats()))
