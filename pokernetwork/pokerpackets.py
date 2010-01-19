@@ -4452,7 +4452,7 @@ Semantics: The authorized player represented by "serial",
            Upon success, the response will be PacketAck() for the new sit-n-go tournament.
            If the request is issued by a user that is not authentified, the response will be:
                  PacketAuthRequest()
-           If at least on user cannot be registered, the response will be:
+           If at least one user cannot be registered, the response will be:
                  PacketPokerError(
                    other_type = PACKET_POKER_CREATE_TOURNEY,
                    code       = REGISTRATION_FAILED 
