@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 5.0.37.2), python-all-dev (>= 2.4), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted, python-poker-engine (>= 1.3.4), perl, php-pear, php5-dev, php5-mysql, libjson-perl, apg, rsync, coreutils, python-central
+Build-Depends: debhelper (>= 5.0.37.2), python-all-dev (>= 2.4), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted, python-poker-engine (>= 1.3.4), perl, php-pear, php5-dev, php5-mysql, libjson-perl, apg, rsync, python-central
 XS-Python-Version: >=2.4
 Standards-Version: 3.8.1
 
