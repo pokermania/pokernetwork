@@ -1222,7 +1222,8 @@ class PokerAvatar:
                                                            auto = player.auto,
                                                            auto_blind_ante = player.auto_blind_ante,
                                                            wait_for = player.wait_for,
-                                                           seat = player.seat))
+                                                           seat = player.seat,
+                                                           buy_in_payed = player.buy_in_payed))
             if self.service.has_ladder:
                 packet = self.service.getLadder(game.id, table.currency_serial, player.serial)
                 if packet.type == PACKET_POKER_PLAYER_STATS:
