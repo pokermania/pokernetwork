@@ -1,7 +1,167 @@
-2009-10-13  Loic Dachary <loic@dachary.org>
+2010-01-25  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
 
+	* debian/control, debian/control.unstable: dont depend on coreutil
+	  in sid
+	* tests/test-pokersite.py.in: in twisted-9.0 the notifyFinish
+	  callbacks are only called if the request is not queued. Set the
+	  queued data member of each request to zero before returning the
+	  deferred so that the pokersite request.finish() calls the test
+	  callback as expected.
+	* debian/rules: config.status depends on cdbs stamp for
+	  compatibility with newer cdbs versions
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in: for
+	  client to be able to choose between buyin and rebuy.
+
+2010-01-19  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokerexplain.py, tests/test-pokerexplain.py.in:
+	  explain should not set userData if game.addPlayer failed,
+	  bug#15044
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in:
+	  checkExpired should noop for already expired session, bug#13717
+
+2010-01-19  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: fix typo
+
+2010-01-12  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/test-pokersite.py.in: persistSession should not set
+	  memcache entry if avatar has no explain bug#14838
+	* pokernetwork/sessionproxyfilter.py,
+	  tests/test-sessionproxyfilter.py.in: add election of explain
+	  resthost by sessionproxyfilter bug#15008
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in: add
+	  support for resthost name in pokerservice bug#15008
+	* pokernetwork/pokermemcache.py, pokernetwork/pokersite.py,
+	  tests/test-pokermemcache.py.in,
+	  tests/test-sessionproxyfilter.py.in: persistSession should not
+	  override other resthosts memcache entry bug#14883
+
+2009-12-29  Johan Euphrosine <proppy@aminche.com>
+
+	* tests/test-sessionproxyfilter.py.in: remove print form
+	  test-sessionproxyfilter.py.in
+
+2009-12-18  Johan Euphrosine <proppy@aminche.com>
+
+	* debian/control, debian/control.unstable: remove python-xml,
+	  obsolete dependency on debian unstable
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  LongPollReturn set flush_next_longpoll flag, if not LongPoll is
+	  pending bug#14963
+
+2009-12-16  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in: avatar
+	  should only be removed from the game when it is the last avatar
+	  bug#14935
+
+2009-12-10  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in: set
+	  avatarSavedUnder to None if _ is not defined bug #14912
+
+2009-12-10  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokerclient.py.in: remove overrides of timeout that
+	  are smaller than 500
+	* tests/test-pokeravatar.py.in: set timeout = 500 for all test
+	  classes so that when the connection to 127.0.0.1 adds a little
+	  delay the test does not automatically fail because the default
+	  timeout expires even before the connection is made. This
+	  connection is the only time dependent operation of the tests and
+	  cannot be controled.
+	* tests/test-pokerclient.py.in: set timeout = 500 for all test
+	  classes so that when the connection to 127.0.0.1 adds a little
+	  delay the test does not automatically fail because the default
+	  timeout expires even before the connection is made. This
+	  connection is the only time dependent operation of the tests and
+	  cannot be controled.
+	* tests/test-pokerrestclient.py.in: The callback argument of the
+	  PokerRestClient constructor must be None to prevent the long poll
+	  timer to run.
+
+2009-12-09  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py: revert r6330 because it breaks
+	  coverage bug#14912
+	* pokernetwork/pokeravatar.py: set avatarSavedUnder to None if _ is
+	  not defined bug#14912
+
+2009-12-04  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  pokeravatar.incomingDistributedPacket should not reset packets
+	  queue if called from longPollCallback (bug: #14645)
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  pokeravatar should queue packets before handling long poll
+	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py,
+	  tests/test-pokeravatar.py.in, tests/test-pokersite.py.in:
+	  pokersite and pokeravatar should not discard
+	  avatar/session/restclient if explain has games (bug: #14726)
+	* pokernetwork/pokerexplain.py, tests/test-pokerexplain.py.in:
+	  PokerExplain should delete game when player leave (bug: #14721)
+
+2009-11-24  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in:
+	  pokertable.muckTimeoutTimer should copy mutable
+	  game.muckable_serials before looping (bug #13898)
+
+2009-11-24  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokerpackets.py: remove obsolete comment from
+	  PacketPokerPlayersList documentation
+
+2009-10-30  Johan Euphrosine <proppy@aminche.com>
+
+	* debian/python-poker-network.install,
+	  debian/python-poker-prizes.install,
+	  debian/python-poker-stats.install: apply
+	  poker-network_1.7.4-2ubuntu1.patch
+
+2009-10-29  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerrestclient.py,
+	  tests/test-pokeravatar.py.in, tests/test-pokerrestclient.py.in:
+	  pokerrestclient should scheduleLongPoll instead of longPoll in
+	  __init__, pokerrestclient should not scheduleLongPoll when
+	  handling tourney packets, pokeravatar should clear timer when
+	  cleaning up pokerrestclient
+
+2009-10-28  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokeravatar.py.in, tests/test-pokerservice.py.in:
+	  cancel the long poll timer
+
+2009-10-23  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  longPollReturn should cancel longPollTimer, longPollTimeout
+	  should call _longpoll_deferred with pending packets
+	* conf/poker.server.xml.in, pokernetwork/pokeravatar.py,
+	  pokernetwork/pokerservice.py, tests/test-pokeravatar.py.in,
+	  upgrades/poker.server/1.7.5-2.0.0.xsl: add long_poll_timeout
+
+2009-10-21  Johan Euphrosine <proppy@aminche.com>
+
+	* debian/python-poker-network.init: use distutils instead of
+	  hardcoded /usr/lib/python/site-packages/ to compute
+	  python_lib_path in python-poker-network init script
+	* debian/control.karmic: provides debian/control.karmic file for
+	  Ubuntu karmic, removes python-xml from Build-Depends
+
+2009-10-13  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokersite.py.in: test the type checking of the
+	  getSession function on the uid / auth arguments
+	* tests/test-pokersite.py.in: session must be created
+	* tests/test-pokersite.py.in: getSession has an additional argument
+	  for explain
+	* ChangeLog: *** empty log message ***
 	* pokernetwork/pokeravatar.py, pokernetwork/pokersite.py,
 	  tests/test-pokeravatar.py.in, tests/test-pokersite.py.in: the uid
 	  & auth args are set when a request is distributed by the avatar
