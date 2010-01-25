@@ -141,12 +141,16 @@ class PokerResourceTestCase(PokerSiteBase):
                   self.transport = PokerResourceTestCase.Transport()
                   self.site = site
 
+            def requestDone(self, request):
+                  pass
+
       def test01_render(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            r.queued = 0
             d = r.notifyFinish()
             def finish(result):
                   self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
@@ -160,6 +164,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            r.queued = 0
             error_pattern = 'UNLIKELY'
             def handlePacketLogic(packet):
                   raise UserWarning, error_pattern
@@ -180,6 +185,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r1.gotLength(len(input))
             r1.handleContentChunk(input)
+            r1.queued = 0
             d1 = defer.Deferred()
             r1.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
             avatar1 = r1.getSession().avatar
@@ -193,6 +199,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r2.gotLength(len(input))
             r2.handleContentChunk(input)
+            r2.queued = 0
             r2.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
             avatar2 = r2.getSession().avatar
             def handlePacketLogic2(packet):
@@ -219,6 +226,7 @@ class PokerResourceTestCase(PokerSiteBase):
             r.site = r.channel.site
             r.gotLength(0)
             r.handleContentChunk('')
+            r.queued = 0
             r.requestReceived('GET', '/?jsonp=FUN&packet={"type":"PacketPing"}', '')
 
             self.assertSubstring('\r\n\r\nFUN([])', r.transport.getvalue())
@@ -228,6 +236,7 @@ class PokerResourceTestCase(PokerSiteBase):
             r.site = r.channel.site
             r.gotLength(0)
             r.handleContentChunk('')
+            r.queued = 0
             r.requestReceived('GET', '/?packet={"type":"PacketPing"}', '')
 
             self.assertSubstring('\r\n\r\n[]', r.transport.getvalue())
@@ -238,6 +247,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            r.queued = 0
             session = 'session'
             serial = '5'
             r.received_cookies['TWISTED_SESSION'] = session
@@ -256,6 +266,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPokerLongPollReturn"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            r.queued = 0
             d = r.notifyFinish()
             r.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
             session = r.getSession()
@@ -272,6 +283,7 @@ class PokerResourceTestCase(PokerSiteBase):
                   input = '{"type": "PacketPokerLongPoll"}'
                   r.gotLength(len(input))
                   r.handleContentChunk(input)
+                  r.queued = 0
                   d = r.notifyFinish()
                   r.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
                   session = r.getSession()
@@ -283,6 +295,7 @@ class PokerResourceTestCase(PokerSiteBase):
                   input = '{"type": "PacketPokerLongPollReturn"}'
                   r.gotLength(len(input))
                   r.handleContentChunk(input)
+                  r.queued = 0
                   d = r.notifyFinish()
                   r.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
                   session = r.getSession()
@@ -302,6 +315,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            r.queued = 0
             d = r.notifyFinish()
             r.requestReceived('GET', '/', '')
             return d
@@ -316,6 +330,7 @@ class PokerResourceTestCase(PokerSiteBase):
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
+            r.queued = 0
             error_pattern = 'UNLIKELY'
             def handlePacketLogic(packet):
                   raise UserWarning, error_pattern
@@ -635,13 +650,16 @@ class FilterFinishTestCase(unittest.TestCase):
                   self.transport = PokerResourceTestCase.Transport()
                   self.site = site
 
+            def requestDone(self, request):
+                  pass
+
       def test01_render(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
             input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
-            
+            r.queued = 0
             d = r.notifyFinish()
             def finish(reason):
                   self.assertSubstring('FINISHED', r.transport.getvalue())
@@ -1001,7 +1019,7 @@ class PokerSiteTestCase(PokerSiteBase):
 
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(FilterErrorTestCase))
     suite.addTest(loader.loadClass(FilterTestCase))
