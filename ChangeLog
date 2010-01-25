@@ -2,6 +2,15 @@
 
  	* Release 2.0.0
 
+	* debian/control: do not depend on python-all-dev as there no
+	  longer is any C modules in poker-network
+	* debian/lintian, debian/lintian/poker-web,
+	  debian/lintian/python-poker-prizes,
+	  debian/lintian/python-poker-stats: add overrides for warnings
+	  related to nusoap include and missing templates in
+	  poker-prizes/stats
+	* pokerweb/Makefile.am, pokerweb/pages/prototype.js: remove unused
+	  prototype.js
 	* debian/control, debian/control.unstable: dont depend on coreutil
 	  in sid
 	* tests/test-pokersite.py.in: in twisted-9.0 the notifyFinish
