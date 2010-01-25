@@ -60,7 +60,6 @@ dist_poker_web_DATA = \
 	pages/nusoap.php \
 	pages/poker.php \
 	pages/webservice.php \
-	pages/prototype.js \
 	pages/tilt.html
 
 all-local:
