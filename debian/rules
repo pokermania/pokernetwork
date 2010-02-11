@@ -13,8 +13,6 @@ export PKG_CONFIG_PATH=/usr/share/pkgconfig
 
 include /usr/share/cdbs/1/rules/debhelper.mk
 
-$(DEB_BUILDDIR)/config.status: debian/stamp-autotools-configure
-
 clean:: # $(DEB_BUILDDIR)/config.status
 	rm -f $(DEB_SRCDIR)/*cdbs-*
 
