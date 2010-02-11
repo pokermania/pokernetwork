@@ -474,6 +474,10 @@ class PokerAvatar:
         if packet.type == PACKET_POKER_LONG_POLL:
             return self.longpollDeferred()
 
+        if packet.type == PACKET_POKER_LONG_POLL_RETURN:
+            self.longPollReturn()
+            return []
+
         self.handlePacketLogic(packet)
         packets = self.resetPacketsQueue()
         if len(packets) == 1 and isinstance(packets[0], defer.Deferred):
@@ -500,10 +504,6 @@ class PokerAvatar:
     def handlePacketLogic(self, packet):
         if self.service.verbose > 2 and packet.type != PACKET_PING:
             self.message("handlePacketLogic(%d): " % self.getSerial() + str(packet))
-
-        if packet.type == PACKET_POKER_LONG_POLL_RETURN:
-            self.longPollReturn()
-            return
 
         if packet.type == PACKET_POKER_EXPLAIN:
             if self.setExplain(packet.value):

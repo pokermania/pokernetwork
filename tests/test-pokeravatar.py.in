@@ -4051,7 +4051,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d = avatar.handlePacketDefer(PacketPokerLongPoll())
             avatar._packets_queue = ['foo']
             d.addCallback(self.assertEquals, ['foo'])
-            avatar.handlePacketLogic(PacketPokerLongPollReturn())
+            avatar.handlePacketDefer(PacketPokerLongPollReturn())
             self.assertEquals(False, avatar.longPollTimer.active())
             return d
         d.addCallback(handleLongPollReturn)
@@ -4065,12 +4065,26 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
         def handleLongPollReturn(x):
             avatar = self.service.avatars[0]
-            avatar.handlePacketLogic(PacketPokerLongPollReturn())
+            avatar.handlePacketDefer(PacketPokerLongPollReturn())
             self.assertEquals(True, avatar._flush_next_longpoll)
             d = avatar.handlePacketDefer(PacketPokerLongPoll())
             self.assertEquals(None, avatar._longpoll_deferred)
             self.assertEquals(False, avatar._flush_next_longpoll)
             return d
+        d.addCallback(handleLongPollReturn)
+        return d
+    # ------------------------------------------------------------------------
+    def test86_3_longPollReturnEmpty(self):
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.setupCallbackChain)
+        d.addCallback(self.login, 0)
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        def handleLongPollReturn(x):
+            avatar = self.service.avatars[0]
+            avatar._packets_queue = ['foo']
+            packets = avatar.handlePacketDefer(PacketPokerLongPollReturn())
+            self.assertEquals([], packets)
         d.addCallback(handleLongPollReturn)
         return d
     # ------------------------------------------------------------------------
