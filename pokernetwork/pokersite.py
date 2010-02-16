@@ -165,8 +165,17 @@ class Session(server.Session):
             # session already expired.
             #
             self.site.getSession(self.uid, self.auth, self.explain_default)
-            server.Session.checkExpired(self)
-            return True
+            #
+            # The session may be replaced by a new session as a side
+            # effect of the verifications made by getSession against
+            # memcache. When this happens no exception is thrown and
+            # checkExpired should not be called because the session
+            # has already expired.
+            #
+            if not self.expired:
+                server.Session.checkExpired(self)
+                return True
+            return False
         except KeyError:
             return False
         

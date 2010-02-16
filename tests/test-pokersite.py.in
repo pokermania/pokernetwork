@@ -738,6 +738,16 @@ class SessionExplainTestCase(PokerSiteBase):
             session.expire()
             session.checkExpired()
 
+      def test03_replaceFromGetSession(self):
+            uid = 'uid'
+            auth = 'auth'
+            session = self.site.makeSessionFromUidAuth(uid, auth, 'yes')
+            session.avatar.user.serial = 5
+            session.lastModified = 0
+            self.site.memcache.set(uid, '0')
+            self.site.memcache.set(auth, '0')
+            self.assertEqual(False, session.checkExpired())
+
 class RequestTestCase(PokerSiteBase):
 
       def test01_name(self):
