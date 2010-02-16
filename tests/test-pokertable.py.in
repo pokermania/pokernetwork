@@ -590,6 +590,16 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.scheduleAutoDeal()
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
     # -------------------------------------------------------------------
+    def test_02_1_autodeal_destroy(self):
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.processingHand(1)
+        self.table.autoDealCheck(20, 10)
+        dealTimeout = self.table.timer_info["dealTimeout"]
+        self.table.destroy()
+        self.assertEquals(1, dealTimeout.cancelled)
+        self.assertEquals(False, self.table.timer_info.has_key("dealTimeout"))
+    # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
         self.createPlayer(1)

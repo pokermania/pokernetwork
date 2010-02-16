@@ -157,6 +157,7 @@ class PokerTable:
     def destroy(self):
         if self.factory.verbose > 1:
             self.message("destroy table %d" % self.game.id)
+        self.cancelDealTimeout()
         if self.transient:
             self.factory.destroyTable(self.game.id)
             
