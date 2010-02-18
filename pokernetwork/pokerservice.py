@@ -634,7 +634,7 @@ class PokerService(service.Service):
         # Cancel sng that stayed in registering state for too long
         #
         for tourney in filter(lambda tourney: tourney.sit_n_go == 'y', self.tourneys.values()):
-            if now - tourney.register_time > self.sng_timeout:
+            if tourney.state == TOURNAMENT_STATE_REGISTERING and now - tourney.register_time > self.sng_timeout:
                 tourney.changeState(TOURNAMENT_STATE_CANCELED)
         #
         # Respawning tournaments

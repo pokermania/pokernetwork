@@ -1671,6 +1671,15 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEqual(heads_up_before.schedule_serial, heads_up_after2.schedule_serial)
 
     # ----------------------------------------------------------------
+    def test14_1_checkTourneysSchedule_cancel_sitngo_already_canceled(self):
+        self.service.startService()
+        self.service.sng_timeout = 0
+        (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
+        heads_up_before.state = pokertournament.TOURNAMENT_STATE_CANCELED
+        heads_up_before.changeState = lambda x: self.assertFalse(True)
+        self.service.checkTourneysSchedule()
+
+    # ----------------------------------------------------------------
     def test15_runTourney(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
