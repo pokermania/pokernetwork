@@ -1270,6 +1270,9 @@ class PokerAvatar:
         for table in self.tables.values():
             table.disconnectPlayer(self, self.getSerial())
         self.logout()
+        for key, restclient in self.game_id2rest_client.iteritems():
+            restclient.clearTimeout()
+        self.game_id2rest_client = {}
 
     def getUserInfo(self, serial):
         self.service.autorefill(serial)
