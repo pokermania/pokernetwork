@@ -51,7 +51,7 @@ silence_all_messages()
 from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA
+from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA, PokerAvatar
 from pokerengine.pokercards import PokerCards
 
 global table1ID
@@ -192,6 +192,8 @@ class MockService:
         class Dummy:
             def __init__(self):
                 self.name = "MockServicePlayerInfo"
+                self.url = "MockServicePlayerInfo.url"
+                self.outfit = "MockServicePlayerInfo.outfit"
         return Dummy()
 
     def error(self, message):
@@ -435,6 +437,10 @@ class MockClientWithTableDict(MockClient):
 class MockClientWithRemoveTable(MockClient):
     def removeTable(self, gameId):
         return True
+# --------------------------------------------------------------------------------
+class MockClientWithRealJoin(MockClient, PokerAvatar):
+    def join(self, table, reason=""):
+        PokerAvatar.join(self, table, reason)
 
 class PokerAvatarCollectionTestCase(unittest.TestCase):
 
@@ -1918,6 +1924,37 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
                               reason = "MockMoveTest")
 
         return expectPlayerDeferred
+
+
+class PokerTableRejoinTestCase(PokerTableTestCaseBase):
+    def setUp(self, ServiceClass = MockServiceWithLadder):
+        PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
+
+    def test49_playerRejoinCheckAutoFlag(self):
+        """
+        See https://gna.org/bugs/?14797
+        """
+        player1 = self.createPlayer(1, clientClass=MockClientWithRealJoin)
+        player1.service = self.service
+        player2 = self.createPlayer(2)
+        self.table.scheduleAutoDeal()
+        d = player1.waitFor(PACKET_POKER_START)
+        def quitPlayer(x):
+            self.table.quitPlayer(player1, 1)
+            self.assertEquals(True, self.table.game.serial2player[1].isAuto())
+        def joinPlayer(x):
+            self.table.joinPlayer(player1, 1)
+            d = player1.waitFor(PACKET_POKER_PLAYER_ARRIVE)
+            return d
+        def checkAutoFlag(x):
+            playerArrive1 = [p for p in player1.packets if p.type == PACKET_POKER_PLAYER_ARRIVE and p.serial == 1]
+            self.assertEquals(False, self.table.game.serial2player[1].isAuto())            
+            self.assertEquals(False, playerArrive1[0].auto)
+        d.addCallback(quitPlayer)
+        d.addCallback(joinPlayer)
+        d.addCallback(checkAutoFlag)
+        return d
+
 # --------------------------------------------------------------------------------
 def Run():
     seed(time.time())
@@ -1930,6 +1967,7 @@ def Run():
     suite.addTest(loader.loadClass(PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal))
     suite.addTest(loader.loadClass(PokerTableTestCaseTransient))
     suite.addTest(loader.loadClass(PokerTableMoveTestCase))
+    suite.addTest(loader.loadClass(PokerTableRejoinTestCase))
     return runner.TrialRunner(reporter.VerboseTextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',

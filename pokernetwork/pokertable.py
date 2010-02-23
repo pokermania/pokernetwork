@@ -1207,7 +1207,6 @@ class PokerTable:
         # Player is now an observer, unless he is seated
         # at the table.
         #
-        avatar.join(self, reason = reason)
         self.factory.joinedCountIncrease()
         if not self.game.isSeated(avatar.getSerial()):
             self.observers.append(avatar)
@@ -1224,6 +1223,8 @@ class PokerTable:
             # Sit back immediately, as if we just seated
             #
             game.comeBack(serial)
+
+        avatar.join(self, reason = reason)
             
         return True
 
