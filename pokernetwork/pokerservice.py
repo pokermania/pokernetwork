@@ -824,6 +824,7 @@ class PokerService(service.Service):
             else:
                 self.tourneyResumeAndDeal(tourney)
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
+            self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_START, param1 = tourney.serial)            
             reactor.callLater(0.01, self.tourneyBroadcastStart, tourney.serial)
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
             # since we only want this behavior before the first deal.

@@ -2645,6 +2645,24 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         self.service.getPage = getPage
         self.service.tourneyBroadcastStart(tourney_serial)
 
+    def test06_monitor(self):
+        self.service.startService()
+        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        self.createUsers()
+        table_serial = 606
+        table_money = 140
+        self.startTournament(table_serial, table_money)
+        tourney = self.service.tourneys[tourney_serial]
+        self.assertEqual(pokertournament.TOURNAMENT_STATE_REGISTERING, tourney.state)
+        self.databaseEvent_called = False
+        def databaseEvent(event = None, param1 = None, param2 = None, param3 = None):            
+            self.databaseEvent_called = True
+            self.assertEqual(PacketPokerMonitorEvent.TOURNEY_START, event)
+            self.assertEqual(tourney_serial, param1)
+        self.service.databaseEvent = databaseEvent
+        self.service.tourneyNewState(tourney, pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.assertEqual(True, self.databaseEvent_called)
+        
 class ListHandsTestCase(PokerServiceTestCaseBase):
 
     def test_ok(self):
@@ -3314,6 +3332,14 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         def close(self):
             pass
+
+        def literal(self, args):
+            pass
+
+        class InternalDatabase:
+            def query(self, args):
+                pass
+        db = InternalDatabase()
 
     class Tournament:
         def __init__(self):

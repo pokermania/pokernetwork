@@ -4119,6 +4119,12 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = table serial
     #
     SEAT	= 9
+
+    ####
+    # A tournament has started.
+    # param1 = tourney serial in the tourneys table
+    #
+    TOURNEY_START       = 10
     
     info = Packet.info + (
         ('event', 0, 'I'),
