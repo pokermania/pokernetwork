@@ -1295,7 +1295,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def test40_destroy_table_with_observers(self):
         """Test table destruction with observers at the table"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
-        self.table.seated2observer(p1)
+        self.table.seated2observer(p1, 1)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
          # Make sure we can't update once table is destroyed.
@@ -1463,7 +1463,17 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.syncDatabase = lambda: None
         self.table.muckTimeoutTimer()
         self.assertEquals([], self.table.game.muckable_serials)
-
+    # -------------------------------------------------------------------
+    def test49_seated2observer_bug(self):
+        a = self.createPlayer(1)
+        a.getSerial = lambda: 0
+        self.message = ""
+        def error(message):
+            self.message = message
+        self.table.error = error
+        self.table.seated2observer(a, 1)
+        self.assertEquals("pokertable.seated2observer: avatar.user.serial (0) doesn't match serial argument (1)", self.message)
+    
 # -------------------------------------------------------------------
 
 # I seriously considered not having *all* the same tests run with

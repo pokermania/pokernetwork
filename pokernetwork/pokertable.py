@@ -692,7 +692,7 @@ class PokerTable:
                 for (serial, seat) in quitters:
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
-                        self.seated2observer(avatar)
+                        self.seated2observer(avatar, serial)
 
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
         if self.tourney: return
@@ -955,8 +955,10 @@ class PokerTable:
     def isRunning(self):
         return self.game.isRunning()
 
-    def seated2observer(self, avatar):
-        self.avatar_collection.remove(avatar.getSerial(), avatar)
+    def seated2observer(self, avatar, serial):
+        if avatar.getSerial() != serial:
+            self.error("pokertable.seated2observer: avatar.user.serial (%d) doesn't match serial argument (%d)" % (avatar.getSerial(), serial))
+        self.avatar_collection.remove(serial, avatar)
         self.observers.append(avatar)
 
     def observer2seated(self, avatar):
@@ -976,7 +978,7 @@ class PokerTable:
             #
             if self.isOpen():
                 if avatar.removePlayer(self, serial):
-                    self.seated2observer(avatar)
+                    self.seated2observer(avatar, serial)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
@@ -1007,7 +1009,7 @@ class PokerTable:
         self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
 
         for avatar in self.avatar_collection.get(serial)[:]:
-            self.seated2observer(avatar)
+            self.seated2observer(avatar, serial)
 
         self.broadcast(PacketPokerPlayerLeave(game_id = game.id,
                                               serial = serial,
@@ -1023,7 +1025,7 @@ class PokerTable:
                 # If not on a closed table, stand up.
                 #
                 if avatar.removePlayer(self, serial):
-                    self.seated2observer(avatar)
+                    self.seated2observer(avatar, serial)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
@@ -1057,7 +1059,7 @@ class PokerTable:
             #
             if self.isOpen():
                 if avatar.removePlayer(self, serial):
-                    self.seated2observer(avatar)
+                    self.seated2observer(avatar, serial)
                     self.factory.leavePlayer(serial, game.id, self.currency_serial)
                     self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
                 else:
