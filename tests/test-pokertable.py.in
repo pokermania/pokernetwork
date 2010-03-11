@@ -1930,9 +1930,13 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         # called as a side effect of moving the player to the table2
         #
         self.table2.timer_info['dealTimeout'] = reactor.callLater(200000, lambda: True)
-        self.table.movePlayer([player], 1, self.table2.game.id,
+        self.table_joined = None
+        def checkJoin(table, reason):
+            self.table_joined = table
+        player.join = checkJoin
+        self.table.movePlayer(self.table.avatar_collection.get(1), 1, self.table2.game.id,
                               reason = "MockMoveTest")
-
+        self.assertEquals(self.table_joined, self.table2)
         return expectPlayerDeferred
 
 

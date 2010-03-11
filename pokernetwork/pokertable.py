@@ -1076,6 +1076,7 @@ class PokerTable:
         return True
         
     def movePlayer(self, avatars, serial, to_game_id, reason = ""):
+        avatars = avatars[:]
         game = self.game
         #
         # We are safe because called from within the server under
