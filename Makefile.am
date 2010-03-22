@@ -61,6 +61,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/packets.py \
 	pokernetwork/pokerauth.py \
 	pokernetwork/pokerauthmysql.py \
+	pokernetwork/pokerauthnopassword.py \
 	pokernetwork/pokeravatar.py \
 	pokernetwork/pokerbot.py \
 	pokernetwork/pokerbotlogic.py \
@@ -104,7 +105,8 @@ cgi_SCRIPTS = \
 
 twistedpluginsdir = ${pythondir}/twisted/plugins
 twistedplugins_PYTHON = \
-	twisted/plugins/pokernetwork_plugin.py
+	twisted/plugins/pokerserver_plugin.py \
+	twisted/plugins/pokerbot_plugin.py
 
 pokerdbdir=${pkgdatadir}
 dist_pokerdb_DATA = \

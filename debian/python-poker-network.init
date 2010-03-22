@@ -66,12 +66,11 @@ serverplugin=pokerserver
 
 botpidfile=/var/run/poker-network-bot.pid
 botlogfile=/var/log/poker-network-bot.log
-botscript=$python_lib_path/pokernetwork/pokerbot.py
+botplugin=pokerbot
 
 more_args=--no_save
 
 test -x ${twistd} || exit 0
-test -r ${botscript} || exit 0
 
 set -e
 
@@ -89,9 +88,10 @@ case "$1" in
 	    ${serverplugin} #--config=${serverconfig}
         if $RUN_BOTS ; then
 	    ${python} ${twistd} \
-	        --pidfile=${botpidfile} --python ${botscript} \
+	        --pidfile=${botpidfile} \
 	        --logfile=${botlogfile} --quiet ${more_args} \
-	        --reactor=${reactor}
+	        --reactor=${reactor} \
+		${botplugin}
         else
             echo "Bots are disabled, edit /etc/default/python-poker-network to enable them."
         fi
@@ -117,9 +117,10 @@ case "$1" in
 	    echo "done"
 	    echo -n "Starting poker bots ..."
 	    ${python} ${twistd} \
-	        --pidfile=${botpidfile} --python ${botscript} \
+	        --pidfile=${botpidfile} \
 	        --logfile=${botlogfile} --quiet ${more_args} \
-	        --reactor=${reactor}
+	        --reactor=${reactor} \
+		${botplugin}
 	    echo "done"
         else
             echo "Bots are disabled"

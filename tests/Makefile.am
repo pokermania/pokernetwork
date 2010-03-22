@@ -70,6 +70,7 @@ TESTS = coverage-reset \
 	test-pokerpackets.py \
 	test-pokerclientpackets.py \
 	test-pokerbotlogic.py \
+	test-pokerbot.py \
 	test-pokerdatabase.py \
 	test-pokerservice.py \
 	test-pokerservice-load.py \

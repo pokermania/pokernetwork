@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2010 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple, 75004 Paris
@@ -20,6 +21,7 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authors:
+#  Johan Euphrosine <proppy@aminche.com>
 #  Loic Dachary <loic@dachary.org>
 #  Henry Precheur <henry@precheur.org> (2004)
 #
@@ -102,8 +104,9 @@ class PokerBotFactory(PokerClientFactory):
         self.went_broke = False
         self.disconnected_volontarily = False
         self.can_disconnect = True
-        self.name = PokerBotFactory.string_generator.getName()
-        self.password = PokerBotFactory.string_generator.getPassword()
+        self.kwargs = kwargs
+        self.name =  kwargs.get('name', PokerBotFactory.string_generator.getName())
+        self.password = kwargs.get('password', PokerBotFactory.string_generator.getPassword())
         
     def buildProtocol(self, addr):
         protocol = PokerClientFactory.buildProtocol(self, addr)
@@ -134,7 +137,8 @@ class PokerBotFactory(PokerClientFactory):
         reconnect = False
         if self.reconnect:
             if self.went_broke:
-                self.name = PokerBotFactory.string_generator.getName()
+                if not self.kwargs.has_key('name'):
+                    self.name = PokerBotFactory.string_generator.getName()
                 print "Re-establishing (get more money)."
                 self.went_broke = False
                 reactor.callLater(self.wait, connector.connect)
@@ -208,8 +212,15 @@ def makeApplication(argv):
     default_path = "/etc/poker-network" + sys.version[:3] + "/poker.bot.xml"
     if not exists(default_path):
         default_path = "/etc/poker-network/poker.bot.xml"
-    configuration = sys.argv[-1][-4:] == ".xml" and sys.argv[-1] or default_path
+    configuration = argv[-1][-4:] == ".xml" and argv[-1] or default_path
 
+    application = service.Application('pokerbot')
+    serviceCollection = service.IServiceCollection(application)
+    bots_service = makeService(configuration)
+    bots_service.setServiceParent(serviceCollection)
+    return application
+
+def makeService(configuration):
     settings = pokernetworkconfig.Config([''])
     settings.load(configuration)
 
@@ -219,37 +230,55 @@ def makeApplication(argv):
     ( host, port ) = split(settings.headerGet("/settings/servers"), ":")
     port = int(port)
 
-    bots = Application('pokerbot')
-    bots.verbose = settings.headerGetInt("/settings/@verbose")
-    services = service.IServiceCollection(bots)
+    services = Bots()
     services.setSettings(settings)
 
-    bots_count = 0
-    for table in settings.headerGetProperties("/settings/table"):
-        for i in range(0, int(table["count"])):
-            bots_count += 1
-            table['tournament'] = False
-            factory = PokerBotFactory(settings = settings,
-                                      join_info = table,
-                                      serial = bots_count)
-            bot = Bot(host, port, factory)
-            factory.bot = bot
-            bot.setServiceParent(services)
-    for tournament in settings.headerGetProperties("/settings/tournament"):
-        for i in range(0, int(tournament["count"])):
-            bots_count += 1
-            tournament['tournament'] = True
-            factory = PokerBotFactory(settings = settings,
-                                      join_info = tournament,
-                                      serial = bots_count)
-            bot = Bot(host, port, factory)
-            factory.bot = bot
-            bot.setServiceParent(services)
-    return bots
+    def bot_serial_generator():
+        serial = 0
+        while True:
+            serial += 1
+            yield serial
 
-application = makeApplication(sys.argv[1:])
+    def create_bot(*args, **kwargs):
+        factory = PokerBotFactory(*args, **kwargs)
+        bot = Bot(host, port, factory)
+        factory.bot = bot
+        bot.setServiceParent(services)
+
+    bot_serial = bot_serial_generator()
+
+    for table in settings.headerGetProperties("/settings/table"):
+        table['tournament'] = False
+        if table.has_key('count'):
+            for i in range(0, int(table["count"])):
+                create_bot(settings = settings,
+                           join_info = table,
+                           serial = bot_serial.next())
+        else:
+            for bot in settings.headerGetProperties("/settings/table[@name='%s']/bot" % table['name']):
+                create_bot(settings = settings,
+                           join_info = table,
+                           serial = bot_serial.next(),
+                           name = bot['name'],
+                           password = bot['password'])
+    for tournament in settings.headerGetProperties("/settings/tournament"):
+        tournament['tournament'] = True
+        if tournament.has_key('count'):
+            for i in range(0, int(tournament["count"])):
+                create_bot(settings = settings,
+                           join_info = tournament,
+                           serial = bot_serial.next())
+        else:
+            for bot in settings.headerGetProperties("/settings/tournament[@name='%s']/bot" % tournament['name']):
+                create_bot(settings = settings,
+                           join_info = table,
+                           serial = bot_serial.next(),
+                           name = bot['name'],
+                           password = bot['password'])
+    return services
 
 def run():
+    application = makeApplication(sys.argv[1:])
     app.startApplication(application, None)
     reactor.run()
 

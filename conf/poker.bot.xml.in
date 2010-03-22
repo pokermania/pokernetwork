@@ -9,7 +9,10 @@
   <currency id="1">@WGET@ wget --quiet -O - 'http://@POKER_WWW_HOST@/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
   <path>@POKER_ENGINE_PKGSYSCONFDIR@</path> 
 
-  <table name="One" count="4"/>
+  <table name="One">
+    <bot name="foo" password="oof" />
+    <bot name="bar" password="rab" />
+  </table>
   <table name="Two" count="4"/>
   <table name="Three" count="4"/>
   <table name="Four" count="4"/>
