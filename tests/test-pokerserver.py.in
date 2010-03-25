@@ -56,7 +56,7 @@ settings_xml_server_manhole = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -112,7 +112,7 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="ISO-8859-1"?
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ %(additional_path)s</path>
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf %(additional_path)s</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -663,54 +663,7 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught an Exception")
 
         self.expectedOutput = "poll reactor already installed"
-    # -------------------------------------------------------------------------
     def test01_missingConfigFileGivenOnCLI_forceReactorInstall(self):
-        """This test looks for an error when attempting to install the
-        poll.reactor if it wasn't already there.  We had some debate about
-        whether this is the behavior we want.  This may be a FIXME."""
-
-        # Some discussion of this test happened on IRC, see:
-        # http://pokersource.info/irc/pokersource@irc.freenode.net/2009-05-18.html
-        import platform
-        from twisted.internet import pollreactor
-        doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
-        caughtIt = False
-        self.holdStdout()
-
-        saveSystem = platform.system
-        if platform.system() == "Windows":
-            def fakeSystem():
-                return "NotWindowsButReallyIs"
-            platform.system = fakeSystem
-
-        reactorCalled = False
-        def reactorFake():
-            reactorCalled = True
-        saveReactor = pollreactor.install
-        pollreactor.install = reactorFake
-
-        reactorModulesSave = sys.modules['twisted.internet.reactor']
-        del sys.modules['twisted.internet.reactor']
-
-        try:
-            pokerServerRun()
-            self.fail("previous line should have thrown exception")
-        except exceptions.UnboundLocalError, e:
-            self.assertEquals(e.__str__(), "local variable 'pollreactor' referenced before assignment")
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught an Exception")
-
-        self.expectedOutput = "installing poll reactor"
-
-        self.failIf(reactorCalled, "Poll reactor can't be called because it is not imported")
-
-        if saveSystem:
-            platform.system = saveSystem
-        pollreactor.install = saveReactor
-        sys.modules['twisted.internet.reactor'] = reactorModulesSave
-    # -------------------------------------------------------------------------
-    # This alternative test01 should probably pass.  It does not currently.
-    def alt_test01_missingConfigFileGivenOnCLI_forceReactorInstall(self):
         import platform
         from twisted.internet import pollreactor
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")

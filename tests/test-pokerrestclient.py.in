@@ -54,7 +54,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """

@@ -10,7 +10,7 @@
   <servers>@POKER_SERVER_HOST@:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@</path> 
+  <path>@POKER_ENGINE_PKGDATADIR@/conf</path> 
 
   <table name="One"	count="4" />
   <table name="Two"	count="4" />

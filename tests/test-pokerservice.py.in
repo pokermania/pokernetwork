@@ -134,7 +134,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -240,7 +240,7 @@ monitor_settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -336,7 +336,7 @@ list_table_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -1005,7 +1005,7 @@ class ResthostTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -1024,7 +1024,7 @@ class ResthostTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -1044,7 +1044,7 @@ class ResthostTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -1799,7 +1799,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1)")
         self.service.db = pokerdatabase.PokerDatabase(self.settings)
-        self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+        self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
         self.service.cleanupTourneys()
         tourney = self.service.tourneys[4000]
         self.assertEqual([1, 2, 3], tourney.players)
@@ -1963,7 +1963,7 @@ class RefillTestCase(unittest.TestCase):
         <listen tcp="19480" />
         <refill serial="1" amount="10000" />
         <delays />
-        <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+        <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
         <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
         <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
@@ -2016,7 +2016,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         self.createUsers()
         user_serial = self.user1_serial
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
         tourney.currency_serial = 1
         tourney.via_satellite = 0
         self.service.tourneys[tourney_serial] = tourney
@@ -2040,7 +2040,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         user_serial = 1
         self.service.startService()
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
         self.service.tourneys[tourney_serial] = tourney
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
@@ -2051,7 +2051,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         user_serial = 1
         self.service.startService()
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
         tourney.register(user_serial)
         tourney.currency_serial = 1
         tourney.state = pokertournament.TOURNAMENT_STATE_RUNNING
@@ -2065,7 +2065,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         user_serial = 1
         self.service.startService()
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
         tourney.register(user_serial)
         tourney.currency_serial = 1
         tourney.buy_in = 1000
@@ -2081,7 +2081,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         self.createUsers()
         user_serial = self.user1_serial
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@'])
+                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
         tourney.register(user_serial)
         tourney.currency_serial = 1
         self.service.tourneys[tourney_serial] = tourney
@@ -6165,7 +6165,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
 
         self.service = pokerservice.PokerService(self.settings)
-        self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+        self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
 
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
@@ -6209,7 +6209,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
 
 #         self.service = pokerservice.PokerService(self.settings)
-#         self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+#         self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
 
 #         oldDb = self.service.db
 #         self.service.db = MockDatabase(MockCursor)
@@ -6245,7 +6245,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
 
         self.service = pokerservice.PokerService(self.settings)
-        self.service.dirs = ['@POKER_ENGINE_PKGSYSCONFDIR@']
+        self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
 
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
@@ -7218,7 +7218,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <tourney_select_info>UNLIKELY</tourney_select_info>
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -7240,7 +7240,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <tourney_select_info>../@srcdir@/testfilter.py</tourney_select_info>
   <users temporary="BOT"/>
 </server>
@@ -7263,7 +7263,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <tourney_select_info>../@srcdir@/testtourney_select_info_no_call.py</tourney_select_info>
   <users temporary="BOT"/>
 </server>
@@ -7287,7 +7287,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <tourney_select_info settings="../@srcdir@/testsettings.xml">../@srcdir@/testtourney_select_info.py</tourney_select_info>
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -7308,7 +7308,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """

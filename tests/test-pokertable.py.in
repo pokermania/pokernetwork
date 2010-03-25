@@ -62,7 +62,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4" autodeal="yes" max_missed_round="5">
   <delays autodeal_tournament_min="2" autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """
@@ -74,7 +74,7 @@ settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="ISO-88
     <deck>9c 9d 9h Ts Tc Td Th Ts Jc Jd Jh Js Qc Qd Qh Qs Kc Kd Kh Ks Ac Ad Ah As</deck>
   </decks>
 
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT"/>
 </server>
 """

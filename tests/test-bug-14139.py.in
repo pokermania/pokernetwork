@@ -61,7 +61,7 @@ settings_bot_xml = """
   <muck>yes</muck>
   <currency id="0"></currency>
   <auto_post>yes</auto_post>
-n  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ </path> 
+  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf </path> 
 
   <verbose>6</verbose>
   <table name="Play Money NL HE 10-max 1/2" count="%(botCount)d"/>
