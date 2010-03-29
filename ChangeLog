@@ -1,6 +1,97 @@
-2010-01-25  Loic Dachary <loic@dachary.org>
+2010-03-29  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* debian/control: build depends on poker-engine 1.3.6 for the
+	  definition of pkgdatadir
+
+2010-03-25  Johan Euphrosine <proppy@aminche.com>
+
+	* twisted/plugins/pokerbot_plugin.py,
+	  twisted/plugins/pokerserver_plugin.py: add missing twisted
+	  plugins
+	* configure.ac, tests/conf/poker.bot.xml.in,
+	  tests/conf/poker.server.xml.in, tests/test-bug-14139.py.in,
+	  tests/test-leak-no-trial.py.in, tests/test-leak.py.in,
+	  tests/test-pokerauth.py.in, tests/test-pokeravatar.py.in,
+	  tests/test-pokerclient.py.in, tests/test-pokerrestclient.py.in,
+	  tests/test-pokerserver-run-load.py.in,
+	  tests/test-pokerserver.py.in, tests/test-pokerservice.py.in,
+	  tests/test-pokertable.py.in, tests/test-proxyfilter.py.in,
+	  tests/test-servercrash.py.in,
+	  tests/test-sessionproxyfilter.py.in,
+	  tests/test-tourneytablebalance.py.in,
+	  tests/test-webservice.py.in: fix poker-network test suite: use
+	  @POKER_ENGINE_PKGDATADIR@/conf instead o f
+	  @POKER_ENGINE_PKGSYSCONFDIR@, fix typo, remove obsolete test
+
+2010-03-22  Johan Euphrosine <proppy@aminche.com>
+
+	* Makefile.am, conf/poker.bot.xml.in, configure.ac,
+	  debian/python-poker-network.init,
+	  pokernetwork/pokerauthnopassword.py, pokernetwork/pokerbot.py,
+	  pokernetwork/pokerserver.py, tests/Makefile.am,
+	  tests/test-pokerbot.py.in,
+	  twisted/plugins/pokernetwork_plugin.py: add support for named bot
+	  convert pokerbot script into a twisted plugin
+	  fix pokerserver imports
+	  add 'nopassword' auth
+
+2010-03-11  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in:
+	  pokertable.movePlayer should copy avatars list bug#15489
+
+2010-03-05  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in: add
+	  serial argument to seated2observer, and log error if not matching
+	  avatar serial bug#14934
+
+2010-02-25  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokerpackets.py, pokernetwork/pokerservice.py,
+	  tests/test-pokerservice.py.in: add TOURNEY_START event in monitor
+	  bug#15482
+
+2010-02-23  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  pokeravatar.disconnect should cancel restclients bug#15384
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in:
+	  pokertable.rejoin should use updated auto flag bug#14797
+
+2010-02-18  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokerservice.py, tests/test-pokerservice.py.in:
+	  pokerservice should only cancel tourney not in registering state
+	  bug#14112
+
+2010-02-18  Loic Dachary <loic@dachary.org>
+
+	* Makefile.am: Add upgrades/poker.server/1.7.5-2.0.0.xsl to
+	  distribution
+
+2010-02-16  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokersite.py, tests/test-pokersite.py.in:
+	  pokersite.checkExpired should not expire overwritten sessions bug
+	  #13717
+	* pokernetwork/pokertable.py, tests/test-pokertable.py.in:
+	  pokertable.destroy should cancelDealTimeout bug#13784
+
+2010-02-11  Loic Dachary <loic@dachary.org>
+
+	* debian/rules: remove useless and non portable dependency (meant
+	  for packaging-farm)
+
+2010-02-11  Johan Euphrosine <proppy@aminche.com>
+
+	* pokernetwork/pokeravatar.py, tests/test-pokeravatar.py.in:
+	  PacketPokerLongPollReturn should not returns queued packet
+	  bug#15335
+
+2010-01-25  Loic Dachary <loic@dachary.org>
 
 	* debian/control: do not depend on python-all-dev as there no
 	  longer is any C modules in poker-network
