@@ -1272,6 +1272,7 @@ class PokerAvatar:
         self.logout()
         for key, restclient in self.game_id2rest_client.iteritems():
             restclient.clearTimeout()
+            restclient.longPollFrequency = -1
         self.game_id2rest_client = {}
 
     def getUserInfo(self, serial):

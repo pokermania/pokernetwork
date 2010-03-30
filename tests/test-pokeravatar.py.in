@@ -3948,7 +3948,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d = defer.Deferred()
             def getOrCreateRestClientMockup(resthost, game_id):
                 clients[game_id] = getOrCreateRestClient(resthost, game_id)
-                clients[game_id].sendPacket = lambda packet, data: d
+                clients[game_id].sendPacketData = lambda data: d
+                clients[game_id].pendingLongPoll = True
                 return clients[game_id]
             avatar.getOrCreateRestClient = getOrCreateRestClientMockup
             def disconnectAvatar(arg):
@@ -3961,7 +3962,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             r.addCallback(lambda arg: self.assertEquals(None, clients[2].timer))
             def f(x): PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
             r.addCallback(f)
-            d.callback([PacketPing()])
+            d.callback('[{ "type": "PacketPing" }]')
             return d
         d.addCallback(handleDistributedPacket)
         return d
@@ -4852,7 +4853,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08_1"
+#    loader.methodPrefix = "test82"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))

@@ -146,8 +146,9 @@ class PokerRestClient:
         self.timer = None
         
     def scheduleLongPoll(self, delta):
-        self.clearTimeout()
-        self.timer = reactor.callLater(max(self.minLongPollFrequency, self.longPollFrequency - delta), self.longPoll)
+        if self.longPollFrequency > 0:        
+            self.clearTimeout()
+            self.timer = reactor.callLater(max(self.minLongPollFrequency, self.longPollFrequency - delta), self.longPoll)
 
     def longPoll(self):
         if self.longPollFrequency > 0:
