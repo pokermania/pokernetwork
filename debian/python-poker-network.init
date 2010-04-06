@@ -89,7 +89,7 @@ case "$1" in
         if $RUN_BOTS ; then
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} \
-	        --logfile=${botlogfile} --quiet ${more_args} \
+	        --logfile=${botlogfile} ${more_args} \
 	        --reactor=${reactor} \
 		${botplugin}
         else
@@ -118,7 +118,7 @@ case "$1" in
 	    echo -n "Starting poker bots ..."
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} \
-	        --logfile=${botlogfile} --quiet ${more_args} \
+	        --logfile=${botlogfile} ${more_args} \
 	        --reactor=${reactor} \
 		${botplugin}
 	    echo "done"
