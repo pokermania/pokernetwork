@@ -1,0 +1,60 @@
+Source: poker-network
+Section: python
+Priority: extra
+Maintainer: Loic Dachary (OuoU) <loic@debian.org>
+Build-Depends: debhelper (>= 5.0.37.2), python-all (>= 2.4), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted, python-poker-engine (>= 1.3.6), perl, php-pear, php5-dev, php5-mysql, libjson-perl, apg, rsync, python-central
+XS-Python-Version: >=2.4
+Standards-Version: 3.8.3
+
+Package: python-poker-network
+Section: python
+Architecture: all
+Suggests: mysql-server, munin-node
+Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.3.4), python-twisted, python-mysqldb, python-soappy, python-openssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync
+Description: multiplayer poker server and client library
+ The server deals the cards and checks the user actions using a poker
+ game engine (poker-engine). It can handle all the poker variants
+ implemented by the poker game engine (holdem, omaha, omaha high/low,
+ stud 7 ...) in ring games, sit and go or multitables tournaments.
+ The client library can be used to implement simple clients such as
+ robots (<1000 LOC example robot provided) or a graphical user
+ interface.
+ .
+ The poker server has its own TCP/IP based protocol. The client
+ library decodes the protocol. An abstract user interface library
+ provides a framework to implement graphical clients.
+
+Package: poker-web
+Section: web
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, dbconfig-common, ucf, php5 | php5-cgi, php5-mysql, php5-gd, apache2, php-pear, gettext
+Description: Web interface to a poker-network server
+ Play poker with other players connected on a poker-network server
+ (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
+ or multitables tournaments. 
+
+Package: python-poker-stats
+Section: python
+Architecture: all
+Priority: optional
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+Description: statistics poker-network client 
+ poker-stats collects statistics from running poker-network servers
+ and consolidate them in a separate set of tables, in a separate
+ database.
+
+Package: python-poker-prizes
+Section: python
+Architecture: all
+Priority: optional
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+Description: real prizes addon for poker-network
+ poker-prizes adds support for real prizes to the poker-network
+ multiplayer online poker server.
