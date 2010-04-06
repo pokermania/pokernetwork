@@ -1,5 +1,6 @@
 #! /bin/sh
 #
+# Copyright (C) 2006 - 2010 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
 #                                24 rue vieille du temple, 75004 Paris
 #
@@ -25,10 +26,10 @@
 #
 ### BEGIN INIT INFO
 # Provides:          poker-network
-# Required-Start: $local_fs $network mysqld
-# Required-Stop: $local_fs $network mysqld
-# Should-Start:      $local_fs
-# Should-Stop:       $local_fs
+# Required-Start:    $network $remote_fs $syslog
+# Required-Stop:     $network $remote_fs $syslog
+# Should-Start:      mysql
+# Should-Stop:       mysql
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: poker-network server and bots
