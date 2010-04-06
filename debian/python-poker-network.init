@@ -83,7 +83,7 @@ case "$1" in
 	fi
 	${python} ${twistd} \
 	    --pidfile=${serverpidfile} \
-	    --logfile=${serverlogfile} --quiet ${more_args} \
+	    --logfile=${serverlogfile} ${more_args} \
 	    --reactor=${reactor} \
 	    ${serverplugin} #--config=${serverconfig}
         if $RUN_BOTS ; then
