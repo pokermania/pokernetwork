@@ -1,7 +1,7 @@
 #!@PYTHON@
 # -*- mode: python -*-
 #
-# Copyright (C) 2007, 2008, 2009 Loic Dachary     <loic@dachary.org>
+# Copyright (C) 2007 - 2010 Loic Dachary    <loic@dachary.org>
 # Copyright (C) 2008, 2009 Bradley M. Kuhn  <bkuhn@ebb.org>
 # Copyright (C) 2008       Johan Euphrosine <proppy@aminche.com>
 #
@@ -3296,46 +3296,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d2.addCallback(self.getPlayerPlacesNone, 1, 'user1')        
         return defer.DeferredList([d1, d2])
 
-    # ------------------------------------------------------------------------
-    def poll(self, (client, packet), id ):
-        avatar = self.service.avatars[id]
-        avatar.queuePackets()
-        avatar.tourneys = [1]
-        avatar.handlePacketLogic(PacketPokerPoll(tourney_serial = 1))
-        packets = avatar.resetPacketsQueue()
-        self.assertEquals(0, len(packets))
-        return (client, packet)
-    
-    # ------------------------------------------------------------------------
-    def test70_poll(self):
-        """Test poll packet."""
-        self.createClients(1)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.poll, 0)
-        return d
-    
-    # ------------------------------------------------------------------------
-    def pollTourneyFinished(self, (client, packet), id ):
-        avatar = self.service.avatars[id]
-        avatar.queuePackets()
-        avatar.tourneys = [1]
-        avatar.handlePacketLogic(PacketPokerPoll(tourney_serial = 2))
-        packets = avatar.resetPacketsQueue()
-        self.assertEquals(1, len(packets))
-        self.assertEquals(PACKET_POKER_TOURNEY_FINISH, packets[0].type)
-        return (client, packet)
-    # ------------------------------------------------------------------------
-    def test70_1_pollTourneyFinished(self):
-        """Test poll packet when tourney is finished."""
-        self.createClients(1)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.pollTourneyFinished, 0)
-        return d
-    
     # -------------------------------------------------------------------------
     def setLocale(self, (client, packet), myLocale, avid = 0, expectSucceed=True):
 

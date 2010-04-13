@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006 - 2010 Loic Dachary <loic@dachary.org>
 # Copyright (C)             2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C) 2004, 2005, 2006       Mekensleep <licensing@mekensleep.com>
 #                                      24 rue vieille du temple 75004 Paris
@@ -215,22 +215,6 @@ behaviour associated to each packet.
 from struct import pack, unpack, calcsize
 from types import IntType, LongType
 from pokernetwork.packets import *
-
-########################################
-
-class PacketPokerTourneyFinish(Packet):
-    """\
-Semantics: notify the client that the tournament is over
-
-Direction: server => client
-
-tourney_serial: integer uniquely identifying a tournament.
-"""
-    info = Packet.info + (
-        ('tourney_serial', 0, 'I'),
-        )
-
-Packet.infoDeclare(globals(), PacketPokerTourneyFinish, Packet, "POKER_TOURNEY_FINISH", 49) # 49 # 0x31 # %SEQ%
 
 ########################################
 
@@ -4168,18 +4152,6 @@ class PacketPokerTourneyManager(Packet):
     pass #pragma: no cover
 
 Packet.infoDeclare(globals(), PacketPokerTourneyManager, Packet, "POKER_TOURNEY_MANAGER", 149) # 149 # 0x95 # %SEQ%
-
-########################################
-
-class PacketPokerPoll(Packet):
-    """ """
-    
-    info = Packet.info + (
-        ('game_id', 0, 'I'),
-        ('tourney_serial', 0, 'I'),
-        )
-
-Packet.infoDeclare(globals(), PacketPokerPoll, Packet, "POKER_POLL", 150) # 150 # 0x96 # %SEQ%
 
 ########################################
 

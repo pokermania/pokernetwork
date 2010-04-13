@@ -1,7 +1,7 @@
 #
 # -*- coding: iso-8859-1 -*-
 #
-# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
+# Copyright (C) 2006 - 2010 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 # Copyright (C)             2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2004, 2005, 2006 Mekensleep
@@ -529,11 +529,6 @@ class PokerAvatar:
             return
         
         if packet.type == PACKET_PING:
-            return
-        
-        if packet.type == PACKET_POKER_POLL:
-            if packet.tourney_serial != 0 and not (packet.tourney_serial in self.tourneys):
-                self.sendPacketVerbose(PacketPokerTourneyFinish(tourney_serial = packet.tourney_serial))
             return
         
         if not self.isAuthorized(packet.type):
