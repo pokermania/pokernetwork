@@ -42,6 +42,10 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
     done
 fi
 
+if [ "$1" = "purge" ]; then
+    ucf --purge /etc/poker-web/constants.php
+fi
+
 . /usr/share/dbconfig-common/dpkg/prerm.mysql 
 dbc_dbname=currency_one
 dbc_go poker-web-currency-one $@
