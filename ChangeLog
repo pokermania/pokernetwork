@@ -1,6 +1,18 @@
-2010-04-06  Loic Dachary <loic@dachary.org>
+2010-09-04  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* debian/poker-web.postrm, debian/poker-web.prerm: ucf --purge
+	  /etc/poker-web/constants.php must be in prerm
+
+2010-04-13  Loic Dachary <loic@dachary.org>
+
+	* pokernetwork/pokeravatar.py, pokernetwork/pokerpackets.py,
+	  tests/test-pokeravatar.py.in, tests/test-protocol.py.in:
+	  POKER_POLL and TOURNEY_FINISH packets are obsoleted by long poll
+	  and centralized sessions
+
+2010-04-06  Loic Dachary <loic@dachary.org>
 
 	* debian/python-poker-network.init: fix insserv dependencies
 	* debian/python-poker-network.init: option --quiet is no longer
