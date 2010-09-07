@@ -137,9 +137,17 @@ fi
 AC_SUBST(POKER_NETWORK_PKGDATADIR, [`eval eval eval echo $pkgdatadir`])
 AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval eval eval echo $pkglibdir`])
 AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval eval eval echo $pkgsysconfdir`])
-POKER_ENGINE_PKGSYSCONFDIR=`pkg-config --variable=pkgsysconfdir poker-engine` || AC_MSG_ERROR([pkg-config --variable=pkgsysconfdir poker-engine fails])
-POKER_ENGINE_PKGDATADIR=`pkg-config --variable=pkgdatadir poker-engine` || AC_MSG_ERROR([pkg-config --variable=pkgdatadir poker-engine fails])
+
+POKER_ENGINE_PKGSYSCONFDIR=`pkg-config --variable=pkgsysconfdir poker-engine`
+if test -z "$POKER_ENGINE_PKGSYSCONFDIR" ; then
+   POKER_ENGINE_PKGSYSCONFDIR=`eval eval eval echo $pkgsysconfdir | sed -e s/-network/-engine/g`
+fi
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [$POKER_ENGINE_PKGSYSCONFDIR])
+
+POKER_ENGINE_PKGDATADIR=`pkg-config --variable=pkgdatadir poker-engine`
+if test -z "$POKER_ENGINE_PKGDATADIR" ; then
+   POKER_ENGINE_PKGDATADIR=`eval eval eval echo $pkgdatadir | sed -e s/-network/-engine/g`
+fi
 AC_SUBST(POKER_ENGINE_PKGDATADIR, [$POKER_ENGINE_PKGDATADIR])
 
 AC_ARG_WITH(poker-server-host,
