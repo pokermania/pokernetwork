@@ -20,11 +20,6 @@ $(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
 	autoreconf --install
 	chmod a+x $@
 
-debian/stamp-autotools-configure: $(DEB_SRCDIR)/configure
-	chmod a+x $(DEB_CONFIGURE_SCRIPT)
-	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
-	touch $@
-
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/class/gnome.mk
 
@@ -54,4 +49,9 @@ binary-install/python-poker-network::
 binary-install/python-poker-stats::
 	-dh_pycentral -ppython-poker-stats
 	dh_python -ppython-poker-stats
+
+debian/stamp-autotools-configure: $(DEB_SRCDIR)/configure
+	chmod a+x $(DEB_CONFIGURE_SCRIPT)
+	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
+	touch $@
 
