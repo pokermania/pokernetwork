@@ -1,8 +1,8 @@
 #
-# Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
-# Copyright (C)             2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
-# Copyright (C) 2004, 2005, 2006       Mekensleep <licensing@mekensleep.com>
-#                                      24 rue vieille du temple, 75004 Paris
+# Copyright (C) 2006-2010        Loic Dachary <loic@dachary.org>
+# Copyright (C) 2008, 2009       Bradley M. Kuhn <bkuhn@ebb.org>
+# Copyright (C) 2004, 2005, 2006 Mekensleep <licensing@mekensleep.com>
+#                                24 rue vieille du temple, 75004 Paris
 #
 # This software's license gives you freedom; you can copy, convey,
 # propagate, redistribute and/or modify this program under the terms of
@@ -139,14 +139,11 @@ AC_SUBST(POKER_NETWORK_PKGLIBDIR, [`eval eval eval echo $pkglibdir`])
 AC_SUBST(POKER_NETWORK_PKGSYSCONFDIR, [`eval eval eval echo $pkgsysconfdir`])
 
 POKER_ENGINE_PKGSYSCONFDIR=`pkg-config --variable=pkgsysconfdir poker-engine`
-if test -z "$POKER_ENGINE_PKGSYSCONFDIR" ; then
-   POKER_ENGINE_PKGSYSCONFDIR=`eval eval eval echo $pkgsysconfdir | sed -e s/-network/-engine/g`
-fi
 AC_SUBST(POKER_ENGINE_PKGSYSCONFDIR, [$POKER_ENGINE_PKGSYSCONFDIR])
 
 POKER_ENGINE_PKGDATADIR=`pkg-config --variable=pkgdatadir poker-engine`
 if test -z "$POKER_ENGINE_PKGDATADIR" ; then
-   POKER_ENGINE_PKGDATADIR=`eval eval eval echo $pkgdatadir | sed -e s/-network/-engine/g`
+   POKER_ENGINE_PKGDATADIR=/usr/share/poker-engine
 fi
 AC_SUBST(POKER_ENGINE_PKGDATADIR, [$POKER_ENGINE_PKGDATADIR])
 
