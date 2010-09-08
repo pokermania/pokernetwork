@@ -98,7 +98,6 @@ TESTS = coverage-reset \
 	testpoker.php \
 	testbirthday.php \
 	testwebservice.php \
-	test-bug-14139.py \
 	coverage-report      
 
 # Regarding XFAIL_TESTS: the only items we typically list here are tests
