@@ -1,6 +1,15 @@
-2010-09-07  Loic Dachary <loic@dachary.org>
+2010-09-08  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
+
+	* debian/control: lower requirements on poker-engine to 1.3.5
+	* debian/changelog: ucf --purge /etc/poker-web/constants.php must
+	  be in prerm (Closes: #586756) has been closed by 1.7.7-2 upload
+	  already
+	* debian/control.unstable: control and control.unstable are the
+	  same
+
+2010-09-07  Loic Dachary <loic@dachary.org>
 
 	* configure.ac: implement fallback for when poker-engine 1.3.5 is
 	  available instead of 1.3.6
