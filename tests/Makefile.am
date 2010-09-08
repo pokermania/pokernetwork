@@ -46,7 +46,6 @@ EXTRA_DIST = \
 	testmessages.py \
 	testsettings.xml \
 	test-leak.py.in \
-	test-bug-14139.py \
 	test-leak-no-trial.py.in \
 	test-leak-reference.py.in \
 	test-leak-exarkun.py.in \
