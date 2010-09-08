@@ -105,7 +105,7 @@ TESTS = coverage-reset \
 # closed.  If you close a bug, be sure to remove the test-bug-NUMBER.py
 # entry from XFAIL_TESTS below.
 
-export XFAIL_TESTS := test-bug-14139.py
+export XFAIL_TESTS := 
 
 .PHONY: coverage-reset coverage-report
 
