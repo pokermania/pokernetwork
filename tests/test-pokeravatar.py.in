@@ -157,7 +157,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         settings.header = settings.doc.xpathNewContext()
         self.client_factory.append(pokerclient.PokerClientFactory(settings = settings))
         self.assertEquals(len(self.client_factory), index + 1,
-                          "clients must be created in daisy-chain with createClients()")
+                          "clients must be created in daisy-chain with createClients() or createClient()")
         def setUpProtocol(client):
             client._poll_frequency = 0.1
             return client
@@ -175,6 +175,14 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         self.destroyDb()
         self.setUpServer()
         self.client_factory = []
+
+    # -------------------------------------------------------------------------
+    def createClient(self):
+        client_index = len(self.client_factory)
+        self.setUpClient(client_index)
+        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[client_index])
+        return client_index
+    
     # -------------------------------------------------------------------------
     def createClients(self, numClients):
         if numClients == 0:
@@ -597,7 +605,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(stringAvatar)
         return d
     # -------------------------------------------------------------------------
-    def normalSetRoles(self, (client, packet), id, myRoles, rolesString):
+    def normalSetRoles(self, (client, packet), myRoles, rolesString):
         avatar = self.service.avatars[0]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerSetRole(serial = client.getSerial(), roles = myRoles))
@@ -615,7 +623,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
-        d.addCallback(self.normalSetRoles, 0, PacketPokerRoles.PLAY, "PLAY")
+        d.addCallback(self.normalSetRoles, PacketPokerRoles.PLAY, "PLAY")
         d.addCallback(self.login, 0)
         d.addCallback(self.quit)
         return d
@@ -651,7 +659,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(setRoles)
         return d
     # -------------------------------------------------------------------------
-    def errorSetRoles(self, (client, packet), id, myRoles, errorCode, errorMessage):
+    def errorSetRoles(self, (client, packet), myRoles, errorCode, errorMessage):
         avatar = self.service.avatars[0]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerSetRole(serial = client.getSerial(), roles = myRoles))
@@ -671,7 +679,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         # This error message will need to be fixed if you add additional valid roles 
-        d.addCallback(self.errorSetRoles, 0, "YOU_HAVE_NEVER_HEARD_OF_THIS_ROLE",
+        d.addCallback(self.errorSetRoles, "YOU_HAVE_NEVER_HEARD_OF_THIS_ROLE",
                       PacketPokerSetRole.UNKNOWN_ROLE, "role YOU_HAVE_NEVER_HEARD_OF_THIS_ROLE is unknown (roles = ['PLAY', 'EDIT'])")
         d.addCallback(self.login, 0)
         d.addCallback(self.quit)
@@ -679,19 +687,26 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # -------------------------------------------------------------------------
     def test06_8_setRoleAfterAnotherUserHas(self):
         """Tests setting of a role that is unknown."""
-        self.createClients(2)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.normalSetRoles, 0, PacketPokerRoles.PLAY, "PLAY")
-        d.addCallback(self.login, 0)
-        d2 = self.client_factory[1].established_deferred
-        d2.addCallback(self.sendExplain)
-        d2.addCallback(self.errorSetRoles, 0, PacketPokerRoles.PLAY,
-                       PacketPokerSetRole.NOT_AVAILABLE,
-                      "another client already has role %s" % PacketPokerRoles.PLAY)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.quit)
-        return defer.DeferredList((d, d2))
+        def client1():
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.normalSetRoles, PacketPokerRoles.PLAY, "PLAY")
+            d.addCallback(self.login, index)
+            return d
+        def client2(result):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.errorSetRoles, PacketPokerRoles.PLAY,
+                           PacketPokerSetRole.NOT_AVAILABLE,
+                           "another client already has role %s" % PacketPokerRoles.PLAY)
+            d.addCallback(self.login, index)
+            return d
+        d = client1();
+        d.addCallback(client2)
+        d.addCallback(self.quit)
+        return d
     # -------------------------------------------------------------------------
     def test07_getImage(self):
         """Tests player getting its image"""
@@ -4813,7 +4828,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test82"
+#    loader.methodPrefix = "test06_8"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
