@@ -1044,35 +1044,44 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
-        self.createClients(2)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.setLocale, "fr_FR")
-        d.addCallback(self.sendRolePlay)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.createRankDBTable, 2, rank = 50, percentile = 30)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2, 50, 30)
-        d.addCallback(self.buyInTable, 0, 2, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 2)
-        d.addCallback(self.sitTable, 0, 2)
-        d.addCallback(self.readyToPlay, 0, 2)
-        d2 = self.client_factory[1].established_deferred
-        d2.addCallback(self.sendExplain)
-        d2.addCallback(self.sendRolePlay)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit',
-                       [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
-        d2.addCallback(self.seatTable, 1, 2)
-        d2.addCallback(self.buyInTable, 1, 2, 1000)
-        # Note: this avatar does not autopost, and doBlindPost handles it.
-        d2.addCallback(self.sitTable, 1, 2)
-        d2.addCallback(self.readyToPlay, 1, 2)
-        d2.addCallback(self.dealTable, 2)
-        d2.addCallback(self.beginHandSetup, 2)
-        d2.addCallback(self.doBlindPost, 1, 2)
-        d2.addCallback(self.startHandAndReceiveCards, 2)
-        return defer.DeferredList((d, d2))
+        def client1(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.setLocale, "fr_FR")
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId, 50, 30)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            d.addCallback(self.autoBlindAnte, index, gameId)
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        def client2(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit',
+                           [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            # Note: this avatar does not autopost, and doBlindPost handles it.
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        gameId = 2
+        d = defer.succeed(True)
+        d.addCallback(client1, gameId)
+        d.addCallback(client2, gameId)
+        d.addCallback(self.dealTable, gameId)
+        d.addCallback(self.beginHandSetup, gameId)
+        d.addCallback(self.doBlindPost, 1, gameId)
+        d.addCallback(self.startHandAndReceiveCards, gameId)
+        return d
     # -------------------------------------------------------------------------
     def sendExplainTooLate(self, (client, packet)):
         avatar = self.service.avatars[0]
@@ -1107,41 +1116,49 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # RANDOM
     def test15a_handPlay_dbLocalesAndOverridesThereof(self):
         """Test playing an actual hand all the way through when locale changes"""
-        self.createClients(2)
+        def client1(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.forceDbToLocaleValue, avid = 0, 
+                          setTo = 'fr_FR', expect = "RESET_BY_SET_LOCALE")
+            d.addCallback(self.setLocale, "fr_FR")
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId, 50, 30)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            d.addCallback(self.autoBlindAnte, index, gameId)
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        def client2(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.forceDbToLocaleValue, avid = 1, 
+                           setTo = 'fr_FR', expect = "fr_FR")
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit',
+                           [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            # Note: this avatar does not autopost, and doBlindPost handles it.
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        gameId = 2
+        d = defer.succeed(True)
+        d.addCallback(client1, gameId)
+        d.addCallback(client2, gameId)
+        d.addCallback(self.dealTable, gameId)
+        d.addCallback(self.beginHandSetup, gameId)
+        d.addCallback(self.doBlindPost, 1, gameId)
+        d.addCallback(self.startHandAndReceiveCards, gameId)
+        return d
 
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.forceDbToLocaleValue, avid = 0, 
-                      setTo = 'fr_FR', expect = "RESET_BY_SET_LOCALE")
-        d.addCallback(self.sendRolePlay)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.setLocale, "en_US")
-        d.addCallback(self.createRankDBTable, 2, rank = 50, percentile = 30)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2, 50, 30)
-        d.addCallback(self.buyInTable, 0, 2, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 2)
-        d.addCallback(self.sitTable, 0, 2)
-        d.addCallback(self.readyToPlay, 0, 2)
-        d2 = self.client_factory[1].established_deferred
-
-        d2.addCallback(self.sendExplain)
-        d2.addCallback(self.forceDbToLocaleValue, avid = 1, 
-                       setTo = 'fr_FR', expect = "fr_FR")
-        d2.addCallback(self.sendRolePlay)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit',
-                       [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
-        d2.addCallback(self.seatTable, 1, 2)
-        d2.addCallback(self.buyInTable, 1, 2, 1000)
-        # Note: this avatar does not autopost, and doBlindPost handles it.
-        d2.addCallback(self.sitTable, 1, 2)
-        d2.addCallback(self.readyToPlay, 1, 2)
-        d2.addCallback(self.dealTable, 2)
-        d2.addCallback(self.beginHandSetup, 2)
-        d2.addCallback(self.doBlindPost, 1, 2)
-        d2.addCallback(self.startHandAndReceiveCards, 2)
-        return defer.DeferredList((d, d2))
     # -------------------------------------------------------------------------
     def test16_explainTooLate(self):
         """This test covers the case where you attempt to turn on explain
@@ -4828,7 +4845,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06_8"
+    loader.methodPrefix = "test15a"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
