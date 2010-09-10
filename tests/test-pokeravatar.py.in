@@ -2457,7 +2457,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                                                             game_id = gameId))
         restore_all_messages()
         self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
-        self.assertEqual(search_output("AutodealCheck scheduled"), True)
         # Coverage for when the server is shutting down
 
         avatar.service.shutting_down = True
@@ -2484,12 +2483,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                              game_id = gameId))
         self.assertEquals(search_output('tried to start a new game but is not the owner of the table'), True)
-        found = 0
-        for packet in avatar.resetPacketsQueue():
-            found += 1
-            self.assertEquals(packet.game_id, gameId)
-            self.assertEquals(packet.type, PACKET_POKER_START)
-        self.assertEquals(found, 1)
                           
         # Coverage for the table owner is the player
         avatar.service.shutting_down = False
@@ -2539,8 +2532,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # This game start should "succeed" (but later fail due to game running) because 
         #  the owner of the table is our player.
         self.assertEqual(search_output("tried to start a new game while in a game"), False)
-        self.assertEqual(search_output("Not autodealing %d because game is running" 
-                                       % gameId), True)
+        self.assertEqual(search_output("No autodeal"), True)
 
         # Following is coverage for when someone else owns the table
 
@@ -2554,33 +2546,31 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
         self.assertEqual(search_output("tried to start a new game while in game "), True)
-        self.assertEqual(search_output('Not autodealing %d because game is running' % gameId), True)
+        self.assertEqual(search_output("No autodeal"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
-        self.createClients(2)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.setupCallbackChain)
-        d.addCallback(self.sendRolePlay)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 1000)
-        d.addCallback(self.autoBlindAnte, 0, 2)
-        d.addCallback(self.sitTable, 0, 2)
-        d.addCallback(self.readyToPlay, 0, 2)
-        d2 = self.client_factory[1].established_deferred
-        d2.addCallback(self.setupCallbackChain)
-        d2.addCallback(self.sendRolePlay)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 2)
-        d2.addCallback(self.buyInTable, 1, 2, 1000)
-        d2.addCallback(self.autoBlindAnte, 1, 2)
-        d2.addCallback(self.sitTable, 1, 2)
-        d2.addCallback(self.readyToPlay, 1, 2)
-#        d2.addCallback(self.dealTable, 2)
-        d2.addCallback(self.variousStartPackets, 1, 2)
-        return defer.DeferredList((d, d2))
+        def client(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.setupCallbackChain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            d.addCallback(self.autoBlindAnte, index, gameId)
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        gameId = 2
+        table = self.service.getTable(gameId)
+        table.autodeal = False
+        d = defer.succeed(True)
+        d.addCallback(client, gameId)
+        d.addCallback(client, gameId)
+#        d.addCallback(self.dealTable, gameId)
+        d.addCallback(self.variousStartPackets, 1, gameId)
+        return d
     # ------------------------------------------------------------------------
     def badSeatTable(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
@@ -4842,7 +4832,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test23"
+#    loader.methodPrefix = "test47"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
