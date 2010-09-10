@@ -312,7 +312,8 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                                                  seat = seatNumber,
                                                  game_id = gameId))
         found = 0
-        for packet in avatar.resetPacketsQueue():
+        packets = avatar.resetPacketsQueue()
+        for packet in packets:
             if packet.type == PACKET_POKER_SEATS:
                 found += 1
                 self.assertEquals(packet.game_id, table.game.id)
@@ -343,8 +344,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         expected = 3
         if percentile:
             expected += 1
-        self.assertEquals(found, expected, "avatarID %d was unable to SEAT in game, %d" %
-                                         (id, gameId))
+        self.assertEquals(found, expected, "avatarID %d was unable to SEAT in game(%d) : %s" % (id, gameId, str(packets)))
         return (client, packet)
     # -------------------------------------------------------------------------
     def buyInTable(self, (client, packet), id, gameId, myAmount):
@@ -485,7 +485,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
             # When I was writing this loop, I also saw a number of:
             # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
             # serial 5, but I thought it was safe to ignore them here.
-        self.assertEquals(found, 16)
+        self.assertEquals(found, 14)
         avatar0.queuePackets()
         avatar1.queuePackets()
         return (client, packet)
@@ -1051,6 +1051,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setLocale, "fr_FR")
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
+            d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
             d.addCallback(self.buyInTable, index, gameId, 1000)
@@ -4841,7 +4842,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test44"
+    loader.methodPrefix = "test15_"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
