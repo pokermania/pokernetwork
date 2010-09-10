@@ -2339,7 +2339,19 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test44_possibleObserverLoggedIn(self):
-        def client(result, gameId):
+        def client1(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        def client2(result, gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2354,8 +2366,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             return d
         gameId = 2
         d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
+        d.addCallback(client1, gameId)
+        d.addCallback(client2, gameId)
         d.addCallback(self.dealTable, gameId)
         d.addCallback(self.loseConnection, gameId)
         return d
@@ -2385,7 +2397,19 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test45_possibleObserverLoggedInWithAnte(self):
-        def client(result, gameId):
+        def client1(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-1-2-limit')
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        def client2(result, gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2400,8 +2424,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             return d
         gameId = 4
         d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
+        d.addCallback(client1, gameId)
+        d.addCallback(client2, gameId)
         d.addCallback(self.dealTable, gameId)
         d.addCallback(self.loseConnectionAnte, gameId)
         return d
@@ -4832,7 +4856,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test47"
+#    loader.methodPrefix = "test45"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
