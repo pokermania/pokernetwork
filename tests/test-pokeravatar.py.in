@@ -41,6 +41,7 @@ from pokerengine import pokertournament
 # will have to be patched too.
 #
 from tests import testclock
+import pprint
 
 from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
 #os.environ['VERBOSE_T'] = '0'
@@ -417,8 +418,10 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         table.update()
         return (client, packet)
     # ------------------------------------------------------------------------
-    def beginHandSetup(self, (client, packet), gameId, dealerAssigned = 1,
-                       blindAmount = 100, blindExpected = 'small'):
+    def beginHandSetup(self, (client, packet), gameId, autoDeal = False):
+        dealerAssigned = 1
+        blindAmount = 100
+        blindExpected = 'small'
         table = self.service.getTable(gameId)
         avatar0 = self.service.avatars[0]
         avatar1 = self.service.avatars[1]
@@ -485,7 +488,11 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
             # When I was writing this loop, I also saw a number of:
             # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
             # serial 5, but I thought it was safe to ignore them here.
-        self.assertEquals(found, 14)
+        if autoDeal:
+            expected = 16
+        else:
+            expected = 14
+        self.assertEquals(found, expected, pprint.pformat(packetList))
         avatar0.queuePackets()
         avatar1.queuePackets()
         return (client, packet)
@@ -1694,7 +1701,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(client, gameId)
         d.addCallback(client, gameId)
         d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.beginHandSetup, gameId)
+        d.addCallback(self.beginHandSetup, gameId, True)
         d.addCallback(self.doBlindPostAndHaveOtherGuyWaitForCardsAndQuit, 1, gameId)
         return d
 
@@ -4835,7 +4842,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test45"
+#    loader.methodPrefix = "test23"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
