@@ -4643,30 +4643,30 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
 class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
     # ------------------------------------------------------------------------
     def test00_tablePicker_failure_by_min(self):
-        self.createClients(1)
-        playerDeferred = self.preparePlayerForTablePickerSend(0)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 2, "over_best", 1)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 1, "over_best", 1)
+        playerNumber = len(self.client_factory)
+        playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_best", 1)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
 
-        playerDeferred.addCallback(self.tablePickerFails, 0, 100, 0,
+        playerDeferred.addCallback(self.tablePickerFails, playerNumber, 100, 0,
                                     "holdem", "2-4-limit")
         return playerDeferred
     # ------------------------------------------------------------------------
     def test01_tablePicker_failure_by_variant(self):
-        self.createClients(1)
-        playerDeferred = self.preparePlayerForTablePickerSend(0)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 2, "over_best", 1)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 1, "over_best", 1)
-        playerDeferred.addCallback(self.tablePickerFails, 0, 0, 0,
+        playerNumber = len(self.client_factory)
+        playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_best", 1)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+        playerDeferred.addCallback(self.tablePickerFails, playerNumber, 0, 0,
                                     "badugi", '')
         return playerDeferred
     # ------------------------------------------------------------------------
     def test02_tablePicker_failure_by_structure(self):
-        self.createClients(1)
-        playerDeferred = self.preparePlayerForTablePickerSend(0)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 2, "over_best", 1)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 1, "over_best", 1)
-        playerDeferred.addCallback(self.tablePickerFails, 0, 0, 0,
+        playerNumber = len(self.client_factory)
+        playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_best", 1)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+        playerDeferred.addCallback(self.tablePickerFails, playerNumber, 0, 0,
                                     '', "500-1000-limit")
         return playerDeferred
     # ------------------------------------------------------------------------
@@ -4712,11 +4712,10 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return d
     # ------------------------------------------------------------------------
     def test05_tablePicker_emptyTableLowestNumberWhenEverythingIsEmpty(self):
-        self.createClients(1)
-
-        playerDeferred = self.preparePlayerForTablePickerSend(0)
-        playerDeferred.addCallback(self.setMoneyForPlayer, 0, 1, "over_best", 1)
-        playerDeferred.addCallback(self.tablePickerSucceeds, 0, 0, 0,
+        playerNumber = len(self.client_factory)
+        playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+        playerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 0, 0,
                                     '', '', 1, "NL HE 10-max 100/200")
         return playerDeferred
     # ------------------------------------------------------------------------
@@ -4848,7 +4847,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test11"
+#    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
