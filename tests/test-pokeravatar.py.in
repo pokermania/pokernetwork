@@ -3333,6 +3333,24 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test69_getPlayerPlaces(self):
         """Test lookup of where the player is playing."""
+        def client(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.sendExplain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            d.addCallback(self.autoBlindAnte, index, gameId)
+            d.addCallback(self.sitTable, index, gameId)
+            d.addCallback(self.readyToPlay, index, gameId)
+            return d
+        gameId = 2
+        d = defer.succeed(True)
+        d.addCallback(client, gameId)
+        d.addCallback(client, gameId)
+        return d
         self.createClients(2)
         d1 = self.client_factory[0].established_deferred
         d1.addCallback(self.sendExplain)
@@ -3349,7 +3367,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d2.addCallback(self.sendRolePlay)
         d2.addCallback(self.login, 1)
         d2.addCallback(self.getPlayerPlacesNone, 1, 'user1')        
-        return defer.DeferredList([d1, d2])
+        return defer.DeferredList([d1, d2]) # the order in which d1 & d2 is run does not matter 
 
     # -------------------------------------------------------------------------
     def setLocale(self, (client, packet), myLocale, avid = 0, expectSucceed=True):
@@ -3483,32 +3501,26 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def test73_playerTimeoutAndThenViewsQueuedPackets(self):
         """Test when a player was in a hand, reconnects after other hands
         have been played, and expects certain packet playback  packets."""
-        self.createClients(3)
-        table = self.service.getTable(2)
+        def client(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.setupCallbackChain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            return d
+        gameId = 2
+        table = self.service.getTable(gameId)
         table.autodeal = False
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.setupCallbackChain)
-        d.addCallback(self.sendRolePlay)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 10000)
-        d2 = self.client_factory[1].established_deferred
-        d2.addCallback(self.setupCallbackChain)
-        d2.addCallback(self.sendRolePlay)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 2)
-        d2.addCallback(self.buyInTable, 1, 2, 10000)
-        d3 = self.client_factory[2].established_deferred
-        d3.addCallback(self.setupCallbackChain)
-        d3.addCallback(self.sendRolePlay)
-        d3.addCallback(self.login, 2)
-        d3.addCallback(self.joinTable, 2, 2, 'Table2', '2-4-limit')
-        d3.addCallback(self.seatTable, 2, 2)
-        d3.addCallback(self.buyInTable, 2, 2, 10000)
-        d3.addCallback(self.playerTimesoutAndThenLooksAtQueuedPackets, 2)
-        return defer.DeferredList((d, d2, d3))
+        d = defer.succeed(True)
+        d.addCallback(client, gameId)
+        d.addCallback(client, gameId)
+        d.addCallback(client, gameId)
+        d.addCallback(self.playerTimesoutAndThenLooksAtQueuedPackets, gameId)
+        return d
+
     # ------------------------------------------------------------------------
     def playWhileObserverGrows(self, (client, packet), gameId):
         avatars = self.service.avatars
@@ -4868,7 +4880,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test63"
+#    loader.methodPrefix = "test73"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
