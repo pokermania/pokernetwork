@@ -4693,24 +4693,23 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return d
     # ------------------------------------------------------------------------
     def test04_tablePicker_twoPossibleGivesMostFullWithSeats(self):
-        self.createClients(8)
-
-        playersDeferreds = []
-        for ii in [ 0, 1, 2 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 1, "NL HE 10-max 100/200",
-                                                 "100-200-no-limit", "holdem", 10, 1))
-        for ii in [ 3, 4, 5, 6 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 2, "NL HE 6-max 100/200",
-                                                 "100-200-no-limit", "holdem", 6, 1))
-
-        pickerDeferred = self.preparePlayerForTablePickerSend(7)
-        pickerDeferred.addCallback(self.setMoneyForPlayer, 7, 1, "over_best", 1)
-        pickerDeferred.addCallback(self.tablePickerSucceeds, 7, 3, 0,
-                                    "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
-        playersDeferreds.append(pickerDeferred)
-        return defer.DeferredList(playersDeferreds)
+        d = defer.succeed(True)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
+        def check(result):
+            playerNumber = len(self.client_factory)
+            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+            pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
+                                       "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
+            return pickerDeferred
+        d.addCallback(check)
+        return d
     # ------------------------------------------------------------------------
     def test05_tablePicker_emptyTableLowestNumberWhenEverythingIsEmpty(self):
         self.createClients(1)
@@ -4865,7 +4864,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test03"
+#    loader.methodPrefix = "test04"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
