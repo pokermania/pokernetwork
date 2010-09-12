@@ -4845,31 +4845,6 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
             return pickerDeferred
         d.addCallback(check)
         return d
-    # ------------------------------------------------------------------------
-    def test12_tablePicker_twoPossibleGivesMostFullWithSeatsButNotFullOne(self):
-        self.createClients(18)
-
-        playersDeferreds = []
-        for ii in [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 1, "NL HE 10-max 100/200",
-                                                 "100-200-no-limit", "holdem", 10, 1))
-        for ii in [ 10, 11, 12 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 2, "NL HE 6-max 100/200",
-                                                 "100-200-no-limit", "holdem", 6, 1))
-        for ii in [ 13, 14, 15, 16 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 5, "Stud 8-max 2/4",
-                                             "2-4-limit", "7stud", 8, 2))
-
-        pickerDeferred = self.preparePlayerForTablePickerSend(17)
-        pickerDeferred.addCallback(self.setMoneyForPlayer, 17, 1, "over_best", 1)
-        pickerDeferred.addCallback(self.setMoneyForPlayer, 17, 2, "over_best", 5)
-        pickerDeferred.addCallback(self.tablePickerSucceeds, 17, 0, 0,
-                                    "", "", 5, "Stud 8-max 2/4")
-        playersDeferreds.append(pickerDeferred)
-        return defer.DeferredList(playersDeferreds)
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
