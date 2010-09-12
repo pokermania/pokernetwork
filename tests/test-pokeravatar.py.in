@@ -4610,8 +4610,9 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
 
         return (client, packet)
     # ------------------------------------------------------------------------
-    def startPlayerSeatedAndPlaying(self, playerNumber, tableNumber, tableName,
+    def startPlayerSeatedAndPlaying(self, result, tableNumber, tableName,
                                     tableStructure, variant, maxPlayers, currencySerial):
+        playerNumber = self.createClient()
         d = self.client_factory[playerNumber].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -4631,6 +4632,8 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
         return d
     # ------------------------------------------------------------------------
     def preparePlayerForTablePickerSend(self, playerNumber):
+        playerNumber_confirm = self.createClient()
+        assert playerNumber_confirm == playerNumber
         d = self.client_factory[playerNumber].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -4668,25 +4671,26 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return playerDeferred
     # ------------------------------------------------------------------------
     def test03_tablePicker_onlyOnePossible(self):
-        self.createClients(2)
 
-        playersDeferreds = []
-        for ii in [ 0 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 5, "Stud 8-max 2/4",
-                                             "2-4-limit", "7stud", 8, 2))
-        pickerDeferred = self.preparePlayerForTablePickerSend(1)
-        pickerDeferred.addCallback(self.setMoneyForPlayer, 1, 2, "over_min_under_best", 5)
-        pickerDeferred.addCallback(self.tablePickerSucceeds, 1, 1, 0,
-                                    "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
-                                   autoBlindAnte = True)
-        def autodeal((client, packet), gameId):
-            table = self.service.getTable(gameId)
-            self.assertTrue(table.timer_info.has_key("dealTimeout"))
-            return (client, packet)
-        pickerDeferred.addCallback(autodeal, 5)
-        playersDeferreds.append(pickerDeferred)
-        return defer.DeferredList(playersDeferreds)
+        d = defer.succeed(True)
+
+        d.addCallback(self.startPlayerSeatedAndPlaying, 5, "Stud 8-max 2/4", "2-4-limit", "7stud", 8, 2)
+
+        def check(result):
+            playerNumber = len(self.client_factory)
+            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_min_under_best", 5)
+            pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 1, 0,
+                                       "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
+                                       autoBlindAnte = True)
+            def autodeal((client, packet), gameId):
+                table = self.service.getTable(gameId)
+                self.assertTrue(table.timer_info.has_key("dealTimeout"))
+                return (client, packet)
+            pickerDeferred.addCallback(autodeal, 5)
+            return pickerDeferred
+        d.addCallback(check)
+        return d
     # ------------------------------------------------------------------------
     def test04_tablePicker_twoPossibleGivesMostFullWithSeats(self):
         self.createClients(8)
@@ -4861,7 +4865,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test76"
+#    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
