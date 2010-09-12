@@ -4811,19 +4811,17 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
     # ------------------------------------------------------------------------
 
     def test09_tablePicker_noTableDueToLackofFunds(self):
-        self.createClients(4)
-
-        playersDeferreds = []
-        for ii in [ 0, 1, 2 ]:
-            playersDeferreds.append(
-                self.startPlayerSeatedAndPlaying(ii, 5, "Stud 8-max 2/4",
-                                             "2-4-limit", "7stud", 8, 2))
-        pickerDeferred = self.preparePlayerForTablePickerSend(3)
-        pickerDeferred.addCallback(self.setMoneyForPlayer, 3, 2, "under_min", 5)
-        pickerDeferred.addCallback(self.tablePickerFails, 3, 3, 0,
-                                    "7stud", "Stud 8-max 2/4")
-        playersDeferreds.append(pickerDeferred)
-        return defer.DeferredList(playersDeferreds)
+        d = defer.succeed(True)
+        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
+        def check(result):
+            playerNumber = len(self.client_factory)
+            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "under_min", 1)
+            pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
+                                       "holdem", "100-200-no-limit")
+            return pickerDeferred
+        d.addCallback(check)
+        return d
     # ------------------------------------------------------------------------
     def test10_tablePicker_sitOutCausesNoMatchesFound(self):
         self.createClients(4)
@@ -4888,7 +4886,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
+#    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
