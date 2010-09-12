@@ -3594,31 +3594,25 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test74_tooManyPacketsGrowOnObserver(self):
         """Test when a player merely observes, the packet queue grows and grows"""
-        self.createClients(3)
-        table = self.service.getTable(2)
+        def client(result, gameId):
+            index = self.createClient()
+            d = self.client_factory[index].established_deferred
+            d.addCallback(self.setupCallbackChain)
+            d.addCallback(self.sendRolePlay)
+            d.addCallback(self.login, index)
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.seatTable, index, gameId)
+            d.addCallback(self.buyInTable, index, gameId, 1000)
+            return d
+        gameId = 2
+        table = self.service.getTable(gameId)
         table.autodeal = False
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.setupCallbackChain)
-        d.addCallback(self.sendRolePlay)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
-        d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 10000)
-        d2 = self.client_factory[1].established_deferred
-        d2.addCallback(self.setupCallbackChain)
-        d2.addCallback(self.sendRolePlay)
-        d2.addCallback(self.login, 1)
-        d2.addCallback(self.joinTable, 1, 2, 'Table2', '2-4-limit')
-        d2.addCallback(self.seatTable, 1, 2)
-        d2.addCallback(self.buyInTable, 1, 2, 10000)
-        d3 = self.client_factory[2].established_deferred
-        d3.addCallback(self.setupCallbackChain)
-        d3.addCallback(self.sendRolePlay)
-        d3.addCallback(self.login, 2)
-        d3.addCallback(self.joinTable, 2, 2, 'Table2', '2-4-limit')
-        d3.addCallback(self.seatTable, 2, 2)
-        d3.addCallback(self.playWhileObserverGrows, 2)
-        return defer.DeferredList((d, d2, d3))
+        d = defer.succeed(True)
+        d.addCallback(client, gameId)
+        d.addCallback(client, gameId)
+        d.addCallback(client, gameId)
+        d.addCallback(self.playWhileObserverGrows, gameId)
+        return d
     # ------------------------------------------------------------------------
     def playerSitsBrieflyThenSitsOut(self, (client, packet), gameId):
         avatars = self.service.avatars
@@ -4880,7 +4874,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test73"
+#    loader.methodPrefix = "test74"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarLocaleTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
