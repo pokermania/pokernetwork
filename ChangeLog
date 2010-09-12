@@ -1,7 +1,100 @@
-2010-09-08  Loic Dachary <loic@dachary.org>
+2010-09-12  Loic Dachary <loic@dachary.org>
 
  	* Release 2.0.0
 
+	* tests/test-pokeravatar.py.in: modify
+	  preparePlayerForTablePickerSend calls to take into account the
+	  fact that they create a client
+	* tests/test-pokeravatar.py.in: remove
+	  test12_tablePicker_twoPossibleGivesMostFullWithSeatsButNotFullOne
+	  because it is redundant with
+	  test07_tablePicker_shouldNotPickFullTableEvenIfPlayerSitsOut
+	* tests/test-pokeravatar.py.in: modify
+	  test11_tablePicker_failureFromTableCannotAddPlayer to not use
+	  DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test10_tablePicker_sitOutCausesNoMatchesFound to not use
+	  DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test09_tablePicker_noTableDueToLackofFunds to not use
+	  DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test08_tablePicker_failureBecauseAllTablesMeetingCriteriaAreFull
+	  to not use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test07_tablePicker_shouldNotPickFullTableEvenIfPlayerSitsOut to
+	  not use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test06_tablePicker_shouldNoticeWhenSitOutMakesTableBadChoice to
+	  not use DeferredList to avoid race conditions. Reimplement test
+	  to sitout two players from the second table instead of just one
+	  at the first so that there is a noticeable side effect. The
+	  result is different from test04.
+	* tests/test-pokeravatar.py.in: modify
+	  test04_tablePicker_twoPossibleGivesMostFullWithSeats to not use
+	  DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test03_tablePicker_onlyOnePossible to not use DeferredList to
+	  avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test76_forceObserverDisconnectPacketQueue to not use DeferredList
+	  to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test75_playerSitsBrieflyThenOut to not use DeferredList to avoid
+	  race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test74_tooManyPacketsGrowOnObserver to not use DeferredList to
+	  avoid race conditions
+	* tests/test-pokeravatar.py.in: modify
+	  test73_playerTimeoutAndThenViewsQueuedPackets to not use
+	  DeferredList to avoid race conditions
+
+2010-09-10  Loic Dachary <loic@dachary.org>
+
+	* tests/test-pokeravatar.py.in: modify test63_newObserver to not
+	  use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: in test44/test45 the first player
+	  must no be autoblind
+	* tests/test-pokeravatar.py.in: modify test47_startPackets to not
+	  use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: additional argument to
+	  beginHandSetup to control the number of packets when autoDeal is
+	  set for all players and when it's not
+	* tests/test-pokeravatar.py.in: modify
+	  test45_possibleObserverLoggedInWithAnte to not use DeferredList
+	  to avoid race conditions
+	* tests/test-pokeravatar.py.in: test15_handPlay was missing the
+	  stats table creation, removed by accident
+	* tests/test-pokeravatar.py.in: modify
+	  test44_possibleObserverLoggedIn to not use DeferredList to avoid
+	  race conditions
+	* tests/test-pokeravatar.py.in: modify test39_tablePlayerList to
+	  not use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify test23_quitPlayerInHand to
+	  not use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify test22_sitOutClosedGame to
+	  not use DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: modify test15_handPlay and
+	  test15a_handPlay_dbLocalesAndOverridesThereof to not use
+	  DeferredList to avoid race conditions
+	* tests/test-pokeravatar.py.in: Add createClient function that
+	  returns the index of the created client. It is sometime more
+	  convenient to create a client only once another has finished some
+	  action. In these cases most tests use deferredList which does not
+	  guarantee that the first callbackchain of the list will be
+	  completed first. This creates race conditions and random
+	  failures.
+
+2010-09-08  Loic Dachary <loic@dachary.org>
+
+	* tests/Makefile.am: pokerdisplay2d/game no longer exists
+	* tests/Makefile.am: tests/test-bug-14139.py is osboleted
+	* tests/Makefile.am: tests/test-bug-14139.py is osboleted
+	* configure.ac: tests/test-bug-14139.py is osboleted
+	* tests/Makefile.am, tests/test-bug-14139.py.in: the bug#14139 is
+	  fixed and the test still fails, get rid of the bugous test. The
+	  fix is otherwise tested in test-pokeravatar.py
+	* ChangeLog: *** empty log message ***
 	* debian/control: lower requirements on poker-engine to 1.3.5
 	* debian/changelog: ucf --purge /etc/poker-web/constants.php must
 	  be in prerm (Closes: #586756) has been closed by 1.7.7-2 upload
