@@ -129,6 +129,7 @@ class PokerTable:
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
         self.temporaryPlayersPattern = settings.headerGet("/server/users/@temporary")
+        self.autodealTemporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
         self.cache = self.createCache()
         self.owner = 0
         self.avatar_collection = PokerAvatarCollection("Table%d" % id, factory.verbose)
@@ -808,7 +809,7 @@ class PokerTable:
                     if self.tourney.state == pokertournament.TOURNAMENT_STATE_BREAK_WAIT:
                         self.broadcastMessage(PacketPokerGameMessage, "Tournament will break when the other tables finish their hand")
                     return
-        else:
+        elif not self.autodealTemporary:
             #
             # Do not auto deal a table where there are only temporary
             # users (i.e. bots)
