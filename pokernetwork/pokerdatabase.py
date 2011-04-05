@@ -48,8 +48,7 @@ class PokerDatabase:
                                       port = int(self.parameters.get("port", '3306')),
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
-                                      db = self.parameters["name"],
-                                      reconnect = 1)
+                                      db = self.parameters["name"])
             if self.verbose > 2:
                 self.message("MySQL server version is " + self.db.get_server_info())
         except:
@@ -59,8 +58,7 @@ class PokerDatabase:
                 db = MySQLdb.connect(host = self.parameters["host"],
                                      port = int(self.parameters.get("port", '3306')),
                                      user = self.parameters["root_user"],
-                                     passwd = self.parameters["root_password"],
-                                     reconnect = 1)
+                                     passwd = self.parameters["root_password"])
                 if self.verbose:
                     self.message("MySQL server version is " + db.get_server_info())
                 if int(db.get_server_info().split('.')[0]) < 5:
@@ -119,8 +117,7 @@ class PokerDatabase:
                                       port = int(self.parameters.get("port", '3306')),
                                       user = self.parameters["user"],
                                       passwd = self.parameters["password"],
-                                      db = self.parameters["name"],
-                                      reconnect = 1)
+                                      db = self.parameters["name"])
 
         if self.verbose:
             self.message("PokerDatabase: Database connection to %s/%s open" % ( self.parameters["host"], self.parameters["name"] ))
@@ -192,7 +189,11 @@ class PokerDatabase:
         return self.version
 
     def cursor(self, *args, **kwargs):
-        return self.db.cursor(*args, **kwargs)
+        try:
+            return self.db.cursor(*args, **kwargs)
+        except (AttributeError, MySQLdb.OperationalError):
+            self.db.connect()
+            return self.db.cursor(*args, **kwargs)
 
     def literal(self, args):
         return self.db.literal(args)
