@@ -198,7 +198,7 @@ class PokerProxyClient(http.HTTPClient):
 class PokerProxyClientFactory(protocol.ClientFactory):
 
     serial = 0
-    
+    noisy = False
     protocol = PokerProxyClient
 
     def __init__(self, command, rest, version, headers, data, father, verbose, destination):
@@ -210,7 +210,6 @@ class PokerProxyClientFactory(protocol.ClientFactory):
         self.version = version
         self.deferred = defer.Deferred()
         self.verbose = verbose
-        self.noisy = False
         self.destination = destination
         PokerProxyClientFactory.serial += 1
         self.serial = PokerProxyClientFactory.serial
