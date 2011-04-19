@@ -1,3 +1,4 @@
+debian/tmp/usr/lib/python???/*-packages/pokeradditions/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokerfulltables/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokerxps/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/auth/*.py
