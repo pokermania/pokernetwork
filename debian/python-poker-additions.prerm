@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# Establish the preliminaries.
+db_version 2.0
+
+. /usr/share/dbconfig-common/dpkg/frontend.prerm.mysql
+dbc_go python-poker-network $@
+
+#DEBHELPER#
