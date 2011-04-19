@@ -50,6 +50,10 @@ binary-install/python-poker-stats::
 	-dh_pycentral -ppython-poker-stats
 	dh_python -ppython-poker-stats
 
+binary-install/python-poker-additions::
+	-dh_pycentral -ppython-poker-additions
+	dh_python -ppython-poker-additions
+
 debian/stamp-autotools-configure: $(DEB_SRCDIR)/configure
 	chmod a+x $(DEB_CONFIGURE_SCRIPT)
 	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
