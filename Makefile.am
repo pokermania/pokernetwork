@@ -25,7 +25,7 @@
 # 
 ACLOCAL_AMFLAGS = -I config
 
-SUBDIRS = pokerweb pokernetwork/munin tests pokerstats pokerprizes
+SUBDIRS = pokerweb pokernetwork/munin tests pokerstats pokerprizes pokeradditions
 
 pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
