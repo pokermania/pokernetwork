@@ -1,1 +1,2 @@
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/**/*.py
+debian/tmp/usr/share/poker-network/conf/poker.server.additions.xml
