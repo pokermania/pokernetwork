@@ -326,6 +326,10 @@ AC_CONFIG_FILES([
         pokerprizes/schema.sql
         pokerprizes/Makefile
 ])
+AC_CONFIG_FILES([
+        pokeradditions/poker.server.additions.xml
+        pokeradditions/Makefile
+])
 AC_OUTPUT
 
 cat <<!
