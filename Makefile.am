@@ -25,7 +25,7 @@
 # 
 ACLOCAL_AMFLAGS = -I config
 
-SUBDIRS = pokerweb pokernetwork/munin tests pokerstats pokerprizes
+SUBDIRS = pokerweb pokernetwork/munin tests pokerstats pokerprizes pokeradditions
 
 pkglibdir=@pkglibdir@
 pkgdatadir=@pkgdatadir@
@@ -195,7 +195,8 @@ all-local:
 	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/examples/poker.server.xml ${srcdir}/examples/poker.server-monotone.xml ; \
 	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.bot ${srcdir}/examples/poker.bot.xml ; \
 	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/pokerstats/poker.stats.xml.in ; \
-	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/pokerprizes/poker.prizes.xml.in
+	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/pokerprizes/poker.prizes.xml.in ; \
+	${POKERCONFIGUPGRADE} --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=${srcdir}/upgrades/poker.server ${srcdir}/pokeradditions/poker.server.additions.xml.in
 
 install-data-local:
 	mkdir -p "${DESTDIR}${pkgsysconfdir}"

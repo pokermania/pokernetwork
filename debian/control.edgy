@@ -57,3 +57,14 @@ Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Ve
 Description: real prizes addon for poker-network
  poker-prizes adds support for real prizes to the poker-network
  multiplayer online poker server.
+
+Package: python-poker-additions
+Section: python
+Architecture: all
+Priority: optional
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+Description: misc additions for poker-network
+ poker-additions adds support for several thinsg such as improved rewards,
+ and several filters to the poker-network multiplayer online poker server.
