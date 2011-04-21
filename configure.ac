@@ -328,6 +328,7 @@ AC_CONFIG_FILES([
 ])
 AC_CONFIG_FILES([
         pokeradditions/poker.server.additions.xml
+        pokeradditions/poker.bot.additions.xml
         pokeradditions/Makefile
 ])
 AC_OUTPUT

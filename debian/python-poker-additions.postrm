@@ -6,7 +6,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 if [ "$1" = "purge" ]; then
-    for file in /etc/poker-network/poker.server.additions.xml ; do
+    for file in /etc/poker-network/poker.server.additions.xml /etc/poker-network/poker.bot.additions.xml ; do
         ucf --debconf-ok --purge $file >/dev/null 2>&1
         rm -f $file
     done
