@@ -3,6 +3,7 @@ debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokerfulltables/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokerxps/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/auth/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokertourneys/*.py
+debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokertourneystarts/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokerrewards/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/pokerrewards/rewards/*.py
 debian/tmp/usr/lib/python???/*-packages/pokeradditions/filters/*.py
