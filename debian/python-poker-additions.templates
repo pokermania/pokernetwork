@@ -1,0 +1,19 @@
+Template: python-poker-additions/socialtourneyfilter-url
+Type: string
+Default: http://localhost/json/auth
+_Description: URL pointing to msgpoker's tourney authentication interface
+
+Template: python-poker-additions/communicator-envparser-url
+Type: string
+Default: http://localhost:11000
+_Description: URL pointing to the envparser control interface
+
+Template: python-poker-additions/communicator-msgpoker-url
+Type: string
+Default: http://localhost/json/receive
+_Description: URL pointing to the msgpoker JSON interface
+
+Template: python-poker-additions/communicator-msgpoker-secret
+Type: string
+Default: abcde
+_Description: Shared secret needed for msgpoker JSON interface communication
