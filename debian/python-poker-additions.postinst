@@ -46,6 +46,26 @@ case "$1" in
 	    dbc_generate_include="template:/etc/poker-network/poker.bot.additions.xml"
         dbc_generate_include_args="-O $pokernetwork_user:$pokernetwork_group -m 600 -o template_infile=/usr/share/poker-network/conf/poker.bot.additions.xml"
         dbc_go python-poker-network $@
+
+        db_get "python-poker-additions/socialtourneyfiler-url"
+        socialtourneyfilter_url="$RET"
+        db_get "python-poker-additions/communicator-envparser-url"
+        communicator_envparser_url="$RET"
+        db_get "python-poker-additions/communicator-msgpoker-url"
+        communicator_msgpoker_url="$RET"
+        db_get "python-poker-additions/communicator-msgpoker-secret"
+        communicator_msgpoker_secret="$RET"
+
+        for conf_file in poker.server.additions.xml ; do
+            $tmpfile=`mktemp`
+            sed -e "s/\%SOCIALTOURNEYFILTER_URL\%/$socialtourneyfilter_url" \
+                -e "s/\%COMMUNICATOR_ENVPARSER_URL\%/$communicator_envparser_url" \
+                -e "s/\%COMMUNICATOR_MSGPOKER_URL\%/$communicator_msgpoker_url" \
+                -e "s/\%COMMUNICATOR_MSGPOKER_SECRET\%/$communicator_msgpoker_secret" \
+            < /etc/poker-network/$conf_file > $tmpfile
+            mv $tmpfile /etc/poker-network/$conf_file
+            chmod 644 /etc/poker-network/$conf_file
+        done
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
