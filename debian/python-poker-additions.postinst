@@ -56,12 +56,22 @@ case "$1" in
         db_get "python-poker-additions/communicator-msgpoker-secret"
         communicator_msgpoker_secret="$RET"
 
+        bot_host="localhost"
+
         for conf_file in poker.server.additions.xml ; do
             tmpfile=$(mktemp)
-            sed -e "s,\%SOCIALTOURNEYFILTER_URL%,$socialtourneyfilter_url," \
-                -e "s,\%COMMUNICATOR_ENVPARSER_URL%,$communicator_envparser_url," \
-                -e "s,\%COMMUNICATOR_MSGPOKER_URL%,$communicator_msgpoker_url," \
-                -e "s,\%COMMUNICATOR_MSGPOKER_SECRET%,$communicator_msgpoker_secret," \
+            sed -e "s,\%SOCIALTOURNEYFILTER_URL\%,$socialtourneyfilter_url," \
+                -e "s,\%COMMUNICATOR_ENVPARSER_URL\%,$communicator_envparser_url," \
+                -e "s,\%COMMUNICATOR_MSGPOKER_URL\%,$communicator_msgpoker_url," \
+                -e "s,\%COMMUNICATOR_MSGPOKER_SECRET\%,$communicator_msgpoker_secret," \
+            < /etc/poker-network/$conf_file > $tmpfile
+            mv $tmpfile /etc/poker-network/$conf_file
+            chmod 644 /etc/poker-network/$conf_file
+        done
+
+        for conf_file in poker.bot.additions.xml ; do
+            tmpfile=$(mktemp)
+            sed -e "s,\%HOST\%,$bot_host," \
             < /etc/poker-network/$conf_file > $tmpfile
             mv $tmpfile /etc/poker-network/$conf_file
             chmod 644 /etc/poker-network/$conf_file
