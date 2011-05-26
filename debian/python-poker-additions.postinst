@@ -47,6 +47,9 @@ case "$1" in
         dbc_generate_include_args="-O $pokernetwork_user:$pokernetwork_group -m 600 -o template_infile=/usr/share/poker-network/conf/poker.bot.additions.xml"
         dbc_go python-poker-network $@
 
+        db_get "python-poker-additions/activate-additions"
+        activate_additions="$RET"
+
         db_get "python-poker-additions/socialtourneyfilter-url"
         socialtourneyfilter_url="$RET"
         db_get "python-poker-additions/communicator-envparser-url"
@@ -76,6 +79,17 @@ case "$1" in
             mv $tmpfile /etc/poker-network/$conf_file
             chmod 644 /etc/poker-network/$conf_file
         done
+
+        if [ "$activate_additions" = "true" ]; then
+            tmpfile=$(mktemp)
+            sed -e "/^serverconfig/d" \
+                -e "/^botconfig/d" \
+            < /etc/default/python-poker-network > $tmpfile
+            echo "serverconfig=/etc/poker-network/poker.server.additions.xml" >> $tmpfile
+            echo "botconfig=/etc/poker-network/poker.bot.additions.xml" >> $tmpfile
+            mv $tmpfile /etc/default/python-poker-network
+            chmod 644 /etc/default/python-poker-network
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

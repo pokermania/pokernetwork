@@ -7,3 +7,8 @@
 # in /etc/poker-network/poker.bot.xml
 #
 RUN_BOTS=false
+
+# Override server and bot config here. showing defaults
+#
+# serverconfig=/etc/poker-network/poker.server.xml
+# botconfig=/etc/poker-network/poker.bot.xml

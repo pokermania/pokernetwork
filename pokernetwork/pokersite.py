@@ -231,7 +231,7 @@ class PokerResource(resource.Resource):
                 request.write(body)
             if self.verbose >= 0 and request.code != 200:
                 self.error("(%s:%s) " % request.findProxiedIP() + str(body))
-            if not request.finished:
+            if not request.finished or request._disconnected:
                 request.finish()
                     
             #

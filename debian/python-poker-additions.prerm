@@ -3,6 +3,14 @@
 # Source debconf library.
 . /usr/share/debconf/confmodule
 
+# Remove additions entries if existing
+tmpfile=$(mktemp)
+sed -e "/^serverconfig=\/etc\/poker-network\/poker.server.additions.xml$/d" \
+    -e "/^botconfig=\/etc\/poker-network\/poker.bot.additions.xml$/d" \
+< /etc/default/python-poker-network > $tmpfile
+mv $tmpfile /etc/default/python-poker-network
+chmod 644 /etc/default/python-poker-network
+
 #DEBHELPER#
 
 exit 0

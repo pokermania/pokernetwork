@@ -1,3 +1,8 @@
+Template: python-poker-additions/activate-additions
+Type: boolean
+Default: true
+_Description: Activate the python-poker-additions? (This changes the serverconfig and botconfig paths in /etc/default/poker-network)
+
 Template: python-poker-additions/socialtourneyfilter-url
 Type: string
 Default: http://localhost/json/auth

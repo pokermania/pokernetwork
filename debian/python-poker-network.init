@@ -42,6 +42,8 @@
 # in /etc/poker-network/poker.bot.xml
 #
 RUN_BOTS=false
+serverconfig=/etc/poker-network/poker.server.xml
+botconfig=/etc/poker-network/poker.bot.xml
 
 # Include python-poker-network defaults if available
 if [ -f /etc/default/python-poker-network ] ; then
@@ -49,7 +51,7 @@ if [ -f /etc/default/python-poker-network ] ; then
 fi
 
 twistd=/usr/bin/twistd
-reactor=poll
+reactor=epoll
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 name=poker-network
@@ -63,7 +65,6 @@ lockfile=/etc/poker-network/lockfile
 serverpidfile=/var/run/poker-network-server.pid
 serverlogfile=/var/log/poker-network-server.log
 serverplugin=pokerserver
-#serverconfig=/etc/poker-network/poker.server2.xml
 
 botpidfile=/var/run/poker-network-bot.pid
 botlogfile=/var/log/poker-network-bot.log
@@ -86,13 +87,13 @@ case "$1" in
 	    --pidfile=${serverpidfile} \
 	    --logfile=${serverlogfile} ${more_args} \
 	    --reactor=${reactor} \
-	    ${serverplugin} #--config=${serverconfig}
-        if $RUN_BOTS ; then
+	    ${serverplugin} --config=${serverconfig}
+    if $RUN_BOTS ; then
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} \
 	        --logfile=${botlogfile} ${more_args} \
 	        --reactor=${reactor} \
-		${botplugin}
+		${botplugin} --config=${botconfig}
         else
             echo "Bots are disabled, edit /etc/default/python-poker-network to enable them."
         fi
