@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Loic Dachary (OuoU) <loic@debian.org>
-Build-Depends: debhelper (>= 5.0.37.2), python (>= 2.4), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted (>= 8), python-poker-engine (>= 1.3.5), perl, php-pear, php5-dev, php5-mysql, libjson-perl, apg, rsync, python-central
+Build-Depends: debhelper (>= 5.0.37.2), python (>= 2.4), automake1.9, cdbs, pkg-config, debconf | debconf-2.0, mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted (>= 8), python-poker-engine (>= 1.3.6-3), perl, php-pear, php5-dev, php5-mysql, libjson-perl, apg, rsync, python-central
 XS-Python-Version: >=2.4
 Standards-Version: 3.8.3
 
@@ -12,7 +12,7 @@ Architecture: all
 Suggests: mysql-server, munin-node
 Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.3.4), python-twisted (>= 8), python-mysqldb, python-soappy, python-openssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync
+Depends: ${python:Depends}, ${misc:Depends}, ucf, adduser, python-poker-engine (>= 1.3.6-3), python-twisted (>= 8), python-mysqldb, python-soappy, python-openssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
