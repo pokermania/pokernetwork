@@ -1,5 +1,12 @@
 poker-network (2.0.0-5) pokermania; urgency=low
 
+  * updated to python-poker-engine 1.3.6-4
+  * updated python-poker-additions (now uses new betting structures)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 08 Jun 2010 21:05:54 +0200
+
+poker-network (2.0.0-5) pokermania; urgency=low
+
   * gracefully integration of additions
 
  -- Andor Goetzendorff <andor@pokermania.de>  Wed, 26 May 2010 21:05:54 +0200
