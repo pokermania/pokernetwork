@@ -42,8 +42,11 @@
 # in /etc/poker-network/poker.bot.xml
 #
 RUN_BOTS=false
+
 serverconfig=/etc/poker-network/poker.server.xml
 botconfig=/etc/poker-network/poker.bot.xml
+server_additional_args=''
+bot_additional_args=''
 
 # Include python-poker-network defaults if available
 if [ -f /etc/default/python-poker-network ] ; then
@@ -86,13 +89,13 @@ case "$1" in
 	${python} ${twistd} \
 	    --pidfile=${serverpidfile} \
 	    --logfile=${serverlogfile} ${more_args} \
-	    --reactor=${reactor} \
+	    --reactor=${reactor} ${server_additional_args} \
 	    ${serverplugin} --config=${serverconfig}
     if $RUN_BOTS ; then
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} \
 	        --logfile=${botlogfile} ${more_args} \
-	        --reactor=${reactor} \
+	        --reactor=${reactor} ${bot_additional_args} \
 		${botplugin} --config=${botconfig}
         else
             echo "Bots are disabled, edit /etc/default/python-poker-network to enable them."
