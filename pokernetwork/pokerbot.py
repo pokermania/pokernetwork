@@ -255,7 +255,7 @@ def makeService(configuration):
                            join_info = table,
                            serial = bot_serial.next())
         else:
-            for bot in settings.headerGetProperties("/settings/table[@name='%s']/bot" % table['name']):
+            for bot in settings.headerGetProperties("/settings/table[@name=\"%s\"]/bot" % table['name']):
                 create_bot(settings = settings,
                            join_info = table,
                            serial = bot_serial.next(),
@@ -269,7 +269,7 @@ def makeService(configuration):
                            join_info = tournament,
                            serial = bot_serial.next())
         else:
-            for bot in settings.headerGetProperties("/settings/tournament[@name='%s']/bot" % tournament['name']):
+            for bot in settings.headerGetProperties("/settings/tournament[@name=\"%s\"]/bot" % tournament['name']):
                 create_bot(settings = settings,
                            join_info = table,
                            serial = bot_serial.next(),
