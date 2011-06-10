@@ -29,6 +29,7 @@ import pokersite
 class RestClientFactory(protocol.ClientFactory):
 
     protocol = client.HTTPPageGetter
+    noisy = False
     
     def __init__(self, host, port, path, data, timeout = 60):
         self.timeout = timeout
@@ -38,6 +39,7 @@ class RestClientFactory(protocol.ClientFactory):
         self.headers.setdefault("connection", "close")
         self.method = 'POST'
         self.url = 'http://' + host + ':' + str(port) + path
+        self.scheme = 'http'
         self.postdata = data
         self.host = host
         self.port = port
@@ -228,7 +230,7 @@ class PokerProxyClientFactory(protocol.ClientFactory):
         protocol.ClientFactory.doStop(self)
 
 #    def error(self, string):
-#	self.message("*ERROR* " + str(string))
+#        self.message("*ERROR* " + str(string))
 
     def buildProtocol(self, addr):
         return self.protocol(self.command, self.rest, self.version,

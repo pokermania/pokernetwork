@@ -61,7 +61,7 @@ class ProxyClient(http.HTTPClient):
 class ProxyClientFactory(protocol.ClientFactory):
 
     serial = 0
-    
+    noisy = False
     protocol = ProxyClient
 
     def __init__(self, command, rest, version, headers, data, father, verbose, destination):
@@ -73,7 +73,6 @@ class ProxyClientFactory(protocol.ClientFactory):
         self.version = version
         self.deferred = defer.Deferred()
         self.verbose = verbose
-        self.noisy = False
         self.destination = destination
         ProxyClientFactory.serial += 1
         self.serial = ProxyClientFactory.serial
