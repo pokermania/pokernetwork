@@ -231,7 +231,7 @@ class PokerResource(resource.Resource):
                 request.write(body)
             if self.verbose >= 0 and request.code != 200:
                 self.error("(%s:%s) " % request.findProxiedIP() + str(body))
-            if not request.finished or request._disconnected:
+            if not (request.finished or request._disconnected):
                 request.finish()
                     
             #
@@ -252,6 +252,7 @@ class PokerResource(resource.Resource):
             #
             return True
         session = request.getSession()
+
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         def render(packets):
             if self.verbose > 3:
@@ -276,7 +277,8 @@ class PokerResource(resource.Resource):
             request.setHeader("content-length", str(len(result_string)))
             request.setHeader("content-type", 'text/plain; charset="UTF-8"')
             request.write(result_string)
-            request.finish()
+            if not (request.finished or request._disconnected):
+                request.finish()
             return True
         def processingFailed(reason):
             body = reason.getTraceback()
