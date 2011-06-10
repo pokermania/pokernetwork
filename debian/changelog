@@ -1,3 +1,10 @@
+poker-network (2.0.0-7) pokermania; urgency=low
+
+  * poker-network "use notifyFinish" error correction
+  * several corrections in pokeradditions
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 10 Jun 2010 21:05:54 +0200
+
 poker-network (2.0.0-6) pokermania; urgency=low
 
   * python init script now read server and bot_additional_args from default
