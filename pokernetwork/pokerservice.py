@@ -2361,7 +2361,7 @@ class PokerService(service.Service):
         return status
 
     def updatePlayerRake(self, currency_serial, serial, amount):
-        if amount == 0:
+        if amount == 0 or currency_serial == 0:
             return True
         status = True
         cursor = self.db.cursor()

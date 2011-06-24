@@ -1,3 +1,10 @@
+poker-network (2.0.0-9) pokermania; urgency=low
+
+  * updated python-poker-network init script (now KILLs after timeout)
+  * updatePlayerRake bugfix for tourneys
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 24 Jun 2010 15:05:54 +0200
+
 poker-network (2.0.0-8) pokermania; urgency=low
 
   * poker.server.additions.xml contains now tourneystarts monitor
