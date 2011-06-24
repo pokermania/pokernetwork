@@ -48,6 +48,9 @@ botconfig=/etc/poker-network/poker.bot.xml
 server_additional_args=''
 bot_additional_args=''
 
+server_kill_timeout='120'
+bot_kill_timeout='30'
+
 # Include python-poker-network defaults if available
 if [ -f /etc/default/python-poker-network ] ; then
     . /etc/default/python-poker-network
@@ -103,19 +106,19 @@ case "$1" in
 	echo ${name}
 	;;
   stop)
-	echo -n "Stopping poker server ..."
-	start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${serverpidfile} || true
-	echo " done."
-        if $RUN_BOTS ; then
+    if $RUN_BOTS ; then
 	    echo -n "Stopping poker bots ..."
-	    start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
+	    start-stop-daemon --stop --quiet --retry=SIGINT/${bot_kill_timeout}/forever/KILL/2 --pidfile=${botpidfile} || true
 	    echo "done"
-        fi
+    fi
+	echo -n "Stopping poker server ..."
+	start-stop-daemon --stop --quiet --retry=SIGINT/${server_kill_timeout}/forever/KILL/2 --pidfile=${serverpidfile} || true
+	echo " done."
 	;;
   rebot)
         if $RUN_BOTS ; then
 	    echo -n "Stopping poker bots ..."
-	    start-stop-daemon --stop --quiet --retry forever/-2/3 --pidfile=${botpidfile} || true
+	    start-stop-daemon --stop --quiet --retry=SIGINT/${bot_kill_timeout}/forever/KILL/2 --pidfile=${botpidfile} || true
 	    echo "done"
 	    echo -n "Wait 10 minutes ..."
             sleep 600
