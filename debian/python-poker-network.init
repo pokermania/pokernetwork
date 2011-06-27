@@ -108,17 +108,17 @@ case "$1" in
   stop)
     if $RUN_BOTS ; then
 	    echo -n "Stopping poker bots ..."
-	    start-stop-daemon --stop --quiet --retry=SIGINT/${bot_kill_timeout}/forever/KILL/2 --pidfile=${botpidfile} || true
+	    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 	    echo "done"
     fi
 	echo -n "Stopping poker server ..."
-	start-stop-daemon --stop --quiet --retry=SIGINT/${server_kill_timeout}/forever/KILL/2 --pidfile=${serverpidfile} || true
+	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
 	echo " done."
 	;;
   rebot)
         if $RUN_BOTS ; then
 	    echo -n "Stopping poker bots ..."
-	    start-stop-daemon --stop --quiet --retry=SIGINT/${bot_kill_timeout}/forever/KILL/2 --pidfile=${botpidfile} || true
+	    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 	    echo "done"
 	    echo -n "Wait 10 minutes ..."
             sleep 600
