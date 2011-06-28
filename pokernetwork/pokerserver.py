@@ -110,14 +110,14 @@ def makeService(configuration):
     #
     manhole_port = settings.headerGetInt("/server/listen/@manhole")
     if manhole_port:
-	    manhole_factory = telnet.ShellFactory()
-	    manhole_factory.namespace['poker_service'] = poker_service
-	    manhole_factory.namespace['poker_site'] = rest_site
-	    manhole_service = internet.TCPServer(manhole_port, manhole_factory, interface = '127.0.0.1')
-	    manhole_service.setName("manhole")
-	    manhole_service.setServiceParent(serviceCollection)
-	    if settings.headerGetInt("/server/@verbose") > 0:
-		    print  "PokerManhole: manhole is useful for debugging, use with telnet admin/admin, however, it can be a security risk and should be used only during debugging"
+        manhole_factory = telnet.ShellFactory()
+        manhole_factory.namespace['poker_service'] = poker_service
+        manhole_factory.namespace['poker_site'] = rest_site
+        manhole_service = internet.TCPServer(manhole_port, manhole_factory, interface = '127.0.0.1')
+        manhole_service.setName("manhole")
+        manhole_service.setServiceParent(serviceCollection)
+        if settings.headerGetInt("/server/@verbose") > 0:
+            print "PokerManhole: manhole is useful for debugging, use with telnet admin/admin, however, it can be a security risk and should be used only during debugging"
     
     return serviceCollection
 

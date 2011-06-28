@@ -118,7 +118,7 @@ class Request(server.Request):
     def findProxiedIP(self):
         """Return the IP address of the client who submitted this request,
         making an attempt to determine the actual IP through the proxy.
-        Returns	the client IP address (type: str )"""
+        Returns the client IP address (type: str )"""
 
         # FIXME: we shouldn't trust these headers so completely because
         # they can be easily forged.  Loic had the idea that we should

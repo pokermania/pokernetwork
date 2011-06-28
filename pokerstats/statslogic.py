@@ -27,9 +27,9 @@ from pokernetwork.pokerclientpackets import *
 
 class PokerStats:
 
-    BOOTSTRAP	= 1
-    MONITOR	= 2
-    IDLE	= 3
+    BOOTSTRAP = 1
+    MONITOR = 2
+    IDLE = 3
 
     def __init__(self, factory, connect = True):
         self.factory = factory
