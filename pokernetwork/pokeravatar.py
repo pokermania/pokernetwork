@@ -317,7 +317,7 @@ class PokerAvatar:
                 self._avatarSavedUnder = None
             _ = self.localeFunc
             pokergameSavedUnder = pokergame_init_i18n('', self.localeFunc)
-	if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
+        if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
             try:
                 self.explain.explain(packet)
                 packets = self.explain.forward_packets
@@ -331,12 +331,12 @@ class PokerAvatar:
                                     # and used before the avatar
                                     # destruction
                 self.service.forceAvatarDestroy(self)
-	else:
-	    packets = [ packet ]
+        else:
+            packets = [ packet ]
         if self._queue_packets:
             self.extendPacketsQueue(packets)
         else:
-	    for packet in packets:
+            for packet in packets:
                 self.protocol.sendPacket(packet)
         if self.localeFunc:
             _ = self._avatarSavedUnder

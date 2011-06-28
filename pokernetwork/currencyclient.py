@@ -68,7 +68,7 @@ class RealCurrencyClient:
         return self.getPage(url)
 
     def parseResultNote(self, result):
-	has_error = False
+        has_error = False
         notes = []
         for line in result.split("\n"):
             note = line.split("\t")
@@ -76,9 +76,9 @@ class RealCurrencyClient:
                 notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
             else:
                 print "RealCurrencyClient::parseResultNote ignore line: " + line
-		has_error = True
-	if has_error:
-		raise Exception("expected notes got something else")
+                has_error = True
+        if has_error:
+            raise Exception("expected notes got something else")
         return notes
 
     def mergeNotes(self, *args):
@@ -122,14 +122,14 @@ class RealCurrencyClient:
         return deferred
 
     def commit(self, url, transaction_id):
-	def validate(result):
+        def validate(result):
             if self.verbose > 2: print "CurrencyClient::commit " + str(result)
             if len(result.split("\n")) > 1:
                 raise Exception("expected a single line got " + str(result) + " instead")
             return result
         deferred = self.request(url = url, command = 'commit', transaction_id = transaction_id)
-	deferred.addCallback(validate)
-	return deferred
+        deferred.addCallback(validate)
+        return deferred
         
 from twisted.python import failure
 from twisted.web import error

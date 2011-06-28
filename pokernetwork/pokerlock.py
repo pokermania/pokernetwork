@@ -33,9 +33,9 @@ import time
 
 class PokerLock(threading.Thread):
 
-    TIMED_OUT	= 1
-    DEAD	= 2
-    RELEASE	= 3
+    TIMED_OUT = 1
+    DEAD = 2
+    RELEASE = 3
 
     acquire_timeout = 60
     queue_timeout = 2 * 60

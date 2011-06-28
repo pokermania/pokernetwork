@@ -91,7 +91,7 @@ class ProxyClientFactory(protocol.ClientFactory):
         protocol.ClientFactory.doStop(self)
 
 #    def error(self, string):
-#	self.message("*ERROR* " + str(string))
+#    self.message("*ERROR* " + str(string))
 
     def buildProtocol(self, addr):
         return self.protocol(self.command, self.rest, self.version,

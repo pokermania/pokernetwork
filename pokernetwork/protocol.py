@@ -196,7 +196,7 @@ class UGAMEProtocol(protocol.Protocol):
                 lags.append(lag)
                 if queue.delay > now and lag > self._lagmax:
                     if self.factory and self.factory.verbose > 0:
-		        self.message(" => queue %d delay canceled because lag too high" % id)
+                        self.message(" => queue %d delay canceled because lag too high" % id)
                     queue.delay = 0
                 #
                 # If time has come, process one packet

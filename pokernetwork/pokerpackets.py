@@ -3688,11 +3688,11 @@ serial: integer uniquely identifying a player.
 """
     type = PACKET_POKER_CASH_IN
 
-    DUPLICATE_CURRENCIES	= 1
-    REFUSED			= 2
-    SAFE			= 3
-    UNKNOWN			= 4
-    RETRY			= 5
+    DUPLICATE_CURRENCIES = 1
+    REFUSED = 2
+    SAFE = 3
+    UNKNOWN = 4
+    RETRY = 5
 
 PacketFactory[PACKET_POKER_CASH_IN] = PacketPokerCashIn
 
@@ -3704,9 +3704,9 @@ PacketNames[PACKET_POKER_CASH_OUT] = "POKER_CASH_OUT"
 class PacketPokerCashOut(PacketPokerMoneyTransfert):
     type = PACKET_POKER_CASH_OUT
 
-    SAFE			= 1
-    BREAK_NOTE			= 2
-    EMPTY			= 3
+    SAFE = 1
+    BREAK_NOTE = 2
+    EMPTY = 3
 
 PacketFactory[PACKET_POKER_CASH_OUT] = PacketPokerCashOut
 
@@ -4042,13 +4042,13 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = 0 if cash game, 1 if tournament
     # 
     #
-    HAND	= 1
+    HAND = 1
 
     ####
     # A tournament is complete and prizes were distributed.
     # param1 = tourney serial in the tourneys table
     #
-    TOURNEY	= 2
+    TOURNEY = 2
 
     ####
     # A player buys in at a cash game table.
@@ -4056,7 +4056,7 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = table serial
     # param3 = buy in amount
     #
-    BUY_IN	= 3
+    BUY_IN = 3
 
     ####
     # A player was granted money by auto refill.
@@ -4064,7 +4064,7 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = currency serial
     # param3 = total amount for this currency
     #
-    REFILL	= 4
+    REFILL = 4
 
     ###
     # A player won a prize at the end of a tournament.
@@ -4072,7 +4072,7 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = currency serial
     # param3 = prize amount
     #
-    PRIZE	= 5
+    PRIZE = 5
 
     ####
     # A player registered in a tournament.
@@ -4080,7 +4080,7 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = currency serial
     # param3 = registration fees
     #
-    REGISTER	= 6
+    REGISTER = 6
 
     ####
     # A player unregistered from a tournament.
@@ -4088,21 +4088,21 @@ class PacketPokerMonitorEvent(Packet):
     # param2 = currency serial
     # param3 = registration fees
     # 
-    UNREGISTER	= 7
+    UNREGISTER = 7
 
     ####
     # A player left a poker table.
     # param1 = user serial
     # param2 = table serial
     #
-    LEAVE	= 8
+    LEAVE = 8
 
     ####
     # A player got a seat at a poker table.
     # param1 = user serial
     # param2 = table serial
     #
-    SEAT	= 9
+    SEAT = 9
 
     ####
     # A tournament has started.
@@ -4457,7 +4457,7 @@ player_timeout:    the number of seconds after which a player in position is for
                    play (by folding).
 currency_serial:   int currency id
 buy_in:            Amount, in currency_serial, for buying into this tournament.
-players:	   Serials of the players participating in the tournament.
+players:           Serials of the players participating in the tournament.
 """
     REGISTRATION_FAILED = 1
     
