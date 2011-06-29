@@ -133,13 +133,13 @@ def makeApplication(argv):
     return application
 
 def run():
-    from twisted.internet import pollreactor
     if platform.system() != "Windows":
         if not sys.modules.has_key('twisted.internet.reactor'):
-                print "installing poll reactor"
-                pollreactor.install()
+            print "installing epoll reactor"
+            from twisted.internet import epollreactor
+            epollreactor.install()
         else:
-                print "poll reactor already installed"
+            print "reactor already installed"
     from twisted.internet import reactor
     application = makeApplication(sys.argv)
     app.startApplication(application, None)
