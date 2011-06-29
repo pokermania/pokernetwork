@@ -194,6 +194,7 @@ class PokerResource(resource.Resource):
         self.message("*ERROR* " + string)
 
     def render(self, request):
+        args = ""
         request.content.seek(0, 0)
         jsonp = request.args.get('jsonp', [''])[0]
         if jsonp:
@@ -205,7 +206,16 @@ class PokerResource(resource.Resource):
         if self.verbose >= 3:
             if "PacketPing" not in data or self.verbose > 3:
                 self.message("(%s:%s) " % request.findProxiedIP() + "render " + data)
-        args = simplejson.loads(data, encoding = 'UTF-8')
+
+        try:
+            args = simplejson.loads(data, encoding = 'UTF-8')
+        except simplejson.decoder.JSONDecodeError as e:
+            resp = 'invalid request'
+            request.setResponseCode(http.BAD_REQUEST)
+            request.setHeader('content-type',"text/html")
+            request.setHeader('content-length', str(len(resp)))
+            return resp
+        
         if hasattr(Packet.JSON, 'decode_objects'): # backward compatibility
             args = Packet.JSON.decode_objects(args)
         args = fromutf8(args)
