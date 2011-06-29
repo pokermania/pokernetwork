@@ -1,3 +1,11 @@
+poker-network (2.0.0-11) pokermania; urgency=low
+
+  * max_missed_rounds in pokeradditions to 2
+  * force disconnect warning is only shown in verbose > 0
+  * default reactor is now epoll, also in python scripts
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 29 Jun 2010 15:05:54 +0200
+
 poker-network (2.0.0-10) pokermania; urgency=low
 
   * fixed init script
