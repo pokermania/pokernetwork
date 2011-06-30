@@ -209,7 +209,7 @@ class PokerResource(resource.Resource):
 
         try:
             args = simplejson.loads(data, encoding = 'UTF-8')
-        except simplejson.decoder.JSONDecodeError as e:
+        except simplejson.decoder.JSONDecodeError:
             resp = 'invalid request'
             request.setResponseCode(http.BAD_REQUEST)
             request.setHeader('content-type',"text/html")

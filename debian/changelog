@@ -1,3 +1,9 @@
+poker-network (2.0.0-12) pokermania; urgency=low
+
+  * fixes compatbility issue with python 2.5 (except .. as ..)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 30 Jun 2010 07:05:54 +0200
+
 poker-network (2.0.0-11) pokermania; urgency=low
 
   * max_missed_rounds in pokeradditions to 2
