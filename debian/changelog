@@ -1,3 +1,9 @@
+poker-network (2.0.0-13) pokermania; urgency=low
+
+  * included badwordsfilter
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 01 Jul 2010 07:05:54 +0200
+
 poker-network (2.0.0-12) pokermania; urgency=low
 
   * fixes compatbility issue with python 2.5 (except .. as ..)

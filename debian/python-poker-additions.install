@@ -11,3 +11,4 @@ debian/tmp/usr/lib/python???/*-packages/pokeradditions/filters/*.py
 
 debian/tmp/usr/share/poker-network/conf/poker.server.additions.xml
 debian/tmp/usr/share/poker-network/conf/poker.bot.additions.xml
+debian/tmp/usr/share/poker-network/conf/badwords.txt
