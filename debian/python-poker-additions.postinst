@@ -91,7 +91,7 @@ case "$1" in
             chmod 644 /etc/default/python-poker-network
         fi
 
-        cp /usr/share/python-poker-network/conf/badwords.txt /etc/poker-network/badwords.txt
+        cp /usr/share/poker-network/conf/badwords.txt /etc/poker-network/badwords.txt
         chmod 644 /etc/poker-network/badwords.txt
     ;;
 
