@@ -37,6 +37,15 @@ from traceback import print_exc
 
 from twisted.application import internet, service, app
 
+if platform.system() != "Windows":
+    if not sys.modules.has_key('twisted.internet.reactor'):
+        from twisted.internet import epollreactor
+        print "installing epoll reactor"
+        epollreactor.install()
+    else:
+        print "reactor already installed"
+
+from twisted.internet import reactor
 from twisted.python import components
 from twisted.persisted import sob
 from twisted.internet import error
@@ -273,14 +282,6 @@ def makeService(configuration):
     return services
 
 def run():
-    if platform.system() != "Windows":
-        if not sys.modules.has_key('twisted.internet.reactor'):
-            from twisted.internet import epollreactor
-            print "installing epoll reactor"
-            epollreactor.install()
-        else:
-            print "reactor already installed"
-    from twisted.internet import reactor
     application = makeApplication(sys.argv[1:])
     app.startApplication(application, None)
     reactor.run()
