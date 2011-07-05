@@ -1,3 +1,10 @@
+poker-network (2.0.0-14) pokermania; urgency=low
+
+  * pokersite.fromutf8 now converts unconvertible utf8
+    characters to xml entities
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 05 Jul 2010 07:05:54 +0200
+
 poker-network (2.0.0-13) pokermania; urgency=low
 
   * included badwordsfilter

@@ -41,7 +41,7 @@ from pokernetwork import pokermemcache
 # like they do.  This is related to another FIXME about this issue you'll
 # find in pokeravatar.py -- bkuhn, 2008-11-28
 def fromutf8(tree, encoding = 'ISO-8859-1'):
-    return __walk(tree, lambda x: x.encode(encoding))
+    return __walk(tree, lambda x: x.encode(encoding,errors='xmlcharrefreplace'))
 
 def toutf8(tree, encoding = 'ISO-8859-1'):
     return __walk(tree, lambda x: unicode(x, encoding))
