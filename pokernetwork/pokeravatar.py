@@ -459,8 +459,7 @@ class PokerAvatar:
                 # of active tables
                 #
                 client = self.game_id2rest_client[game_id]
-                if ( len(client.queue.callbacks) <= 0 or
-                     client.pendingLongPoll ):
+                if len(client.queue.callbacks) <= 0 or client.pendingLongPoll:
                     if self.service.verbose > 1:
                         self.message("incomingDistributedPackets: del %d" % game_id)
                     self.game_id2rest_client[game_id].clearTimeout()
