@@ -458,8 +458,8 @@ class PokerAvatar:
                 # discard client if nothing pending and not in the list
                 # of active tables
                 #
-                client = self.game_id2rest_client[game_id]
-                if len(client.queue.callbacks) <= 0 or client.pendingLongPoll:
+                client = self.game_id2rest_client.get(game_id,None)
+                if client and (len(client.queue.callbacks) <= 0 or client.pendingLongPoll):
                     if self.service.verbose > 1:
                         self.message("incomingDistributedPackets: del %d" % game_id)
                     self.game_id2rest_client[game_id].clearTimeout()
