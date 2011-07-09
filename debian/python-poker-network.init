@@ -106,13 +106,13 @@ case "$1" in
 	echo ${name}
 	;;
   stop)
+	echo -n "Stopping poker server ..."
+	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
     if $RUN_BOTS ; then
 	    echo -n "Stopping poker bots ..."
 	    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 	    echo "done"
     fi
-	echo -n "Stopping poker server ..."
-	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
 	echo " done."
 	;;
   rebot)
@@ -120,15 +120,12 @@ case "$1" in
 	    echo -n "Stopping poker bots ..."
 	    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 	    echo "done"
-	    echo -n "Wait 10 minutes ..."
-            sleep 600
-	    echo "done"
 	    echo -n "Starting poker bots ..."
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} \
 	        --logfile=${botlogfile} ${more_args} \
-	        --reactor=${reactor} \
-		${botplugin}
+	        --reactor=${reactor} ${bot_additional_args} \
+		${botplugin} --config=${botconfig}
 	    echo "done"
         else
             echo "Bots are disabled"
