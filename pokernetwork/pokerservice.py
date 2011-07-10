@@ -2276,19 +2276,31 @@ class PokerService(service.Service):
         self.databaseEvent(event = PacketPokerMonitorEvent.BUY_IN, param1 = serial, param2 = table_id, param3 = withdraw)
         return withdraw
 
-    def seatPlayer(self, serial, table_id, amount):
+    def seatPlayer(self, serial, table_id, amount, minimum_amount = None):
         status = True
         cursor = self.db.cursor()
-        sql = ( "INSERT INTO user2table ( user_serial, table_serial, money) VALUES "
-                " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + " )" )
-        if self.verbose > 1:
-            self.message("seatPlayer: %s" % sql)
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
-            status = False
-        cursor.close()
-        self.databaseEvent(event = PacketPokerMonitorEvent.SEAT, param1 = serial, param2 = table_id)
+        if minimum_amount:
+            sql = ( '''
+                SELECT COUNT(*) FROM user2money
+                WHERE user_serial = %d
+                AND currency_serial = %d
+                AND amount >= %d
+            ''' % ((serial,)+minimum_amount))
+            cursor.execute(sql)
+            status = (cursor.fetchone()[0] >= 1)
+        if not status:
+            cursor.close()
+        else:
+            sql = ( "INSERT INTO user2table ( user_serial, table_serial, money) VALUES "
+                    " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + " )" )
+            if self.verbose > 1:
+                self.message("seatPlayer: %s" % sql)
+            cursor.execute(sql)
+            if cursor.rowcount != 1:
+                self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+                status = False
+            cursor.close()
+            self.databaseEvent(event = PacketPokerMonitorEvent.SEAT, param1 = serial, param2 = table_id)
         return status
 
     def movePlayer(self, serial, from_table_id, to_table_id):

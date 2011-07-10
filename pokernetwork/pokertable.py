@@ -1258,8 +1258,9 @@ class PokerTable:
         amount = 0
         if self.transient:
             amount = game.buyIn()
-            
-        if not self.factory.seatPlayer(serial, game.id, amount):
+        
+        minimum_amount = (self.currency_serial,game.buyIn())
+        if not self.factory.seatPlayer(serial, game.id, amount, minimum_amount):
             return False
 
         self.observer2seated(avatar)
