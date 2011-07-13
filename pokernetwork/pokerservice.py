@@ -2288,9 +2288,9 @@ class PokerService(service.Service):
             ''' % ((serial,)+minimum_amount))
             cursor.execute(sql)
             status = (cursor.fetchone()[0] >= 1)
-        if not status:
             cursor.close()
-        else:
+        if status:
+            cursor = self.db.cursor()
             sql = ( "INSERT INTO user2table ( user_serial, table_serial, money) VALUES "
                     " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + " )" )
             if self.verbose > 1:

@@ -1,3 +1,9 @@
+poker-network (2.0.0-19) pokermania; urgency=low
+
+  * potential bugfix: cursor used multiple times
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 13 Jul 2010 18:05:54 +0200
+
 poker-network (2.0.0-18) pokermania; urgency=low
 
   * bot autonomy (new init commands for bots)
