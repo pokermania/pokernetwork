@@ -115,11 +115,8 @@ case "$1" in
     fi
 	echo " done."
 	;;
-  rebot)
-        if $RUN_BOTS ; then
-	    echo -n "Stopping poker bots ..."
-	    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
-	    echo "done"
+  bot-start)
+    if $RUN_BOTS ; then
 	    echo -n "Starting poker bots ..."
 	    ${python} ${twistd} \
 	        --pidfile=${botpidfile} \
@@ -127,9 +124,18 @@ case "$1" in
 	        --reactor=${reactor} ${bot_additional_args} \
 		${botplugin} --config=${botconfig}
 	    echo "done"
-        else
-            echo "Bots are disabled"
-        fi
+    else
+        echo "Bots are disabled"
+    fi
+    ;;
+  bot-stop)
+    echo -n "Stopping poker bots ..."
+    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
+    echo "done"
+    ;;
+  rebot)
+    echo "deprecated - use '$0 bot-restart' instead."
+    $0 bot-restart
 	;;
   restart|force-reload)
 	#
@@ -140,9 +146,13 @@ case "$1" in
 	$0 stop
 	$0 start
 	;;
+  bot-restart)
+    $0 bot-stop
+    $0 bot-start
+    ;;
   *)
 	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload|rebot}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload|bot-start|bot-stop|bot-restart}" >&2
 	exit 1
 	;;
 esac
