@@ -1,8 +1,14 @@
+poker-network (2.0.0-18) pokermania; urgency=low
+
+  * bot autonomy (new init commands for bots)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 13 Jul 2010 03:05:54 +0200
+
 poker-network (2.0.0-17) pokermania; urgency=low
 
   * weekly update
 
- -- Andor Goetzendorff <andor@pokermania.de>  Fri, 11 Jul 2010 03:05:54 +0200
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 12 Jul 2010 03:05:54 +0200
 
 poker-network (2.0.0-16) pokermania; urgency=low
 
