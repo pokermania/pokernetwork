@@ -464,6 +464,7 @@ class PokerSite(server.Site):
         memcache_address = settings.headerGet("/server/@memcached")
         if memcache_address:
             self.memcache = pokermemcache.memcache.Client([memcache_address])
+            pokermemcache.checkMemcacheServers(self.memcache)
         else:
             self.memcache = pokermemcache.MemcacheMockup.Client([])
         self.pipes = []

@@ -21,6 +21,7 @@
 
 # borrowed from memcache.py
 import types
+import memcache
 
 class MemcachedStringEncodingError(Exception):
     pass
@@ -104,8 +105,24 @@ class MemcacheMockup:
                     del self.cache[key]
             return 1
 
-try:
-    import memcache #pragma: no cover
-except:
-    memcache = MemcacheMockup #pragma: no cover
 
+def checkMemcacheServers(memcache_client):
+    '''
+    checks if all memcached servers are actually online.
+    throws an error if the connect does not work on one of
+    '''
+    import socket
+    servers_offline = []
+    for address in [x.address for x in memcache_client.servers]:
+        try:
+            s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            s.settimeout(0.5)
+            s.connect(address)
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+        except Exception, e:
+            servers_offline.append((address,e))
+            continue
+    
+    if servers_offline:
+        raise Exception('Memcached connectity errors: %s' % str(servers_offline))
