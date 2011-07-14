@@ -641,26 +641,54 @@ class PokerService(service.Service):
             if tourney.state == TOURNAMENT_STATE_REGISTERING and now - tourney.register_time > self.sng_timeout:
                 tourney.changeState(TOURNAMENT_STATE_CANCELED)
         #
-        # Respawning tournaments
+        # Respawning sit'n'go tournaments
         #
-        for schedule in filter(lambda schedule: schedule['respawn'] == 'y', self.tourneys_schedule.values()):
+        for schedule in filter(lambda schedule: schedule['respawn'] == 'y' and schedule['sit_n_go'] == 'y', self.tourneys_schedule.values()):
             schedule_serial = schedule['serial']
-            if ( not self.schedule2tourneys.has_key(schedule_serial) or
-                 not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial]) ):
+            if (
+                not self.schedule2tourneys.has_key(schedule_serial) or
+                not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial])
+            ):
                 self.spawnTourney(schedule)
         #
         # One time tournaments
         #
         one_time = []
-        for serial in self.tourneys_schedule.keys():
-            schedule = self.tourneys_schedule[serial]
-            if ( schedule['respawn'] == 'n' and
-                 int(schedule['register_time']) < now ):
-                one_time.append(schedule)
-                del self.tourneys_schedule[serial]
+        for schedule in filter(lambda schedule: schedule['respawn'] == 'n' and int(schedule['register_time']) < now,self.tourneys_schedule.values()):
+            one_time.append(schedule)
+            del self.tourneys_schedule[schedule['serial']]
         for schedule in one_time:
             self.spawnTourney(schedule)
-
+        
+        #
+        # Respawning regular tournaments
+        #
+        respawning_regular = []
+        for schedule in filter(
+           lambda schedule: 
+               schedule['respawn'] == 'y' and 
+               int(schedule['respawn_interval']) > 0 and
+               int(schedule['register_time']) < now
+           ,self.tourneys_schedule.values()
+        ):
+            schedule_serial = schedule['serial']
+            schedule = schedule.copy()
+            intervals = max(0,int((now-int(schedule['start_time']-int(schedule['respawn_interval']))) / int(schedule['respawn_interval'])))
+            schedule['start_time'] = int(schedule['start_time']) + intervals*int(schedule['respawn_interval'])
+            schedule['register_time'] = int(schedule['register_time']) + intervals*int(schedule['respawn_interval'])
+            if (schedule['register_time'] < now and (
+                not self.schedule2tourneys.has_key(schedule_serial) or
+                not filter(
+                   lambda tourney: 
+                        tourney.register_time >= schedule['register_time'] or 
+                        tourney.state not in (TOURNAMENT_STATE_CANCELED,TOURNAMENT_STATE_COMPLETE)
+                    ,self.schedule2tourneys[schedule_serial]
+                ))
+            ):
+                respawning_regular.append(schedule)
+        for schedule in respawning_regular:
+            self.spawnTourney(schedule)
+            
         #
         # Update tournaments with time clock
         #
