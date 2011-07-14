@@ -263,7 +263,7 @@ class PokerAvatar:
             # If we have not warned yet that packet queue is getting long, warn now.
             if not self.warnedPacketExcess:
                 self.warnedPacketExcess = True
-                if self.service.verbose > 0:
+                if self.service.verbose >= 1:
                     self.message("user %d has more than %d packets queued; will force-disconnect when %d are queued" % (self.getSerial(), warnVal, self.service.getClientQueuedPacketMax()))
             if len(self._packets_queue) >= self.service.getClientQueuedPacketMax():
                 self.service.forceAvatarDestroy(self)

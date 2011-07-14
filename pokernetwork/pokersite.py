@@ -261,9 +261,10 @@ class PokerResource(resource.Resource):
             # For instance : the request was reverse-proxied to a server.
             #
             return True
+        
         session = request.getSession()
-
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
+        
         def render(packets):
             if self.verbose > 3:
                 self.message("(%s:%s) " % request.findProxiedIP() + "render " + data + " returns " + str(packets))
@@ -296,7 +297,7 @@ class PokerResource(resource.Resource):
             # session is reloaded (and expired) because the session object could have changed in the meantime
             request.getSession().expire()
             
-            body = reason.getTraceback()
+            body = reason.getTraceback() if self.verbose >= 1 else "Internal Server Error"
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-length', str(len(body)))
             request.setHeader('content-type',"text/html")
@@ -304,7 +305,8 @@ class PokerResource(resource.Resource):
             request.finish()
             
             if self.verbose >= 0:
-                self.error("(%s:%s) " % request.findProxiedIP() + str(body))
+                body_without_newlines = re.split(r'[\n\r]+',str(reason.getTraceback(elideFrameworkCode=True)))
+                self.error("(%s:%s) " % request.findProxiedIP() + "; ".join(body_without_newlines))
             return True
         d.addCallbacks(render, processingFailed)
         return d
