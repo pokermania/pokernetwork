@@ -550,7 +550,9 @@ class PokerService(service.Service):
     def destroyAvatar(self, avatar):
         if avatar in self.avatars:
             self.avatars.remove(avatar)
-        else:
+        # if serial is 0 this avatar is already obsolete and can be 
+        # already removed from self.avatars in a distributed scenario
+        elif avatar.getSerial() != 0: 
             self.error("avatar %s is not in the list of known avatars" % str(avatar))
         if avatar in self.monitors:
             self.monitors.remove(avatar)
