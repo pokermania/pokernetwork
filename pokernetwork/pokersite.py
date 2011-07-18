@@ -305,8 +305,12 @@ class PokerResource(resource.Resource):
             request.finish()
             
             if self.verbose >= 0:
-                body_without_newlines = re.split(r'[\n\r]+',str(reason.getTraceback(elideFrameworkCode=True)))
-                self.error("(%s:%s) " % request.findProxiedIP() + "; ".join(body_without_newlines))
+                error_to_print = str(body)
+                if self.chunk_size > 0:
+                    body_split = "; ".join(re.split('[\r\n]+',str(error_to_print)))
+                    body_chunks = [body_split[i:i+self.chunk_size] for i in range(0, len(body_split), self.chunk_size)]
+                    error_to_print = re.replace('\n; |; \n','\n','\n'.join(body_chunks))
+                self.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
             return True
         d.addCallbacks(render, processingFailed)
         return d
@@ -461,6 +465,8 @@ class PokerSite(server.Site):
         sessionCheckTime = settings.headerGetInt("/server/@session_check")
         if sessionCheckTime > 0:
             self.sessionCheckTime = sessionCheckTime
+        self.chunk_size = settings.headerGetInt("/server/@chunk_size")
+        
         memcache_address = settings.headerGet("/server/@memcached")
         if memcache_address:
             self.memcache = pokermemcache.memcache.Client([memcache_address])
