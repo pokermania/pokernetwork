@@ -1,3 +1,9 @@
+poker-network (2.0.0-23) pokermania; urgency=low
+
+  * recursion bug fixing test
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 18 Jul 2010 18:19:54 +0200
+
 poker-network (2.0.0-22) pokermania; urgency=low
 
   * now supports chunking of messages

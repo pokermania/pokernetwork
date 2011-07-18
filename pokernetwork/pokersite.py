@@ -149,7 +149,7 @@ class Session(server.Session):
 
     def expire(self):
         server.Session.expire(self)
-        self.site.resource.service.destroyAvatar(self.avatar)
+        self.site.resource.service.forceAvatarDestroy(self.avatar)
         del self.avatar
         self.expired = True
     
@@ -295,6 +295,7 @@ class PokerResource(resource.Resource):
             return True
         def processingFailed(reason):
             # session is reloaded (and expired) because the session object could have changed in the meantime
+            # XXX is expiring the session really useful here?
             request.getSession().expire()
             
             body = reason.getTraceback() if self.verbose >= 1 else "Internal Server Error"
