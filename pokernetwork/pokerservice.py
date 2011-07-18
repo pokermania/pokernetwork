@@ -679,9 +679,7 @@ class PokerService(service.Service):
             if (schedule['register_time'] < now and (
                 not self.schedule2tourneys.has_key(schedule_serial) or
                 not filter(
-                   lambda tourney: 
-                        tourney.register_time >= schedule['register_time'] or 
-                        tourney.state not in (TOURNAMENT_STATE_CANCELED,TOURNAMENT_STATE_COMPLETE)
+                    lambda tourney: tourney.start_time >= schedule['start_time'] 
                     ,self.schedule2tourneys[schedule_serial]
                 ))
             ):
