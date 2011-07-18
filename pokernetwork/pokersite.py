@@ -503,8 +503,6 @@ class PokerSite(server.Site):
     def persistSession(self, session):
         if len(session.avatar.tables) <= 0 and len(session.avatar.tourneys) <= 0 and (not session.avatar.explain or len(session.avatar.explain.games.getAll()) <= 0):
             session.expire()
-            if self.resthost:
-                self.memcache.delete(session.uid)
             return False
         is_explain_resthost = self.resthost and session.avatar.explain
         if is_explain_resthost:
