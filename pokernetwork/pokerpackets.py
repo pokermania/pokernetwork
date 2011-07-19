@@ -1294,7 +1294,8 @@ reason: string representing the reason that this packet is being sent to
                            ('betting_structure', '2-4-limit', 's'),
                            ('skin', 'default', 's'),
                            ('reason', '', 's'),
-                           ('tourney_serial', 0, 'no net')
+                           ('tourney_serial', 0, 'no net'),
+                           ('player_seated',-1,'no net')
                            )
     
     format = "!IBIHBBHBHHI"
@@ -1318,6 +1319,7 @@ reason: string representing the reason that this packet is being sent to
         self.reason = kwargs.get("reason", "")
         self.currency_serial = kwargs.get("currency_serial", 0)
         self.tourney_serial = kwargs.get("tourney_serial", 0)
+        self.player_seated = kwargs.get("player_seated", -1)
 
     def pack(self):
         block = Packet.pack(self)
@@ -1344,7 +1346,7 @@ reason: string representing the reason that this packet is being sent to
         return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin) + self.calcsizestring(self.reason)
 
     def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s, tourney_serial = %i, reason = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin, self.tourney_serial, self.reason )
+        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s, tourney_serial = %i, player_seated = %i, reason = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin, self.tourney_serial, self.player_seated, self.reason )
 
 PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
 

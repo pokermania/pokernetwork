@@ -1601,20 +1601,26 @@ class PokerService(service.Service):
            The ad-hoc format of the query string deserves special
            documentation.  It works as follows:
 
-               0. If string is the empty string, or excatly 'all', then
+               0. If string is the empty string, or exactly 'all', then
                   all tables in the system are returned.
 
-               1. If string is 'my', then all tables that player identified
+               1. If string is 'marked', then all tables in the system are
+                  returned, and the table objects contain a player_seated
+                  attribute that is set to 1 if the player is currently
+                  seated at that table (otherwise the attribute is set 
+                  to 0).
+                  
+               2. If string is 'my', then all tables that player identified
                   by the argument, 'serial', has joined are returned.
 
-               2. If string (a) contains *no* TAB (\t) characters AND (b)
+               3. If string (a) contains *no* TAB (\t) characters AND (b)
                   contains any non-numeric characters (aka is a string of
                   letters, optionally with numbers, with no tabs), then it
                   assumed to be a specific table name, and only table(s)
                   with the specific name exactly equal to the string are
                   returned.
 
-               3. Otherwise, the string is interpreted as a tab-separated
+               4. Otherwise, the string is interpreted as a tab-separated
                   group of criteria for selecting which tables to be
                   returned, which mimics the 'string' input given in a
                   PacketPokerTableSelect() (this method was written
@@ -1662,6 +1668,8 @@ class PokerService(service.Service):
             cursor.execute("SELECT * FROM pokertables" + orderBy)
         elif string == 'my':
             cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s" + orderBy, serial)
+        elif string == 'marked':
+            cursor.execute("SELECT pokertables.*, IF(user2table.user_serial IS NULL,0,1) player_seated FROM pokertables LEFT JOIN user2table on (pokertables.serial = user2table.table_serial AND user2table.user_serial = %s)" + orderBy, serial)
         elif re.match("^[0-9]+$", string):
             cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s" + orderBy, string)
         elif len(criteria) > 1:
@@ -1679,8 +1687,10 @@ class PokerService(service.Service):
             # supposed to be integers.
             if whereValues['currency_serial'] != None and whereValues['currency_serial'] != '':
                 if not re.match("^[0-9]+$", whereValues['currency_serial']):
-                    self.error("listTables(): currency_serial parameter must be an integer, instead was: %s"
-                               % whereValues['currency_serial'])
+                    self.error(
+                        "listTables(): currency_serial parameter must be an integer, instead was: %s"
+                        % whereValues['currency_serial']
+                    )
                     cursor.close()
                     return []
                 else:
