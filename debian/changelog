@@ -1,3 +1,11 @@
+poker-network (2.0.0-25) pokermania; urgency=low
+
+  * tourney-related rewards are only triggered
+    on non-sit_n_go tournaments
+  * player_seated available in table object
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 19 Jul 2010 20:19:54 +0200
+
 poker-network (2.0.0-24) pokermania; urgency=low
 
   * chunk_size fix

@@ -159,9 +159,11 @@ class PokerExplain:
 
     def chipsBet2Pot(self, game, player, bet, pot_index):
         packets = []
-        if ( pot_index == 0 and
-             player.dead > 0 and
-             game.isSecondRound() ):
+        if (
+            pot_index == 0 and
+            player.dead > 0 and
+            game.isSecondRound() 
+         ):
             #
             # The ante or the dead are already in the pot
             #
