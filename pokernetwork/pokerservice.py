@@ -195,6 +195,8 @@ class PokerService(service.Service):
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
 
+        self.chunk_size = settings.headerGetInt("/server/@chunk_size")
+        
         refill = settings.headerGetProperties("/server/refill")
         if len(refill) > 0:
             self.refill = refill[0]

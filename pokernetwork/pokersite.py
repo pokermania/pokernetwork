@@ -307,10 +307,11 @@ class PokerResource(resource.Resource):
             
             if self.verbose >= 0:
                 error_to_print = str(body)
-                if self.chunk_size > 0:
-                    body_split = "; ".join(re.split(r'[\r\n]+',str(error_to_print)))
-                    body_chunks = [body_split[i:i+self.chunk_size] for i in range(0, len(body_split), self.chunk_size)]
-                    error_to_print = re.replace('\n; |; \n','\n','\n'.join(body_chunks))
+                chunk_size = self.service.chunk_size
+                if chunk_size > 0:
+                    body_split = ";- ".join(re.split(r'[\r\n]+',str(error_to_print)))
+                    body_chunks = [body_split[i:i+chunk_size] for i in range(0, len(body_split), chunk_size)]
+                    error_to_print = re.replace('\n;- |;- \n','\n','\n'.join(body_chunks))
                 self.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
             return True
         d.addCallbacks(render, processingFailed)
@@ -466,7 +467,6 @@ class PokerSite(server.Site):
         sessionCheckTime = settings.headerGetInt("/server/@session_check")
         if sessionCheckTime > 0:
             self.sessionCheckTime = sessionCheckTime
-        self.chunk_size = settings.headerGetInt("/server/@chunk_size")
         
         memcache_address = settings.headerGet("/server/@memcached")
         if memcache_address:
