@@ -311,7 +311,7 @@ class PokerResource(resource.Resource):
                 if chunk_size > 0:
                     body_split = ";- ".join(re.split(r'[\r\n]+',str(error_to_print)))
                     body_chunks = [body_split[i:i+chunk_size] for i in range(0, len(body_split), chunk_size)]
-                    error_to_print = re.replace('\n;- |;- \n','\n','\n'.join(body_chunks))
+                    error_to_print = re.sub(r'\n;- |;- \n',r'\n','\n'.join(body_chunks))
                 self.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
             return True
         d.addCallbacks(render, processingFailed)
