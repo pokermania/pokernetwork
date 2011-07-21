@@ -152,33 +152,7 @@ class Session(server.Session):
         self.site.resource.service.forceAvatarDestroy(self.avatar)
         del self.avatar
         self.expired = True
-    
-    def checkExpired(self):
-        if self.expired:
-            return False
-        try:
-            #
-            # The session may expire as a side effect of the
-            # verifications made by getSession against memcache.
-            # When this happens an exception is thrown and checkExpire
-            # is not called : this is intended because the
-            # session already expired.
-            #
-            self.site.getSession(self.uid, self.auth, self.explain_default)
-            #
-            # The session may be replaced by a new session as a side
-            # effect of the verifications made by getSession against
-            # memcache. When this happens no exception is thrown and
-            # checkExpired should not be called because the session
-            # has already expired.
-            #
-            if not self.expired:
-                server.Session.checkExpired(self)
-                return True
-            return False
-        except KeyError:
-            return False
-        
+            
 class PokerResource(resource.Resource):
 
     def __init__(self, service):
@@ -464,9 +438,6 @@ class PokerSite(server.Site):
         sessionTimeout = settings.headerGetInt("/server/@session_timeout")
         if sessionTimeout > 0:
             self.sessionFactory.sessionTimeout = sessionTimeout
-        sessionCheckTime = settings.headerGetInt("/server/@session_check")
-        if sessionCheckTime > 0:
-            self.sessionCheckTime = sessionCheckTime
         
         memcache_address = settings.headerGet("/server/@memcached")
         if memcache_address:
@@ -596,7 +567,7 @@ class PokerSite(server.Site):
 
     def makeSessionFromUidAuth(self, uid, auth, explain):
         session = self.sessions[uid] = self.sessionFactory(self, uid, auth, explain)
-        session.startCheckingExpiration(self.sessionCheckTime)
+        session.startCheckingExpiration()
         return session
         
     def makeSession(self, uid, auth, explain):

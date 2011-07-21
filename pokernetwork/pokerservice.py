@@ -2886,10 +2886,6 @@ class PokerXML(resource.Resource):
             if not hasattr(session, "avatar"):
                 session.avatar = self.service.createAvatar()
                 session.notifyOnExpire(lambda: self.sessionExpires(session))
-# For test : trigger session expiration in the next 4 seconds
-# see http://twistedmatrix.com/bugs/issue1090
-#                session.lastModified -= 900
-#                reactor.callLater(4, session.checkExpired)
             avatar = session.avatar
         else:
             avatar = self.service.createAvatar()
