@@ -1,3 +1,9 @@
+poker-network (2.0.0-28) pokermania; urgency=low
+
+  * removed sessionCheck
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 22 Jul 2010 12:19:54 +0200
+
 poker-network (2.0.0-27) pokermania; urgency=low
 
   * traceback activated on getPlayer,if verbose >=1
