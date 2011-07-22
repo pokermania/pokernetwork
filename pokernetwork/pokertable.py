@@ -147,7 +147,7 @@ class PokerTable:
         self.update_recursion = False
 
     def message(self, string):
-        print "PokerTable: " + string
+        print "PokerTable[%s]: " % (self.game.id if self.game else "?") + string
 
     def error(self, string):
         self.message("*ERROR* " + string)

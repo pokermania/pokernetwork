@@ -1,3 +1,9 @@
+poker-network (2.0.0-30) pokermania; urgency=low
+
+  * added game_id to pokertable messages
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 22 Jul 2010 14:19:54 +0200
+
 poker-network (2.0.0-29) pokermania; urgency=low
 
   * protocolInvalid to verbose > 1
