@@ -115,7 +115,7 @@ class PokerServerProtocol(UGAMEProtocol):
         UGAMEProtocol.connectionLost(self, reason)
 
     def protocolInvalid(self, client, server):
-        if self.factory.verbose:
+        if self.factory.verbose > 1:
             self.message("client with protocol %s rejected (need %s)" % ( client, server ))
 
     def ping(self):

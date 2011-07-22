@@ -1,3 +1,9 @@
+poker-network (2.0.0-29) pokermania; urgency=low
+
+  * protocolInvalid to verbose > 1
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 22 Jul 2010 13:19:54 +0200
+
 poker-network (2.0.0-28) pokermania; urgency=low
 
   * removed sessionCheck
