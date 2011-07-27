@@ -1225,13 +1225,19 @@ class PokerTable:
         # was previously disconnected from a tournament
         # or an ongoing game.
         #
+        came_back = False
         if self.isSeated(avatar):
             #
             # Sit back immediately, as if we just seated
             #
-            game.comeBack(serial)
-
+            came_back = game.comeBack(serial)
         avatar.join(self, reason = reason)
+        
+        if came_back:
+            # it does not hurt to re-sit the avatar
+            # but is needed for other clients to notice
+            # the arrival
+            avatar.sitPlayer(self,serial)
             
         return True
 

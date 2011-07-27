@@ -933,8 +933,7 @@ class PokerAvatar:
             table = self.service.getTable(packet.game_id)
         if table:
             self.removeGamePacketsQueue(packet.game_id)
-            if not table.joinPlayer(self, self.getSerial(),
-                                    reason = reason):
+            if not table.joinPlayer(self, self.getSerial(),reason = reason):
                 if deprecatedEmptyTableBehavior:
                     self.sendPacketVerbose(PacketPokerTable(reason = reason))
                 self.sendPacketVerbose(
