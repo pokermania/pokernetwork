@@ -92,8 +92,6 @@ class UGAMEProtocol(protocol.Protocol):
         if self.factory and self.factory.verbose > 5:
             self.message("connectionLost: reason = " + str(reason))
         if not self._protocol_ok:
-            if self.factory and self.factory.verbose > 1:
-                self.message("connectionLost: reason = " + str(reason))
             self.protocolInvalid("different", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
         
     def _sendVersion(self):
