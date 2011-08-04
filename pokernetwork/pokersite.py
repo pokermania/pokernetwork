@@ -239,7 +239,7 @@ class PokerResource(resource.Resource):
         session = request.getSession()
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         
-        def render(packets):
+        def render(packets,session = None):
             if self.verbose > 3:
                 self.message("(%s:%s) " % request.findProxiedIP() + "render " + data + " returns " + str(packets))
             #
@@ -250,7 +250,10 @@ class PokerResource(resource.Resource):
             # PacketPokerLongPollReturn
             #
             if packet.type != PACKET_POKER_LONG_POLL_RETURN:
-                session = request.getSession()
+                if not session:
+                    if self.verbose > 2:
+                        self.message("(%s:%s) " % request.findProxiedIP() + "recreating session")
+                    session = request.getSession()
                 session.site.updateSession(session)
                 session.site.persistSession(session)
             #
@@ -268,9 +271,9 @@ class PokerResource(resource.Resource):
                 request.finish()
             return True
         def processingFailed(reason):
-            # session is reloaded (and expired) because the session object could have changed in the meantime
-            # XXX is expiring the session really useful here?
-            request.getSession().expire()
+            # session was reloaded (and expired) because the session object could have changed in the meantime
+            # no manual session expiration anymore!
+            # request.getSession().expire()
             
             body = reason.getTraceback() if self.verbose >= 1 else "Internal Server Error"
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
@@ -288,7 +291,7 @@ class PokerResource(resource.Resource):
                     error_to_print = re.sub(r'\n;- |;- \n',r'\n','\n'.join(body_chunks))
                 self.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
             return True
-        d.addCallbacks(render, processingFailed)
+        d.addCallbacks(render, processingFailed, (session,))
         return d
 
 class PokerImageUpload(resource.Resource):
