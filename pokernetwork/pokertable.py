@@ -147,7 +147,7 @@ class PokerTable:
         self.update_recursion = False
 
     def message(self, string):
-        print "[PokerTable %s]: " % (self.game.id if self.game else "?") + string
+        print "[PokerTable %s]: %s" % (self.game.id if hasattr(self, 'game') else "?", string)
 
     def error(self, string):
         self.message("*ERROR* " + string)
@@ -566,7 +566,7 @@ class PokerTable:
                 (type, hand_serial) = event
                 self.factory.saveHand(self.compressedHistory(game.historyGet()), hand_serial)
                 self.factory.updateTableStats(game, len(self.observers), len(self.waiting))
-                transient = self.transient and 1 or 0
+                transient = 1 if self.transient else 0
                 self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
             
             else:
