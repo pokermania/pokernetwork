@@ -53,7 +53,7 @@ bot_kill_timeout='30'
 
 # Include python-poker-network defaults if available
 if [ -f /etc/default/python-poker-network ] ; then
-    . /etc/default/python-poker-network
+	. /etc/default/python-poker-network
 fi
 
 twistd=/usr/bin/twistd
@@ -86,56 +86,56 @@ case "$1" in
   start)
 	echo -n "Starting ${desc}: "
 	if [ -f $lockfile ]; then
-	    echo " not configured, abort."
-	    exit 0;
+		echo " not configured, abort."
+		exit 0;
 	fi
 	${python} ${twistd} \
-	    --pidfile=${serverpidfile} \
-	    --logfile=${serverlogfile} ${more_args} \
-	    --reactor=${reactor} ${server_additional_args} \
-	    ${serverplugin} --config=${serverconfig}
-    if $RUN_BOTS ; then
-	    ${python} ${twistd} \
-	        --pidfile=${botpidfile} \
-	        --logfile=${botlogfile} ${more_args} \
-	        --reactor=${reactor} ${bot_additional_args} \
+		--pidfile=${serverpidfile} \
+		--logfile=${serverlogfile} ${more_args} \
+		--reactor=${reactor} ${server_additional_args} \
+		${serverplugin} --config=${serverconfig}
+	if $RUN_BOTS ; then
+		${python} ${twistd} \
+			--pidfile=${botpidfile} \
+			--logfile=${botlogfile} ${more_args} \
+			--reactor=${reactor} ${bot_additional_args} \
 		${botplugin} --config=${botconfig}
-        else
-            echo "Bots are disabled, edit /etc/default/python-poker-network to enable them."
-        fi
+	else
+		echo "Bots are disabled, edit /etc/default/python-poker-network to enable them."
+	fi
 	echo ${name}
 	;;
   stop)
+	if $RUN_BOTS ; then
+		echo -n "Stopping poker bots ..."
+		start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
+		echo "done"
+	fi
 	echo -n "Stopping poker server ..."
 	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
-    if $RUN_BOTS ; then
-	    echo -n "Stopping poker bots ..."
-	    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
-	    echo "done"
-    fi
 	echo " done."
 	;;
   bot-start)
-    if $RUN_BOTS ; then
-	    echo -n "Starting poker bots ..."
-	    ${python} ${twistd} \
-	        --pidfile=${botpidfile} \
-	        --logfile=${botlogfile} ${more_args} \
-	        --reactor=${reactor} ${bot_additional_args} \
+	if $RUN_BOTS ; then
+		echo -n "Starting poker bots ..."
+		${python} ${twistd} \
+			--pidfile=${botpidfile} \
+			--logfile=${botlogfile} ${more_args} \
+			--reactor=${reactor} ${bot_additional_args} \
 		${botplugin} --config=${botconfig}
-	    echo "done"
-    else
-        echo "Bots are disabled"
-    fi
-    ;;
+		echo "done"
+	else
+		echo "Bots are disabled"
+	fi
+	;;
   bot-stop)
-    echo -n "Stopping poker bots ..."
-    start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
-    echo "done"
-    ;;
+	echo -n "Stopping poker bots ..."
+	start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
+	echo "done"
+	;;
   rebot)
-    echo "deprecated - use '$0 bot-restart' instead."
-    $0 bot-restart
+	echo "deprecated - use '$0 bot-restart' instead."
+	$0 bot-restart
 	;;
   restart|force-reload)
 	#
@@ -147,9 +147,9 @@ case "$1" in
 	$0 start
 	;;
   bot-restart)
-    $0 bot-stop
-    $0 bot-start
-    ;;
+	$0 bot-stop
+	$0 bot-start
+	;;
   *)
 	N=/etc/init.d/$NAME
 	echo "Usage: $N {start|stop|restart|force-reload|bot-start|bot-stop|bot-restart}" >&2
