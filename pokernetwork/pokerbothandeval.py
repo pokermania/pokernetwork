@@ -260,7 +260,7 @@ class PostFlopHandEval(PokerHandEval):
                         action = "call"
                     else:
                         action = "check"
-        elif hand_value[0] in ["TwoPair","Trips","Straight","Flush","Flhouse","Quads","StFlush"]:
+        elif hand_value[0] in ["TwoPair","Trips","Straight","Flush","FlHouse","Quads","StFlush"]:
             action = "raise"
         return action
 class EvalDraws:

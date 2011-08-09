@@ -256,7 +256,7 @@ class PostFlopHandEvalTestCase(unittest.TestCase):
         self.game = FakeGame()
         self.handEval = PostFlopHandEval()
     def testEvalHand(self):
-        #raise with TwoPair, Trips, Straight, Flush, Flhouse, Quads or StFlush
+        #raise with TwoPair, Trips, Straight, Flush, FlHouse, Quads or StFlush
         assert self.handEval.evalHand(700,self.game, 1001) == "raise", "invalid action expected raise"
         #with no pair and no draw
         self.game.hand = "7s 3h"
