@@ -1,3 +1,9 @@
+poker-network (2.0.0-34) pokermania; urgency=low
+
+  * weekly update, FlHouse!
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 09 Aug 2010 11:00:00 +0200
+
 poker-network (2.0.0-33) pokermania; urgency=low
 
   * weekly update, session fixes
