@@ -1,3 +1,9 @@
+poker-network (2.0.0-35) pokermania; urgency=low
+
+  * shutdown fix
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Thu, 11 Aug 2010 01:30:00 +0200
+
 poker-network (2.0.0-34) pokermania; urgency=low
 
   * weekly update, FlHouse!
