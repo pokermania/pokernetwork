@@ -250,7 +250,7 @@ class PokerResource(resource.Resource):
             # PacketPokerLongPollReturn
             #
             if packet.type != PACKET_POKER_LONG_POLL_RETURN:
-                if not session:
+                if not session or not hasattr(session,'avatar'):
                     if self.verbose > 2:
                         self.message("(%s:%s) " % request.findProxiedIP() + "recreating session")
                     session = request.getSession()
