@@ -491,16 +491,20 @@ class PokerService(service.Service):
         for table in self.tables.values():
             if not table.game.isEndOrNull():
                 playing += 1
+                table.cancelPlayerTimers()
+                for serial in table.avatar_collection.serial2avatars.keys():
+                    table.game.autoPlayer(serial)
+                table.update()
         if self.verbose and playing > 0:
             self.message("Shutting down, waiting for %d games to finish" % playing)
         if playing <= 0:
-            if self.verbose:
+            if self.verbose >= 0:
                 self.message("Shutdown immediately")
             self.down = True
             self.shutdown_deferred.callback(True)
             self.shutdown_deferred = False
         else:
-            reactor.callLater(10, self.shutdownCheck)
+            reactor.callLater(2, self.shutdownCheck)
 
     def isShuttingDown(self):
         return self.shutting_down
