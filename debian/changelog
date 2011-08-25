@@ -1,3 +1,9 @@
+poker-network (2.0.0-37) pokermania; urgency=low
+
+  * rewards are also given when there is no avatar object
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Thu, 25 Aug 2010 02:30:00 +0200
+
 poker-network (2.0.0-36) pokermania; urgency=low
 
   * shutdown fix v2
