@@ -99,7 +99,7 @@ from pokernetwork import pokernetworkconfig
 from pokerauth import get_auth_instance
 from datetime import date
 
-UPDATE_TOURNEYS_SCHEDULE_DELAY = 10 * 60
+UPDATE_TOURNEYS_SCHEDULE_DELAY = 2 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
 DELETE_OLD_TOURNEYS_DELAY = 1 * 60 * 60
 
