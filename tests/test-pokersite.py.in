@@ -68,6 +68,9 @@ class PokerServiceMockup:
       def destroyAvatar(self, avatar):
             pass
 
+      def forceAvatarDestroy(self,avatar):
+          pass
+
       def getPlayerPlaces(self, serial):
             return PacketPokerPlayerPlaces(serial = serial)
 
@@ -670,16 +673,7 @@ class FilterFinishTestCase(unittest.TestCase):
 
 class SessionTestCase(PokerSiteBase):
 
-      def test01_checkExpired(self):
-            uid = 'uid'
-            auth = 'auth'
-            session = self.site.makeSessionFromUidAuth(uid, auth, False)
-            self.site.memcache.set(auth, '0')
-            self.assertEqual(True, session.checkExpired())
-            self.site.memcache.delete(auth)
-            self.assertEqual(False, session.checkExpired())
-
-      def test02_checkDistributedArgs(self):
+      def test01_checkDistributedArgs(self):
             uid = 'ZUID'
             auth = 'ZAUTH'
             session = self.site.makeSessionFromUidAuth(uid, auth, False)
@@ -736,7 +730,6 @@ class SessionExplainTestCase(PokerSiteBase):
             self.site.memcache.set(auth, '0')
             session.lastModified = 0
             session.expire()
-            session.checkExpired()
 
       def test03_replaceFromGetSession(self):
             uid = 'uid'
@@ -746,7 +739,6 @@ class SessionExplainTestCase(PokerSiteBase):
             session.lastModified = 0
             self.site.memcache.set(uid, '0')
             self.site.memcache.set(auth, '0')
-            self.assertEqual(False, session.checkExpired())
 
 class RequestTestCase(PokerSiteBase):
 
@@ -791,15 +783,14 @@ class PokerSiteTestCase(PokerSiteBase):
 
       def test01_init_full(self):
             settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" memcached="127.0.0.1:11211" session_timeout="60" session_check="10" cookie_timeout="120" />
+<server verbose="6" memcached="127.0.0.1:11211" session_timeout="60" cookie_timeout="120" />
 """
             settings = pokernetworkconfig.Config([])
             settings.loadFromString(settings_xml)
             service = PokerServiceMockup()
             site = pokersite.PokerSite(settings, pokersite.PokerResource(service))
-            self.assertEqual([ '127.0.0.1:11211' ], site.memcache.addresses)
+            self.assertEqual([ '127.0.0.1:11211' ], [str(s) for s in site.memcache.servers])
             self.assertEqual(60, site.sessionFactory.sessionTimeout)
-            self.assertEqual(10, site.sessionCheckTime)
             self.assertEqual(120, site.cookieTimeout)
 
       def test02_init_default(self):
@@ -807,9 +798,8 @@ class PokerSiteTestCase(PokerSiteBase):
             sessionCheckTime = pokersite.PokerSite.sessionCheckTime
             service = PokerServiceMockup()
             site = pokersite.PokerSite(self.settings, pokersite.PokerResource(service))
-            self.assertEqual([ ], site.memcache.addresses)
+            self.assertEqual([ ], site.memcache.servers)
             self.assertEqual(sessionTimeout, site.sessionFactory.sessionTimeout)
-            self.assertEqual(sessionCheckTime, site.sessionCheckTime)
 
       def test03_01_getSession(self):
             """
@@ -1018,13 +1008,13 @@ class PokerSiteTestCase(PokerSiteBase):
             session.avatar.explain.games.games = {}
             self.assertEquals(False, site.persistSession(session))
             self.assertEquals(True, session.expired)
-            self.assertEquals(None, site.memcache.get('uid'))
+            self.assertEquals(('HOST', 7777, 'PATH'), site.memcache.get('uid'))
 
             session = self.site.makeSession('uid', 'auth', False)
             session.avatar.explain = None
             self.assertEquals(False, site.persistSession(session))
             self.assertEquals(True, session.expired)
-            self.assertEquals(None, site.memcache.get('uid'))
+            self.assertEquals(('HOST', 7777, 'PATH'), site.memcache.get('uid'))
             
 
 def Run():
