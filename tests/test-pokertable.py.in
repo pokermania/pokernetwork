@@ -202,7 +202,7 @@ class MockService:
     def movePlayer(self, serial, fromGameId, toGameId):
         return 0
 
-    def seatPlayer(self, serial, table_id, amount):
+    def seatPlayer(self, serial, table_id, amount, minimum_amount = None):
         if self.players.has_key(serial):
             self.error("Player is already seated at table, ." % table_id)
             return False
@@ -677,7 +677,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def test08_2_brokenSeatFactory(self):
         player = self.createPlayer(1, False)
         self.assertEqual(True, self.table.joinPlayer(player, 1))
-        self.table.factory.seatPlayer = lambda a, b, c: False
+        self.table.factory.seatPlayer = lambda a, b, c, d=None: False
         self.assertEqual(False, self.table.seatPlayer(player, 1, -1))
     # -------------------------------------------------------------------
     def test08_5_kick(self):
