@@ -1,3 +1,10 @@
+poker-network (2.0.0-38) pokermania; urgency=low
+
+  * some tests fixed, new auth module in additions
+  * tourney schedule check every 2 minutes
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 05 Sep 2010 19:30:00 +0200
+
 poker-network (2.0.0-37) pokermania; urgency=low
 
   * rewards are also given when there is no avatar object
