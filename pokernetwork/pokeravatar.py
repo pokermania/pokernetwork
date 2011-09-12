@@ -353,7 +353,11 @@ class PokerAvatar:
     queueDeferred = sendPacket
     
     def sendPacketVerbose(self, packet):
-        if self.service.verbose > 1 and hasattr(packet, 'type') and packet.type != PACKET_PING or self.service.verbose > 5:
+        if (
+            self.service.verbose > 1 and hasattr(packet, 'type') and packet.type != PACKET_PING or
+            hasattr(packet, 'type') and packet.type == PACKET_ERROR or 
+            self.service.verbose > 5
+        ):
             self.message("sendPacket(%d): %s" % ( self.getSerial(), str(packet) ))
         self.sendPacket(packet)
         
