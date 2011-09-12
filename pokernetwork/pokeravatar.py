@@ -304,7 +304,7 @@ class PokerAvatar:
         #    Note that _ default value depends of locale installation
         #    by pokerservice, as
         #    http://docs.python.org/library/gettext.html point out,
-        #    gettext.install installs the function _() in Python’s
+        #    gettext.install installs the function _() in Pythons
         #    builtins namespace. Assigning it to self.localeFunc
         #    convert it to a global that is file wise (as pointed
         #    above).
