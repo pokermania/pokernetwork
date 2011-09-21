@@ -1,3 +1,9 @@
+poker-network (2.0.1-1) pokermania; urgency=low
+
+  * support for cleaned betting structures
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 21 Sep 2010 13:00:00 +0200
+
 poker-network (2.0.0-38) pokermania; urgency=low
 
   * some tests fixed, new auth module in additions
