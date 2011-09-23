@@ -245,7 +245,7 @@ CREATE TABLE tourneys_schedule (
   players_min INT DEFAULT 2,
   -- Poker variant (holdem, omaha, omaha8, 7stud)
   variant VARCHAR(32),
-  -- Betting structure (.01-.02-no-limit, .01-.02-pot-limit, .02-.04-limit, .02-.04-no-limit, .02-.04-pot-limit, .02..04-limit, .05-.10-limit, .05-.10-no-limit, .05-.10-pot-limit, .05..10-limit, .10-.25-limit, .10-.25-no-limit, .10-.25-pot-limit, .25-.50-limit, .25-.50-no-limit, .25-.50-pot-limit, .25..50-limit, .50-1-limit, .50-1-no-limit, .50-1-pot-limit, .50.1-limit, 0-0-limit, 1-2-limit, 1-2-no-limit, 1-2-pot-limit, 10-15-limit, 10-15-pot-limit, 10-20-limit, 10-20-no-limit, 10-20-pot-limit, 100-200-limit, 100-200-no-limit, 100-200-pot-limit, 15-30-limit, 150-300-limit, 2-4-limit, 2-4-no-limit, 2-4-pot-limit, 200-400-limit, 3-6-limit, 3-6-no-limit, 3-6-pot-limit, 30-60-limit, 30-60-no-limit, 30-60-pot-limit, 4-8-limit, 5-10-limit, 5-10-no-limit, 5-10-pot-limit, 50-100-limit, 50-100-no-limit, 50-100-pot-limit)
+  -- Betting structure (level-001, level-10-15-pot-limit, level-10-20-no-limit, level-15-30-no-limit, level-2-4-limit)
   betting_structure VARCHAR(32),
   -- Number of seats, in the range 2 and 10 included.
   seats_per_game INT DEFAULT 10,
