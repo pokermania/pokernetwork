@@ -115,6 +115,22 @@ case "$1" in
 	fi
 	echo " done."
 	;;
+  status)
+    if [ -f ${serverpidfile} ] ; then
+        MY_PID=$(cat $serverpidfile)
+        ps -p $MY_PID > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			echo "$desc not running"
+			exit 1
+		else
+			echo "$desc running"
+			exit 0
+		fi
+	else
+		echo "$desc not running"
+		exit 1
+	fi
+	;;
   bot-start)
 	if $RUN_BOTS ; then
 		echo -n "Starting poker bots ..."
@@ -152,7 +168,7 @@ case "$1" in
 	;;
   *)
 	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload|bot-start|bot-stop|bot-restart}" >&2
+	echo "Usage: $N {start|stop|restart|status|force-reload|bot-start|bot-stop|bot-restart}" >&2
 	exit 1
 	;;
 esac
