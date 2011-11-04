@@ -162,13 +162,24 @@ case "$1" in
 	$0 stop
 	$0 start
 	;;
+  force-stop)
+        echo "try to kill process in ${serverpidfile}"
+        /bin/kill -9 `/bin/cat ${serverpidfile}`
+        if [ $? -gt 0 ]; then
+                echo "error killing process"
+                exit 1
+        else
+                echo "process successfully killed"
+                exit 0
+        fi
+        ;;
   bot-restart)
 	$0 bot-stop
 	$0 bot-start
 	;;
   *)
 	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|status|force-reload|bot-start|bot-stop|bot-restart}" >&2
+	echo "Usage: $N {start|stop|force-stop|restart|status|force-reload|bot-start|bot-stop|bot-restart}" >&2
 	exit 1
 	;;
 esac
