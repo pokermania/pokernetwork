@@ -1176,11 +1176,10 @@ class PokerService(service.Service):
             return PacketAck()
 
     def tourneyBroadcastStart(self, tourney_serial):
-        tourney_serial = str(tourney_serial)
-        cursor = self.db.cursor(DictCursor)
-        cursor.execute("SELECT * FROM resthost")
-        for row in cursor.fetchall():
-            self.getPage('http://' + row['host'] + ':' + str(row['port']) + '/TOURNEY_START?tourney_serial=' + tourney_serial)
+        cursor = self.db.cursor()
+        cursor.execute("SELECT host,port FROM resthost")
+        for host,port in cursor.fetchall():
+            self.getPage('http://%s:%d/TOURNEY_START?tourney_serial=%d' % (host,long(port),tourney_serial))
         cursor.close()
         
     def tourneyNotifyStart(self, tourney_serial):
@@ -1188,20 +1187,21 @@ class PokerService(service.Service):
         if manager.type != PACKET_POKER_TOURNEY_MANAGER:
             raise UserWarning, str(manager)
         user2properties = manager.user2properties
-        def send(avatar):
-            #
-            # check again because the call is delayed and the user may have logged out
-            # or the avatar may have been destroyed in the meantime
-            #
-            if avatar.isLogged() and avatar.explain:
-                avatar.sendPacket(PacketPokerTourneyStart(tourney_serial = tourney_serial, table_serial = user2properties[str(avatar.getSerial())]['table_serial']))
-        calls = []
-        for avatars in self.avatar_collection.values():
-            for avatar in avatars:
-                if user2properties.has_key(str(avatar.getSerial())) and avatar.explain:
-                    calls.append(reactor.callLater(0.01, send, avatar))
-        return calls
         
+        calls = []
+        def send(avatar_serial,table_serial):
+            # get all avatars that are logged in and having an explain instance
+            avatars = (a for a in self.avatar_collection.get(avatar_serial) if a.isLogged() and a.explain)
+            for avatar in avatars:
+                avatar.sendPacket(PacketPokerTourneyStart(tourney_serial=tourney_serial,table_serial=table_serial))
+                
+        for avatar_serial,properties in user2properties.iteritems():
+            avatar_serial = long(avatar_serial)
+            table_serial = properties['table_serial']
+            calls.append(reactor.callLater(0.1,send,avatar_serial,table_serial))
+            
+        return calls
+    
     def tourneyManager(self, tourney_serial):
         packet = PacketPokerTourneyManager()
         packet.tourney_serial = tourney_serial
