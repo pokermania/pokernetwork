@@ -893,6 +893,7 @@ class PokerService(service.Service):
     def tourneyDeal(self, tourney):
         for game_id in map(lambda game: game.id, tourney.games):
             table = self.getTable(game_id)
+            table.autodeal = True
             table.scheduleAutoDeal()
 
     def tourneyBreakWait(self, tourney):
@@ -1030,6 +1031,7 @@ class PokerService(service.Service):
                                       })
         self.tourney_table_serial += 1
         table.timeout_policy = "fold"
+        table.autodeal = False
         return table.game
 
     def tourneyDestroyGameActual(self, game):
