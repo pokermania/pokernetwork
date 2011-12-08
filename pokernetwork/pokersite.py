@@ -275,7 +275,8 @@ class PokerResource(resource.Resource):
             # no manual session expiration anymore!
             # request.getSession().expire()
             
-            body = reason.getTraceback() if self.verbose >= 1 else "Internal Server Error"
+            error_trace = reason.getTraceback()
+            body = error_trace if self.verbose >= 1 else "Internal Server Error"
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-length', str(len(body)))
             request.setHeader('content-type',"text/html")
@@ -283,7 +284,7 @@ class PokerResource(resource.Resource):
             request.finish()
             
             if self.verbose >= 0:
-                error_to_print = str(body)
+                error_to_print = str(error_trace)
                 chunk_size = self.service.chunk_size
                 if chunk_size > 0:
                     body_split = ";- ".join(re.split(r'[\r\n]+',str(error_to_print)))
