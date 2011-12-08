@@ -449,13 +449,15 @@ class PokerAvatar:
         d.addCallback(lambda x: self.resetPacketsQueue())
         return d
             
-    def incomingDistributedPackets(self, packets, game_id):
+    def incomingDistributedPackets(self, packets, game_id,block=True):
         if self.service.verbose > 3:
             self.message("incomingDistributedPackets(%s, %s)" % ( str(packets), str(game_id) ))
-        self.blockLongPollDeferred()
+        
+        if block: self.blockLongPollDeferred()
         for packet in packets:
             self.sendPacket(packet)
-        self.unblockLongPollDeferred()
+
+        restclient_deleted = False
         if game_id:
             if game_id not in self.tables and (not(self.explain) or not(self.explain.games.gameExists(game_id))):
                 #
@@ -468,6 +470,11 @@ class PokerAvatar:
                         self.message("incomingDistributedPackets: del %d" % game_id)
                     self.game_id2rest_client[game_id].clearTimeout()
                     del self.game_id2rest_client[game_id]
+                    restclient_deleted = True
+        if restclient_deleted and self.explain:
+            self.sendPacket(PacketPokerState(game_id=game_id,string='ephemeral'))
+            
+        if block: self.unblockLongPollDeferred()            
 
     def handlePacketDefer(self, packet):
         if self.service.verbose > 2:

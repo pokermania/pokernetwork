@@ -1293,6 +1293,9 @@ class PokerTable:
         return True
 
     def chatPlayer(self, avatar, serial, message):
+        if not self.isJoined(avatar):
+            self.error("player %d can't chat before joining" % serial)
+            return False
         self.broadcast(PacketPokerChat(game_id = self.game.id,
                                        serial = serial,
                                        message = message + "\n"))
