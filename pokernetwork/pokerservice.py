@@ -551,7 +551,7 @@ class PokerService(service.Service):
         return avatar
 
     def forceAvatarDestroy(self, avatar):
-        reactor.callLater(1, self.destroyAvatar, avatar)
+        reactor.callLater(0.1, self.destroyAvatar, avatar)
 
     def destroyAvatar(self, avatar):
         if avatar in self.avatars:

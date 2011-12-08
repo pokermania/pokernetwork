@@ -25,6 +25,7 @@ from twisted.python.runtime import seconds
 from pokernetwork.pokerpackets import *
 
 import pokersite
+from twisted.internet.defer import CancelledError
 
 class RestClientFactory(protocol.ClientFactory):
 
@@ -162,6 +163,15 @@ class PokerRestClient:
                 d.addCallback(self.longPollCallback)
             else:
                 self.scheduleLongPoll(delta)
+                
+    def cancel(self):
+        self.clearTimeout()
+        self.longPollFrequency = -1
+        handle_cancel = lambda fail: True if fail.check(CancelledError) else fail
+        old_queue, self.queue.callbacks = self.queue.callbacks, []     
+        self.queue.addErrback(handle_cancel)
+#        self.queue.callbacks.extend(old_queue)
+        self.queue.cancel()
         
 class PokerProxyClient(http.HTTPClient):
     """

@@ -418,6 +418,14 @@ class PokerAvatar:
     def handleDistributedPacket(self, request, packet, data):
         resthost, game_id = self.service.packet2resthost(packet)
         if resthost:
+        explain_client_existing = self.game_id2rest_client.has_key(game_id) and self.explain.games.gameExists(game_id) 
+        if resthost and not explain_client_existing and packet.type not in (PACKET_POKER_TABLE_JOIN,PACKET_POKER_LONG_POLL):
+            self.sendPacket(PacketPokerStateInformation(
+                message = 'distributed connection ephemeral',
+                code = PacketPokerStateInformation.REMOTE_TABLE_EPHEMERAL,
+                game_id = game_id
+            ))
+        if resthost and packet.type != PACKET_POKER_LONG_POLL:
             return self.distributePacket(packet, data, resthost, game_id)
         else:
             return self.handlePacketDefer(packet)
@@ -466,11 +474,10 @@ class PokerAvatar:
                 #
                 client = self.game_id2rest_client.get(game_id,None)
                 if client and (len(client.queue.callbacks) <= 0 or client.pendingLongPoll):
-                    if self.service.verbose > 1:
-                        self.message("incomingDistributedPackets: del %d" % game_id)
-                    self.game_id2rest_client[game_id].clearTimeout()
-                    del self.game_id2rest_client[game_id]
+                    restclient = self.game_id2rest_client.pop(game_id)
+                    restclient.cancel()
                     restclient_deleted = True
+                    
         if restclient_deleted and self.explain:
             self.sendPacket(PacketPokerState(game_id=game_id,string='ephemeral'))
             
@@ -1273,13 +1280,21 @@ class PokerAvatar:
     def connectionLost(self, reason):
         if self.service.verbose > 3:
             self.message("connection lost for %s/%d" % ( self.getName(), self.getSerial() ))
+        self.blockLongPollDeferred()
         for table in self.tables.values():
             table.disconnectPlayer(self, self.getSerial())
         self.logout()
-        for key, restclient in self.game_id2rest_client.iteritems():
-            restclient.clearTimeout()
-            restclient.longPollFrequency = -1
+        for game_id, restclient in self.game_id2rest_client.iteritems():
+            restclient.cancel()
+            self.sendPacket(PacketPokerStateInformation(
+                message = 'connection closed',
+                code = PacketPokerStateInformation.REMOTE_CONNECTION_LOST,
+                game_id = game_id,
+                serial = self.getSerial()
+            ))
         self.game_id2rest_client = {}
+        self._flush_next_longpoll = True
+        self.unblockLongPollDeferred()
 
     def getUserInfo(self, serial):
         self.service.autorefill(serial)

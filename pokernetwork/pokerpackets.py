@@ -4492,8 +4492,47 @@ class PacketPokerLongPollReturn(Packet):
     info = Packet.info
 
 Packet.infoDeclare(globals(), PacketPokerLongPollReturn, Packet, "POKER_LONG_POLL_RETURN", 168) # 168 # 0xa8 # %SEQ%
+########################################
+class PacketPokerStateInformation(PacketPokerId):
+    """\
+Semantics: This message is sent to a client whenever the server
+           has an inconsistent or otherwise not useful state of the player's
+           session object. This packet should help the user to decide how to
+           reinstate a correct connection by e.g. re-issuing a PacketPokerTableJoin
+           or a PacketLogin packet
+           
+Direction: server  =>  client
 
+Context: Since this packet is sent on the server's behalf, usually without the 
+         client's direct interaction. It is difficult to define a determined context 
+         for it. It is however possible to deduce if the packet is referring to a 
+         determined game or not, by looking at the "game_id" field.
+         The following error codes are currently used:
+         - REMOTE_CONNECTION_LOST: The server is closing the connection to another
+                                   remote server, because the session on the server the
+                                   client is connected to is expired. 
+         - REMOTE_TABLE_EPHEMERAL: Denotes the fact that after the current request the
+                                   will be disconnected again. This usually happens if
+                                   the server never received a PacketPokerTable packet
+                                   on this connection --> send a PacketPokerTableJoin
+                                   packet.
+          
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+message: string representing the error.
+code: integer representing the error.
+"""
 
+    REMOTE_CONNECTION_LOST = 1
+    REMOTE_TABLE_EPHEMERAL = 2
+    
+    info = PacketPokerId.info + (
+        ('message','no message','s'),
+        ('code',0,'I')
+        )
+
+Packet.infoDeclare(globals(), PacketPokerStateInformation, Packet, "POKER_STATE_INFORMATION", 154) # 154 # 0x9a # %SEQ%
+    
 _TYPES = range(50,169)
 
 # Interpreted by emacs
