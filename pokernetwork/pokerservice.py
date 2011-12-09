@@ -90,8 +90,7 @@ from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8,\
-    PokerExpireResource
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -556,7 +555,6 @@ class PokerService(service.Service):
         reactor.callLater(0.1, self.destroyAvatar, avatar)
 
     def destroyAvatar(self, avatar):
-        print 'DESTROY',avatar.getSerial()
         if avatar in self.avatars:
             self.avatars.remove(avatar)
         # if serial is 0 this avatar is already obsolete and may have been 
@@ -2803,7 +2801,6 @@ class PokerRestTree(resource.Resource):
         self.putChild("UPLOAD", PokerImageUpload(self.service))
         self.putChild("TOURNEY_START", PokerTourneyStartResource(self.service))
         self.putChild("AVATAR", PokerAvatarResource(self.service))
-        self.putChild("EXPIRE", PokerExpireResource(self.service))
         self.putChild("", self)
 
     def render_GET(self, request):

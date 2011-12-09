@@ -395,7 +395,6 @@ class PokerAvatar:
         if self._block_longpoll_deferred == False and self._longpoll_deferred and (len(self._packets_queue) > 0 or self._flush_next_longpoll):
             self._flush_next_longpoll = False
             packets = self.resetPacketsQueue()
-            print 'FLUSH',self.getSerial(),[str(packet) for packet in packets]
             if self.service.verbose > 3:
                 self.message("flushLongPollDeferred(%s): " % str(packets))
             d = self._longpoll_deferred
@@ -420,7 +419,6 @@ class PokerAvatar:
             self._flush_next_longpoll = True
             
     def handleDistributedPacket(self, request, packet, data):
-        print 'HANDLE!',self.getSerial(),packet
         resthost, game_id = self.service.packet2resthost(packet)
         explain_client_existing = self.game_id2rest_client.has_key(game_id) and self.explain.games.gameExists(game_id) 
         if resthost and not explain_client_existing and packet.type != PACKET_POKER_TABLE_JOIN:
@@ -454,7 +452,6 @@ class PokerAvatar:
         return client
             
     def distributePacket(self, packet, data, resthost, game_id):
-        print 'DISTRIBUTE',self.getSerial(),game_id,PacketNames[packet.type]
         ( host, port, path ) = resthost
         client = self.getOrCreateRestClient(resthost, game_id)
         d = client.sendPacket(packet, data)
@@ -463,7 +460,6 @@ class PokerAvatar:
         return d
             
     def incomingDistributedPackets(self, packets, game_id,block=True):
-        print 'INCOMING',self.getSerial(),game_id,id(self)
         if self.service.verbose > 3:
             self.message("incomingDistributedPackets(%s, %s)" % ( str(packets), str(game_id) ))
         
@@ -1306,10 +1302,6 @@ class PokerAvatar:
         self.sendPacketVerbose(self.service.getPersonalInfo(serial))
 
     def removePlayer(self, table, serial):
-        import traceback
-        print 'REMOVED',serial,id(self)
-#        traceback.print_stack(limit=5)
-        
         game = table.game
         player = game.getPlayer(serial)
         seat = player and player.seat
