@@ -1171,6 +1171,7 @@ game_id: integer uniquely identifying a game.
 
     FULL = 1
     GENERAL_FAILURE = 2
+    NOT_JOINED = 1001
     type = PACKET_POKER_TABLE_JOIN
 
 PacketFactory[PACKET_POKER_TABLE_JOIN] = PacketPokerTableJoin
@@ -4479,10 +4480,10 @@ players:           Serials of the players participating in the tournament.
 
 Packet.infoDeclare(globals(), PacketPokerCreateTourney, Packet, "POKER_CREATE_TOURNEY", 166) # 166 # 0xa6 # %SEQ%
 ########################################
-class PacketPokerLongPoll(Packet):
+class PacketPokerLongPoll(PacketPokerId):
     """ """
     
-    info = Packet.info
+    info = PacketPokerId.info
 
 Packet.infoDeclare(globals(), PacketPokerLongPoll, Packet, "POKER_LONG_POLL", 167) # 167 # 0xa7 # %SEQ%
 ########################################

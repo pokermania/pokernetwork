@@ -282,7 +282,7 @@ class PokerResource(resource.Resource):
             request.setHeader('content-type',"text/html")
             request.write(body)
             request.finish()
-            
+            print trace
             if self.verbose >= 0:
                 error_to_print = str(error_trace)
                 chunk_size = self.service.chunk_size
@@ -579,3 +579,41 @@ class PokerSite(server.Site):
         session.memcache_serial = 0
         self.memcache.add(auth, str(session.memcache_serial))
         return session
+
+class PokerExpireResource(resource.Resource):
+    def __init__(self, service):
+        resource.Resource.__init__(self)
+        self.service = service
+        self.verbose = service.verbose
+        self.deferred = defer.succeed(None)
+        self.isLeaf = True
+
+    def message(self, string):
+        print "PokerTourneyStart: " + string
+
+    def render(self, request):
+        if self.verbose > 3:
+            self.message("render " + str(request))
+        session = request.getSession()
+        poker_site = session.site
+        
+        show_it = bool(request.args.get('show',[False])[0])
+        if show_it:
+            body = self.shi(poker_site)
+        else:
+            user_id = int(request.args['user_id'][0])
+            body = self.xx(poker_site, user_id)
+        
+        from pprint import pformat
+        body = pformat(body)
+        request.setHeader('content-type',"text/html")
+        request.setHeader('content-length', str(len(body)))
+        request.write(body)
+        session.expire()
+        return True
+    
+    def shi(self,poker_site): 
+        return [(k,s.avatar.getSerial()) for (k,s) in poker_site.sessions.items()]
+    
+    def xx(self,poker_site,user_id): 
+        return [poker_site.sessions[k].expire() for (k,s) in self.shi(poker_site) if s==user_id]
