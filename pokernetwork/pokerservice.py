@@ -2940,6 +2940,7 @@ class PokerXML(resource.Resource):
             elif use_sessions == "use sessions":
                 if logout:
                     session.expire()
+                    session.logout()
                 else:
                     avatar.queuePackets()
 

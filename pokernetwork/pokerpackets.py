@@ -548,6 +548,7 @@ the blinds, the client must know that it will never receive the
 packet announcing the "pre-flop" state. The "end" state is not
 sent when a game is canceled (i.e. PACKET_POKER_CANCELED is sent).
 
+serial: the unique number associated to the user.
 game_id: integer uniquely identifying a game.
 string: state of the game.
 """

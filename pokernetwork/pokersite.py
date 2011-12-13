@@ -152,6 +152,10 @@ class Session(server.Session):
         self.site.resource.service.forceAvatarDestroy(self.avatar)
         del self.avatar
         self.expired = True
+        
+    def logout(self):
+        assert self.expired == True
+        self.site.logoutSession(self)
             
 class PokerResource(resource.Resource):
 
@@ -256,6 +260,14 @@ class PokerResource(resource.Resource):
                     session = request.getSession()
                 session.site.updateSession(session)
                 session.site.persistSession(session)
+            
+            #
+            # if the sent packet was a logout packet, expire his session 
+            # and log the user out.
+            # 
+            if packet.type == PACKET_LOGOUT:
+                session.expire()
+                session.logout()
             #
             # Format answer
             #
@@ -497,21 +509,9 @@ class PokerSite(server.Site):
     def updateSession(self, session):
         serial = session.avatar.getSerial()
         #
-        # There is no need to consider the case where session.memcache_serial is
-        # zero because nothing needs updating in memcache.
+        # the session is only updated if the session's avatar object is
+        # associated with a user (i.e. it does not have a serial of 0)
         #
-        if session.memcache_serial > 0:
-            if serial == 0:
-                #
-                # if the user has logged out, unbind the serial that was in memcache
-                #
-                self.memcache.replace(session.auth, '0', time = self.cookieTimeout)
-            #
-            # for consistency, so that updateSession can be called multiple times without
-            # side effects
-            #
-            session.memcache_serial = serial
-
         if serial > 0:
             #
             # refresh the memcache entry each time a request is handled
@@ -520,6 +520,13 @@ class PokerSite(server.Site):
             #
             self.memcache.set(session.auth, str(serial), time = self.cookieTimeout)
 
+    def logoutSession(self,session):
+        session_resthost = self.memcache.get(session.uid)
+        is_new_or_same_resthost = not session_resthost or session_resthost == self.resthost
+        if is_new_or_same_resthost:
+            self.memcache.delete(session.uid)
+            self.memcache.delete(session.auth)            
+        
     def getSession(self, uid, auth, explain):
         if not isinstance(uid, str):
             raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
@@ -568,7 +575,7 @@ class PokerSite(server.Site):
                     self.sessions[uid].avatar.relogin(memcache_serial)
                 
         return self.sessions[uid]
-
+    
     def makeSessionFromUidAuth(self, uid, auth, explain):
         session = self.sessions[uid] = self.sessionFactory(self, uid, auth, explain)
         session.startCheckingExpiration()
