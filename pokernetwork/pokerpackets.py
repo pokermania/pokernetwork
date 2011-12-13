@@ -4526,6 +4526,8 @@ code: integer representing the error.
 
     REMOTE_CONNECTION_LOST = 1
     REMOTE_TABLE_EPHEMERAL = 2
+    LOCAL_TABLE_EPHEMERAL = 3
+    
     
     info = PacketPokerId.info + (
         ('message','no message','s'),

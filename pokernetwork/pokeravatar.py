@@ -420,18 +420,34 @@ class PokerAvatar:
             
     def handleDistributedPacket(self, request, packet, data):
         resthost, game_id = self.service.packet2resthost(packet)
-        explain_client_existing = self.game_id2rest_client.has_key(game_id) and self.explain.games.gameExists(game_id) 
-        if resthost and not explain_client_existing and packet.type != PACKET_POKER_TABLE_JOIN:
-            self.sendPacket(PacketPokerStateInformation(
-                message = 'distributed connection ephemeral',
-                code = PacketPokerStateInformation.REMOTE_TABLE_EPHEMERAL,
-                game_id = game_id
-            ))
+        
+        for packet_state in self.handlePokerState(packet, resthost, game_id): 
+            self.sendPacket(packet_state)
+        
         if resthost and packet.type != PACKET_POKER_LONG_POLL:
             return self.distributePacket(packet, data, resthost, game_id)
         else:
             return self.handlePacketDefer(packet)
 
+    def handlePokerState(self,packet,resthost,game_id):
+        packets = []
+        if not self.explain: return packets
+         
+        explain_client_existing = self.game_id2rest_client.has_key(game_id) and self.explain.games.gameExists(game_id)
+        if packet.type != PACKET_POKER_TABLE_JOIN and not resthost and game_id and game_id not in self.tables:
+            packets.append(PacketPokerStateInformation(
+                message = 'local connection ephemeral',
+                code = PacketPokerStateInformation.LOCAL_TABLE_EPHEMERAL,
+                game_id = game_id
+            ))
+        elif packet.type != PACKET_POKER_TABLE_JOIN and resthost and not explain_client_existing:
+            packets.append(PacketPokerStateInformation(
+                message = 'distributed connection ephemeral',
+                code = PacketPokerStateInformation.REMOTE_TABLE_EPHEMERAL,
+                game_id = game_id
+            ))
+        return packets
+        
     def getOrCreateRestClient(self, resthost, game_id):
         #
         # no game_id means the request must be delegated for tournament
