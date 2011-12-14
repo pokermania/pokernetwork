@@ -1,3 +1,15 @@
+poker-network (2.0.1-4) pokermania; urgency=low
+
+  * added PacketPokerStateInformation (better information about local and
+    remote table connections)
+  * PacketPokerLongPoll now should include game_id to hint remote table
+    connection.
+  * passive memcached key removal: only remove if a PacketLogout is sent
+  * TOURNAMENT_STATE_BREAK now working again
+  * poker-network init scripts now supports force-stop and status
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 14 Dec 2010 12:00:00 +0200
+
 poker-network (2.0.1-3) pokermania; urgency=low
 
   * back to old betting structure names again
