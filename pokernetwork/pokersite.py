@@ -481,8 +481,13 @@ class PokerSite(server.Site):
     # prevent calling the startFactory method of site.Server
     # to disable logging.
     #
-    def startFactory(self): 
-        self.memcache = self.resource.service.memcache
+    def startFactory(self):
+#       FIXME !
+#        self.memcache = self.resource.service.memcache
+        from twisted.internet import reactor
+        def loadLater(): 
+            self.memcache = self.resource.service.memcache
+        reactor.callLater(0,loadLater)
         
     def stopFactory(self): 
         for key in self.sessions.keys():
