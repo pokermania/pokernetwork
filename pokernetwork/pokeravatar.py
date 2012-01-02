@@ -44,6 +44,7 @@ from pokernetwork.pokerpackets import *
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
 from twisted.internet import protocol, reactor, defer
+from pokernetwork import pokernetworkconfig
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
@@ -69,11 +70,15 @@ class PokerAvatar:
         self._block_longpoll_deferred = False
         self._longpoll_deferred = None
         self.game_id2rest_client = {}
+        self.distributed_uid = None
+        self.distributed_auth = None
         self.distributed_args = '?explain=no'
         self.longPollTimer = None
         self._flush_next_longpoll = False
 
     def setDistributedArgs(self, uid, auth):
+        self.distributed_uid = uid
+        self.distributed_auth = auth
         self.distributed_args = '?explain=no&uid=%s&auth=%s' % ( uid, auth )
         
     def __str__(self):
