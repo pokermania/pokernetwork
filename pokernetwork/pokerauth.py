@@ -54,15 +54,17 @@ class PokerAuth:
     def GetLevel(self, type):
         return self.type2auth.has_key(type) and self.type2auth[type]
 
-    def auth(self, name, password):
+    def auth(self, name, password, auth_token):
         cursor = self.db.cursor()
-        cursor.execute("SELECT serial, password, privilege FROM users "
-                       "WHERE name = '%s'" % name)
+        cursor.execute("SELECT serial, password, privilege FROM users WHERE name = %s",(name,))
         numrows = int(cursor.rowcount)
         serial = 0
         privilege = User.REGULAR
-        if numrows <= 0:
+        valid_credentials = False
+        
+        if numrows <= 0 and password is not None:
             if self.auto_create_account:
+                valid_credentials = True
                 if self.verbose > 1:
                     self.message("user %s does not exist, create it" % name)
                 serial = self.userCreate(name, password)
@@ -71,19 +73,23 @@ class PokerAuth:
                 if self.verbose > 1:
                     self.message("user %s does not exist" % name)
                 cursor.close()
-                return ( False, "Invalid login or password" )
         elif numrows > 1:
             self.error("more than one row for %s" % name)
             cursor.close()
-            return ( False, "Invalid login or password" )
         else:
             (serial, password_sql, privilege) = cursor.fetchone()
             cursor.close()
-            if password_sql != password:
-                self.message("password mismatch for %s" % name)
-                return ( False, "Invalid login or password" )
-
-        return ( (serial, name, privilege), None )
+            if auth_token is not None and password is None:
+                memcache_serial = self.memcache.get(auth_token)
+                if memcache_serial is not None:
+                    valid_credentials = (long(serial) == long(memcache_serial))
+            else:
+                valid_credentials = (password_sql == password)
+             
+        if valid_credentials:
+            return ( (serial, name, privilege), None )
+        else:
+            return ( False, "Invalid login or password" )
 
     def userCreate(self, name, password):
         if self.verbose:

@@ -218,10 +218,15 @@ class PokerAvatar:
         if packet.type == PACKET_LOGIN:
             status = checkNameAndPassword(packet.name, packet.password)
         elif packet.type == PACKET_AUTH:
-            status = checkName(name)
+            status = checkName(packet.name)
 #            FIXME additional checking on the auth hash?
         if status[0]:
-            ( info, reason ) = self.service.auth(packet.name, packet.password, self.roles)
+            ( info, reason ) = self.service.auth(
+                packet.name, 
+                packet.password if packet.type == PACKET_LOGIN else None, 
+                packet.auth if packet.type == PACKET_AUTH else None, 
+                self.roles
+            )
             code = 0
         else:
             self.message("auth: failure " + str(status))
@@ -232,10 +237,11 @@ class PokerAvatar:
             self.sendPacketVerbose(PacketAuthOk())
             self.login(info)
         else:
-            self.sendPacketVerbose(PacketAuthRefused(message = reason,
-                                                     code = code,
-                                                     other_type = PACKET_LOGIN))
-
+            self.sendPacketVerbose(PacketAuthRefused(
+                message = reason,
+                code = code,
+                other_type = PACKET_LOGIN
+            ))
     def getSerial(self):
         return self.user.serial
 
