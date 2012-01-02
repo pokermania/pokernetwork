@@ -39,7 +39,7 @@ from types import *
 from traceback import format_exc
 
 from pokerengine import pokergame
-from pokernetwork.user import User, checkNameAndPassword
+from pokernetwork.user import User, checkNameAndPassword, checkName
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
@@ -215,7 +215,11 @@ class PokerAvatar:
             self.user.logout()
         
     def auth(self, packet):
-        status = checkNameAndPassword(packet.name, packet.password)
+        if packet.type == PACKET_LOGIN:
+            status = checkNameAndPassword(packet.name, packet.password)
+        elif packet.type == PACKET_AUTH:
+            status = checkName(name)
+#            FIXME additional checking on the auth hash?
         if status[0]:
             ( info, reason ) = self.service.auth(packet.name, packet.password, self.roles)
             code = 0
@@ -571,11 +575,13 @@ class PokerAvatar:
             self.sendPacketVerbose(PacketAuthRequest())
             return
 
-        if packet.type == PACKET_LOGIN:
+        if packet.type in (PACKET_LOGIN,PACKET_AUTH):
             if self.isLogged():
-                self.sendPacketVerbose(PacketError(other_type = PACKET_LOGIN,
-                                                   code = PacketLogin.LOGGED,
-                                                   message = "already logged in"))
+                self.sendPacketVerbose(PacketError(
+                    other_type = PACKET_LOGIN,
+                    code = PacketLogin.LOGGED,
+                    message = "already logged in"
+                ))
             else:
                 self.auth(packet)
             return
