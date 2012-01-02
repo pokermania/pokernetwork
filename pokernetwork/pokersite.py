@@ -35,7 +35,6 @@ from twisted.python import log
 from twisted.python.runtime import seconds
 
 from pokernetwork.pokerpackets import *
-from pokernetwork import pokermemcache
 
 # Disabled Unicode encoding. It is not required anymore since it is only used
 # for the (dealer) chat. We measured a higher sit out count with Unicode
@@ -455,13 +454,7 @@ class PokerSite(server.Site):
         sessionTimeout = settings.headerGetInt("/server/@session_timeout")
         if sessionTimeout > 0:
             self.sessionFactory.sessionTimeout = sessionTimeout
-        
-        memcache_address = settings.headerGet("/server/@memcached")
-        if memcache_address:
-            self.memcache = pokermemcache.memcache.Client([memcache_address])
-            pokermemcache.checkMemcacheServers(self.memcache)
-        else:
-            self.memcache = pokermemcache.MemcacheMockup.Client([])
+        self.memcache = None
         self.pipes = []
         for path in settings.header.xpathEval("/server/rest_filter"):
             module = imp.load_source("poker_pipe", path.content)
@@ -489,7 +482,7 @@ class PokerSite(server.Site):
     # to disable logging.
     #
     def startFactory(self): 
-        pass
+        self.memcache = self.resource.service.memcache
         
     def stopFactory(self): 
         for key in self.sessions.keys():

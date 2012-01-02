@@ -35,8 +35,9 @@ def message(string):
     
 class PokerAuth:
 
-    def __init__(self, db, settings):
+    def __init__(self, db, memcache, settings):
         self.db = db
+        self.memcache = memcache
         self.type2auth = {}
         self.verbose = settings.headerGetInt("/server/@verbose")
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
@@ -104,7 +105,7 @@ class PokerAuth:
         return int(serial)
 
 _get_auth_instance = None
-def get_auth_instance(db, settings):
+def get_auth_instance(db, memcache, settings):
     global _get_auth_instance
     if _get_auth_instance == None:
         verbose = settings.headerGetInt("/server/@verbose")
@@ -121,5 +122,5 @@ def get_auth_instance(db, settings):
         except:
             if verbose > 1:
                 message("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'" % script)
-            _get_auth_instance = lambda db, settings: PokerAuth(db, settings)
-    return apply(_get_auth_instance, [db, settings])
+            _get_auth_instance = lambda db, memcache, settings: PokerAuth(db, memcache, settings)
+    return apply(_get_auth_instance, [db, memcache, settings])

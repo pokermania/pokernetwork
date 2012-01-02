@@ -96,6 +96,7 @@ from pokernetwork import pokeravatar
 from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
+from pokernetwork import pokermemcache
 from pokerauth import get_auth_instance
 from datetime import date
 
@@ -203,6 +204,7 @@ class PokerService(service.Service):
         else:
             self.refill = None
         self.db = None
+        self.memcache = None
         self.cashier = None
         self.poker_auth = None
         self.timer = {}
@@ -270,6 +272,12 @@ class PokerService(service.Service):
     def startService(self):
         self.monitors = []
         self.db = PokerDatabase(self.settings)
+        memcache_address = self.settings.headerGet("/server/@memcached")
+        if memcache_address:
+            self.memcache = pokermemcache.memcache.Client([memcache_address])
+            pokermemcache.checkMemcacheServers(self.memcache)
+        else:
+            self.memcache = pokermemcache.MemcacheMockup.Client([])
         self.setupTourneySelectInfo()
         self.setupLadder()
         self.setupResthost()
@@ -279,7 +287,7 @@ class PokerService(service.Service):
             self.cleanUp(temporary_users = self.settings.headerGet("/server/users/@temporary"))
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
-        self.poker_auth = get_auth_instance(self.db, self.settings)
+        self.poker_auth = get_auth_instance(self.db, self.memcache, self.settings)
         self.dirs = split(self.settings.headerGet("/server/path"))
         self.avatar_collection = PokerAvatarCollection("service", self.verbose)
         self.avatars = []
