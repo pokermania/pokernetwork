@@ -37,14 +37,15 @@ from twisted.python.runtime import seconds
 from pokernetwork.pokerpackets import *
 from pokernetwork import pokermemcache
 
-# FIXME: I don't think these next two functions should assume 'ISO-8859-1'
-# like they do.  This is related to another FIXME about this issue you'll
-# find in pokeravatar.py -- bkuhn, 2008-11-28
+# Disabled Unicode encoding. It is not required anymore since it is only used
+# for the (dealer) chat. We measured a higher sit out count with Unicode
+# activated FIXME a better solution would be to refactor the engine to only
+# encode chat packets than to disable it altogether
 def fromutf8(tree, encoding = 'ISO-8859-1'):
-    return __walk(tree, lambda x: x.encode(encoding,'xmlcharrefreplace'))
+    return tree
 
 def toutf8(tree, encoding = 'ISO-8859-1'):
-    return __walk(tree, lambda x: unicode(x, encoding))
+    return tree
 
 def __walk(tree, convert):
     if type(tree) is TupleType or type(tree) is ListType:
