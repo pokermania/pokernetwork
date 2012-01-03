@@ -695,49 +695,45 @@ PacketNames[PACKET_AUTH] = "AUTH"
 
 class PacketAuth(Packet):
     """\
-Semantics: authentify user "name" with "auth" token.
+Semantics: authentify user with "auth" token.
 
 Direction: server <= client
 
-If the user/auth combination is valid, the
+If the auth string is valid, the
 PacketAuthOk packet will be sent back to the client,
 immediately followed by the PacketSerial packet that
 holds the serial number of the user.
 
-If the user/password combination is invalid, the
+If the auth string is invalid, the
 PacketAuthRefused packet will be sent back to the client.
 If the user is already logged in, a PacketError is sent
 with code set to PacketAuth.LOGGED.
 
-name: valid user name as a string
-password: matching password string
+auth: valid user auth hash as a string
     """
 
     LOGGED = 1
     
     type = PACKET_AUTH
 
-    info = Packet.info + ( ('name', 'unknown', 's'),
-                           ('auth', 'unknown', 's') )
+    info = Packet.info + ( ('auth', 'unknown', 's'), )
     
     def __init__(self, **kwargs):
-        self.name = kwargs.get("name", "unknown")
         self.auth = kwargs.get("auth", "unknown")
 
     def pack(self):
-        return Packet.pack(self) + self.packstring(self.name) + self.packstring(self.auth)
+        return Packet.pack(self) + self.packstring(self.auth)
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (block, self.name) = self.unpackstring(block)
         (block, self.auth) = self.unpackstring(block)
         return block
 
     def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.name) + self.calcsizestring(self.auth)
+        return Packet.calcsize(self) + self.calcsizestring(self.auth)
 
     def __str__(self):
-        return Packet.__str__(self) + " name = %s, auth = %s" % (self.name, self.auth)
+        return Packet.__str__(self) + " auth = %s" % (self.auth,)
 
 PacketFactory[PACKET_AUTH] = PacketAuth
 

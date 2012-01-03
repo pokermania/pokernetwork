@@ -63,6 +63,9 @@ def checkNameAndPassword(name, password):
     else:
         return status
 
+def checkAuth(auth):
+    return (True,None,None)
+
 class User:
     REGULAR = 1
     ADMIN = 2

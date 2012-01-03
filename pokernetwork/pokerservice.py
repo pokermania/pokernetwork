@@ -599,8 +599,8 @@ class PokerService(service.Service):
         cursor.close()
         return True
 
-    def auth(self, name, password, auth_token, roles):
-        ( info, reason ) = self.poker_auth.auth(name, password, auth_token)
+    def auth(self, auth_type, auth_args, roles):
+        ( info, reason ) = self.poker_auth.auth(auth_type,auth_args)
         if info:
             self.autorefill(info[0])
         return ( info, reason )

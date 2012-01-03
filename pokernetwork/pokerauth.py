@@ -54,7 +54,7 @@ class PokerAuth:
     def GetLevel(self, type):
         return self.type2auth.has_key(type) and self.type2auth[type]
 
-    def auth(self, name, password, auth_token):
+    def auth(self, auth_type, name, password, auth_token):
         cursor = self.db.cursor()
         cursor.execute("SELECT serial, password, privilege FROM users WHERE name = %s",(name,))
         numrows = int(cursor.rowcount)

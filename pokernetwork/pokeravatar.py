@@ -218,13 +218,12 @@ class PokerAvatar:
         if packet.type == PACKET_LOGIN:
             status = checkNameAndPassword(packet.name, packet.password)
         elif packet.type == PACKET_AUTH:
-            status = checkName(packet.name)
+            status = checkAuth(packet.auth)
 #            FIXME additional checking on the auth hash?
         if status[0]:
             ( info, reason ) = self.service.auth(
-                packet.name, 
-                packet.password if packet.type == PACKET_LOGIN else None, 
-                packet.auth if packet.type == PACKET_AUTH else None, 
+                packet.type,
+                (packet.name,packet.password) if packet.type == PACKET_LOGIN else (packet.auth,),
                 self.roles
             )
             code = 0
