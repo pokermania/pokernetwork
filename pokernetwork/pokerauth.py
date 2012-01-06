@@ -29,6 +29,7 @@
 
 from pokernetwork.user import User
 from twisted.python.runtime import seconds
+from pokernetwork.packets import PACKET_LOGIN, PACKET_AUTH
 
 def message(string):
     print "PokerAuth: " + string
@@ -54,14 +55,13 @@ class PokerAuth:
     def GetLevel(self, type):
         return self.type2auth.has_key(type) and self.type2auth[type]
 
-    def auth(self, auth_type, name, password, auth_token):
+    def _authLogin(self,name,password):
         cursor = self.db.cursor()
         cursor.execute("SELECT serial, password, privilege FROM users WHERE name = %s",(name,))
         numrows = int(cursor.rowcount)
         serial = 0
         privilege = User.REGULAR
         valid_credentials = False
-        
         if numrows <= 0 and password is not None:
             if self.auto_create_account:
                 valid_credentials = True
@@ -79,17 +79,39 @@ class PokerAuth:
         else:
             (serial, password_sql, privilege) = cursor.fetchone()
             cursor.close()
-            if auth_token is not None and password is None:
-                memcache_serial = self.memcache.get(auth_token)
-                if memcache_serial is not None:
-                    valid_credentials = (long(serial) == long(memcache_serial))
-            else:
-                valid_credentials = (password_sql == password)
-             
+            valid_credentials = (password_sql == password)
         if valid_credentials:
             return ( (serial, name, privilege), None )
         else:
             return ( False, "Invalid login or password" )
+        
+    def _authAuth(self,auth_token):
+        serial = 0
+        privilege = User.REGULAR
+        valid_credentials = False
+        memcache_serial = self.memcache.get(auth_token)
+        if memcache_serial is not None:
+            cursor = self.db.cursor()
+            cursor.execute("SELECT serial, name, privilege FROM users WHERE serial = %s",(memcache_serial,))
+            numrows = int(cursor.rowcount)
+            if numrows == 1:
+                valid_credentials = True
+                (serial, name, privilege) = cursor.fetchone()
+        if valid_credentials:
+            return ( (serial, name, privilege), None )
+        else:
+            return ( False, "Invalid login or password" )
+               
+    def auth(self,auth_type,auth_args):
+        if auth_type == PACKET_LOGIN:
+            (name,password) = auth_args
+            return self._authLogin(name, password)
+        elif auth_type == PACKET_AUTH:
+            (auth_token,) = auth_args
+            return self._authAuth(auth_token)
+        else:
+            print 'auth_type',auth_type
+            raise NotImplementedError()
 
     def userCreate(self, name, password):
         if self.verbose:

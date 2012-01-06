@@ -39,7 +39,7 @@ from types import *
 from traceback import format_exc
 
 from pokerengine import pokergame
-from pokernetwork.user import User, checkNameAndPassword, checkName
+from pokernetwork.user import User, checkNameAndPassword, checkAuth
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
@@ -221,11 +221,12 @@ class PokerAvatar:
             status = checkAuth(packet.auth)
 #            FIXME additional checking on the auth hash?
         if status[0]:
-            ( info, reason ) = self.service.auth(
-                packet.type,
-                (packet.name,packet.password) if packet.type == PACKET_LOGIN else (packet.auth,),
-                self.roles
-            )
+            auth_args = None
+            if packet.type == PACKET_LOGIN:
+                auth_args = (packet.name,packet.password)
+            elif packet.type == PACKET_AUTH:
+                auth_args = (packet.auth,)
+            ( info, reason ) = self.service.auth(packet.type,auth_args,self.roles)
             code = 0
         else:
             self.message("auth: failure " + str(status))
