@@ -295,7 +295,7 @@ class PokerResource(resource.Resource):
             request.setHeader('content-type',"text/html")
             request.write(body)
             request.finish()
-            print error_trace
+            
             if self.verbose >= 0:
                 error_to_print = str(error_trace)
                 chunk_size = self.service.chunk_size
