@@ -703,6 +703,7 @@ class PokerService(service.Service):
         for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED ), self.tourneys.values()):
             if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
                 self.deleteTourney(tourney)
+                self.tourneyDeleteRoute(tourney)
 
         self.cancelTimer('checkTourney')
         self.timer['checkTourney'] = reactor.callLater(CHECK_TOURNEYS_SCHEDULE_DELAY, self.checkTourneysSchedule)
@@ -1840,7 +1841,7 @@ class PokerService(service.Service):
                 where = "tourney_serial = " + str(packet.game_id)
             elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
                 where = "tourney_serial = " + str(packet.tourney_serial)
-            elif hasattr(packet, "game_id"):
+            elif getattr(packet, "game_id",0) > 0:
                 where = "table_serial = " + str(packet.game_id)
                 game_id = packet.game_id
             else:
