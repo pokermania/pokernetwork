@@ -148,8 +148,8 @@ DROP TABLE IF EXISTS user2table;
 CREATE TABLE user2table (
   user_serial INT UNSIGNED NOT NULL,
   table_serial INT UNSIGNED NOT NULL,
-  money INT DEFAULT 0 NOT NULL,
-  bet INT DEFAULT 0 NOT NULL,
+  money BIGINT DEFAULT 0 NOT NULL,
+  bet BIGINT DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (user_serial,table_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
