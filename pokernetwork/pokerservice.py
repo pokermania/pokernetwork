@@ -577,10 +577,10 @@ class PokerService(service.Service):
         if self.verbose > 2:
             self.message("sessionStart(%d, %s): " % ( serial, ip ))
         cursor = self.db.cursor()
-        sql = "insert into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, seconds(), ip )
+        sql = "replace into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, seconds(), ip )
         cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.error("modified %d rows (expected 1): %s" % ( cursor.rowcount, sql ))
+        if not (1 <= cursor.rowcount <= 2):
+            self.error("modified %d rows (expected 1 or 2): %s" % ( cursor.rowcount, sql ))
         cursor.close()
         return True
 
