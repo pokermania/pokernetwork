@@ -171,6 +171,11 @@ class PokerAvatar:
             self.message("user %s/%d logged in" % ( self.user.name, self.user.serial ))
         if self.protocol:
             self.has_session = self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
+            
+        if self.explain:
+            self.explain.handleSerial(PacketSerial(serial = serial))
+        self.service.avatar_collection.add(serial, self)
+            
         self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)
 

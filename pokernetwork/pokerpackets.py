@@ -424,9 +424,9 @@ game_id: integer uniquely identifying a game.
 
     info = Packet.info + ( ('game_id', 0, 'I'),
                            ('position', -1, 'b'),
-                           ('serial', 0, 'no net') )
+                           ('serial', 0, 'I') )
     
-    format = "!IB"
+    format = "!IBI"
     format_size = calcsize(format)
 
     def __init__(self, **kwargs):
@@ -436,11 +436,11 @@ game_id: integer uniquely identifying a game.
 
     def pack(self):
         position = self.position == -1 and 255 or self.position
-        return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, position)
+        return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, position, self.serial)
 
     def unpack(self, block):
         block = Packet.unpack(self, block)
-        (self.game_id, self.position) = unpack(PacketPokerPosition.format, block[:PacketPokerPosition.format_size])
+        (self.game_id, self.position, self.serial) = unpack(PacketPokerPosition.format, block[:PacketPokerPosition.format_size])
         if self.position == 255: self.position = -1
         return block[PacketPokerPosition.format_size:]
 
