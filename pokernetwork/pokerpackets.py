@@ -4316,18 +4316,6 @@ percentile: percentile of the player
 Packet.infoDeclare(globals(), PacketPokerPlayerStats, Packet, "POKER_PLAYER_STATS", 161) # 161 # 0xa1 # %SEQ%
 
 ########################################
-class PacketPokerTourneyInfo(Packet):
-    """\
-
-Semantics: defined by tourney_select_info module as loaded from poker.server.xml
-
-Direction: server =>  client
-"""
-    pass
-    
-Packet.infoDeclare(globals(), PacketPokerTourneyInfo, Packet, "POKER_TOURNEY_INFO", 164) # 164 # 0xa4 # %SEQ%
-
-########################################
 class PacketPokerTablePicker(PacketPokerId):
     """\
 
