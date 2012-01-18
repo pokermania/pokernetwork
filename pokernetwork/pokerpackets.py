@@ -783,9 +783,9 @@ class PacketPokerChips(PacketPokerId):
 
     type = PACKET_POKER_CHIPS
 
-    info = PacketPokerId.info + ( ('bet', 0, 'I'), )
+    info = PacketPokerId.info + ( ('bet', 0, 'Q'), )
     
-    format = "!I"
+    format = "!Q"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):
@@ -832,9 +832,9 @@ game_id: integer uniquely identifying a game.
 
     type = PACKET_POKER_PLAYER_CHIPS
 
-    info = PacketPokerChips.info + ( ('money', 0, 'I'), )
+    info = PacketPokerChips.info + ( ('money', 0, 'Q'), )
 
-    format = "!I"
+    format = "!Q"
     format_size = calcsize(format)
 
     def __init__(self, *args, **kwargs):

@@ -274,6 +274,14 @@ Packet.format_info = {
           'calcsize': lambda data: 4,
           },
     #
+    # Unsigned long long, long, 8 bytes, network order (big endian).
+    # Example: 1 <=> \x00\x00\x00\x00\x00\x00\x00\x01
+    #
+    'Q': {'pack': lambda data: pack('!Q', data),
+          'unpack': lambda block: ( block[8:], int(unpack('!Q', block[:8])[0]) ),
+          'calcsize': lambda data: 8,
+          },
+    #
     # Unsigned integer, char, 1 byte
     # Example: 1 <=> \x01
     #
