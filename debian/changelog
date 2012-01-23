@@ -1,3 +1,8 @@
+poker-network (2.0.3-2) pokermania; urgency=low
+  * point to newest pokeradditions commit
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 23 Jan 2012 12:00:00 +0200
+
 poker-network (2.0.3-1) pokermania; urgency=low
   * explain is set also on avatar.login (explaining now possible through
     binary protocol)
