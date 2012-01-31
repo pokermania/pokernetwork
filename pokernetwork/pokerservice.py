@@ -76,7 +76,6 @@ except ImportError:
     from twisted.python.components import Interface
 
 from MySQLdb.cursors import DictCursor
-from MySQLdb.constants import ER
 
 from twisted.python import components
 
@@ -238,10 +237,12 @@ class PokerService(service.Service):
                                             rank = row[0],
                                             percentile = row[1])
         else:
-            packet = PacketPokerError(serial = user_serial,
-                                      other_type = PACKET_POKER_PLAYER_STATS,
-                                      code = PacketPokerPlayerStats.NOT_FOUND,
-                                      message = "no ladder entry for player %d and currency %d" % ( user_serial, currency_serial ))
+            packet = PacketPokerError(
+                serial = user_serial,
+                other_type = PACKET_POKER_PLAYER_STATS,
+                code = PacketPokerPlayerStats.NOT_FOUND,
+                message = "no ladder entry for player %d and currency %d" % ( user_serial, currency_serial )
+            )
         if game_id:
             packet.game_id = game_id
         else:
@@ -366,12 +367,12 @@ class PokerService(service.Service):
 
     def cancelTimer(self, key):
         if self.timer.has_key(key):
-           if self.verbose > 3:
-               self.message("cancelTimer " + key)
-           timer = self.timer[key]
-           if timer.active():
-              timer.cancel()
-           del self.timer[key]
+            if self.verbose > 3:
+                self.message("cancelTimer " + key)
+            timer = self.timer[key]
+            if timer.active():
+                timer.cancel()
+            del self.timer[key]
 
     def cancelTimers(self, what):
         for key in self.timer.keys():
@@ -511,7 +512,7 @@ class PokerService(service.Service):
             self.shutdown_deferred.callback(True)
             self.shutdown_deferred = False
         else:
-            reactor.callLater(2, self.shutdownCheck)
+            reactor.callLater(2.0, self.shutdownCheck)
 
     def isShuttingDown(self):
         return self.shutting_down
@@ -802,7 +803,7 @@ class PokerService(service.Service):
         tourney.player_timeout = int(tourney_map['player_timeout'])
         tourney.via_satellite = int(tourney_map['via_satellite'])
         tourney.satellite_of = int(tourney_map['satellite_of'])
-        tourney.satellite_of, reason = self.tourneySatelliteLookup(tourney)
+        tourney.satellite_of = self.tourneySatelliteLookup(tourney)[0]
         tourney.satellite_player_count = int(tourney_map['satellite_player_count'])
         tourney.satellite_registrations = []
         tourney.callback_new_state = self.tourneyNewState
@@ -1253,9 +1254,11 @@ class PokerService(service.Service):
                 # here and have avatar construct the Error packet, but it
                 # seems other methods in pokerservice also construct error
                 # packets already, so it seemed somewhat fitting.
-                return PacketError(other_type = PACKET_POKER_GET_TOURNEY_MANAGER,
-                                      code = PacketPokerGetTourneyManager.DOES_NOT_EXIST,
-                                   message = "Tournament %d does not exist" % tourney_serial)
+                return PacketError(
+                    other_type = PACKET_POKER_GET_TOURNEY_MANAGER,
+                    code = PacketPokerGetTourneyManager.DOES_NOT_EXIST,
+                    message = "Tournament %d does not exist" % tourney_serial
+                )
         # Now we know we can proceed with taking the first row returned in
         # the cursor; there is at least one there.
         packet.tourney = cursor.fetchone()
@@ -2402,17 +2405,17 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         if currency_serial != '':
-           sql = ( "UPDATE user2money,user2table,pokertables SET " +
-                   " user2money.amount = user2money.amount + user2table.money + user2table.bet " +
-                   " WHERE user2money.user_serial = user2table.user_serial AND " +
-                   "       user2money.currency_serial = pokertables.currency_serial AND " +
-                   "       pokertables.serial = " + str(table_id) + " AND " +
-                   "       user2table.table_serial = " + str(table_id) + " AND " +
-                   "       user2table.user_serial = " + str(serial) )
-           if self.verbose > 1:
-               self.message("leavePlayer %s" % sql)
-           cursor.execute(sql)
-           if cursor.rowcount > 1:
+            sql = ( "UPDATE user2money,user2table,pokertables SET " +
+                    " user2money.amount = user2money.amount + user2table.money + user2table.bet " +
+                    " WHERE user2money.user_serial = user2table.user_serial AND " +
+                    "       user2money.currency_serial = pokertables.currency_serial AND " +
+                    "       pokertables.serial = " + str(table_id) + " AND " +
+                    "       user2table.table_serial = " + str(table_id) + " AND " +
+                    "       user2table.user_serial = " + str(serial) )
+            if self.verbose > 1:
+                self.message("leavePlayer %s" % sql)
+            cursor.execute(sql)
+            if cursor.rowcount > 1:
                 self.error("modified %d rows (expected 0 or 1): %s " % ( cursor.rowcount, sql ))
                 status = False
         sql = ( "DELETE from user2table "
@@ -2669,7 +2672,6 @@ class PokerService(service.Service):
         return bestTable
 
     def createTable(self, owner, description):
-
         tourney_serial = 0
         if description.has_key('tourney'):
             tourney_serial = description['tourney'].serial
@@ -2692,17 +2694,14 @@ class PokerService(service.Service):
         if cursor.rowcount != 1:
             self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             # FIXME: sr #2273 notes that this should return None from right here if rowcount == 0
-        if hasattr(cursor, "lastrowid"):
-            id = cursor.lastrowid
-        else:
-            id = cursor.insert_id()
-        cursor.execute("REPLACE INTO route VALUES (%s,%s,%s,%s)", ( id, tourney_serial, int(seconds()), self.resthost_serial))
+        insert_id = cursor.lastrowid if hasattr(cursor, "lastrowid") else cursor.insert_id()
+        cursor.execute("REPLACE INTO route VALUES (%s,%s,%s,%s)", ( insert_id, tourney_serial, int(seconds()), self.resthost_serial))
         cursor.close()
 
-        table = PokerTable(self, id, description)
+        table = PokerTable(self, insert_id, description)
         table.owner = owner
 
-        self.tables[id] = table
+        self.tables[insert_id] = table
 
         if self.verbose:
             self.message("table created : %s" % table.game.name)
@@ -2934,7 +2933,6 @@ class PokerXML(resource.Resource):
         if len(result_packets) == 1 and isinstance(result_packets[0], defer.Deferred):
             def renderLater(packet):
                 result_maps = packets2maps([packet])
-
                 result_string = self.maps2result(request, result_maps)
                 request.setHeader("Content-length", str(len(result_string)))
                 request.write(result_string)
@@ -2952,9 +2950,7 @@ class PokerXML(resource.Resource):
                     session.logout()
                 else:
                     avatar.queuePackets()
-
             result_maps = packets2maps(result_packets)
-
             result_string = self.maps2result(request, result_maps)
             if self.verbose > 2:
                 self.message("result_string " + str(result_string))
@@ -2972,87 +2968,32 @@ import xmlrpclib
 class PokerXMLRPC(PokerXML):
 
     def getArguments(self, request):
-        ( args, functionPath ) = xmlrpclib.loads(request.content.read())
+        args = xmlrpclib.loads(request.content.read())[0]
         return fromutf8(args, self.encoding)
 
     def maps2result(self, request, maps):
         return xmlrpclib.dumps((maps, ), methodresponse = 1)
 
-class PokerREST(PokerXML):
-
-    def getArguments(self, request):
-        use_sessions = request.args.get('session', ['no'])[0]
-        session_name = request.args.get('name', [None])[0]
-        if session_name:
-            request.sitepath = [ session_name ]
-        else:
-            request.sitepath = [ ]
-
-        if use_sessions == 'no':
-            use_sessions = 'no sessions'
-        elif use_sessions in ( 'clear', 'new' ):
-            #
-            # Force session expiration.
-            #
-            # NOTE 1: that request.getSession() will create a session
-            # if no session exists. However, since it is a light
-            # weight operation that will be canceled by
-            # session.expire(), it is ok.
-            #
-            # NOTE 2: the avatar attached to the session will be destroyed
-            # as a side effect, because a callback was attached to the
-            # session expiration.
-            #
-            request.getSession().expire()
-            request.session = None
-            request.cookies = []
-            if use_sessions == 'clear':
-                use_sessions = 'no sessions'
-            elif use_sessions == 'new':
-                use_sessions = 'use sessions'
-        elif use_sessions == 'yes':
-            use_sessions = 'use sessions'
-
-        jsonp = request.args.get('jsonp', [''])[0]
-        if jsonp:
-            data = request.args.get('packet', [''])[0]
-        else:
-            data = request.content.read()
-        args = simplejson.loads(data, encoding = 'latin-1')
-        if hasattr(Packet.JSON, 'decode_objects'):
-            args = Packet.JSON.decode_objects(args)
-        return [ use_sessions, fromutf8(args, self.encoding) ]
-
-    def maps2result(self, request, maps):
-        jsonp = request.args.get('jsonp', [''])[0]
-        if jsonp:
-            return jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
-        else:
-            return str(Packet.JSON.encode(maps))
 
 try:
     import SOAPpy
-
     class PokerSOAP(PokerXML):
-
         def getArguments(self, request):
             data = request.content.read()
-
             p, header, body, attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
-
             methodName, args, kwargs, ns = p._name, p._aslist, p._asdict, p._ns
-
             # deal with changes in SOAPpy 0.11
             if callable(args):
                 args = args()
             if callable(kwargs):
                 kwargs = kwargs()
-
             return fromutf8(SOAPpy.simplify(args), self.encoding)
 
         def maps2result(self, request, maps):
-            return SOAPpy.buildSOAP(kw = {'Result': toutf8(maps, self.encoding)},
-                                    method = 'returnPacket',
-                                    encoding = self.encoding)
+            return SOAPpy.buildSOAP(
+                kw = {'Result': maps},
+                method = 'returnPacket',
+                encoding = self.encoding
+            )
 except:
     print "Python SOAP module not available"
