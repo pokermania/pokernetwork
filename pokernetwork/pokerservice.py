@@ -30,7 +30,6 @@
 
 from os.path import exists
 from types import *
-from string import split, join
 import os
 import copy
 import operator
@@ -288,7 +287,7 @@ class PokerService(service.Service):
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
         self.poker_auth = get_auth_instance(self.db, self.memcache, self.settings)
-        self.dirs = split(self.settings.headerGet("/server/path"))
+        self.dirs = self.settings.headerGet("/server/path").split()
         self.avatar_collection = PokerAvatarCollection("service", self.verbose)
         self.avatars = []
         self.tables = {}
@@ -1307,9 +1306,9 @@ class PokerService(service.Service):
         cursor.close()
         return ( players, tourneys )
 
-    def tourneySelect(self, string):
+    def tourneySelect(self, query_string):
         cursor = self.db.cursor(DictCursor)
-        criterion = split(string, "\t")
+        criterion = query_string.split("\t")
         tourney_sql = "SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys LEFT JOIN(user2tourney) ON(tourneys.serial = user2tourney.tourney_serial) "
         tourney_sql += "WHERE (state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
         schedule_sql = "SELECT * FROM tourneys_schedule AS tourneys WHERE respawn = 'n' AND active = 'y'"
@@ -1321,8 +1320,8 @@ class PokerService(service.Service):
                 sql += " AND tourneys.currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
             else:
                 sql += " AND sit_n_go = '%s'" % sit_n_go
-        elif string != '':
-            sql = " AND name = '%s'" % string
+        elif query_string != '':
+            sql = " AND name = '%s'" % query_string
         tourney_sql += sql
         schedule_sql += sql
         tourney_sql += " GROUP BY tourneys.serial"
@@ -1633,41 +1632,41 @@ class PokerService(service.Service):
         cursor.close()
         return ( players, tables )
 
-    def listTables(self, string, serial):
+    def listTables(self, query_string, serial):
         """listTables() takes two arguments:
 
-                 string : which is the ad-hoc query string for the tables
-                          sought (described in detail below), and
-                 serial : which is the user serial, used only when string == "my"
+                 query_string : which is the ad-hoc query string for the tables
+                                sought (described in detail below), and
+                 serial       : which is the user serial, used only when query_string == "my"
 
            The ad-hoc format of the query string deserves special
            documentation.  It works as follows:
 
-               0. If string is the empty string, or exactly 'all', then
+               0. If query_string is the empty string, or exactly 'all', then
                   all tables in the system are returned.
 
-               1. If string is 'marked', then all tables in the system are
+               1. If query_string is 'marked', then all tables in the system are
                   returned, and the table objects contain a player_seated
                   attribute that is set to 1 if the player is currently
                   seated at that table (otherwise the attribute is set 
                   to 0).
                   
-               2. If string is 'my', then all tables that player identified
+               2. If query_string is 'my', then all tables that player identified
                   by the argument, 'serial', has joined are returned.
 
-               3. If string (a) contains *no* TAB (\t) characters AND (b)
+               3. If query_string (a) contains *no* TAB (\t) characters AND (b)
                   contains any non-numeric characters (aka is a string of
                   letters, optionally with numbers, with no tabs), then it
                   assumed to be a specific table name, and only table(s)
                   with the specific name exactly equal to the string are
                   returned.
 
-               4. Otherwise, the string is interpreted as a tab-separated
+               4. Otherwise, query_string is interpreted as a tab-separated
                   group of criteria for selecting which tables to be
                   returned, which mimics the 'string' input given in a
                   PacketPokerTableSelect() (this method was written
                   primarily to service that packet).  Two rules to keep in
-                  mind when constructing the string:
+                  mind when constructing the query_string:
 
                      (a) If any field is the empty string (i.e., nothing
                          between the tab characters for that field), then
@@ -1687,7 +1686,7 @@ class PokerService(service.Service):
                          "currency_serial\tvariant"
            """
         # It appears to me that the original motivation for this \t
-        # seperated format for string was that the string would front-load
+        # seperated format for query_string was that the string would front-load
         # with more commonly used criteria, and put less frequently used
         # ones further to the back.  Thus, the query string can be
         # effeciently constructed by callers.  During implementation of
@@ -1704,16 +1703,17 @@ class PokerService(service.Service):
         #  helper function, searchTables() -- bkuhn, 2009-07-03
 
         orderBy = " ORDER BY players desc, serial"
-        criteria = split(string, "\t")
+        
+        criteria = query_string.split("\t")
         cursor = self.db.cursor(DictCursor)
-        if string == '' or string == 'all':
+        if query_string == '' or query_string == 'all':
             cursor.execute("SELECT * FROM pokertables" + orderBy)
-        elif string == 'my':
+        elif query_string == 'my':
             cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s" + orderBy, serial)
-        elif string == 'marked':
+        elif query_string == 'marked':
             cursor.execute("SELECT pokertables.*, IF(user2table.user_serial IS NULL,0,1) player_seated FROM pokertables LEFT JOIN user2table on (pokertables.serial = user2table.table_serial AND user2table.user_serial = %s)" + orderBy, serial)
-        elif re.match("^[0-9]+$", string):
-            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s" + orderBy, string)
+        elif re.match("^[0-9]+$", query_string):
+            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s" + orderBy, query_string)
         elif len(criteria) > 1:
             # Next, unpack the various possibilities in the tab-separated
             # criteria, starting with everything set to None.  This is to
@@ -1723,7 +1723,7 @@ class PokerService(service.Service):
             if len(criteria) == 2:
                 ( whereValues['currency_serial'], whereValues['variant'] ) = criteria
             else:
-                self.error("Following listTables() criteria string has more parameters than expected, ignoring third one and beyond in: " + string)
+                self.error("Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: " + query_string)
                 ( whereValues['currency_serial'], whereValues['variant'] ) = criteria[:2]
             # Next, do some minor format verification for those values that are
             # supposed to be integers.
@@ -1740,7 +1740,7 @@ class PokerService(service.Service):
             cursor.close()
             return self.searchTables(whereValues['currency_serial'], whereValues['variant'], None, None)
         else:
-            cursor.execute("SELECT * FROM pokertables WHERE name = %s", string)
+            cursor.execute("SELECT * FROM pokertables WHERE name = %s", query_string)
 
         result = cursor.fetchall()
         cursor.close()
@@ -2771,7 +2771,7 @@ if HAS_OPENSSL:
 
         def __init__(self, settings):
             self.pem_file = None
-            for dir in split(settings.headerGet("/server/path")):
+            for dir in settings.headerGet("/server/path").split():
                 if exists(dir + "/poker.pem"):
                     self.pem_file = dir + "/poker.pem"
 
