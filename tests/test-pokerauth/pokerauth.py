@@ -1,6 +1,6 @@
 class PokerAuth:
-    def __init__(self, db, settings):
+    def __init__(self, db, memcache, settings):
         self.gotcha = 1
 
-def get_auth_instance(db, settings):
-    return PokerAuth(db, settings)
+def get_auth_instance(db, memcache, settings):
+    return PokerAuth(db, memcache, settings)

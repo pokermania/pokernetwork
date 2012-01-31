@@ -80,9 +80,13 @@ class PokerAuth:
             (serial, password_sql, privilege) = cursor.fetchone()
             cursor.close()
             valid_credentials = (password_sql == password)
+
         if valid_credentials:
             return ( (serial, name, privilege), None )
         else:
+#            if a user was found with this name, log the unsuccesful attempt
+            if serial != 0:
+                self.message('password mismatch for %s' % name)
             return ( False, "Invalid login or password" )
         
     def _authAuth(self,auth_token):
@@ -100,6 +104,7 @@ class PokerAuth:
         if valid_credentials:
             return ( (serial, name, privilege), None )
         else:
+            self.message('auth mismatch: %s' % auth_token)
             return ( False, "Invalid login or password" )
                
     def auth(self,auth_type,auth_args):

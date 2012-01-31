@@ -27,14 +27,16 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #  Cedric Pinson <mornifle@plopbyte.net> (2004-2006)
 
+from pokernetwork.packets import PACKET_LOGIN
 from pokernetwork.user import User
 from twisted.python.runtime import seconds
 import MySQLdb
 
 class PokerAuth:
 
-    def __init__(self, db, settings):
+    def __init__(self, db, memcache, settings):
         self.db = db
+        self.memcache = memcache
         self.type2auth = {}
         self.verbose = settings.headerGetInt("/server/@verbose")
         self.settings = settings
@@ -57,7 +59,11 @@ class PokerAuth:
     def GetLevel(self, type):
         return self.type2auth.has_key(type) and self.type2auth[type]
 
-    def auth(self, name, password):
+    def auth(self, auth_type, auth_args):
+        if auth_type != PACKET_LOGIN:
+            raise NotImplementedError('can only handle PACKET_LOGIN authentication')
+
+        name, password = auth_args
         cursor = self.auth_db.cursor()
         cursor.execute("SELECT username, password, privilege FROM %s " % self.parameters["table"] +
                        "WHERE username = '%s'" % name)
@@ -65,10 +71,10 @@ class PokerAuth:
         serial = 0
         privilege = User.REGULAR
         if numrows <= 0:
-                if self.verbose > 1:
-                    self.message("user %s does not exist" % name)
-                cursor.close()
-                return ( False, "Invalid login or password" )
+            if self.verbose > 1:
+                self.message("user %s does not exist" % name)
+            cursor.close()
+            return ( False, "Invalid login or password" )
         elif numrows > 1:
             self.error("more than one row for %s" % name)
             cursor.close()
@@ -82,5 +88,5 @@ class PokerAuth:
 
         return ( (serial, name, privilege), None )
 
-def get_auth_instance(db, settings):
-    return PokerAuth(db, settings)
+def get_auth_instance(db, memcache, settings):
+    return PokerAuth(db, memcache, settings)
