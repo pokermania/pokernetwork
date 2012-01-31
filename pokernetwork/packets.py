@@ -24,7 +24,6 @@
 #
 from struct import pack, unpack, calcsize
 import simplejson
-from string import join
 
 PacketFactory = {}
 PacketNames = {}
@@ -812,7 +811,7 @@ class PacketList(Packet):
         return Packet.calcsize(self) + PacketList.format_size + sum([ packet.calcsize() for packet in self.packets ])
 
     def __str__(self):
-        return Packet.__str__(self) + join([packet.__str__() for packet in self.packets ])
+        return Packet.__str__(self) + "".join(packet.__str__() for packet in self.packets)
 
 PacketFactory[PACKET_LIST] = PacketList
 

@@ -273,7 +273,7 @@ class PokerResource(resource.Resource):
             #
             maps = toutf8(packets2maps(packets))
             if jsonp:
-                result_string = jsonp + '(' + str(Packet.JSON.encode(maps)) + ')'
+                result_string = '%s(%s)' % (jsonp,Packet.JSON.encode(maps))
             else:
                 result_string = str(Packet.JSON.encode(maps))
             request.setHeader("content-length", str(len(result_string)))

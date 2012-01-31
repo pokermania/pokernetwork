@@ -67,13 +67,11 @@ def makeService(configuration):
     # Poker protocol (with or without SSL)
     #
     tcp_port = settings.headerGetInt("/server/listen/@tcp")
-    internet.TCPServer(tcp_port, poker_factory
-                       ).setServiceParent(serviceCollection)    
+    internet.TCPServer(tcp_port, poker_factory).setServiceParent(serviceCollection)    
 
     tcp_ssl_port = settings.headerGetInt("/server/listen/@tcp_ssl")
     if HAS_OPENSSL and tcp_ssl_port:
-            internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)
-                           ).setServiceParent(serviceCollection)
+        internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)).setServiceParent(serviceCollection)
 
     rest_site = PokerSite(settings, PokerRestTree(poker_service))
 
@@ -82,13 +80,11 @@ def makeService(configuration):
     #
     rest_port = settings.headerGetInt("/server/listen/@rest")
     if rest_port:
-            internet.TCPServer(rest_port, rest_site
-                               ).setServiceParent(serviceCollection)
+        internet.TCPServer(rest_port, rest_site).setServiceParent(serviceCollection)
 
     rest_ssl_port = settings.headerGetInt("/server/listen/@rest_ssl")
     if HAS_OPENSSL and rest_ssl_port:
-            internet.SSLServer(rest_ssl_port, rest_site, SSLContextFactory(settings)
-                               ).setServiceParent(serviceCollection)
+        internet.SSLServer(rest_ssl_port, rest_site, SSLContextFactory(settings)).setServiceParent(serviceCollection)
 
     http_site = server.Site(PokerTree(poker_service))
 
@@ -97,13 +93,11 @@ def makeService(configuration):
     #
     http_port = settings.headerGetInt("/server/listen/@http")
     if http_port:
-            internet.TCPServer(http_port, http_site
-                               ).setServiceParent(serviceCollection)
+        internet.TCPServer(http_port, http_site).setServiceParent(serviceCollection)
 
     http_ssl_port = settings.headerGetInt("/server/listen/@http_ssl")
     if HAS_OPENSSL and http_ssl_port:
-            internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)
-                               ).setServiceParent(serviceCollection)
+        internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)).setServiceParent(serviceCollection)
 
     #
     # TELNET twisted.manhole (without SSL)
@@ -146,5 +140,5 @@ def run():
     reactor.run()
 
 if __name__ == '__main__':
+    # Does not need coverage since we call run directly in the tests.
     run() # pragma: no cover
-          # Do not need coverage since we call run directly in the tests.
