@@ -1915,10 +1915,10 @@ class PokerService(service.Service):
         cursor.execute(sql)
         for x in xrange(cursor.rowcount):
             row = cursor.fetchone()
-            withdraw = row['buy_in']
+            withdraw = row['buy_in'] + row['rake']
             cursor1 = self.db.cursor()
-            if row['buy_in'] > 0:
-                sql = ( "UPDATE user2money,user2tourney SET amount = amount + " + str(row['buy_in']) +
+            if withdraw > 0:
+                sql = ( "UPDATE user2money,user2tourney SET amount = amount + " + str(withdraw) +
                         " WHERE user2tourney.user_serial = user2money.user_serial AND " +
                         "       user2money.currency_serial = " + str(row['currency_serial']) + " AND " +
                         "       user2tourney.tourney_serial = " + str(row['serial']) )
