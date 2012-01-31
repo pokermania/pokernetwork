@@ -73,7 +73,7 @@ class PokerCashier:
         # Figure out the currency_serial matching the URL
         #
         sql = "SELECT serial FROM currencies WHERE url = %s"
-        if self.verbose > 2: self.message(sql % self.db.db.literal(url))
+        if self.verbose > 2: self.message(sql % self.db.literal(url))
         cursor.execute(sql, url)
         if cursor.rowcount == 0:
             user_create = lower(self.parameters.get('user_create', 'no'))
@@ -82,7 +82,7 @@ class PokerCashier:
                                   code = PacketPokerCashIn.REFUSED,
                                   message = "Invalid currency " + url + " and user_create = " + user_create + " in settings.")
             sql = "INSERT INTO currencies (url) VALUES (%s)"
-            if self.verbose > 2: self.message(sql % self.db.db.literal(url))
+            if self.verbose > 2: self.message(sql % self.db.literal(url))
             try:
                 cursor.execute(sql, url)
                 if cursor.rowcount == 1:

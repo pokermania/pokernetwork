@@ -345,7 +345,7 @@ class PokerService(service.Service):
     def error(self, string):
         self.message("*ERROR* " + str(string))
 
-    def stopServiceFinish(self, x):
+    def stopServiceFinish(self):
         self.monitors = []
         if self.cashier: self.cashier.close()
         if self.db:
@@ -362,7 +362,7 @@ class PokerService(service.Service):
     def stopService(self):
         deferred = self.shutdown()
         deferred.addCallback(lambda x: self.disconnectAll())
-        deferred.addCallback(self.stopServiceFinish)
+        deferred.addCallback(lambda x: self.stopServiceFinish())
         return deferred
 
     def cancelTimer(self, key):
@@ -637,7 +637,7 @@ class PokerService(service.Service):
                 )
         cursor.execute(sql)
         result = cursor.fetchall()
-        self.tourneys_schedule = dict(zip(map(lambda schedule: schedule['serial'], result), result))
+        self.tourneys_schedule = dict( (schedule['serial'],schedule) for schedule in result )
         cursor.close()
         self.checkTourneysSchedule()
         self.cancelTimer('updateTourney')
@@ -901,9 +901,9 @@ class PokerService(service.Service):
             self.timer[key] = reactor.callLater(int(self.delays.get('breaks_check', 30)), self.tourneyBreakCheck, tourney)
 
     def tourneyDeal(self, tourney):
-        for game_id in map(lambda game: game.id, tourney.games):
+        for game_id in tourney.id2game.keys():
             table = self.getTable(game_id)
-            table.autodeal = True
+            table.autodeal = self.getTableAutoDeal()
             table.scheduleAutoDeal()
 
     def tourneyBreakWait(self, tourney):
@@ -1571,13 +1571,13 @@ class PokerService(service.Service):
             return None
         (description,) = cursor.fetchone()
         cursor.close()
+        history = None
         try:
             history = eval(description.replace("\r",""))
-            return history
-        except:
+        except Exception:
             self.error("loadHand(%d) eval failed for %s" % ( hand_serial, description ))
-            print_exc()
-            return None
+            if self.verbose > 1: print_exc()
+        return history
 
     def saveHand(self, description, hand_serial):
         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0]
@@ -1601,8 +1601,6 @@ class PokerService(service.Service):
         cursor.execute(sql)
         if cursor.rowcount != len(player_list):
             self.error("inserted %d rows (expected exactly %d): %s " % ( cursor.rowcount, len(player_list), sql ))
-
-
         cursor.close()
 
     def listHands(self, sql_list, sql_total):
@@ -2310,7 +2308,10 @@ class PokerService(service.Service):
         (name,) = cursor.fetchone()
         cursor.close()
         return name
-
+    
+    def getTableAutoDeal(self):
+        return self.settings.headerGet("/server/@autodeal") == "yes"
+    
     def buyInPlayer(self, serial, table_id, currency_serial, amount):
         if amount == None:
             self.error("called buyInPlayer with None amount (expected > 0); denying buyin")
@@ -2818,7 +2819,7 @@ def _getRequestCookie(request):
     if request.cookies:
         return request.cookies[0]
     else:
-        return request.getCookie(join(['TWISTED_SESSION'] + request.sitepath, '_'))
+        return request.getCookie('_'.join(['TWISTED_SESSION'] + request.sitepath))
 
 #
 # When connecting to the poker server with REST, SOAP or XMLRPC

@@ -62,7 +62,7 @@ from pokernetwork import currencyclient
 from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
-from pokernetwork.packets import PacketError
+from pokernetwork.packets import PacketError, PacketLogin
 from pokernetwork.pokertable  import PokerAvatarCollection
 from MySQLdb.cursors import DictCursor
 
@@ -219,9 +219,9 @@ class PokerServiceTestCaseBase(unittest.TestCase):
             cursor.execute("INSERT INTO users (name, password, created) VALUES ('user%d', 'password%d', 0)" % ( user_number, user_number ))
             self.assertEqual(1, cursor.rowcount)
 
-        ( (self.user1_serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
-        ( (self.user2_serial, name, privilege), message ) = self.service.auth("user2", "password2", "role1")
-        ( (self.user3_serial, name, privilege), message ) = self.service.auth("user3", "password3", "role1")
+        ( (self.user1_serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), "role1")
+        ( (self.user2_serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user2", "password2"), "role1")
+        ( (self.user3_serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user3", "password3"), "role1")
 
         for user_number in (self.user1_serial, self.user2_serial, self.user3_serial):
             if self.default_money > 0 and user_number == self.user3_serial:
@@ -645,7 +645,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         clear_all_messages()
         tables = self.service.listTables('\tholdem\t', 0)
         self.assertEqual(4, len(tables))
-        self.assertEquals(get_messages(), ["*ERROR* Following listTables() criteria string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
+        self.assertEquals(get_messages(), ["*ERROR* Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
     # ----------------------------------------------------------------
     def test11_currencySerialIsNotAnInteger(self):
         self.service.startService()
@@ -1343,7 +1343,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
-        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
+        ( (serial,name,privilege), message ) = self.service.auth(
+            PacketLogin.type,
+            ("user1", "password1"),
+            "role1"
+        )
         self.assertEquals(None, message)
         self.assertEquals(4, serial)
         self.assertEquals("user1", name)
@@ -1353,7 +1357,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test01_auth_invalid_login(self):
         self.service.startService()
         self.service.poker_auth.auto_create_account = False
-        ( status, message ) = self.service.auth("user1", "password1", sets.Set("role1"))
+        ( status, message ) = self.service.auth(PacketLogin.type,("user1", "password1"), sets.Set("role1"))
         self.assertEquals("Invalid login or password", message)
         self.assertEquals(False, status)
 
@@ -1366,9 +1370,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 return "user1"
 
         self.service.startService()
-        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", sets.Set('role1'))
+        ( (serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), sets.Set('role1'))
         self.service.avatar_collection.add(serial, Client())
-        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", sets.Set('role1'))
+        ( (serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), sets.Set('role1'))
         self.assertEquals(None, message)
         self.assertEquals("user1", name)
 
@@ -1981,7 +1985,7 @@ class RefillTestCase(unittest.TestCase):
     def test_refill(self):
         self.service.startService()
         refill = 10000
-        ( (serial, name, privilege), message ) = self.service.auth("user1", "password1", "role1")
+        ( (serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), "role1")
         self.assertEquals(0, self.service.autorefill(serial))
         table_money = 1000
         table_serial = 200
@@ -2294,6 +2298,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service.startService()
         self.createUsers()
@@ -2425,9 +2430,11 @@ class TourneyCreateTestCase(PokerServiceTestCaseBase):
         self.service.settings.headerSet("/server/@autodeal", "no")
         self.createUsers()
         tourney_name = 'testname'
-        packet = PacketPokerCreateTourney(currency_serial = 1,
-                                          name = tourney_name,
-                                          players = [ self.user1_serial, self.user2_serial ])
+        packet = PacketPokerCreateTourney(
+            currency_serial = 1,
+            name = tourney_name,
+            players = [self.user1_serial, self.user2_serial]
+        )
         result = self.service.tourneyCreate(packet)
         self.assertEquals(PACKET_ACK, result.type)
         places = self.service.getPlayerPlaces(self.user1_serial)
@@ -2438,9 +2445,11 @@ class TourneyCreateTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         players = [ self.user1_serial, self.user2_serial ]
-        packet = PacketPokerCreateTourney(currency_serial = 1,
-                                          buy_in = self.default_money * 10,
-                                          players = players)
+        packet = PacketPokerCreateTourney(
+            currency_serial = 1,
+            buy_in = self.default_money * 10,
+            players = players
+        )
         result = self.service.tourneyCreate(packet)
         self.assertEquals(PACKET_POKER_ERROR, result.type)
         self.assertSubstring(str(players), result.message)
@@ -2636,12 +2645,10 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
     def test05_broadcast_start(self):
         self.service.startService()
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
-        host = 'hostname'
-        port = '80'
-        tourney_serial = str(tourney_serial)
+        host,port = 'hostname',80
         self.service.db.db.query("INSERT INTO resthost (name, host, port) VALUES ('name', '%s', %s)" % ( host, port ))
         def getPage(url):
-            self.assertEqual('http://' + host + ':' + port + '/TOURNEY_START?tourney_serial=' + tourney_serial, url)
+            self.assertEqual('http://%s:%d/TOURNEY_START?tourney_serial=%d' % (host,port,tourney_serial), url)
         self.service.getPage = getPage
         self.service.tourneyBroadcastStart(tourney_serial)
 
@@ -3638,7 +3645,6 @@ class BreakTestCase(PokerServiceTestCaseBase):
     # ------------------------------------------------------------------------
     def test_tourneyDeal(self):
         class Game:
-
             def __init__(self):
                 self.id = 1
 
@@ -3646,6 +3652,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def __init__(self):
                 self.games = [ Game() ]
                 self.serial = 1
+                self.id2game = dict((g.id,g) for g in self.games)
 
         tourney = Tournament()
         table = BreakTestCase.Table()
@@ -3847,6 +3854,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -3894,6 +3902,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -3918,8 +3927,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
     class MockAvatar:
         def __init__(maSelf):
             maSelf.connectionLostArgs = []
+            maSelf.serial = 5
         def connectionLost(maSelf, val):
             maSelf.connectionLostArgs.append(val)
+        def getSerial(maSelf):
+            return maSelf.serial
+        
     # ----------------------------------------------------------------
     def test05_forceAvatarDestory_notInAnyList(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -3938,7 +3951,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             self.assertEquals(len(msgs), 1)
             self.assertEquals(msgs[0].find('*ERROR* avatar <__main__.MockAvatar instance at '), 0)
             self.failUnless(msgs[0].find(' is not in the list of known avatars') > 0)
-            self.assertEquals(ma.connectionLostArgs, [ 'Disconnected' ])
+            self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
             self.assertEquals(self.service.monitors, [])
             testDestroyCalledDefer.callback(True)
@@ -3961,7 +3974,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         testDestroyCalledDefer = defer.Deferred()
         def testDestroyCalled():
             self.assertEquals(get_messages(), [])
-            self.assertEquals(ma.connectionLostArgs, [ 'Disconnected' ])
+            self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
             self.assertEquals(self.service.monitors, [])
             testDestroyCalledDefer.callback(True)
@@ -3988,7 +4001,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         testDestroyCalledDefer = defer.Deferred()
         def testDestroyCalled():
             self.assertEquals(get_messages(), [])
-            self.assertEquals(ma.connectionLostArgs, [ 'Disconnected' ])
+            self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
             self.assertEquals(self.service.monitors, [])
             testDestroyCalledDefer.callback(True)
@@ -4004,7 +4017,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 cursorSelf.rowcount = 0
                 cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'insert into session' ]
+                cursorSelf.acceptedStatements = [ 'replace into session' ]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
                     cursorSelf.counts[cntType] = 0
@@ -4032,6 +4045,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -4040,8 +4054,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
         self.failUnless(self.service.sessionStart(5, '192.168.0.1'))
         self.assertEquals(get_messages(), ["sessionStart(5, 192.168.0.1): "])
-        self.assertEquals(self.service.db.cursorValue.counts,
-                          {'insert into session' : 1 })
+        self.assertEquals(self.service.db.cursorValue.counts,{'replace into session' : 1 })
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test09_sessionStartFail(self):
@@ -4049,7 +4062,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 cursorSelf.rowcount = 0
                 cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'insert into session' ]
+                cursorSelf.acceptedStatements = [ 'replace into session' ]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
                     cursorSelf.counts[cntType] = 0 
@@ -4076,6 +4089,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -4086,11 +4100,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0], 'sessionStart(7, 192.168.0.2): ')
-        self.assertEquals(msgs[1].find("*ERROR* modified 0 rows (expected 1): insert into session ( user_serial, started, ip ) values ( 7, "), 0)
+        self.assertEquals(msgs[1].find("*ERROR* modified 0 rows (expected 1 or 2): replace into session ( user_serial, started, ip ) values ( 7, "), 0)
         self.failUnless(msgs[1].find(", '192.168.0.2')") > 0)
 
-        self.assertEquals(self.service.db.cursorValue.counts,
-                          {'insert into session' : 1 })
+        self.assertEquals(self.service.db.cursorValue.counts,{'replace into session' : 1 })
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test10_sessionEndSucceed(self):
@@ -4098,8 +4111,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 cursorSelf.rowcount = 0
                 cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'insert into session_history',
-                                                  'delete from session']
+                cursorSelf.acceptedStatements = [
+                    'insert into session_history',
+                    'delete from session'
+                ]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
                     cursorSelf.counts[cntType] = 0 
@@ -4126,6 +4141,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -4135,9 +4151,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(self.service.sessionEnd(9))
         self.assertEquals(get_messages(), ['sessionEnd(9): '])
 
-        self.assertEquals(self.service.db.cursorValue.counts,
-                          { 'insert into session_history' : 1,
-                            'delete from session' : 1 })
+        self.assertEquals(self.service.db.cursorValue.counts,{
+            'insert into session_history' : 1,
+            'delete from session' : 1 
+        })
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test11_sessionEndInsertFailsDeleteSucceeds(self):
@@ -4176,6 +4193,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -4225,6 +4243,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -4278,6 +4297,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
@@ -4413,6 +4433,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)            
         class MockTable:
             def __init__(mtSelf): mtSelf.updateCount = 0
             def update(mtSelf):   mtSelf.updateCount += 1
@@ -4507,6 +4528,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -4562,6 +4584,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -4616,6 +4639,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -4690,6 +4714,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -4855,6 +4880,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -4934,6 +4960,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, val): return dbSelf.db.literal(val)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5375,8 +5402,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.row = []
                 if statement == "SELECT * FROM tourneys":
                     if cursorSelf.counts[statement] <= 1:
-                        cursorSelf.row = { 'buy_in' : 100, 'currency_serial' : 168, 
-                                           'serial' : 732 }
+                        cursorSelf.row = {
+                            'buy_in' : 100,
+                            'rake': 0, 
+                            'currency_serial' : 168, 
+                            'serial' : 732 
+                        }
                         cursorSelf.rowcount = 1
                     # Second time method does select, we just want 0 rows returned.
                 elif statement == "UPDATE user2money,user2tourney SET amount = amount":
@@ -6489,7 +6520,7 @@ class SSLContextFactoryCoverage(unittest.TestCase):
         SSL.Context = saveContext
         shutil.rmtree(tmpdir)
 ##############################################################################
-from pokernetwork.pokerservice import PokerTree, PokerSOAP, PokerREST, PokerXMLRPC
+from pokernetwork.pokerservice import PokerTree, PokerSOAP, PokerXMLRPC
 class MockRequestBase():
     def __init__(mrSelf):
         mrSelf.method = "GET"
@@ -6785,375 +6816,6 @@ class PokerXMLRPCCoverageTestCase(unittest.TestCase):
         self.failUnless(search_output('result_string '), "Missing result_string output")
     # ----------------------------------------------------------------
 ##############################################################################
-# Mock Ups for PokerREST
-
-# Variables to check after tests for MockRequestForPokerREST
-#   expireCount, notifyFunctions
-#   (you should call each notifyFunction and make sure it DTRT
-
-class MockRequestForPokerREST(MockRequestForPokerXML):
-    def __init__(mrSelf, content):
-        mrSelf.args = {}
-        mrSelf.cookieRequests = []
-        MockRequestForPokerXML.__init__(mrSelf, content)
-    def getCookie(mrSelf, stuff):
-        mrSelf.cookieRequests.append(stuff)
-        return "DUMMY_COOKIE_%d" % len(mrSelf.cookieRequests)
-
-# Variables to check after tests for MockSessionForPokerREST:
-#   expireCount, notifyFunctions
-#   (you should call each notifyFunction and make sure it DTRT
-class MockSessionForPokerREST(MockSessionForPokerXML):
-    def __init__(msSelf):
-        msSelf.expireCount = 0
-        msSelf.notifyFunctions = []
-    def expire(msSelf): msSelf.expireCount += 1
-    def notifyOnExpire(msSelf, fun):
-        msSelf.notifyFunctions.append(fun)
-        
-class MockRequestForRESTWithSession(MockRequestForPokerREST):
-    def getSession(mrSelf):
-        if not hasattr(mrSelf, 'session') or not mrSelf.session:
-            mrSelf.session = MockSessionForPokerREST()
-        return mrSelf.session
-
-class PokerRESTCoverageTestCase(unittest.TestCase):
-    # ----------------------------------------------------------------
-    def test01_render_dummyRESTCall(self):
-        service = MockServiceForPokerXML()
-        prest = pokerservice.PokerREST(service)
-        request = MockRequestForPokerREST(MockContentForPokerXML("""
-{"type" : "41"}
-"""))
-
-        clear_all_messages()
-        val = prest.render(request)
-        self.assertEquals(val, """[{"message": "Invalid type name 41", "code": 0, "type": "PacketError", "other_type": 3}]""")
-
-        self.assertEquals(request.cookieRequests, [])
-        self.assertEquals(len(service.destroyedAvatars), 1)
-        self.assertEquals(service.destroyedAvatars[0].name, "MOCK_CREATE_AVATAR_0")
-        self.assertEquals(service.destroyedAvatars[0], service.avatar)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-
-        self.assertEquals(len(request.headerData.keys()), 2)
-        self.assertEquals(request.headerData['Content-length'],  ['88'])
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        msgs = get_messages()
-        self.failUnless(len(msgs) >= 2, "Missing Message Output")
-        self.failUnless(search_output('render '), "Missing render output")
-        self.failUnless(search_output('result_string '), "Missing result_string output")
-    # ----------------------------------------------------------------
-    def test02_render_withNewSession_withjsonp(self):
-        class MockServiceWithoutAvatar(MockServiceForPokerXML):
-            def __init__(self, avatar = None):
-                MockServiceForPokerXML.__init__(self, avatar)
-                if hasattr(self, "avatar") and not avatar:
-                    del self.avatar
-
-        service = MockServiceWithoutAvatar()
-        prest = pokerservice.PokerREST(service)
-        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
-{"type" : "41"}
-"""))
-        request.args = { 'session' : ['new'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
-                         'packet' : ["""{ "type" : "PacketPing" }"""] }
-        
-        clear_all_messages()
-        val = prest.render(request)
-        self.assertEquals(val, """JSON_PREFIX([{"type": "PacketPing"}])""")
-
-        self.assertEquals(request.session.expireCount, 0)
-        self.assertEquals(len(request.session.notifyFunctions), 1)
-        self.failUnless(hasattr(request.session, 'avatar'))
-        
-        self.assertEquals("""JSON_PREFIX([{"type": "PacketPing"}])""", val)
-        self.assertEquals(len(service.destroyedAvatars), 0)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-
-        self.assertEquals(len(service.avatar.packetList), 1)
-        self.assertEquals(service.avatar.packetList[0].type, PACKET_PING)
-        self.assertEquals(service.avatar.packetsQueuedCount, 1)
-        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
-
-        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe'])
-        self.assertEquals(request.cookies, [])
-        self.assertEquals(request.sitepath, ['joe'])
-
-        self.assertEquals(len(request.headerData.keys()), 2)
-        self.assertEquals(request.headerData['Content-length'],  ['37'])
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        msgs = get_messages()
-        self.failUnless(len(msgs) >= 2, "Missing Message Output")
-        self.failUnless(search_output('render '), "Missing render output")
-        self.failUnless(search_output('result_string JSON_PREFIX'), "Missing result_string output")
-
-        # Now call the notifyFunction and see if does what is expected:
-        request.session.notifyFunctions[0]()
-
-        self.assertEquals(len(service.destroyedAvatars), 1)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-        self.failIf(hasattr(request.session, 'avatar'))
-    # ----------------------------------------------------------------
-    def test03_render_withSessionYes_HandleMultiplePackets(self):
-        class MockAvatarWithMultipleHandle(MockAvatarForPokerXML):
-            def handlePacket(self, packet):
-                MockAvatarForPokerXML.handlePacket(self, packet)
-                return [PacketSerial(serial = 12), PacketPing()]
-
-        class MockServiceWithMultipleHandleAvatar(MockServiceForPokerXML):
-            def __init__(self, avatar = None):
-                MockServiceForPokerXML.__init__(self, avatar)
-                if hasattr(self, "avatar") and not avatar:
-                    del self.avatar
-
-            def createAvatar(self):
-                if hasattr(self, 'avatar') and self.avatar:
-                    self.oldAvatars.append(self.avatar)
-                self.avatar = MockAvatarWithMultipleHandle("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
-                self.createAvatarCount += 1
-                return self.avatar
-
-        service = MockServiceWithMultipleHandleAvatar()
-        prest = pokerservice.PokerREST(service)
-        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
-{"type" : "41"}
-"""))
-        request.args = { 'session' : ['yes'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
-                         'packet' : ["""{ "type" : "PacketPing" }"""] }
-        request.cookies = None
-        
-        clear_all_messages()
-        val = prest.render(request)
-
-        self.assertEquals(request.session.expireCount, 0)
-        self.assertEquals(len(request.session.notifyFunctions), 1)
-        self.failUnless(hasattr(request.session, 'avatar'))
-        
-        self.assertEquals('JSON_PREFIX([{"type": "PacketSerial", "serial": 12, "cookie": "DUMMY_COOKIE_2"}, {"type": "PacketPing"}])', val)
-        self.assertEquals(len(service.destroyedAvatars), 0)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-
-        self.assertEquals(len(service.avatar.packetList), 1)
-        self.assertEquals(service.avatar.packetList[0].type, PACKET_PING)
-        self.assertEquals(service.avatar.packetsQueuedCount, 1)
-        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
-
-        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe', 'TWISTED_SESSION_joe'])
-        self.assertEquals(request.cookies, None)
-        self.assertEquals(request.sitepath, ['joe'])
-
-        self.assertEquals(len(request.headerData.keys()), 2)
-        self.assertEquals(request.headerData['Content-length'],  ['105'])
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        msgs = get_messages()
-        self.failUnless(len(msgs) >= 3, "Missing Message Output")
-        self.failUnless(search_output('receive session cookie DUMMY_COOKIE_1'),
-                         'Missing receive session cookie')
-        self.failUnless(search_output('send session cookie DUMMY_COOKIE_2'),
-                         'Missing send session cookie')
-        self.failUnless(search_output('render '), "Missing render output")
-        self.failUnless(search_output('result_string JSON_PREFIX'), "Missing result_string output")
-
-        # Now call the notifyFunction and see if does what is expected:
-        request.session.notifyFunctions[0]()
-
-        self.assertEquals(len(service.destroyedAvatars), 1)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-        self.failIf(hasattr(request.session, 'avatar'))
-    # ----------------------------------------------------------------
-    def test04_render_withSessionYes_logout(self):
-        class MockAvatarLogout(MockAvatarForPokerXML):
-            def handlePacket(self, packet):
-                MockAvatarForPokerXML.handlePacket(self, packet)
-                return [PacketLogout()]
-
-        class MockServiceLogout(MockServiceForPokerXML):
-            def __init__(self, avatar = None):
-                MockServiceForPokerXML.__init__(self, avatar)
-                if hasattr(self, "avatar") and not avatar:
-                    del self.avatar
-
-            def createAvatar(self):
-                if hasattr(self, 'avatar') and self.avatar:
-                    self.oldAvatars.append(self.avatar)
-                self.avatar = MockAvatarLogout("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
-                self.createAvatarCount += 1
-                return self.avatar
-
-        service = MockServiceLogout()
-        prest = pokerservice.PokerREST(service)
-        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
-{"type" : "41"}
-"""))
-        request.args = { 'session' : ['yes'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
-                         'packet' : ["""{ "type" : "PacketLogout" }"""] }
-        request.cookies = None
-        
-        clear_all_messages()
-        val = prest.render(request)
-        self.assertEquals(val, """JSON_PREFIX([{"type": "PacketLogout"}])""")
-
-        self.assertEquals(request.session.expireCount, 1)
-        self.assertEquals(len(request.session.notifyFunctions), 1)
-        self.failUnless(hasattr(request.session, 'avatar'))
-        
-        self.assertEquals(len(service.destroyedAvatars), 0)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-
-        self.assertEquals(len(service.avatar.packetList), 1)
-        self.assertEquals(service.avatar.packetList[0].type, PACKET_LOGOUT)
-        self.assertEquals(service.avatar.packetsQueuedCount, 0)
-        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
-
-        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe'])
-        self.assertEquals(request.cookies, None)
-        self.assertEquals(request.sitepath, ['joe'])
-
-        self.assertEquals(len(request.headerData.keys()), 2)
-        self.assertEquals(request.headerData['Content-length'],  ['39'])
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        msgs = get_messages()
-        self.failUnless(len(msgs) >= 3, "Missing Message Output")
-        self.failUnless(search_output('receive session cookie DUMMY_COOKIE_1'),
-                         'Missing receive session cookie')
-        self.failUnless(search_output('render '), "Missing render output")
-        self.failUnless(search_output('result_string JSON_PREFIX'), "Missing result_string output")
-
-        # Now call the notifyFunction and see if does what is expected:
-        request.session.notifyFunctions[0]()
-
-        self.assertEquals(len(service.destroyedAvatars), 1)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-        self.failIf(hasattr(request.session, 'avatar'))
-    # ----------------------------------------------------------------
-    def test05_render_withSessionYes_Deferred(self):
-        resultDeferred = defer.Deferred()
-        class MockAvatarDeferred(MockAvatarForPokerXML):
-            def handlePacket(self, packet):
-                MockAvatarForPokerXML.handlePacket(self, packet)
-                return [resultDeferred]
-
-        class MockServiceDeferredAvatar(MockServiceForPokerXML):
-            def __init__(self, avatar = None):
-                MockServiceForPokerXML.__init__(self, avatar)
-                if hasattr(self, "avatar") and not avatar:
-                    del self.avatar
-
-            def createAvatar(self):
-                if hasattr(self, 'avatar') and self.avatar:
-                    self.oldAvatars.append(self.avatar)
-                self.avatar = MockAvatarDeferred("MOCK_CREATE_AVATAR_%d" % self.createAvatarCount)
-                self.createAvatarCount += 1
-                return self.avatar
-
-        class MockRequestRESTForCallback(MockRequestForRESTWithSession):
-            def __init__(mrSelf, data):
-                MockRequestForRESTWithSession.__init__(mrSelf, data)
-                mrSelf.finishCount = 0
-                mrSelf.writtenData = ""
-            def finish(mrSelf):
-                mrSelf.finishCount += 1
-            def write(mrSelf, data):
-                mrSelf.writtenData += data
-
-        service = MockServiceDeferredAvatar()
-        prest = pokerservice.PokerREST(service)
-        request = MockRequestRESTForCallback(MockContentForPokerXML("""
-{"type" : "41"}
-"""))
-        request.args = { 'session' : ['yes'], 'name' : ['joe'], 'jsonp' : ["JSON_PREFIX"], 
-                         'packet' : ["""{ "type" : "PacketPing" }"""] }
-        request.cookies = None
-        
-        clear_all_messages()
-        val = prest.render(request)
-        self.assertEquals(val, twisted.web.server.NOT_DONE_YET)
-
-        self.assertEquals(request.session.expireCount, 0)
-        self.assertEquals(len(request.session.notifyFunctions), 1)
-        self.failUnless(hasattr(request.session, 'avatar'))
-        
-        self.assertEquals(len(service.destroyedAvatars), 0)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-
-        self.assertEquals(len(service.avatar.packetList), 1)
-        self.assertEquals(service.avatar.packetList[0].type, PACKET_PING)
-        self.assertEquals(service.avatar.packetsQueuedCount, 0)
-        self.assertEquals(service.avatar.name, 'MOCK_CREATE_AVATAR_0')
-
-        self.assertEquals(request.cookieRequests, ['TWISTED_SESSION_joe'])
-        self.assertEquals(request.cookies, None)
-        self.assertEquals(request.sitepath, ['joe'])
-
-        msgs = get_messages()
-        self.failUnless(len(msgs) >= 2, "Missing Message Output")
-        self.failUnless(search_output('receive session cookie DUMMY_COOKIE_1'),
-                         'Missing receive session cookie')
-        self.failUnless(search_output('render '), "Missing render output")
-
-        # Now call the notifyFunction and see if does what is expected:
-        request.session.notifyFunctions[0]()
-
-        self.assertEquals(len(service.destroyedAvatars), 1)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-        self.failIf(hasattr(request.session, 'avatar'))
-
-        # Finally, let's make sure our deferred does the right thing,
-        # first testing to verify it has not been rendered, and then
-        # calling back and making sure it was rendered
-
-        self.assertEquals(len(request.headerData.keys()), 1)
-        self.failIf(request.headerData.has_key('Content-length'))
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        self.assertEquals(request.writtenData, "")
-        self.assertEquals(request.finishCount, 0)
-
-        resultDeferred.callback(PacketLogout())
-
-        self.assertEquals(len(request.headerData.keys()), 2)
-        self.assertEquals(request.headerData['Content-length'],  ['39'])
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        self.assertEquals(request.writtenData, 'JSON_PREFIX([{"type": "PacketLogout"}])')
-        self.assertEquals(request.finishCount, 1)
-    # ----------------------------------------------------------------
-    def test06_render_clearSessions(self):
-        service = MockServiceForPokerXML()
-        prest = pokerservice.PokerREST(service)
-        request = MockRequestForRESTWithSession(MockContentForPokerXML("""
-{"type" : "PacketPing"}
-"""))
-        request.args = { 'session' : ['clear'] }
-
-        clear_all_messages()
-        val = prest.render(request)
-        self.assertEquals(val, '[{"type": "PacketPing"}]')
-
-        self.assertEquals(request.cookieRequests, [])
-        self.assertEquals(len(service.destroyedAvatars), 1)
-        self.assertEquals(service.destroyedAvatars[0].name, "MOCK_CREATE_AVATAR_0")
-        self.assertEquals(service.destroyedAvatars[0], service.avatar)
-        self.assertEquals(service.oldAvatars, [])
-        self.assertEquals(service.createAvatarCount, 1)
-
-        self.assertEquals(len(request.headerData.keys()), 2)
-        self.assertEquals(request.headerData['Content-length'],  ['24'])
-        self.assertEquals(request.headerData['Content-type'], ['text/xml; charset="ISO-8859-1"'])
-        msgs = get_messages()
-        self.failUnless(len(msgs) >= 2, "Missing Message Output")
-        self.failUnless(search_output('render '), "Missing render output")
-        self.failUnless(search_output('result_string '), "Missing result_string output")
-    # ----------------------------------------------------------------
-##############################################################################
 class PokerSOAPCoverageTestCase(unittest.TestCase):
     # ----------------------------------------------------------------
     def test01_render_dummySOAPCall(self):
@@ -7383,7 +7045,6 @@ def Run():
     suite.addTest(loader.loadClass(PokerRestTreeCoverageTestCase))
     suite.addTest(loader.loadClass(PokerXMLCoverageTestCase))
     suite.addTest(loader.loadClass(PokerXMLRPCCoverageTestCase))
-    suite.addTest(loader.loadClass(PokerRESTCoverageTestCase))
     suite.addTest(loader.loadClass(PokerSOAPCoverageTestCase))
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     suite.addTest(loader.loadClass(TourneyNotifyTestCase))
