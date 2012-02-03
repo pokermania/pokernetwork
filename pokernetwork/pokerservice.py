@@ -727,7 +727,7 @@ class PokerService(service.Service):
         currency_serial = schedule['currency_serial']
         currency_serial_from_date_format = schedule['currency_serial_from_date_format']
         if currency_serial_from_date_format:
-            if not self_spawnTourney_currency_from_date_format_re.match(currency_serial_from_date_format):
+            if not self._spawnTourney_currency_from_date_format_re.match(currency_serial_from_date_format):
                 raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, currency_from_date_format_regexp )
             currency_serial = long(self.today().strftime(currency_serial_from_date_format))
         #
