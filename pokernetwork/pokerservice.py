@@ -146,6 +146,8 @@ components.registerAdapter(PokerFactoryFromPokerService,
 class PokerService(service.Service):
 
     implements(IPokerService)
+    _spawnTourney_currency_from_date_format_re = re.compile('(%[dHIjmMSUwWyY])+')
+
 
     def __init__(self, settings):
         if type(settings) is StringType:
@@ -718,16 +720,14 @@ class PokerService(service.Service):
 
     def today(self):
         return date.today()
-
     def spawnTourney(self, schedule):
-        currency_from_date_format_regexp = '(%[dHIjmMSUwWyY])+'
         #
         # buy-in currency
         #
         currency_serial = schedule['currency_serial']
         currency_serial_from_date_format = schedule['currency_serial_from_date_format']
         if currency_serial_from_date_format:
-            if not re.match(currency_from_date_format_regexp, currency_serial_from_date_format):
+            if not self_spawnTourney_currency_from_date_format_re.match(currency_serial_from_date_format):
                 raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, currency_from_date_format_regexp )
             currency_serial = long(self.today().strftime(currency_serial_from_date_format))
         #
@@ -736,7 +736,7 @@ class PokerService(service.Service):
         prize_currency = schedule['prize_currency']
         prize_currency_from_date_format = schedule['prize_currency_from_date_format']
         if prize_currency_from_date_format:
-            if not re.match(currency_from_date_format_regexp, prize_currency_from_date_format):
+            if not self._spawnTourney_currency_from_date_format_re.match(prize_currency_from_date_format):
                 raise UserWarning, "tourney_schedule.prize_currency_from_date_format format string %s does not match %s" % ( prize_currency_from_date_format, currency_from_date_format_regexp )
             prize_currency = long(self.today().strftime(prize_currency_from_date_format))
         cursor = self.db.cursor()

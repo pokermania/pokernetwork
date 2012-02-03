@@ -89,10 +89,11 @@ def packets2maps(packets):
         maps.append(attributes)
     return maps
 
+_args2packets_re = re.compile("^[a-zA-Z]+$")
 def args2packets(args):
     packets = []
     for arg in args:
-        if re.match("^[a-zA-Z]+$", arg['type']):
+        if _args2packets_re.match(arg['type']):
             try:
                 fun_args = len(arg) > 1 and '(**arg)' or '()'
                 packets.append(eval(arg['type'] + fun_args))
