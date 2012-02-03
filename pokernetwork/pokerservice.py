@@ -728,7 +728,7 @@ class PokerService(service.Service):
         currency_serial_from_date_format = schedule['currency_serial_from_date_format']
         if currency_serial_from_date_format:
             if not self._spawnTourney_currency_from_date_format_re.match(currency_serial_from_date_format):
-                raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, currency_from_date_format_regexp )
+                raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, self._spawnTourney_currency_from_date_format_re.pattern )
             currency_serial = long(self.today().strftime(currency_serial_from_date_format))
         #
         # prize pool currency
@@ -737,7 +737,7 @@ class PokerService(service.Service):
         prize_currency_from_date_format = schedule['prize_currency_from_date_format']
         if prize_currency_from_date_format:
             if not self._spawnTourney_currency_from_date_format_re.match(prize_currency_from_date_format):
-                raise UserWarning, "tourney_schedule.prize_currency_from_date_format format string %s does not match %s" % ( prize_currency_from_date_format, currency_from_date_format_regexp )
+                raise UserWarning, "tourney_schedule.prize_currency_from_date_format format string %s does not match %s" % ( prize_currency_from_date_format, self._spawnTourney_currency_from_date_format_re.pattern )
             prize_currency = long(self.today().strftime(prize_currency_from_date_format))
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO tourneys "
@@ -782,7 +782,7 @@ class PokerService(service.Service):
         else:
             tourney_serial = cursor.insert_id()
         if schedule['respawn'] == 'n':
-            cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s" % schedule['serial'])
+            cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s", (int(schedule['serial']),))
         cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
         cursor.close()
         self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial, prize_currency)
@@ -975,7 +975,7 @@ class PokerService(service.Service):
         #added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
         if not hasattr(tourney, "finish_time"):
             tourney.finish_time = seconds()
-        cursor.execute("UPDATE tourneys SET finish_time = %d WHERE serial = %s" % (tourney.finish_time, tourney.serial))
+        cursor.execute("UPDATE tourneys SET finish_time = %s WHERE serial = %s", (tourney.finish_time, int(tourney.serial)))
         cursor.close()
         self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY, param1 = tourney.serial)
         self.tourneyDeleteRoute(tourney)
@@ -2159,7 +2159,7 @@ class PokerService(service.Service):
         # Look for user
         #
         cursor = self.db.cursor()
-        cursor.execute("SELECT serial FROM users WHERE name = '%s'" % packet.name)
+        cursor.execute("SELECT serial FROM users WHERE name = %s", (packet.name,))
         numrows = int(cursor.rowcount)
         #
         # password constraints check
@@ -2179,7 +2179,7 @@ class PokerService(service.Service):
                                message = "email %s does not match %s " % ( packet.email, email_regexp ),
                                other_type = packet.type)
         if numrows == 0:
-            cursor.execute("SELECT serial FROM users WHERE email = '%s' " % packet.email)
+            cursor.execute("SELECT serial FROM users WHERE email = %s ", (packet.email,))
             numrows = int(cursor.rowcount)
             if numrows > 0:
                 return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
@@ -2216,7 +2216,7 @@ class PokerService(service.Service):
                 return PacketError(code = PacketPokerSetAccount.NAME_ALREADY_EXISTS,
                                    message = "user name %s already exists" % packet.name,
                                    other_type = packet.type)
-            cursor.execute("SELECT serial FROM users WHERE email = '%s' and serial != %d" % ( packet.email, serial ))
+            cursor.execute("SELECT serial FROM users WHERE email = %s and serial != %s", ( packet.email, serial ))
             numrows = int(cursor.rowcount)
             if numrows > 0:
                 return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,

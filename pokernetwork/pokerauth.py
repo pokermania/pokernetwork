@@ -122,7 +122,7 @@ class PokerAuth:
         if self.verbose:
             self.message("creating user %s" % name)
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO users (created, name, password) values (%d, '%s', '%s')" %
+        cursor.execute("INSERT INTO users (created, name, password) values (%s, %s, %s)",
                        (seconds(), name, password))
         #
         # Accomodate for MySQLdb versions < 1.1
