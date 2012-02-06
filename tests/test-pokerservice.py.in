@@ -162,6 +162,17 @@ class MockCursorBase:
     def execute(*args):
         cursorSelf = args[0]
         sql = args[1]
+        i=0
+        while '%s' in sql:
+            if isinstance(args[2][i], str):
+                sql = sql.replace('%s', "'%s'" % args[2][i], 1)
+            elif isinstance(args[2][i], int):
+                sql = sql.replace('%s', "%d" % args[2][i], 1)
+            elif isinstance(args[2][i], float):
+                sql = sql.replace('%s', "%f" % args[2][i], 1)
+            else:
+                raise Exception("undefined type: %s" % (type(args[2][i]),))
+            i += 1
         found = False
         for statement in cursorSelf.acceptedStatements:
             if sql[:len(statement)] == statement:
