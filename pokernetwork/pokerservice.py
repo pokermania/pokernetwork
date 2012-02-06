@@ -1615,14 +1615,12 @@ class PokerService(service.Service):
         return (total, map(lambda x: x[0], hands))
 
     def eventTable(self, table):
-        table_serial = table.game.id
-        if table.tourney:
-            tourney_serial = table.tourney.serial
-        else:
-            tourney_serial = 0
-        cursor = self.db.cursor()
-        cursor.execute("REPLACE INTO route VALUES (%s,%s,%s,%s)", ( table_serial, tourney_serial, int(seconds()), self.resthost_serial))
-        cursor.close()
+        if self.verbose > 2:
+            self.message(
+                "eventTable: %s" % {
+                    'game_id': self.game.id ,
+                    'tourney_serial': self.tourney.serial if self.tourney else 0
+            })
 
     def statsTables(self):
         cursor = self.db.cursor()
