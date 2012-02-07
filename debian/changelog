@@ -1,3 +1,10 @@
+poker-network (2.0.3-4) pokermania; urgency=low
+
+  * route query on eventTable removed
+  * pokeradditions/xpmonitor now sends also uncalled
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 07 Feb 2012 12:00:00 +0200
+
 poker-network (2.0.3-3) pokermania; urgency=low
 
   * now depends on poker-engine 1.3.10
