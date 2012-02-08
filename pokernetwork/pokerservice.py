@@ -1618,8 +1618,8 @@ class PokerService(service.Service):
         if self.verbose > 2:
             self.message(
                 "eventTable: %s" % {
-                    'game_id': self.game.id ,
-                    'tourney_serial': self.tourney.serial if self.tourney else 0
+                    'game_id': table.game.id ,
+                    'tourney_serial': table.tourney.serial if table.tourney else 0
             })
 
     def statsTables(self):
