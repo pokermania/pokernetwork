@@ -94,18 +94,16 @@ def packets2maps(packets):
         maps.append(attributes)
     return maps
 
-_args2packets_re = re.compile("^[a-zA-Z]+$")
+_arg2packet_re = re.compile("^[a-zA-Z]+$")
+def arg2packet(arg):
+    if _arg2packet_re.match(arg['type']):
+        try: return pokerpackets[arg['type']](**arg) if len(arg) > 1 else pokerpackets[arg['type']]()
+        except: return PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
+    return PacketError(message = "Invalid type name %s" % arg['type'])
+
 def args2packets(args):
-    packets = []
     for arg in args:
-        if _args2packets_re.match(arg['type']):
-            try:
-                packets.append(pokerpackets[arg['type']](**arg) if len(arg) > 1 else pokerpackets[arg['type']]())
-            except:
-                packets.append(PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc() )))
-        else:
-            packets.append(PacketError(message = "Invalid type name %s" % arg['type']))
-    return packets
+        yield arg2packet(arg)
 
 class Request(server.Request):
 
@@ -202,7 +200,7 @@ class PokerResource(resource.Resource):
         if hasattr(Packet.JSON, 'decode_objects'): # backward compatibility
             args = Packet.JSON.decode_objects(args)
         args = fromutf8(args)
-        packet = args2packets([args])[0]
+        packet = arg2packet(args)
 
         deferred = defer.succeed(None)
 
