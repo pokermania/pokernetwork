@@ -35,6 +35,11 @@ from twisted.python import log
 from twisted.python.runtime import seconds
 
 from pokernetwork.pokerpackets import *
+from pokernetwork import pokerpackets as _pokerpackets
+pokerpackets = {}
+for key, val in _pokerpackets.__dict__.iteritems():
+    if type(val) == ClassType and issubclass(val, Packet):
+        pokerpackets[key] = val
 
 # Disabled Unicode encoding. It is not required anymore since it is only used
 # for the (dealer) chat. We measured a higher sit out count with Unicode
@@ -95,8 +100,7 @@ def args2packets(args):
     for arg in args:
         if _args2packets_re.match(arg['type']):
             try:
-                fun_args = len(arg) > 1 and '(**arg)' or '()'
-                packets.append(eval(arg['type'] + fun_args))
+                packets.append(pokerpackets[arg['type']](**arg) if len(arg) > 1 else pokerpackets[arg['type']]())
             except:
                 packets.append(PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc() )))
         else:
