@@ -129,7 +129,7 @@ class PokerRestClient:
         self.pendingLongPoll = False
         args = simplejson.loads(data, encoding = 'UTF-8')
         args = pokersite.fromutf8(args)
-        packets = pokersite.args2packets(args)
+        packets = list(pokersite.args2packets(args))
         return packets
 
     def receiveError(self, data):
