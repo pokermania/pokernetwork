@@ -1296,10 +1296,15 @@ class PokerTable:
         if not self.isJoined(avatar):
             self.error("player %d can't chat before joining" % serial)
             return False
+        message = self.chatFilter(message)
         self.broadcast(PacketPokerChat(game_id = self.game.id,
                                        serial = serial,
                                        message = message + "\n"))
         self.factory.chatMessageArchive(serial, self.game.id, message)
+
+    def chatFilter(self, message):
+        message = self.factory.getChatFilter().sub('poker',message)
+        return message
 
     def autoBlindAnte(self, avatar, serial, auto):
         game = self.game

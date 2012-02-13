@@ -221,6 +221,12 @@ class PokerService(service.Service):
         self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
         if self.long_poll_timeout <= 0:
             self.long_poll_timeout = 20
+        #badwords list
+        fileName = settings.headerGet("/server/badwordschatfilter/@file") 
+        cleanedBadWords = [i.strip() for i in open(fileName,'r')]
+        joinedBadWords = "|".join(cleanedBadWords)
+        regExp = "(%s)" % joinedBadWords
+        self.chat_filter = re.compile(regExp,re.IGNORECASE)
 
     def setupLadder(self):
         cursor = self.db.cursor()
@@ -401,6 +407,9 @@ class PokerService(service.Service):
     def getMissedRoundMax(self):
         return self.missed_round_max
 
+    def getChatFilter(self):
+        return self.chat_filter
+    
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max
 
