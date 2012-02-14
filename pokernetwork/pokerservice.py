@@ -1834,38 +1834,37 @@ class PokerService(service.Service):
         # packets that are delegated but related to tournaments.
         #
         game_id = None
+        result = None
+        where = ""
         cursor = self.db.cursor()
         if packet.type == PACKET_POKER_CREATE_TOURNEY:
             #
             # Look for the server with the less routes going to it
             #
-            sql = "SELECT host, port, path FROM route,resthost WHERE route.resthost_serial = resthost.serial GROUP BY route.resthost_serial ORDER BY count(*) ASC LIMIT 1"
+            sql =   "SELECT host, port, path FROM route,resthost " \
+                    "WHERE route.resthost_serial = resthost.serial " \
+                    "GROUP BY route.resthost_serial ORDER BY count(*) ASC LIMIT 1"
             if self.verbose > 2:
                 self.message("packet2resthost: create tourney " + sql)
             cursor.execute(sql)
+            result = cursor.fetchone() if cursor.rowcount > 0 else None
         else:
             if packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
-                where = "tourney_serial = " + str(packet.game_id)
+                where = "tourney_serial = %d" % packet.game_id
             elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
                 where = "tourney_serial = " + str(packet.tourney_serial)
-            elif getattr(packet, "game_id",0) > 0:
-                where = "table_serial = " + str(packet.game_id)
+            elif getattr(packet, "game_id",0) > 0 and packet.game_id in self.tables.iterkeys():
                 game_id = packet.game_id
-            else:
-                cursor.close()
-                return (None, None)
-
-            cursor.execute("SELECT host, port, path FROM route,resthost " +
-                           " WHERE route.resthost_serial = resthost.serial " +
-                           #
-                           # exclude the routes that go to this server
-                           #
-                           " AND resthost.serial != " + str(self.resthost_serial) +
-                           " AND " + where)
-        if cursor.rowcount > 0:
-            result = cursor.fetchone()
-        else:
-            result = None
+            elif getattr(packet, "game_id",0) > 0:
+                where = "table_serial = %d" % packet.game_id
+                game_id = packet.game_id
+                
+            if where:
+                cursor.execute(
+                   "SELECT host, port, path FROM route,resthost WHERE route.resthost_serial = resthost.serial " \
+                   "AND resthost.serial != %d AND %s" % (self.resthost_serial,where)
+                )
+                result = cursor.fetchone() if cursor.rowcount > 0 else None
         cursor.close()
         return ( result, game_id )
 

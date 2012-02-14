@@ -4523,7 +4523,7 @@ code: integer representing the error.
         ('code',0,'I')
         )
 
-Packet.infoDeclare(globals(), PacketPokerStateInformation, Packet, "POKER_STATE_INFORMATION", 154) # 154 # 0x9a # %SEQ%
+Packet.infoDeclare(globals(), PacketPokerStateInformation, Packet, "POKER_STATE_INFORMATION", 160) # 160 # 0xa0 # %SEQ%
     
 _TYPES = range(50,169)
 
