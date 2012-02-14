@@ -1303,8 +1303,9 @@ class PokerTable:
         self.factory.chatMessageArchive(serial, self.game.id, message)
 
     def chatFilter(self, message):
-        message = self.factory.getChatFilter().sub('poker',message)
-        return message
+        return self.factory.chat_filter.sub('poker',message) \
+            if self.factory.chat_filter \
+            else message
 
     def autoBlindAnte(self, avatar, serial, auto):
         game = self.game

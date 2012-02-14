@@ -213,6 +213,7 @@ class PokerService(service.Service):
         self.resthost_serial = 0
         self.has_ladder = None
         self.monitor_plugins = []
+        self.chat_filter = None
         for monitor in settings.header.xpathEval("/server/monitor"):
             module = imp.load_source("monitor", monitor.content)
             self.monitor_plugins.append(getattr(module, "handle_event"))
@@ -222,11 +223,10 @@ class PokerService(service.Service):
         if self.long_poll_timeout <= 0:
             self.long_poll_timeout = 20
         #badwords list
-        fileName = settings.headerGet("/server/badwordschatfilter/@file") 
-        cleanedBadWords = [i.strip() for i in open(fileName,'r')]
-        joinedBadWords = "|".join(cleanedBadWords)
-        regExp = "(%s)" % joinedBadWords
-        self.chat_filter = re.compile(regExp,re.IGNORECASE)
+        
+        chat_filter_filepath = settings.headerGet("/server/badwordschatfilter/@file")
+        if chat_filter_filepath:
+            self.setupChatFilter(chat_filter_filepath) 
 
     def setupLadder(self):
         cursor = self.db.cursor()
@@ -276,7 +276,11 @@ class PokerService(service.Service):
                 s = None
             self.tourney_select_info = module.Handle(self, s)
             getattr(self.tourney_select_info, '__call__')
-            
+
+    def setupChatFilter(self,chat_filter_filepath):
+        regExp = "(%s)" % "|".join(i.strip() for i in open(chat_filter_filepath,'r'))
+        self.chat_filter = re.compile(regExp,re.IGNORECASE)
+        
     def startService(self):
         self.monitors = []
         self.db = PokerDatabase(self.settings)
@@ -407,9 +411,6 @@ class PokerService(service.Service):
     def getMissedRoundMax(self):
         return self.missed_round_max
 
-    def getChatFilter(self):
-        return self.chat_filter
-    
     def getClientQueuedPacketMax(self):
         return self.client_queued_packet_max
 
@@ -729,6 +730,7 @@ class PokerService(service.Service):
 
     def today(self):
         return date.today()
+    
     def spawnTourney(self, schedule):
         #
         # buy-in currency
