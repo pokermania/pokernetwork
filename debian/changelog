@@ -1,3 +1,10 @@
+poker-network (2.0.3-6) pokermania; urgency=low
+
+  * added chat_filter to core
+  * packet2resthost does not look into db if the table is the server's
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 14 Feb 2012 04:25:00 +0200
+
 poker-network (2.0.3-5) pokermania; urgency=low
 
   * pokerservice.eventTable fix
