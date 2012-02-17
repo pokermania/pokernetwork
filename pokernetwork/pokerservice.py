@@ -688,29 +688,26 @@ class PokerService(service.Service):
         #
         # Respawning regular tournaments
         #
-        respawning_regular = []
         for schedule in filter(
-           lambda schedule: 
-               schedule['respawn'] == 'y' and 
-               int(schedule['respawn_interval']) > 0 and
-               int(schedule['register_time']) < now
-           ,self.tourneys_schedule.values()
+            lambda schedule: schedule['respawn'] == 'y' and int(schedule['respawn_interval']) > 0,
+            self.tourneys_schedule.values()
         ):
             schedule_serial = schedule['serial']
             schedule = schedule.copy()
-            intervals = max(0,int((now-int(schedule['start_time']-int(schedule['respawn_interval']))) / int(schedule['respawn_interval'])))
-            schedule['start_time'] = int(schedule['start_time']) + intervals*int(schedule['respawn_interval'])
-            schedule['register_time'] = int(schedule['register_time']) + intervals*int(schedule['respawn_interval'])
-            if (schedule['register_time'] < now and (
+            if schedule['start_time'] < now:
+                start_time = int(schedule['start_time'])
+                respawn_interval = int(schedule['respawn_interval'])
+                intervals = max(0, int(1+(now-start_time)/respawn_interval))
+                schedule['start_time'] += schedule['respawn_interval']*intervals
+                schedule['register_time'] += schedule['respawn_interval']*intervals
+            if schedule['register_time'] < now and (
                 not self.schedule2tourneys.has_key(schedule_serial) or
                 not filter(
                     lambda tourney: tourney.start_time >= schedule['start_time'] 
                     ,self.schedule2tourneys[schedule_serial]
-                ))
+                )
             ):
-                respawning_regular.append(schedule)
-        for schedule in respawning_regular:
-            self.spawnTourney(schedule)
+                self.spawnTourney(schedule)
             
         #
         # Update tournaments with time clock
