@@ -1605,14 +1605,13 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         #  gets created; the default schema doesn't respawn this tourney
         #  by default.
         cursor = self.db.cursor()
-        cursor.execute("UPDATE tourneys_schedule SET respawn = 'y', register_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 SECOND), start_time = UNIX_TIMESTAMP(NOW() + INTERVAL 1 MINUTE), respawn_interval=3600 WHERE name = 'regular1'")
+        cursor.execute("UPDATE tourneys_schedule SET respawn = 'y', register_time = %s+1, start_time = %s+60, respawn_interval=3600 WHERE name = 'regular1'", (seconds(), seconds()))
         self.assertEqual(1, cursor.rowcount)
         cursor.close()
 
         self.service.startService()
         d = defer.Deferred()
         def checkTourneys(status):
-            t = self.service.tourneys.values()[0]
             self.failUnless(filter(lambda tourney: tourney.sit_n_go == 'n', self.service.tourneys.values()))
             self.failUnless(filter(lambda tourney: tourney.name == 'regular1', self.service.tourneys.values()))
         d.addCallback(checkTourneys)
