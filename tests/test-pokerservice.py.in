@@ -1076,9 +1076,11 @@ class ResthostTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(settings)
 
     def tearDown(self):
-        d = self.service.stopService()
-        d.addCallback(lambda x: self.destroyDb())
-        return d
+        if hasattr(self, 'service'):
+            d = self.service.stopService()
+            d.addCallback(lambda x: self.destroyDb())
+            return d
+        return defer.succeed(True)
 
     def test00_init(self):
         """ setupResthost twice with the same information gives the same serial """
@@ -1619,6 +1621,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         return d
     
     def test13_1_checkTourneySchedule_respawning_regular(self):
+        """checks for weather a respawn tourney in the past, present and in the future are spawned correctly"""
         cursor = self.db.cursor()
         cursor.execute("""INSERT INTO tourneys_schedule
             SET
@@ -1661,23 +1664,25 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             betting_structure = 'level-15-30-no-limit',
             currency_serial = 1,
             sit_n_go = 'n',
-            start_time = %s+160,
-            register_time = %s+120,
+            start_time = %s+120,
+            register_time = %s+90,
             active = 'y',
             respawn = 'y',
             respawn_interval = 60
             ;""", (seconds(), seconds()))
         self.assertEqual(1, cursor.rowcount)
         cursor.close()
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 2
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 1
         self.service.startService()
-        self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_1', self.service.tourneys.values()), "past tourney not spawned")
-        self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_2', self.service.tourneys.values()), "tourney not spawned")
+        self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_2', self.service.tourneys.values()), "present tourney not spawned")
         self.failIf(filter(lambda tourney: tourney.name == 'respawn_regular_3', self.service.tourneys.values()), "future tourney spawned too early")
         def deferedCheckTourneys(result):
+            self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_1', self.service.tourneys.values()), "past tourney not spawned")
             self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_3', self.service.tourneys.values()), "future tourney never spawned")
         d = defer.Deferred()
         d.addCallback(deferedCheckTourneys)
-        reactor.callLater(2*60, lambda: d.callback(True))
+        reactor.callLater(100, lambda: d.callback(True))
         return d
     
     # ----------------------------------------------------------------
