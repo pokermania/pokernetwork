@@ -5375,7 +5375,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mtSelf.tourney = None
 
         self.service.eventTable(MockTable())
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(get_messages(), ["eventTable: {'game_id': 99, 'tourney_serial': 0}"])
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test39_statsTable(self):
