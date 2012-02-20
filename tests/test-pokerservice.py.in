@@ -49,6 +49,7 @@ from tests import testclock
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
+from twisted.python.runtime import seconds
 
 twisted.internet.base.DelayedCall.debug = True
 
@@ -1616,7 +1617,69 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         reactor.callLater(3, lambda: d.callback(True))
 
         return d
-
+    
+    def test13_1_checkTourneySchedule_respawning_regular(self):
+        cursor = self.db.cursor()
+        cursor.execute("""INSERT INTO tourneys_schedule
+            SET
+            name = 'respawn_regular_1',
+            description_short = 'test respawn_regular',
+            description_long = 'test respawn_regular',
+            variant = 'holdem',
+            betting_structure = 'level-15-30-no-limit',
+            currency_serial = 1,
+            sit_n_go = 'n',
+            start_time = %s-120,
+            register_time = %s-160,
+            active = 'y',
+            respawn = 'y',
+            respawn_interval = 60
+            ;""", (seconds(), seconds()))
+        self.assertEqual(1, cursor.rowcount)
+        cursor.execute("""INSERT INTO tourneys_schedule
+            SET
+            name = 'respawn_regular_2',
+            description_short = 'test respawn_regular',
+            description_long = 'test respawn_regular',
+            variant = 'holdem',
+            betting_structure = 'level-15-30-no-limit',
+            currency_serial = 1,
+            sit_n_go = 'n',
+            start_time = %s+10,
+            register_time = %s-30,
+            active = 'y',
+            respawn = 'y',
+            respawn_interval = 60
+            ;""", (seconds(), seconds()))
+        self.assertEqual(1, cursor.rowcount)
+        cursor.execute("""INSERT INTO tourneys_schedule
+            SET
+            name = 'respawn_regular_3',
+            description_short = 'test respawn_regular',
+            description_long = 'test respawn_regular',
+            variant = 'holdem',
+            betting_structure = 'level-15-30-no-limit',
+            currency_serial = 1,
+            sit_n_go = 'n',
+            start_time = %s+160,
+            register_time = %s+120,
+            active = 'y',
+            respawn = 'y',
+            respawn_interval = 60
+            ;""", (seconds(), seconds()))
+        self.assertEqual(1, cursor.rowcount)
+        cursor.close()
+        self.service.startService()
+        self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_1', self.service.tourneys.values()), "past tourney not spawned")
+        self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_2', self.service.tourneys.values()), "tourney not spawned")
+        self.failIf(filter(lambda tourney: tourney.name == 'respawn_regular_3', self.service.tourneys.values()), "future tourney spawned too early")
+        def deferedCheckTourneys(result):
+            self.failUnless(filter(lambda tourney: tourney.name == 'respawn_regular_3', self.service.tourneys.values()), "future tourney never spawned")
+        d = defer.Deferred()
+        d.addCallback(deferedCheckTourneys)
+        reactor.callLater(2*60, lambda: d.callback(True))
+        return d
+    
     # ----------------------------------------------------------------
     def test14_checkTourneysSchedule_cancel_regular(self):
         pokerservice.DELETE_OLD_TOURNEYS_DELAY = 0

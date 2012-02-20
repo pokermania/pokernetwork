@@ -689,7 +689,7 @@ class PokerService(service.Service):
         # Respawning regular tournaments
         #
         for schedule in filter(
-            lambda schedule: schedule['respawn'] == 'y' and int(schedule['respawn_interval']) > 0,
+            lambda schedule: schedule['respawn'] == 'y' and int(schedule['respawn_interval']) > 0 and schedule['sit_n_go'] == 'n',
             self.tourneys_schedule.values()
         ):
             schedule_serial = schedule['serial']
@@ -697,7 +697,7 @@ class PokerService(service.Service):
             if schedule['start_time'] < now:
                 start_time = int(schedule['start_time'])
                 respawn_interval = int(schedule['respawn_interval'])
-                intervals = max(0, int(1+(now-start_time)/respawn_interval))
+                intervals = max(0, int((now-start_time)/respawn_interval)-1)
                 schedule['start_time'] += schedule['respawn_interval']*intervals
                 schedule['register_time'] += schedule['respawn_interval']*intervals
             if schedule['register_time'] < now and (
@@ -707,6 +707,7 @@ class PokerService(service.Service):
                     ,self.schedule2tourneys[schedule_serial]
                 )
             ):
+                print "spawn", schedule['name'], now, schedule['register_time'], schedule['register_time'] < now, schedule['start_time'] > now
                 self.spawnTourney(schedule)
             
         #
