@@ -539,10 +539,6 @@ class PokerService(service.Service):
 
     def databaseEvent(self, **kwargs):
         event = PacketPokerMonitorEvent(**kwargs)
-        sql = "INSERT INTO monitor (event, param1, param2, param3) VALUES (%d, %d, %d, %d)" % ( kwargs['event'], kwargs.get('param1', 0), kwargs.get('param2', 0), kwargs.get('param3', 0) )
-        if self.verbose > 3:
-            self.message(sql)
-        self.db.db.query(sql)
         for avatar in self.monitors:
             if hasattr(avatar, "protocol") and avatar.protocol:
                 avatar.sendPacketVerbose(event)
