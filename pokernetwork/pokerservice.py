@@ -41,11 +41,14 @@ import simplejson
 import imp
 from traceback import print_exc
 
-
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
-from twisted.web.client import getPage
 from twisted.python.runtime import seconds
+from twisted.web import client
+
+# disable noisy on HTTPClientFactory
+client.HTTPClientFactory.noisy = False
+
 
 try:
     from OpenSSL import SSL
@@ -218,7 +221,7 @@ class PokerService(service.Service):
             module = imp.load_source("monitor", monitor.content)
             self.monitor_plugins.append(getattr(module, "handle_event"))
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
-        self.getPage = getPage
+        self.getPage = client.getPage
         self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
         if self.long_poll_timeout <= 0:
             self.long_poll_timeout = 20
