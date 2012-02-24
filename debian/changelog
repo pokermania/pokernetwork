@@ -1,3 +1,12 @@
+poker-network (2.0.3-7) pokermania; urgency=low
+
+  * added pot_cleaned to pokeradditions/xpnotifier
+  * repeatable tourneysSchedule check fix
+  * monitorable events are not automatically inserted into db anymore
+  * monitor_sql_log.py can be used to log monitors into db
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 24 Feb 2012 04:25:00 +0200
+
 poker-network (2.0.3-6) pokermania; urgency=low
 
   * added chat_filter to core
