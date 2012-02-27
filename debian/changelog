@@ -1,3 +1,9 @@
+poker-network (2.0.3-9) pokermania; urgency=low
+
+  * HTTPPageGetter noisy = false (no more log entries)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 27 Feb 2012 13:35:00 +0200
+
 poker-network (2.0.3-8) pokermania; urgency=low
 
   * reward fix (rewards are subtracted and given sequentially)
