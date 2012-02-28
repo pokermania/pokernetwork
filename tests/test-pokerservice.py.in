@@ -184,6 +184,7 @@ class MockCursorBase:
         cursorSelf.row = (None,)
         cursorSelf.testObject.failUnless(found, "Unknown sql statement: " + sql)
         cursorSelf.statementActions(sql, statement)
+        cursorSelf._executed = sql
         return cursorSelf.rowcount
     def fetchone(cursorSelf): return cursorSelf.row
 
@@ -5492,10 +5493,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     # row count 0 is ok, next check for proper serials in statement
                     self.failUnless(sql.find("currency_serial = 168") > 0)
                     self.failUnless(sql.find("tourney_serial = 732") > 0)
-                elif statement == "DELETE FROM tourneys WHERE serial =":
-                    # row count 0 is ok, check for proper serial
-                    self.failUnless(sql.find("serial = 732") > 0)
-                elif statement == "DELETE FROM user2tourney WHERE tourney_serial =":
+                elif statement == "UPDATE tourneys SET state = 'aborted' WHERE serial =":
                     # row count 0 is ok, check for proper serial
                     self.failUnless(sql.find("serial = 732") > 0)
                 else:
@@ -5503,8 +5501,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, ["SELECT * FROM tourneys",
                                     "UPDATE user2money,user2tourney SET amount = amount",
-                                    "DELETE FROM tourneys WHERE serial =",
-                                    "DELETE FROM user2tourney WHERE tourney_serial ="])
+                                    "UPDATE tourneys SET state = 'aborted' WHERE serial ="])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):
                 # Needed because cleanupTourneys() calls with argument "DictCursor"
@@ -5522,18 +5519,16 @@ class PokerServiceCoverageTests(unittest.TestCase):
         # Make sure the right number of SQL statements got executed; the loop should
         # have only went once
         for expectJustOneStr in [ "UPDATE user2money,user2tourney SET amount = amount",
-                                  "DELETE FROM tourneys WHERE serial =",
-                                  "DELETE FROM user2tourney WHERE tourney_serial =" ]:
+                                  "UPDATE tourneys SET state = 'aborted' WHERE serial =" ]:
             self.assertEquals(self.service.db.cursorValue.counts[expectJustOneStr], 1)
         self.assertEquals(self.service.db.cursorValue.counts["SELECT * FROM tourneys"], 2)
 
         msgs = get_messages()
-        self.assertEquals(len(msgs), 5)
+        self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0].find("cleanupTourneys: SELECT * FROM tourneys WHERE"), 0)
-        self.assertEquals(msgs[1].find('cleanupTourneys: UPDATE user2money,user2tourney'), 0)
-        self.assertEquals(msgs[2].find('cleanupTourneys: DELETE FROM tourneys WHERE'), 0)
-        self.assertEquals(msgs[3].find('cleanupTourneys: DELETE FROM user2tourney'), 0)
-        self.assertEquals(msgs[4].find("cleanupTourneys: SELECT * FROM tourneys  WHERE"), 0)
+        self.assertEquals(msgs[1].find("cleanupTourneys: UPDATE user2money,user2tourney"), 0)
+        self.assertEquals(msgs[2].find("cleanupTourneys: UPDATE tourneys SET state = 'aborted' WHERE"), 0)
+        self.assertEquals(msgs[3].find("cleanupTourneys: SELECT * FROM tourneys  WHERE"), 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------

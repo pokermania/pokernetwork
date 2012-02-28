@@ -1909,7 +1909,7 @@ class PokerService(service.Service):
         # Sit and go tournaments in the 'registering' state are trashed.
         #
         sql = ( "SELECT * FROM tourneys WHERE " +
-                " ( state NOT IN ( 'registering', 'complete' ) OR " +
+                " ( state NOT IN ( 'registering', 'aborted', 'complete' ) OR " +
                 "   ( state = 'registering' AND " +
                 "     ( sit_n_go = 'y' OR start_time < (%d + 60) ) " +
                 "   ) " +
@@ -1930,14 +1930,9 @@ class PokerService(service.Service):
                 if self.verbose > 1:
                     self.message("cleanupTourneys: %s" % sql)
                 cursor1.execute(sql)
-            sql = "DELETE FROM tourneys WHERE serial = %d" % row['serial']
+            cursor1.execute("UPDATE tourneys SET state = 'aborted' WHERE serial = %s", (row['serial'],))
             if self.verbose > 1:
-                self.message("cleanupTourneys: %s" % sql)
-            cursor1.execute(sql)
-            sql = "DELETE FROM user2tourney WHERE tourney_serial = %d" % row['serial']
-            if self.verbose > 1:
-                self.message("cleanupTourneys: %s" % sql)
-            cursor1.execute(sql)
+                self.message("cleanupTourneys: %s" % cursor1._executed)
             cursor1.close()
         #
         # Restore tourney registrations after reboot
