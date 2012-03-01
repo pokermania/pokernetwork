@@ -1750,7 +1750,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         """ Tournament break issue a message to all players """
         class Tournament:
             def __init__(self):
-                self.state = pokertournament.TOURNAMENT_STATE_BREAK_WAIT
+                self.state = pokertournament.PokerTournament.STATES.BREAK_WAIT
                 
         self.createPlayer(1)
         self.createPlayer(2)

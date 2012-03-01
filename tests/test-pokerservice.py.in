@@ -1746,7 +1746,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
         register_time = int(pokerservice.seconds()) - 1
         self.service.checkTourneysSchedule()
-        self.assertEquals(pokertournament.TOURNAMENT_STATE_CANCELED, heads_up_before.state)
+        self.assertEquals(pokertournament.PokerTournament.STATES.BREAK, heads_up_before.state)
         (heads_up_after1, heads_up_after2) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
         self.failUnless(abs(register_time - heads_up_after2.register_time) <= 1)
         self.assertEquals(heads_up_before.serial, heads_up_after1.serial)
@@ -1758,7 +1758,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.service.sng_timeout = 0
         (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
-        heads_up_before.state = pokertournament.TOURNAMENT_STATE_CANCELED
+        heads_up_before.state = pokertournament.PokerTournament.STATES.BREAK
         heads_up_before.changeState = lambda x: self.assertFalse(True)
         self.service.checkTourneysSchedule()
 
@@ -1802,7 +1802,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(client1.tables.has_key(self.service.tables.values()[2].game.id), True)
             self.assertEquals(client1.tables[self.service.tables.values()[2].game.id], self.service.tables.values()[2])
 
-            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
+            self.assertEquals(pokertournament.PokerTournament.STATES.RUNNING, heads_up.state)
             game = heads_up.games[0]
             in_position = game.getSerialInPosition()
             game.callNraise(in_position, game.maxBuyIn())
@@ -1853,7 +1853,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         d = defer.Deferred()
         def checkTourneys(status):
-            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
+            self.assertEquals(pokertournament.PokerTournament.STATES.RUNNING, heads_up.state)
             game = heads_up.games[0]
             in_position = game.getSerialInPosition()
             game.callNraise(in_position, game.maxBuyIn())
@@ -2137,7 +2137,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
                                                   dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
         tourney.register(user_serial)
         tourney.currency_serial = 1
-        tourney.state = pokertournament.TOURNAMENT_STATE_RUNNING
+        tourney.state = pokertournament.PokerTournament.STATES.RUNNING
         self.service.tourneys[tourney_serial] = tourney
         p = self.service.tourneyUnregister(PacketPokerId(serial = user_serial,
                                                          game_id = tourney_serial))
@@ -2739,14 +2739,14 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         table_money = 140
         self.startTournament(table_serial, table_money)
         tourney = self.service.tourneys[tourney_serial]
-        self.assertEqual(pokertournament.TOURNAMENT_STATE_REGISTERING, tourney.state)
+        self.assertEqual(pokertournament.PokerTournament.STATES.REGISTERING, tourney.state)
         self.databaseEvent_called = False
         def databaseEvent(event = None, param1 = None, param2 = None, param3 = None):            
             self.databaseEvent_called = True
             self.assertEqual(PacketPokerMonitorEvent.TOURNEY_START, event)
             self.assertEqual(tourney_serial, param1)
         self.service.databaseEvent = databaseEvent
-        self.service.tourneyNewState(tourney, pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.service.tourneyNewState(tourney, pokertournament.PokerTournament.STATES.REGISTERING, pokertournament.PokerTournament.STATES.RUNNING)
         self.assertEqual(True, self.databaseEvent_called)
         
 class ListHandsTestCase(PokerServiceTestCaseBase):
@@ -2977,11 +2977,11 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
         class TournamentCandidate:
             def __init__(self):
                 self.schedule_serial = 12345
-                self.state = pokertournament.TOURNAMENT_STATE_RUNNING
+                self.state = pokertournament.PokerTournament.STATES.RUNNING
 
         self.service.startService()
         self.service.tourneys = { 12345: TournamentCandidate() }
-        self.assertEqual((0, pokertournament.TOURNAMENT_STATE_REGISTERING), self.service.tourneySatelliteLookup(Tournament()), 'tourneySatelliteLookup find a tournament which is not in the expected state')
+        self.assertEqual((0, pokertournament.PokerTournament.STATES.REGISTERING), self.service.tourneySatelliteLookup(Tournament()), 'tourneySatelliteLookup find a tournament which is not in the expected state')
 
     def test_lookup(self):
         class Tournament:
@@ -2992,7 +2992,7 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
             def __init__(self):
                 self.serial = 4343
                 self.schedule_serial = 12345
-                self.state = pokertournament.TOURNAMENT_STATE_REGISTERING
+                self.state = pokertournament.PokerTournament.STATES.REGISTERING
 
         self.service.startService()
         self.service.tourneys = { 12345: TournamentCandidate() }
@@ -3451,7 +3451,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         self.service.tourneyBreakWait = ok
         self.service.tourneyNewState(BreakTestCase.Tournament(),
-             pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK_WAIT)
+             pokertournament.PokerTournament.STATES.RUNNING, pokertournament.PokerTournament.STATES.BREAK_WAIT)
         self.assertEquals(self.callCount, 1)
         self.service.tourneyBreakWait = notok
         self.callCount = 0
@@ -3502,7 +3502,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyDeal = confirmTourneyDeal
         self.secondsStart = testclock._seconds_value
 
-        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_BREAK, pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.PokerTournament.STATES.BREAK, pokertournament.PokerTournament.STATES.RUNNING)
 
         self.service.db = saveDb
         return defer.DeferredList((tourneyBreakResumeDeferred, tourneyDealDeferred), fireOnOneErrback = True)
@@ -3552,7 +3552,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyDeal = confirmTourneyDeal
         self.secondsStart = testclock._seconds_value
 
-        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.service.tourneyNewState(BreakTestCase.Tournament(), pokertournament.PokerTournament.STATES.REGISTERING, pokertournament.PokerTournament.STATES.RUNNING)
 
         self.service.db = saveDb
         return tourneyDealDeferred
@@ -3686,7 +3686,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         # tourney.breaks_duration is.  
 
         now = pokerservice.seconds()
-        self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
+        self.service.tourneyNewState(Tournament(), pokertournament.PokerTournament.STATES.RUNNING, pokertournament.PokerTournament.STATES.BREAK)
         self.assertEquals(self.callCount, 1)
         for ii in [ 1, 2 ]:
             self.assertEquals(len(tables[ii].broadcastedPackets), 1)
@@ -3708,7 +3708,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         now = pokerservice.seconds()
         remainingSeconds = 111
         self.service.tourneyNewState(Tournament(remainingSeconds = remainingSeconds),
-                                     pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
+                                     pokertournament.PokerTournament.STATES.RUNNING, pokertournament.PokerTournament.STATES.BREAK)
         self.assertEquals(self.callCount, 1)
         for ii in [ 1, 2 ]:
             self.assertEquals(len(tables[ii].broadcastedPackets), 1)
@@ -3813,7 +3813,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         class Tournament:
 
             def __init__(self):
-                self.state = pokertournament.TOURNAMENT_STATE_RUNNING
+                self.state = pokertournament.PokerTournament.STATES.RUNNING
                 self.remaining = 0
                 self.games = [ Game() ]
                 self.serial = 1
@@ -3830,7 +3830,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tables = { 1: table }
         self.service.tourneyBreakCheck(tourney)
         self.failIf(table.message)
-        tourney.state = pokertournament.TOURNAMENT_STATE_BREAK
+        tourney.state = pokertournament.PokerTournament.STATES.BREAK
         self.service.tourneyBreakCheck(tourney)
         self.failUnless("less than a minute" in table.message)
         tourney.remaining = 60
@@ -4394,8 +4394,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mtSelf.start_time = 5
                 mtSelf.serial = 19
         self.service.tourneyNewState(MockTourney(),
-                                     pokertournament.TOURNAMENT_STATE_BREAK_WAIT,
-                                     pokertournament.TOURNAMENT_STATE_RUNNING)
+                                     pokertournament.PokerTournament.STATES.BREAK_WAIT,
+                                     pokertournament.PokerTournament.STATES.RUNNING)
         self.assertEquals(self.callCount, 1)
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
