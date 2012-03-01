@@ -365,6 +365,7 @@ class PokerService(service.Service):
         if self.cashier: self.cashier.close()
         if self.db:
             self.cleanupCrashedTables()
+            self.abortRunningTourneys()
             if self.resthost_serial: self.cleanupResthost()
             self.db.close()
             self.db = None
@@ -1892,81 +1893,91 @@ class PokerService(service.Service):
         cursor.execute(sql)
         sql = "delete from session"
         cursor.execute(sql)
-
         cursor.close()
+
+    def abortRunningTourneys(self):
+        cursor = self.db.cursor()
+        try:
+            cursor.execute("""
+                UPDATE tourneys AS t
+                    LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial
+                    LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial
+                SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted'
+                WHERE
+                    t.resthost_serial = %s AND
+                    t.state IN ('running', 'break', 'breakwait')""",
+                (self.resthost_serial,)
+            )
+            if self.verbose > 1 and cursor.rowcount:
+                self.message("cleanupTourneys: " + cursor._executed)
+        finally:
+            cursor.close()
 
     def cleanupTourneys(self):
         self.tourneys = {}
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
-
         cursor = self.db.cursor(DictCursor)
-        #
-        # Trash uncompleted tournaments and refund the buyin but keep the
-        # tournaments that are 'complete' or 'registering'n.
-        # Tournaments in the 'registering' state for which the start time
-        # is in the past are trashed.
-        # Sit and go tournaments in the 'registering' state are trashed.
-        #
-        sql = ( "SELECT * FROM tourneys WHERE " +
-                " ( state NOT IN ( 'registering', 'aborted', 'complete' ) OR " +
-                "   ( state = 'registering' AND " +
-                "     ( sit_n_go = 'y' OR start_time < (%d + 60) ) " +
-                "   ) " +
-                " ) " +
-                " AND resthost_serial = %d" ) % ( seconds(), self.resthost_serial )
-        if self.verbose > 2:
-            self.message("cleanupTourneys: " + sql)
-        cursor.execute(sql)
-        for x in xrange(cursor.rowcount):
-            row = cursor.fetchone()
-            withdraw = row['buy_in'] + row['rake']
-            cursor1 = self.db.cursor()
-            if withdraw > 0:
-                sql = ( "UPDATE user2money,user2tourney SET amount = amount + " + str(withdraw) +
-                        " WHERE user2tourney.user_serial = user2money.user_serial AND " +
-                        "       user2money.currency_serial = " + str(row['currency_serial']) + " AND " +
-                        "       user2tourney.tourney_serial = " + str(row['serial']) )
-                if self.verbose > 1:
-                    self.message("cleanupTourneys: %s" % sql)
-                cursor1.execute(sql)
-            cursor1.execute("UPDATE tourneys SET state = 'aborted' WHERE serial = %s", (row['serial'],))
-            if self.verbose > 1:
-                self.message("cleanupTourneys: %s" % cursor1._executed)
-            cursor1.close()
-        #
-        # Restore tourney registrations after reboot
-        #
-        sql = ( "SELECT * FROM tourneys " +
-                " WHERE " +
-                "  state = 'registering' AND " +
-                "  start_time > (%d + 60) AND " +
-                "  resthost_serial = %d " ) % ( seconds(), self.resthost_serial )
-        if self.verbose > 2:
-            self.message("cleanupTourneys: " + sql)
-        cursor.execute(sql)
-        for x in xrange(cursor.rowcount):
-            row = cursor.fetchone()
-            if self.verbose >= 0: message = "cleanupTourneys: restoring %s(%s) with players" % ( row['name'], row['serial'],  )
-            tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
-            cursor1 = self.db.cursor()
-            sql = "SELECT user_serial FROM user2tourney WHERE tourney_serial = " + str(row['serial'])
+        try:
+            # abort still running tourneys and refund buyin
+            self.abortRunningTourneys()
+            
+            # trash tourneys and their user2tourney data which are either sit'n'go and aborted
+            # or in registering state with a starttime in the past+60s
+            where = """
+                WHERE
+                    t.resthost_serial = %s AND
+                    (
+                        (t.sit_n_go = 'y' AND t.state IN ('aborted', 'registering'))
+                    OR 
+                        (t.state = 'registering' AND t.start_time < %s)
+                    )
+            """
+            cursor.execute("""
+                DELETE u2t FROM user2tourney AS u2t
+                    LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial
+                """ + where,
+                (self.resthost_serial, seconds())
+            )
+            if self.verbose > 1 and cursor.rowcount:
+                self.message("cleanupTourneys: " + cursor._executed)
+            cursor.execute("""
+                DELETE t FROM tourneys AS t
+                """ + where,
+                (self.resthost_serial, seconds())
+            )
+            if self.verbose > 1 and cursor.rowcount:
+                self.message("cleanupTourneys: " + cursor._executed)
+            del where
+            
+            # restore registering tourneys
+            cursor.execute("""
+                SELECT * FROM tourneys
+                WHERE
+                    resthost_serial = %s AND
+                    state = 'registering' AND
+                    start_time >= %s
+                """,
+                (self.resthost_serial, seconds())
+            )
             if self.verbose > 2:
-                self.message("cleanupTourneys: " + sql)
-            cursor1.execute(sql)
-            for y in xrange(cursor1.rowcount):
-                (serial,) = cursor1.fetchone()
-                if self.verbose >= 0: message += " " + str(serial)
-                tourney.register(serial)
-
-            cursor1.execute(sql)
-            cursor1.close()
-            if self.verbose >= 0:
-                self.message(message)
-            cursor2 = self.db.cursor()
-            cursor2.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( row['serial'], int(seconds()), self.resthost_serial))
-            cursor2.close()            
-        cursor.close()
+                self.message("cleanupTourneys: " + cursor._executed)
+            for row in cursor.fetchall():
+                tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
+                cursor.execute("""
+                    SELECT user_serial FROM user2tourney WHERE tourney_serial = %s""",
+                    (row['serial'],)
+                )
+                if self.verbose > 2:
+                    self.message("cleanupTourneys: " + cursor._executed)
+                for user in cursor.fetchall():
+                    tourney.register(user['user_serial'])
+                cursor.execute("""
+                    REPLACE INTO route VALUES (0, %s, %s, %s)""",
+                    (row['serial'], seconds(), self.resthost_serial)
+                )
+        finally:
+            cursor.close()
 
     def getMoney(self, serial, currency_serial):
         cursor = self.db.cursor()
