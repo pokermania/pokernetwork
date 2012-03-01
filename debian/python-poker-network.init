@@ -82,6 +82,8 @@ test -x ${twistd} || exit 0
 
 set -e
 
+ulimit -n 10240
+
 case "$1" in
   start)
 	echo -n "Starting ${desc}: "
