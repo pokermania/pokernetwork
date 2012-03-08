@@ -114,6 +114,7 @@ class PokerTable:
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
         game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
+        game.registerCallback(lambda game_id, game_type, *args: game_type == 'finish' and self.tourneyEndTurn())
         self.skin = description.get("skin", "default")
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
@@ -893,7 +894,6 @@ class PokerTable:
             self.delayedActions()
             if len(packets) > 0:
                 self.broadcast(packets)
-            self.tourneyEndTurn()
             if self.isValid():
                 self.cashGame_kickPlayerSittingOutTooLong(history_tail)
                 self.scheduleAutoDeal()
