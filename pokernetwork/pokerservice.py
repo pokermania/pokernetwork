@@ -640,20 +640,23 @@ class PokerService(service.Service):
         if self.verbose > 3:
             self.message("updateTourneysSchedule")
         cursor = self.db.cursor(DictCursor)
-
-        sql = ( " SELECT * FROM tourneys_schedule WHERE " +
-                "          active = 'y' AND " +
-                "          resthost_serial = %s AND " +
-                "          ( respawn = 'y' OR " +
-                "            register_time < %s )" ) % self.db.literal((self.resthost_serial, int(seconds()) )
-                )
-        cursor.execute(sql)
-        result = cursor.fetchall()
-        self.tourneys_schedule = dict( (schedule['serial'],schedule) for schedule in result )
-        cursor.close()
-        self.checkTourneysSchedule()
-        self.cancelTimer('updateTourney')
-        self.timer['updateTourney'] = reactor.callLater(UPDATE_TOURNEYS_SCHEDULE_DELAY, self.updateTourneysSchedule)
+        try:
+            cursor.execute("""
+                SELECT * FROM tourneys_schedule
+                WHERE
+                    resthost_serial = %s AND
+                    active = 'y' AND
+                    (
+                        respawn = 'y' OR register_time < %s
+                    )
+                """, (self.resthost_serial, seconds())
+            )
+            self.tourneys_schedule = dict((schedule['serial'],schedule) for schedule in cursor.fetchall())
+            self.checkTourneysSchedule()
+            self.cancelTimer('updateTourney')
+            self.timer['updateTourney'] = reactor.callLater(UPDATE_TOURNEYS_SCHEDULE_DELAY, self.updateTourneysSchedule)
+        finally:
+            cursor.close()
 
     def checkTourneysSchedule(self):
         if self.verbose > 3:
@@ -1064,51 +1067,69 @@ class PokerService(service.Service):
             self.tourneyDestroyGameActual(game)
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
-        from_table = self.getTable(from_game_id)
-        from_table.movePlayer(from_table.avatar_collection.get(serial), serial,
-                        to_game_id, reason = PacketPokerTable.REASON_TOURNEY_MOVE)
         cursor = self.db.cursor()
-        sql = "UPDATE user2tourney SET table_serial = %d WHERE user_serial = %d AND tourney_serial = %d" % ( to_game_id, serial, tourney.serial )
-        if self.verbose > 4:
-            self.message("tourneyMovePlayer: " + sql)
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.message("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
-            return False
-        cursor.close()
-        return True
+        try:
+            from_table = self.getTable(from_game_id)
+            from_table.movePlayer(
+                from_table.avatar_collection.get(serial),
+                serial,
+                to_game_id,
+                reason = PacketPokerTable.REASON_TOURNEY_MOVE
+            )
+            cursor.execute("""
+                UPDATE user2tourney SET table_serial = %s
+                WHERE
+                    user_serial = %s AND
+                    tourney_serial = %s
+                """, (to_game_id, serial, tourney.serial)
+            )
+            if self.verbose > 4:
+                self.message("tourneyMovePlayer: " + cursor._executed)
+            if cursor.rowcount != 1:
+                self.message("modified %d row (expected 1): %s" % (cursor.rowcount, cursor._executed))
+                return False
+            return True
+        finally:
+            cursor.close()
 
     def tourneyRemovePlayer(self, tourney, game_id, serial):
-        #
-        # Inform the player about its position and prize
-        #
-        prizes = tourney.prizes()
-        rank = tourney.getRank(serial)
-        money = 0
-        players = len(tourney.players)
-        if rank-1 < len(prizes):
-            money = prizes[rank-1]
-
-        avatars = self.avatar_collection.get(serial)
-        if avatars:
-            packet = PacketPokerTourneyRank(serial = tourney.serial,
-                                            game_id = game_id,
-                                            players = players,
-                                            rank = rank,
-                                            money = money)
-            for avatar in avatars:
-                avatar.sendPacketVerbose(packet)
-        table = self.getTable(game_id)
-        table.kickPlayer(serial)
         cursor = self.db.cursor()
-        sql = "UPDATE user2tourney SET rank = %d, table_serial = -1 WHERE user_serial = %d AND tourney_serial = %d" % ( rank, serial, tourney.serial )
-        if self.verbose > 4:
-            self.message("tourneyRemovePlayer: " + sql)
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
-        cursor.close()
-        self.tourneySatelliteSelectPlayer(tourney, serial, rank)
+        try:
+            aprizes = tourney.prizes()
+            rank = tourney.getRank(serial)
+            players = len(tourney.players)
+            if rank-1 < len(prizes):
+                money = prizes[rank-1]
+            avatars = self.avatar_collection.get(serial)
+            if avatars:
+                packet = PacketPokerTourneyRank(
+                    serial = tourney.serial,
+                    game_id = game_id,
+                    players = players,
+                    rank = rank,
+                    money = money
+                )
+                for avatar in avatars:
+                    avatar.sendPacketVerbose(packet)
+            table = self.getTable(game_id)
+            table.kickPlayer(serial)
+            cursor.execute("""
+                UPDATE user2tourney
+                SET
+                    rank = %s,
+                    table_serial = -1,
+                WHERE
+                    user_serial = %s,
+                    tourney_serial = %s
+                """, (rank, serial, tourney.serail)
+            )
+            if self.verbose > 4:
+                self.message("tourneyRemovePlayer: " + cursor._executed)
+            if cursor.rowcount != 1:
+                self.error("modified %d rows (expected 1): %s " % (cursor.rowcount, cursor._executed))
+            self.tourneySatelliteSelectPlayer(tourney, serial, rank)
+        finally:
+            cursor.close()
 
     def tourneySatelliteLookup(self, tourney):
         if tourney.satellite_of == 0:
