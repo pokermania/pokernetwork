@@ -49,7 +49,7 @@ from twisted.web import resource,server
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory
 from pokernetwork.pokersite import PokerSite
-from twisted.manhole import telnet
+from pokernetwork.pokermanhole import makeService as makeManholeService
 
 def makeService(configuration):
     settings = Config([''])
@@ -67,7 +67,7 @@ def makeService(configuration):
     # Poker protocol (with or without SSL)
     #
     tcp_port = settings.headerGetInt("/server/listen/@tcp")
-    internet.TCPServer(tcp_port, poker_factory).setServiceParent(serviceCollection)    
+    internet.TCPServer(tcp_port, poker_factory).setServiceParent(serviceCollection)
 
     tcp_ssl_port = settings.headerGetInt("/server/listen/@tcp_ssl")
     if HAS_OPENSSL and tcp_ssl_port:
