@@ -1347,8 +1347,8 @@ class PokerService(service.Service):
         schedule_sql = "SELECT * FROM tourneys_schedule AS tourneys WHERE respawn = 'n' AND active = 'y'"
         sql = ''
         if len(criterion) > 1:
-            ( currency_serial, type ) = criterion
-            sit_n_go = type == 'sit_n_go' and 'y' or 'n'
+            ( currency_serial, tourney_type ) = criterion
+            sit_n_go = 'y' if tourney_type == 'sit_n_go' else 'n'
             if currency_serial:
                 sql += " AND tourneys.currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
             else:
@@ -2803,9 +2803,9 @@ if HAS_OPENSSL:
 
         def __init__(self, settings):
             self.pem_file = None
-            for dir in settings.headerGet("/server/path").split():
-                if exists(dir + "/poker.pem"):
-                    self.pem_file = dir + "/poker.pem"
+            for path in settings.headerGet("/server/path").split():
+                if exists(path + "/poker.pem"):
+                    self.pem_file = path + "/poker.pem"
 
         def getContext(self):
             ctx = SSL.Context(SSL.SSLv23_METHOD)
