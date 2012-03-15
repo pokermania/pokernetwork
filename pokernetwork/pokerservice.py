@@ -1095,9 +1095,10 @@ class PokerService(service.Service):
     def tourneyRemovePlayer(self, tourney, game_id, serial):
         cursor = self.db.cursor()
         try:
-            aprizes = tourney.prizes()
+            prizes = tourney.prizes()
             rank = tourney.getRank(serial)
             players = len(tourney.players)
+            money = 0
             if rank-1 < len(prizes):
                 money = prizes[rank-1]
             avatars = self.avatar_collection.get(serial)
@@ -1117,11 +1118,11 @@ class PokerService(service.Service):
                 UPDATE user2tourney
                 SET
                     rank = %s,
-                    table_serial = -1,
+                    table_serial = -1
                 WHERE
-                    user_serial = %s,
+                    user_serial = %s AND
                     tourney_serial = %s
-                """, (rank, serial, tourney.serail)
+                """, (rank, serial, tourney.serial)
             )
             if self.verbose > 4:
                 self.message("tourneyRemovePlayer: " + cursor._executed)

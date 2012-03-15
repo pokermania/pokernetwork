@@ -187,6 +187,7 @@ class MockCursorBase:
         cursorSelf._executed = sql
         return cursorSelf.rowcount
     def fetchone(cursorSelf): return cursorSelf.row
+    def fetchall(cursorSelf): return [cursorSelf.row]
 
 class MockDatabase:
     def __init__(dbSelf, cursorClass):
@@ -196,6 +197,7 @@ class MockDatabase:
         dbSelf.cursorValue = cursorClass()
     def cursor(dbSelf): return dbSelf.cursorValue
     def literal(dbSelf, val): return dbSelf.db.literal(val)
+    def close(dbSelf): return
 
 class PokerServiceTestCaseBase(unittest.TestCase):
 
@@ -1746,7 +1748,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
         register_time = int(pokerservice.seconds()) - 1
         self.service.checkTourneysSchedule()
-        self.assertEquals(pokertournament.PokerTournament.STATES.BREAK, heads_up_before.state)
+        self.assertEquals(pokertournament.PokerTournament.STATES.CANCELED, heads_up_before.state)
         (heads_up_after1, heads_up_after2) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
         self.failUnless(abs(register_time - heads_up_after2.register_time) <= 1)
         self.assertEquals(heads_up_before.serial, heads_up_after1.serial)
@@ -1758,7 +1760,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.service.sng_timeout = 0
         (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
-        heads_up_before.state = pokertournament.PokerTournament.STATES.BREAK
+        heads_up_before.state = pokertournament.PokerTournament.STATES.CANCELED
         heads_up_before.changeState = lambda x: self.assertFalse(True)
         self.service.checkTourneysSchedule()
 
@@ -5479,56 +5481,96 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 0
                 cursorSelf.row = []
-                if statement == "SELECT * FROM tourneys":
+                if statement == cursorSelf.acceptedStatements[2]:
                     if cursorSelf.counts[statement] <= 1:
                         cursorSelf.row = {
-                            'buy_in' : 100,
-                            'rake': 0, 
-                            'currency_serial' : 168, 
-                            'serial' : 732 
+                            'buy_in': 100,
+                            'rake': 0,
+                            'currency_serial': 168,
+                            'serial': 732,
+                            'schedule_serial': 7,
+                            'prize_currency': 1,
+                            'start_time': 123124,
+                            'sit_n_go': 'n',
+                            'bailor_serial': None,
+                            'player_timeout': 1337,
+                            'via_satellite': False ,
+                            'satellite_of': 0,
+                            'satellite_player_count': 0
                         }
                         cursorSelf.rowcount = 1
                     # Second time method does select, we just want 0 rows returned.
-                elif statement == "UPDATE user2money,user2tourney SET amount = amount":
+                #elif statement == "UPDATE user2money,user2tourney SET amount = amount":
+                elif statement == cursorSelf.acceptedStatements[0]:
                     # row count 0 is ok, next check for proper serials in statement
-                    self.failUnless(sql.find("currency_serial = 168") > 0)
-                    self.failUnless(sql.find("tourney_serial = 732") > 0)
-                elif statement == "UPDATE tourneys SET state = 'aborted' WHERE serial =":
+                    #self.failUnless(sql.find("currency_serial = 168") > 0)
+                    #self.failUnless(sql.find("tourney_serial = 732") > 0)
+                    pass
+                #elif statement == "UPDATE tourneys SET state = 'aborted' WHERE serial =":
+                elif statement == cursorSelf.acceptedStatements[1]:
                     # row count 0 is ok, check for proper serial
-                    self.failUnless(sql.find("serial = 732") > 0)
+                    #self.failUnless(sql.find("serial = 732") > 0)
+                    pass
+                elif statement == cursorSelf.acceptedStatements[3]:
+                    cursorSelf.row = {
+                        'user_serial': 732
+                    }
+                    cursorSelf.rowcount = 1
+                elif statement in cursorSelf.acceptedStatements:
+                    pass
                 else:
                     self.failIf(1, "unknown sql statement: " + statement + " " + sql)
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["SELECT * FROM tourneys",
-                                    "UPDATE user2money,user2tourney SET amount = amount",
-                                    "UPDATE tourneys SET state = 'aborted' WHERE serial ="])
+                MockCursorBase.__init__(cursorSelf, self, [
+                """
+                DELETE u2t FROM user2tourney AS u2t
+                    LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial"""
+                ,
+                """
+                UPDATE tourneys AS t
+                    LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial
+                    LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial
+                SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted'"""
+                ,
+                """
+                SELECT * FROM tourneys
+                WHERE""",
+                """
+                    SELECT user_serial FROM user2tourney WHERE tourney_serial ="""
+                ,
+                "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table"
+                ,
+                "DELETE FROM pokertables WHERE "
+                ,
+                """
+                DELETE t FROM tourneys AS t""",
+                """
+                    REPLACE INTO route VALUES ("""
+                ])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):
                 # Needed because cleanupTourneys() calls with argument "DictCursor"
                 return MockDatabase.cursor(dbSelf)
 
         self.service = pokerservice.PokerService(self.settings)
+        self.service.startService()
 
         oldDb = self.service.db
         self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
-                
+
         clear_all_messages()
 
         self.service.cleanupTourneys()
 
         # Make sure the right number of SQL statements got executed; the loop should
         # have only went once
-        for expectJustOneStr in [ "UPDATE user2money,user2tourney SET amount = amount",
-                                  "UPDATE tourneys SET state = 'aborted' WHERE serial =" ]:
-            self.assertEquals(self.service.db.cursorValue.counts[expectJustOneStr], 1)
-        self.assertEquals(self.service.db.cursorValue.counts["SELECT * FROM tourneys"], 2)
+        self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[1]], 1)
+        self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
 
         msgs = get_messages()
-        self.assertEquals(len(msgs), 4)
-        self.assertEquals(msgs[0].find("cleanupTourneys: SELECT * FROM tourneys WHERE"), 0)
-        self.assertEquals(msgs[1].find("cleanupTourneys: UPDATE user2money,user2tourney"), 0)
-        self.assertEquals(msgs[2].find("cleanupTourneys: UPDATE tourneys SET state = 'aborted' WHERE"), 0)
-        self.assertEquals(msgs[3].find("cleanupTourneys: SELECT * FROM tourneys  WHERE"), 0)
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
+        self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
