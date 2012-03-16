@@ -345,7 +345,7 @@ class PokerAvatar:
             try:
                 self.explain.explain(packet)
                 packets = self.explain.forward_packets
-            except:
+            except Exception:
                 packets = [ PacketError(other_type = PACKET_NONE, message = format_exc()) ]
                 if self.service.verbose >= 0:
                     self.message(packets[0].message)
