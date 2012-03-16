@@ -114,6 +114,7 @@ class PokerTable:
         game.setBettingStructure(description["betting_structure"])
         game.setMaxPlayers(int(description["seats"]))
         game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
+        game.registerCallback(lambda game_id, game_type, *args: game_type == 'end' and self.tourneyEndTurn())
         self.skin = description.get("skin", "default")
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
@@ -803,10 +804,10 @@ class PokerTable:
             return
         if game.isTournament():
             if self.tourney:
-                if self.tourney.state != pokertournament.TOURNAMENT_STATE_RUNNING:
+                if self.tourney.state != pokertournament.PokerTournament.STATES.RUNNING:
                     if self.factory.verbose > 2:
                         self.message("Not autodealing %d because in tournament state %s" % ( self.game.id, self.tourney.state ))
-                    if self.tourney.state == pokertournament.TOURNAMENT_STATE_BREAK_WAIT:
+                    if self.tourney.state == pokertournament.PokerTournament.STATES.BREAK_WAIT:
                         self.broadcastMessage(PacketPokerGameMessage, "Tournament will break when the other tables finish their hand")
                     return
         elif not self.autodealTemporary:
