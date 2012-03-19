@@ -666,8 +666,8 @@ class PokerService(service.Service):
         # Cancel sng that stayed in registering state for too long
         #
         for tourney in filter(lambda tourney: tourney.sit_n_go == 'y', self.tourneys.values()):
-            if tourney.state == PokerTournament.STATES.REGISTERING and now - tourney.register_time > self.sng_timeout:
-                tourney.changeState(PokerTournament.STATES.CANCELED)
+            if tourney.state == TOURNAMENT_STATE_REGISTERING and now - tourney.register_time > self.sng_timeout:
+                tourney.changeState(TOURNAMENT_STATE_CANCELED)
         #
         # Respawning sit'n'go tournaments
         #
@@ -675,7 +675,7 @@ class PokerService(service.Service):
             schedule_serial = schedule['serial']
             if (
                 not self.schedule2tourneys.has_key(schedule_serial) or
-                not filter(lambda tourney: tourney.state == PokerTournament.STATES.REGISTERING, self.schedule2tourneys[schedule_serial])
+                not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial])
             ):
                 self.spawnTourney(schedule)
         #
@@ -720,7 +720,7 @@ class PokerService(service.Service):
         #
         # Forget about old tournaments
         #
-        for tourney in filter(lambda tourney: tourney.state in ( PokerTournament.STATES.COMPLETE,  PokerTournament.STATES.CANCELED ), self.tourneys.values()):
+        for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED ), self.tourneys.values()):
             if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
                 self.deleteTourney(tourney)
                 self.tourneyDeleteRoute(tourney)
@@ -845,7 +845,7 @@ class PokerService(service.Service):
     def tourneyNewState(self, tourney, old_state, new_state):
         cursor = self.db.cursor()
         updates = [ "state = '" + new_state + "'" ]
-        if old_state != PokerTournament.STATES.BREAK and new_state == PokerTournament.STATES.RUNNING:
+        if old_state != TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             updates.append("start_time = %d" % tourney.start_time)
         sql = "update tourneys set " + ", ".join(updates) + " where serial = " + str(tourney.serial)
         if self.verbose > 2:
@@ -854,7 +854,7 @@ class PokerService(service.Service):
         if cursor.rowcount != 1:
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
         cursor.close()
-        if new_state == PokerTournament.STATES.BREAK:
+        if new_state == TOURNAMENT_STATE_BREAK:
             # When we are entering BREAK state for the first time, which
             # should only occur here in the state change operation, we
             # send the PacketPokerTableTourneyBreakBegin.  Note that this
@@ -872,13 +872,13 @@ class PokerService(service.Service):
                 table = self.getTable(gameId)
                 table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = gameId, resume_time = resumeTime))
             self.tourneyBreakCheck(tourney)
-        elif old_state == PokerTournament.STATES.BREAK and new_state == PokerTournament.STATES.RUNNING:
+        elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             wait = int(self.delays.get('extra_wait_tourney_break', 0))
             if wait > 0:
                 reactor.callLater(wait, self.tourneyResumeAndDeal, tourney)
             else:
                 self.tourneyResumeAndDeal(tourney)
-        elif old_state == PokerTournament.STATES.REGISTERING and new_state == PokerTournament.STATES.RUNNING:
+        elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
             self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_START, param1 = tourney.serial)            
             reactor.callLater(0.01, self.tourneyBroadcastStart, tourney.serial)
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
@@ -888,16 +888,16 @@ class PokerService(service.Service):
                 reactor.callLater(wait, self.tourneyDeal, tourney)
             else:
                 self.tourneyDeal(tourney)
-        elif new_state == PokerTournament.STATES.RUNNING:
+        elif new_state == TOURNAMENT_STATE_RUNNING:
             self.tourneyDeal(tourney)
-        elif new_state == PokerTournament.STATES.BREAK_WAIT:
+        elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
             self.tourneyBreakWait(tourney)
 
     def tourneyBreakCheck(self, tourney):
         key = 'tourney_breaks_%d' % id(tourney)
         self.cancelTimer(key)
         tourney.updateBreak()
-        if tourney.state == PokerTournament.STATES.BREAK:
+        if tourney.state == TOURNAMENT_STATE_BREAK:
             remaining = tourney.remainingBreakSeconds()
             if remaining < 60:
                 remaining = "less than a minute"
@@ -1141,10 +1141,10 @@ class PokerService(service.Service):
                 found = candidate
                 break
         if found:
-            if found.state != PokerTournament.STATES.REGISTERING:
+            if found.state != TOURNAMENT_STATE_REGISTERING:
                 self.error("tourney %d is a satellite of %d but %d is in state %s instead of the expected state %s" % 
-                           ( tourney.serial, found.schedule_serial, found.schedule_serial, found.state, PokerTournament.STATES.REGISTERING) )
-                return ( 0, PokerTournament.STATES.REGISTERING )
+                           ( tourney.serial, found.schedule_serial, found.schedule_serial, found.state, TOURNAMENT_STATE_REGISTERING) )
+                return ( 0, TOURNAMENT_STATE_REGISTERING )
             return ( found.serial, None )
         else:
             return ( 0, False )
@@ -1332,7 +1332,7 @@ class PokerService(service.Service):
 
     def tourneyStats(self):
         cursor = self.db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM tourneys WHERE state in ( %s, %s )", ( PokerTournament.STATES.RUNNING, PokerTournament.STATES.REGISTERING ))
+        cursor.execute("SELECT COUNT(*) FROM tourneys WHERE state in ( %s, %s )", ( TOURNAMENT_STATE_RUNNING, TOURNAMENT_STATE_REGISTERING ))
         tourneys = int(cursor.fetchone()[0])
         cursor.execute("SELECT COUNT(*) FROM user2tourney WHERE rank = -1")
         players = int(cursor.fetchone()[0])

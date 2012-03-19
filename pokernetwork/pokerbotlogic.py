@@ -192,7 +192,7 @@ class PokerBot:
                 print "Unable to find tournament %s " % name
             found = None
             for tourney in packet.packets:
-                if tourney.state == PokerTournament.STATES.REGISTERING:
+                if tourney.state == TOURNAMENT_STATE_REGISTERING:
                     found = tourney.serial
                     break
             if not found:

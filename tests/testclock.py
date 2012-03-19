@@ -51,7 +51,7 @@ base.seconds = _seconds_tick
 #
 reactor.timeout = lambda: 0
 runtime.seconds = _seconds_tick
-pokertournament.seconds = _seconds_tick
+pokertournament.tournament_seconds = _seconds_tick
 
 from pokernetwork.pokerlock import PokerLock
 PokerLock.acquire_sleep = 0.01

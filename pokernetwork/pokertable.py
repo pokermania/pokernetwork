@@ -804,10 +804,10 @@ class PokerTable:
             return
         if game.isTournament():
             if self.tourney:
-                if self.tourney.state != pokertournament.PokerTournament.STATES.RUNNING:
+                if self.tourney.state != pokertournament.TOURNAMENT_STATE_RUNNING:
                     if self.factory.verbose > 2:
                         self.message("Not autodealing %d because in tournament state %s" % ( self.game.id, self.tourney.state ))
-                    if self.tourney.state == pokertournament.PokerTournament.STATES.BREAK_WAIT:
+                    if self.tourney.state == pokertournament.TOURNAMENT_STATE_BREAK_WAIT:
                         self.broadcastMessage(PacketPokerGameMessage, "Tournament will break when the other tables finish their hand")
                     return
         elif not self.autodealTemporary:
