@@ -1297,15 +1297,15 @@ class PokerService(service.Service):
         if self.tourneys.has_key(tourney_serial):
             packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizes()
         else:
-            if packet.tourney["sit_n_go"] == 'y':
-                player_count = packet.tourney["players_quota"]
-            else:
-                player_count = packet.tourney["registered"]
+            player_count = packet.tourney["players_quota"] \
+                if packet.tourney["sit_n_go"] == 'y' \
+                else packet.tourney["registered"]
             packet.tourney["rank2prize"] = pokerprizes.PokerPrizesTable(
-                        buy_in_amount = packet.tourney['buy_in'],
-                        guarantee_amount = packet.tourney['prize_min'],
-                        player_count = player_count,
-                        config_dirs = self.dirs).getPrizes()
+                buy_in_amount = packet.tourney['buy_in'],
+                guarantee_amount = packet.tourney['prize_min'],
+                player_count = player_count,
+                config_dirs = self.dirs
+            ).getPrizes()
         cursor.close()
 
         user2properties = {}
