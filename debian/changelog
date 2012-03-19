@@ -1,3 +1,21 @@
+poker-network (2.0.4-1) pokermania; urgency=low
+
+  fixes, improvements: #2902, #5316, #5317, #4892
+
+  * PokerService tests running again
+  * 3139ba5 minor fixup in pokertournament.PokerTournament.register
+  * da6fbe5 PacketPokerUserInfo now uses 8 byte uints, refs #5263
+  * 36a8380 Merge branch 'fb_respawn_tourney', refs #4892
+  * 47c2731 usage of PacketFactory instead of __dict__ for packet lookup, refs #2902
+  * a0c3eb0 use __dict__ lookup instead of eval in args2packets, refs #2902
+  * 05157b2 playerListIndexAdd humanized
+  * 076da9a negative value fix no. 2
+  * c0dbb57 call Table.tourneyEndTurn after game finished instead of every time an interaction happens refs #5317
+  * a8d64e7 Updated manhole to use conch implementation of ssh_manhole, refs #5316
+  * 2be0bd9 rewrite of PokerService.cleanupTourneys, fixes the new abort state and simplifies things
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 27 Feb 2012 13:35:00 +0200
+
 poker-network (2.0.3-9) pokermania; urgency=low
 
   * HTTPPageGetter noisy = false (no more log entries)

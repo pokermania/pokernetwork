@@ -149,8 +149,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         self.service.verbose = 6
         self.service.startService()
         factory = pokerservice.IPokerFactory(self.service)
-        self.p = reactor.listenTCP(0, factory,
-                                   interface="127.0.0.1")
+        self.p = reactor.listenTCP(0, factory, interface="127.0.0.1")
         self.port = self.p.getHost().port
     # ------------------------------------------------------
     def setUpClient(self, index):
@@ -460,8 +459,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
             elif packet.type == PACKET_POKER_POSITION:
                 found += 1
                 self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(True, packet.serial == avatar0.getSerial() 
-                                        or packet.serial == avatar1.getSerial())
+                self.assertEquals(True, packet.serial == avatar0.getSerial() or packet.serial == avatar1.getSerial())
             elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
                 found += 1
                 self.assertEquals(packet.cookie, "")
@@ -479,12 +477,10 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                 self.assertEquals(packet.serial, avatar1.getSerial())
                 self.assertEquals(packet.game_id, gameId)
                 self.assertEquals(packet.position, -1)
-                self.assertEquals(packet.length, 8)
+                self.assertEquals(packet.length, 12)
             elif packet.type == PACKET_POKER_BOARD_CARDS:
                 self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(True, packet.serial == avatar0.getSerial() 
-                                        or packet.serial == avatar1.getSerial())
-                
+                self.assertEquals(True, packet.serial == avatar0.getSerial() or packet.serial == avatar1.getSerial())
                 self.assertEquals(packet.cards, [])
             # When I was writing this loop, I also saw a number of:
             # POKER_PLAYER_CHIPS and also the POKER_PLAYER_ARRIVE for
@@ -940,15 +936,23 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def startHandAndReceiveCards(self, (client, packet), gameId):
         table = self.service.getTable(gameId)
 
-        lang2strings = { 'default' : [ "Dealer: user1 pays 1 blind\n",
-                                       "Dealer: user0 pays 2 blind\n",
-                                       "Dealer: pre-flop, 2 players\n" ], 
-                         'en_US' : [ "Dealer: user1 pays 1 blind\n",
-                                           "Dealer: user0 pays 2 blind\n",
-                                           "Dealer: pre-flop, 2 players\n" ], 
-                         'fr_FR' : [ "Dealer: user1 paye 1 de blind\n",
-                                           "Dealer: user0 paye 2 de blind\n",
-                                           "Dealer: pre-flop, 2 joueurs\n" ] }
+        lang2strings = { 
+            'default' : [  
+                "Dealer: user1 pays 1 blind\n",
+                "Dealer: user0 pays 2 blind\n",
+                "Dealer: pre-flop, 2 players\n" 
+            ], 
+             'en_US' : [ 
+                "Dealer: user1 pays 1 blind\n",
+                "Dealer: user0 pays 2 blind\n",
+                "Dealer: pre-flop, 2 players\n" 
+            ], 
+             'fr_FR' : [
+                "Dealer: user1 paye 1 de blind\n",
+                "Dealer: user0 paye 2 de blind\n",
+                "Dealer: pre-flop, 2 joueurs\n" 
+            ] 
+        }
         avatar = []
         avatar.append(self.service.avatars[0])
         avatar.append(self.service.avatars[1])
@@ -983,8 +987,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     elif (packet.serial == avatar[1].getSerial()):
                         self.assertEquals(packet.chips, [100, 1])
                     else:
-                        assert("unknown serial in player2bet packet: %d" 
-                               % packet.serial)
+                        assert("unknown serial in player2bet packet: %d" % packet.serial)
                 elif packet.type == PACKET_POKER_CHIPS:
                     found += 1
                     self.assertEquals(packet.serial, mySerial)
@@ -1000,8 +1003,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
                     if (packet.message not in lang2strings[self.avatarLocales[avid]]):
-                        self.fail("Unexpected and/or Wrong Language (expected %s) message: %s for avatar %d" 
-                                  % (self.avatarLocales[avid], packet.message, avid))
+                        self.fail(
+                            "Unexpected and/or Wrong Language (expected %s) message: %s for avatar %d" % \
+                            (self.avatarLocales[avid], packet.message, avid)
+                        )
                 elif packet.type == PACKET_POKER_STATE:
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
@@ -1073,8 +1078,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit',
-                           [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
+            d.addCallback(
+                self.joinTable, index, gameId, 'Table2', '2-4-limit',
+                [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}]
+            )
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             # Note: this avatar does not autopost, and doBlindPost handles it.
@@ -1109,14 +1116,16 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def forceDbToLocaleValue(self, (client, packet), avid = 0, setTo = '', expect = '', updateCount = 0):
         from pokernetwork.pokerauth import get_auth_instance
-        auth = get_auth_instance(self.service.db, self.service.settings)
+        auth = get_auth_instance(self.service.db, self.service.memcache, self.service.settings)
 
         avatar = self.service.avatars[avid]
         self.avatarLocales[avid] = expect
 
         cursor = self.service.db.cursor()
-        cursor.execute("insert into users(created, name, password, locale) values(%d, 'user%d', '%s', '%s')"
-                       % (seconds(), avid, 'password1', setTo))
+        cursor.execute(
+            "INSERT INTO users (created, name, password, locale) VALUES (%s, %s, %s, %s)",
+            (seconds(), 'user%d' % avid, 'password1', setTo)
+        )
         self.assertEquals(cursor.rowcount, 1)
         cursor.close()
         return (client, packet)
