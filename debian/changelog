@@ -1,3 +1,9 @@
+poker-network (2.0.4-2) pokermania; urgency=low
+
+  * added pokermanhole to Makefile.am
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 20 Mar 2012 01:02:00 +0200
+
 poker-network (2.0.4-1) pokermania; urgency=low
 
   fixes, improvements: #2902, #5316, #5317, #4892
