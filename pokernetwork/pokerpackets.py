@@ -2142,7 +2142,7 @@ serial: integer uniquely identifying a player.
 
     format = "!II"
     format_size = calcsize(format)
-    format_item = "!IIII"
+    format_item = "!IQQQ"
     format_item_size = calcsize(format_item)
 
     def __init__(self, *args, **kwargs):
