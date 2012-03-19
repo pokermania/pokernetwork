@@ -34,12 +34,9 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.python.runtime import seconds
 
+import pokernetwork.pokerpackets
+pokerpackets = dict((p.__name__,p) for p in pokernetwork.pokerpackets.PacketFactory.values())
 from pokernetwork.pokerpackets import *
-from pokernetwork import pokerpackets as _pokerpackets
-pokerpackets = {}
-for key, val in _pokerpackets.__dict__.iteritems():
-    if type(val) == ClassType and issubclass(val, Packet):
-        pokerpackets[key] = val
 
 # Disabled Unicode encoding. It is not required anymore since it is only used
 # for the (dealer) chat. We measured a higher sit out count with Unicode
