@@ -4351,7 +4351,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 cursorSelf.rowcount = 0
                 cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'update tourneys set']
+                cursorSelf.acceptedStatements = [ 'UPDATE tourneys SET']
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
                     cursorSelf.counts[cntType] = 0 
@@ -4374,7 +4374,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockDatabase:
             def __init__(dbSelf):
                 class MockInternalDatabase:
-                    def literal(intDBSelf, *args): return args[0]
+                    def literal(intDBSelf, *args): 
+                        if type(args[0]) == str: return "'%s'" % args[0]
+                        elif type(args[0]) in (int,float): return args[0]
+                        else: raise Exception('not implemented: %s' % args[0])
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
@@ -4395,17 +4398,21 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(mtSelf):
                 mtSelf.start_time = 5
                 mtSelf.serial = 19
-        self.service.tourneyNewState(MockTourney(),
-                                     pokertournament.TOURNAMENT_STATE_BREAK_WAIT,
-                                     pokertournament.TOURNAMENT_STATE_RUNNING)
+        self.service.tourneyNewState(
+            MockTourney(),
+            pokertournament.TOURNAMENT_STATE_BREAK_WAIT,
+            pokertournament.TOURNAMENT_STATE_RUNNING
+        )
         self.assertEquals(self.callCount, 1)
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
-        self.assertEquals(msgs[0].find("tourneyNewState: update tourneys set state"), 0)
-        self.assertEquals(msgs[1], "*ERROR* modified 8 rows (expected 1): update tourneys set state = 'running', start_time = 5 where serial = 19 ")
+        self.assertEquals(msgs[0].find("tourneyNewState: UPDATE tourneys SET state"), 0)
+        self.assertEquals(msgs[1], "*ERROR* modified 8 rows (expected 1): UPDATE tourneys SET state = 'running', start_time = 5 WHERE serial = 19 ")
          
-        self.assertEquals(self.service.db.cursorValue.counts,
-                          {'update tourneys set': 1})
+        self.assertEquals(
+            self.service.db.cursorValue.counts,
+            {'UPDATE tourneys SET': 1}
+        )
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test14_tourneyFinished_prizeNegative(self):
@@ -5481,7 +5488,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 0
                 cursorSelf.row = []
-                if statement == cursorSelf.acceptedStatements[2]:
+                    # Second time method does select, we just want 0 rows returned.
+                #elif statement == "UPDATE user2money,user2tourney SET amount = amount":
+                if statement == cursorSelf.acceptedStatements[0]:
+                    cursorSelf.rowcount = 1
+                    pass
+                elif statement == cursorSelf.acceptedStatements[1]:
                     if cursorSelf.counts[statement] <= 1:
                         cursorSelf.row = {
                             'buy_in': 100,
@@ -5490,7 +5502,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                             'serial': 732,
                             'schedule_serial': 7,
                             'prize_currency': 1,
-                            'start_time': 123124,
+                            'start_time': seconds() + 3600,
                             'sit_n_go': 'n',
                             'bailor_serial': None,
                             'player_timeout': 1337,
@@ -5499,19 +5511,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                             'satellite_player_count': 0
                         }
                         cursorSelf.rowcount = 1
-                    # Second time method does select, we just want 0 rows returned.
-                #elif statement == "UPDATE user2money,user2tourney SET amount = amount":
-                elif statement == cursorSelf.acceptedStatements[0]:
-                    # row count 0 is ok, next check for proper serials in statement
-                    #self.failUnless(sql.find("currency_serial = 168") > 0)
-                    #self.failUnless(sql.find("tourney_serial = 732") > 0)
-                    pass
-                #elif statement == "UPDATE tourneys SET state = 'aborted' WHERE serial =":
-                elif statement == cursorSelf.acceptedStatements[1]:
-                    # row count 0 is ok, check for proper serial
-                    #self.failUnless(sql.find("serial = 732") > 0)
-                    pass
-                elif statement == cursorSelf.acceptedStatements[3]:
+                elif statement == cursorSelf.acceptedStatements[2]:
                     cursorSelf.row = {
                         'user_serial': 732
                     }
@@ -5522,30 +5522,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     self.failIf(1, "unknown sql statement: " + statement + " " + sql)
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, [
-                """
-                DELETE u2t FROM user2tourney AS u2t
-                    LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial"""
-                ,
-                """
-                UPDATE tourneys AS t
-                    LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial
-                    LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial
-                SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted'"""
-                ,
-                """
-                SELECT * FROM tourneys
-                WHERE""",
-                """
-                    SELECT user_serial FROM user2tourney WHERE tourney_serial ="""
-                ,
-                "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table"
-                ,
-                "DELETE FROM pokertables WHERE "
-                ,
-                """
-                DELETE t FROM tourneys AS t""",
-                """
-                    REPLACE INTO route VALUES ("""
+                    "DELETE t FROM tourneys AS t",
+                    "SELECT * FROM tourneys WHERE",
+                    "SELECT user_serial FROM user2tourney WHERE tourney_serial =",
+                    "UPDATE tourneys AS t LEFT JOIN user2tourney AS u2t ON",
+                    "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys",
+                    "REPLACE INTO route VALUES"
                 ])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):
@@ -5568,7 +5550,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
 
         msgs = get_messages()
-        self.assertEquals(len(msgs), 2)
+        self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
         self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
 

@@ -666,7 +666,7 @@ class PokerExplain:
             if not ( packet.type == PACKET_POKER_STATE and packet.string == "end" ):
                 (subject, messages) = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
                 if messages:
-                    message = "".join("Dealer: %s \n" % line for line in messages)
+                    message = "".join("Dealer: %s\n" % line for line in messages)
                     forward_packets.append(PacketPokerChat(
                         game_id = game.id,
                         message = message)
