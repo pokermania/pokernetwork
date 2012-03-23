@@ -96,6 +96,7 @@ def ureload(module, updatables=None):
 
     # set _update
     module._update = updatables
+    del module._dont_update
 
     # end
     return module
