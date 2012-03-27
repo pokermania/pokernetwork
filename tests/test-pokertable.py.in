@@ -38,6 +38,8 @@ import copy
 
 twisted.internet.base.DelayedCall.debug = True
 
+from pokernetwork.pokerexplain import PokerExplain
+
 #
 # Must be done before importing pokerclient or pokerclient
 # will have to be patched too.
@@ -133,8 +135,12 @@ def convertHandHistoryToDict (hist):
         dict[key] = entry[1:-1]
     return dict
 
-class MockService:
+class MockChatFilter:
+    def sub(self,repl,message):
+        return message
 
+class MockService:
+            
     def __init__(self, settings):
         self.settings = settings
         self.verbose = settings.headerGetInt("/server/@verbose")
@@ -151,6 +157,7 @@ class MockService:
         self.joined_count = 0
         self.joined_max = 1000
         self.chat_messages = []
+        self.chat_filter = MockChatFilter()
 
     def getMissedRoundMax(self):
         return 5  # if you change this, change it in settings_xml above
@@ -441,7 +448,28 @@ class MockClientWithRemoveTable(MockClient):
 class MockClientWithRealJoin(MockClient, PokerAvatar):
     def join(self, table, reason=""):
         PokerAvatar.join(self, table, reason)
-
+# --------------------------------------------------------------------------------
+class MockClientWithExplain(MockClientWithRealJoin):
+    sitPlayer = PokerAvatar.sitPlayer
+    addPlayer = PokerAvatar.addPlayer
+    
+    def __init__(self,*args,**kw):
+        self.explain = None
+        MockClientWithRealJoin.__init__(self,*args,**kw)
+        
+    def setExplain(self,what):
+        ret = PokerAvatar.setExplain(self, what)
+        if ret:
+            self.packets_explained = []
+            self.explain._prefix = '[%d] ' % self.getSerial()
+        return ret
+        
+    def sendPacket(self,packet):
+        self.explain.explain(packet)
+        packets = self.explain.forward_packets
+        return MockClientWithRealJoin.sendPacket(self,packet)
+        
+# --------------------------------------------------------------------------------
 class PokerAvatarCollectionTestCase(unittest.TestCase):
 
     def test01(self):
@@ -483,25 +511,25 @@ class PokerTableTestCaseBase(unittest.TestCase):
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
         settings.header = settings.doc.xpathNewContext()
         self.service = ServiceClass(settings)
-        self.table = pokertable.PokerTable(self.service, table1ID, 
-                                           { 'name': "table1",
-                                             'variant': "holdem",
-                                             'betting_structure': "2-4-limit",
-                                             'seats': 4,
-                                             'player_timeout' : 6, 
-                                             'muck_timeout' : 1,
-                                             'currency_serial': 0,
-                                             'max_missed_round' : 3
-                                             })
-        self.table2 = pokertable.PokerTable(self.service, table2ID, 
-                                           { 'name': "table2",
-                                             'variant': "holdem",
-                                             'betting_structure': "2-4-limit",
-                                             'seats': 4,
-                                             'player_timeout' : 6, 
-                                             'muck_timeout' : 1,
-                                             'currency_serial': 0
-                                             })
+        self.table = pokertable.PokerTable(self.service, table1ID, {
+            'name': "table1",
+            'variant': "holdem",
+            'betting_structure': "2-4-limit",
+            'seats': 4,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'currency_serial': 0,
+            'max_missed_round' : 3
+        })
+        self.table2 = pokertable.PokerTable(self.service, table2ID, {
+            'name': "table2",
+            'variant': "holdem",
+            'betting_structure': "2-4-limit",
+            'seats': 4,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'currency_serial': 0
+        })
         self.service.table1 = self.table
         self.service.table2 = self.table2
 
@@ -527,8 +555,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.clients[serial] = client
         if getReadyToPlay:
             client.reasonExpected = "MockCreatePlayerJoin"
-            self.assertEqual(True, table.joinPlayer(client, serial, 
-                                       reason  = "MockCreatePlayerJoin"))
+            self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
             client.reasonExpected = ""
             self.assertEqual(True, table.seatPlayer(client, serial, -1))
             self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
@@ -578,8 +605,10 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             search_output('Player 1 marked as having a bugous PokerProcessingHand protocol')
             self.failUnless(player[1].bugous_processing_hand, "1 should have bugous_processing_hand")
             for ii in [ 2, 3, 4]:
-                self.failIf(player[ii].bugous_processing_hand,
-                            "%d should not have bugous_processing_hand" % ii)
+                self.failIf(
+                    player[ii].bugous_processing_hand,
+                    "%d should not have bugous_processing_hand" % ii
+                )
 
         threeGetsStart.addCallback(checkValues)
 
@@ -1940,6 +1969,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         return expectPlayerDeferred
 
 
+# --------------------------------------------------------------------------------
 class PokerTableRejoinTestCase(PokerTableTestCaseBase):
     def setUp(self, ServiceClass = MockServiceWithLadder):
         PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
@@ -1968,6 +1998,50 @@ class PokerTableRejoinTestCase(PokerTableTestCaseBase):
         d.addCallback(joinPlayer)
         d.addCallback(checkAutoFlag)
         return d
+    
+
+# --------------------------------------------------------------------------------
+class PokerTableExplainedTestCase(PokerTableTestCaseBase):
+    """This suite tries to cover edge cases of errors happening during gameplay within
+    the PokerExplain and their respective PokerGameClient classes."""
+
+    def setUp(self, ServiceClass = MockServiceWithLadder):
+        PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
+        
+    def test50_fold_immediately(self):
+        serials = [1,2]
+        clients = {}
+        for serial in serials:
+            clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            client.setExplain(PacketPokerExplain.ALL)
+            self.assertEqual(True, self.table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
+            self.table.sitPlayer(client, serial)
+            self.table.game.noAutoBlindAnte(serial)
+            
+        for serial,client in clients.iteritems():
+            client.setMoney(self.table,1000)
+        
+        self.table.scheduleAutoDeal()
+        
+        def payBlinds(packet):
+            self.table.game.blind(2,1000)
+            self.table.game.blind(1,1000)
+            
+            # game is finished by now in the PokerGameServer, but
+            # the changes are not propageted to the PokerGameClients until 
+            # we update the table
+            self.table.update()
+            
+        d1 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
+        d2 = clients[1].waitFor(PACKET_POKER_WIN)
+        
+        d1.addCallback(payBlinds)
+        d1.chainDeferred(d2)
+        
+        return d1
 
 # --------------------------------------------------------------------------------
 def Run():
@@ -1982,10 +2056,11 @@ def Run():
     suite.addTest(loader.loadClass(PokerTableTestCaseTransient))
     suite.addTest(loader.loadClass(PokerTableMoveTestCase))
     suite.addTest(loader.loadClass(PokerTableRejoinTestCase))
+    suite.addTest(loader.loadClass(PokerTableExplainedTestCase))
     return runner.TrialRunner(reporter.VerboseTextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
+#        tracebackFormat='verbose',
+        tracebackFormat='default',
+    ).run(suite)
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():

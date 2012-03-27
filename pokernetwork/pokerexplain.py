@@ -461,6 +461,8 @@ class PokerExplain:
                                                                      serial = serial))
 
             elif packet.type == PACKET_POKER_RAKE:
+                if game.isBlindAnteRound():
+                    game.blindAnteRoundEnd()
                 game.setRakedAmount(packet.value)
                 
             elif packet.type == PACKET_POKER_WIN:
