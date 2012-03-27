@@ -293,9 +293,11 @@ class PokerTable:
         # Cards private to each player are shown only to the player
         #
         if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial != serial:
-            private = PacketPokerPlayerCards(game_id = packet.game_id,
-                                             serial = packet.serial,
-                                             cards = PokerCards(packet.cards).tolist(False))
+            private = PacketPokerPlayerCards(
+                game_id = packet.game_id,
+                serial = packet.serial,
+                cards = PokerCards(packet.cards).tolist(False)
+            )
             return private
         else:
             return packet
@@ -665,6 +667,8 @@ class PokerTable:
                 pass
             
             elif type == "rebuy":
+                pass
+            elif type == "blind_request":
                 pass
             
             else:

@@ -575,12 +575,10 @@ class PokerExplain:
                     game.initRound()
                 else:
                     if not self.no_display_packets:
-                        if ( packet.string == "end" and
-                             game.isSingleUncalledBet(game.side_pots) ):
+                        if packet.string == "end" and game.isSingleUncalledBet(game.side_pots):
                             forward_packets.extend(self.moveBet2Player(game))
                         else:
                             forward_packets.extend(self.moveBet2Pot(game))
-
                     if packet.string != "end":
                         game.initRound()
 

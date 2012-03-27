@@ -91,9 +91,11 @@ class PokerAvatar:
                     self.error("setExplain must be called when not connected to any table")
                     return False
 
-                self.explain = PokerExplain(dirs = self.service.dirs,
-                                            verbose = self.service.verbose,
-                                            explain = what)
+                self.explain = PokerExplain(
+                    dirs = self.service.dirs,
+                    verbose = self.service.verbose,
+                    explain = what
+                )
         else:
             self.explain = None
         return True
@@ -1047,12 +1049,13 @@ class PokerAvatar:
         if mySerial != packet.serial:
             errMsg = "attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial )
             self.message(errMsg)
-            self.sendPacketVerbose(
-                PacketPokerError(code       = PacketPokerTableJoin.GENERAL_FAILURE,
-                                 message    = errMsg,
-                                 other_type = PACKET_POKER_TABLE_PICKER,
-                                 serial     = mySerial,
-                                 game_id    = 0))
+            self.sendPacketVerbose(PacketPokerError(
+                code       = PacketPokerTableJoin.GENERAL_FAILURE,
+                message    = errMsg,
+                other_type = PACKET_POKER_TABLE_PICKER,
+                serial     = mySerial,
+                game_id    = 0
+            ))
         else:
             # Call autorefill() first before checking for a table,
             # since the amount of money we have left will impact the
@@ -1060,28 +1063,32 @@ class PokerAvatar:
             # to have whatever play-money we can get before picking.
             self.service.autorefill(packet.serial)
 
-            table = self.service.getTableBestByCriteria(mySerial,
-                      min_players = packet.min_players, currency_serial = packet.currency_serial,
-                      variant = packet.variant, betting_structure = packet.betting_structure)
+            table = self.service.getTableBestByCriteria(
+                mySerial,
+                min_players = packet.min_players, currency_serial = packet.currency_serial,
+                variant = packet.variant, betting_structure = packet.betting_structure
+            )
 
             if not table:
                 # If we cannot find a table, tell user we were unable to
                 # find a table matching their criteria
-                self.sendPacketVerbose(
-                  PacketPokerError(code       = PacketPokerTableJoin.GENERAL_FAILURE,
-                                   message    = "No table found matching given criteria",
-                                   other_type = PACKET_POKER_TABLE_PICKER,
-                                   serial     = mySerial,
-                                   game_id    = 0))
+                self.sendPacketVerbose(PacketPokerError(
+                    code = PacketPokerTableJoin.GENERAL_FAILURE,
+                    message = "No table found matching given criteria",
+                    other_type = PACKET_POKER_TABLE_PICKER,
+                    serial = mySerial,
+                    game_id = 0
+                ))
             elif not table.game.canAddPlayer(mySerial):
                 # If the table we found just can't take us, tell user we
                 # could not add them.
-                self.sendPacketVerbose(
-                  PacketPokerError(code      = PacketPokerTableJoin.GENERAL_FAILURE,
-                                   message   = "Found matching table, but unable to join it.",
-                                   other_type = PACKET_POKER_TABLE_PICKER,
-                                   serial     = mySerial,
-                                   game_id    = table.game.id))
+                self.sendPacketVerbose(PacketPokerError(
+                    code = PacketPokerTableJoin.GENERAL_FAILURE,
+                    message = "Found matching table, but unable to join it.",
+                    other_type = PACKET_POKER_TABLE_PICKER,
+                    serial = mySerial,
+                    game_id = table.game.id
+                ))
             else:
                 # Otherwise, we perform the sequence of operations
                 # that is defined by the semantics of this packet in
@@ -1092,16 +1099,18 @@ class PokerAvatar:
                 #   PacketPokerBuyIn(amount = buyIn), and if it succeeds, 
                 #   PacketPokerSit()
                 if self.performPacketPokerTableJoin(
-                     PacketPokerTableJoin(serial = mySerial,
-                                          game_id = table.game.id), table,
-                       deprecatedEmptyTableBehavior = False,
-                       reason = PacketPokerTable.REASON_TABLE_PICKER):
+                    PacketPokerTableJoin(serial = mySerial,game_id = table.game.id), 
+                    table,
+                    deprecatedEmptyTableBehavior = False,
+                    reason = PacketPokerTable.REASON_TABLE_PICKER
+                ):
 
                     # Giving no seat argument at all for the packet should cause
                     # us to get any available seat.
                     if self.performPacketPokerSeat(
                         PacketPokerSeat(serial = mySerial, game_id = table.game.id),
-                        table, table.game):
+                        table, table.game
+                    ):
 
                         # Next, determine if player can afford the "best"
                         # buy in.  If the player can't, give them the
@@ -1115,13 +1124,18 @@ class PokerAvatar:
                             # self.service.getTableByBestCriteria(), which
                             # promises us that we have at least minimum.
                         if self.performPacketPokerBuyIn(
-                            PacketPokerBuyIn(serial = mySerial, amount = buyIn,
-                                 game_id = table.game.id), table, table.game):
+                            PacketPokerBuyIn(
+                                serial = mySerial, amount = buyIn,
+                                game_id = table.game.id
+                            ), 
+                            table, table.game
+                        ):
                             if packet.auto_blind_ante:
                                 table.autoBlindAnte(self, packet.serial, True)
                             self.performPacketPokerSit(
-                               PacketPokerSit(serial = mySerial, game_id = table.game.id),
-                               table)
+                                PacketPokerSit(serial = mySerial, game_id = table.game.id),
+                                table
+                            )
                             table.update()
 
     # -------------------------------------------------------------------------
@@ -1136,63 +1150,78 @@ class PokerAvatar:
 
     def setRole(self, packet):
         if packet.roles not in PacketPokerRoles.ROLES:
-            return PacketError(code = PacketPokerSetRole.UNKNOWN_ROLE,
-                               message = "role %s is unknown (roles = %s)" % ( packet.roles, PacketPokerRoles.ROLES),
-                               other_type = PACKET_POKER_SET_ROLE)
+            return PacketError(
+                code = PacketPokerSetRole.UNKNOWN_ROLE,
+                message = "role %s is unknown (roles = %s)" % ( packet.roles, PacketPokerRoles.ROLES),
+                other_type = PACKET_POKER_SET_ROLE
+            )
 
         if packet.roles in self.roles:
-            return PacketError(code = PacketPokerSetRole.NOT_AVAILABLE,
-                               message = "another client already has role %s" % packet.roles,
-                               other_type = PACKET_POKER_SET_ROLE)
+            return PacketError(
+                code = PacketPokerSetRole.NOT_AVAILABLE,
+                message = "another client already has role %s" % packet.roles,
+                other_type = PACKET_POKER_SET_ROLE
+            )
         self.roles.add(packet.roles)
-        return PacketPokerRoles(serial = packet.serial,
-                                roles = join(self.roles, " "))
+        return PacketPokerRoles(
+            serial = packet.serial,
+            roles = join(self.roles, " ")
+        )
             
     def getPlayerInfo(self):
         if self.user.isLogged():
-            return PacketPokerPlayerInfo(serial = self.getSerial(),
-                                         name = self.getName(),
-                                         url = self.user.url,
-                                         outfit = self.user.outfit)
+            return PacketPokerPlayerInfo(
+                serial = self.getSerial(),
+                name = self.getName(),
+                url = self.user.url,
+                outfit = self.user.outfit
+            )
         else:
-            return PacketError(code = PacketPokerGetPlayerInfo.NOT_LOGGED,
-                               message = "Not logged in",
-                               other_type = PACKET_POKER_GET_PLAYER_INFO)
+            return PacketError(
+                code = PacketPokerGetPlayerInfo.NOT_LOGGED,
+                message = "Not logged in",
+                other_type = PACKET_POKER_GET_PLAYER_INFO
+            )
     
     def listPlayers(self, packet):
         table = self.service.getTable(packet.game_id)
         if table:
             players = table.listPlayers()
-            self.sendPacketVerbose(PacketPokerPlayersList(game_id = packet.game_id,
-                                                          players = players))
+            self.sendPacketVerbose(PacketPokerPlayersList(
+                game_id = packet.game_id,
+                players = players
+            ))
         
     def listTables(self, packet):
         packets = []
         for table in self.service.listTables(packet.string, self.getSerial()):
-            packet = PacketPokerTable(id = int(table['serial']),
-                                      name = table['name'],
-                                      variant = table['variant'],
-                                      betting_structure = table['betting_structure'],
-                                      seats = int(table['seats']),
-                                      players = int(table['players']),
-                                      hands_per_hour = int(table['hands_per_hour']),
-                                      average_pot = int(table['average_pot']),
-                                      percent_flop = int(table['percent_flop']),
-                                      player_timeout = int(table['player_timeout']),
-                                      muck_timeout = int(table['muck_timeout']),
-                                      observers = int(table['observers']),
-                                      waiting = int(table['waiting']),
-                                      skin = table['skin'],
-                                      currency_serial = int(table['currency_serial']),
-                                      player_seated = int(table.get('player_seated',-1)),
-                                      reason = PacketPokerTable.REASON_TABLE_LIST,
-                                      )
+            packet = PacketPokerTable(
+                id = int(table['serial']),
+                name = table['name'],
+                variant = table['variant'],
+                betting_structure = table['betting_structure'],
+                seats = int(table['seats']),
+                players = int(table['players']),
+                hands_per_hour = int(table['hands_per_hour']),
+                average_pot = int(table['average_pot']),
+                percent_flop = int(table['percent_flop']),
+                player_timeout = int(table['player_timeout']),
+                muck_timeout = int(table['muck_timeout']),
+                observers = int(table['observers']),
+                waiting = int(table['waiting']),
+                skin = table['skin'],
+                currency_serial = int(table['currency_serial']),
+                player_seated = int(table.get('player_seated',-1)),
+                reason = PacketPokerTable.REASON_TABLE_LIST,
+            )
             packet.tourney_serial = int(table['tourney_serial'])
             packets.append(packet)
         ( players, tables ) = self.service.statsTables()
-        self.sendPacketVerbose(PacketPokerTableList(players = players,
-                                                    tables = tables,
-                                                    packets = packets))
+        self.sendPacketVerbose(PacketPokerTableList(
+            players = players,
+            tables = tables,
+            packets = packets
+        ))
 
     def listHands(self, packet, serial):
         if packet.type != PACKET_POKER_HAND_SELECT_ALL:
@@ -1220,11 +1249,13 @@ class PokerAvatar:
         if packet.type == PACKET_POKER_HAND_SELECT_ALL:
             start = 0
             count = total
-        self.sendPacketVerbose(PacketPokerHandList(string = packet.string,
-                                                   start = start,
-                                                   count = count,
-                                                   hands = hands,
-                                                   total = total))
+        self.sendPacketVerbose(PacketPokerHandList(
+            string = packet.string,
+            start = start,
+            count = count,
+            hands = hands,
+            total = total
+        ))
 
     def createTable(self, packet):
         table = self.service.createTable(self.getSerial(), {
@@ -1236,7 +1267,8 @@ class PokerAvatar:
             "muck_timeout": packet.muck_timeout,
             "currency_serial": packet.currency_serial,
             "skin": packet.skin,
-            "reason" : packet.reason})
+            "reason" : packet.reason
+        })
         if not table:
             self.sendPacket(PacketPokerTable(reason = packet.reason))
         return table            
@@ -1249,44 +1281,54 @@ class PokerAvatar:
         packet = table.toPacket()
         packet.reason = reason
         self.sendPacketVerbose(packet)
-        self.sendPacketVerbose(PacketPokerBuyInLimits(game_id = game.id,
-                                                      min = game.buyIn(),
-                                                      max = game.maxBuyIn(),
-                                                      best = game.bestBuyIn(),
-                                                      rebuy_min = game.minMoney()))
+        self.sendPacketVerbose(PacketPokerBuyInLimits(
+            game_id = game.id,
+            min = game.buyIn(),
+            max = game.maxBuyIn(),
+            best = game.bestBuyIn(),
+            rebuy_min = game.minMoney()
+        ))
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
         nochips = 0
         for player in game.serial2player.values():
             player_info = table.getPlayerInfo(player.serial)
-            self.sendPacketVerbose(PacketPokerPlayerArrive(game_id = game.id,
-                                                           serial = player.serial,
-                                                           name = player_info.name,
-                                                           url = player_info.url,
-                                                           outfit = player_info.outfit,
-                                                           blind = player.blind,
-                                                           remove_next_turn = player.remove_next_turn,
-                                                           sit_out = player.sit_out,
-                                                           sit_out_next_turn = player.sit_out_next_turn,
-                                                           auto = player.auto,
-                                                           auto_blind_ante = player.auto_blind_ante,
-                                                           wait_for = player.wait_for,
-                                                           seat = player.seat,
-                                                           buy_in_payed = player.buy_in_payed))
+            self.sendPacketVerbose(PacketPokerPlayerArrive(
+                game_id = game.id,
+                serial = player.serial,
+                name = player_info.name,
+                url = player_info.url,
+                outfit = player_info.outfit,
+                blind = player.blind,
+                remove_next_turn = player.remove_next_turn,
+                sit_out = player.sit_out,
+                sit_out_next_turn = player.sit_out_next_turn,
+                auto = player.auto,
+                auto_blind_ante = player.auto_blind_ante,
+                wait_for = player.wait_for,
+                seat = player.seat,
+                buy_in_payed = player.buy_in_payed
+            ))
             if self.service.has_ladder:
                 packet = self.service.getLadder(game.id, table.currency_serial, player.serial)
                 if packet.type == PACKET_POKER_PLAYER_STATS:
                     self.sendPacketVerbose(packet)
             if not game.isPlaying(player.serial):
-                self.sendPacketVerbose(PacketPokerPlayerChips(game_id = game.id,
-                                                              serial = player.serial,
-                                                              bet = nochips,
-                                                              money = player.money))
+                self.sendPacketVerbose(PacketPokerPlayerChips(
+                    game_id = game.id,
+                    serial = player.serial,
+                    bet = nochips,
+                    money = player.money
+                ))
                 if game.isSit(player.serial):
-                    self.sendPacketVerbose(PacketPokerSit(game_id = game.id,
-                                                          serial = player.serial))
+                    self.sendPacketVerbose(PacketPokerSit(
+                        game_id = game.id,
+                        serial = player.serial
+                    ))
                 if player.isAuto():
-                    self.sendPacketVerbose(PacketPokerAutoFold(game_id = game.id,
-                                                          serial = player.serial))                    
+                    self.sendPacketVerbose(PacketPokerAutoFold(
+                        game_id = game.id,
+                        serial = player.serial
+                    ))
 
         self.sendPacketVerbose(PacketPokerSeats(game_id = game.id,
                                                 seats = game.seats()))
@@ -1365,19 +1407,25 @@ class PokerAvatar:
         # resets the autoPlayer/wait_for flag.
         #
         if game.sit(serial):
-            table.broadcast(PacketPokerSit(game_id = game.id,
-                                           serial = serial))
+            table.broadcast(PacketPokerSit(
+                game_id = game.id,
+                serial = serial)
+            )
 
     def sitOutPlayer(self, table, serial):
         game = table.game
         if table.isOpen():
             if game.sitOutNextTurn(serial):
-                table.broadcast(PacketPokerSitOut(game_id = game.id,
-                                                  serial = serial))
+                table.broadcast(PacketPokerSitOut(
+                    game_id = game.id,
+                    serial = serial)
+                )
         else:
             game.autoPlayer(serial)
-            table.broadcast(PacketPokerAutoFold(game_id = game.id,
-                                                serial = serial))
+            table.broadcast(PacketPokerAutoFold(
+                game_id = game.id,
+                serial = serial)
+            )
 
     def autoBlindAnte(self, table, serial, auto):
         game = table.game
@@ -1385,11 +1433,15 @@ class PokerAvatar:
             return
         game.getPlayer(serial).auto_blind_ante = auto
         if auto:
-            self.sendPacketVerbose(PacketPokerAutoBlindAnte(game_id = game.id,
-                                                            serial = serial))
+            self.sendPacketVerbose(PacketPokerAutoBlindAnte(
+                game_id = game.id,
+                serial = serial)
+            )
         else:
-            self.sendPacketVerbose(PacketPokerNoautoBlindAnte(game_id = game.id,
-                                                              serial = serial))
+            self.sendPacketVerbose(PacketPokerNoautoBlindAnte(
+                game_id = game.id,
+                serial = serial)
+            )
                                                               
     def setMoney(self, table, amount):
         game = table.game
@@ -1397,10 +1449,12 @@ class PokerAvatar:
         if game.payBuyIn(self.getSerial(), amount):
             player = game.getPlayer(self.getSerial())
             nochips = 0
-            table.broadcast(PacketPokerPlayerChips(game_id = game.id,
-                                                   serial = self.getSerial(),
-                                                   bet = nochips,
-                                                   money = player.money))
+            table.broadcast(PacketPokerPlayerChips(
+                game_id = game.id,
+                serial = self.getSerial(),
+                bet = nochips,
+                money = player.money)
+            )
             return True
         else:
             return False

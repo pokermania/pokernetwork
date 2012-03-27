@@ -96,6 +96,7 @@ call_messages()
 
 messages_needle = ''
 messages_grep_hit = None
+messages_out = []
 def grep_output(needle):
     messages_grep_hit = defer.Deferred()
     messages_needle = needle
@@ -120,8 +121,7 @@ def messages_append(string):
 
 class2message = {
     pokergame.PokerGame: lambda self, string: messages_append(self.prefix + "[PokerGame " + str(self.id) + "] " + string)
-    }
-messages_out = []
+}
 
 def redirect_messages(obj, is_class = True):
     if not hasattr(obj, 'orig_message'):

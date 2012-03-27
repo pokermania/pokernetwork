@@ -532,7 +532,6 @@ Semantics: the state of the game "game_id" changed to
  null : new game.
  end : a game just ended.
  blindAnte : players are paying blinds and/or antes.
- ephemeral: the connection to the table was dropped on behalf of the server. 
 
 The other game states are not pre-determined and depend on the content
 of the variant file. For instance, the states matching the
