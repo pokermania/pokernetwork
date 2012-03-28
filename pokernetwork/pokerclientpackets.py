@@ -377,7 +377,7 @@ betting round. This packet is sent when the client side
 knows that the round is finished but before the corresponding
 packet (PACKET_POKER_STATE) has been received from the server.
 It will be followed by the POKER_BEGIN_ROUND packet, either
-immediatly if the server has no delay between betting rounds
+immediately if the server has no delay between betting rounds
 or later if the server waits a few seconds between two betting
 rounds.
 It is not inferred at the end of the last betting round.

@@ -315,12 +315,16 @@ class PokerTable:
                     for (serial, chips) in serial2chips.iteritems():
                         if serial == 'values':
                             continue
-                        packets.append(PacketPokerPlayerChips(game_id = game_id,
-                                                              serial = serial,
-                                                              bet = nochips,
-                                                              money = chips))
-                packets.append(PacketPokerInGame(game_id = game_id,
-                                                 players = player_list))
+                        packets.append(PacketPokerPlayerChips(
+                            game_id = game_id,
+                            serial = serial,
+                            bet = nochips,
+                            money = chips
+                        ))
+                packets.append(PacketPokerInGame(
+                    game_id = game_id,
+                    players = player_list
+                ))
                 #
                 # This may happen, for instance, if a turn is canceled
                 #
@@ -328,37 +332,49 @@ class PokerTable:
                     previous_dealer = -1
                 else:
                     previous_dealer = self.previous_dealer
-                packets.append(PacketPokerDealer(game_id = game_id,
-                                                 dealer = dealer,
-                                                 previous_dealer = previous_dealer))
+                packets.append(PacketPokerDealer(
+                    game_id = game_id,
+                    dealer = dealer,
+                    previous_dealer = previous_dealer
+                ))
                 self.previous_dealer = dealer
-                packets.append(PacketPokerStart(game_id = game_id,
-                                                hand_serial = hand_serial,
-                                                hands_count = hands_count,
-                                                time = time,
-                                                level = level))
+                packets.append(PacketPokerStart(
+                    game_id = game_id,
+                    hand_serial = hand_serial,
+                    hands_count = hands_count,
+                    time = time,
+                    level = level
+                ))
                 
             elif type == "wait_for":
                 (type, serial, reason) = event
-                packets.append(PacketPokerWaitFor(game_id = game_id,
-                                                  serial = serial,
-                                                  reason = reason))
+                packets.append(PacketPokerWaitFor(
+                    game_id = game_id,
+                    serial = serial,
+                    reason = reason
+                ))
                 
             elif type == "player_list":
                 (type, player_list) = event
-                packets.append(PacketPokerInGame(game_id = game_id,
-                                                 players = player_list))
+                packets.append(PacketPokerInGame(
+                    game_id = game_id,
+                    players = player_list
+                ))
 
             elif type == "round":
                 (type, name, board, pockets) = event
                 packets.extend(self.cards2packets(game_id, board, pockets, cache))
-                packets.append(PacketPokerState(game_id = game_id,
-                                                string = name))
+                packets.append(PacketPokerState(
+                    game_id = game_id,
+                    string = name
+                ))
 
             elif type == "position":
                 (type, position) = event
-                packets.append(PacketPokerPosition(game_id = game_id,
-                                                   position = position))
+                packets.append(PacketPokerPosition(
+                    game_id = game_id,
+                    position = position
+                ))
                 
             elif type == "showdown":
                 (type, board, pockets) = event
@@ -366,11 +382,12 @@ class PokerTable:
                 
             elif type == "blind_request":
                 (type, serial, amount, dead, state) = event
-                packets.append(PacketPokerBlindRequest(game_id = game_id,
-                                                       serial = serial,
-                                                       amount = amount,
-                                                       dead = dead,
-                                                       state = state))
+                packets.append(PacketPokerBlindRequest(
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount,
+                    dead = dead,
+                    state = state))
 
             elif type == "wait_blind":
                 (type, serial) = event

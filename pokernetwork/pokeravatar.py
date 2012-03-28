@@ -942,7 +942,8 @@ class PokerAvatar:
 
         elif not table and packet.type == PACKET_POKER_HAND_REPLAY:
             table = self.createTable(PacketPokerTable(
-                        reason = PacketPokerTable.REASON_HAND_REPLAY))
+                reason = PacketPokerTable.REASON_HAND_REPLAY
+            ))
             if table:
                 table.handReplay(self, packet.serial)
 
@@ -950,8 +951,10 @@ class PokerAvatar:
             packet.reason = PacketPokerTable.REASON_TABLE_CREATE
             table = self.createTable(packet)
             if table:
-                table.joinPlayer(self, self.getSerial(),
-                                 reason = PacketPokerTable.REASON_TABLE_CREATE)
+                table.joinPlayer(
+                    self, self.getSerial(),
+                    reason = PacketPokerTable.REASON_TABLE_CREATE
+                )
             
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
@@ -963,9 +966,11 @@ class PokerAvatar:
                     table.quitPlayer(self, self.getSerial())
                 self.logout()
             else:
-                self.sendPacketVerbose(PacketError(code = PacketLogout.NOT_LOGGED_IN,
-                                                   message = "Not logged in",
-                                                   other_type = PACKET_LOGOUT))
+                self.sendPacketVerbose(PacketError(
+                    code = PacketLogout.NOT_LOGGED_IN,
+                    message = "Not logged in",
+                    other_type = PACKET_LOGOUT
+                ))
 
     # The "perform" methods below are designed so that the a minimal
     # amount of code related to receiving a packet that appears in the
@@ -991,12 +996,13 @@ class PokerAvatar:
             if not table.joinPlayer(self, self.getSerial(),reason = reason):
                 if deprecatedEmptyTableBehavior:
                     self.sendPacketVerbose(PacketPokerTable(reason = reason))
-                self.sendPacketVerbose(
-                  PacketPokerError(code = PacketPokerTableJoin.GENERAL_FAILURE,
-                                   message = "Unable to join table for unknown reason",
-                                   other_type = requestorPacketType,
-                                   serial     = self.getSerial(),
-                                   game_id    = 0))
+                self.sendPacketVerbose(PacketPokerError(
+                    code = PacketPokerTableJoin.GENERAL_FAILURE,
+                    message = "Unable to join table for unknown reason",
+                    other_type = requestorPacketType,
+                    serial = self.getSerial(),
+                    game_id = 0
+                ))
         return table
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
@@ -1004,11 +1010,13 @@ class PokerAvatar:
         is received."""
 
         if PacketPokerRoles.PLAY not in self.roles:
-            self.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                    serial = packet.serial,
-                                                    code = PacketPokerSeat.ROLE_PLAY,
-                                                    message = "PACKET_POKER_ROLES must set the role to PLAY before chosing a seat",
-                                                    other_type = PACKET_POKER_SEAT))
+            self.sendPacketVerbose(PacketPokerError(
+                game_id = game.id,
+                serial = packet.serial,
+                code = PacketPokerSeat.ROLE_PLAY,
+                message = "PACKET_POKER_ROLES must set the role to PLAY before chosing a seat",
+                other_type = PACKET_POKER_SEAT
+            ))
             return False
         elif ( self.getSerial() == packet.serial or self.getSerial() == table.owner ):
             if not table.seatPlayer(self, packet.serial, packet.seat):
@@ -1026,9 +1034,11 @@ class PokerAvatar:
         if self.getSerial() == packet.serial:
             self.service.autorefill(packet.serial)
             if not table.buyInPlayer(self, packet.amount):
-                self.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                        serial = packet.serial,
-                                                        other_type = PACKET_POKER_BUY_IN))
+                self.sendPacketVerbose(PacketPokerError(
+                    game_id = game.id,
+                    serial = packet.serial,
+                    other_type = PACKET_POKER_BUY_IN
+                ))
                 return False
             else:
                 return True
@@ -1050,11 +1060,11 @@ class PokerAvatar:
             errMsg = "attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial )
             self.message(errMsg)
             self.sendPacketVerbose(PacketPokerError(
-                code       = PacketPokerTableJoin.GENERAL_FAILURE,
-                message    = errMsg,
+                code = PacketPokerTableJoin.GENERAL_FAILURE,
+                message = errMsg,
                 other_type = PACKET_POKER_TABLE_PICKER,
-                serial     = mySerial,
-                game_id    = 0
+                serial = mySerial,
+                game_id = 0
             ))
         else:
             # Call autorefill() first before checking for a table,
