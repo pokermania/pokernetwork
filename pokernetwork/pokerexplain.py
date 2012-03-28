@@ -28,6 +28,7 @@ from pokernetwork.pokergameclient import PokerNetworkGameClient
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclientpackets import *
 
+from pprint import pformat
 DEFAULT_PLAYER_USER_DATA = { 'timeout': None }
 
 class PokerGames:
@@ -570,7 +571,12 @@ class PokerExplain:
                 # reaching showdown or otherwise terminating the hand.
                 #
                 if game.isFirstRound():
-                    game.initRound()
+                    try:
+                        game.initRound()
+                    except Exception, e:
+                        self.error('explain exception initRound 1')
+                        if self.verbose > 0: self._postMortemDump(packet,game)
+                        raise e
                 else:
                     if not self.no_display_packets:
                         if packet.string == "end" and game.isSingleUncalledBet(game.side_pots):
@@ -578,7 +584,12 @@ class PokerExplain:
                         else:
                             forward_packets.extend(self.moveBet2Pot(game))
                     if packet.string != "end":
-                        game.initRound()
+                        try:
+                            game.initRound()
+                        except Exception, e:
+                            self.error('explain exception initRound 2')
+                            if self.verbose > 0: self._postMortemDump(packet,game)
+                            raise e
 
                 if not self.no_display_packets:
                     if game.isRunning() and game.cardsDealt() and game.downCardsDealtThisRoundCount() > 0:
@@ -864,4 +875,7 @@ class PokerExplain:
                                             serial = self.getSerial()))
         packets.append(self.currentGames(game.id))
         return packets
-
+    
+    def _postMortemDump(self,packet,game):
+        self.message('Packet: %s' % packet)
+        self.message(pformat(game.__dict__))
