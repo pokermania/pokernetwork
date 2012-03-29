@@ -115,6 +115,7 @@ class PokerTable:
         game.setMaxPlayers(int(description["seats"]))
         game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
         game.registerCallback(lambda game_id, game_type, *args: game_type == 'end' and self.tourneyEndTurn())
+        game.registerCallback(lambda game_id, game_type, *args: game_type == 'end' and self.tourneyUpdateStats())
         self.skin = description.get("skin", "default")
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
@@ -741,6 +742,11 @@ class PokerTable:
             type = event[0]
             if type == "end":
                 self.factory.tourneyEndTurn(self.tourney, game.id)
+    
+    def tourneyUpdateStats(self):
+        if not self.tourney:
+            return
+        self.factory.tourneyUpdateStats(self.tourney,self.game.id)
         
     def autoDeal(self):
         self.cancelDealTimeout()

@@ -2110,7 +2110,7 @@ PacketNames[PACKET_POKER_USER_INFO] = "POKER_USER_INFO"
 
 class PacketPokerUserInfo(PacketSerial):
     """\
-Semantics: read only user descritpive information, complement
+Semantics: read only user descriptive information, complement
 of PACKET_POKER_PLAYER_INFO.
 
 Direction: server  => client
@@ -4279,6 +4279,111 @@ table_serial: integer uniquely identifying a game.
 Packet.infoDeclare(globals(), PacketPokerTourneyStart, Packet, "POKER_TOURNEY_START", 156) # 0x9c # %SEQ%
 
 ########################################
+class PacketPokerGetTourneyPlayerStats(PacketSerial):
+    """\
+    
+Semantics: if the player "serial" is participating in the tourney
+           "tourney_serial", he can ask for information about his
+           current performance (i.e. his rank) in the tourney and
+           compare it to the chips leader and the average chips 
+           amount.
+
+Direction: server  <=  client
+
+Context: the packet can be sent by the player as long as the tourney
+         is loaded in memory on the server. he will receive an error
+         if the tourney is not existing (DOES_NOT_EXIST) or he is or
+         was not participating in the tourney (NOT_PARTICIPATING).
+
+serial: integer uniquely identifying a player.
+tourney_serial: integer uniquely indentifying a tourney.
+"""
+    info = PacketSerial.info + (
+            ('tourney_serial',0,'I'),
+            )
+    
+    DOES_NOT_EXIST = 1
+    NOT_PARTICIPATING = 2
+    
+Packet.infoDeclare(globals(), PacketPokerGetTourneyPlayerStats, Packet, "POKER_GET_TOURNEY_PLAYER_STATS", 157) # 0x9d # %SEQ%
+
+########################################
+class PacketPokerTourneyPlayerStats(PacketSerial):
+    """\
+Semantics: contains personalized information for user "serial"
+           for tourney "tourney_serial" such as his rank, the 
+           current chips leader, and so forth.
+
+Direction: server  =>  client
+
+Context: the packet is sent as a response to PacketPokerGetTourneyPlayerStats
+
+serial: integer uniquely identifying a player.
+tourney_serial: integer uniquely indentifying a tourney.
+rank: integer the current rank of the player
+players_active: integer the number of players who are 
+                still participating in the tourney
+chips_avg: the average amount of chips an active player has
+chips_max: the amount of chips the highest ranked player has
+player_chips_max_serial: the serial of the currently leading player
+player_chips_max_name: the name of the currently leading player
+"""
+    info = PacketSerial.info + (
+            ('tourney_serial',0,'I'),
+            ('rank',0,'H'),
+            ('players_active',0,'H'),
+            ('chips_avg',0,'Q'),
+            ('chips_max',0,'Q'),
+            ('player_chips_max_serial',0,'I'),
+            ('player_chips_max_name','noname','s'),
+            )
+    
+Packet.infoDeclare(globals(), PacketPokerTourneyPlayerStats, Packet, "POKER_TOURNEY_PLAYER_STATS", 158) # 0x9e # %SEQ%
+
+########################################
+class PacketPokerStateInformation(PacketPokerId):
+    """\
+Semantics: This message is sent to a client whenever the server
+           has an inconsistent or otherwise not useful state of the player's
+           session object. This packet should help the user to decide how to
+           reinstate a correct connection by e.g. re-issuing a PacketPokerTableJoin
+           or a PacketLogin packet
+           
+Direction: server  =>  client
+
+Context: Since this packet is sent on the server's behalf, usually without the 
+         client's direct interaction. It is difficult to define a determined context 
+         for it. It is however possible to deduce if the packet is referring to a 
+         determined game or not, by looking at the "game_id" field.
+         The following error codes are currently used:
+         - REMOTE_CONNECTION_LOST: The server is closing the connection to another
+                                   remote server, because the session on the server the
+                                   client is connected to is expired. 
+         - REMOTE_TABLE_EPHEMERAL: Denotes the fact that after the current request the
+                                   client's session will be destroyed again. This usually
+                                   happens if the server never received a PacketPokerTable 
+                                   packet on this connection --> send a PacketPokerTableJoin
+                                   packet.
+          
+serial: integer uniquely identifying a player.
+game_id: integer uniquely identifying a game.
+message: string representing the error.
+code: integer representing the error.
+"""
+
+    REMOTE_CONNECTION_LOST = 1
+    REMOTE_TABLE_EPHEMERAL = 2
+    LOCAL_TABLE_EPHEMERAL = 3
+    
+    
+    info = PacketPokerId.info + (
+        ('message','no message','s'),
+        ('code',0,'I')
+        )
+
+Packet.infoDeclare(globals(), PacketPokerStateInformation, Packet, "POKER_STATE_INFORMATION", 160) # 160 # 0xa0 # %SEQ%
+
+########################################
 class PacketPokerPlayerStats(PacketPokerId):
     """\
 
@@ -4482,47 +4587,7 @@ class PacketPokerLongPollReturn(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerLongPollReturn, Packet, "POKER_LONG_POLL_RETURN", 168) # 168 # 0xa8 # %SEQ%
 ########################################
-class PacketPokerStateInformation(PacketPokerId):
-    """\
-Semantics: This message is sent to a client whenever the server
-           has an inconsistent or otherwise not useful state of the player's
-           session object. This packet should help the user to decide how to
-           reinstate a correct connection by e.g. re-issuing a PacketPokerTableJoin
-           or a PacketLogin packet
-           
-Direction: server  =>  client
 
-Context: Since this packet is sent on the server's behalf, usually without the 
-         client's direct interaction. It is difficult to define a determined context 
-         for it. It is however possible to deduce if the packet is referring to a 
-         determined game or not, by looking at the "game_id" field.
-         The following error codes are currently used:
-         - REMOTE_CONNECTION_LOST: The server is closing the connection to another
-                                   remote server, because the session on the server the
-                                   client is connected to is expired. 
-         - REMOTE_TABLE_EPHEMERAL: Denotes the fact that after the current request the
-                                   will be disconnected again. This usually happens if
-                                   the server never received a PacketPokerTable packet
-                                   on this connection --> send a PacketPokerTableJoin
-                                   packet.
-          
-serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a game.
-message: string representing the error.
-code: integer representing the error.
-"""
-
-    REMOTE_CONNECTION_LOST = 1
-    REMOTE_TABLE_EPHEMERAL = 2
-    LOCAL_TABLE_EPHEMERAL = 3
-    
-    
-    info = PacketPokerId.info + (
-        ('message','no message','s'),
-        ('code',0,'I')
-        )
-
-Packet.infoDeclare(globals(), PacketPokerStateInformation, Packet, "POKER_STATE_INFORMATION", 160) # 160 # 0xa0 # %SEQ%
     
 _TYPES = range(50,169)
 

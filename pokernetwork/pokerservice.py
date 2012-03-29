@@ -942,6 +942,8 @@ class PokerService(service.Service):
             self.tourneyFinished(tourney)
             self.tourneySatelliteWaitingList(tourney)
 
+    def tourneyUpdateStats(self,tourney,game_id):
+        tourney.stats.update(game_id)
 
     def tourneyFinished(self, tourney):
         prizes = tourney.prizes()
@@ -1344,7 +1346,24 @@ class PokerService(service.Service):
         players = int(cursor.fetchone()[0])
         cursor.close()
         return ( players, tourneys )
-
+    
+    def tourneyPlayerStats(self, tourney_serial, user_serial):
+        tourney = self.tourneys.get(tourney_serial,None)
+        if tourney is None:
+            return PacketError(
+                other_type = PACKET_POKER_GET_TOURNEY_PLAYER_STATS,
+                code = PacketPokerGetTourneyPlayerStats.DOES_NOT_EXIST,
+                message = "Tournament %d does not exist" % tourney_serial
+            )
+        elif user_serial not in tourney.players:
+            return PacketError(
+                other_type = PACKET_POKER_GET_TOURNEY_PLAYER_STATS,
+                code = PacketPokerGetTourneyPlayerStats.NOT_PARTICIPATING,
+                message = "User %d not participating in tourney %d." % (user_serial,tourney_serial)
+            )
+        stats = tourney.stats(user_serial)
+        return PacketPokerTourneyPlayerStats(**stats)
+    
     def tourneySelect(self, query_string):
         cursor = self.db.cursor(DictCursor)
         criterion = query_string.split("\t")
