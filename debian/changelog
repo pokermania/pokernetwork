@@ -1,3 +1,12 @@
+poker-network (2.0.5-1) pokermania; urgency=low
+
+  * changed poker-engine dependecy to v1.3.12
+  * 4eb81aa squash of extended_logging
+  * 2fa8725 PacketPokerGetTourneyPlayerStats and PacketPokerTourneyPlayerStats implemented.
+  * c9adb93 enables us to reload modules on a running server. (experimental, don't use!)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 03 Apr 2012 13:00:00 +0200
+
 poker-network (2.0.4-2) pokermania; urgency=low
 
   * added pokermanhole to Makefile.am
