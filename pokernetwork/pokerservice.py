@@ -2408,36 +2408,39 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         if minimum_amount:
-            sql = ( '''
-                SELECT COUNT(*) FROM user2money
-                WHERE user_serial = %d
-                AND currency_serial = %d
-                AND amount >= %d
-            ''' % ((serial,)+minimum_amount))
-            cursor.execute(sql)
+            cursor.execute(
+                "SELECT COUNT(*) FROM user2money " \
+                "WHERE user_serial = %s " \
+                "AND currency_serial = %s " \
+                "AND amount >= %s",
+                ((serial,)+minimum_amount)
+            )
             status = (cursor.fetchone()[0] >= 1)
             cursor.close()
         if status:
             cursor = self.db.cursor()
-            sql = ( "INSERT INTO user2table ( user_serial, table_serial, money) VALUES "
-                    " ( " + str(serial) + ", " + str(table_id) + ", " + str(amount) + " )" )
+            cursor.execute(
+                "INSERT INTO user2table ( user_serial, table_serial, money) " \
+                "VALUES (%s,%s,%s)",
+                (serial,table_id,amount)
+            )
             if self.verbose > 1:
-                self.message("seatPlayer: %s" % sql)
-            cursor.execute(sql)
+                self.message("seatPlayer: %s" % cursor._executed)
             if cursor.rowcount != 1:
-                self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+                self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, cursor._executed ))
                 status = False
             cursor.close()
             self.databaseEvent(event = PacketPokerMonitorEvent.SEAT, param1 = serial, param2 = table_id)
         return status
 
     def movePlayer(self, serial, from_table_id, to_table_id):
-        money = -1
         cursor = self.db.cursor()
-        sql = ( "SELECT money FROM user2table "
-                "  WHERE user_serial = " + str(serial) + " AND "
-                "        table_serial = " + str(from_table_id) )
-        cursor.execute(sql)
+        cursor.execute(
+            "SELECT money FROM user2table " \
+            "WHERE user_serial = %s " \
+            "AND table_serial = %s",
+            (serial,from_table_id)
+        )
         if cursor.rowcount != 1:
             self.message("movePlayer(%d) expected one row got %d" % ( serial, cursor.rowcount ))
         (money,) = cursor.fetchone()
@@ -2445,15 +2448,17 @@ class PokerService(service.Service):
 
         if money > 0:
             cursor = self.db.cursor()
-            sql = ( "UPDATE user2table "
-                    "  SET table_serial = " + str(to_table_id) +
-                    "  WHERE user_serial = " + str(serial) + " and"
-                    "        table_serial = " + str(from_table_id) )
+            cursor.execute(
+                "UPDATE user2table " \
+                "SET table_serial = %s " \
+                "WHERE user_serial = %s " \
+                "AND table_serial = %s",
+                (to_table_id,serial,from_table_id)
+            )
             if self.verbose > 1:
-                self.message("movePlayer: %s" % sql)
-            cursor.execute(sql)
+                self.message("movePlayer: %s" % cursor._executed)
             if cursor.rowcount != 1:
-                self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+                self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, cursor._executed ))
                 money = -1
             cursor.close()
 

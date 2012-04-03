@@ -957,8 +957,7 @@ class PokerTable:
         if self.isJoined(avatar):
             avatar.join(self, reason = PacketPokerTable.REASON_HAND_REPLAY)
         else:
-            self.joinPlayer(avatar, avatar.getSerial(),
-                            reason = PacketPokerTable.REASON_HAND_REPLAY)
+            self.joinPlayer(avatar, avatar.getSerial(), reason = PacketPokerTable.REASON_HAND_REPLAY)
         serial = avatar.getSerial()
         cache = self.createCache()
         for packet in self.history2packets(history, game.id, cache):
@@ -1193,10 +1192,12 @@ class PokerTable:
     def movePlayerFrom(self, serial, to_game_id):
         game = self.game
         player = game.getPlayer(serial)
-        self.broadcast(PacketPokerTableMove(game_id = game.id,
-                                            serial = serial,
-                                            to_game_id = to_game_id,
-                                            seat = player.seat))
+        self.broadcast(PacketPokerTableMove(
+            game_id = game.id,
+            serial = serial,
+            to_game_id = to_game_id,
+            seat = player.seat)
+        )
         sit_out = game.isSitOut(serial)
         game.removePlayer(serial)
         return sit_out
@@ -1222,13 +1223,17 @@ class PokerTable:
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
         if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
-            self.error("joinPlayer: %d cannot join game %d because the server is full" %
-                       (serial, game.id))
-            avatar.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                      serial = serial,
-                                                      other_type = PACKET_POKER_TABLE_JOIN,
-                                                      code = PacketPokerTableJoin.FULL,
-                                                      message = "This server has too many seated players and observers."))
+            self.error(
+                "joinPlayer: %d cannot join game %d because the server is full" % \
+                (serial, game.id)
+            )
+            avatar.sendPacketVerbose(PacketPokerError(
+                game_id = game.id,
+                serial = serial,
+                other_type = PACKET_POKER_TABLE_JOIN,
+                code = PacketPokerTableJoin.FULL,
+                message = "This server has too many seated players and observers.")
+            )
             return False
 
         # Next, test to see if joining this table will cause the avatar to

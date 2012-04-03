@@ -690,8 +690,7 @@ class PokerAvatar:
             self.sendPacketVerbose(self.setRole(packet))
             return 
 
-        elif ( packet.type == PACKET_POKER_SET_ACCOUNT or
-               packet.type == PACKET_POKER_CREATE_ACCOUNT ):
+        elif packet.type in (PACKET_POKER_SET_ACCOUNT,PACKET_POKER_CREATE_ACCOUNT):
             if self.getSerial() != packet.serial:
                 packet.serial = 0
             self.sendPacketVerbose(self.service.setAccount(packet))
@@ -706,9 +705,11 @@ class PokerAvatar:
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
-            ( playerCount, tourneyCount ) = self.service.tourneyStats()
-            tourneyList = PacketPokerTourneyList(players = playerCount,
-                                              tourneys = tourneyCount)
+            (playerCount, tourneyCount) = self.service.tourneyStats()
+            tourneyList = PacketPokerTourneyList(
+                players = playerCount,
+                tourneys = tourneyCount
+            )
             tourneys = self.service.tourneySelect(packet.string)
             for tourney in tourneys:
                 tourneyList.packets.append(PacketPokerTourney(**tourney))
@@ -775,7 +776,6 @@ class PokerAvatar:
 
         elif packet.type == PACKET_POKER_TABLE_JOIN:
             self.performPacketPokerTableJoin(packet)
-
             return
 
         elif packet.type == PACKET_POKER_TABLE_PICKER:
@@ -800,9 +800,11 @@ class PokerAvatar:
                     if not self.bugous_processing_hand:
                         self.sendPacketVerbose(table.processingHand(packet.serial))
                     else:
-                        self.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                                serial = self.getSerial(),
-                                                                other_type = PACKET_POKER_PROCESSING_HAND))
+                        self.sendPacketVerbose(PacketPokerError(
+                            game_id = game.id,
+                            serial = self.getSerial(),
+                            other_type = PACKET_POKER_PROCESSING_HAND
+                        ))
                 else:
                     self.message("attempt to set processing hand for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
 
@@ -831,9 +833,11 @@ class PokerAvatar:
                 if self.getSerial() == packet.serial:
                     self.service.autorefill(packet.serial)
                     if not table.rebuyPlayerRequest(self, packet.amount):
-                        self.sendPacketVerbose(PacketPokerError(game_id = game.id,
-                                                                serial = packet.serial,
-                                                                other_type = PACKET_POKER_REBUY))
+                        self.sendPacketVerbose(PacketPokerError(
+                            game_id = game.id,
+                            serial = packet.serial,
+                            other_type = PACKET_POKER_REBUY
+                        ))
                 else:
                     self.message("attempt to rebuy for player %d by player %d" % ( packet.serial, self.getSerial() ))
 
@@ -913,28 +917,24 @@ class PokerAvatar:
                 
             elif packet.type == PACKET_POKER_FOLD:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.fold(packet.serial)
                 else:
                     self.message("attempt to fold player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
 
             elif packet.type == PACKET_POKER_CALL:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.call(packet.serial)
                 else:
                     self.message("attempt to call for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
 
             elif packet.type == PACKET_POKER_RAISE:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.callNraise(packet.serial, packet.amount)
                 else:
                     self.message("attempt to raise for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
 
             elif packet.type == PACKET_POKER_CHECK:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    
                     game.check(packet.serial)
                 else:
                     self.message("attempt to check for player %d by player %d that is not the owner of the game" % ( packet.serial, self.getSerial() ))
@@ -1025,7 +1025,7 @@ class PokerAvatar:
                 other_type = PACKET_POKER_SEAT
             ))
             return False
-        elif ( self.getSerial() == packet.serial or self.getSerial() == table.owner ):
+        elif self.getSerial() == packet.serial or self.getSerial() == table.owner:
             if not table.seatPlayer(self, packet.serial, packet.seat):
                 packet.seat = -1
             else:
@@ -1233,7 +1233,7 @@ class PokerAvatar:
             )
             packet.tourney_serial = int(table['tourney_serial'])
             packets.append(packet)
-        ( players, tables ) = self.service.statsTables()
+        (players, tables) = self.service.statsTables()
         self.sendPacketVerbose(PacketPokerTableList(
             players = players,
             tables = tables,
@@ -1292,7 +1292,6 @@ class PokerAvatar:
 
     def join(self, table, reason = ""):
         game = table.game
-        
         self.tables[game.id] = table
 
         packet = table.toPacket()
@@ -1347,8 +1346,7 @@ class PokerAvatar:
                         serial = player.serial
                     ))
 
-        self.sendPacketVerbose(PacketPokerSeats(game_id = game.id,
-                                                seats = game.seats()))
+        self.sendPacketVerbose(PacketPokerSeats(game_id = game.id, seats = game.seats()))
         if not game.isEndOrNull():
             #
             # If a game is running, replay it.
@@ -1426,8 +1424,8 @@ class PokerAvatar:
         if game.sit(serial):
             table.broadcast(PacketPokerSit(
                 game_id = game.id,
-                serial = serial)
-            )
+                serial = serial
+            ))
 
     def sitOutPlayer(self, table, serial):
         game = table.game
@@ -1435,14 +1433,14 @@ class PokerAvatar:
             if game.sitOutNextTurn(serial):
                 table.broadcast(PacketPokerSitOut(
                     game_id = game.id,
-                    serial = serial)
-                )
+                    serial = serial
+                ))
         else:
             game.autoPlayer(serial)
             table.broadcast(PacketPokerAutoFold(
                 game_id = game.id,
-                serial = serial)
-            )
+                serial = serial
+            ))
 
     def autoBlindAnte(self, table, serial, auto):
         game = table.game
@@ -1452,17 +1450,16 @@ class PokerAvatar:
         if auto:
             self.sendPacketVerbose(PacketPokerAutoBlindAnte(
                 game_id = game.id,
-                serial = serial)
-            )
+                serial = serial
+            ))
         else:
             self.sendPacketVerbose(PacketPokerNoautoBlindAnte(
                 game_id = game.id,
-                serial = serial)
-            )
+                serial = serial
+            ))
                                                               
     def setMoney(self, table, amount):
         game = table.game
-
         if game.payBuyIn(self.getSerial(), amount):
             player = game.getPlayer(self.getSerial())
             nochips = 0
