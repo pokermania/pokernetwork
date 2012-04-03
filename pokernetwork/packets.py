@@ -177,6 +177,30 @@ class Packet:
     @staticmethod
     def calcsizestring(string):
         return calcsize("!H") + len(string)
+    
+    @staticmethod
+    def packbstring(obj):
+        if obj == True: string = 'TRUE'
+        elif obj == False: string = 'FALSE'
+        else: string = obj
+        return pack("!H", len(string)) + string
+
+    @staticmethod
+    def unpackbstring(block):
+        offset = calcsize("!H")
+        (length,) = unpack("!H", block[:offset])
+        obj = block[offset:offset + length]
+        if obj == 'TRUE': string = True
+        elif obj == 'FALSE': string = False
+        else: string = obj
+        return (block[offset + length:], string)
+
+    @staticmethod
+    def calcsizebstring(obj):
+        if obj == True: string = 'TRUE'
+        elif obj == False: string = 'FALSE'
+        else: string = obj
+        return calcsize("!H") + len(string)
 
     @staticmethod
     def packjson(object):
@@ -226,6 +250,60 @@ class Packet:
     @staticmethod
     def calcsizepackets(packets):
         return 2 + sum([ packet.calcsize() for packet in packets ])
+    
+    @staticmethod
+    def packmoney(obj):
+        block = pack('!H', len(obj))
+        for (currency, money) in obj.iteritems():
+            fields = (currency,) + money
+            block += pack('!IIII', *fields)
+        return block
+
+    @staticmethod
+    def unpackmoney(block):
+        (length,) = unpack('!H', block[:calcsize('!H')])
+        block = block[calcsize('!H'):]
+        fmt = '!IIII'
+        format_size = calcsize(fmt)
+        obj = {}
+        for i in xrange(length):
+            fields = unpack(fmt, block[:format_size])
+            obj[fields[0]] = fields[1:]
+            block = block[format_size:]
+        return (block, obj)
+
+    @staticmethod
+    def calcsizemoney(obj):
+        return calcsize('!H') + len(obj) * calcsize('!IIII')
+    
+    @staticmethod
+    def packplayers(obj):
+        block = pack('!H', len(obj))
+        for (name, chips, flags) in obj:
+            block += Packet.packstring(name)
+            block += pack('!IB', chips, flags)
+        return block
+
+    @staticmethod
+    def unpackplayers(block):
+        (length,) = unpack('!H', block[:calcsize('!H')])
+        block = block[calcsize('!H'):]
+        format = '!IB'
+        format_size = calcsize(format)
+        obj = []
+        for i in xrange(length):
+            (block, name) = Packet.unpackstring(block)
+            (chips, flags) = unpack(format, block[:format_size])
+            obj.append((name, chips, flags))
+            block = block[format_size:]
+        return (block, obj)
+
+    @staticmethod
+    def calcsizeplayers(object):
+        size = calcsize('!H')
+        for (name, chips, flags) in object:
+            size += Packet.calcsizestring(name) + calcsize('!IB')
+        return size
     
     def __str__(self):
         return "type = %s(%d)" % ( PacketNames[self.type], self.type )
@@ -344,6 +422,17 @@ Packet.format_info = {
           'calcsize': Packet.calcsizestring,
           },
     #
+    # Character string or boolean, length as a 2 bytes integer, network order (big endian)
+    #   followed by the content of the string.
+    # Example: "abc" <=> \x00\x03abc
+    #          "" <=> \x00\x00
+    #          True <=> \x00\x04TRUE
+    #
+    'bs': {'pack': Packet.packbstring,
+          'unpack': Packet.unpackbstring,
+          'calcsize': Packet.calcsizebstring,
+          },
+    #
     # JSon.org encoded string, length as a 2 bytes integer, network order (big endian)
     #   followed by the content of the string.
     # Example: "{'a':1}" <=> \x00\x07{'a':1}
@@ -397,6 +486,38 @@ Packet.format_info = {
            'unpack': Packet.unpackpackets,
            'calcsize': Packet.calcsizepackets,
            },
+    
+    #
+    # List of user money status, length of the list as a 2 byte unsigned integer in the range [0-65535]
+    # Each money status is a list of 4 unsigned integers
+    #  currency
+    #  bankroll
+    #  in_game
+    #  points
+    # Example: {} <=> \x00
+    #          {5: (2, 3, 4)} <=> \x01\x05\x02\x03\x04
+    #          {5: (2, 3, 4), 10: (1, 1, 1)} <=> \x02\x05\x02\x03\x04\x0a\x01\x01\x01
+    #
+    'money': {
+              'pack': Packet.packmoney,
+              'unpack': Packet.unpackmoney,
+              'calcsize': Packet.calcsizemoney
+              },
+    
+    #
+    # List of players, length of the list as a 4 byte unsigned integer in the range [0-65535]
+    # Each player is a list of 3 elements
+    #  name (string)
+    #  money (4 byte unsigned integer)
+    #  flags (2 byte unsigned integer)
+    # Example: [] <=> \x00\x00
+    #          [('player',1000,0)] <=> \x00\x01\x00\x06player\x00\x00\x03\xe8\x00
+    #
+    'players': {
+                'pack': Packet.packplayers,
+                'unpack': Packet.unpackplayers,
+                'calcsize':Packet.calcsizeplayers
+                }
     }
 
 PacketFactory[PACKET_NONE] = Packet

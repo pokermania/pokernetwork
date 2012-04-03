@@ -40,32 +40,6 @@ def chips2amount(chips):
         amount += chips[i*2] * chips[i*2 + 1]
     return amount
 
-class PokerClientPacketJSON(simplejson.JSONEncoder):
-    def default(self, object):
-        if isinstance(object, PokerCards):
-            return ['Cards'] + [255] * len(object.cards)
-        elif isinstance(object, PokerChips):
-            return ['Chips', object.toint()]
-        else:
-            return simplejson.JSONEncoder.default(self, object)
-
-    @staticmethod
-    def decode_objects(something):
-        if type(something) is types.ListType:
-            if something[0] in ('Cards', 'Chips'):
-                if something[0] == 'Cards':
-                    return PokerCards(something[1:])
-                elif something[0] == 'Chips':
-                    return PokerChips([1],[something[1]])
-            else:
-                return map(PokerClientPacketJSON.decode_objects, something)
-        elif type(something) is types.DictType:
-            return dict(map(lambda (k, v): [k, PokerClientPacketJSON.decode_objects(v)], something.iteritems()))
-        else:
-            return something
-    
-Packet.JSON = PokerClientPacketJSON()
-
 class PokerClientPackets:
     @staticmethod
     def unpackchips(block):

@@ -218,9 +218,6 @@ from pokernetwork.packets import *
 
 ########################################
 
-PACKET_POKER_SEATS = 50 # 0x32 # %SEQ%
-PacketNames[PACKET_POKER_SEATS] = "POKER_SEATS"
-
 class PacketPokerSeats(Packet):
     """\
 Semantics: attribution of the seats of a game to the players.
@@ -244,74 +241,27 @@ seats: list of serials of players. The list contains exactly 10 integers.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_SEATS
-
-    info = Packet.info + ( ('seats', [], 'Il'),
-                           ('game_id', 0, 'I'),
-                           )
+    info = Packet.info + (
+        ('seats', [], 'Il'),
+        ('game_id', 0, 'I'),
+        )
     
-    format = "!I"
-    format_size = calcsize(format)
-    format_element = "!I"
-
-    def __init__(self, **kwargs):
-        self.seats = kwargs.get("seats",[])
-        self.game_id = kwargs.get("game_id",0)
-
-    def pack(self):
-        return Packet.pack(self) + self.packlist(self.seats, PacketPokerSeats.format_element) + pack(PacketPokerSeats.format, self.game_id)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.seats) = self.unpacklist(block, PacketPokerSeats.format_element)
-        (self.game_id,) = unpack(PacketPokerSeats.format, block[:PacketPokerSeats.format_size])
-        return block[PacketPokerSeats.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizelist(self.seats, PacketPokerSeats.format_element) + PacketPokerSeats.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, seats = %s" % ( self.game_id, self.seats )
-
-PacketFactory[PACKET_POKER_SEATS] = PacketPokerSeats
-
+Packet.infoDeclare(globals(), PacketPokerSeats, Packet, "POKER_SEATS", 50) # 50 # 0x32
 ########################################
 
 PACKET_POKER_ID = 51 # 0x33 # %SEQ%
 PacketNames[PACKET_POKER_ID] = "POKER_ID"
 
 class PacketPokerId(PacketSerial):
-    """abstract packet with game id and serial"""
+    """
+    abstract packet with game id and serial
+    """
 
-    type = PACKET_POKER_ID
-
-    info = PacketSerial.info + ( ( 'game_id', 0, 'I'), )
+    info = PacketSerial.info + (
+        ('game_id', 0, 'I'), 
+        )
         
-    game_id = 0
-
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        PacketSerial.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketSerial.pack(self) + pack(PacketPokerId.format, self.game_id)
-
-    def unpack(self, block):
-        block = PacketSerial.unpack(self, block)
-        self.game_id = int(unpack(PacketPokerId.format, block[:PacketPokerId.format_size])[0])
-        return block[PacketPokerId.format_size:]
-
-    def calcsize(self):
-        return PacketSerial.calcsize(self) + PacketPokerId.format_size
-
-    def __str__(self):
-        return PacketSerial.__str__(self) + " game_id = %d" % self.game_id
-
-PacketFactory[PACKET_POKER_ID] = PacketPokerId
-
+Packet.infoDeclare(globals(), PacketPokerId, Packet, "POKER_ID", 51) # 51 # 0x33
 ########################################
 
 PACKET_POKER_MESSAGE = 52 # 0x34 # %SEQ%
@@ -323,82 +273,26 @@ class PacketPokerMessage(PacketPokerId):
     Informative messages
     """
 
-    type = PACKET_POKER_MESSAGE
-
-    info = PacketPokerId.info + ( ( 'string', '', 's' ), )
+    info = PacketPokerId.info + (
+        ('string', '', 's' ), 
+        )
         
-    def __init__(self, *args, **kwargs):
-        self.string = kwargs.get("string", "")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + self.packstring(self.string)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.string) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizestring(self.string)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " string = %s" % self.string
-
-PacketFactory[PACKET_POKER_MESSAGE] = PacketPokerMessage
-
+Packet.infoDeclare(globals(), PacketPokerMessage, Packet, "POKER_MESSAGE", 52) # 52 # 0x34
 ########################################
-
-PACKET_POKER_ERROR = 53 # 0x35 # %SEQ%
-PacketNames[PACKET_POKER_ERROR] = "ERROR"
 
 class PacketPokerError(PacketPokerId):
     """
-
     Packet describing an error
-
     """
 
-    type = PACKET_POKER_ERROR
+    info = PacketPokerId.info + (
+        ('message', 'no message', 's'),
+        ('code', 0, 'I'),
+        ('other_type', 53, 'B'),
+        )
 
-    info = PacketPokerId.info + ( ('message', 'no message', 's'),
-                                  ('code', 0, 'I'),
-                                  ('other_type', PACKET_POKER_ERROR, 'B'),
-                                  )
-    other_type = 0
-    code = 0
-    message = ""
-
-    format = "!IB"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.message = kwargs.get("message", "no message")
-        self.code = kwargs.get("code", 0)
-        self.other_type = kwargs.get("other_type", PACKET_POKER_ERROR)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + self.packstring(self.message) + pack(PacketPokerError.format, self.code, self.other_type)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.message) = self.unpackstring(block)
-        (self.code, self.other_type) = unpack(PacketPokerError.format, block[:PacketPokerError.format_size])
-        return block[PacketPokerError.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizestring(self.message) + PacketPokerError.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " message = %s, code = %d, other_type = %s" % (self.message, self.code, PacketNames[self.other_type] )
-
-PacketFactory[PACKET_POKER_ERROR] = PacketPokerError
-
+Packet.infoDeclare(globals(), PacketPokerError, Packet, "POKER_ERROR", 53) # 53 # 0x35
 ########################################
-
-PACKET_POKER_POSITION = 54 # 0x36 # %SEQ%
-PacketNames[PACKET_POKER_POSITION] = "POKER_POSITION"
 
 class PacketPokerPosition(Packet):
     """\
@@ -420,90 +314,34 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_POSITION
-
-    info = Packet.info + ( ('game_id', 0, 'I'),
-                           ('position', -1, 'b'),
-                           ('serial', 0, 'I') )
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        ('position', -1, 'b'),
+        ('serial', 0, 'I'), 
+        )
     
-    format = "!IBI"
-    format_size = calcsize(format)
-
-    def __init__(self, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        self.position = kwargs.get("position", -1)
-        self.serial = kwargs.get("serial", 0) # accepted by constructor but otherwise ignored
-
-    def pack(self):
-        position = self.position == -1 and 255 or self.position
-        return Packet.pack(self) + pack(PacketPokerPosition.format, self.game_id, position, self.serial)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (self.game_id, self.position, self.serial) = unpack(PacketPokerPosition.format, block[:PacketPokerPosition.format_size])
-        if self.position == 255: self.position = -1
-        return block[PacketPokerPosition.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketPokerPosition.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, position = %d, serial = %d" % ( self.game_id, self.position, self.serial )
-
-PacketFactory[PACKET_POKER_POSITION] = PacketPokerPosition
-
+Packet.infoDeclare(globals(), PacketPokerPosition, Packet, "POKER_POSITION", 54) # 54 # 0x36
 ########################################
-
-PACKET_POKER_INT = 55 # 0x37 # %SEQ%
-PacketNames[PACKET_POKER_INT] = "POKER_INT"
 
 class PacketPokerInt(PacketPokerId):
-    """base class for a int coded amount"""
+    """
+    base class for a int coded amount
+    """
 
-    type = PACKET_POKER_INT
-
-    info = PacketPokerId.info + ( ('amount', 0, 'I'), )
+    info = PacketPokerId.info + (
+        ('amount', 0, 'I'), 
+        )
     
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.amount = kwargs.get("amount", 0)
-        if not ( type(self.amount) == IntType or type(self.amount) == LongType ): raise UserWarning, "not an int" + str(self.amount)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerInt.format, self.amount)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.amount,) = unpack(PacketPokerInt.format, block[:PacketPokerInt.format_size])
-        return block[PacketPokerInt.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerInt.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " amount = %d" % self.amount
-
-PacketFactory[PACKET_POKER_INT] = PacketPokerInt
-
+Packet.infoDeclare(globals(), PacketPokerInt, Packet, "POKER_INT", 55) # 55 # 0x37
 ########################################
-
-PACKET_POKER_BET = 56 # 0x38 # %SEQ%
-PacketNames[PACKET_POKER_BET] = "POKER_BET"
 
 class PacketPokerBet(PacketPokerInt):
-    """base class for raise. It is not used. To bet use PokerRaise instead."""
+    """
+    base class for raise. It is not used. To bet use PokerRaise instead.
+    """
 
-    type = PACKET_POKER_BET
-
-PacketFactory[PACKET_POKER_BET] = PacketPokerBet
-
+Packet.infoDeclare(globals(), PacketPokerBet, Packet, "POKER_BET", 56) # 56 # 0x38
 ########################################
-
-PACKET_POKER_FOLD = 57 # 0x39 # %SEQ%
-PacketNames[PACKET_POKER_FOLD] = "POKER_FOLD"
 
 class PacketPokerFold(PacketPokerId):
     """\
@@ -515,14 +353,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_FOLD
-
-PacketFactory[PACKET_POKER_FOLD] = PacketPokerFold
-
+Packet.infoDeclare(globals(), PacketPokerFold, Packet, "POKER_FOLD", 57) # 57 # 0x39
 ########################################
-
-PACKET_POKER_STATE = 58 # 0x3a # %SEQ%
-PacketNames[PACKET_POKER_STATE] = "POKER_STATE"
 
 class PacketPokerState(PacketPokerId):
     """\
@@ -552,35 +384,12 @@ game_id: integer uniquely identifying a game.
 string: state of the game.
 """
 
-    type = PACKET_POKER_STATE
-
-    info = PacketPokerId.info + ( ('string', '', 's'), )
+    info = PacketPokerId.info + (
+        ('string', '', 's'), 
+        )
     
-    def __init__(self, *args, **kwargs):
-        self.string = kwargs.get("string","")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + self.packstring(self.string)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.string) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizestring(self.string)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " string = %s" % self.string
-
-
-PacketFactory[PACKET_POKER_STATE] = PacketPokerState
-
+Packet.infoDeclare(globals(), PacketPokerState, Packet, "POKER_STATE", 58) # 58 # 0x3a
 ########################################
-
-PACKET_POKER_WIN = 59 # 0x3b # %SEQ%
-PacketNames[PACKET_POKER_WIN] = "POKER_WIN"
 
 class PacketPokerWin(PacketPokerId):
     """\
@@ -630,73 +439,24 @@ serials: list of serials of players who won.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_WIN
-
-    info = PacketPokerId.info + ( ('serials', [], 'Il'), )
+    info = PacketPokerId.info + (
+        ('serials', [], 'Il'),
+        )
     
-    format_element = "!I"
-
-    def __init__(self, *args, **kwargs):
-        self.serials = kwargs.get("serials",[])
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        block = PacketPokerId.pack(self)
-        block += self.packlist(self.serials, PacketPokerWin.format_element)
-        return block
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.serials) = self.unpacklist(block, PacketPokerWin.format_element)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.serials, PacketPokerWin.format_element)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " serials = %s" % self.serials
-
-PacketFactory[PACKET_POKER_WIN] = PacketPokerWin
-
+Packet.infoDeclare(globals(), PacketPokerWin, Packet, "POKER_WIN", 59) # 59 # 0x3b
 ########################################
-
-PACKET_POKER_CARDS = 60 # 0x3c # %SEQ%
-PacketNames[PACKET_POKER_CARDS] = "POKER_CARDS"
 
 class PacketPokerCards(PacketPokerId):
-    """base class for player / board / best cards"""
-    type = PACKET_POKER_CARDS
+    """
+    base class for player / board / best cards
+    """
 
-    info = PacketPokerId.info + ( ('cards', [], 'Bl'), )
+    info = PacketPokerId.info + (
+        ('cards', [], 'Bl'), 
+        )
     
-    format_element = "!B"
-
-    def __init__(self, *args, **kwargs):
-        self.cards = kwargs.get("cards",[])
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        block = PacketPokerId.pack(self)
-        block += self.packlist(self.cards, PacketPokerCards.format_element)
-        return block
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.cards) = self.unpacklist(block, PacketPokerCards.format_element)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.cards, PacketPokerCards.format_element)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " cards = %s" % self.cards
-
-PacketFactory[PACKET_POKER_CARDS] = PacketPokerCards
-
+Packet.infoDeclare(globals(), PacketPokerCards, Packet, "POKER_CARDS", 60) # 60 # 0x3c
 ########################################
-
-PACKET_POKER_PLAYER_CARDS = 61 # 0x3d # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_CARDS] = "POKER_PLAYER_CARDS"
 
 class PacketPokerPlayerCards(PacketPokerCards):
     """\
@@ -729,14 +489,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_PLAYER_CARDS
-
-PacketFactory[PACKET_POKER_PLAYER_CARDS] = PacketPokerPlayerCards
-
+Packet.infoDeclare(globals(), PacketPokerPlayerCards, Packet, "POKER_PLAYER_CARDS", 61) # 61 # 0x3d
 ########################################
-
-PACKET_POKER_BOARD_CARDS = 62 # 0x3e # %SEQ%
-PacketNames[PACKET_POKER_BOARD_CARDS] = "POKER_BOARD_CARDS"
 
 class PacketPokerBoardCards(PacketPokerCards):
     """\
@@ -768,50 +522,16 @@ cards: list of integers describing cards.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BOARD_CARDS
-
-PacketFactory[PACKET_POKER_BOARD_CARDS] = PacketPokerBoardCards
-
+Packet.infoDeclare(globals(), PacketPokerBoardCards, Packet, "POKER_BOARD_CARDS", 62) # 62 # 0x3e
 ########################################
-
-PACKET_POKER_CHIPS = 63 # 0x3f # %SEQ%
-PacketNames[PACKET_POKER_CHIPS] = "POKER_CHIPS"
 
 class PacketPokerChips(PacketPokerId):
     """base class"""
 
-    type = PACKET_POKER_CHIPS
-
     info = PacketPokerId.info + ( ('bet', 0, 'Q'), )
     
-    format = "!Q"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.bet = kwargs.get("bet", 0)
-        if not ( type(self.bet) == IntType or type(self.bet) == LongType ): raise UserWarning, "not an int" + str(self.bet)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerChips.format, self.bet)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.bet,) = unpack(PacketPokerChips.format, block[:PacketPokerChips.format_size])
-        return block[PacketPokerChips.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerChips.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " bet = %d" % self.bet
-
-PacketFactory[PACKET_POKER_CHIPS] = PacketPokerChips
-
+Packet.infoDeclare(globals(), PacketPokerChips, Packet, "POKER_CHIPS", 63) # 63 # 0x3f
 ########################################
-
-PACKET_POKER_PLAYER_CHIPS = 64 # 0x40 # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_CHIPS] = "POKER_PLAYER_CHIPS"
 
 class PacketPokerPlayerChips(PacketPokerChips):
     """\
@@ -829,38 +549,12 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_PLAYER_CHIPS
+    info = PacketPokerChips.info + (
+        ('money', 0, 'Q'),
+        )
 
-    info = PacketPokerChips.info + ( ('money', 0, 'Q'), )
-
-    format = "!Q"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.money = kwargs.get("money", 0)
-        if not ( type(self.money) == IntType or type(self.money) == LongType ): raise UserWarning, "not an int" + str(self.money)
-        PacketPokerChips.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerChips.pack(self) + pack(PacketPokerPlayerChips.format, self.money)
-
-    def unpack(self, block):
-        block = PacketPokerChips.unpack(self, block)
-        (self.money,) = unpack(PacketPokerPlayerChips.format, block[:PacketPokerPlayerChips.format_size])
-        return block[PacketPokerPlayerChips.format_size:]
-
-    def calcsize(self):
-        return PacketPokerChips.calcsize(self) + PacketPokerPlayerChips.format_size
-
-    def __str__(self):
-        return PacketPokerChips.__str__(self) + " money = %d" % self.money
-
-PacketFactory[PACKET_POKER_PLAYER_CHIPS] = PacketPokerPlayerChips
-
+Packet.infoDeclare(globals(), PacketPokerPlayerChips, Packet, "POKER_PLAYER_CHIPS", 64) # 64 # 0x40
 ########################################
-
-PACKET_POKER_CHECK = 65 # 0x41 # %SEQ%
-PacketNames[PACKET_POKER_CHECK] = "POKER_CHECK"
 
 class PacketPokerCheck(PacketPokerId):
     """\
@@ -873,14 +567,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_CHECK
-
-PacketFactory[PACKET_POKER_CHECK] = PacketPokerCheck
-
+Packet.infoDeclare(globals(), PacketPokerCheck, Packet, "POKER_CHECK", 65) # 65 # 0x41
 ########################################
-
-PACKET_POKER_START = 66 # 0x42 # %SEQ%
-PacketNames[PACKET_POKER_START] = "POKER_START"
 
 class PacketPokerStart(PacketPokerId):
     """\
@@ -909,44 +597,15 @@ level: integer indicating the tournament level at which the current
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_START
+    info = PacketPokerId.info + (
+        ('hands_count', 0, 'I'),
+        ('time', 0, 'I'),
+        ('hand_serial', 0, 'I'),
+        ('level', 0, 'B'),
+        )
 
-    info = PacketPokerId.info + ( ('hands_count', 0, 'I'),
-                                  ('time', 0, 'I'),
-                                  ('hand_serial', 0, 'I'),
-                                  ('level', 0, 'B'),
-                                  )
-
-    format = "!IIIB"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.hands_count = kwargs.get("hands_count",0)
-        self.time = int(kwargs.get("time",0))
-        self.hand_serial = kwargs.get("hand_serial",0)
-        self.level = kwargs.get("level",0)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerStart.format, self.hands_count, self.time, self.hand_serial, self.level)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.hands_count, self.time, self.hand_serial, self.level) = unpack(PacketPokerStart.format, block[:PacketPokerStart.format_size])
-        return block[PacketPokerStart.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerStart.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " hands_count = %d, time = %d, hand_serial = %d, level = %d" % (self.hands_count, self.time, self.hand_serial, self.level)
-
-PacketFactory[PACKET_POKER_START] = PacketPokerStart
-
+Packet.infoDeclare(globals(), PacketPokerStart, Packet, "POKER_START", 66) # 66 # 0x42
 ########################################
-
-PACKET_POKER_IN_GAME = 67 # 0x43 # %SEQ%
-PacketNames[PACKET_POKER_IN_GAME] = "POKER_IN_GAME"
 
 class PacketPokerInGame(PacketPokerId):
     """\
@@ -967,36 +626,12 @@ players: list of serials of players participating in the hand.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_IN_GAME
-
-    info = PacketPokerId.info + ( ('players', [], 'Il'), )
+    info = PacketPokerId.info + (
+        ('players', [], 'Il'), 
+        )
     
-    format_element = "!I"
-
-    def __init__(self, *args, **kwargs):
-        self.players = kwargs.get("players",[])
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + self.packlist(self.players, PacketPokerInGame.format_element)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.players) = self.unpacklist(block, PacketPokerInGame.format_element)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.players, PacketPokerInGame.format_element)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " players = %s" % self.players
-
-PacketFactory[PACKET_POKER_IN_GAME] = PacketPokerInGame
-
+Packet.infoDeclare(globals(), PacketPokerInGame, Packet, "POKER_IN_GAME", 67) # 67 # 0x43
 ########################################
-
-PACKET_POKER_CALL = 68 # 0x44 # %SEQ%
-PacketNames[PACKET_POKER_CALL] = "POKER_CALL"
 
 class PacketPokerCall(PacketPokerId):
     """\
@@ -1008,14 +643,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_CALL
-
-PacketFactory[PACKET_POKER_CALL] = PacketPokerCall
-
+Packet.infoDeclare(globals(), PacketPokerCall, Packet, "POKER_CALL", 68) # 68 # 0x44
 ########################################
-
-PACKET_POKER_RAISE = 69 # 0x45 # %SEQ%
-PacketNames[PACKET_POKER_RAISE] = "POKER_RAISE"
 
 class PacketPokerRaise(PacketPokerBet):
     """\
@@ -1034,14 +663,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_RAISE
-
-PacketFactory[PACKET_POKER_RAISE] = PacketPokerRaise
-
+Packet.infoDeclare(globals(), PacketPokerRaise, Packet, "POKER_RAISE", 69) # 69 # 0x45
 ########################################
-
-PACKET_POKER_DEALER = 70 # 0x46 # %SEQ%
-PacketNames[PACKET_POKER_DEALER] = "POKER_DEALER"
 
 class PacketPokerDealer(Packet):
     """\
@@ -1059,45 +682,14 @@ previous_dealer: the seat number on wich the previous dealer button is located [
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_DEALER
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
+        ('dealer', -1, 'b'),
+        ('previous_dealer', -1, 'b'),
+        )
 
-    info = Packet.info + ( ('game_id', 0, 'I'),
-                           ('dealer', -1, 'b'),
-                           ('previous_dealer', -1, 'b'),
-                           )
-
-    format = "!IBB"
-    format_size = calcsize(format)
-
-    def __init__(self, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        self.dealer = kwargs.get("dealer", -1)
-        self.previous_dealer = kwargs.get("previous_dealer", -1)
-
-    def pack(self):
-        dealer = self.dealer == -1 and 255 or self.dealer
-        previous_dealer = self.previous_dealer == -1 and 255 or self.previous_dealer
-        return Packet.pack(self) + pack(PacketPokerDealer.format, self.game_id, dealer, previous_dealer)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (self.game_id, self.dealer, self.previous_dealer) = unpack(PacketPokerDealer.format, block[:PacketPokerDealer.format_size])
-        if self.dealer == 255: self.dealer = -1
-        if self.previous_dealer == 255: self.previous_dealer = -1
-        return block[PacketPokerDealer.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketPokerDealer.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " game_id = %d, dealer = %d, previous_dealer = %d" % ( self.game_id, self.dealer, self.previous_dealer )
-
-PacketFactory[PACKET_POKER_DEALER] = PacketPokerDealer
-
+Packet.infoDeclare(globals(), PacketPokerDealer, Packet, "POKER_DEALER", 70) # 70 # 0x46
 ########################################
-
-PACKET_POKER_TABLE_JOIN = 71 # 0x47 # %SEQ%
-PacketNames[PACKET_POKER_TABLE_JOIN] = "POKER_TABLE_JOIN"
 
 class PacketPokerTableJoin(PacketPokerId):
     """\
@@ -1172,14 +764,9 @@ game_id: integer uniquely identifying a game.
     FULL = 1
     GENERAL_FAILURE = 2
     NOT_JOINED = 1001
-    type = PACKET_POKER_TABLE_JOIN
 
-PacketFactory[PACKET_POKER_TABLE_JOIN] = PacketPokerTableJoin
-
+Packet.infoDeclare(globals(), PacketPokerTableJoin, Packet, "POKER_TABLE_JOIN", 71) # 71 # 0x47
 ########################################
-
-PACKET_POKER_TABLE_SELECT = 72 # 0x48 # %SEQ%
-PacketNames[PACKET_POKER_TABLE_SELECT] = "POKER_TABLE_SELECT"
 
 class PacketPokerTableSelect(PacketString):
     """\
@@ -1194,14 +781,8 @@ string: currency<tabulation>variant
         in which the player id attached to the connection is playing.
 """
 
-    type = PACKET_POKER_TABLE_SELECT
-
-PacketFactory[PACKET_POKER_TABLE_SELECT] = PacketPokerTableSelect
-
+Packet.infoDeclare(globals(), PacketPokerTableSelect, Packet, "POKER_TABLE_SELECT", 72) # 72 # 0x48
 ########################################
-PACKET_POKER_TABLE = 73 # 0x49 # %SEQ%
-PacketNames[PACKET_POKER_TABLE] = "POKER_TABLE"
-
 class PacketPokerTable(Packet):
     """\
 Semantics: the full description of a poker game. When sent
@@ -1278,84 +859,29 @@ reason: string representing the reason that this packet is being sent to
     REASON_HAND_REPLAY   = "HandReplay"
     REASON_NONE          = ""
 
-    type = PACKET_POKER_TABLE
-
-    info = Packet.info + ( ('id', 0, 'I'),
-                           ('seats', 10, 'B'),
-                           ('average_pot', 0, 'I'),
-                           ('hands_per_hour', 0, 'H'),
-                           ('percent_flop', 0, 'B'),
-                           ('players', 0, 'B'),
-                           ('observers', 0, 'H'),
-                           ('waiting', 0, 'B'),
-                           ('player_timeout', 0, 'H'),
-                           ('muck_timeout', 0, 'H'),
-                           ('currency_serial', 0, 'I'),
-                           ('name', 'noname', 's'),
-                           ('variant', 'holdem', 's'),
-                           ('betting_structure', '2-4-limit', 's'),
-                           ('skin', 'default', 's'),
-                           ('reason', '', 's'),
-                           ('tourney_serial', 0, 'no net'),
-                           ('player_seated',-1,'no net')
-                           )
+    info = Packet.info + (
+        ('id', 0, 'I'),
+        ('seats', 10, 'B'),
+        ('average_pot', 0, 'I'),
+        ('hands_per_hour', 0, 'H'),
+        ('percent_flop', 0, 'B'),
+        ('players', 0, 'B'),
+        ('observers', 0, 'H'),
+        ('waiting', 0, 'B'),
+        ('player_timeout', 0, 'H'),
+        ('muck_timeout', 0, 'H'),
+        ('currency_serial', 0, 'I'),
+        ('name', 'noname', 's'),
+        ('variant', 'holdem', 's'),
+        ('betting_structure', '2-4-limit', 's'),
+        ('skin', 'default', 's'),
+        ('reason', '', 's'),
+        ('tourney_serial', 0, 'no net'),
+        ('player_seated',-1,'no net')
+        )
     
-    format = "!IBIHBBHBHHI"
-    format_size = calcsize(format)
-
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", "noname")
-        self.variant = kwargs.get("variant", "holdem")
-        self.betting_structure = kwargs.get("betting_structure", "2-4-limit")
-        self.id = kwargs.get("id", 0)
-        self.seats = kwargs.get("seats", 10)
-        self.average_pot = kwargs.get("average_pot", 0)
-        self.hands_per_hour = kwargs.get("hands_per_hour", 0)
-        self.percent_flop = kwargs.get("percent_flop", 0)
-        self.players = kwargs.get("players", 0)
-        self.observers = kwargs.get("observers", 0)
-        self.waiting = kwargs.get("waiting", 0)
-        self.player_timeout = kwargs.get("player_timeout", 0)
-        self.muck_timeout = kwargs.get("muck_timeout", 0)
-        self.skin = kwargs.get("skin", "default")
-        self.reason = kwargs.get("reason", "")
-        self.currency_serial = kwargs.get("currency_serial", 0)
-        self.tourney_serial = kwargs.get("tourney_serial", 0)
-        self.player_seated = kwargs.get("player_seated", -1)
-
-    def pack(self):
-        block = Packet.pack(self)
-        block += pack(PacketPokerTable.format, self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial)
-        block += self.packstring(self.name)
-        block += self.packstring(self.variant)
-        block += self.packstring(self.betting_structure)
-        block += self.packstring(self.skin)
-        block += self.packstring(self.reason)
-        return block
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (self.id, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial) = unpack(PacketPokerTable.format, block[:PacketPokerTable.format_size])
-        block = block[PacketPokerTable.format_size:]
-        (block, self.name) = self.unpackstring(block)
-        (block, self.variant) = self.unpackstring(block)
-        (block, self.betting_structure) = self.unpackstring(block)
-        (block, self.skin) = self.unpackstring(block)
-        (block, self.reason) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketPokerTable.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.variant) + self.calcsizestring(self.betting_structure) + self.calcsizestring(self.skin) + self.calcsizestring(self.reason)
-
-    def __str__(self):
-        return Packet.__str__(self) + "\n\tid = %d, name = %s, variant = %s, betting_structure = %s, seats = %d, average_pot = %d, hands_per_hour = %d, percent_flop = %d, players = %d, observers = %d, waiting = %d, player_timeout = %d, muck_timeout = %d, currency_serial = %d, skin = %s, tourney_serial = %i, player_seated = %i, reason = %s" % ( self.id, self.name, self.variant, self.betting_structure, self.seats, self.average_pot, self.hands_per_hour, self.percent_flop, self.players, self.observers, self.waiting, self.player_timeout, self.muck_timeout, self.currency_serial, self.skin, self.tourney_serial, self.player_seated, self.reason )
-
-PacketFactory[PACKET_POKER_TABLE] = PacketPokerTable
-
+Packet.infoDeclare(globals(),PacketPokerTable, Packet, "POKER_TABLE", 73) # 73 # 0x49
 ########################################
-
-PACKET_POKER_TABLE_LIST = 74 # 0x4a # %SEQ%
-PacketNames[PACKET_POKER_TABLE_LIST] = "POKER_TABLE_LIST"
 
 class PacketPokerTableList(PacketList):
     """\
@@ -1367,40 +893,13 @@ Direction: server  => client
 packets: a list of PACKET_POKER_TABLE packets.
 """
 
-    type = PACKET_POKER_TABLE_LIST
+    info = PacketList.info + (
+        ('players', 0, 'I'),
+        ('tables', 0, 'I'),
+        )
 
-    info = PacketList.info + ( ('players', 0, 'I'),
-                               ('tables', 0, 'I'),
-                               )
-    
-    format = "!II"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.players = kwargs.get("players", 0)
-        self.tables = kwargs.get("tables", 0)
-        PacketList.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketList.pack(self) + pack(PacketPokerTableList.format, self.players, self.tables)
-
-    def unpack(self, block):
-        block = PacketList.unpack(self, block)
-        (self.players, self.tables) = unpack(PacketPokerTableList.format, block[:PacketPokerTableList.format_size])
-        return block[PacketPokerTableList.format_size:]
-
-    def calcsize(self):
-        return PacketList.calcsize(self) + PacketPokerTableList.format_size
-
-    def __str__(self):
-        return PacketList.__str__(self) + "\n\tplayers = %d, tables = %d" % ( self.players, self.tables )
-
-PacketFactory[PACKET_POKER_TABLE_LIST] = PacketPokerTableList
-
+Packet.infoDeclare(globals(),PacketPokerTableList, Packet, "POKER_TABLE_LIST", 74) # 74 # 0x4a
 ########################################
-
-PACKET_POKER_SIT = 75 # 0x4b # %SEQ%
-PacketNames[PACKET_POKER_SIT] = "POKER_SIT"
 
 class PacketPokerSit(PacketPokerId):
     """\
@@ -1421,26 +920,14 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_SIT
-
-PacketFactory[PACKET_POKER_SIT] = PacketPokerSit
-
+Packet.infoDeclare(globals(),PacketPokerSit, Packet, "POKER_SIT", 75) # 75 # 0x4b
 ########################################
-
-PACKET_POKER_TABLE_DESTROY = 76 # 0x4c # %SEQ%
-PacketNames[PACKET_POKER_TABLE_DESTROY] = "POKER_TABLE_DESTROY"
 
 class PacketPokerTableDestroy(PacketPokerId):
     """destroy"""
 
-    type = PACKET_POKER_TABLE_DESTROY
-
-PacketFactory[PACKET_POKER_TABLE_DESTROY] = PacketPokerTableDestroy
-
+Packet.infoDeclare(globals(),PacketPokerTableDestroy, Packet, "POKER_TABLE_DESTROY", 76) # 76 # 0x4c
 ########################################
-
-PACKET_POKER_TIMEOUT_WARNING = 77 # 0x4d # %SEQ%
-PacketNames[PACKET_POKER_TIMEOUT_WARNING] = "POKER_TIMEOUT_WARNING"
 
 class PacketPokerTimeoutWarning(PacketPokerId):
     """\
@@ -1453,40 +940,13 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_TIMEOUT_WARNING
+    info = PacketPokerId.info + (
+        ('timeout', sys.maxint, 'I'),
+        ('when', -1, 'no net'),
+        )
 
-    info = PacketPokerId.info + ( ('timeout', sys.maxint, 'I'),
-                                  ('when', -1, 'no net'),
-                                  )
-
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.timeout = kwargs.get("timeout", sys.maxint)
-        self.when = kwargs.get("when", -1)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerTimeoutWarning.format, self.timeout)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.timeout,) = unpack(PacketPokerTimeoutWarning.format, block[:PacketPokerTimeoutWarning.format_size])
-        return block[PacketPokerTimeoutWarning.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerTimeoutWarning.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " timeout = %d" % self.timeout
-
-PacketFactory[PACKET_POKER_TIMEOUT_WARNING] = PacketPokerTimeoutWarning
-
+Packet.infoDeclare(globals(),PacketPokerTableDestroy, Packet, "POKER_TIMEOUT_WARNING", 77) # 77 # 0x4d
 ########################################
-
-PACKET_POKER_TIMEOUT_NOTICE = 78 # 0x4e # %SEQ%
-PacketNames[PACKET_POKER_TIMEOUT_NOTICE] = "POKER_TIMEOUT_NOTICE"
 
 class PacketPokerTimeoutNotice(PacketPokerId):
     """\
@@ -1499,14 +959,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_TIMEOUT_NOTICE
-
-PacketFactory[PACKET_POKER_TIMEOUT_NOTICE] = PacketPokerTimeoutNotice
-
+Packet.infoDeclare(globals(),PacketPokerTimeoutNotice, Packet, "POKER_TIMEOUT_NOTICE", 78) # 78 # 0x4e
 ########################################
-
-PACKET_POKER_SEAT = 79 # 0x4f # %SEQ%
-PacketNames[PACKET_POKER_SEAT] = "POKER_SEAT"
 
 class PacketPokerSeat(PacketPokerId):
     """\
@@ -1530,39 +984,10 @@ game_id: integer uniquely identifying a game.
 """
     ROLE_PLAY = 1
 
-    type = PACKET_POKER_SEAT
-
     info = PacketPokerId.info + ( ('seat', -1, 'b'), )
 
-    format = "!B"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.seat = kwargs.get("seat", -1)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        seat = self.seat == -1 and 255 or self.seat
-        return PacketPokerId.pack(self) + pack(PacketPokerSeat.format, seat)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.seat,) = unpack(PacketPokerSeat.format, block[:PacketPokerSeat.format_size])
-        if self.seat == 255: self.seat = -1
-        return block[PacketPokerSeat.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerSeat.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " seat = %d" % self.seat
-
-PacketFactory[PACKET_POKER_SEAT] = PacketPokerSeat
-
+Packet.infoDeclare(globals(),PacketPokerSeat, Packet, "POKER_SEAT", 79) # 79 # 0x4f
 ########################################
-
-PACKET_POKER_TABLE_MOVE = 80 # 0x50 # %SEQ%
-PacketNames[PACKET_POKER_TABLE_MOVE] = "POKER_TABLE_MOVE"
 
 class PacketPokerTableMove(PacketPokerSeat):
     """\
@@ -1582,37 +1007,10 @@ game_id: integer uniquely identifying a game.
 to_game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_TABLE_MOVE
-
     info = PacketPokerSeat.info + ( ('to_game_id', sys.maxint, 'I'), )
 
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.to_game_id = kwargs.get("to_game_id", sys.maxint)
-        PacketPokerSeat.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerSeat.pack(self) + pack(PacketPokerTableMove.format, self.to_game_id)
-
-    def unpack(self, block):
-        block = PacketPokerSeat.unpack(self, block)
-        (self.to_game_id,) = unpack(PacketPokerTableMove.format, block[:PacketPokerTableMove.format_size])
-        return block[PacketPokerTableMove.format_size:]
-
-    def calcsize(self):
-        return PacketPokerSeat.calcsize(self) + PacketPokerTableMove.format_size
-
-    def __str__(self):
-        return PacketPokerSeat.__str__(self) + " to_game_id = %d" % self.to_game_id
-
-PacketFactory[PACKET_POKER_TABLE_MOVE] = PacketPokerTableMove
-
+Packet.infoDeclare(globals(),PacketPokerTableMove, Packet, "POKER_TABLE_MOVE", 80) # 80 # 0x50
 ########################################
-
-PACKET_POKER_PLAYER_LEAVE = 81 # 0x51 # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_LEAVE] = "POKER_PLAYER_LEAVE"
 
 class PacketPokerPlayerLeave(PacketPokerSeat):
     """\
@@ -1633,14 +1031,8 @@ seat: the seat left in the range [0,9]
 
     TOURNEY = 1
 
-    type = PACKET_POKER_PLAYER_LEAVE
-
-PacketFactory[PACKET_POKER_PLAYER_LEAVE] = PacketPokerPlayerLeave
-
+Packet.infoDeclare(globals(),PacketPokerPlayerLeave, Packet, "POKER_PLAYER_LEAVE", 81) # 81 # 0x51
 ########################################
-
-PACKET_POKER_SIT_OUT = 82 # 0x52 # %SEQ%
-PacketNames[PACKET_POKER_SIT_OUT] = "POKER_SIT_OUT"
 
 class PacketPokerSitOut(PacketPokerId):
     """\
@@ -1663,14 +1055,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_SIT_OUT
-
-PacketFactory[PACKET_POKER_SIT_OUT] = PacketPokerSitOut
-
+Packet.infoDeclare(globals(),PacketPokerSitOut, Packet, "POKER_SIT_OUT", 82) # 82 # 0x52
 ########################################
-
-PACKET_POKER_TABLE_QUIT = 83 # 0x53 # %SEQ%
-PacketNames[PACKET_POKER_TABLE_QUIT] = "POKER_TABLE_QUIT"
 
 class PacketPokerTableQuit(PacketPokerId):
     """\
@@ -1686,14 +1072,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_TABLE_QUIT
-
-PacketFactory[PACKET_POKER_TABLE_QUIT] = PacketPokerTableQuit
-
+Packet.infoDeclare(globals(), PacketPokerTableQuit, Packet, "POKER_TABLE_QUIT", 83) # 83 # 0x53
 ########################################
-
-PACKET_POKER_BUY_IN = 84 # 0x54 # %SEQ%
-PacketNames[PACKET_POKER_BUY_IN] = "POKER_BUY_IN"
 
 class PacketPokerBuyIn(PacketPokerId):
     """\
@@ -1714,37 +1094,10 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BUY_IN
-
     info = PacketPokerId.info + ( ('amount', 0, 'I'), )
 
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.amount = kwargs.get("amount",0)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerBuyIn.format, self.amount)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.amount,) = unpack(PacketPokerBuyIn.format, block[:PacketPokerBuyIn.format_size])
-        return block[PacketPokerBuyIn.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerBuyIn.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " amount = %d" % self.amount
-
-PacketFactory[PACKET_POKER_BUY_IN] = PacketPokerBuyIn
-
+Packet.infoDeclare(globals(),PacketPokerBuyIn , Packet, "POKER_BUY_IN", 84) # 84 # 0x54
 ########################################
-
-PACKET_POKER_REBUY = 85 # 0x55 # %SEQ%
-PacketNames[PACKET_POKER_REBUY] = "POKER_REBUY"
 
 class PacketPokerRebuy(PacketPokerBuyIn):
     """\
@@ -1766,17 +1119,11 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_REBUY
-
-PacketFactory[PACKET_POKER_REBUY] = PacketPokerRebuy
-
+Packet.infoDeclare(globals(),PacketPokerRebuy , Packet, "POKER_REBUY", 85) # 85 # 0x55
 ########################################
 
-PACKET_POKER_CHAT = 86 # 0x56 # %SEQ%
-PacketNames[PACKET_POKER_CHAT] = "POKER_CHAT"
-
 class PacketPokerChat(PacketPokerId):
-   """\
+    """\
 Semantics: a text "message" sent to all players seated
 at the poker table "game_id".
 
@@ -1786,37 +1133,16 @@ message: a text message string (2^16 long max)
 game_id: integer uniquely identifying a game.
 """
 
-   type = PACKET_POKER_CHAT
-
-   info = PacketPokerId.info + ( ('message', '', 's'), )
+    info = PacketPokerId.info + ( ('message', '', 's'), )
    
-   def __init__(self, *args, **kwargs):
-       self.message = kwargs.get("message", "")
-       PacketPokerId.__init__(self, *args, **kwargs)
-
-   def pack(self):
-       return PacketPokerId.pack(self) + self.packstring(self.message)
-
-   def unpack(self, block):
-       block = PacketPokerId.unpack(self, block)
-       (block, self.message) = self.unpackstring(block)
-       return block
-
-   def calcsize(self):
-       return PacketPokerId.calcsize(self) + self.calcsizestring(self.message)
-
-   def __str__(self):
-       return PacketPokerId.__str__(self) + " message = %s" % self.message
-
-PacketFactory[PACKET_POKER_CHAT] = PacketPokerChat
-
+Packet.infoDeclare(globals(),PacketPokerChat , Packet, "POKER_CHAT", 86) # 86 # 0x56
 ########################################
 
 PACKET_POKER_PLAYER_INFO = 87 # 0x57 # %SEQ%
 PacketNames[PACKET_POKER_PLAYER_INFO] = "POKER_PLAYER_INFO"
 
 class PacketPokerPlayerInfo(PacketPokerId):
-   """\
+    """\
 Semantics: the player "serial" descriptive informations. When
 sent to the server, sets the information and broadcast them
 to other players. When sent from the server, notify the client
@@ -1830,51 +1156,24 @@ outfit: name of the player outfit.
 serial: integer uniquely identifying a player.
 """
 
-   NOT_LOGGED = 1
-
-   type = PACKET_POKER_PLAYER_INFO
-
-   info = PacketPokerId.info + ( ('name', 'noname', 's'),
-                                 ('outfit', 'random', 's'),
-                                 ('url', 'random', 's'),
-                                 # FIXME_PokerPlayerInfoLocale: 
-                                 # (see also sr #2262 )
-                                 # should "locale" be here?  It's
-                                 #  referenced in
-                                 #  PokerService.getPlayerInfo().  I'm the
-                                 #  one who probably added that, but I am
-                                 #  unclear as to why right now, but
-                                 #  wanted to note I notced. -- bkuhn
-                                 )
+    NOT_LOGGED = 1
+    
+    info = PacketPokerId.info + (
+        ('name', 'noname', 's'),
+        ('outfit', 'random', 's'),
+        ('url', 'random', 's'),
+        # FIXME_PokerPlayerInfoLocale: 
+        # (see also sr #2262 )
+        # should "locale" be here?  It's
+        #  referenced in
+        #  PokerService.getPlayerInfo().  I'm the
+        #  one who probably added that, but I am
+        #  unclear as to why right now, but
+        #  wanted to note I notced. -- bkuhn
+        )
    
-   def __init__(self, *args, **kwargs):
-       self.name = kwargs.get('name', "noname")
-       self.url = kwargs.get('url', "random")
-       self.outfit = kwargs.get('outfit',"random")
-       PacketPokerId.__init__(self, *args, **kwargs)
-
-   def pack(self):
-       return PacketPokerId.pack(self) + self.packstring(self.name) + self.packstring(self.outfit) + self.packstring(self.url)
-
-   def unpack(self, block):
-       block = PacketPokerId.unpack(self, block)
-       (block, self.name) = self.unpackstring(block)
-       (block, self.outfit) = self.unpackstring(block)
-       (block, self.url) = self.unpackstring(block)
-       return block
-
-   def calcsize(self):
-       return PacketPokerId.calcsize(self) + self.calcsizestring(self.name) + self.calcsizestring(self.outfit) + self.calcsizestring(self.url)
-
-   def __str__(self):
-       return PacketPokerId.__str__(self) + " name = %s, url = %s, outfit = %s " % ( self.name , self.url, self.outfit )
-
-PacketFactory[PACKET_POKER_PLAYER_INFO] = PacketPokerPlayerInfo
-
+Packet.infoDeclare(globals(),PacketPokerPlayerInfo , Packet, "POKER_PLAYER_INFO", 87) # 87 # 0x57
 ########################################
-
-PACKET_POKER_PLAYER_ARRIVE = 88 # 0x58 # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_ARRIVE] = "POKER_PLAYER_ARRIVE"
 
 class PacketPokerPlayerArrive(PacketPokerPlayerInfo):
     """\
@@ -1894,80 +1193,19 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_PLAYER_ARRIVE
-
-    info = PacketPokerPlayerInfo.info + ( ('blind', 'late', 's'),
-                                          ('remove_next_turn', False, 'bool'),
-                                          ('sit_out', True, 'bool'),
-                                          ('sit_out_next_turn', False, 'bool'),
-                                          ('auto', False, 'bool'),
-                                          ('auto_blind_ante', False, 'bool'),
-                                          ('wait_for', False, 'bool'),
-                                          ('buy_in_payed', False, 'bool'),
-                                          ('seat', None, 'Bnone'),
-                                  )
+    info = PacketPokerPlayerInfo.info + ( 
+        ('blind', 'late', 'bs'),
+        ('remove_next_turn', False, 'bool'),
+        ('sit_out', True, 'bool'),
+        ('sit_out_next_turn', False, 'bool'),
+        ('auto', False, 'bool'),
+        ('auto_blind_ante', False, 'bool'),
+        ('wait_for', False, 'bool'),
+        ('buy_in_payed', False, 'bool'),
+        ('seat', None, 'Bnone'),
+        )
     
-    format = "!BBBBBBBB"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.blind = kwargs.get("blind", "late")
-        self.remove_next_turn = kwargs.get("remove_next_turn", False)
-        self.sit_out = kwargs.get("sit_out", True)
-        self.sit_out_next_turn = kwargs.get("sit_out_next_turn", False)
-        self.auto = kwargs.get("auto", False)
-        self.auto_blind_ante = kwargs.get("auto_blind_ante", False)
-        self.wait_for = kwargs.get("wait_for", False)
-        self.buy_in_payed = kwargs.get("buy_in_payed", False)
-        self.seat = kwargs.get("seat", None)
-        PacketPokerPlayerInfo.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        blind = str(self.blind)
-        remove_next_turn = self.remove_next_turn and 1 or 0
-        sit_out = self.sit_out and 1 or 0
-        sit_out_next_turn = self.sit_out_next_turn and 1 or 0
-        auto = self.auto and 1 or 0
-        auto_blind_ante = self.auto_blind_ante and 1 or 0
-        wait_for = self.wait_for and 1 or 0
-        buy_in_payed = self.buy_in_payed and 1 or 0
-        if self.seat == None:
-            seat = 255
-        else:
-            seat = self.seat
-        return PacketPokerPlayerInfo.pack(self) + self.packstring(blind) + pack(PacketPokerPlayerArrive.format, remove_next_turn, sit_out, sit_out_next_turn, auto, auto_blind_ante, wait_for, buy_in_payed, seat)
-
-    def unpack(self, block):
-        block = PacketPokerPlayerInfo.unpack(self, block)
-        (block, blind) = self.unpackstring(block)
-        if blind == 'None':
-            self.blind = None
-        elif blind == 'False':
-            self.blind = False
-        else:
-            self.blind = blind
-        ( remove_next_turn, sit_out, sit_out_next_turn, auto, auto_blind_ante, wait_for, buy_in_payed, seat ) = unpack(PacketPokerPlayerArrive.format, block[:PacketPokerPlayerArrive.format_size])
-        self.remove_next_turn = remove_next_turn == 1
-        self.sit_out = sit_out == 1
-        self.sit_out_next_turn = sit_out_next_turn == 1
-        self.auto = auto == 1
-        self.auto_blind_ante = auto_blind_ante == 1
-        self.wait_for = wait_for == 1
-        self.buy_in_payed = buy_in_payed == 1
-        if seat == 255:
-            self.seat = None
-        else:
-            self.seat = seat
-        return block[PacketPokerPlayerArrive.format_size:]
-
-    def calcsize(self):
-        return PacketPokerPlayerInfo.calcsize(self) + self.calcsizestring(str(self.blind)) + PacketPokerPlayerArrive.format_size
-
-    def __str__(self):
-        return PacketPokerPlayerInfo.__str__(self) + "blind = %s, remove_next_turn = %s, sit_out = %s, sit_out_next_turn = %s, auto = %s, auto_blind_ante = %s, wait_for = %s, buy_in_payed = %s, seat = %s " % ( self.blind, self.remove_next_turn, self.sit_out, self.sit_out_next_turn, self.auto, self.auto_blind_ante, self.wait_for, self.buy_in_payed, self.seat )
-
-PacketFactory[PACKET_POKER_PLAYER_ARRIVE] = PacketPokerPlayerArrive
-
+Packet.infoDeclare(globals(), PacketPokerPlayerArrive, Packet, "POKER_PLAYER_ARRIVE", 88) # 88 # 0x58
 ########################################
 
 PACKET_POKER_HAND_SELECT = 89 # 0x59 # %SEQ%
@@ -1995,36 +1233,12 @@ count: number of matching hands to return starting from start
 serial: integer uniquely identifying a player.
 """
 
-    type = PACKET_POKER_HAND_SELECT
-
-    info = PacketString.info + ( ('start', 0, 'I'),
-                                 ('count', 50, 'B'),
-                                 )
+    info = PacketString.info + ( 
+        ('start', 0, 'I'),
+        ('count', 50, 'B'),
+        )
     
-    format = "!IB"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.start = kwargs.get("start", 0)
-        self.count = kwargs.get("count", 50)
-        PacketString.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketString.pack(self) + pack(PacketPokerHandSelect.format, self.start, self.count)
-
-    def unpack(self, block):
-        block = PacketString.unpack(self, block)
-        (self.start, self.count) = unpack(PacketPokerHandSelect.format, block[:PacketPokerHandSelect.format_size])
-        return block[PacketPokerHandSelect.format_size:]
-
-    def calcsize(self):
-        return PacketString.calcsize(self) + PacketPokerHandSelect.format_size
-
-    def __str__(self):
-        return PacketString.__str__(self) + " start = %d, count = %d" % ( self.start, self.count )
-
-PacketFactory[PACKET_POKER_HAND_SELECT] = PacketPokerHandSelect
-
+Packet.infoDeclare(globals(), PacketPokerHandSelect, Packet, "POKER_HAND_SELECT", 89) # 89 # 0x59
 ########################################
 
 PACKET_POKER_HAND_LIST = 90 # 0x5a # %SEQ%
@@ -2041,44 +1255,13 @@ Context: reply to the PACKET_POKER_HAND_SELECT packet.
 hands: list of integers uniquely identifying a hand to the server.
 """
 
-    type = PACKET_POKER_HAND_LIST
-
-    info = PacketPokerHandSelect.info + ( ('hands', [], 'Il'),
-                                          ('total', sys.maxint, 'I'),
-                                          )
-
-    format = "!I"
-    format_size = calcsize(format)
-    format_element = "!I"
-
-    def __init__(self, *args, **kwargs):
-        self.hands = kwargs.get("hands", [])
-        self.total = kwargs.get("total", sys.maxint)
-        PacketPokerHandSelect.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        block = PacketPokerHandSelect.pack(self)
-        block += self.packlist(self.hands, PacketPokerHandList.format_element)
-        return block + pack(PacketPokerHandList.format, self.total)
-
-    def unpack(self, block):
-        block = PacketPokerHandSelect.unpack(self, block)
-        (block, self.hands) = self.unpacklist(block, PacketPokerHandList.format_element)
-        (self.total,) = unpack(PacketPokerHandList.format, block[:PacketPokerHandList.format_size])
-        return block[PacketPokerHandList.format_size:]
-
-    def calcsize(self):
-        return PacketPokerHandSelect.calcsize(self) + self.calcsizelist(self.hands, PacketPokerHandList.format_element) + PacketPokerHandList.format_size
-
-    def __str__(self):
-        return PacketPokerHandSelect.__str__(self) + " hands = %s, total = %d" % ( self.hands, self.total )
-
-PacketFactory[PACKET_POKER_HAND_LIST] = PacketPokerHandList
-
+    info = PacketPokerHandSelect.info + ( 
+        ('hands', [], 'Il'),
+        ('total', sys.maxint, 'I'),
+        )
+    
+Packet.infoDeclare(globals(), PacketPokerHandList, Packet, "POKER_HAND_LIST", 90) # 90 # 0x5a
 ########################################
-
-PACKET_POKER_HAND_SELECT_ALL = 91 # 0x5b # %SEQ%
-PacketNames[PACKET_POKER_HAND_SELECT_ALL] = "POKER_HAND_SELECT_ALL"
 
 class PacketPokerHandSelectAll(PacketString):
     """
@@ -2099,14 +1282,8 @@ for the unique identifier of the hand also known as the hand_serial
 in the PACKET_POKER_START packet.
 """
 
-    type = PACKET_POKER_HAND_SELECT_ALL
-
-PacketFactory[PACKET_POKER_HAND_SELECT_ALL] = PacketPokerHandSelectAll
-
+Packet.infoDeclare(globals(), PacketPokerHandSelectAll, Packet, "POKER_HAND_SELECT_ALL", 91) # 91 # 0x5b
 ########################################
-
-PACKET_POKER_USER_INFO = 92 # 0x5c # %SEQ%
-PacketNames[PACKET_POKER_USER_INFO] = "POKER_USER_INFO"
 
 class PacketPokerUserInfo(PacketSerial):
     """\
@@ -2123,123 +1300,17 @@ serial: integer uniquely identifying a player.
 
     NOT_LOGGED = 1
 
-    # self.money index constants
-    cashier = 0
-    in_game = 1
+    info = PacketSerial.info + ( 
+        ('rating', 1500, 'I'),
+        ('affiliate', 0, 'I'),
+        ('name', 'unknown', 's'),
+        ('password', '', 's'),
+        ('email', '', 's'),
+        ('money', {}, 'money'),
+        )
 
-    type = PACKET_POKER_USER_INFO
-
-    info = PacketSerial.info + ( ('rating', 1500, 'I'),
-                                 ('affiliate', 0, 'I'),
-                                 ('name', 'unknown', 's'),
-                                 ('password', '', 's'),
-                                 ('email', '', 's'),
-                                 ('money', {}, 'money'),
-                                 )
-
-    rating = 1500
-
-    format = "!II"
-    format_size = calcsize(format)
-    format_item = "!IQQQ"
-    format_item_size = calcsize(format_item)
-
-    def __init__(self, *args, **kwargs):
-        self.name = kwargs.get("name", "unknown")
-        self.password = kwargs.get("password", "")
-        self.email = kwargs.get("email", "")
-        self.rating = kwargs.get("rating", 1500)
-        self.affiliate = int(kwargs.get("affiliate", 0))
-        #
-        # currency 5, bankroll 200, in_game 3, points 20
-        # {5: (200, 3, 20), ...}
-        #
-        self.money = kwargs.get("money", {})
-        PacketSerial.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        block = PacketSerial.pack(self) + pack(PacketPokerUserInfo.format, self.rating, self.affiliate) + self.packstring(self.name) + self.packstring(self.password) + self.packstring(self.email)
-        block += pack('!H', len(self.money))
-        for (currency, (bankroll, in_game, points)) in self.money.iteritems():
-            block += pack(PacketPokerUserInfo.format_item, currency, bankroll, in_game, points)
-        return block
-
-    def unpack(self, block):
-        block = PacketSerial.unpack(self, block)
-        (self.rating, self.affiliate) = unpack(PacketPokerUserInfo.format, block[:PacketPokerUserInfo.format_size])
-        block = block[PacketPokerUserInfo.format_size:]
-        (block, self.name) = self.unpackstring(block)
-        (block, self.password) = self.unpackstring(block)
-        (block, self.email) = self.unpackstring(block)
-        ( length, ) = unpack('!H', block[:calcsize('!H')])
-        block = block[calcsize('!H'):]
-        self.money = {}
-        for i in xrange(length):
-            (currency, bankroll, in_game, points) = unpack(PacketPokerUserInfo.format_item, block[:PacketPokerUserInfo.format_item_size])
-            block = block[PacketPokerUserInfo.format_item_size:]
-            self.money[currency] = (bankroll, in_game, points)
-        return block
-
-    def calcsize(self):
-        size = PacketSerial.calcsize(self) + PacketPokerUserInfo.format_size + self.calcsizestring(self.name) + self.calcsizestring(self.password) + self.calcsizestring(self.email)
-        size += calcsize('!H')
-        size += len(self.money) * PacketPokerUserInfo.format_item_size
-        return size
-
-    def __str__(self):
-        string = PacketSerial.__str__(self) + " name = %s, password = %s, email = %s, rating = %d, affiliate = %d, " % ( self.name, self.password, self.email, self.rating, self.affiliate )
-        for (currency, (bankroll, in_game, points)) in self.money.iteritems():
-            string += str(currency) + "=" + str(bankroll) + "/" + str(in_game) + "/" + str(points) + " "
-        return string
-
-    @staticmethod
-    def packmoney(object):
-        block = pack('!H', len(object))
-        for (currency, money) in object.iteritems():
-            fields = (currency,) + money
-            block += pack('!IIII', *fields)
-        return block
-
-    @staticmethod
-    def unpackmoney(block):
-        (length,) = unpack('!H', block[:calcsize('!H')])
-        block = block[calcsize('!H'):]
-        format = '!IIII'
-        format_size = calcsize(format)
-        object = {}
-        for i in xrange(length):
-            fields = unpack(format, block[:format_size])
-            object[fields[0]] = fields[1:]
-            block = block[format_size:]
-        return (block, object)
-
-    @staticmethod
-    def calcsizemoney(object):
-        return calcsize('!H') + len(object) * calcsize('!IIII')
-
-Packet.format_info['money'] = {
-    #
-    # List of user money status, length of the list as a 2 byte unsigned integer in the range [0-65535]
-    # Each money status is a list of 4 unsigned integers
-    #  currency
-    #  bankroll
-    #  in_game
-    #  points
-    # Example: {} <=> \x00
-    #          {5: (2, 3, 4)} <=> \x01\x05\x02\x03\x04
-    #          {5: (2, 3, 4), 10: (1, 1, 1)} <=> \x02\x05\x02\x03\x04\x0a\x01\x01\x01
-    #
-    'pack': PacketPokerUserInfo.packmoney,
-    'unpack': PacketPokerUserInfo.unpackmoney,
-    'calcsize': PacketPokerUserInfo.calcsizemoney,
-    }
-
-PacketFactory[PACKET_POKER_USER_INFO] = PacketPokerUserInfo
-
+Packet.infoDeclare(globals(), PacketPokerUserInfo, Packet, "POKER_USER_INFO", 92) # 92 # 0x5c
 ########################################
-
-PACKET_POKER_GET_USER_INFO = 93 # 0x5d # %SEQ%
-PacketNames[PACKET_POKER_GET_USER_INFO] = "POKER_GET_USER_INFO"
 
 class PacketPokerGetUserInfo(PacketSerial):
     """\
@@ -2254,14 +1325,8 @@ before sending this packet.
 serial: integer uniquely identifying a player.
 """
 
-    type = PACKET_POKER_GET_USER_INFO
-
-PacketFactory[PACKET_POKER_GET_USER_INFO] = PacketPokerGetUserInfo
-
+Packet.infoDeclare(globals(), PacketPokerGetUserInfo, Packet, "POKER_GET_USER_INFO", 93) # 93 # 0x5d
 ########################################
-
-PACKET_POKER_ANTE = 94 # 0x5e # %SEQ%
-PacketNames[PACKET_POKER_ANTE] = "POKER_ANTE"
 
 class PacketPokerAnte(PacketPokerInt):
     """\
@@ -2283,10 +1348,7 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_ANTE
-
-PacketFactory[PACKET_POKER_ANTE] = PacketPokerAnte
-
+Packet.infoDeclare(globals(), PacketPokerAnte, Packet, "POKER_ANTE", 94) # 94 # 0x5e
 ########################################
 
 PACKET_POKER_BLIND = 95 # 0x5f # %SEQ%
@@ -2318,38 +1380,12 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BLIND
+    info = PacketPokerInt.info + (
+        ('dead', 0, 'I'), 
+        )
 
-    info = PacketPokerInt.info + ( ('dead', 0, 'I'), )
-
-    dead = 0
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.dead = kwargs.get("dead", 0)
-        PacketPokerInt.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerInt.pack(self) + pack(PacketPokerBlind.format, self.dead)
-
-    def unpack(self, block):
-        block = PacketPokerInt.unpack(self, block)
-        (self.dead,) = unpack(PacketPokerBlind.format, block[:PacketPokerBlind.format_size])
-        return block[PacketPokerBlind.format_size:]
-
-    def calcsize(self):
-        return PacketPokerInt.calcsize(self) + PacketPokerBlind.format_size
-
-    def __str__(self):
-        return PacketPokerInt.__str__(self) + " dead = %d" % self.dead
-
-PacketFactory[PACKET_POKER_BLIND] = PacketPokerBlind
-
+Packet.infoDeclare(globals(), PacketPokerBlind, Packet, "POKER_BLIND", 95) # 95 # 0x5f
 ########################################
-
-PACKET_POKER_WAIT_BIG_BLIND = 96 # 0x60 # %SEQ%
-PacketNames[PACKET_POKER_WAIT_BIG_BLIND] = "POKER_WAIT_BIG_BLIND"
 
 class PacketPokerWaitBigBlind(PacketPokerId):
     """\
@@ -2370,14 +1406,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_WAIT_BIG_BLIND
-
-PacketFactory[PACKET_POKER_WAIT_BIG_BLIND] = PacketPokerWaitBigBlind
-
+Packet.infoDeclare(globals(), PacketPokerWaitBigBlind, Packet, "POKER_WAIT_BIG_BLIND", 96) # 96 # 0x60
 ########################################
-
-PACKET_POKER_AUTO_BLIND_ANTE = 97 # 0x61 # %SEQ%
-PacketNames[PACKET_POKER_AUTO_BLIND_ANTE] = "POKER_AUTO_BLIND_ANTE"
 
 class PacketPokerAutoBlindAnte(PacketPokerId):
     """\
@@ -2397,14 +1427,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_AUTO_BLIND_ANTE
-
-PacketFactory[PACKET_POKER_AUTO_BLIND_ANTE] = PacketPokerAutoBlindAnte
-
+Packet.infoDeclare(globals(), PacketPokerAutoBlindAnte, Packet, "POKER_AUTO_BLIND_ANTE", 97) # 97 # 0x61
 ########################################
-
-PACKET_POKER_NOAUTO_BLIND_ANTE = 98 # 0x62 # %SEQ%
-PacketNames[PACKET_POKER_NOAUTO_BLIND_ANTE] = "POKER_NOAUTO_BLIND_ANTE"
 
 class PacketPokerNoautoBlindAnte(PacketPokerId):
     """\
@@ -2425,14 +1449,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_NOAUTO_BLIND_ANTE
-
-PacketFactory[PACKET_POKER_NOAUTO_BLIND_ANTE] = PacketPokerNoautoBlindAnte
-
+Packet.infoDeclare(globals(), PacketPokerNoautoBlindAnte, Packet, "POKER_NOAUTO_BLIND_ANTE", 98) # 98 # 0x62
 ########################################
-
-PACKET_POKER_CANCELED = 99 # 0x63 # %SEQ%
-PacketNames[PACKET_POKER_CANCELED] = "POKER_CANCELED"
 
 class PacketPokerCanceled(PacketPokerInt):
     """\
@@ -2449,10 +1467,7 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_CANCELED
-
-PacketFactory[PACKET_POKER_CANCELED] = PacketPokerCanceled
-
+Packet.infoDeclare(globals(), PacketPokerCanceled, Packet, "POKER_CANCELED", 99) # 99 # 0x63
 ########################################
 
 PACKET_POKER_BLIND_REQUEST = 100 # 0x64 # %SEQ%
@@ -2479,36 +1494,10 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BLIND_REQUEST
-
     info = PacketPokerBlind.info + ( ('state', 'unknown', 's'), )
-    
-    state = "unknown"
 
-    def __init__(self, *args, **kwargs):
-        self.state = kwargs.get("state", "unknown")
-        PacketPokerBlind.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerBlind.pack(self) + self.packstring(self.state)
-
-    def unpack(self, block):
-        block = PacketPokerBlind.unpack(self, block)
-        (block, self.state) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerBlind.calcsize(self) + self.calcsizestring(self.state)
-
-    def __str__(self):
-        return PacketPokerBlind.__str__(self) + " state = %s" % self.state
-
-PacketFactory[PACKET_POKER_BLIND_REQUEST] = PacketPokerBlindRequest
-
+Packet.infoDeclare(globals(), PacketPokerBlindRequest, Packet, "POKER_BLIND_REQUEST", 100) # 100 # 0x64
 ########################################
-
-PACKET_POKER_ANTE_REQUEST = 101 # 0x65 # %SEQ%
-PacketNames[PACKET_POKER_ANTE_REQUEST] = "POKER_ANTE_REQUEST"
 
 class PacketPokerAnteRequest(PacketPokerAnte):
     """\
@@ -2526,14 +1515,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_ANTE_REQUEST
-
-PacketFactory[PACKET_POKER_ANTE_REQUEST] = PacketPokerAnteRequest
-
+Packet.infoDeclare(globals(), PacketPokerAnteRequest, Packet, "POKER_ANTE_REQUEST", 101) # 101 # 0x65
 ########################################
-
-PACKET_POKER_AUTO_FOLD = 102 # 0x66 # %SEQ%
-PacketNames[PACKET_POKER_AUTO_FOLD] = "POKER_AUTO_FOLD"
 
 class PacketPokerAutoFold(PacketPokerId):
     """\
@@ -2551,14 +1534,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_AUTO_FOLD
-
-PacketFactory[PACKET_POKER_AUTO_FOLD] = PacketPokerAutoFold
-
+Packet.infoDeclare(globals(), PacketPokerAutoFold, Packet, "POKER_AUTO_FOLD", 102) # 102 # 0x66
 ########################################
-
-PACKET_POKER_WAIT_FOR = 103 # 0x67 # %SEQ%
-PacketNames[PACKET_POKER_WAIT_FOR] = "POKER_WAIT_FOR"
 
 class PacketPokerWaitFor(PacketPokerId):
     """\
@@ -2581,34 +1558,10 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_WAIT_FOR
-
     info = PacketPokerId.info + ( ('reason', '', 's'), )
-    
-    def __init__(self, *args, **kwargs):
-        self.reason = kwargs.get("reason","")
-        PacketPokerId.__init__(self, *args, **kwargs)
 
-    def pack(self):
-        return PacketPokerId.pack(self) + self.packstring(self.reason)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.reason) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizestring(self.reason)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " reason = %s" % self.reason
-
-PacketFactory[PACKET_POKER_WAIT_FOR] = PacketPokerWaitFor
-
+Packet.infoDeclare(globals(), PacketPokerWaitFor, Packet, "POKER_WAIT_FOR", 103) # 103 # 0x67
 ########################################
-
-PACKET_POKER_STREAM_MODE = 104 # 0x68 # %SEQ%
-PacketNames[PACKET_POKER_STREAM_MODE] = "POKER_STREAM_MODE"
 
 class PacketPokerStreamMode(PacketPokerId):
     """
@@ -2626,14 +1579,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_STREAM_MODE
-
-PacketFactory[PACKET_POKER_STREAM_MODE] = PacketPokerStreamMode
-
+Packet.infoDeclare(globals(), PacketPokerStreamMode, Packet, "POKER_STREAM_MODE", 104) # 104 # 0x68
 ########################################
-
-PACKET_POKER_BATCH_MODE = 105 # 0x69 # %SEQ%
-PacketNames[PACKET_POKER_BATCH_MODE] = "POKER_BATCH_MODE"
 
 class PacketPokerBatchMode(PacketPokerId):
     """
@@ -2659,14 +1606,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_BATCH_MODE
-
-PacketFactory[PACKET_POKER_BATCH_MODE] = PacketPokerBatchMode
-
+Packet.infoDeclare(globals(), PacketPokerBatchMode, Packet, "POKER_BATCH_MODE", 105) # 105 # 0x69
 ########################################
-
-PACKET_POKER_LOOK_CARDS = 106 # 0x6a # %SEQ%
-PacketNames[PACKET_POKER_LOOK_CARDS] = "POKER_LOOK_CARDS"
 
 class PacketPokerLookCards(PacketPokerId):
     """\
@@ -2679,20 +1620,10 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_LOOK_CARDS
-
     info = PacketPokerId.info + ( ('state', 'on', 'no net'), )
 
-    def __init__(self, *args, **kwargs):
-        self.state = kwargs.get("state","on")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-PacketFactory[PACKET_POKER_LOOK_CARDS] = PacketPokerLookCards
-
+Packet.infoDeclare(globals(), PacketPokerLookCards, Packet, "POKER_LOOK_CARDS", 106) # 106 # 0x6a
 ########################################
-
-PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST = 107 # 0x6b # %SEQ%
-PacketNames[PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST] = "POKER_TABLE_REQUEST_PLAYERS_LIST"
 
 class PacketPokerTableRequestPlayersList(PacketPokerId):
     """\
@@ -2703,14 +1634,8 @@ Direction: server <= client
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST
-
-PacketFactory[PACKET_POKER_TABLE_REQUEST_PLAYERS_LIST] = PacketPokerTableRequestPlayersList
-
+Packet.infoDeclare(globals(), PacketPokerTableRequestPlayersList, Packet, "POKER_TABLE_REQUEST_PLAYERS_LIST", 107) # 107 # 0x6b
 ########################################
-
-PACKET_POKER_PLAYERS_LIST = 108 # 0x6c # %SEQ%
-PacketNames[PACKET_POKER_PLAYERS_LIST] = "POKER_PLAYERS_LIST"
 
 class PacketPokerPlayersList(PacketPokerId):
     """
@@ -2726,90 +1651,13 @@ players: list of player serials participating in "game_id"
      flag: byte 0
     """
 
-    format = "!H"
-    format_size = calcsize(format)
-    format_item = "!IB"
-    format_item_size = calcsize(format_item)
+    info = PacketPokerId.info + (
+        ('players', [], 'players'),
+        )
 
-    type = PACKET_POKER_PLAYERS_LIST
 
-    info = PacketPokerId.info + ( ('players', [], 'players'), )
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-        self.players = kwargs.get("players", [])
-
-    def pack(self):
-        block = PacketPokerId.pack(self) + pack(PacketPokerPlayersList.format, len(self.players))
-        for (name, chips, flag) in self.players:
-            block += self.packstring(name) + pack(PacketPokerPlayersList.format_item, chips, flag)
-        return block
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (length,) = unpack(PacketPokerPlayersList.format, block[:PacketPokerPlayersList.format_size])
-        block = block[PacketPokerPlayersList.format_size:]
-        self.players = []
-        for i in xrange(length):
-            (block, name) = self.unpackstring(block)
-            (chips, flag) = unpack(PacketPokerPlayersList.format_item, block[:PacketPokerPlayersList.format_item_size])
-            block = block[PacketPokerPlayersList.format_item_size:]
-            self.players.append((name, chips, flag))
-        return block
-
-    def calcsize(self):
-        size = PacketPokerId.calcsize(self) + PacketPokerPlayersList.format_size
-        for (name, chips, flag) in self.players:
-            size += self.calcsizestring(name) + PacketPokerPlayersList.format_item_size
-        return size
-
-    def __str__(self):
-        string = PacketPokerId.__str__(self) + " player|chips|flag : "
-        for (name, chips, flag) in self.players:
-            string += " %s|%d|%d " % ( name, chips, flag )
-        return string
-
-    @staticmethod
-    def packplayers(object):
-        block = pack('!H', len(object))
-        for (name, chips, flags) in object:
-            block += Packet.packstring(name)
-            block += pack('!IB', chips, flags)
-        return block
-
-    @staticmethod
-    def unpackplayers(block):
-        (length,) = unpack('!H', block[:calcsize('!H')])
-        block = block[calcsize('!H'):]
-        format = '!IB'
-        format_size = calcsize(format)
-        object = []
-        for i in xrange(length):
-            (block, name) = Packet.unpackstring(block)
-            (chips, flags) = unpack(format, block[:format_size])
-            object.append((name, chips, flags))
-            block = block[format_size:]
-        return (block, object)
-
-    @staticmethod
-    def calcsizeplayers(object):
-        size = calcsize('!H')
-        for (name, chips, flags) in object:
-            size += Packet.calcsizestring(name) + calcsize('!IB')
-        return size
-
-Packet.format_info['players'] = {
-    'pack': PacketPokerPlayersList.packplayers,
-    'unpack': PacketPokerPlayersList.unpackplayers,
-    'calcsize': PacketPokerPlayersList.calcsizeplayers,
-    }
-
-PacketFactory[PACKET_POKER_PLAYERS_LIST] = PacketPokerPlayersList
-
+Packet.infoDeclare(globals(), PacketPokerPlayersList, Packet, "POKER_PLAYERS_LIST", 108) # 108 # 0x6c
 ########################################
-
-PACKET_POKER_PERSONAL_INFO = 109 # 0x6d # %SEQ%
-PacketNames[PACKET_POKER_PERSONAL_INFO] = "POKER_PERSONAL_INFO"
 
 class PacketPokerPersonalInfo(PacketPokerUserInfo):
     """\
@@ -2817,89 +1665,22 @@ class PacketPokerPersonalInfo(PacketPokerUserInfo):
 
     NOT_LOGGED = 1
 
-    type = PACKET_POKER_PERSONAL_INFO
-
-    info = PacketPokerUserInfo.info + ( ('firstname', '', 's'),
-                                        ('lastname', '', 's'),
-                                        ('addr_street', '', 's'),
-                                        ('addr_street2', '', 's'),
-                                        ('addr_zip', '', 's'),
-                                        ('addr_town', '', 's'),
-                                        ('addr_state', '', 's'),
-                                        ('addr_country', '', 's'),
-                                        ('phone', '', 's'),
-                                        ('gender', '', 's'),
-                                        ('birthdate', '', 's'),
-                                        )
+    info = PacketPokerUserInfo.info + ( 
+        ('firstname', '', 's'),
+        ('lastname', '', 's'),
+        ('addr_street', '', 's'),
+        ('addr_street2', '', 's'),
+        ('addr_zip', '', 's'),
+        ('addr_town', '', 's'),
+        ('addr_state', '', 's'),
+        ('addr_country', '', 's'),
+        ('phone', '', 's'),
+        ('gender', '', 's'),
+        ('birthdate', '', 's'),
+        )
     
-    def __init__(self, *args, **kwargs):
-        self.firstname = kwargs.get("firstname", "")
-        self.lastname = kwargs.get("lastname", "")
-        self.addr_street = kwargs.get("addr_street", "")
-        self.addr_street2 = kwargs.get("addr_street2", "")
-        self.addr_zip = kwargs.get("addr_zip", "")
-        self.addr_town = kwargs.get("addr_town", "")
-        self.addr_state = kwargs.get("addr_state", "")
-        self.addr_country = kwargs.get("addr_country", "")
-        self.phone = kwargs.get("phone", "")
-        self.gender = kwargs.get("gender", "")
-        self.birthdate = str(kwargs.get("birthdate", ""))
-        PacketPokerUserInfo.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        packet = PacketPokerUserInfo.pack(self)
-        packet += self.packstring(self.firstname)
-        packet += self.packstring(self.lastname)
-        packet += self.packstring(self.addr_street)
-        packet += self.packstring(self.addr_street2)
-        packet += self.packstring(self.addr_zip)
-        packet += self.packstring(self.addr_town)
-        packet += self.packstring(self.addr_state)
-        packet += self.packstring(self.addr_country)
-        packet += self.packstring(self.phone)
-        packet += self.packstring(self.gender)
-        packet += self.packstring(self.birthdate)
-        return packet
-
-    def unpack(self, block):
-        block = PacketPokerUserInfo.unpack(self, block)
-        (block, self.firstname) = self.unpackstring(block)
-        (block, self.lastname) = self.unpackstring(block)
-        (block, self.addr_street) = self.unpackstring(block)
-        (block, self.addr_street2) = self.unpackstring(block)
-        (block, self.addr_zip) = self.unpackstring(block)
-        (block, self.addr_town) = self.unpackstring(block)
-        (block, self.addr_state) = self.unpackstring(block)
-        (block, self.addr_country) = self.unpackstring(block)
-        (block, self.phone) = self.unpackstring(block)
-        (block, self.gender) = self.unpackstring(block)
-        (block, self.birthdate) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return ( PacketPokerUserInfo.calcsize(self) +
-                 self.calcsizestring(self.firstname) +
-                 self.calcsizestring(self.lastname) +
-                 self.calcsizestring(self.addr_street) +
-                 self.calcsizestring(self.addr_street2) +
-                 self.calcsizestring(self.addr_zip) +
-                 self.calcsizestring(self.addr_town) +
-                 self.calcsizestring(self.addr_state) +
-                 self.calcsizestring(self.addr_country) +
-                 self.calcsizestring(self.phone) +
-                 self.calcsizestring(self.gender) +
-                 self.calcsizestring(str(self.birthdate))
-                 )
-
-    def __str__(self):
-        return PacketPokerUserInfo.__str__(self) + " firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, addr_town = %s, addr_state = %s, addr_country = %s, phone = %s, gender = %s, birthdate = %s" % ( self.firstname, self.lastname, self.addr_street, self.addr_street2, self.addr_zip, self.addr_town, self.addr_state, self.addr_country, self.phone, self.gender, self.birthdate )
-
-PacketFactory[PACKET_POKER_PERSONAL_INFO] = PacketPokerPersonalInfo
-
+Packet.infoDeclare(globals(), PacketPokerPersonalInfo, Packet, "POKER_PERSONAL_INFO", 109) # 109 # 0x6d
 ########################################
-
-PACKET_POKER_GET_PERSONAL_INFO = 110 # 0x6e # %SEQ%
-PacketNames[PACKET_POKER_GET_PERSONAL_INFO] = "POKER_GET_PERSONAL_INFO"
 
 class PacketPokerGetPersonalInfo(PacketSerial):
     """\
@@ -2916,13 +1697,8 @@ serial: integer uniquely identifying a player.
 
     NOT_LOGGED = 1
 
-    type = PACKET_POKER_GET_PERSONAL_INFO
-
-PacketFactory[PACKET_POKER_GET_PERSONAL_INFO] = PacketPokerGetPersonalInfo
-
+Packet.infoDeclare(globals(), PacketPokerGetPersonalInfo, Packet, "POKER_GET_PERSONAL_INFO", 110) # 110 # 0x6e
 ########################################
-PACKET_POKER_TOURNEY_SELECT = 111 # 0x6f # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_SELECT] = "POKER_TOURNEY_SELECT"
 
 class PacketPokerTourneySelect(PacketString):
     """\
@@ -2947,116 +1723,41 @@ string: 1) empty string selects all tournaments
                   using currency 2
 """
 
-    type = PACKET_POKER_TOURNEY_SELECT
-
-PacketFactory[PACKET_POKER_TOURNEY_SELECT] = PacketPokerTourneySelect
-
+Packet.infoDeclare(globals(), PacketPokerTourneySelect, Packet, "POKER_TOURNEY_SELECT", 111) # 111 # 0x6f
 ########################################
 PACKET_POKER_TOURNEY = 112 # 0x70 # %SEQ%
 PacketNames[PACKET_POKER_TOURNEY] = "POKER_TOURNEY"
 
 class PacketPokerTourney(Packet):
 
-    type = PACKET_POKER_TOURNEY
-
-    info = Packet.info + ( ('serial', 0, 'I'),
-                           ('schedule_serial', 0, 'no net'),
-                           ('buy_in', 10, 'I'),
-                           ('start_time', 0, 'I'),
-                           ('sit_n_go', 'y', 'cbool'),
-                           ('players_quota', 0, 'H'),
-                           ('registered', 0, 'H'),
-                           ('currency_serial', 0, 'I'),
-                           ('breaks_first', 0, 'H'),
-                           ('breaks_interval', 0, 'H'),
-                           ('breaks_duration', 0, 'H'),
-                           ('description_short', 'nodescription_short', 's'),
-                           ('variant', 'holdem', 's'),
-                           ('state', 'announced', 's'),
-                           ('name', 'noname', 's'),
-                           )
+    info = Packet.info + ( 
+        ('serial', 0, 'I'),
+        ('schedule_serial', 0, 'no net'),
+        ('buy_in', 10, 'I'),
+        ('start_time', 0, 'I'),
+        ('sit_n_go', 'y', 'cbool'),
+        ('players_quota', 0, 'H'),
+        ('registered', 0, 'H'),
+        ('currency_serial', 0, 'I'),
+        ('breaks_first', 0, 'H'),
+        ('breaks_interval', 0, 'H'),
+        ('breaks_duration', 0, 'H'),
+        ('description_short', 'nodescription_short', 's'),
+        ('variant', 'holdem', 's'),
+        ('state', 'announced', 's'),
+        ('name', 'noname', 's'),
+        )
     
-    format = "!IIIBHHIHHH"
-    format_size = calcsize(format)
-
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", "noname")
-        self.description_short = kwargs.get("description_short", "nodescription_short")
-        self.variant = kwargs.get("variant", "holdem")
-        self.state = kwargs.get("state", "announced")
-        self.serial = kwargs.get("serial", 0)
-        self.schedule_serial = kwargs.get("schedule_serial", 0)
-        self.buy_in = kwargs.get("buy_in", 10)
-        self.start_time = int(kwargs.get("start_time", 0))
-        self.sit_n_go = kwargs.get("sit_n_go", 'y')
-        self.players_quota = kwargs.get("players_quota", 0)
-        self.registered = kwargs.get("registered", 0)
-        self.currency_serial = kwargs.get("currency_serial", 0)
-        self.breaks_first = kwargs.get("breaks_first", 0)
-        self.breaks_interval = kwargs.get("breaks_interval", 0)
-        self.breaks_duration = kwargs.get("breaks_duration", 0)
-
-    def pack(self):
-        block = Packet.pack(self)
-        block += pack(PacketPokerTourney.format, self.serial, self.buy_in, self.start_time, (self.sit_n_go == 'y' and 1 or 0), self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration)
-        block += self.packstring(self.description_short)
-        block += self.packstring(self.variant)
-        block += self.packstring(self.state)
-        block += self.packstring(self.name)
-        return block
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (self.serial, self.buy_in, self.start_time, self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration) = unpack(PacketPokerTourney.format, block[:PacketPokerTourney.format_size])
-        self.sit_n_go = self.sit_n_go and 'y' or 'n'
-        block = block[PacketPokerTourney.format_size:]
-        (block, self.description_short) = self.unpackstring(block)
-        (block, self.variant) = self.unpackstring(block)
-        (block, self.state) = self.unpackstring(block)
-        (block, self.name) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketPokerTourney.format_size + self.calcsizestring(self.description_short) + self.calcsizestring(self.variant) + self.calcsizestring(self.state) + self.calcsizestring(self.name)
-
-    def __str__(self):
-        return Packet.__str__(self) + "\n\tserial = %s, schedule_serial = %s, name = %s, description_short = %s, variant = %s, state = %s, buy_in = %s, start_time = %s, sit_n_go = %s, players_quota = %s, registered = %s, currency_serial = %d, breaks_first = %d, breaks_interval = %d, breaks_duration = %d " % ( self.serial, self.schedule_serial, self.name, self.description_short, self.variant, self.state, self.buy_in, strftime("%Y/%m/%d %H:%M", gmtime(self.start_time)), self.sit_n_go, self.players_quota, self.registered, self.currency_serial, self.breaks_first, self.breaks_interval, self.breaks_duration )
-
-PacketFactory[PACKET_POKER_TOURNEY] = PacketPokerTourney
-
+Packet.infoDeclare(globals(), PacketPokerTourney, Packet, "POKER_TOURNEY", 112) # 112 # 0x70
 ########################################
-
-PACKET_POKER_TOURNEY_INFO = 113 # 0x71 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_INFO] = "POKER_TOURNEY_INFO"
 
 class PacketPokerTourneyInfo(PacketPokerTourney):
 
-    type = PACKET_POKER_TOURNEY_INFO
+    info = PacketPokerTourney.info + (
+        ('description_long', 'no long description', 's'), 
+        )
 
-    info = PacketPokerTourney.info + ( ('description_long', 'no long description', 's'), )
-
-    reason = ""
-
-    def __init__(self, *args, **kwargs):
-        self.description_long = kwargs.get("description_long", "no long description")
-        PacketPokerTourney.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerTourney.pack(self) + self.packstring(self.description_long)
-
-    def unpack(self, block):
-        block = PacketPokerTourney.unpack(self, block)
-        (block, self.description_long) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerTourney.calcsize(self) + self.calcsizestring(self.description_long)
-
-    def __str__(self):
-        return PacketPokerTourney.__str__(self) + " description_long = %s" % self.description_long
-
-PacketFactory[PACKET_POKER_TOURNEY_INFO] = PacketPokerTourneyInfo
-
+Packet.infoDeclare(globals(), PacketPokerTourneyInfo, Packet, "POKER_TOURNEY_INFO", 113) # 113 # 0x71
 ########################################
 
 PACKET_POKER_TOURNEY_LIST = 114 # 0x72 # %SEQ%
@@ -3072,39 +1773,13 @@ Direction: server  => client
 packets: a list of PACKET_POKER_TOURNEY packets.
 """
 
-    type = PACKET_POKER_TOURNEY_LIST
+    info = PacketList.info + (
+        ('players', 0, 'I'),
+        ('tourneys', 0, 'I'),
+    )
 
-    info = PacketList.info + ( ('players', 0, 'I'),
-                               ('tourneys', 0, 'I') )
-
-    format = "!II"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.players = kwargs.get("players", 0)
-        self.tourneys = kwargs.get("tourneys", 0)
-        PacketList.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketList.pack(self) + pack(PacketPokerTourneyList.format, self.players, self.tourneys)
-
-    def unpack(self, block):
-        block = PacketList.unpack(self, block)
-        (self.players, self.tourneys) = unpack(PacketPokerTourneyList.format, block[:PacketPokerTourneyList.format_size])
-        return block[PacketPokerTourneyList.format_size:]
-
-    def calcsize(self):
-        return PacketList.calcsize(self) + PacketPokerTourneyList.format_size
-
-    def __str__(self):
-        return PacketList.__str__(self) + "\n\tplayers = %d, tourneys = %d" % ( self.players, self.tourneys )
-
-PacketFactory[PACKET_POKER_TOURNEY_LIST] = PacketPokerTourneyList
-
+Packet.infoDeclare(globals(), PacketPokerTourneyList, Packet, "POKER_TOURNEY_LIST", 114) # 114 # 0x72
 ########################################
-
-PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST = 115 # 0x73 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST] = "POKER_TOURNEY_REQUEST_PLAYERS_LIST"
 
 class PacketPokerTourneyRequestPlayersList(PacketPokerId):
     """\
@@ -3120,14 +1795,8 @@ PacketPokerTourneyRegister.DOES_NOT_EXIST.
 game_id: integer uniquely identifying a tournament.
 """
 
-    type = PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST
-
-PacketFactory[PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST] = PacketPokerTourneyRequestPlayersList
-
+Packet.infoDeclare(globals(), PacketPokerTourneyRequestPlayersList, Packet, "POKER_TOURNEY_REQUEST_PLAYERS_LIST", 115) # 115 # 0x73
 ########################################
-
-PACKET_POKER_TOURNEY_REGISTER = 116 # 0x74 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_REGISTER] = "POKER_TOURNEY_REGISTER"
 
 class PacketPokerTourneyRegister(PacketPokerId):
     """\
@@ -3169,14 +1838,8 @@ game_id: integer uniquely identifying a tournament.
     SERVER_ERROR = 5
     VIA_SATELLITE = 6
 
-    type = PACKET_POKER_TOURNEY_REGISTER
-
-PacketFactory[PACKET_POKER_TOURNEY_REGISTER] = PacketPokerTourneyRegister
-
+Packet.infoDeclare(globals(), PacketPokerTourneyRegister, Packet, "POKER_TOURNEY_REGISTER", 116) # 116 # 0x74
 ########################################
-
-PACKET_POKER_TOURNEY_UNREGISTER = 117 # 0x75 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_UNREGISTER] = "POKER_TOURNEY_UNREGISTER"
 
 class PacketPokerTourneyUnregister(PacketPokerId):
     """\
@@ -3212,14 +1875,8 @@ game_id: integer uniquely identifying a tournament.
     TOO_LATE = 3
     SERVER_ERROR = 4
 
-    type = PACKET_POKER_TOURNEY_UNREGISTER
-
-PacketFactory[PACKET_POKER_TOURNEY_UNREGISTER] = PacketPokerTourneyUnregister
-
+Packet.infoDeclare(globals(), PacketPokerTourneyUnregister, Packet, "POKER_TOURNEY_UNREGISTER", 117) # 117 # 0x75
 ########################################
-
-PACKET_POKER_TOURNEY_PLAYERS_LIST = 118 # 0x76 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_PLAYERS_LIST] = "POKER_TOURNEY_PLAYERS_LIST"
 
 class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
     """
@@ -3235,52 +1892,21 @@ players: list of player serials participating in "game_id"
      flag: byte 0
     """
 
-    type = PACKET_POKER_TOURNEY_PLAYERS_LIST
-
-PacketFactory[PACKET_POKER_TOURNEY_PLAYERS_LIST] = PacketPokerTourneyPlayersList
-
+Packet.infoDeclare(globals(), PacketPokerTourneyPlayersList, Packet, "POKER_TOURNEY_PLAYERS_LIST", 118) # 118 # 0x76
 ########################################
-
-PACKET_POKER_HAND_HISTORY = 119 # 0x77 # %SEQ%
-PacketNames[PACKET_POKER_HAND_HISTORY] = "POKER_HAND_HISTORY"
 
 class PacketPokerHandHistory(PacketPokerId):
 
-    type = PACKET_POKER_HAND_HISTORY
-
-    info = PacketPokerId.info + ( ('history', '', 's'),
-                                  ('serial2name', '', 's'),
-                                  )
+    info = PacketPokerId.info + (
+        ('history', '', 's'),
+        ('serial2name', '', 's'),
+        )
 
     NOT_FOUND = 1
     FORBIDDEN = 2
 
-    def __init__(self, *args, **kwargs):
-        self.history = kwargs.get("history", "")
-        self.serial2name = kwargs.get("serial2name", "")
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + self.packstring(self.history) + self.packstring(self.serial2name)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.history) = self.unpackstring(block)
-        (block, self.serial2name) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizestring(self.history) + self.calcsizestring(self.serial2name)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " history = %s, serial2name = %s" % ( self.history, self.serial2name )
-
-PacketFactory[PACKET_POKER_HAND_HISTORY] = PacketPokerHandHistory
-
+Packet.infoDeclare(globals(), PacketPokerHandHistory, Packet, "POKER_HAND_HISTORY", 119) # 119 # 0x77
 ########################################
-
-PACKET_POKER_SET_ACCOUNT = 120 # 0x78 # %SEQ%
-PacketNames[PACKET_POKER_SET_ACCOUNT] = "POKER_SET_ACCOUNT"
 
 class PacketPokerSetAccount(PacketPokerPersonalInfo):
 
@@ -3296,38 +1922,22 @@ class PacketPokerSetAccount(PacketPokerPersonalInfo):
     EMAIL_ALREADY_EXISTS = 10
     SERVER_ERROR = 11
 
-    type = PACKET_POKER_SET_ACCOUNT
-
-PacketFactory[PACKET_POKER_SET_ACCOUNT] = PacketPokerSetAccount
-
+Packet.infoDeclare(globals(), PacketPokerSetAccount, Packet, "POKER_SET_ACCOUNT", 120) # 120 # 0x78
 ########################################
-
-PACKET_POKER_CREATE_ACCOUNT = 121 # 0x79 # %SEQ%
-PacketNames[PACKET_POKER_CREATE_ACCOUNT] = "POKER_CREATE_ACCOUNT"
 
 class PacketPokerCreateAccount(PacketPokerSetAccount):
-
-    type = PACKET_POKER_CREATE_ACCOUNT
-
-PacketFactory[PACKET_POKER_CREATE_ACCOUNT] = PacketPokerCreateAccount
-
+    """
+    """
+    
+Packet.infoDeclare(globals(), PacketPokerCreateAccount, Packet, "POKER_CREATE_ACCOUNT", 121) # 121 # 0x79
 ########################################
-
-PACKET_POKER_PLAYER_SELF = 122 # 0x7a # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_SELF] = "POKER_PLAYER_SELF"
 
 class PacketPokerPlayerSelf(PacketPokerId):
-    type = PACKET_POKER_PLAYER_SELF
-
-    def __init__(self, *args, **kwargs):
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-PacketFactory[PACKET_POKER_PLAYER_SELF] = PacketPokerPlayerSelf
-
+    """
+    """
+    
+Packet.infoDeclare(globals(), PacketPokerPlayerSelf, Packet, "POKER_PLAYER_SELF", 122) # 122 # 0x7a
 ########################################
-
-PACKET_POKER_GET_PLAYER_INFO = 123 # 0x7b # %SEQ%
-PacketNames[PACKET_POKER_GET_PLAYER_INFO] = "POKER_GET_PLAYER_INFO"
 
 class PacketPokerGetPlayerInfo(Packet):
     """
@@ -3348,14 +1958,8 @@ Direction: server <= client
 
     NOT_LOGGED = 1
 
-    type = PACKET_POKER_GET_PLAYER_INFO
-
-PacketFactory[PACKET_POKER_GET_PLAYER_INFO] = PacketPokerGetPlayerInfo
-
+Packet.infoDeclare(globals(), PacketPokerGetPlayerInfo, Packet, "POKER_GET_PLAYER_INFO", 123) # 123 # 0x7b
 ########################################
-
-PACKET_POKER_ROLES = 124 # 0x7c # %SEQ%
-PacketNames[PACKET_POKER_ROLES] = "POKER_ROLES"
 
 class PacketPokerRoles(PacketSerial):
 
@@ -3363,34 +1967,12 @@ class PacketPokerRoles(PacketSerial):
     EDIT = "EDIT"
     ROLES = [ PLAY, EDIT ]
 
-    type = PACKET_POKER_ROLES
+    info = PacketSerial.info + (
+        ('roles', '', 's'), 
+        )
 
-    info = PacketSerial.info + ( ('roles', '', 's'), )
-
-    def __init__(self, *args, **kwargs):
-        self.roles = kwargs.get("roles","")
-        PacketSerial.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketSerial.pack(self) + self.packstring(self.roles)
-
-    def unpack(self, block):
-        block = PacketSerial.unpack(self, block)
-        (block, self.roles) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketSerial.calcsize(self) + self.calcsizestring(self.roles)
-
-    def __str__(self):
-        return PacketSerial.__str__(self) + " roles = %s" % self.roles
-
-PacketFactory[PACKET_POKER_ROLES] = PacketPokerRoles
-
+Packet.infoDeclare(globals(), PacketPokerRoles, Packet, "POKER_ROLES", 124) # 124 # 0x7c
 ########################################
-
-PACKET_POKER_SET_ROLE = 125 # 0x7d # %SEQ%
-PacketNames[PACKET_POKER_SET_ROLE] = "POKER_SET_ROLE"
 
 class PacketPokerSetRole(PacketPokerRoles):
     """
@@ -3411,14 +1993,8 @@ roles: string PLAY or EDIT
     UNKNOWN_ROLE = 1
     NOT_AVAILABLE = 2
 
-    type = PACKET_POKER_SET_ROLE
-
-PacketFactory[PACKET_POKER_SET_ROLE] = PacketPokerSetRole
-
+Packet.infoDeclare(globals(), PacketPokerSetRole, Packet, "POKER_SET_ROLE", 125) # 125 # 0x7d
 ########################################
-
-PACKET_POKER_READY_TO_PLAY = 126 # 0x7e # %SEQ%
-PacketNames[PACKET_POKER_READY_TO_PLAY] = "POKER_READY_TO_PLAY"
 
 class PacketPokerReadyToPlay(PacketPokerId):
     """\
@@ -3431,14 +2007,8 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    type = PACKET_POKER_READY_TO_PLAY
-
-PacketFactory[PACKET_POKER_READY_TO_PLAY] = PacketPokerReadyToPlay
-
+Packet.infoDeclare(globals(), PacketPokerReadyToPlay, Packet, "POKER_READY_TO_PLAY", 126) # 126 # 0x7e
 ########################################
-
-PACKET_POKER_PROCESSING_HAND = 127 # 0x7f # %SEQ%
-PacketNames[PACKET_POKER_PROCESSING_HAND] = "POKER_PROCESSING_HAND"
 
 class PacketPokerProcessingHand(PacketPokerId):
     """\
@@ -3465,14 +2035,8 @@ game_id: integer uniquely identifying a game.
 
     BUGOUS = 0
 
-    type = PACKET_POKER_PROCESSING_HAND
-
-PacketFactory[PACKET_POKER_PROCESSING_HAND] = PacketPokerProcessingHand
-
+Packet.infoDeclare(globals(), PacketPokerProcessingHand, Packet, "POKER_PROCESSING_HAND", 127) # 127 # 0x7f
 ########################################
-
-PACKET_POKER_MUCK_REQUEST = 128 # 0x80 # %SEQ%
-PacketNames[PACKET_POKER_MUCK_REQUEST] = "POKER_MUCK_REQUEST"
 
 class PacketPokerMuckRequest(PacketPokerId):
     """\
@@ -3486,38 +2050,13 @@ Direction: server <=> client
 game_id: integer uniquely identifying a game.
 muckable_serials: list of serials of players that are given a the choice to muck.
     """
-    type = PACKET_POKER_MUCK_REQUEST
 
-    info = PacketPokerId.info + ( ('muckable_serials', [], 'Il'), )
+    info = PacketPokerId.info + (
+        ('muckable_serials', [], 'Il'),
+        )
     
-    format_element = "!I"
-
-    def __init__(self, *args, **kwargs):
-        self.muckable_serials = kwargs.get("muckable_serials", [])
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        block = PacketPokerId.pack(self)
-        block += self.packlist(self.muckable_serials, PacketPokerMuckRequest.format_element)
-        return block
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (block, self.muckable_serials) = self.unpacklist(block, PacketPokerMuckRequest.format_element)
-        return block
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + self.calcsizelist(self.muckable_serials, PacketPokerMuckRequest.format_element)
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " muckable_serials = " + str(self.muckable_serials)
-
-PacketFactory[PACKET_POKER_MUCK_REQUEST] = PacketPokerMuckRequest
-
+Packet.infoDeclare(globals(), PacketPokerMuckRequest, Packet, "POKER_MUCK_REQUEST", 128) # 128 # 0x80
 ########################################
-
-PACKET_POKER_AUTO_MUCK = 129 # 0x81 # %SEQ%
-PacketNames[PACKET_POKER_AUTO_MUCK] = "POKER_AUTO_MUCK"
 
 class PacketPokerAutoMuck(PacketPokerId):
     """\
@@ -3550,103 +2089,42 @@ game_id: integer uniquely identifying a game.
 info: bitfield indicating what muck situations are of interest.
     """
 
-    type = PACKET_POKER_AUTO_MUCK
+    info = PacketPokerId.info + (
+        ('auto_muck', 0xFF, 'B'),
+        )
 
-    info = PacketPokerId.info + ( ('auto_muck', 0xFF, 'B'), )
-
-    format = "!B"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.auto_muck = kwargs.get("auto_muck", 0xFF)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerAutoMuck.format, self.auto_muck)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.auto_muck,) = unpack(PacketPokerAutoMuck.format, block[:PacketPokerAutoMuck.format_size])
-        return block[PacketPokerAutoMuck.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerAutoMuck.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + " auto_muck = %x" % self.auto_muck
-
-PacketFactory[PACKET_POKER_AUTO_MUCK] = PacketPokerAutoMuck
-
+Packet.infoDeclare(globals(), PacketPokerAutoMuck, Packet, "POKER_AUTO_MUCK", 129) # 129 # 0x81
 ########################################
-
-PACKET_POKER_MUCK_ACCEPT = 130 # 0x82 # %SEQ%
-PacketNames[PACKET_POKER_MUCK_ACCEPT] = "POKER_MUCK_ACCEPT"
 
 class PacketPokerMuckAccept(PacketPokerId):
-    type = PACKET_POKER_MUCK_ACCEPT
+    """
+    """
 
-PacketFactory[PACKET_POKER_MUCK_ACCEPT] = PacketPokerMuckAccept
-
+Packet.infoDeclare(globals(), PacketPokerMuckAccept, Packet, "POKER_MUCK_ACCEPT", 130) # 130 # 0x82
 ########################################
 
-PACKET_POKER_MUCK_DENY = 131 # 0x83 # %SEQ%
-PacketNames[PACKET_POKER_MUCK_DENY] = "POKER_MUCK_DENY"
-
 class PacketPokerMuckDeny(PacketPokerId):
-    type = PACKET_POKER_MUCK_DENY
-
-PacketFactory[PACKET_POKER_MUCK_DENY] = PacketPokerMuckDeny
-
+    """
+    """
+    
+Packet.infoDeclare(globals(), PacketPokerMuckDeny, Packet, "POKER_MUCK_DENY", 131) # 131 # 0x83
 ########################################
 
 class PacketPokerMoneyTransfert(PacketSerial):
+    """
+    """
+    
+    info = PacketSerial.info + (
+        ('url', 'UNKNOWN', 's'),
+        ('name', 'UNKNOWN', 's'),
+        ('application_data', '', 's'),
+        ('bserial', 0, 'I'),
+        ('value', 0, 'I'),
+        )
 
-    info = PacketSerial.info + ( ('url', 'UNKNOWN', 's'),
-                                 ('name', 'UNKNOWN', 's'),
-                                 ('application_data', '', 's'),
-                                 ('bserial', 0, 'I'),
-                                 ('value', 0, 'I'),
-                                 )
-
-    format = "!II"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.url = kwargs.get("url", "UNKNOWN")
-        self.name = kwargs.get("name", "UNKNOWN")
-        self.application_data = kwargs.get("application_data", '')
-        self.bserial = int(kwargs.get("bserial", 0))
-        self.value = int(kwargs.get("value", 0))
-        if kwargs.has_key('note'):
-            note = kwargs['note']
-            self.url = note[0]
-            self.bserial = int(note[1])
-            self.name = note[2]
-            self.value = int(note[3])
-        PacketSerial.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketSerial.pack(self) + self.packstring(self.url) + self.packstring(self.name) + self.packstring(self.application_data) + pack(PacketPokerMoneyTransfert.format, self.bserial, self.value)
-
-    def unpack(self, block):
-        block = PacketSerial.unpack(self, block)
-        (block, self.url) = self.unpackstring(block)
-        (block, self.name) = self.unpackstring(block)
-        (block, self.application_data) = self.unpackstring(block)
-        (self.bserial, self.value) = unpack(PacketPokerMoneyTransfert.format, block[:PacketPokerMoneyTransfert.format_size])
-        return block[PacketPokerMoneyTransfert.format_size:]
-
-    def calcsize(self):
-        return PacketSerial.calcsize(self) + self.calcsizestring(self.url) + self.calcsizestring(self.name) + self.calcsizestring(self.application_data) + PacketPokerMoneyTransfert.format_size
-
-    def __str__(self):
-        return PacketSerial.__str__(self) + ", url = %s, name = %s, bserial = %d, value = %d, application_data = %s" % (self.url, self.name, self.bserial, self.value, self.application_data )
-
-
+# class is not publicly available, but used as a base class
+#Packet.infoDeclare(globals(), , Packet, "", ) #  #
 ########################################
-
-PACKET_POKER_CASH_IN = 132 # 0x84 # %SEQ%
-PacketNames[PACKET_POKER_CASH_IN] = "POKER_CASH_IN"
 
 class PacketPokerCashIn(PacketPokerMoneyTransfert):
     """\
@@ -3690,134 +2168,56 @@ note: tuple of (url, bserial, name, value) that overrides the parameters
       of the same name
 serial: integer uniquely identifying a player.
 """
-    type = PACKET_POKER_CASH_IN
-
     DUPLICATE_CURRENCIES = 1
     REFUSED = 2
     SAFE = 3
     UNKNOWN = 4
     RETRY = 5
 
-PacketFactory[PACKET_POKER_CASH_IN] = PacketPokerCashIn
-
+Packet.infoDeclare(globals(), PacketPokerCashIn, Packet, "POKER_CASH_IN", 132) # 132 # 0x84
 ########################################
 
-PACKET_POKER_CASH_OUT = 133 # 0x85 # %SEQ%
-PacketNames[PACKET_POKER_CASH_OUT] = "POKER_CASH_OUT"
-
 class PacketPokerCashOut(PacketPokerMoneyTransfert):
-    type = PACKET_POKER_CASH_OUT
-
+    """
+    """
+    
     SAFE = 1
     BREAK_NOTE = 2
     EMPTY = 3
 
-PacketFactory[PACKET_POKER_CASH_OUT] = PacketPokerCashOut
-
+Packet.infoDeclare(globals(), PacketPokerCashOut, Packet, "POKER_CASH_OUT", 133) # 133 # 0x85
 ########################################
-
-PACKET_POKER_CASH_OUT_COMMIT = 134 # 0x86 # %SEQ%
-PacketNames[PACKET_POKER_CASH_OUT_COMMIT] = "POKER_CASH_OUT_COMMIT"
 
 class PacketPokerCashOutCommit(Packet):
 
-    type = PACKET_POKER_CASH_OUT_COMMIT
-
-    info = Packet.info + ( ('transaction_id', '', 's'), )
+    info = Packet.info + (
+        ('transaction_id', '', 's'), 
+        )
 
     INVALID_TRANSACTION = 1
 
-    def __init__(self, **kwargs):
-        self.transaction_id = kwargs.get("transaction_id", "")
-
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.transaction_id)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.transaction_id) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.transaction_id)
-
-    def __str__(self):
-        return Packet.__str__(self) + " transaction_id = %s" % self.transaction_id
-
-PacketFactory[PACKET_POKER_CASH_OUT_COMMIT] = PacketPokerCashOutCommit
-
+Packet.infoDeclare(globals(), PacketPokerCashOutCommit, Packet, "POKER_CASH_OUT_COMMIT", 134) # 134 # 0x86
 ########################################
-
-PACKET_POKER_CASH_QUERY = 135 # 0x87 # %SEQ%
-PacketNames[PACKET_POKER_CASH_QUERY] = "POKER_CASH_QUERY"
 
 class PacketPokerCashQuery(Packet):
 
-    type = PACKET_POKER_CASH_QUERY
-
-    info = Packet.info + ( ('application_data', '', 's'), )
+    info = Packet.info + (
+        ('application_data', '', 's'),
+        )
     
     DOES_NOT_EXIST = 1
 
-    def __init__(self, **kwargs):
-        self.application_data = kwargs.get("application_data", "")
-
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.application_data)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.application_data) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.application_data)
-
-    def __str__(self):
-        return Packet.__str__(self) + " application_data = %s" % self.application_data
-
-PacketFactory[PACKET_POKER_CASH_QUERY] = PacketPokerCashQuery
-
+Packet.infoDeclare(globals(), PacketPokerCashQuery, Packet, "POKER_CASH_QUERY", 135) # 135 # 0x87
 ########################################
-
-PACKET_POKER_RAKE = 136 # 0x88 # %SEQ%
-PacketNames[PACKET_POKER_RAKE] = "POKER_RAKE"
 
 class PacketPokerRake(PacketInt):
 
-    type = PACKET_POKER_RAKE
+    info = PacketInt.info + (
+        ('game_id', 0, 'I'),
+        )
 
-    info = PacketInt.info + ( ('game_id', 0, 'I'), )
-
-    game_id = 0
-
-    format = "!I"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.game_id = kwargs.get("game_id", 0)
-        PacketInt.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketInt.pack(self) + pack(PacketPokerRake.format, self.game_id)
-
-    def unpack(self, block):
-        block = PacketInt.unpack(self, block)
-        (self.game_id,) = unpack(PacketPokerRake.format, block[:PacketPokerRake.format_size])
-        return block[PacketPokerRake.format_size:]
-
-    def calcsize(self):
-        return PacketInt.calcsize(self) + PacketPokerRake.format_size
-
-    def __str__(self):
-        return PacketInt.__str__(self) + " game_id = %d" % self.game_id
-
-PacketFactory[PACKET_POKER_RAKE] = PacketPokerRake
-
+Packet.infoDeclare(globals(), PacketPokerRake, Packet, "POKER_RAKE", 136) # 136 # 0x88
 ########################################
-
-PACKET_POKER_TOURNEY_RANK = 137 # 0x89 # %SEQ%
-PacketNames[PACKET_POKER_TOURNEY_RANK] = "POKER_TOURNEY_RANK"
 
 class PacketPokerTourneyRank(PacketPokerId):
     """\
@@ -3834,111 +2234,46 @@ players: the number of players in this tourney
 money: the money won
 """
 
-    type = PACKET_POKER_TOURNEY_RANK
+    info = PacketPokerId.info + ( 
+        ('players', 0, 'I'),
+        ('money', 0, 'I'),
+        ('rank', sys.maxint, 'I'),
+        )
 
-    info = PacketPokerId.info + ( ('players', 0, 'I'),
-                                  ('money', 0, 'I'),
-                                  ('rank', sys.maxint, 'I'),
-                                  )
-
-    format = "!III"
-    format_size = calcsize(format)
-
-    def __init__(self, *args, **kwargs):
-        self.players = kwargs.get("players", 0)
-        self.money = kwargs.get("money", 0)
-        self.rank = kwargs.get("rank", sys.maxint)
-        PacketPokerId.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketPokerId.pack(self) + pack(PacketPokerTourneyRank.format, self.players, self.money, self.rank)
-
-    def unpack(self, block):
-        block = PacketPokerId.unpack(self, block)
-        (self.players, self.money, self.rank) = unpack(PacketPokerTourneyRank.format, block[:PacketPokerTourneyRank.format_size])
-        return block[PacketPokerTourneyRank.format_size:]
-
-    def calcsize(self):
-        return PacketPokerId.calcsize(self) + PacketPokerTourneyRank.format_size
-
-    def __str__(self):
-        return PacketPokerId.__str__(self) + "\n\tplayers = %d, tourney = %d, rank %d, won %d" % ( self.players, self.serial, self.rank, self.money )
-
-
-PacketFactory[PACKET_POKER_TOURNEY_RANK] = PacketPokerTourneyRank
-
+Packet.infoDeclare(globals(), PacketPokerTourneyRank, Packet, "POKER_TOURNEY_RANK", 137) # 137 # 0x89
 ########################################
-
-PACKET_POKER_PLAYER_IMAGE = 138 # 0x8a # %SEQ%
-PacketNames[PACKET_POKER_PLAYER_IMAGE] = "POKER_PLAYER_IMAGE"
 
 class PacketPokerPlayerImage(PacketSerial):
-    """ """
+    """
+    """
 
-    type = PACKET_POKER_PLAYER_IMAGE
+    info = PacketSerial.info + (
+        ('image', '', 's'),
+        ('image_type', 'image/png', 's'),
+        )
 
-    info = PacketSerial.info + ( ('image', '', 's'),
-                                 ('image_type', 'image/png', 's'),
-                                 )
-
-    def __init__(self, *args, **kwargs):
-        self.image = kwargs.get("image", '')
-        self.image_type = kwargs.get("image_type", 'image/png')
-        PacketSerial.__init__(self, *args, **kwargs)
-
-    def pack(self):
-        return PacketSerial.pack(self) + self.packstring(self.image) + self.packstring(self.image_type)
-
-    def unpack(self, block):
-        block = PacketSerial.unpack(self, block)
-        (block, self.image) = self.unpackstring(block)
-        (block, self.image_type) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return PacketSerial.calcsize(self) + self.calcsizestring(self.image) + self.calcsizestring(self.image_type)
-
-    def __str__(self):
-        return PacketSerial.__str__(self) + " image = %s, image_type = %s" % ( self.image, self.image_type )
-
-
-PacketFactory[PACKET_POKER_PLAYER_IMAGE] = PacketPokerPlayerImage
-
+Packet.infoDeclare(globals(), PacketPokerPlayerImage, Packet, "POKER_PLAYER_IMAGE", 138) # 138 # 0x8a
 ########################################
-
-PACKET_POKER_GET_PLAYER_IMAGE = 139 # 0x8b # %SEQ%
-PacketNames[PACKET_POKER_GET_PLAYER_IMAGE] = "POKER_GET_PLAYER_IMAGE"
 
 class PacketPokerGetPlayerImage(PacketSerial):
-
-    type = PACKET_POKER_GET_PLAYER_IMAGE
-
-PacketFactory[PACKET_POKER_GET_PLAYER_IMAGE] = PacketPokerGetPlayerImage
-
+    """
+    """
+    
+Packet.infoDeclare(globals(), PacketPokerGetPlayerImage, Packet, "POKER_GET_PLAYER_IMAGE", 139) # 139 # 0x8b
 ########################################
-
-PACKET_POKER_HAND_REPLAY = 140 # 0x8c # %SEQ%
-PacketNames[PACKET_POKER_HAND_REPLAY] = "POKER_HAND_REPLAY"
 
 class PacketPokerHandReplay(PacketPokerId):
-    """ """
+    """
+    """
 
-    type = PACKET_POKER_HAND_REPLAY
-
-PacketFactory[PACKET_POKER_HAND_REPLAY] = PacketPokerHandReplay
-
+Packet.infoDeclare(globals(), PacketPokerHandReplay, Packet, "POKER_HAND_REPLAY", 140) # 140 # 0x8c
 ########################################
 
-PACKET_POKER_GAME_MESSAGE = 141 # 0x8d # %SEQ%
-PacketNames[PACKET_POKER_GAME_MESSAGE] = "POKER_GAME_MESSAGE"
-
 class PacketPokerGameMessage(PacketPokerMessage):
-    """ """
-
-    type = PACKET_POKER_GAME_MESSAGE
-
-PacketFactory[PACKET_POKER_GAME_MESSAGE] = PacketPokerGameMessage
-
+    """
+    """
+    
+Packet.infoDeclare(globals(), PacketPokerGameMessage, Packet, "POKER_GAME_MESSAGE", 141) # 141 # 0x8d
 ########################################
 
 class PacketPokerExplain(PacketInt):
@@ -3965,15 +2300,12 @@ value == ALL
 
 Direction: server <= client
 """
-    pass #pragma: no cover
-
     NONE       = 0x0000
     REST       = 0x0001
     CHIPSTACKS = 0x0004
     ALL        = REST | CHIPSTACKS
 
 Packet.infoDeclare(globals(), PacketPokerExplain, PacketInt, "POKER_EXPLAIN", 142) # 142 # 0x8e # %SEQ%
-
 ########################################
 
 class PacketPokerStatsQuery(PacketString):
@@ -3982,7 +2314,6 @@ class PacketPokerStatsQuery(PacketString):
     pass #pragma: no cover
     
 Packet.infoDeclare(globals(), PacketPokerStatsQuery, PacketString, "POKER_STATS_QUERY", 143) # 143 # 0x8f # %SEQ%
-
 ########################################
 
 class PacketPokerStats(Packet):
@@ -4153,8 +2484,6 @@ Packet.infoDeclare(globals(), PacketPokerGetTourneyManager, Packet, "POKER_GET_T
 class PacketPokerTourneyManager(Packet):
     """ """
     
-    pass #pragma: no cover
-
 Packet.infoDeclare(globals(), PacketPokerTourneyManager, Packet, "POKER_TOURNEY_MANAGER", 149) # 149 # 0x95 # %SEQ%
 
 ########################################
@@ -4233,6 +2562,7 @@ Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakBegin, Packet, "POKER_
 def PacketPokerTableTourneyBreakBegin__str__(self):
         return Packet.__str__(self) + "game_id = %d, resume_time = %s" % ( self.game_id,strftime("%Y/%m/%d %H:%M", gmtime(self.resume_time)))
 PacketPokerTableTourneyBreakBegin.__str__ = PacketPokerTableTourneyBreakBegin__str__
+
 ########################################
 class PacketPokerTableTourneyBreakDone(Packet):
     """\
@@ -4572,6 +2902,7 @@ players:           Serials of the players participating in the tournament.
         )
 
 Packet.infoDeclare(globals(), PacketPokerCreateTourney, Packet, "POKER_CREATE_TOURNEY", 166) # 166 # 0xa6 # %SEQ%
+
 ########################################
 class PacketPokerLongPoll(PacketPokerId):
     """ """
@@ -4579,6 +2910,7 @@ class PacketPokerLongPoll(PacketPokerId):
     info = PacketPokerId.info
 
 Packet.infoDeclare(globals(), PacketPokerLongPoll, Packet, "POKER_LONG_POLL", 167) # 167 # 0xa7 # %SEQ%
+
 ########################################
 class PacketPokerLongPollReturn(Packet):
     """ """
@@ -4586,6 +2918,7 @@ class PacketPokerLongPollReturn(Packet):
     info = Packet.info
 
 Packet.infoDeclare(globals(), PacketPokerLongPollReturn, Packet, "POKER_LONG_POLL_RETURN", 168) # 168 # 0xa8 # %SEQ%
+
 ########################################
 
     
