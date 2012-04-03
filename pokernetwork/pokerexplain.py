@@ -353,8 +353,7 @@ class PokerExplain:
                     player.wait_for = packet.wait_for
                     player.auto = packet.auto
                 if not self.no_display_packets:
-                    self.forward_packets.append(PacketPokerSeats(game_id = game.id,
-                                                                 seats = game.seats()))
+                    self.forward_packets.append(PacketPokerSeats(game_id = game.id, seats = game.seats()))
 
             elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
                    packet.type == PACKET_POKER_TABLE_MOVE ) :
@@ -362,12 +361,13 @@ class PokerExplain:
                 if packet.serial == self.getSerial():
                     self.games.deleteGame(game.id)
                 if packet.type == PACKET_POKER_TABLE_MOVE:
-                    forward_packets.append(PacketPokerPlayerLeave(game_id = packet.game_id,
-                                                                  serial = packet.serial,
-                                                                  seat = packet.seat))
+                    forward_packets.append(PacketPokerPlayerLeave(
+                        game_id = packet.game_id,
+                        serial = packet.serial,
+                        seat = packet.seat
+                    ))
                 if not self.no_display_packets:
-                    self.forward_packets.append(PacketPokerSeats(game_id = game.id,
-                                                                 seats = game.seats()))
+                    self.forward_packets.append(PacketPokerSeats(game_id = game.id, seats = game.seats()))
 
             elif packet.type == PACKET_POKER_PLAYER_SELF:
                 ( serial_in_position, position_is_obsolete ) = game.position_info
@@ -432,12 +432,10 @@ class PokerExplain:
                         auto = player.isAuto()
                         if not game.isSit(serial):
                             game.sit(serial)
-                            forward_packets.append(PacketPokerSit(game_id = game.id,
-                                                                  serial = serial))
+                            forward_packets.append(PacketPokerSit(game_id = game.id, serial = serial))
                         if auto:
                             game.autoPlayer(serial)
-                            forward_packets.append(PacketPokerAutoFold(game_id = game.id,
-                                                                       serial = player.serial))
+                            forward_packets.append(PacketPokerAutoFold(game_id = game.id, serial = player.serial))
 
                         if wait_for:
                             if wait_for == True and not in_game and not game.isRunning():
@@ -451,14 +449,15 @@ class PokerExplain:
                                 player.wait_for = "first_round"
                             else:
                                 player.wait_for = wait_for
-                            forward_packets.append(PacketPokerWaitFor(game_id = game.id,
-                                                                      serial = serial,
-                                                                      reason = wait_for))
+                            forward_packets.append(PacketPokerWaitFor(
+                                game_id = game.id,
+                                serial = serial,
+                                reason = wait_for
+                            ))
                     else:
                         if game.isSit(serial):
                             game.sitOut(serial)                            
-                            forward_packets.append(PacketPokerSitOut(game_id = game.id,
-                                                                     serial = serial))
+                            forward_packets.append(PacketPokerSitOut(game_id = game.id,serial = serial))
 
             elif packet.type == PACKET_POKER_RAKE:
                 if game.isBlindAnteRound():
@@ -481,7 +480,6 @@ class PokerExplain:
                         forward_packets.extend(self.packetsPot2Player(game))
                 else:
                     game.distributeMoney()
-
                     winners = game.winners[:]
                     winners.sort()
                     packet.serials.sort()
@@ -491,7 +489,6 @@ class PokerExplain:
                         if game.isGameEndInformationValid():
                             forward_packets.extend(self.packetsShowdown(game))
                             forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
-
                         forward_packets.extend(self.packetsPot2Player(game))
                     game.endTurn()
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
@@ -538,8 +535,7 @@ class PokerExplain:
             elif packet.type == PACKET_POKER_FOLD:
                 game.fold(packet.serial)
                 if game.isSitOut(packet.serial):
-                    forward_packets.append(PacketPokerSitOut(game_id = game.id,
-                                                             serial = packet.serial))
+                    forward_packets.append(PacketPokerSitOut(game_id = game.id, serial = packet.serial))
 
             elif packet.type == PACKET_POKER_CALL:
                 game.call(packet.serial)
@@ -586,22 +582,28 @@ class PokerExplain:
 
                 if not self.no_display_packets:
                     if game.isRunning() and game.cardsDealt() and game.downCardsDealtThisRoundCount() > 0:
-                        forward_packets.append(PacketPokerDealCards(game_id = game.id,
-                                                                    numberOfCards = game.downCardsDealtThisRoundCount(),
-                                                                    serials = game.serialsNotFold()))
+                        forward_packets.append(PacketPokerDealCards(
+                            game_id = game.id,
+                            numberOfCards = game.downCardsDealtThisRoundCount(),
+                            serials = game.serialsNotFold())
+                        )
 
                 if game.isRunning() and game.cardsDealt() and game.cardsDealtThisRoundCount() :
                     for player in game.playersNotFold():
                         cards = player.hand.toRawList()
-                        forward_packets.append(PacketPokerPlayerCards(game_id = game.id,
-                                                                      serial = player.serial,
-                                                                      cards = cards))
+                        forward_packets.append(PacketPokerPlayerCards(
+                            game_id = game.id,
+                            serial = player.serial,
+                            cards = cards)
+                        )
 
                 if not self.no_display_packets:
                     if game.isRunning() and game.cardsDealt() and self.getSerial() != 0 and game.isPlaying(self.getSerial()) and (packet.string == "flop" or packet.string == "turn" or packet.string == "river"):
-                        forward_packets.append(PacketPokerPlayerHandStrength(game_id = game.id,
-                                                                             serial = self.getSerial(),
-                                                                             hand = game.readablePlayerBestHands(self.getSerial())))
+                        forward_packets.append(PacketPokerPlayerHandStrength(
+                            game_id = game.id,
+                            serial = self.getSerial(),
+                            hand = game.readablePlayerBestHands(self.getSerial()))
+                        )
 
                 if ( packet.string != "end" and not game.isBlindAnteRound() ):
                     if not self.no_display_packets:
@@ -629,14 +631,14 @@ class PokerExplain:
                                 position = game.position,
                                 serial = serial_in_position)
                             )
-                        if ( self_was_in_position and not self_in_position ):
+                        if self_was_in_position and not self_in_position:
                             self.unsetPlayerTimeout(game, self.getSerial())
                             if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
                                 forward_packets.append(PacketPokerSelfLostPosition(
                                     game_id = game.id,
                                     serial = serial_in_position)
                                 )
-                        if ( ( not self_was_in_position or position_is_obsolete ) and self_in_position ):
+                        if (not self_was_in_position or position_is_obsolete) and self_in_position:
                             if not game.isBlindAnteRound() or not game.getPlayer(self.getSerial()).isAutoBlindAnte():
                                 forward_packets.append(PacketPokerSelfInPosition(
                                     game_id = game.id,
@@ -663,7 +665,7 @@ class PokerExplain:
             # Build dealer messages
             # Skip state = end because information is missing and will be received by the next packet (WIN)
             #
-            if not ( packet.type == PACKET_POKER_STATE and packet.string == "end" ):
+            if not (packet.type == PACKET_POKER_STATE and packet.string == "end"):
                 (subject, messages) = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
                 if messages:
                     message = "".join("Dealer: %s\n" % line for line in messages)
