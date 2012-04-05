@@ -32,19 +32,17 @@ sys.path.insert(0, "..")
 
 import platform
 from os.path import exists
-from types import *
 
 try:
-        from OpenSSL import SSL
+        from OpenSSL import SSL ; del SSL # just imported to check for SSL
         from pokernetwork.pokerservice import SSLContextFactory
         HAS_OPENSSL=True
 except:
         print "openSSL not available."
         HAS_OPENSSL=False
-        
 
 from twisted.application import internet, service, app
-from twisted.web import resource,server
+from twisted.web import server
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory
