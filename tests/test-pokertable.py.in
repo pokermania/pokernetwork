@@ -58,8 +58,10 @@ from pokerengine.pokercards import PokerCards
 
 global table1ID
 global table2ID
+global table3ID
 table1ID = 100
 table2ID = 200
+table3ID = 300
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4" autodeal="yes" max_missed_round="5">
   <delays autodeal_tournament_min="2" autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
@@ -310,6 +312,11 @@ class MockService:
         if self.testObject:
             self.testObject.assertEqual(game_id,  self.testObject.table1_value)
             self.testObject.assertEqual(tourney.name,  'My Old Sit and Go')
+    
+    def tourneyUpdateStats(self,tourney, game_id):
+        if self.testObject:
+            self.testObject.assertEqual(game_id,  self.testObject.table1_value)
+            self.testObject.assertEqual(tourney.name,  'My Old Sit and Go')
 
     def resetBet(self, gameId):
         if self.testObject:
@@ -339,6 +346,7 @@ class MockClient:
         self.user = MockClient.User()
         self.testObject = testObject
         self.reasonExpected = expectedReason
+        self.bugous_processing_hand = False
 
     def __str__(self):
         return "MockClient of Player%d" % self.serial
@@ -347,7 +355,7 @@ class MockClient:
         self.deferred = defer.Deferred()
         self.type = type
         return self.deferred
-
+    
     def raiseIfPacket(self, type):
         self.raise_if_packet = type
 
@@ -400,9 +408,13 @@ class MockClient:
         self.packets.append(packet)
         if self.deferred:
             if self.raise_if_packet and packet.type == self.raise_if_packet:
-                reactor.callLater(0, lambda: self.deferred.errback(packet))
+                d, self.deferred = self.deferred, None
+                raise_if_packet, self.raise_if_packet = self.raise_if_packet, None
+                reactor.callLater(0, d.errback, packet)
             elif self.type == packet.type:
-                reactor.callLater(0, lambda: self.deferred.callback(packet))
+                d, self.deferred = self.deferred, None
+                packet_type, self.type = self.type, None
+                reactor.callLater(0, d.callback, packet)
 
     def sendPacketVerbose(self, packet):
         self.sendPacket(packet)
@@ -465,8 +477,9 @@ class MockClientWithExplain(MockClientWithRealJoin):
         return ret
         
     def sendPacket(self,packet):
-        self.explain.explain(packet)
-        packets = self.explain.forward_packets
+        if self.explain:
+            self.explain.explain(packet)
+            packets = self.explain.forward_packets
         return MockClientWithRealJoin.sendPacket(self,packet)
         
 # --------------------------------------------------------------------------------
@@ -502,10 +515,13 @@ class PokerTableTestCaseBase(unittest.TestCase):
         testclock._seconds_reset()        
         global table1ID
         global table2ID
+        global table3ID
         table1ID = table1ID + 1
         table2ID += 1
+        table3ID += 1
         self.table1_value = table1ID
         self.table2_value = table2ID
+        self.table3_value = table3ID
 
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
@@ -530,8 +546,18 @@ class PokerTableTestCaseBase(unittest.TestCase):
             'muck_timeout' : 1,
             'currency_serial': 0
         })
+        self.table3 = pokertable.PokerTable(self.service, table3ID, {
+            'name': "table3",
+            'variant': "holdem",
+            'betting_structure': "1-2-no-limit",
+            'seats': 4,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'currency_serial': 0
+        })
         self.service.table1 = self.table
         self.service.table2 = self.table2
+        self.service.table3 = self.table3
 
         # Test to make sure that the max_missed_round count can be
         # overwritten by description in init settings.  note That table1
@@ -2009,6 +2035,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
         
     def test50_fold_immediately(self):
+#        restore_all_messages()
         serials = [1,2]
         clients = {}
         for serial in serials:
@@ -2042,12 +2069,58 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1.chainDeferred(d2)
         
         return d1
+    
+    def test51_blindAnteState(self):
+        table = self.table3
+        restore_all_messages()
+#        receive a PACKET_POKER_STATE when in state blind_ante. players have to have the same bet
+        serials = [1,2]
+        clients = {}
+        for serial in serials:
+            clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+#            client.setExplain(PacketPokerExplain.ALL)
+            self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertEqual(True, table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, table.buyInPlayer(client, table.game.maxBuyIn()))
+            table.sitPlayer(client, serial)
+            table.game.noAutoBlindAnte(serial)
+            
+        for serial,client in clients.iteritems():
+            client.setMoney(table,3000)
+        
+        
+        def waitForPosition(packet):
+            table.game.serial2player[1].sit_out_next_turn = True
+            table.game.serial2player[2].sit_out_next_turn = True
+            table.game.callNraise(2, 200000)
+            table.update()
+            table.game.call(1)
+            d3 = clients[1].waitFor(PACKET_POKER_STATE)
+            table.update()
+            return d3
+        
+        def payBlinds(packet):
+            table.game.blind(2,2500)
+            table.game.blind(1,2000)
+            d2 = clients[1].waitFor(PACKET_POKER_POSITION)
+            d2.addCallback(waitForPosition)
+            table.update()
+            return d2
+            
+        d1 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
+        
+        d1.addCallback(payBlinds)
+        table.scheduleAutoDeal()
+        
 
+        return d1
+        
 # --------------------------------------------------------------------------------
 def Run():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test40"
+#    loader.methodPrefix = "test50"
 #    os.environ['VERBOSE_T'] = '4'
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarCollectionTestCase))
