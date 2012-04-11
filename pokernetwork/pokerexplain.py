@@ -448,8 +448,6 @@ class PokerExplain:
                                 # to a table in the middle of a game). 
                                 #
                                 player.wait_for = "first_round"
-                            else:
-                                player.wait_for = wait_for
                             forward_packets.append(PacketPokerWaitFor(
                                 game_id = game.id,
                                 serial = serial,
