@@ -2035,7 +2035,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
         
     def test50_fold_immediately(self):
-#        restore_all_messages()
+        # restore_all_messages()
         serials = [1,2]
         clients = {}
         for serial in serials:
@@ -2072,23 +2072,22 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
     
     def test51_blindAnteState(self):
         table = self.table3
-        restore_all_messages()
-#        receive a PACKET_POKER_STATE when in state blind_ante. players have to have the same bet
+        # restore_all_messages()
+        # receive a PACKET_POKER_STATE when in state blind_ante. players have to have the same bet
         serials = [1,2]
         clients = {}
         for serial in serials:
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
-#            client.setExplain(PacketPokerExplain.ALL)
+            # client.setExplain(PacketPokerExplain.ALL)
             self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
             self.assertEqual(True, table.seatPlayer(client, serial, -1))
             self.assertEqual(True, table.buyInPlayer(client, table.game.maxBuyIn()))
             table.sitPlayer(client, serial)
             table.game.noAutoBlindAnte(serial)
-            
+
         for serial,client in clients.iteritems():
             client.setMoney(table,3000)
-        
         
         def waitForPosition(packet):
             table.game.serial2player[1].sit_out_next_turn = True
@@ -2113,7 +2112,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1.addCallback(payBlinds)
         table.scheduleAutoDeal()
         
-
         return d1
         
 # --------------------------------------------------------------------------------
