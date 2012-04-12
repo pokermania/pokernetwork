@@ -669,6 +669,7 @@ class PokerService(service.Service):
                 "WHERE t.serial = %s",
                 (tourney.serial,)
             )
+            tourney.changeState(TOURNAMENT_STATE_CANCELED)
         finally:
             cursor.close()
 
