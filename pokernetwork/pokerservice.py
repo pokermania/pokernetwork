@@ -658,6 +658,20 @@ class PokerService(service.Service):
         finally:
             cursor.close()
 
+    def refundCancelTourney(self, tourney):
+        cursor = self.db.cursor()
+        try:
+            cursor.execute(
+                "UPDATE tourneys AS t " \
+                    "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
+                    "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
+                "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'canceled' " \
+                "WHERE t.serial = %s",
+                (tourney.serial,)
+            )
+        finally:
+            cursor.close()
+
     def checkTourneysSchedule(self):
         if self.verbose > 3:
             self.message("checkTourneysSchedule")
@@ -667,7 +681,7 @@ class PokerService(service.Service):
         #
         for tourney in filter(lambda tourney: tourney.sit_n_go == 'y', self.tourneys.values()):
             if tourney.state == TOURNAMENT_STATE_REGISTERING and now - tourney.register_time > self.sng_timeout:
-                tourney.changeState(TOURNAMENT_STATE_CANCELED)
+                self.refundCancelTourney(tourney)
         #
         # Respawning sit'n'go tournaments
         #
