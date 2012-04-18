@@ -10,8 +10,17 @@ from twisted.cred import credentials
 from twisted.internet import defer
 from pprint import pprint as pp
 
-def unblock_table(service, serial, destroy=False):
-    """Kick everyone from the table, refund money+bet, cleanup sql, set game to end state and if destory=True destory the table"""
+poker_service = None
+
+def refund_kick(serial, service=None):
+    """
+    Refunds money+bet and then kicks each player.
+    
+    serial: the serial of the table to refund and kick
+    service: the service to use (default: poker_service)
+    """
+    if service is None:
+        service = poker_service
     cursor = service.db.cursor()
     try:
         blocking_table = service.tables[serial]
@@ -19,22 +28,45 @@ def unblock_table(service, serial, destroy=False):
         for serial in blocking_table.avatar_collection.serial2avatars.keys():
             service.leavePlayer(serial, blocking_table.game.id, 1)
         # refund players remaining in sql
-        cursor.execute("update user2table as u2t join pokertables as t on t.serial = u2t.table_serial join user2money as u2m on u2m.user_serial = u2t.user_serial set u2m.amount = u2m.amount + u2t.money + u2t.bet, u2t.money = 0, u2t.bet = 0 where u2t.table_serial = %s and t.currency_serial = 1;", (serial))
+        cursor.execute(
+            "UPDATE user2table AS u2t "
+            "JOIN pokertables AS t "
+                "ON t.serial = u2t.table_serial "
+            "JOIN user2money AS u2m "
+                "ON u2m.user_serial = u2t.user_serial "
+            "SET "
+                "u2m.amount = u2m.amount + u2t.money + u2t.bet, "
+                "u2t.money = 0, "
+                "u2t.bet = 0 "
+            "WHERE u2t.table_serial = %s AND t.currency_serial = 1",
+            (serial,)
+        )
         # cleanup sql
-        cursor.execute("delete from user2table where table_serial = %s;""", (serial))
-        # game state muck -> end
-        blocking_table.game.endState()
-        # beat it to death for failing
-        if destroy:
-            blocking_table.destroy()
+        cursor.execute("DELETE FROM user2table WHERE table_serial = %s", (serial,))
     finally:
         cursor.close()
 
-def find_muck_games(service):
-    """Find games in muck state and print them"""
-    for table in service.tables.itervalues():
-        if table.game.state == 'muck':
-            yield table.game.id
+def filter_tables(function, service=None):
+    """
+    filter_tables(lambda t: t.listPlayers() != []) -> list of tables matching function
+    
+    function: the filter to apply on all tables
+    service: the service to look in (default: poker_service)
+    """
+    if service is None:
+        service = poker_service
+    return [t for t in service.tables.itervalues() if function(t)]
+
+def filter_games(function, service=None):
+    """
+    filter_tables(lambda t: t.listPlayers() != []) -> list of games matching function
+    
+    function: the filter to apply on all games
+    service: the service to look in (default: poker_service)
+    """
+    if service is None:
+        service = poker_service
+    return [t.game for t in service.tables.itervalues() if function(t.game)]
 
 class AllowAnyAccess():
     implements(checkers.ICredentialsChecker)
@@ -48,10 +80,14 @@ class AllowAnyAccess():
 
 def makeService(port, namespace):
     namespace.update({
-        'unblock_tables': unblock_table,
-        'find_muck_games': find_muck_games,
-        'pp': pp
+        'refund_kick': refund_kick,
+        'filter_tables': filter_tables,
+        'filter_games': filter_games,
+        'pp': pp,
+        'namespace': namespace
     })
+    global poker_service
+    poker_service = namespace['poker_service']
 
     def chainProtocolFactory():
         return insults.ServerProtocol(
