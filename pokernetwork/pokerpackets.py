@@ -876,7 +876,7 @@ reason: string representing the reason that this packet is being sent to
         ('betting_structure', '2-4-limit', 's'),
         ('skin', 'default', 's'),
         ('reason', '', 's'),
-        ('tourney_serial', 0, 'no net'),
+        ('tourney_serial', 0, 'I'),
         ('player_seated',-1,'no net')
         )
     
