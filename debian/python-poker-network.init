@@ -109,7 +109,9 @@ case "$1" in
 	;;
   stop)
 	echo -n "Stopping poker server ..."
-	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
+	#no kill timeout since switch from HTTP to TCP (ticket 5495)
+	#start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
+	start-stop-daemon --stop --quiet --pidfile=${serverpidfile} || true
 	if $RUN_BOTS ; then
 		echo -n "Stopping poker bots ..."
 		start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
@@ -172,6 +174,11 @@ case "$1" in
                 exit 1
         else
                 echo "process successfully killed"
+				echo "now start/stop again to cleanup ..."
+                $0 start
+                sleep 1
+                $0 stop
+                exit $?
                 exit 0
         fi
         ;;
