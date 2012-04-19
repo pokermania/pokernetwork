@@ -179,7 +179,6 @@ case "$1" in
                 sleep 1
                 $0 stop
                 exit $?
-                exit 0
         fi
         ;;
   bot-restart)
