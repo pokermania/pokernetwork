@@ -180,8 +180,8 @@ class Packet:
     
     @staticmethod
     def packbstring(obj):
-        if obj == True: string = 'TRUE'
-        elif obj == False: string = 'FALSE'
+        if obj == True: string = '_TRUE'
+        elif obj == False: string = '_FALSE'
         else: string = obj
         return pack("!H", len(string)) + string
 
@@ -190,15 +190,15 @@ class Packet:
         offset = calcsize("!H")
         (length,) = unpack("!H", block[:offset])
         obj = block[offset:offset + length]
-        if obj == 'TRUE': string = True
-        elif obj == 'FALSE': string = False
+        if obj == '_TRUE': string = True
+        elif obj == '_FALSE': string = False
         else: string = obj
         return (block[offset + length:], string)
 
     @staticmethod
     def calcsizebstring(obj):
-        if obj == True: string = 'TRUE'
-        elif obj == False: string = 'FALSE'
+        if obj == True: string = '_TRUE'
+        elif obj == False: string = '_FALSE'
         else: string = obj
         return calcsize("!H") + len(string)
 
