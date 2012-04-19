@@ -1357,7 +1357,7 @@ class PokerAvatar:
             # packet containing cards custom cards into placeholders
             # in this case.
             #
-            for past_packet in table.history2packets(game.historyGet(), game.id, table.createCache()):
+            for past_packet in table.history2packets(game.historyGetReduced(), game.id, table.createCache()):
                 self.sendPacketVerbose(table.private2public(past_packet, self.getSerial()))
         self.sendPacketVerbose(PacketPokerStreamMode(game_id = game.id))
 

@@ -32,7 +32,6 @@ from twisted.internet import reactor
 from twisted.python.runtime import seconds
 
 from re import match
-from types import ListType
 import traceback
 
 from pokerengine.pokergame import PokerGameServer
@@ -138,11 +137,10 @@ class PokerTable:
         self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = 'transient' in description
         self.tourney = description.get("tourney", None)
-
+        
         # max_missed_round can be configured on a per table basis, which
         # overrides the server-wide default
-        self.max_missed_round = int(description.get("max_missed_round",
-                                                    factory.getMissedRoundMax()))
+        self.max_missed_round = int(description.get("max_missed_round",factory.getMissedRoundMax()))
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
@@ -534,7 +532,7 @@ class PokerTable:
         updates = {}
         serial2rake = {}
         reset_bet = False
-        for event in self.game.historyGet()[self.history_index:]:
+        for event in self.game.historyGetReduced()[self.history_index:]:
             event_type = event[0]
             if event_type == "game":
                 pass
@@ -629,7 +627,7 @@ class PokerTable:
 
             elif event_type == "finish":
                 hand_serial = event[1]
-                self.factory.saveHand(self.compressedHistory(self.game.historyGet()), hand_serial)
+                self.factory.saveHand(self.compressedHistory(self.game.historyGetReduced()), hand_serial)
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 transient = 1 if self.transient else 0
                 self.factory.databaseEvent(event=PacketPokerMonitorEvent.HAND, param1=hand_serial, param2=transient)
@@ -649,11 +647,6 @@ class PokerTable:
             bet = self.factory.tableMoneyAndBet(self.game.id)[1]
             if bet and self.game.potAndBetsAmount() != bet:
                 self.error("table %d bet mismatch %d in memory versus %d in database" % (self.game.id, self.game.potAndBetsAmount(), bet))
-
-    def historyReduce(self):
-        if self.history_index < len(self.game.historyGet()):
-            self.game.historyReduce()
-            self.history_index = len(self.game.historyGet())
 
     def compressedHistory(self, history):
         new_history = []
@@ -696,7 +689,7 @@ class PokerTable:
         return new_history
 
     def delayedActions(self):
-        for event in self.game.historyGet()[self.history_index:]:
+        for event in self.game.historyGetReduced()[self.history_index:]:
             event_type = event[0]
             if event_type == "game":
                 self.game_delay = {
@@ -738,7 +731,7 @@ class PokerTable:
     def tourneyEndTurn(self):
         if not self.tourney:
             return
-        for event in self.game.historyGet()[self.history_index:]:
+        for event in self.game.historyGetReduced()[self.history_index:]:
             event_type = event[0]
             if event_type == "end":
                 self.factory.tourneyEndTurn(self.tourney, self.game.id)
@@ -893,14 +886,17 @@ class PokerTable:
     def update(self):
         if self.update_recursion:
             if self.factory.verbose >= 0:
-                self.error("unexpected recursion (ignored)\n" + "".join(traceback.format_list(traceback.extract_stack())))
+                self.error(
+                    "unexpected recursion (ignored)" + 
+                    "\n" + "".join(traceback.format_list(traceback.extract_stack(limit=10)))
+                )
             return "recurse"
         self.update_recursion = True
         if not self.isValid():
             return "not valid"
-
-        history = self.game.historyGet()
-        history_len = len(history)
+        
+        self.history_index = self.game.historyReduce()
+        history = self.game.historyGetReduced()
         history_tail = history[self.history_index:]
 
         try:
@@ -915,10 +911,6 @@ class PokerTable:
                 self.cashGame_kickPlayerSittingOutTooLong(history_tail)
                 self.scheduleAutoDeal()
         finally:
-            assert history_len == len(history), "%s length changed from %d to %d (i.e. %s was added)" % (
-                str(history), history_len, len(history), history[history_len:]
-            )
-            self.historyReduce()
             self.update_recursion = False
         return "ok"
 

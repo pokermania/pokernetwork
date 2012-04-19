@@ -675,14 +675,14 @@ class PokerExplain:
             # Skip state = end because information is missing and will be received by the next packet (WIN)
             #
             if not (packet.type == PACKET_POKER_STATE and packet.string == "end"):
-                (subject, messages) = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
+                game.history_index = game.historyReduce()
+                (subject, messages) = history2messages(game, game.historyGetReduced()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
                 if messages:
                     message = "".join("Dealer: %s\n" % line for line in messages)
                     forward_packets.append(PacketPokerChat(
                         game_id = game.id,
                         message = message)
                     )
-                game.history_index = len(game.historyGet())
 
         return True
 
