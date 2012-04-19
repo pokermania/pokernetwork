@@ -178,26 +178,26 @@ class PokerTable:
         """Destroys the table and deletes it from factory.tables.Also informs connected avatars."""
         if self.factory.verbose > 1:
             self.message("destroy table %d" % (self.game.id,))
-
+        #
         # cancel DealTimeout timer
         self.cancelDealTimeout()
-
+        #
         # destroy factory table
         if self.transient:
             self.factory.destroyTable(self.game.id)
-
+        #
         # broadcast TableDestroy to connected avatars
         self.broadcast(PacketPokerTableDestroy(game_id=self.game.id))
-
+        #
         # remove table from avatars
         for avatars in self.avatar_collection.itervalues():
             for avatar in avatars:
                 del avatar.tables[self.game.id]
-
+        #
         # remove table from oberservers
         for observer in self.observers:
             del observer.tables[self.game.id]
-
+        #
         # cut connection from and to factory
         self.factory.deleteTable(self)
         del self.factory
@@ -270,7 +270,6 @@ class PokerTable:
         #
         # If no pockets or board specified (different from empty pockets),
         # ignore and keep the cached values
-        #
         if board != None:
             if board != cache["board"]:
                 packets.append(PacketPokerBoardCards(
@@ -281,8 +280,7 @@ class PokerTable:
 
         if pockets != None:
             #
-            # Send new pockets or pockets that changed
-            #
+            # send new pockets or pockets that changed
             for (serial, pocket) in pockets.iteritems():
                 if serial not in cache["pockets"] or cache["pockets"][serial] != pocket:
                     packets.append(PacketPokerPlayerCards(
@@ -296,17 +294,15 @@ class PokerTable:
 
     def broadcast(self, packets):
         """Broadcast a list of packets to all connected avatars on this table."""
-        if type(packets) is not ListType:
+        if type(packets) is not list:
             packets = [packets]
-
         for packet in packets:
             keys = self.game.serial2player.keys()
             if self.factory.verbose > 1:
                 self.message("broadcast%s %s " % (keys, packet))
             for serial in keys:
                 #
-                # Player may be in game but disconnected.
-                #
+                # player may be in game but disconnected.
                 for avatar in self.avatar_collection.get(serial):
                     avatar.sendPacket(self.private2public(packet, serial))
             for avatar in self.observers:
@@ -316,8 +312,7 @@ class PokerTable:
 
     def private2public(self, packet, serial):
         #
-        # Cards private to each player are shown only to the player
-        #
+        # cards private to each player are shown only to the player
         if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial != serial:
             return PacketPokerPlayerCards(
                 game_id=packet.game_id,
@@ -349,8 +344,7 @@ class PokerTable:
                     players=player_list
                 ))
                 #
-                # This may happen, for instance, if a turn is canceled
-                #
+                # this may happen, for instance, if a turn is canceled
                 if self.previous_dealer == dealer:
                     previous_dealer = -1
                 else:
@@ -434,9 +428,11 @@ class PokerTable:
 
             elif event_type == "ante":
                 serial, amount = event[1:]
-                packets.append(PacketPokerAnte(game_id=game_id,
-                                               serial=serial,
-                                               amount=amount))
+                packets.append(PacketPokerAnte(
+                    game_id=game_id,
+                    serial=serial,
+                    amount=amount
+                ))
 
             elif event_type == "all-in":
                 pass
@@ -665,72 +661,35 @@ class PokerTable:
         cached_board = None
         for event in history:
             event_type = event[0]
-            if event_type in ('all-in', 'wait_for',):
+            if event_type in (
+                'all-in', 'wait_for','blind_request',
+                'muck','finish', 'leave','rebuy'
+            ):
                 pass
-
-            elif event_type == "game":
+            
+            elif event_type == 'game':
                 new_history.append(event)
-
-            elif event_type == "round":
+                
+            elif event_type == 'round':
                 name, board, pockets = event[1:]
-
-                if pockets != cached_pockets:
-                    cached_pockets = pockets
-                else:
-                    pockets = None
-
-                if board != cached_board:
-                    cached_board = board
-                else:
-                    board = None
-
+                pockets = cached_pockets if pockets != cached_pockets else None
+                board = cached_board if board != cached_board else None
                 new_history.append((event_type, name, board, pockets))
-
-            elif event_type == "showdown":
+                
+            elif event_type == 'showdown':
                 board, pockets = event[1:]
-                if pockets != cached_pockets:
-                    cached_pockets = pockets
-                else:
-                    pockets = None
-
-                if board != cached_board:
-                    cached_board = board
-                else:
-                    board = None
-
+                pockets = cached_pockets if pockets != cached_pockets else None
+                board = cached_board if board != cached_board else None
                 new_history.append((event_type, board, pockets))
-
+                
             elif event_type in (
                 'call', 'check', 'fold',
                 'raise', 'canceled', 'position',
                 'blind', 'ante', 'player_list',
-                ):
-                    new_history.append(event)
-
-            elif event_type == "rake":
+                'rake','end','sitOut'
+            ):
                 new_history.append(event)
-
-            elif event_type == "end":
-                new_history.append(event)
-
-            elif event_type == "sitOut":
-                new_history.append(event)
-
-            elif event_type == "muck":
-                pass
-
-            elif event_type == "leave":
-                pass
-
-            elif event_type == "finish":
-                pass
-
-            elif event_type == "rebuy":
-                pass
-
-            elif event_type == "blind_request":
-                pass
-
+                
             else:
                 self.error("compressedHistory: unknown history type %s " % event_type)
 
@@ -990,10 +949,7 @@ class PokerTable:
         if self.isJoined(avatar):
             avatar.join(self, reason=PacketPokerTable.REASON_HAND_REPLAY)
         else:
-            self.joinPlayer(
-                avatar, avatar.getSerial(),
-                reason=PacketPokerTable.REASON_HAND_REPLAY
-            )
+            self.joinPlayer(avatar, avatar.getSerial(), reason = PacketPokerTable.REASON_HAND_REPLAY)
         serial = avatar.getSerial()
         cache = self.createCache()
         for packet in self.history2packets(history, self.game.id, cache):
@@ -1224,15 +1180,16 @@ class PokerTable:
         self.game.close()
 
     def movePlayerFrom(self, serial, to_game_id):
-        player = self.game.getPlayer(serial)
+        game = self.game
+        player = game.getPlayer(serial)
         self.broadcast(PacketPokerTableMove(
-            game_id=self.game.id,
-            serial=serial,
-            to_game_id=to_game_id,
-            seat=player.seat
-        ))
-        sit_out = self.game.isSitOut(serial)
-        self.game.removePlayer(serial)
+            game_id = game.id,
+            serial = serial,
+            to_game_id = to_game_id,
+            seat = player.seat)
+        )
+        sit_out = game.isSitOut(serial)
+        game.removePlayer(serial)
         return sit_out
 
     def possibleObserverLoggedIn(self, avatar, serial):
@@ -1244,26 +1201,25 @@ class PokerTable:
 
     def joinPlayer(self, avatar, serial, reason=""):
         #
-        # Nothing to be done except sending all packets
+        # Nothing to be done except sending all packets.
         # Useful in disconnected mode to resume a session.
-        #
         if self.isJoined(avatar):
             avatar.join(self, reason=reason)
             return True
-
+        #
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
         if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
             self.error("joinPlayer: %d cannot join game %d because the server is full" % (serial, self.game.id))
             avatar.sendPacketVerbose(PacketPokerError(
-                game_id=self.game.id,
-                serial=serial,
-                other_type=PACKET_POKER_TABLE_JOIN,
-                code=PacketPokerTableJoin.FULL,
-                message="This server has too many seated players and observers."
+                game_id = self.game.id,
+                serial = serial,
+                other_type = PACKET_POKER_TABLE_JOIN,
+                code = PacketPokerTableJoin.FULL,
+                message = "This server has too many seated players and observers."
             ))
             return False
-
+        #
         # Next, test to see if joining this table will cause the avatar to
         # exceed the maximum permitted by the server.
         if len(avatar.tables) >= self.factory.simultaneous:
@@ -1274,7 +1230,6 @@ class PokerTable:
         #
         # Player is now an observer, unless he is seated
         # at the table.
-        #
         self.factory.joinedCountIncrease()
         if not self.game.isSeated(avatar.getSerial()):
             self.observers.append(avatar)
@@ -1285,16 +1240,15 @@ class PokerTable:
         # at the table already, presumably because he
         # was previously disconnected from a tournament
         # or an ongoing game.
-        #
         came_back = False
         if self.isSeated(avatar):
             #
             # Sit back immediately, as if we just seated
-            #
             came_back = self.game.comeBack(serial)
         avatar.join(self, reason=reason)
 
         if came_back:
+            #
             # it does not hurt to re-sit the avatar
             # but is needed for other clients to notice
             # the arrival
@@ -1306,26 +1260,19 @@ class PokerTable:
         if not self.isJoined(avatar):
             self.error("player %d can't seat before joining" % serial)
             return False
-        #
-        # Do nothing if already seated
-        #
         if self.isSeated(avatar):
             self.message("player %d is already seated" % serial)
             return False
-
         if not self.game.canAddPlayer(serial):
             self.error("table refuses to seat player %d" % serial)
             return False
-
         if seat != -1 and seat not in self.game.seats_left:
             self.error("table refuses to seat player %d at seat %d" % (serial, seat))
             return False
 
-        amount = 0
-        if self.transient:
-            amount = self.game.buyIn()
-
+        amount = self.game.buyIn() if self.transient else 0
         minimum_amount = (self.currency_serial, self.game.buyIn())
+        
         if not self.factory.seatPlayer(serial, self.game.id, amount, minimum_amount):
             return False
 
@@ -1343,11 +1290,9 @@ class PokerTable:
             self.error("player %d can't sit out before getting a seat" % serial)
             return False
         #
-        # Silently do nothing if already sit out
-        #
+        # silently do nothing if already sit out
         if not self.isSit(avatar):
             return True
-
         avatar.sitOutPlayer(self, serial)
         return True
 
@@ -1390,7 +1335,6 @@ class PokerTable:
         if not self.isSeated(avatar):
             self.error("player %d can't sit before getting a seat" % serial)
             return False
-
         return avatar.sitPlayer(self, serial)
 
     def destroyPlayer(self, avatar, serial):
@@ -1471,7 +1415,6 @@ class PokerTable:
             # an extra 2 seconds to react. The warning says that there only is
             # N seconds left but the server will actually timeout after N + 2
             # seconds.
-            #
             if timeout > 2:
                 self.broadcast(PacketPokerTimeoutWarning(
                     game_id=self.game.id,
@@ -1524,7 +1467,6 @@ class PokerTable:
 
     def cancelPlayerTimers(self):
         info = self.timer_info
-
         timer = info["playerTimeout"]
         if timer != None:
             if timer.active():
@@ -1537,31 +1479,30 @@ class PokerTable:
         self.updatePlayerTimers()
 
     def updateMuckTimer(self, history):
-        for event in history:
-            type = event[0]
-            if type == "muck":
+        for event in reversed(history):
+            if event[0] == "muck":
                 self.cancelMuckTimer()
                 self.timer_info["muckTimeout"] = reactor.callLater(self.muckTimeout, self.muckTimeoutTimer)
+                return
 
     def updatePlayerTimers(self):
         info = self.timer_info
-
         timer = info["playerTimeout"]
         if self.game.isRunning():
             serial = self.game.getSerialInPosition()
             #
-            # Any event in the game resets the player timeout
-            #
-            if (info["playerTimeoutSerial"] != serial or
-                 len(self.game.historyGet()) > self.history_index):
+            # any event in the game resets the player timeout
+            if (
+                info["playerTimeoutSerial"] != serial or 
+                len(self.game.historyGetReduced()) > self.history_index
+            ):
                 if timer != None and timer.active():
                     timer.cancel()
-
                 timer = reactor.callLater(self.playerTimeout / 2, self.playerWarningTimer, serial)
                 info["playerTimeout"] = timer
                 info["playerTimeoutSerial"] = serial
         else:
             #
-            # If the game is not running, cancel the previous timeout
-            #
+            # if the game is not running, cancel the previous timeout
             self.cancelPlayerTimers()
+            
