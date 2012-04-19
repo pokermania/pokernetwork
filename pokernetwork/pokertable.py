@@ -39,6 +39,7 @@ from pokerengine import pokergame, pokertournament
 from pokerengine.pokercards import PokerCards
 
 from pokernetwork.pokerpackets import *  # @UnusedWildImport
+from pokernetwork.lockcheck import LockCheck
 
 from pokernetwork import pokeravatar
 
@@ -137,7 +138,7 @@ class PokerTable:
         self.muckTimeout = int(description.get("muck_timeout", 5))
         self.transient = 'transient' in description
         self.tourney = description.get("tourney", None)
-        
+
         # max_missed_round can be configured on a per table basis, which
         # overrides the server-wide default
         self.max_missed_round = int(description.get("max_missed_round",factory.getMissedRoundMax()))
@@ -161,6 +162,19 @@ class PokerTable:
             "delay": 0,
         }
         self.update_recursion = False
+
+        # Lock Checker
+        self._lock_check = LockCheck(self.playerTimeout * 9, self._warnLock)
+        self.game.registerCallback(lambda game_id, event_type, *args: event_type == 'end' and self._lock_check.stop())
+        self._lock_check_locked = False
+
+    def _warnLock(self):
+        self._lock_check_locked = True
+        game_id = str(self.game.id) if hasattr(self, 'game') else '?'
+        self.error("Table is locked! game_id: %s" % (game_id,))
+
+    def isLocked(self):
+        return self._lock_check_locked
 
     def message(self, string):
         print "[PokerTable %s]: %s" % (self.game.id if hasattr(self, 'game') else "?", string)
@@ -229,6 +243,7 @@ class PokerTable:
             del info["dealTimeout"]
 
     def beginTurn(self):
+        self._lock_check.start()
         self.cancelDealTimeout()
         if self.game.isEndOrNull():
             self.historyReset()
