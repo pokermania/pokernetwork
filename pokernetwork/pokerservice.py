@@ -43,6 +43,8 @@ from traceback import print_exc
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
+import traceback
+from lockcheck import LockChecks
 from twisted.python.runtime import seconds
 from twisted.web import client
 
@@ -229,7 +231,12 @@ class PokerService(service.Service):
         
         chat_filter_filepath = settings.headerGet("/server/badwordschatfilter/@file")
         if chat_filter_filepath:
-            self.setupChatFilter(chat_filter_filepath) 
+            self.setupChatFilter(chat_filter_filepath)
+
+        # tourney lock check
+        self._lock_check_locked = False
+        self._lock_check_running = None
+        self._lock_check_break = None
 
     def setupLadder(self):
         cursor = self.db.cursor()
@@ -353,6 +360,16 @@ class PokerService(service.Service):
         self.poker_auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
         service.Service.startService(self)
         self.down = False
+
+        # Setup Lock Check
+        self._lock_check_running = LockChecks(5 * 60 * 60, self._warnLock)
+        player_timeout = max(map(lambda t: t.playerTimeout, self.tables.itervalues())) if self.tables else 20
+        max_players = max(map(lambda t: t.game.max_players, self.tables.itervalues())) if self.tables else 9
+        len_rounds = (max(map(lambda t: len(t.game.round_info), self.tables.itervalues())) + 3) if self.tables else 8
+        self._lock_check_break = LockChecks(
+            player_timeout * max_players * len_rounds,
+            self._warnLock
+        )
 
     def message(self, string):
         print "PokerService: " + str(string)
@@ -501,6 +518,13 @@ class PokerService(service.Service):
         self.cancelTimer('messages')
         self.cancelTimers('tourney_breaks')
         self.cancelTimers('tourney_delete_route')
+
+        # Shutdown Lock Checks
+        if self._lock_check_break:
+            self._lock_check_break.stopall()
+        if self._lock_check_running:
+            self._lock_check_running.stopall()
+
         self.shutdown_deferred = defer.Deferred()
         reactor.callLater(0.01, self.shutdownCheck)
         return self.shutdown_deferred
@@ -857,14 +881,34 @@ class PokerService(service.Service):
         self.tourneyBreakResume(tourney)
         self.tourneyDeal(tourney)
 
+    def _warnLock(self, tourney_serial):
+        self._lock_check_locked = True
+        self.error("Tournament is locked! tourney_serial: %s" % (tourney_serial,))
+
+    def isLocked(self):
+        return self._lock_check_locked
+
     def tourneyNewState(self, tourney, old_state, new_state):
+        # Lock Check
+        try:
+            if new_state == TOURNAMENT_STATE_RUNNING:
+                self._lock_check_running.start(tourney.serial)
+            elif new_state == TOURNAMENT_STATE_COMPLETE:
+                self._lock_check_running.stop(tourney.serial)
+            elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
+                self._lock_check_break.start(tourney.serial)
+            elif new_state == TOURNAMENT_STATE_BREAK:
+                self._lock_check_break.stop(tourney.serial)
+        except:
+            self.error("Exception on tourneyNewState()\n" + "\n".join(traceback.format_exc()))
+
         cursor = self.db.cursor()
         updates = []
-        
+
         updates.append("state = %s" % self.db.literal(new_state))
         if old_state != TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             updates.append("start_time = %s" % self.db.literal(tourney.start_time))
-            
+
         sql = "UPDATE tourneys SET %s WHERE serial = %s" % (
             ", ".join(updates),
             self.db.literal(tourney.serial)

@@ -164,7 +164,10 @@ class PokerTable:
         self.update_recursion = False
 
         # Lock Checker
-        self._lock_check = LockCheck(self.playerTimeout * 9, self._warnLock)
+        self._lock_check = LockCheck(
+            self.playerTimeout * self.game.max_players * (len(self.game.round_info) + 3),
+            self._warnLock
+        )
         self.game.registerCallback(lambda game_id, event_type, *args: event_type == 'end' and self._lock_check.stop())
         self._lock_check_locked = False
 
@@ -213,6 +216,10 @@ class PokerTable:
         # cut connection from and to factory
         self.factory.deleteTable(self)
         del self.factory
+
+        #
+        # kill lock check timer
+        self._lock_check.stop()
 
     def getName(self, serial):
         """Returns the name to the given serial"""
