@@ -158,23 +158,35 @@ class MockCursorBase:
             cursorSelf.counts[cntType] = 0 
     def close(cursorSelf):
         cursorSelf.closedCount += 1
-    def statementActions(cursorSelf, sql, statment):
+        
+    def statementActions(cursorSelf, sql, statement):
         raise NotImplementedError("MockCursor subclass must implement this")
-    def execute(*args):
-        cursorSelf = args[0]
-        sql = args[1]
-        i=0
-        while '%s' in sql:
-            if isinstance(args[2][i], str):
-                sql = sql.replace('%s', "'%s'" % args[2][i], 1)
-            elif isinstance(args[2][i], int):
-                sql = sql.replace('%s', "%d" % args[2][i], 1)
-            elif isinstance(args[2][i], float):
-                sql = sql.replace('%s', "%f" % args[2][i], 1)
-            else:
-                raise Exception("undefined type: %s" % (type(args[2][i]),))
-            i += 1
+    
+    def statementActionsStatic(cursorSelf,sql,statement,acceptList,acceptListRowCount):
+        for (accept,accept_cnt) in zip(acceptList,acceptListRowCount):
+            if sql[:len(statement)] == accept:
+                cursorSelf.rowcount = accept_cnt
+                return True
+
+    @staticmethod
+    def literal(param):
+        if type(param) == str:
+            return "'%s'" % param.replace(r"\\", "").replace(r"'",r"\'")
+        elif type(param) == float:
+            return "%f" % param
+        elif type(param) == int:
+            return "%d" % param
+        else:
+            raise Exception("undefined type: %s" % param)
+        
+    def execute(cursorSelf,*args):
+        sql = args[0]
+        params = args[1] if len(args)>1 else []
         found = False
+        
+        if '%s' in sql: 
+            sql = sql % tuple(map(MockCursorBase.literal, params))
+        
         for statement in cursorSelf.acceptedStatements:
             if sql[:len(statement)] == statement:
                 cursorSelf.counts[statement] += 1
@@ -192,7 +204,7 @@ class MockCursorBase:
 class MockDatabase:
     def __init__(dbSelf, cursorClass):
         class MockInternalDatabase:
-            def literal(intDBSelf, *args): return args[0]
+            def literal(intDBSelf, *args): return MockCursorBase.literal(args[0])
         dbSelf.db = MockInternalDatabase()
         dbSelf.cursorValue = cursorClass()
     def cursor(dbSelf): return dbSelf.cursorValue
