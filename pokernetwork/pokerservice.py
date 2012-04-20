@@ -613,7 +613,7 @@ class PokerService(service.Service):
         if self.verbose > 2:
             self.message("sessionStart(%d, %s): " % ( serial, ip ))
         cursor = self.db.cursor()
-        sql = "replace into session ( user_serial, started, ip ) values ( %d, %d, '%s')" % ( serial, seconds(), ip )
+        sql = "REPLACE INTO session ( user_serial, started, ip ) VALUES ( %d, %d, '%s')" % ( serial, seconds(), ip )
         cursor.execute(sql)
         if not (1 <= cursor.rowcount <= 2):
             self.error("modified %d rows (expected 1 or 2): %s" % ( cursor.rowcount, sql ))
@@ -624,11 +624,11 @@ class PokerService(service.Service):
         if self.verbose > 2:
             self.message("sessionEnd(%d): " % ( serial ))
         cursor = self.db.cursor()
-        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session where user_serial = %d" % ( seconds(), serial )
+        sql = "INSERT INTO session_history ( user_serial, started, ended, ip ) SELECT user_serial, started, %d, ip FROM session WHERE user_serial = %d" % ( seconds(), serial )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("a) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql ))
-        sql = "delete from session where user_serial = %d" % serial
+        sql = "DELETE FROM session where user_serial = %d" % serial
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("b) modified %d rows (expected 1): %s" % ( cursor.rowcount, sql ))
@@ -1021,13 +1021,12 @@ class PokerService(service.Service):
         #
         bail = tourney.prize_min - ( tourney.buy_in * tourney.registered )
         if bail > 0 and tourney.bailor_serial > 0:
-            sql = ( "UPDATE user2money SET amount = amount - " + str(bail) + " WHERE " +
-                    "       user_serial = " + str(tourney.bailor_serial) + " AND " +
-                    "       currency_serial = " + str(prize_currency) + " AND " +
-                    "       amount >= " + str(bail) )
+            sql = "UPDATE user2money SET amount = amount - %s WHERE user_serial = %s AND currency_serial = %s AND amount >= %s"
+            params = (bail,tourney.bailor_serial,prize_currency,bail)
+            cursor.execute(sql,params)
+            a = cursor._executed
             if self.verbose > 2:
-                self.message("tourneyFinished: bailor pays " + sql)
-            cursor.execute(sql)
+                self.message("tourneyFinished: bailor pays %s" % cursor._executed)
             if cursor.rowcount != 1:
                 self.error("tourneyFinished: bailor failed to provide requested money modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
                 cursor.close()
@@ -1038,16 +1037,17 @@ class PokerService(service.Service):
             serial = winners.pop(0)
             if prize <= 0:
                 continue
-            sql = "UPDATE user2money SET amount = amount + " + str(prize) + " WHERE user_serial = " + str(serial) + " AND currency_serial = " + str(prize_currency)
+            sql = "UPDATE user2money SET amount = amount + %s WHERE user_serial = %s AND currency_serial = %s"
+            params = (prize,serial,prize_currency)
+            cursor.execute(sql,params)
             if self.verbose > 2:
-                self.message("tourneyFinished: " + sql)
-            cursor.execute(sql)
+                self.message("tourneyFinished: %s" % cursor._executed)
             if cursor.rowcount == 0:
-                sql = ( "INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, %d, %d)" %
-                        ( serial, prize_currency, prize ) )
+                sql = "INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%s, %s, %s)"
+                params = (serial, prize_currency, prize)
+                cursor.execute(sql,params)
                 if self.verbose > 2:
-                    self.message("tourneyFinished: " + sql)
-                cursor.execute(sql)
+                    self.message("tourneyFinished: %s" % cursor._executed)
             self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = prize_currency, param3 = prize)
 
         #added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
@@ -1389,13 +1389,14 @@ class PokerService(service.Service):
 
     def tourneyPlayersList(self, tourney_serial):
         if not self.tourneys.has_key(tourney_serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                               code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
-                               message = "Tournament %d does not exist" % tourney_serial)
+            return PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
+                message = "Tournament %d does not exist" % tourney_serial
+            )
         tourney = self.tourneys[tourney_serial]
-        players = map(lambda serial: ( self.getName(serial), -1, 0 ), tourney.players)
-        return PacketPokerTourneyPlayersList(serial = tourney_serial,
-                                             players = players)
+        players = [(self.getName(serial),-1,0) for serial in tourney.players]
+        return PacketPokerTourneyPlayersList(serial = tourney_serial, players = players)
 
     def tourneyStats(self):
         cursor = self.db.cursor()
@@ -1505,18 +1506,21 @@ class PokerService(service.Service):
         currency_serial = tourney.currency_serial or 0
         withdraw = tourney.buy_in + tourney.rake
         if withdraw > 0:
-            sql = ( "UPDATE user2money SET amount = amount - " + str(withdraw) +
-                    " WHERE user_serial = " + str(serial) + " AND " +
-                    "       currency_serial = " + str(currency_serial) + " AND " +
-                    "       amount >= " + str(withdraw)
-                    )
+            sql = \
+                "UPDATE user2money SET amount = amount - %s " \
+                "WHERE user_serial = %s " \
+                "AND currency_serial = %s " \
+                "AND amount >= %s"
+            params = (withdraw,serial,currency_serial,withdraw)
+            cursor.execute(sql,params)
             if self.verbose > 1:
-                self.message("tourneyRegister: %s" % sql)
-            cursor.execute(sql)
+                self.message("tourneyRegister: %s" % cursor._executed)
             if cursor.rowcount == 0:
-                error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                    code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
-                                    message = "Not enough money to enter the tournament %d" % tourney_serial)
+                error = PacketError(
+                    other_type = PACKET_POKER_TOURNEY_REGISTER,
+                    code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
+                    message = "Not enough money to enter the tournament %d" % tourney_serial
+                )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(error)
                 self.error(error)
@@ -1524,25 +1528,30 @@ class PokerService(service.Service):
             if cursor.rowcount != 1:
                 self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
                 for avatar in avatars:
-                    avatar.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                                         code = PacketPokerTourneyRegister.SERVER_ERROR,
-                                                         message = "Server error"))
+                    avatar.sendPacketVerbose(PacketError(
+                        other_type = PACKET_POKER_TOURNEY_REGISTER,
+                        code = PacketPokerTourneyRegister.SERVER_ERROR,
+                        message = "Server error"
+                    ))
                 return False
         self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
         #
         # Register
         #
-        sql = "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, %d, %d)" % ( serial, currency_serial, tourney_serial )
+        sql = "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%s, %s, %s)"
+        params = ( serial, currency_serial, tourney_serial )
+        cursor.execute(sql,params)
         if self.verbose > 4:
-            self.message("tourneyRegister: " + sql)
-        cursor.execute(sql)
+            self.message("tourneyRegister: %s" % cursor._executed)
         if cursor.rowcount != 1:
             self.error("insert %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             cursor.close()
             for avatar in avatars:
-                avatar.sendPacketVerbose(PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                                     code = PacketPokerTourneyRegister.SERVER_ERROR,
-                                                     message = "Server error"))
+                avatar.sendPacketVerbose(PacketError(
+                    other_type = PACKET_POKER_TOURNEY_REGISTER,
+                    code = PacketPokerTourneyRegister.SERVER_ERROR,
+                    message = "Server error"
+                ))
             return False
         cursor.close()
 
@@ -1556,20 +1565,26 @@ class PokerService(service.Service):
         serial = packet.serial
         tourney_serial = packet.game_id
         if not self.tourneys.has_key(tourney_serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
-                               code = PacketPokerTourneyUnregister.DOES_NOT_EXIST,
-                               message = "Tournament %d does not exist" % tourney_serial)
+            return PacketError(
+                other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                code = PacketPokerTourneyUnregister.DOES_NOT_EXIST,
+                message = "Tournament %d does not exist" % tourney_serial
+            )
         tourney = self.tourneys[tourney_serial]
 
         if not tourney.isRegistered(serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
-                               code = PacketPokerTourneyUnregister.NOT_REGISTERED,
-                               message = "Player %d is not registered in tournament %d " % ( serial, tourney_serial ) )
+            return PacketError(
+                other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                code = PacketPokerTourneyUnregister.NOT_REGISTERED,
+                message = "Player %d is not registered in tournament %d " % ( serial, tourney_serial ) 
+            )
 
         if not tourney.canUnregister(serial):
-            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
-                               code = PacketPokerTourneyUnregister.TOO_LATE,
-                               message = "It is too late to unregister player %d from tournament %d " % ( serial, tourney_serial ) )
+            return PacketError(
+                other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                code = PacketPokerTourneyUnregister.TOO_LATE,
+                message = "It is too late to unregister player %d from tournament %d " % ( serial, tourney_serial ) 
+            )
 
         cursor = self.db.cursor()
         #
@@ -1681,7 +1696,7 @@ class PokerService(service.Service):
 
     def loadHand(self, hand_serial):
         cursor = self.db.cursor()
-        sql = ( "select description from hands where serial = " + str(hand_serial) )
+        sql = ( "SELECT description FROM hands WHERE serial = " + str(hand_serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("loadHand(%d) expected one row got %d" % ( hand_serial, cursor.rowcount ))
@@ -1699,24 +1714,23 @@ class PokerService(service.Service):
 
     def saveHand(self, description, hand_serial):
         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0]
+        
         cursor = self.db.cursor()
-
-        sql = ( "update hands set " +
-                " description = %s "
-                " where serial = " + str(hand_serial) )
+        
+        sql = "UPDATE hands SET description = %s WHERE serial = %s"
+        cursor.execute(sql, (str(description),hand_serial))
         if self.verbose > 1:
-            self.message("saveHand: %s" % ( sql % description ))
-        cursor.execute(sql, str(description))
+            self.message("saveHand: %s" % (cursor._executed,))
         if cursor.rowcount != 1 and cursor.rowcount != 0:
             self.error("modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql ))
             cursor.close()
             return
 
-        sql = "insert into user2hand values "
+        sql = "INSERT INTO user2hand VALUES "
         sql += ", ".join(map(lambda player_serial: "(%d, %d)" % ( player_serial, hand_serial ), player_list))
+        cursor.execute(sql)
         if self.verbose > 1:
             self.message("saveHand: %s" % sql)
-        cursor.execute(sql)
         if cursor.rowcount != len(player_list):
             self.error("inserted %d rows (expected exactly %d): %s " % ( cursor.rowcount, len(player_list), sql ))
         cursor.close()
@@ -1990,18 +2004,19 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
 
         if len(temporary_users) > 2:
-            sql = "delete session_history from session_history, users where session_history.user_serial = users.serial and users.name like '" + temporary_users + "%'"
-            cursor.execute(sql)
-            sql = "delete session from session, users where session.user_serial = users.serial and users.name like '" + temporary_users + "%'"
-            cursor.execute(sql)
-            sql = "DELETE FROM user2tourney USING user2tourney, users WHERE users.name like '" + temporary_users + "%' AND users.serial = user2tourney.user_serial"
-            cursor.execute(sql)
-            sql = "delete from users where name like '" + temporary_users + "%'"
-            cursor.execute(sql)
+            params = (temporary_users+"%",)
+            sql = "DELETE session_history FROM session_history, users WHERE session_history.user_serial = users.serial AND users.name LIKE %s"
+            cursor.execute(sql,params)
+            sql = "DELETE session FROM session, users WHERE session.user_serial = users.serial AND users.name LIKE %s"
+            cursor.execute(sql,params)
+            sql = "DELETE user2tourney FROM user2tourney, users WHERE users.name LIKE %s AND users.serial = user2tourney.user_serial"
+            cursor.execute(sql,params)
+            sql = "DELETE FROM users WHERE name LIKE %s"
+            cursor.execute(sql,params)
 
-        sql = "insert into session_history ( user_serial, started, ended, ip ) select user_serial, started, %d, ip from session" % seconds()
-        cursor.execute(sql)
-        sql = "delete from session"
+        sql = "INSERT INTO session_history ( user_serial, started, ended, ip ) SELECT user_serial, started, %s, ip FROM session"
+        cursor.execute(sql,(seconds(),))
+        sql = "DELETE FROM session"
         cursor.execute(sql)
         cursor.close()
 
@@ -2146,7 +2161,7 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         
         cursor.execute(
-            "select locale,name,skin_url,skin_outfit from users where serial = %s",
+            "SELECT locale,name,skin_url,skin_outfit FROM users WHERE serial = %s",
             (serial,)
         )
         if cursor.rowcount != 1:
@@ -2195,28 +2210,33 @@ class PokerService(service.Service):
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)
 
-        sql = ( "SELECT rating,affiliate,email,name FROM users WHERE serial = " + str(serial) )
-        cursor.execute(sql)
+        sql = "SELECT rating,affiliate,email,name FROM users WHERE serial = %s"
+        cursor.execute(sql,(serial,))
         if cursor.rowcount != 1:
             self.error("getUserInfo(%d) expected one row got %d" % ( serial, cursor.rowcount ))
             return PacketPokerUserInfo(serial = serial)
         row = cursor.fetchone()
         if row['email'] == None: row['email'] = ""
 
-        packet = PacketPokerUserInfo(serial = serial,
-                                     name = row['name'],
-                                     email = row['email'],
-                                     rating = row['rating'],
-                                     affiliate = row['affiliate'])
-        sql = ( " SELECT user2money.currency_serial,user2money.amount,user2money.points,CAST(SUM(user2table.bet) + SUM(user2table.money) AS UNSIGNED) AS in_game "
-                "        FROM user2money LEFT JOIN (pokertables,user2table) "
-                "        ON (user2table.user_serial = user2money.user_serial  AND "
-                "            user2table.table_serial = pokertables.serial AND  "
-                "            user2money.currency_serial = pokertables.currency_serial)  "
-                "        WHERE user2money.user_serial = " + str(serial) + " GROUP BY user2money.currency_serial " )
-        if self.verbose:
-            self.message(sql)
-        cursor.execute(sql)
+        packet = PacketPokerUserInfo(
+            serial = serial,
+            name = row['name'],
+            email = row['email'],
+            rating = row['rating'],
+            affiliate = row['affiliate']
+        )
+        sql = \
+            "SELECT user2money.currency_serial,user2money.amount,user2money.points,CAST(SUM(user2table.bet) + SUM(user2table.money) AS UNSIGNED) AS in_game " \
+            "FROM user2money " \
+            "LEFT JOIN (pokertables,user2table) ON ( " \
+                "user2table.user_serial = user2money.user_serial " \
+                "AND user2table.table_serial = pokertables.serial " \
+                "AND user2money.currency_serial = pokertables.currency_serial " \
+            ") " \
+            "WHERE user2money.user_serial = %s GROUP BY user2money.currency_serial"
+        cursor.execute(sql,(serial,))
+        if self.verbose >= 1:
+            self.message("getUserInfo: %s" % cursor._executed)
         for row in cursor:
             if not row['in_game']: row['in_game'] = 0
             if not row['points']: row['points'] = 0
@@ -2228,15 +2248,17 @@ class PokerService(service.Service):
     def getPersonalInfo(self, serial):
         user_info = self.getUserInfo(serial)
         self.message("getPersonalInfo %s" % str(user_info))
-        packet = PacketPokerPersonalInfo(serial = user_info.serial,
-                                         name = user_info.name,
-                                         email = user_info.email,
-                                         rating = user_info.rating,
-                                         affiliate = user_info.affiliate,
-                                         money = user_info.money)
+        packet = PacketPokerPersonalInfo(
+            serial = user_info.serial,
+            name = user_info.name,
+            email = user_info.email,
+            rating = user_info.rating,
+            affiliate = user_info.affiliate,
+            money = user_info.money
+        )
         cursor = self.db.cursor()
-        sql = ( "SELECT firstname,lastname,addr_street,addr_street2,addr_zip,addr_town,addr_state,addr_country,phone,gender,birthdate FROM users_private WHERE serial = " + str(serial) )
-        cursor.execute(sql)
+        sql = "SELECT firstname,lastname,addr_street,addr_street2,addr_zip,addr_town,addr_state,addr_country,phone,gender,birthdate FROM users_private WHERE serial = %s"
+        cursor.execute(sql,(serial,))
         if cursor.rowcount != 1:
             self.error("getPersonalInfo(%d) expected one row got %d" % ( serial, cursor.rowcount ))
             return PacketPokerPersonalInfo(serial = serial)
@@ -2249,22 +2271,19 @@ class PokerService(service.Service):
 
     def setPersonalInfo(self, personal_info):
         cursor = self.db.cursor()
-        sql = ( "UPDATE users_private SET "
-                " firstname = '" + personal_info.firstname + "', "
-                " lastname = '" + personal_info.lastname + "', "
-                " addr_street = '" + personal_info.addr_street + "', "
-                " addr_street2 = '" + personal_info.addr_street2 + "', "
-                " addr_zip = '" + personal_info.addr_zip + "', "
-                " addr_town = '" + personal_info.addr_town + "', "
-                " addr_state = '" + personal_info.addr_state + "', "
-                " addr_country = '" + personal_info.addr_country + "', "
-                " phone = '" + personal_info.phone + "', "
-                " gender = '" + personal_info.gender + "', "
-                " birthdate = '" + personal_info.birthdate + "' "
-                " WHERE serial = " + str(personal_info.serial) )
+        sql = \
+            "UPDATE users_private " \
+            "SET firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, " \
+                "addr_town = %s, addr_state = %s, addr_country = %s, phone = %s, gender = %s, birthdate = %s " \
+            "WHERE serial = %s"
+        params = (
+            personal_info.firstname,personal_info.lastnamepersonal_info.addr_street,personal_info.addr_street2,personal_info.addr_zip,
+            personal_info.addr_town,personal_info.addr_state,personal_info.addr_country,personal_info.phone,personal_info.gender,personal_info.birthdate,
+            personal_info.serial
+        )
+        cursor.execute(sql,params)
         if self.verbose > 1:
-            self.message("setPersonalInfo: %s" % sql)
-        cursor.execute(sql)
+            self.message("setPersonalInfo: %s" % cursor._executed)
         if cursor.rowcount != 1 and cursor.rowcount != 0:
             self.error("setPersonalInfo: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql ))
             return False
@@ -2277,9 +2296,11 @@ class PokerService(service.Service):
         #
         status = checkName(packet.name)
         if not status[0]:
-            return PacketError(code = status[1],
-                               message = status[2],
-                               other_type = packet.type)
+            return PacketError(
+                code = status[1],
+                message = status[2],
+                other_type = packet.type
+            )
         #
         # Look for user
         #
@@ -2313,73 +2334,73 @@ class PokerService(service.Service):
             #
             # User does not exists, create it
             #
-            sql = "INSERT INTO users (created, name, password, email, affiliate) values (%d, '%s', '%s', '%s', '%d')" % (seconds(), packet.name, packet.password, packet.email, packet.affiliate)
-            cursor.execute(sql)
+            sql = "INSERT INTO users (created, name, password, email, affiliate) values (%s, %s, %s, %s, %s)"
+            params = (seconds(), packet.name, packet.password, packet.email, str(packet.affiliate))
+            cursor.execute(sql,params)
             if cursor.rowcount != 1:
                 #
                 # Impossible except for a sudden database corruption, because of the
                 # above SQL statements
                 #
-                self.error("setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
-                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
-                                   message = "inserted %d rows (expected 1)" % cursor.rowcount,
-                                   other_type = packet.type)
+                self.error("setAccount: insert %d rows (expected 1): %s " % ( cursor.rowcount, cursor._executed ))
+                return PacketError(
+                    code = PacketPokerSetAccount.SERVER_ERROR,
+                    message = "inserted %d rows (expected 1)" % cursor.rowcount,
+                    other_type = packet.type
+                )
             #
-            # Accomodate for MySQLdb versions < 1.1
-            #
-            if hasattr(cursor, "lastrowid"):
-                packet.serial = cursor.lastrowid
-            else:
-                packet.serial = cursor.insert_id()
-            cursor.execute("INSERT INTO users_private (serial) VALUES ('%d')" % packet.serial)
+            packet.serial = cursor.lastrowid
+            cursor.execute("INSERT INTO users_private (serial) VALUES (%s)", (packet.serial,))
         else:
             #
             # User exists, update name, password and email
             #
             (serial,) = cursor.fetchone()
             if serial != packet.serial:
-                return PacketError(code = PacketPokerSetAccount.NAME_ALREADY_EXISTS,
-                                   message = "user name %s already exists" % packet.name,
-                                   other_type = packet.type)
+                return PacketError(
+                    code = PacketPokerSetAccount.NAME_ALREADY_EXISTS,
+                    message = "user name %s already exists" % packet.name,
+                    other_type = packet.type
+                )
             cursor.execute("SELECT serial FROM users WHERE email = %s and serial != %s", ( packet.email, serial ))
             numrows = int(cursor.rowcount)
             if numrows > 0:
-                return PacketError(code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
-                                   message = "there already is another account with the email %s" % packet.email,
-                                   other_type = packet.type)
-            set_password = packet.password and ", password = '" + packet.password + "' " or ""
-            sql = ( "UPDATE users SET "
-                    " name = '" + packet.name + "', "
-                    " email = '" + packet.email + "' " +
-                    set_password +
-                    " WHERE serial = " + str(packet.serial) )
+                return PacketError(
+                    code = PacketPokerSetAccount.EMAIL_ALREADY_EXISTS,
+                    message = "there already is another account with the email %s" % packet.email,
+                    other_type = packet.type
+                )
+            set_password = ", password = %s " % self.db.literal(packet.password) if packet.password else ""
+            sql = "UPDATE users SET name = %s, email = %s " + set_password + "WHERE serial = %s"
+            params = (packet.name,packet.email,packet.serial)
+            cursor.execute(sql,params)
             if self.verbose > 1:
                 self.message("setAccount: %s" % sql)
-            cursor.execute(sql)
             if cursor.rowcount != 1 and cursor.rowcount != 0:
                 self.error("setAccount: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql ))
-                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
-                                   message = "modified %d rows (expected 1 or 0)" % cursor.rowcount,
-                                   other_type = packet.type)
+                return PacketError(
+                    code = PacketPokerSetAccount.SERVER_ERROR,
+                    message = "modified %d rows (expected 1 or 0)" % cursor.rowcount,
+                    other_type = packet.type
+                )
         #
         # Set personal information
         #
         if not self.setPersonalInfo(packet):
-                return PacketError(code = PacketPokerSetAccount.SERVER_ERROR,
-                                   message = "unable to set personal information",
-                                   other_type = packet.type)
+                return PacketError(
+                    code = PacketPokerSetAccount.SERVER_ERROR,
+                    message = "unable to set personal information",
+                    other_type = packet.type
+                )
         return self.getPersonalInfo(packet.serial)
 
     def setPlayerInfo(self, player_info):
         cursor = self.db.cursor()
-        sql = ( "update users set "
-                " name = '" + player_info.name + "', "
-                " skin_url = '" + player_info.url + "', "
-                " skin_outfit = '" + player_info.outfit + "' "
-                " where serial = " + str(player_info.serial) )
+        sql = "UPDATE users SET name = %s, skin_url = %s, skin_outfit = %s WHERE serial = %s" 
+        params = (player_info.name,player_info.url,player_info.outfit,player_info.serial)
+        cursor.execute(sql,params)
         if self.verbose > 1:
-            self.message("setPlayerInfo: %s" % sql)
-        cursor.execute(sql)
+            self.message("setPlayerInfo: %s" % cursor._executed)
         if cursor.rowcount != 1 and cursor.rowcount != 0:
             self.error("setPlayerInfo: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql ))
             return False
@@ -2393,8 +2414,7 @@ class PokerService(service.Service):
             return placeholder
 
         cursor = self.db.cursor()
-        sql = ( "select skin_image,skin_image_type from users where serial = " + str(serial) )
-        cursor.execute(sql)
+        cursor.execute("SELECT skin_image,skin_image_type from users where serial = %s", (serial,))
         if cursor.rowcount != 1:
             self.error("getPlayerImage(%d) expected one row got %d" % ( serial, cursor.rowcount ))
             return placeholder
@@ -2402,19 +2422,19 @@ class PokerService(service.Service):
         if skin_image == None:
             skin_image = ""
         cursor.close()
-        return PacketPokerPlayerImage(serial = serial,
-                                      image = skin_image,
-                                      image_type = skin_image_type)
+        return PacketPokerPlayerImage(
+            serial = serial,
+            image = skin_image,
+            image_type = skin_image_type
+        )
 
     def setPlayerImage(self, player_image):
         cursor = self.db.cursor()
-        sql = ( "update users set "
-                " skin_image = '" + player_image.image + "', "
-                " skin_image_type = '" + player_image.image_type + "' "
-                " where serial = " + str(player_image.serial) )
+        sql = "UPDATE users SET skin_image = %s, skin_image_type = %s WHERE serial = %s" 
+        params = (player_image.image,player_image.image_type,player_image.serial)
+        cursor.execute(sql,params)
         if self.verbose > 1:
-            self.message("setPlayerInfo: %s" % sql)
-        cursor.execute(sql)
+            self.message("setPlayerInfo: %s" % cursor._executed)
         if cursor.rowcount != 1 and cursor.rowcount != 0:
             self.error("setPlayerImage: modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql ))
             return False
@@ -2425,7 +2445,7 @@ class PokerService(service.Service):
             return "anonymous"
 
         cursor = self.db.cursor()
-        sql = ( "select name from users where serial = " + str(serial) )
+        sql = ( "SELECT name FROM users WHERE serial = " + str(serial) )
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.error("getName(%d) expected one row got %d" % ( serial, cursor.rowcount ))
@@ -2480,7 +2500,7 @@ class PokerService(service.Service):
             cursor = self.db.cursor()
             cursor.execute(
                 "INSERT INTO user2table ( user_serial, table_serial, money) " \
-                "VALUES (%s,%s,%s)",
+                "VALUES (%s, %s, %s)",
                 (serial,table_id,amount)
             )
             if self.verbose > 1:
@@ -2538,25 +2558,26 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         if currency_serial != '':
-            sql = ( "UPDATE user2money,user2table,pokertables SET " +
-                    " user2money.amount = user2money.amount + user2table.money + user2table.bet " +
-                    " WHERE user2money.user_serial = user2table.user_serial AND " +
-                    "       user2money.currency_serial = pokertables.currency_serial AND " +
-                    "       pokertables.serial = " + str(table_id) + " AND " +
-                    "       user2table.table_serial = " + str(table_id) + " AND " +
-                    "       user2table.user_serial = " + str(serial) )
+            sql = \
+                "UPDATE user2money,user2table,pokertables " \
+                "SET user2money.amount = user2money.amount + user2table.money + user2table.bet " \
+                "WHERE user2money.user_serial = user2table.user_serial " \
+                "AND user2money.currency_serial = pokertables.currency_serial " \
+                "AND pokertables.serial = %s " \
+                "AND user2table.table_serial = %s " \
+                "AND user2table.user_serial = %s" 
+            params = (table_id,table_id,serial)
+            cursor.execute(sql,params)
             if self.verbose > 1:
-                self.message("leavePlayer %s" % sql)
-            cursor.execute(sql)
+                self.message("leavePlayer %s" % cursor._executed)
             if cursor.rowcount > 1:
                 self.error("modified %d rows (expected 0 or 1): %s " % ( cursor.rowcount, sql ))
                 status = False
-        sql = ( "DELETE from user2table "
-                " WHERE user_serial = " + str(serial) + " AND "
-                "       table_serial = " + str(table_id) )
+        
+        sql = "DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s"
+        cursor.execute(sql,(serial,table_id))
         if self.verbose > 1:
-            self.message("leavePlayer %s" % sql)
-        cursor.execute(sql)
+            self.message("leavePlayer %s" % cursor._executed)
         if cursor.rowcount != 1:
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             status = False
@@ -2569,14 +2590,11 @@ class PokerService(service.Service):
             return True
         status = True
         cursor = self.db.cursor()
-        sql = ( "UPDATE user2money SET "
-                " rake = rake + " + str(amount) + ", "
-                " points = points + " + str(amount) + " "
-                " WHERE user_serial = " + str(serial) + " AND "
-                "       currency_serial = " + str(currency_serial) )
+        sql = "UPDATE user2money SET rake = rake + %s, points = points + %s WHERE user_serial = %s AND currency_serial = %s"
+        params = (amount,amount,serial,currency_serial)
+        cursor.execute(sql,params)
         if self.verbose > 1:
-            self.message("updatePlayerRake: %s" % sql)
-        cursor.execute(sql)
+            self.message("updatePlayerRake: %s" % cursor._executed)
         if cursor.rowcount != 1:
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             status = False
@@ -2588,14 +2606,11 @@ class PokerService(service.Service):
             return True
         status = True
         cursor = self.db.cursor()
-        sql = ( "UPDATE user2table SET "
-                " money = money + " + str(amount) + ", "
-                " bet = bet - " + str(amount) +
-                " WHERE user_serial = " + str(serial) + " AND "
-                "       table_serial = " + str(table_id) )
+        sql = "UPDATE user2table SET money = money + %s, bet = bet - %s WHERE user_serial = %s AND table_serial = %s"
+        params = (amount,amount,serial,table_id)
+        cursor.execute(sql,params)
         if self.verbose > 1:
-            self.message("updatePlayerMoney: %s" % sql)
-        cursor.execute(sql)
+            self.message("updatePlayerMoney: %s" % cursor._executed)
         if cursor.rowcount != 1:
             self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             status = False
@@ -2625,35 +2640,31 @@ class PokerService(service.Service):
 
     def updateTableStats(self, game, observers, waiting):
         cursor = self.db.cursor()
-        cursor.execute("UPDATE pokertables SET " +
-                       " average_pot = %s, " +
-                       " hands_per_hour = %s, " +
-                       " percent_flop = %s, " +
-                       " players = %s, " +
-                       " observers = %s, " +
-                       " waiting = %s " +
-                       " WHERE serial = %s ", (
-            game.stats['average_pot'],
-            game.stats['hands_per_hour'],
-            game.stats['percent_flop'],
-            game.allCount(),
-            observers,
-            waiting,
-            game.id
-            ))
+        cursor.execute(
+            "UPDATE pokertables " \
+            "SET average_pot = %s, hands_per_hour = %s, percent_flop = %s, players = %s, observers = %s, waiting = %s " \
+            "WHERE serial = %s ", (
+                game.stats['average_pot'],
+                game.stats['hands_per_hour'],
+                game.stats['percent_flop'],
+                game.allCount(),
+                observers,
+                waiting,
+                game.id
+            )
+        )
         cursor.close()
 
     def tableMoneyAndBet(self, table_id):
         cursor = self.db.cursor()
-        sql = ( "SELECT sum(money), sum(bet) FROM user2table WHERE table_serial = " + str(table_id) )
-        cursor.execute(sql)
+        cursor.execute("SELECT sum(money), sum(bet) FROM user2table WHERE table_serial = %s",(table_id,))
         (money, bet) = cursor.fetchone()
         cursor.close()
         if not money: money = 0
         elif type(money) == StringType: money = int(money)
         if not bet: bet = 0
         elif type(bet) == StringType: bet = int(bet)
-        return  (money, bet)
+        return (money, bet)
 
     def destroyTable(self, table_id):
 
@@ -2668,11 +2679,9 @@ class PokerService(service.Service):
 #         # END HACK CHECK
 
         cursor = self.db.cursor()
-        sql = ( "delete from user2table "
-                "  where table_serial = " + str(table_id) )
+        cursor.execute("DELETE FROM user2table WHERE table_serial = %s", (table_id,))
         if self.verbose > 1:
-            self.message("destroy: %s" % sql)
-        cursor.execute(sql)
+            self.message("destroy: %s" % cursor._executed)
         cursor.execute("DELETE FROM route WHERE table_serial = %s", table_id)
 
 #     def setRating(self, winners, serials):
@@ -2805,12 +2814,11 @@ class PokerService(service.Service):
         return bestTable
 
     def createTable(self, owner, description):
-        tourney_serial = 0
-        if description.has_key('tourney'):
-            tourney_serial = description['tourney'].serial
+        tourney_serial = description['tourney'].serial if description.has_key('tourney') else 0
 
         cursor = self.db.cursor()
-        sql = "INSERT pokertables ( resthost_serial, seats, player_timeout, muck_timeout, currency_serial, name, variant, betting_structure, skin, tourney_serial ) VALUES ( %s, %s, %s, %s, %s, %s,  %s, %s, %s, %s ) " % self.db.literal((
+        sql = "INSERT pokertables ( resthost_serial, seats, player_timeout, muck_timeout, currency_serial, name, variant, betting_structure, skin, tourney_serial ) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+        params = (
             self.resthost_serial,
             description['seats'],
             description.get('player_timeout', 60),
@@ -2820,10 +2828,11 @@ class PokerService(service.Service):
             description['variant'],
             description['betting_structure'],
             description.get('skin', 'default'),
-            tourney_serial ))
+            tourney_serial
+        )
+        cursor.execute(sql,params)
         if self.verbose > 1:
-            self.message("createTable: %s" % sql)
-        cursor.execute(sql)
+            self.message("createTable: %s" % cursor._executed)
         if cursor.rowcount != 1:
             self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
             # FIXME: sr #2273 notes that this should return None from right here if rowcount == 0
@@ -2877,7 +2886,7 @@ class PokerService(service.Service):
             self.message("table %s/%d removed from server" % ( table.game.name, table.game.id ))
         del self.tables[table.game.id]
         cursor = self.db.cursor()
-        sql = ( "delete from  pokertables where serial = " + str(table.game.id) )
+        sql = ( "DELETE FROM pokertables where serial = " + str(table.game.id) )
         if self.verbose > 1:
             self.message("deleteTable: %s" % sql)
         cursor.execute(sql)
