@@ -1543,7 +1543,7 @@ class PokerService(service.Service):
         if self.verbose > 4:
             self.message("tourneyRegister: %s" % cursor._executed)
         if cursor.rowcount != 1:
-            self.error("insert %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+            self.error("insert %d rows (expected 1): %s " % ( cursor.rowcount, cursor._executed ))
             cursor.close()
             for avatar in avatars:
                 avatar.sendPacketVerbose(PacketError(
@@ -1611,16 +1611,17 @@ class PokerService(service.Service):
         #
         # Unregister
         #
-        sql = "DELETE FROM user2tourney WHERE user_serial = %d AND tourney_serial = %d" % ( serial, tourney_serial )
+        cursor.execute("DELETE FROM user2tourney WHERE user_serial = %s AND tourney_serial = %s",(serial,tourney_serial))
         if self.verbose > 4:
-            self.message("tourneyUnregister: " + sql)
-        cursor.execute(sql)
+            self.message("tourneyUnregister: %s" % cursor._executed)
         if cursor.rowcount != 1:
-            self.error("delete no rows (expected 1): %s " % sql)
+            self.error("delete no rows (expected 1): %s " % cursor._executed)
             cursor.close()
-            return PacketError(other_type = PACKET_POKER_TOURNEY_UNREGISTER,
-                               code = PacketPokerTourneyUnregister.SERVER_ERROR,
-                               message = "Server error : user_serial = %d and tourney_serial = %d was not in user2tourney" % ( serial, tourney_serial ))
+            return PacketError(
+                other_type = PACKET_POKER_TOURNEY_UNREGISTER,
+                code = PacketPokerTourneyUnregister.SERVER_ERROR,
+                message = "Server error : user_serial = %d and tourney_serial = %d was not in user2tourney" % ( serial, tourney_serial )
+            )
         cursor.close()
 
         tourney.unregister(serial)
@@ -1629,23 +1630,19 @@ class PokerService(service.Service):
 
     def tourneyCancel(self, tourney):
         if self.verbose > 1:
-            self.message("tourneyCancel " + str(tourney.players))
+            self.message("tourneyCancel: %s" % (tourney.players,))
         for serial in tourney.players:
-            packet = self.tourneyUnregister(PacketPokerTourneyUnregister(game_id = tourney.serial,
-                                                                         serial = serial))
+            packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
+                game_id = tourney.serial,
+                serial = serial)
+            )
             if packet.type == PACKET_ERROR:
-                self.message("tourneyCancel: " + str(packet))
+                self.message("tourneyCancel: %s" % (packet,))
 
     def getHandSerial(self):
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO hands (description) VALUES ('[]')")
-        #
-        # Accomodate with MySQLdb versions < 1.1
-        #
-        if hasattr(cursor, "lastrowid"):
-            serial = cursor.lastrowid
-        else:
-            serial = cursor.insert_id()
+        serial = cursor.lastrowid
         cursor.close()
         return int(serial)
 
@@ -1653,20 +1650,24 @@ class PokerService(service.Service):
         history = self.loadHand(hand_serial)
 
         if not history:
-            return PacketPokerError(game_id = hand_serial,
-                                    serial = serial,
-                                    other_type = PACKET_POKER_HAND_HISTORY,
-                                    code = PacketPokerHandHistory.NOT_FOUND,
-                                    message = "Hand %d was not found in history of player %d" % ( hand_serial, serial ) )
+            return PacketPokerError(
+                game_id = hand_serial,
+                serial = serial,
+                other_type = PACKET_POKER_HAND_HISTORY,
+                code = PacketPokerHandHistory.NOT_FOUND,
+                message = "Hand %d was not found in history of player %d" % ( hand_serial, serial ) 
+            )
 
         (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = history[0]
 
         if serial not in player_list:
-            return PacketPokerError(game_id = hand_serial,
-                                    serial = serial,
-                                    other_type = PACKET_POKER_HAND_HISTORY,
-                                    code = PacketPokerHandHistory.FORBIDDEN,
-                                    message = "Player %d did not participate in hand %d" % ( serial, hand_serial ) )
+            return PacketPokerError(
+                game_id = hand_serial,
+                serial = serial,
+                other_type = PACKET_POKER_HAND_HISTORY,
+                code = PacketPokerHandHistory.FORBIDDEN,
+                message = "Player %d did not participate in hand %d" % ( serial, hand_serial ) 
+            )
 
         serial2name = {}
         for player_serial in player_list:
@@ -1688,10 +1689,12 @@ class PokerService(service.Service):
                         if player_serial != serial:
                             pocket.loseNotVisible()
 
-        return PacketPokerHandHistory(game_id = hand_serial,
-                                      serial = serial,
-                                      history = str(history),
-                                      serial2name = str(serial2name))
+        return PacketPokerHandHistory(
+            game_id = hand_serial,
+            serial = serial,
+            history = str(history),
+            serial2name = str(serial2name)
+        )
 
     def loadHand(self, hand_serial):
         cursor = self.db.cursor()
@@ -2276,8 +2279,8 @@ class PokerService(service.Service):
                 "addr_town = %s, addr_state = %s, addr_country = %s, phone = %s, gender = %s, birthdate = %s " \
             "WHERE serial = %s"
         params = (
-            personal_info.firstname,personal_info.lastnamepersonal_info.addr_street,personal_info.addr_street2,personal_info.addr_zip,
-            personal_info.addr_town,personal_info.addr_state,personal_info.addr_country,personal_info.phone,personal_info.gender,personal_info.birthdate,
+            personal_info.firstname, personal_info.lastname, personal_info.addr_street, personal_info.addr_street2, personal_info.addr_zip,
+            personal_info.addr_town, personal_info.addr_state, personal_info.addr_country, personal_info.phone, personal_info.gender, personal_info.birthdate,
             personal_info.serial
         )
         cursor.execute(sql,params)
