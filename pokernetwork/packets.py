@@ -23,6 +23,7 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 from struct import pack, unpack, calcsize
+from copy import deepcopy
 import simplejson
 
 PacketFactory = {}
@@ -52,7 +53,12 @@ class Packet:
             if field == 'type':
                 self.type = self.type # type is now in __dict__, for serialization 
             if not self.__dict__.has_key(field):
-                self.__dict__[field] = kwargs.get(field, default)
+                if kwargs.has_key(field):
+                    self.__dict__[field] = kwargs[field]
+                elif type(default) in (str,int,long,float):
+                    self.__dict__[field] = default
+                else:
+                    self.__dict__[field] = deepcopy(default)
         self.length = self.infoCalcsize()
         return None
             
