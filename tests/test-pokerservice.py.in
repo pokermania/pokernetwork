@@ -86,20 +86,6 @@ TABLE1 = 1
 TABLE2 = 2
 TABLE3 = 3
 
-# Note that we use the locale fr_FR.ISO-8859-1 here for testing.  This must be
-# a valid locale on the system!  Important tests are skipped otherwise!!!
-
-localLocale = locale.getlocale(locale.LC_ALL)
-FRENCH_LOCALE_MISSING = False
-MESSAGE_WHEN_FRENCH_LOCALE_MISSING = "WARNING: Locale fr_FR.ISO-8859-1 missing, so certain tests will be SKIPPED and coverage will be INCOMPLETE! FAIL!  fail!"
-try:
-    locale.setlocale(locale.LC_ALL, "fr_FR.ISO-8859-1")
-except locale.Error, le:
-    print MESSAGE_WHEN_FRENCH_LOCALE_MISSING
-    FRENCH_LOCALE_MISSING = True
-
-locale.setlocale(locale.LC_ALL, localLocale)
-
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
@@ -194,6 +180,7 @@ class MockCursorBase:
                 found = True
                 break
         cursorSelf.row = (None,)
+        cursorSelf.lastrowid = None
         cursorSelf.testObject.failUnless(found, "Unknown sql statement: " + sql)
         cursorSelf.statementActions(sql, statement)
         cursorSelf._executed = sql
@@ -1310,16 +1297,17 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         locale.setlocale = saveLocale
 
     def test00_05_configValues(self):
-        self.configValues(settings_xml.replace('delays',
-                                               'delays extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="60"'), 1000, delaysValue=60)
+        self.configValues(
+            settings_xml.replace('delays','delays extra_wait_tourney_break="60" extra_wait_tourney_start="60" extra_wait_tourney_finish="60"'), 
+            1000, delaysValue=60
+        )
 
     def test00_12_badEncoding(self):
         """test00_12_badEncoding
         Check the case where an error occurs due to an encoding requested
         for a config language value has an unknown encoding."""
 
-        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>',
-                                                '<language value="fr_FR.MAGIC-PIXIE-DUST"/>')
+        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>','<language value="fr_FR.MAGIC-PIXIE-DUST"/>')
 
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
@@ -1340,8 +1328,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         Check the case where an error occurs due to an encoding requested
         for a config language value has an unknown encoding."""
 
-        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>',
-                                                '<language value=".MAGIC-PIXIE-DUST"/>')
+        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>','<language value=".MAGIC-PIXIE-DUST"/>')
 
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
@@ -2294,9 +2281,8 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.service.avatar_collection.add(self.user1_serial, client1)
         self.service.spawnTourney(schedule)
         clear_all_messages()
-        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,
-                                                                game_id = tourney_serial))
-        self.failUnless(search_output('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND        currency_serial = 1 AND        amount >= 300000'), "UPDATE user2money expected verbose output not found")
+        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial,game_id = tourney_serial))
+        self.failUnless(search_output('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND currency_serial = 1 AND amount >= 300000'), "UPDATE user2money expected verbose output not found")
         self.failUnless(search_output('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (4, 1, 1)'), "INSERT INTO user2tourney")
         self.assertEquals(len(client1.packets), 1)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
@@ -2304,8 +2290,8 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEquals(client1.packets[0].game_id, tourney_serial)
         client1.packets = []
         self.assertEquals(client1.tableJoined, None)
-        self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
-        self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
+        self.service.db.db.query("INSERT INTO user2table VALUES (%s, %s, %s, 0)" % (self.user1_serial,table_serial,table_money))
+        self.service.db.db.query("UPDATE user2tourney SET table_serial = %s" % (table_serial,))
         self.service.tourneys[tourney_serial].can_register = False
         clear_all_messages()
         packet = self.service.tourneyManager(tourney_serial)
@@ -2313,10 +2299,10 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEqual(tourney_serial, packet.tourney['serial'])
         self.assertNotEqual(None, packet.tourney['rank2prize'])
         self.assertEqual(1, packet.tourney['registered'])
-        self.assertEqual({'4' : {'rank': -1,
-                                 'table_serial': table_serial,
-                                 'name' : 'user1',
-                                 'money': table_money}}, packet.user2properties)
+        self.assertEqual(
+            {'4': {'rank': -1, 'table_serial': table_serial, 'name': 'user1', 'money': table_money}}, 
+            packet.user2properties
+        )
     # ----------------------------------------------------------------
     def test02_no_money_no_table(self):
         self.service.startService()
@@ -4258,10 +4244,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(msgs[0].find("tourneyNewState: UPDATE tourneys SET state"), 0)
         self.assertEquals(msgs[1], "*ERROR* modified 8 rows (expected 1): UPDATE tourneys SET state = 'running', start_time = 5 WHERE serial = 19 ")
          
-        self.assertEquals(
-            self.service.db.cursorValue.counts,
-            {'UPDATE tourneys SET': 1}
-        )
+        self.assertEquals(self.service.db.cursorValue.counts, {'UPDATE tourneys SET': 1})
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test14_tourneyFinished_prizeNegative(self):
@@ -4733,43 +4716,19 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def canRegister(mtSelf, serial):
                 self.assertEquals(serial, 194)
                 return True
-        class MockCursor:
+            
+        acceptList = [ "UPDATE user2money SET amount = amount"]
+        acceptListRowCount = [0]
+        class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
-                cursorSelf.rowcount = 0
-                cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ "UPDATE user2money SET amount = amount"]
-                cursorSelf.row = ()
-                for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                found = False
-                for str in cursorSelf.acceptedStatements:
-                    if sql[:len(str)] == str:
-                        cursorSelf.counts[str] += 1
-                        cursorSelf.rowcount = 0
-                        found = True
-                        break
-                cursorSelf.rowcount = 0
-                cursorSelf.row = (None,)
-                self.failUnless(found)
-                return cursorSelf.rowcount
-            def fetchone(cursorSelf): return cursorSelf.row
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args): return args[0]
-                dbSelf.db = MockInternalDatabase()
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf): return dbSelf.cursorValue
-            def literal(dbSelf, val): return dbSelf.db.literal(val)
-
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
+            def statementActions(cursorSelf, sql, statement):
+                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
+                
         self.service = pokerservice.PokerService(self.settings)
 
         oldDb = self.service.db
-        self.service.db = MockDatabase()
+        self.service.db = MockDatabase(MockCursor)
                 
         client = MockClient()
         tourney = MockTourney()
@@ -4813,43 +4772,19 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def canRegister(mtSelf, serial):
                 self.assertEquals(serial, 194)
                 return True
-        class MockCursor:
+
+        acceptList = [ "UPDATE user2money SET amount = amount"]
+        acceptListRowCount = [2]
+        class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
-                cursorSelf.rowcount = 0
-                cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ "UPDATE user2money SET amount = amount"]
-                cursorSelf.row = ()
-                for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                found = False
-                for str in cursorSelf.acceptedStatements:
-                    if sql[:len(str)] == str:
-                        cursorSelf.counts[str] += 1
-                        cursorSelf.rowcount = 0
-                        found = True
-                        break
-                cursorSelf.rowcount = 2
-                cursorSelf.row = (None,)
-                self.failUnless(found)
-                return cursorSelf.rowcount
-            def fetchone(cursorSelf): return cursorSelf.row
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args): return args[0]
-                dbSelf.db = MockInternalDatabase()
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf): return dbSelf.cursorValue
-            def literal(dbSelf, val): return dbSelf.db.literal(val)
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
+            def statementActions(cursorSelf, sql, statement):
+                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
 
         self.service = pokerservice.PokerService(self.settings)
 
         oldDb = self.service.db
-        self.service.db = MockDatabase()
+        self.service.db = MockDatabase(MockCursor)
                 
         client = MockClient()
         tourney = MockTourney()
@@ -5056,13 +4991,13 @@ class PokerServiceCoverageTests(unittest.TestCase):
     def test32_getHandSerial_coverCursorWithInsertID(self):
         self.service = pokerservice.PokerService(self.settings)
         class MockCursor(MockCursorBase):
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["INSERT INTO hands"])
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 1
                 cursorSelf.row = ()
+                cursorSelf.lastrowid = 22
 
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["INSERT INTO hands"])
-            def insert_id(cursorSelf):  return 22.8
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5556,33 +5491,26 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test49_setAccount_lastrowidFailure(self):
+        acceptList = [
+            "SELECT serial FROM users WHERE name",
+            "SELECT serial FROM users WHERE email",
+            "INSERT INTO users ",
+            "INSERT INTO users_private"
+        ]
+        acceptListRowCount = [0,0,1,1]
         class MockCursor(MockCursorBase):
-            def insert_id(mcSelf): return 22
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
             def statementActions(cursorSelf, sql, statement):
-                cursorSelf.rowcount = 0
-                cursorSelf.row = []
-                if statement == "SELECT serial FROM users WHERE name":
+                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
+                if statement == "INSERT INTO users ":
+                    cursorSelf.lastrowid = 22
+                elif statement == "SELECT serial FROM users WHERE name":
                     self.failUnless(sql.find("name = 'durrrr'") > 0, "name wrong")
-                    cursorSelf.rowcount = 0
-                    cursorSelf.row = []
-                elif statement == "INSERT INTO users ":
-                    cursorSelf.rowcount = 1
-                    cursorSelf.row = []
                 elif statement == "INSERT INTO users_private":
-                    self.failUnless(sql.find("VALUES ('22')") > 0, "serial for users_private wrong")
+                    self.failUnless(sql.find("VALUES (22)") > 0, "serial for users_private wrong")
                 elif statement == "SELECT serial FROM users WHERE email":
                     self.failUnless(sql.find("email = 'durrrr@example.org'") > 0, "name wrong")
-                    cursorSelf.rowcount = 0
-                    cursorSelf.row = []
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, [
-                    "SELECT serial FROM users WHERE name",
-                    "SELECT serial FROM users WHERE email",
-                    "INSERT INTO users ",
-                    "INSERT INTO users_private"
-                ])
-        self.service = pokerservice.PokerService(self.settings)
-
         class MockPacket():
             def __init__(mpSelf):
                 mpSelf.name = "durrrr"
@@ -5591,6 +5519,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.affiliate = 0
                 mpSelf.type = PACKET_POKER_SET_ACCOUNT
 
+        self.service = pokerservice.PokerService(self.settings)
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
@@ -5607,8 +5536,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.setPersonalInfo = mockSetPersonalInfo
         self.service.getPersonalInfo = mockGetPersonalInfo
         
-        self.assertEquals("IT WORKED!!!",
-                          self.service.setAccount(inputPacket))
+        self.assertEquals("IT WORKED!!!", self.service.setAccount(inputPacket))
 
         self.assertEquals(self.service.db.cursorValue.counts["SELECT serial FROM users WHERE name"], 1)
         self.assertEquals(self.service.db.cursorValue.counts["SELECT serial FROM users WHERE email"], 1)
@@ -6038,18 +5966,18 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test64_updatePlayerMoney_updateReturns0Rows(self):
-        validStatements = ["UPDATE user2table SET"]
+        acceptList = ["UPDATE user2table SET"]
+        acceptListRowCount = [0]
         class MockCursor(MockCursorBase):
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
             def statementActions(cursorSelf, sql, statement):
+                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
                 if statement == "UPDATE user2table SET":
                     self.failUnless(sql.find("money + 77") > 0, "amount value wrong")
                     self.failUnless(sql.find("bet - 77") > 0, "amount value wrong")
                     self.failUnless(sql.find("user_serial = 742") > 0, "user_serial wrong")
                     self.failUnless(sql.find("table_serial = 852") > 0, "currency_serial wrong")
-                    cursorSelf.rowcount = 0
-                    cursorSelf.row = []
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, validStatements)
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -6059,28 +5987,31 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
 
         self.failIf(self.service.updatePlayerMoney(742, 852, 77))
-        for statement in validStatements:
+        for statement in acceptList:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
-        self.failUnless(msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
-                        "Missing expected string in: " + msgs[0])
-        self.failUnless(msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2table SET') == 0,
-                        "Missing expected string in: " +  msgs[1])
+        self.failUnless(
+            msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
+            "Missing expected string in: " + msgs[0]
+        )
+        self.failUnless(
+            msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2table SET') == 0,
+            "Missing expected string in: " +  msgs[1]
+        )
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test65_createTable_insertFailsAndLasRowNotThere(self):
-        validStatements = ["INSERT pokertables", 'REPLACE INTO route']
+        acceptList = ["INSERT INTO pokertables", 'REPLACE INTO route']
+        acceptListRowCount = [0,1]
         class MockCursor(MockCursorBase):
-            def insert_id(mcBase): return 1567
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "INSERT pokertables":
-                    cursorSelf.rowcount = 0
-                    cursorSelf.row = []
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, validStatements)
-
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
+            def statementActions(cursorSelf, sql, statement):
+                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
+                if statement == "INSERT INTO pokertables":
+                    cursorSelf.lastrowid = 1567
 
         self.service = pokerservice.PokerService(self.settings)
         self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
@@ -6091,9 +6022,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
 
         self.service.tables = {}
-        table = self.service.createTable("bobby", { 'seats' : 7, 'currency_serial' : 2663,
-                                                    'name': "This", 'variant' : 'omaha',
-                                                    'betting_structure' : "2-4-limit" })
+        table = self.service.createTable("bobby", {
+            'seats' : 7, 'currency_serial' : 2663,
+            'name': "This", 'variant' : 'omaha',
+            'betting_structure' : "2-4-limit" 
+        })
         self.assertEquals(self.service.tables[1567], table)
         self.assertEquals(table.owner, 'bobby')
         self.assertEquals(table.game.name, "This")
@@ -6101,12 +6034,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(table.game.max_players, 7)
         self.assertEquals(table.currency_serial, 2663)
 
-        for statement in validStatements:
+        for statement in acceptList:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
         msgs = get_messages()
         self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
-        self.failUnless(search_output('createTable: INSERT pokertables'))
-        self.failUnless(search_output('*ERROR* inserted 0 rows (expected 1): INSERT pokertables'))
+        self.failUnless(search_output('createTable: INSERT INTO pokertables'))
+        self.failUnless(search_output('*ERROR* inserted 0 rows (expected 1): INSERT INTO pokertables'))
         self.failUnless(search_output('table created : This'))
         
         self.service.db = oldDb
@@ -6151,15 +6084,16 @@ class PokerServiceCoverageTests(unittest.TestCase):
 #         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test65b_createTable_insertSucceedsWithLargerThan1ReturnedWithLastRowThere(self):
-        validStatements = ["INSERT pokertables", 'REPLACE INTO route']
+        acceptList = ["INSERT INTO pokertables", 'REPLACE INTO route']
+        acceptListRowCount = [3,1]
         class MockCursor(MockCursorBase):
             def insert_id(mcBase): return 1567
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "INSERT pokertables":
-                    cursorSelf.rowcount = 3
-                    cursorSelf.row = []
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, validStatements)
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
+            def statementActions(cursorSelf, sql, statement):
+                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
+                if statement == "INSERT INTO pokertables":
+                    cursorSelf.lastrowid = 1567
 
 
         self.service = pokerservice.PokerService(self.settings)
@@ -6183,12 +6117,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(table.game.max_players, 7)
         self.assertEquals(table.currency_serial, 2663)
 
-        for statement in validStatements:
+        for statement in acceptList:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
         msgs = get_messages()
         self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
-        self.failUnless(search_output('createTable: INSERT pokertables'))
-        self.failUnless(search_output('*ERROR* inserted 3 rows (expected 1): INSERT pokertables'))
+        self.failUnless(search_output('createTable: INSERT INTO pokertables'))
+        self.failUnless(search_output('*ERROR* inserted 3 rows (expected 1): INSERT INTO pokertables'))
         self.failUnless(search_output('table created : This'))
         
         self.service.db = oldDb
