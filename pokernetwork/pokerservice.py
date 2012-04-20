@@ -890,17 +890,16 @@ class PokerService(service.Service):
 
     def tourneyNewState(self, tourney, old_state, new_state):
         # Lock Check
-        try:
+        if self._lock_check_running:
             if new_state == TOURNAMENT_STATE_RUNNING:
                 self._lock_check_running.start(tourney.serial)
             elif new_state == TOURNAMENT_STATE_COMPLETE:
                 self._lock_check_running.stop(tourney.serial)
-            elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
+        if self._lock_check_break:
+            if new_state == TOURNAMENT_STATE_BREAK_WAIT:
                 self._lock_check_break.start(tourney.serial)
             elif new_state == TOURNAMENT_STATE_BREAK:
                 self._lock_check_break.stop(tourney.serial)
-        except:
-            self.error("Exception on tourneyNewState()\n" + "\n".join(traceback.format_exc()))
 
         cursor = self.db.cursor()
         updates = []
