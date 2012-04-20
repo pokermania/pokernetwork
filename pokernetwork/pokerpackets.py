@@ -945,7 +945,7 @@ game_id: integer uniquely identifying a game.
         ('when', -1, 'no net'),
         )
 
-Packet.infoDeclare(globals(),PacketPokerTableDestroy, Packet, "POKER_TIMEOUT_WARNING", 77) # 77 # 0x4d
+Packet.infoDeclare(globals(),PacketPokerTimeoutWarning, Packet, "POKER_TIMEOUT_WARNING", 77) # 77 # 0x4d
 ########################################
 
 class PacketPokerTimeoutNotice(PacketPokerId):

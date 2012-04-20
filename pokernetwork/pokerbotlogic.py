@@ -134,8 +134,10 @@ class PokerBot:
                 note = PokerBot.note_generator.getNote()
                 if self.factory.currency_id:
                     note[0] += "?id=" + self.factory.currency_id
-                protocol.sendPacket(PacketPokerCashIn(serial = packet.serial,
-                                                      note = note))
+                protocol.sendPacket(PacketPokerCashIn(
+                    serial=packet.serial,
+                    **dict(zip(('url', 'bserial', 'name', 'value'), note))
+                ))
             
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.state = STATE_RUNNING
