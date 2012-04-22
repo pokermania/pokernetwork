@@ -356,8 +356,7 @@ class PokerExplain:
                 if not self.no_display_packets:
                     self.forward_packets.append(PacketPokerSeats(game_id = game.id, seats = game.seats()))
 
-            elif ( packet.type == PACKET_POKER_PLAYER_LEAVE or
-                   packet.type == PACKET_POKER_TABLE_MOVE ) :
+            elif packet.type in (PACKET_POKER_PLAYER_LEAVE,PACKET_POKER_TABLE_MOVE) :
                 game.removePlayer(packet.serial)
                 if packet.serial == self.getSerial():
                     self.games.deleteGame(game.id)
@@ -437,7 +436,6 @@ class PokerExplain:
                         if auto:
                             game.autoPlayer(serial)
                             forward_packets.append(PacketPokerAutoFold(game_id = game.id, serial = player.serial))
-
                         if wait_for:
                             if wait_for == True and not in_game and not game.isRunning():
                                 #
@@ -446,7 +444,6 @@ class PokerExplain:
                                 # blindAnte round. This only happens when the anteRound
                                 # is already finished on the server (i.e. when connecting
                                 # to a table in the middle of a game). 
-                                #
                                 player.wait_for = "first_round"
                             forward_packets.append(PacketPokerWaitFor(
                                 game_id = game.id,
@@ -467,12 +464,10 @@ class PokerExplain:
                 if not self.no_display_packets:
                     for serial in packet.serials:
                         forward_packets.append(PacketPokerPlayerWin(serial = serial, game_id = game.id))
-
                 if game.winners:
                     #
                     # If we know the winners before an explicit call to the distributeMoney
                     # method, it means that there is no showdown.
-                    #
                     if not self.no_display_packets:
                         if game.isGameEndInformationValid():
                             forward_packets.append(PacketPokerShowdown(game_id = game.id, showdown_stack = game.showdown_stack))
@@ -502,7 +497,6 @@ class PokerExplain:
                     # to notice that a player already paid the buy_in 
                     # when it connects to a table on which said player has
                     # no chips in front of him.
-                    #
                     player = game.getPlayer(packet.serial)
                     player.buy_in_payed = True
                     forward_packets.append(self.updatePlayerChips(game, player))
@@ -523,7 +517,6 @@ class PokerExplain:
                 else:
                     #
                     # If server sends chips amount for a player that did not yet pay the buy in
-                    # 
                     player.bet = packet.bet
                     player.money = packet.money
                     if player.money > 0:
@@ -556,18 +549,14 @@ class PokerExplain:
 
             elif packet.type == PACKET_POKER_STATE:
                 game.position_info[PokerNetworkGameClient.POSITION_OBSOLETE] = True
-
                 if game.isBlindAnteRound():
                     game.blindAnteRoundEnd()
-
                 if packet.string == "end" and game.state != "null":
                     game.endState()
-
                 #
                 # A state change is received at the begining of each
                 # betting round. No state change is received when
                 # reaching showdown or otherwise terminating the hand.
-                #
                 if game.isFirstRound():
                     try:
                         game.initRound()
@@ -588,7 +577,6 @@ class PokerExplain:
                             self.error('explain exception initRound 2')
                             if self.verbose > 0: self._postMortemDump(packet,game)
                             raise e
-
                 if not self.no_display_packets:
                     if game.isRunning() and game.cardsDealt() and game.downCardsDealtThisRoundCount() > 0:
                         forward_packets.append(PacketPokerDealCards(
@@ -596,7 +584,6 @@ class PokerExplain:
                             numberOfCards = game.downCardsDealtThisRoundCount(),
                             serials = game.serialsNotFold())
                         )
-
                 if game.isRunning() and game.cardsDealt() and game.cardsDealtThisRoundCount() :
                     for player in game.playersNotFold():
                         cards = player.hand.toRawList()
@@ -605,7 +592,6 @@ class PokerExplain:
                             serial = player.serial,
                             cards = cards)
                         )
-
                 if not self.no_display_packets:
                     if game.isRunning() and game.cardsDealt() and self.getSerial() != 0 and game.isPlaying(self.getSerial()) and (packet.string == "flop" or packet.string == "turn" or packet.string == "river"):
                         forward_packets.append(PacketPokerPlayerHandStrength(
@@ -613,7 +599,6 @@ class PokerExplain:
                             serial = self.getSerial(),
                             hand = game.readablePlayerBestHands(self.getSerial()))
                         )
-
                 if ( packet.string != "end" and not game.isBlindAnteRound() ):
                     if not self.no_display_packets:
                         forward_packets.extend(self.updateBetLimit(game))
@@ -627,7 +612,6 @@ class PokerExplain:
             if game.isRunning():
                 #
                 # Build position related packets
-                #
                 position_changed = serial_in_position != game.getSerialInPosition()
                 if position_is_obsolete or position_changed:
                     self_was_in_position = self.getSerial() != 0 and serial_in_position == self.getSerial()
@@ -673,7 +657,6 @@ class PokerExplain:
             #
             # Build dealer messages
             # Skip state = end because information is missing and will be received by the next packet (WIN)
-            #
             if not (packet.type == PACKET_POKER_STATE and packet.string == "end"):
                 game.history_index = game.historyReduce()
                 (subject, messages) = history2messages(game, game.historyGetReduced()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
@@ -706,10 +689,8 @@ class PokerExplain:
         packets.extend(self.updatePotsChips(game, game.getPots()))
         return packets
 
-    #
     # Should be move all bets back to players (for uncalled bets)
     # This is a border case we don't want to handle right now
-    #
     moveBet2Player = moveBet2Pot
         
     def updateBetLimit(self, game):
@@ -725,20 +706,21 @@ class PokerExplain:
         steps.reverse()
         #
         # Search for the lowest chip value by which all amounts can be divided
-        #
         for step in steps:
             if min_bet % step == 0 and max_bet % step == 0 and to_call % step == 0:
                 found = step
         if found:
             if self.verbose:
                 self.message(" => bet min=%d, max=%d, step=%d, to_call=%d" % ( min_bet, max_bet, found, to_call))
-            packets.append(PacketPokerBetLimit(game_id = game.id,
-                                               min = min_bet,
-                                               max = max_bet,
-                                               step = game.getChipUnit(),
-                                               call = to_call,
-                                               allin = game.getPlayer(serial).money,
-                                               pot = game.potAndBetsAmount() + to_call * 2))
+            packets.append(PacketPokerBetLimit(
+                game_id = game.id,
+                min = min_bet,
+                max = max_bet,
+                step = game.getChipUnit(),
+                call = to_call,
+                allin = game.getPlayer(serial).money,
+                pot = game.potAndBetsAmount() + to_call * 2)
+            )
         else:
             self.error("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d" % ( self.chips_values, min_bet, max_bet ))
         return packets
@@ -747,14 +729,15 @@ class PokerExplain:
         games = self.games.getGameIds()
         if exclude:
             games.remove(exclude)
-        return PacketPokerCurrentGames(game_ids = games,
-                                       count = len(games))
+        return PacketPokerCurrentGames(game_ids = games, count = len(games))
 
     def explainPlayerChips(self, game, player):
-        packet = PacketPokerClientPlayerChips(game_id = game.id,
-                                              serial = player.serial,
-                                              bet = self.normalizeChips(game, player.bet),
-                                              money = self.normalizeChips(game, player.money) )
+        packet = PacketPokerClientPlayerChips(
+            game_id = game.id,
+            serial = player.serial,
+            bet = self.normalizeChips(game, player.bet),
+            money = self.normalizeChips(game, player.money) 
+        )
         return packet
                 
         
@@ -784,9 +767,11 @@ class PokerExplain:
                     self.error("pot %d, total size = %d, expected %d" % ( current_pot, cumulated_pot_size, frame['pot'] )) #pragma: no cover
                 merged_pot = next_pot - 1
                 if merged_pot > current_pot:
-                    merge = PacketPokerChipsPotMerge(game_id = game.id,
-                                                     sources = range(current_pot, merged_pot),
-                                                     destination = merged_pot)
+                    merge = PacketPokerChipsPotMerge(
+                        game_id = game.id,
+                        sources = range(current_pot, merged_pot),
+                        destination = merged_pot
+                    )
                     if self.verbose > 2:
                         self.message("packetsPot2Player: %s" % merge)
                     packets.append(merge)
@@ -794,13 +779,11 @@ class PokerExplain:
                     #
                     # Happens quite often : single winner. Special case where
                     # we use the exact chips layout saved in game_state.
-                    #
                     serial = frame['serial2share'].keys()[0]
                     packets.append(self.chipsPot2Player(game, game.getPlayer(serial), game_state['pot'], merged_pot, "win"))
                 else:
                     #
                     # Possibly complex showdown, cannot avoid breaking chip stacks
-                    #
                     for (serial, share) in frame['serial2share'].iteritems():
                         packets.append(self.chipsPot2Player(game, game.getPlayer(serial), share, merged_pot, "win"))
                 current_pot = next_pot
@@ -829,12 +812,16 @@ class PokerExplain:
         packets = []
         if game.variant == "7stud":
             for player in game.playersAll():
-                packets.append(PacketPokerPlayerNoCards(game_id = game.id,
-                                                        serial = player.serial))
+                packets.append(PacketPokerPlayerNoCards(
+                    game_id = game.id,
+                    serial = player.serial)
+                )
                 if player.hand.areVisible():
-                    packet = PacketPokerPlayerCards(game_id = game.id,
-                                                    serial = player.serial,
-                                                    cards = player.hand.tolist(True))
+                    packet = PacketPokerPlayerCards(
+                        game_id = game.id,
+                        serial = player.serial,
+                        cards = player.hand.tolist(True)
+                    )
                     packet.visibles = "hole"
                     packets.append(packet)
 
@@ -851,26 +838,32 @@ class PokerExplain:
                         best_hand = 0
                         if serial == serial_delta_max:
                             best_hand = 1
-                        packets.append(PacketPokerBestCards(game_id = game.id,
-                                                            serial = serial,
-                                                            side = side,
-                                                            cards = cards,
-                                                            bestcards = bestcards[1:],
-                                                            board = game.board.tolist(True),
-                                                            hand = hand,
-                                                            besthand = best_hand))
+                        packets.append(PacketPokerBestCards(
+                            game_id = game.id,
+                            serial = serial,
+                            side = side,
+                            cards = cards,
+                            bestcards = bestcards[1:],
+                            board = game.board.tolist(True),
+                            hand = hand,
+                            besthand = best_hand)
+                        )
         return packets
 
     def packetsTableQuit(self, game):
         packets = []
         packets.append(PacketPokerBatchMode(game_id = game.id))
         for player in game.playersAll():
-            packets.append(PacketPokerPlayerLeave(game_id = game.id,
-                                                  serial = player.serial,
-                                                  seat = player.seat))
+            packets.append(PacketPokerPlayerLeave(\
+                game_id = game.id,
+                serial = player.serial,
+                seat = player.seat)
+            )
         packets.append(PacketPokerStreamMode(game_id = game.id))
-        packets.append(PacketPokerTableQuit(game_id = game.id,
-                                            serial = self.getSerial()))
+        packets.append(PacketPokerTableQuit(
+            game_id = game.id,
+            serial = self.getSerial())
+        )
         packets.append(self.currentGames(game.id))
         return packets
     

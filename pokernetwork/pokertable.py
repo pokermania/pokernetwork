@@ -918,8 +918,7 @@ class PokerTable:
             return "not valid"
         
         self.history_index = self.game.historyReduce()
-        history = self.game.historyGetReduced()
-        history_tail = history[self.history_index:]
+        history_tail = self.game.historyGetReduced()[self.history_index:]
 
         try:
             self.updateTimers(history_tail)
