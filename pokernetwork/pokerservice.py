@@ -511,6 +511,32 @@ class PokerService(service.Service):
                 self.message("Locale, \"%s\" not available.  %s must not have been provide via <language/> tag in settings, or errors occured during loading." % (locale, locale))
             return None
 
+    def shutdownLockChecks(self):
+        if self._lock_check_break:
+            self._lock_check_break.stopall()
+        if self._lock_check_running:
+            self._lock_check_running.stopall()
+        
+    def shutdownGames(self):
+        tables = (t for t in self.tables.itervalues() if not t.game.isEndOrNull())
+        for table in tables:
+            table.cancelPlayerTimers()
+            for serial,avatars in table.avatar_collection.serial2avatars.items():
+                for avatar in avatars:
+                    avatar.sendPacket(PacketPokerStateInformation(
+                        serial = serial,
+                        game_id = table.game.id,
+                        code = PacketPokerStateInformation.SHUTTING_DOWN,
+                        message = "shutting down"
+                    ))
+                    #
+                    # if the avatar uses a non-persistent connection, disconnect
+                    # it, since it is impossible establish new connections while
+                    # shutting down
+                    if avatar._queue_packets: 
+                        table.quitPlayer(avatar,serial)
+                        
+    
     def shutdown(self):
         self.shutting_down = True
         self.cancelTimer('checkTourney')
@@ -519,13 +545,9 @@ class PokerService(service.Service):
         self.cancelTimers('tourney_breaks')
         self.cancelTimers('tourney_delete_route')
 
-        # Shutdown Lock Checks
-        if self._lock_check_break:
-            self._lock_check_break.stopall()
-        if self._lock_check_running:
-            self._lock_check_running.stopall()
-
+        self.shutdownGames()
         self.shutdown_deferred = defer.Deferred()
+        self.shutdown_deferred.addCallback(lambda res: self.shutdownLockChecks())
         reactor.callLater(0.01, self.shutdownCheck)
         return self.shutdown_deferred
 
@@ -535,14 +557,7 @@ class PokerService(service.Service):
                 self.shutdown_deferred.callback(True)
             return
 
-        playing = 0
-        for table in self.tables.values():
-            if not table.game.isEndOrNull():
-                playing += 1
-                table.cancelPlayerTimers()
-                for serial in table.avatar_collection.serial2avatars.keys():
-                    table.game.autoPlayer(serial)
-                table.update()
+        playing = sum(1 for table in self.tables.itervalues() if not table.game.isEndOrNull())
         if self.verbose and playing > 0:
             self.message("Shutting down, waiting for %d games to finish" % playing)
         if playing <= 0:
@@ -577,17 +592,13 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         cursor.execute("SELECT MAX(serial) FROM hands")
         (hands,) = cursor.fetchone()
-        if hands == None:
-            hands = 0
-        else:
-            hands = int(hands)
         cursor.close()
         return PacketPokerStats(
             players = len(self.avatars),
-            hands = hands,
+            hands = 0 if hands is None else int(hands),
             bytesin = UGAMEProtocol._stats_read,
             bytesout = UGAMEProtocol._stats_write,
-            )
+        )
 
     def createAvatar(self):
         avatar = pokeravatar.PokerAvatar(self)

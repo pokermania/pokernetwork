@@ -2694,7 +2694,7 @@ Context: Since this packet is sent on the server's behalf, usually without the
                                    happens if the server never received a PacketPokerTable 
                                    packet on this connection --> send a PacketPokerTableJoin
                                    packet.
-         - LOCAL_TABLE_EPHEMERAL:  The table at game_id will be gone after the current hand.
+         - SHUTTING_DOWN:          The table at game_id will be gone after the current hand.
                                    This message is sent to the clients on behalf of the server
                                    when the server is shutting down.
           
@@ -2707,11 +2707,12 @@ code: integer representing the error.
     REMOTE_CONNECTION_LOST = 1
     REMOTE_TABLE_EPHEMERAL = 2
     LOCAL_TABLE_EPHEMERAL = 3
+    SHUTTING_DOWN = 4
     
     
     info = PacketPokerId.info + (
-        ('message','no message','s'),
-        ('code',0,'I')
+        ('code',0,'I'),
+        ('message','no message','s')
         )
 
 Packet.infoDeclare(globals(), PacketPokerStateInformation, Packet, "POKER_STATE_INFORMATION", 160) # 160 # 0xa0 # %SEQ%
