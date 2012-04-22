@@ -2694,6 +2694,9 @@ Context: Since this packet is sent on the server's behalf, usually without the
                                    happens if the server never received a PacketPokerTable 
                                    packet on this connection --> send a PacketPokerTableJoin
                                    packet.
+         - LOCAL_TABLE_EPHEMERAL:  The table at game_id will be gone after the current hand.
+                                   This message is sent to the clients on behalf of the server
+                                   when the server is shutting down.
           
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.

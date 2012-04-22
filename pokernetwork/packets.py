@@ -262,14 +262,14 @@ class Packet:
         block = pack('!H', len(obj))
         for (currency, money) in obj.iteritems():
             fields = (currency,) + money
-            block += pack('!IIII', *fields)
+            block += pack('!IQQQ', *fields)
         return block
 
     @staticmethod
     def unpackmoney(block):
         (length,) = unpack('!H', block[:calcsize('!H')])
         block = block[calcsize('!H'):]
-        fmt = '!IIII'
+        fmt = '!IQQQ'
         format_size = calcsize(fmt)
         obj = {}
         for i in xrange(length):
@@ -280,7 +280,7 @@ class Packet:
 
     @staticmethod
     def calcsizemoney(obj):
-        return calcsize('!H') + len(obj) * calcsize('!IIII')
+        return calcsize('!H') + len(obj) * calcsize('!IQQQ')
     
     @staticmethod
     def packplayers(obj):
