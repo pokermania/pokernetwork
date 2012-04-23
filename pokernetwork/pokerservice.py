@@ -153,7 +153,10 @@ class PokerService(service.Service):
     implements(IPokerService)
     _spawnTourney_currency_from_date_format_re = re.compile('(%[dHIjmMSUwWyY])+')
 
-
+    STATE_OFFLINE = 0
+    STATE_ONLINE = 1
+    STATE_SHUTTING_DOWN = 2
+    
     def __init__(self, settings):
         if type(settings) is StringType:
             settings_object = pokernetworkconfig.Config(['.'])
@@ -523,22 +526,21 @@ class PokerService(service.Service):
         # happens when the service is not started and to accomodate tests 
         if not hasattr(self, "tables"):
             return
+        
         tables = (t for t in self.tables.itervalues() if not t.game.isEndOrNull())
         for table in tables:
-            table.cancelPlayerTimers()
+            table.broadcast(PacketPokerStateInformation(
+                game_id = table.game.id,
+                code = PacketPokerStateInformation.SHUTTING_DOWN,
+                message = "shutting down"
+            ))
             for serial,avatars in table.avatar_collection.serial2avatars.items():
                 for avatar in avatars:
-                    avatar.sendPacket(PacketPokerStateInformation(
-                        serial = serial,
-                        game_id = table.game.id,
-                        code = PacketPokerStateInformation.SHUTTING_DOWN,
-                        message = "shutting down"
-                    ))
                     #
                     # if the avatar uses a non-persistent connection, disconnect
                     # it, since it is impossible establish new connections while
                     # shutting down
-                    if avatar._queue_packets: 
+                    if avatar._queue_packets:
                         table.quitPlayer(avatar,serial)
                         
     
@@ -550,6 +552,7 @@ class PokerService(service.Service):
         self.cancelTimers('tourney_breaks')
         self.cancelTimers('tourney_delete_route')
 
+        if self.resthost_serial: self.setResthostOnShuttingDown()
         self.shutdownGames()
         self.shutdown_deferred = defer.Deferred()
         self.shutdown_deferred.addCallback(lambda res: self.shutdownLockChecks())
@@ -1302,7 +1305,7 @@ class PokerService(service.Service):
 
     def tourneyBroadcastStart(self, tourney_serial):
         cursor = self.db.cursor()
-        cursor.execute("SELECT host,port FROM resthost")
+        cursor.execute("SELECT host,port FROM resthost WHERE state = %s",(self.STATE_ONLINE))
         for host,port in cursor.fetchall():
             self.getPage('http://%s:%d/TOURNEY_START?tourney_serial=%d' % (host,long(port),tourney_serial))
         cursor.close()
@@ -1961,24 +1964,32 @@ class PokerService(service.Service):
         if resthost:
             resthost = resthost[0]
             cursor = self.db.cursor()
-            values = ( resthost['host'], resthost['port'], resthost['path'] )
+            values = ( resthost['host'], resthost['port'], resthost['path'])
             name = resthost.get('name', None)
             cursor.execute("SELECT serial FROM resthost WHERE host = %s AND port = %s AND path = %s", values)
             if cursor.rowcount > 0:
                 self.resthost_serial = cursor.fetchone()[0]
+                cursor.execute("UPDATE resthost SET state = %s WHERE serial = %s", (self.STATE_ONLINE,self.resthost_serial))
             else:
                 if not name:
-                    cursor.execute("INSERT INTO resthost (host, port, path) VALUES (%s, %s, %s)", values)
+                    cursor.execute("INSERT INTO resthost (host, port, path, state) VALUES (%s, %s, %s, %s)", values + (self.STATE_ONLINE,))
                 else:
-                    cursor.execute("INSERT INTO resthost (name, host, port, path) VALUES (%s, %s, %s, %s)", (name, ) + values)
+                    cursor.execute("INSERT INTO resthost (name, host, port, path, state) VALUES (%s, %s, %s, %s, %s)", (name,) + values + (self.STATE_ONLINE,))
                 self.resthost_serial = cursor.lastrowid
             cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
             cursor.close()
-
+    
+    def setResthostOnShuttingDown(self):
+        if self.resthost_serial:
+            cursor = self.db.cursor()
+            cursor.execute("UPDATE resthost SET state = %s WHERE serial = %s", (self.STATE_SHUTTING_DOWN,self.resthost_serial))
+            cursor.close()
+            
     def cleanupResthost(self):
         if self.resthost_serial:
             cursor = self.db.cursor()
             cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
+            cursor.execute("UPDATE resthost SET state = %s WHERE serial = %s", (self.STATE_OFFLINE,self.resthost_serial))
             cursor.close()
 
     def packet2resthost(self, packet):

@@ -592,6 +592,7 @@ CREATE TABLE resthost (
   host VARCHAR(255),
   port INT UNSIGNED,
   path VARCHAR(255),
+  state INT UNSIGNED NOT NULL DEFAULT '0',
 
   PRIMARY KEY (serial)
 ) ENGINE=MyISAM;
