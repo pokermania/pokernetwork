@@ -379,7 +379,7 @@ class PokerTable:
                     game_id=game_id,
                     hand_serial=hand_serial,
                     hands_count=hands_count,
-                    time=time,
+                    time=int(time),
                     level=level
                 ))
 
