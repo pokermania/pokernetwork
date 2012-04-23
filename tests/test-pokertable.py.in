@@ -434,7 +434,7 @@ class MockClient:
                 self.player = player
                 self.name = self.player.getName()
                 self.url = "http://fake"
-                self.outfit = None
+                self.outfit = "random"
         return MockPlayerInfo(self)
 
 if verbose < 0: redirect_messages(MockClient)
@@ -569,6 +569,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.clients = {}
     # -------------------------------------------------------------------
     def tearDown(self):
+        self.table._lock_check.stop()
         self.table.cancelDealTimeout()
         self.table.cancelPlayerTimers()
         del self.table
@@ -1086,7 +1087,18 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def checkFailedJoinDueToMax(self, player):
         self.assertEqual(False, self.table.isJoined(player))
-        self.assertEquals(get_messages(), ['*ERROR* joinPlayer: %d cannot join game %d because the server is full' % (player.serial, self.table.game.id), 'sendPacket: type = ERROR(53) serial = %d game_id = %d message = This server has too many seated players and observers., code = 1, other_type = POKER_TABLE_JOIN' % (player.serial, self.table.game.id)])
+        self.assertEquals(get_messages(), [
+            '*ERROR* joinPlayer: %d cannot join game %d because the server is full' % (
+                player.serial,
+                self.table.game.id
+            ),
+            'sendPacket: POKER_ERROR  type = 53 length = 72 serial = %d cookie =  ' \
+            'game_id = %d message = This server has too many seated players and ' \
+            'observers. code = 1 other_type = 71' % (
+                player.serial,
+                self.table.game.id
+            )
+        ])
         self.assertEquals(len(player.packets), 1)
         p = player.packets[0]
         self.assertEquals(p.type, PACKET_POKER_ERROR)
@@ -1238,8 +1250,16 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         if self.table.factory.verbose < 2: self.table.factory.verbose = 2
         clear_all_messages()
         self.table.update()
-        for msg in ['[Server][PokerGame %d] removing player 4 from game', 'broadcast[1, 2, 3] type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8', 'sendPacket: type = POKER_PLAYER_LEAVE(81) serial = 4 game_id = %d seat = 8']:
-            self.assertEquals(search_output(msg % self.table1_value), True)
+        #FIXME! doesn't make sense to search 4 times for the same sting to check if there are 4 in messages
+        for msg in [
+            '[Server][PokerGame %d] removing player 4 from game',
+            'broadcast[1, 2, 3] POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
+            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
+            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
+            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
+            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
+            ]:
+                self.assertEquals(search_output(msg % self.table1_value), True, msg)
 
         for ii in [1, 2, 3, 4]:
             # Our service's leavePlayer() should have been called for 4,
@@ -1420,6 +1440,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def historyGet(mgSelf): return []
             def isRunning(mgSelf): return False
             def potAndBetsAmount(mgSelf): return 0
+            def historyReduce(mgSelf): pass
+            def historyGetReduced(mgSelf): return [""]
 
         self.table.timer_info["muckTimeout"] = None
         origGame = self.table.game
@@ -1473,6 +1495,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def isRunning(mgSelf): return True
             def getSerialInPosition(mgSelf): return 664
             def historyGet(mgSelf): return [ "" ]
+            def historyReduce(mgSelf): pass
+            def historyGetReduced(mgSelf): return [""]
 
         self.table.game = MockGame() 
         self.table.playerTimeout = 100
