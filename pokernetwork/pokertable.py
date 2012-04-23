@@ -687,14 +687,18 @@ class PokerTable:
                 
             elif event_type == 'round':
                 name, board, pockets = event[1:]
-                pockets = cached_pockets if pockets != cached_pockets else None
-                board = cached_board if board != cached_board else None
+                if pockets != cached_pockets: cached_pockets = pockets
+                else: pockets = None
+                if board != cached_board: cached_board = board
+                else: board = None
                 new_history.append((event_type, name, board, pockets))
                 
             elif event_type == 'showdown':
                 board, pockets = event[1:]
-                pockets = cached_pockets if pockets != cached_pockets else None
-                board = cached_board if board != cached_board else None
+                if pockets != cached_pockets: cached_pockets = pockets
+                else: pockets = None
+                if board != cached_board: cached_board = board
+                else: board = None
                 new_history.append((event_type, board, pockets))
                 
             elif event_type in (
