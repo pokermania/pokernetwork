@@ -227,12 +227,13 @@ class PokerService(service.Service):
         self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
         if self.long_poll_timeout <= 0:
             self.long_poll_timeout = 20
+            
+        #
         #badwords list
-        
         chat_filter_filepath = settings.headerGet("/server/badwordschatfilter/@file")
         if chat_filter_filepath:
             self.setupChatFilter(chat_filter_filepath)
-
+        #
         # tourney lock check
         self._lock_check_locked = False
         self._lock_check_running = None
@@ -518,6 +519,10 @@ class PokerService(service.Service):
             self._lock_check_running.stopall()
         
     def shutdownGames(self):
+        #
+        # happens when the service is not started and to accomodate tests 
+        if not hasattr(self, "tables"):
+            return
         tables = (t for t in self.tables.itervalues() if not t.game.isEndOrNull())
         for table in tables:
             table.cancelPlayerTimers()

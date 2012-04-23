@@ -2539,7 +2539,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
         def __init__(self):
             self.serial = TourneyMovePlayerTestCase.tourney_serial
 
-    class Table:
+    class MockTable:
         def __init__(self, testObject):
             self.avatar_collection = PokerAvatarCollection()
             self.testObj = testObject
@@ -2549,7 +2549,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
     def test_ok(self):
         self.service.startService()
-        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table(self)
+        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.MockTable(self)
         user_serial = 1
         table_serial = 100
         cursor = self.db.cursor()
@@ -2559,7 +2559,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
     def test_missing_db_record(self):
         self.service.startService()
-        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.Table(self)
+        self.service.getTable = lambda from_game_id: TourneyMovePlayerTestCase.MockTable(self)
         user_serial = 1
         table_serial = 100
         cursor = self.db.cursor()
@@ -3388,7 +3388,10 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 
 ##############################################################################
 class BreakTestCase(PokerServiceTestCaseBase):
-    class Table:
+    def setUp(self,settingsFile=settings_xml):
+        PokerServiceTestCaseBase.setUp(self, settingsFile)
+        self.service.shutdownGames = lambda *a,**kw: None
+    class MockTable:
         def __init__(self):
             self.message = None
             self.type = None
@@ -3635,17 +3638,17 @@ class BreakTestCase(PokerServiceTestCaseBase):
         # computed correctly and the packets are sent to the tables as
         # needed.
 
-        class Table(BreakTestCase.Table):
+        class MockTable(BreakTestCase.MockTable):
             def __init__(self):
                 self.broadcastedPackets = []
-                BreakTestCase.Table.__init__(self)
+                BreakTestCase.MockTable.__init__(self)
 
             def broadcast(self, packet):
                 self.broadcastedPackets.append(packet)
         tables = {}
-        tables[1] = Table()
-        tables[2] = Table()
-        class Game:
+        tables[1] = MockTable()
+        tables[2] = MockTable()
+        class MockGame:
             def __init__(self, newId=0):
                 self.id = newId
             def getTable(gameId):
@@ -3658,7 +3661,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def __init__(self, remainingSeconds = None):
                 self.remaining_secs = remainingSeconds
                 self.breaks_duration = breaks_duration
-                self.games = [ Game(1), Game(2) ]
+                self.games = [ MockGame(1), MockGame(2) ]
                 BreakTestCase.Tournament.__init__(self)
 
             def remainingBreakSeconds(self):
@@ -3720,26 +3723,25 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
     # ------------------------------------------------------------------------
     def test_tourneyDeal(self):
-        class Game:
+        class MockGame:
             def __init__(self):
                 self.id = 1
 
         class Tournament:
             def __init__(self):
-                self.games = [ Game() ]
+                self.games = [ MockGame() ]
                 self.serial = 1
                 self.id2game = dict((g.id,g) for g in self.games)
 
         tourney = Tournament()
-        table = BreakTestCase.Table()
+        table = BreakTestCase.MockTable()
         table.game = tourney.games[0]
         self.service.tables = { 1: table }
         self.service.tourneyDeal(tourney)
         self.failUnless(hasattr(table, 'autodeal'))
 
     def test_tourneyBreakWait(self):
-        class Game:
-
+        class MockGame:
             def __init__(self):
                 self.id = 1
                 self.running = False
@@ -3749,11 +3751,11 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         class Tournament:
             def __init__(self):
-                self.games = [ Game() ]
+                self.games = [ MockGame() ]
                 self.serial = 1
 
         tourney = Tournament()
-        table = BreakTestCase.Table()
+        table = BreakTestCase.MockTable()
         table.game = tourney.games[0]
         self.service.tables = { 1: table }
         tourney.games[0].running = True
@@ -3764,18 +3766,16 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.failUnless("finish their hand" in table.message)
     # ------------------------------------------------------------------------
     def test11_tourneyBreakResume(self):
-        class Table(BreakTestCase.Table):
+        class MockTable(BreakTestCase.MockTable):
             def __init__(self):
                 self.broadcastedPackets = []
-                BreakTestCase.Table.__init__(self)
+                BreakTestCase.MockTable.__init__(self)
             def broadcast(self, packet):
                 self.broadcastedPackets.append(packet)
         tables = {}
-        tables[1] = Table()
-        tables[2] = Table()
-        #the following gives me a syntax error
-        #class  Game:
-        class Game:
+        tables[1] = MockTable()
+        tables[2] = MockTable()
+        class MockGame:
             def __init__(self, newId=0):
                 self.id = newId
             def getTable(gameId):
@@ -3784,7 +3784,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 else: self.failIf(True)
         class Tournament(BreakTestCase.Tournament):
             def __init__(self):
-                self.games = [ Game(1), Game(2) ]
+                self.games = [ MockGame(1), MockGame(2) ]
                 BreakTestCase.Tournament.__init__(self)
 
         tourney = Tournament()
@@ -3802,17 +3802,15 @@ class BreakTestCase(PokerServiceTestCaseBase):
     # ------------------------------------------------------------------------
     def test_tourneyBreakCheck(self):
 
-        class Game:
-
+        class MockGame:
             def __init__(self):
                 self.id = 1
 
         class Tournament:
-
             def __init__(self):
                 self.state = pokertournament.TOURNAMENT_STATE_RUNNING
                 self.remaining = 0
-                self.games = [ Game() ]
+                self.games = [ MockGame() ]
                 self.serial = 1
 
             def remainingBreakSeconds(self):
@@ -3822,7 +3820,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
                 pass
 
         tourney = Tournament()
-        table = BreakTestCase.Table()
+        table = BreakTestCase.MockTable()
         table.game = tourney.games[0]
         self.service.tables = { 1: table }
         self.service.tourneyBreakCheck(tourney)
@@ -4375,6 +4373,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def buyIn(mgSelf): return 100
 
         self.service = pokerservice.PokerService(self.settings)
+        self.service.shutdownGames = lambda *a,**kw: None
         oldDb = self.service.db
         self.service.db = MockDatabase()
 
@@ -6507,8 +6506,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
             def __init__(mrSelf):
                 mrSelf.cookies = [ 'thisone', 'notthisone' ]
 
-        self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie()),
-                          'thisone')
+        self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie()),'thisone')
     # ----------------------------------------------------------------
     def test02_getRequestCookie_callsGetCookie(self):
         class MockRequestWithCookie(MockRequestBase):
@@ -6521,8 +6519,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
 
         caughtIt = False
         try:
-            self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie("notalist")),
-                              'thisone')
+            self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie("notalist")),'thisone')
             self.failIf(True, "We should have caught a TypeError")
         except TypeError, te:
             self.assertEquals(te.__str__(), 'can only concatenate list (not "str") to list')
