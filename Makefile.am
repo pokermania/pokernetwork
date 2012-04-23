@@ -57,6 +57,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/__init__.py \
 	pokernetwork/client.py \
 	pokernetwork/currencyclient.py \
+        pokernetwork/lockcheck.py \
 	pokernetwork/nullfilter.py \
 	pokernetwork/packets.py \
 	pokernetwork/pokerauth.py \
