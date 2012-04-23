@@ -1116,7 +1116,7 @@ class PokerService(service.Service):
 
     def tourneyCreateTable(self, tourney):
         table = self.createTable(0, {
-            'name': "%s(%s)" % (
+            'name': "%s (%s)" % (
                 tourney.name,
                 str(self.tourney_table_serial)
             ),
