@@ -1,7 +1,15 @@
+poker-network (2.1.0-2) pokermania; urgency=low
+
+  * 11fb70f time is serialized as a long int so let's pass it like that
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 23 Apr 2012 23:45:00 +0200
+
 poker-network (2.1.0-1) pokermania; urgency=low
 
   fixes, improvements: #5257, #5495, #5515
 
+  * 89e3bba updated pokeradditions
+  * 5303a51 compressedHistory cached pockets/board bugfix
   * 4cdf0d2 set tourney game names to "name(serial)" so name and serial can be distinguished, fixes #5257
   * 264d020 shutdown routine improved
   * implemented lock checking so locks get detected sooner in games and tournaments
