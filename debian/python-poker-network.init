@@ -164,6 +164,7 @@ case "$1" in
 	#	just the same as "restart".
 	#
 	$0 stop
+	sleep 1
 	$0 start
 	;;
   force-stop)
