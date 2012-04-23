@@ -1115,15 +1115,19 @@ class PokerService(service.Service):
         table.update()
 
     def tourneyCreateTable(self, tourney):
-        table = self.createTable(0, { 'name': tourney.name + str(self.tourney_table_serial),
-                                      'variant': tourney.variant,
-                                      'betting_structure': tourney.betting_structure,
-                                      'seats': tourney.seats_per_game,
-                                      'currency_serial': 0,
-                                      'player_timeout': tourney.player_timeout,
-                                      'transient': True,
-                                      'tourney': tourney,
-                                      })
+        table = self.createTable(0, {
+            'name': "%s(%s)" % (
+                tourney.name,
+                str(self.tourney_table_serial)
+            ),
+            'variant': tourney.variant,
+            'betting_structure': tourney.betting_structure,
+            'seats': tourney.seats_per_game,
+            'currency_serial': 0,
+            'player_timeout': tourney.player_timeout,
+            'transient': True,
+            'tourney': tourney
+        })
         self.tourney_table_serial += 1
         table.timeout_policy = "fold"
         table.autodeal = False
