@@ -1096,7 +1096,7 @@ class ResthostTestCase(unittest.TestCase):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM resthost WHERE serial = 1")        
         self.assertEqual(1, cursor.rowcount)
-        (serial,name,host,port,path) = cursor.fetchone()
+        serial, name, host, port, path, state = cursor.fetchone()
         self.assertEqual(1, serial)
         self.assertEqual('HOST', host)
         self.assertEqual(7777, port)
@@ -1111,7 +1111,7 @@ class ResthostTestCase(unittest.TestCase):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM resthost WHERE serial = 1")        
         self.assertEqual(1, cursor.rowcount)
-        (serial,name,host,port,path) = cursor.fetchone()
+        serial, name, host, port, path, state = cursor.fetchone()
         self.assertEqual(1, serial)
         self.assertEqual('HOST', host)
         self.assertEqual(7777, port)
@@ -1123,7 +1123,7 @@ class ResthostTestCase(unittest.TestCase):
         self.service.startService()
         
         db = self.service.db
-        db.db.query("INSERT INTO resthost VALUES (2, 'two', 'host2', 2222, 'path2')")
+        db.db.query("INSERT INTO resthost VALUES (2, 'two', 'host2', 2222, 'path2', 0)")
         db.db.query("INSERT INTO route VALUES (102, 0, 0, 2)")
 
         #
@@ -1187,10 +1187,10 @@ class ResthostTestCase(unittest.TestCase):
         self.failIf(resthost)
         self.failIf(game_id)
         db = self.service.db
-        db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1')")
+        db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1', 0)")
         db.db.query("INSERT INTO route VALUES (0, 100, 0, 10)")
         db.db.query("INSERT INTO route VALUES (0, 200, 0, 10)")
-        db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2')")
+        db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2', 0)")
         db.db.query("INSERT INTO route VALUES (0, 300, 0, 20)")
         resthost, game_id = self.service.packet2resthost(PacketPokerCreateTourney())
         self.assertEqual('host2', resthost[0])

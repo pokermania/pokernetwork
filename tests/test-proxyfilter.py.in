@@ -191,7 +191,7 @@ class ProxyTestCase(unittest.TestCase):
             """
             db = self.proxy_service.db
             db.db.query("INSERT INTO route VALUES (6, 0, 0, 60)")
-            db.db.query("INSERT INTO resthost VALUES (60, 'fake', '127.0.0.1', 6666, '/fail')")
+            db.db.query("INSERT INTO resthost VALUES (60, 'fake', '127.0.0.1', 6666, '/fail', 0)")
             d = client.getPage("http://127.0.0.1:19480/POKER_REST",
                                postdata = '{"type":"PacketPokerTableJoin","game_id":6}')
             def checkTable(result):
