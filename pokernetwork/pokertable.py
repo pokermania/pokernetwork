@@ -164,17 +164,15 @@ class PokerTable:
         self.update_recursion = False
 
         # Lock Checker
-        self._lock_check = LockCheck(
-            self.playerTimeout * self.game.max_players * (len(self.game.round_info) + 3),
-            self._warnLock
-        )
+        self._lock_check = LockCheck(20 * 60, self._warnLock)
         self.game.registerCallback(lambda game_id, event_type, *args: event_type == 'end' and self._lock_check.stop())
         self._lock_check_locked = False
 
     def _warnLock(self):
         self._lock_check_locked = True
         game_id = str(self.game.id) if hasattr(self, 'game') else '?'
-        self.error("Table is locked! game_id: %s" % (game_id,))
+        hand_serial = str(self.game.hand_serial) if hasattr(self, 'game') else '?'
+        self.error("Table is locked! game_id: %s, hand_serial: %s" % (game_id, hand_serial,))
 
     def isLocked(self):
         return self._lock_check_locked
