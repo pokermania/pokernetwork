@@ -1039,7 +1039,6 @@ class PokerService(service.Service):
             sql = "UPDATE user2money SET amount = amount - %s WHERE user_serial = %s AND currency_serial = %s AND amount >= %s"
             params = (bail,tourney.bailor_serial,prize_currency,bail)
             cursor.execute(sql,params)
-            a = cursor._executed
             if self.verbose > 2:
                 self.message("tourneyFinished: bailor pays %s" % cursor._executed)
             if cursor.rowcount != 1:

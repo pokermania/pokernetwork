@@ -314,7 +314,6 @@ class PokerTable:
             packets = [packets]
         for packet in packets:
             keys = self.game.serial2player.keys()
-            print("broadcast%s %s " % (keys, packet))
             if self.factory.verbose > 1:
                 self.message("broadcast%s %s " % (keys, packet))
             for serial in keys:
