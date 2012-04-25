@@ -39,6 +39,7 @@ import copy
 twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork.pokerexplain import PokerExplain
+from pokernetwork.pokertable import PokerPredefinedDecks
 
 #
 # Must be done before importing pokerclient or pokerclient
@@ -59,9 +60,11 @@ from pokerengine.pokercards import PokerCards
 global table1ID
 global table2ID
 global table3ID
+global table9ID
 table1ID = 100
 table2ID = 200
 table3ID = 300
+table9ID = 900
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="4" autodeal="yes" max_missed_round="5">
   <delays autodeal_tournament_min="2" autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
@@ -516,12 +519,15 @@ class PokerTableTestCaseBase(unittest.TestCase):
         global table1ID
         global table2ID
         global table3ID
+        global table9ID
         table1ID = table1ID + 1
         table2ID += 1
         table3ID += 1
+        table9ID += 1
         self.table1_value = table1ID
         self.table2_value = table2ID
         self.table3_value = table3ID
+        self.table9_value = table9ID
 
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsXmlStr, len(settingsXmlStr))
@@ -555,9 +561,19 @@ class PokerTableTestCaseBase(unittest.TestCase):
             'muck_timeout' : 1,
             'currency_serial': 0
         })
+        self.table9 = pokertable.PokerTable(self.service, table9ID, {
+            'name': "table3",
+            'variant': "holdem",
+            'betting_structure': "1-2-no-limit",
+            'seats': 9,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'currency_serial': 0
+        })
         self.service.table1 = self.table
         self.service.table2 = self.table2
         self.service.table3 = self.table3
+        self.service.table9 = self.table9
 
         # Test to make sure that the max_missed_round count can be
         # overwritten by description in init settings.  note That table1
@@ -1250,7 +1266,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         if self.table.factory.verbose < 2: self.table.factory.verbose = 2
         clear_all_messages()
         self.table.update()
-        #FIXME! doesn't make sense to search 4 times for the same sting to check if there are 4 in messages
+        #FIXME! doesn't make sense to search 4 times for the same string to check if there are 4 in messages
         for msg in [
             '[Server][PokerGame %d] removing player 4 from game',
             'broadcast[1, 2, 3] POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
@@ -1440,8 +1456,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def historyGet(mgSelf): return []
             def isRunning(mgSelf): return False
             def potAndBetsAmount(mgSelf): return 0
-            def historyReduce(mgSelf): pass
-            def historyGetReduced(mgSelf): return [""]
 
         self.table.timer_info["muckTimeout"] = None
         origGame = self.table.game
@@ -1495,8 +1509,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def isRunning(mgSelf): return True
             def getSerialInPosition(mgSelf): return 664
             def historyGet(mgSelf): return [ "" ]
-            def historyReduce(mgSelf): pass
-            def historyGetReduced(mgSelf): return [""]
 
         self.table.game = MockGame() 
         self.table.playerTimeout = 100
@@ -2137,6 +2149,174 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.scheduleAutoDeal()
         
         return d1
+    
+    def test52_strange(self):
+        table = self.table3
+        clients = {}
+        table.oldUpdate = table.update
+        def newUpdate(obj):
+            print '[TABLE_POS]',obj.game.position,obj.game.player_list[obj.game.position] if len(obj.game.player_list)>obj.game.position and obj.game.position >= 0 else 'NOT AVAILABLE: pos: %s, serials: %s' % (obj.game.position, obj.game.player_list)
+            return obj.oldUpdate()
+        table.update = lambda: newUpdate(table)
+        def sitIn(serial):
+            client = clients[serial]
+            table.seatPlayer(client, serial, -1)
+            table.buyInPlayer(client, table.game.maxBuyIn())
+            table.game.noAutoBlindAnte(serial)
+            table.sitPlayer(client, serial)
+            table.update()
+            
+        for serial in (1,2,3):
+            clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            client.setExplain(PacketPokerExplain.REST)
+            table.joinPlayer(client,serial)
+            
+        for serial in (1,2):
+            sitIn(serial)
+            
+        def quitAll(packet):
+            table.destroy()
+            
+        def secondGame(packet):
+            table.game.blind(1); table.update()
+            table.game.blind(3); table.update()
+            table.game.fold(2); table.update()
+            d3 = clients[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+            d3.addCallback(lambda packet: table.destroy())
+            return d3
+            
+        def firstGame(packet):
+            table.game.blind(2); table.update()
+            table.game.blind(1); table.update()
+            sitIn(3)
+            table.game.fold(2); table.update()
+            d2 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
+            d2.addCallback(secondGame)
+            table.scheduleAutoDeal()
+#            restore_all_messages()
+            return d2
+        
+        d1 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
+        
+        d1.addCallback(firstGame)
+        table.scheduleAutoDeal()
+        return d1
+    
+    def test53_uncalled(self):
+#        restore_all_messages()
+        table = self.table9
+        
+        player_list = [101, 102, 103, 104, 105, 106, 107]
+        clients = {}
+        
+        decks = []
+        cards = []
+        cards_to_player = [
+            (101,(1,1)),
+            (102,(1,1)),
+            (103,(207, 206)), 
+            (104,(203, 235)),
+            (105,(236, 239)), 
+            (106,(1,1)),
+            (107,(1,1))
+        ]
+        cards_board = (28, 51, 41, 24, 45)
+        for i in range(2):
+            for (player,card_strings) in cards_to_player:
+                cards.append(card_strings[i])
+        cards.extend(cards_board)
+        cards.reverse()
+        decks.append(cards)
+        decks.append(cards)
+        
+        table.game.shuffler = PokerPredefinedDecks(decks)
+            
+        def sitIn(serial):
+            client = clients[serial]
+            table.seatPlayer(client, serial, -1)
+            table.buyInPlayer(client, table.game.maxBuyIn())
+            table.game.noAutoBlindAnte(serial)
+            table.sitPlayer(client, serial)
+            table.update()
+            
+        for serial in player_list:
+            clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            client.setExplain(PacketPokerExplain.REST)
+            table.joinPlayer(client,serial)
+        for serial in player_list:
+            sitIn(serial)
+
+        table.game.getPlayer(103).money = 100000000
+        clients[103].setMoney(table,100000000)
+        table.update()
+        
+        def secondGame(packet):
+            table.game.fold(103); table.update() # is ignored
+            table.leavePlayer(clients[103], 103)
+            table.game.blind(104); table.update()
+            table.game.blind(103); table.update() # is ignored
+            table.game.blind(105); table.update()
+            
+            for client in clients.values():
+                explain_game = clients[106].explain.games.getGame(table.game.id)
+                self.assertEqual(table.game.uncalled_serial, explain_game.uncalled_serial)
+            
+            table.game.check(106); table.update() # ignored
+            table.playerTimeoutTimer(106)
+            
+            table.game.check(107); table.update() # ignored
+            table.game.check(107); table.update() # ignored
+            table.playerTimeoutTimer(107)
+            
+            table.playerTimeoutTimer(101)
+            table.playerTimeoutTimer(102)
+            
+            table.game.check(104); table.update() # ignored
+            table.playerTimeoutTimer(104)
+            
+            table.destroy()
+            
+        def firstGame(packet):
+            table.game.blind(102); table.update()
+            table.game.blind(103); table.update()
+            table.game.call(104); table.update()
+            table.game.call(105); table.update()
+            table.game.fold(106); table.update()
+            table.game.fold(107); table.update()
+            table.game.fold(101); table.update()
+            table.game.call(102); table.update()
+            
+            table.game.check(103); table.update()
+            table.game.check(102); table.update()
+            table.game.check(104); table.update()
+            table.game.check(105); table.update()
+            
+            table.game.check(102); table.update()
+            table.game.callNraise(103, 400); table.update()
+            table.game.call(104); table.update()
+            table.game.call(105); table.update()
+            table.game.fold(102); table.update()
+            
+            table.game.callNraise(103, 280); table.update()
+            table.game.call(104); table.update()
+            table.game.callNraise(105, 560); table.update()
+            
+            table.game.callNraise(103, 10000000000000); table.update()
+            table.game.fold(104); table.update()
+            table.game.call(105); table.update()
+            d2 = clients[103].waitFor(PACKET_POKER_BLIND_REQUEST)
+            d2.addCallback(secondGame)
+            table.scheduleAutoDeal()
+            return d2
+            
+        d1 = clients[102].waitFor(PACKET_POKER_BLIND_REQUEST)
+        d1.addCallback(firstGame)
+        table.game.forced_dealer_seat = 0
+        table.scheduleAutoDeal()
+        return d1
+        
         
 # --------------------------------------------------------------------------------
 def Run():

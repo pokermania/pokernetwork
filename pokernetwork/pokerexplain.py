@@ -452,7 +452,7 @@ class PokerExplain:
                             ))
                     else:
                         if game.isSit(serial):
-                            game.sitOut(serial)                            
+                            game.sitOut(serial)
                             forward_packets.append(PacketPokerSitOut(game_id = game.id,serial = serial))
 
             elif packet.type == PACKET_POKER_RAKE:
@@ -658,8 +658,8 @@ class PokerExplain:
             # Build dealer messages
             # Skip state = end because information is missing and will be received by the next packet (WIN)
             if not (packet.type == PACKET_POKER_STATE and packet.string == "end"):
-                game.history_index = game.historyReduce()
-                (subject, messages) = history2messages(game, game.historyGetReduced()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
+                (subject, messages) = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
+                game.history_index = len(game.historyGet())
                 if messages:
                     message = "".join("Dealer: %s\n" % line for line in messages)
                     forward_packets.append(PacketPokerChat(

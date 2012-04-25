@@ -164,9 +164,7 @@ class PokerTable:
         self.update_recursion = False
 
         # Lock Checker
-        self._lock_check = LockCheck(20 * 60, self._warnLock)
-        self.game.registerCallback(lambda game_id, event_type, *args: event_type == 'end' and self._lock_check.stop())
-        self._lock_check_locked = False
+        self._initLockCheck()
 
     def _warnLock(self):
         self._lock_check_locked = True
@@ -217,7 +215,7 @@ class PokerTable:
 
         #
         # kill lock check timer
-        self._lock_check.stop()
+        self._stopLockCheck()
 
     def getName(self, serial):
         """Returns the name to the given serial"""
@@ -248,7 +246,7 @@ class PokerTable:
             del info["dealTimeout"]
 
     def beginTurn(self):
-        self._lock_check.start()
+        self._startLockCheck()
         self.cancelDealTimeout()
         if self.game.isEndOrNull():
             self.historyReset()
@@ -316,6 +314,7 @@ class PokerTable:
             packets = [packets]
         for packet in packets:
             keys = self.game.serial2player.keys()
+            print("broadcast%s %s " % (keys, packet))
             if self.factory.verbose > 1:
                 self.message("broadcast%s %s " % (keys, packet))
             for serial in keys:
@@ -552,7 +551,7 @@ class PokerTable:
         updates = {}
         serial2rake = {}
         reset_bet = False
-        for event in self.game.historyGetReduced()[self.history_index:]:
+        for event in self.game.historyGet()[self.history_index:]:
             event_type = event[0]
             if event_type == "game":
                 pass
@@ -647,7 +646,7 @@ class PokerTable:
 
             elif event_type == "finish":
                 hand_serial = event[1]
-                self.factory.saveHand(self.compressedHistory(self.game.historyGetReduced()), hand_serial)
+                self.factory.saveHand(self.compressedHistory(self.game.historyGet()), hand_serial)
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 transient = 1 if self.transient else 0
                 self.factory.databaseEvent(event=PacketPokerMonitorEvent.HAND, param1=hand_serial, param2=transient)
@@ -713,7 +712,7 @@ class PokerTable:
         return new_history
 
     def delayedActions(self):
-        for event in self.game.historyGetReduced()[self.history_index:]:
+        for event in self.game.historyGet()[self.history_index:]:
             event_type = event[0]
             if event_type == "game":
                 self.game_delay = {
@@ -743,7 +742,7 @@ class PokerTable:
         # self.history_index, since we expect finish to be at the end if
         # it is there, and we don't want to consider previously reduced
         # history.
-        for event in historyToSearch[::-1]:
+        for event in reversed(historyToSearch):
             if event[0] == "finish":
                 handIsFinished = True
                 break
@@ -755,7 +754,7 @@ class PokerTable:
     def tourneyEndTurn(self):
         if not self.tourney:
             return
-        for event in self.game.historyGetReduced()[self.history_index:]:
+        for event in self.game.historyGet()[self.history_index:]:
             event_type = event[0]
             if event_type == "end":
                 self.factory.tourneyEndTurn(self.tourney, self.game.id)
@@ -919,8 +918,11 @@ class PokerTable:
         if not self.isValid():
             return "not valid"
         
-        self.history_index = self.game.historyReduce()
-        history_tail = self.game.historyGetReduced()[self.history_index:]
+        history_tail = self.game.historyGet()[self.history_index:]
+        if self.game.historyCanBeReduced(): 
+            try: self.game.historyReduce()
+            except Exception: self.error('history reduce error:\n' + traceback.format_exc(limit=4))
+        self.history_index = len(self.game.historyGet())
 
         try:
             self.updateTimers(history_tail)
@@ -1509,7 +1511,7 @@ class PokerTable:
             # any event in the game resets the player timeout
             if (
                 info["playerTimeoutSerial"] != serial or 
-                len(self.game.historyGetReduced()) > self.history_index
+                len(self.game.historyGet()) > self.history_index
             ):
                 if timer != None and timer.active():
                     timer.cancel()
@@ -1521,3 +1523,19 @@ class PokerTable:
             # if the game is not running, cancel the previous timeout
             self.cancelPlayerTimers()
             
+    def _initLockCheck(self):
+        self._lock_check = LockCheck(20 * 60, self._warnLock)
+        self.game.registerCallback(self.__lockCheckEndCallback)
+        self._lock_check_locked = False
+        
+    def _startLockCheck(self):
+        if self._lock_check:
+            self._lock_check.start()
+        
+    def _stopLockCheck(self):
+        if self._lock_check:
+            self._lock_check.stop()
+    
+    def __lockCheckEndCallback(self, game_id, event_type, *args):
+        if event_type == 'end':
+            self._startLockCheck()
