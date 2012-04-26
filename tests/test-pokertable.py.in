@@ -1456,6 +1456,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def historyGet(mgSelf): return []
             def isRunning(mgSelf): return False
             def potAndBetsAmount(mgSelf): return 0
+            def historyCanBeReduced(mgSelf): False
 
         self.table.timer_info["muckTimeout"] = None
         origGame = self.table.game
@@ -2155,7 +2156,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         clients = {}
         table.oldUpdate = table.update
         def newUpdate(obj):
-            print '[TABLE_POS]',obj.game.position,obj.game.player_list[obj.game.position] if len(obj.game.player_list)>obj.game.position and obj.game.position >= 0 else 'NOT AVAILABLE: pos: %s, serials: %s' % (obj.game.position, obj.game.player_list)
+            #print '[TABLE_POS]',obj.game.position,obj.game.player_list[obj.game.position] if len(obj.game.player_list)>obj.game.position and obj.game.position >= 0 else 'NOT AVAILABLE: pos: %s, serials: %s' % (obj.game.position, obj.game.player_list)
             return obj.oldUpdate()
         table.update = lambda: newUpdate(table)
         def sitIn(serial):
