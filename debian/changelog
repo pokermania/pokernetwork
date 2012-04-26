@@ -1,3 +1,13 @@
+poker-network (2.1.1-1) pokermania; urgency=low
+
+  * cd60874 added test which checks for the serial2delta KeyError in explains to test-pokertable
+  * 4dacf01 only reduce when it makes sense, added strange pokertable tests
+  * 86bdf2c set pokertable lockcheck timeout to 20 minutes and added hand_serial to warning
+  * 36a63ce fixed tests regarding new state field in resthost table
+  * 9c94d78 update sql statements
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 26 Apr 2012 12:45:00 +0200
+
 poker-network (2.1.0-2) pokermania; urgency=low
 
   * 11fb70f time is serialized as a long int so let's pass it like that
