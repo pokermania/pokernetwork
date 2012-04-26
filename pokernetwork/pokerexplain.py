@@ -358,9 +358,9 @@ class PokerExplain:
 
             elif packet.type in (PACKET_POKER_PLAYER_LEAVE,PACKET_POKER_TABLE_MOVE) :
                 game.removePlayer(packet.serial)
-                if packet.serial == self.getSerial():
-                    self.games.deleteGame(game.id)
                 if packet.type == PACKET_POKER_TABLE_MOVE:
+                    if packet.serial == self.getSerial():
+                        self.games.deleteGame(game.id)
                     forward_packets.append(PacketPokerPlayerLeave(
                         game_id = packet.game_id,
                         serial = packet.serial,

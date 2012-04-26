@@ -1558,7 +1558,7 @@ serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """
 
-    info = PacketPokerId.info + ( ('reason', '', 's'), )
+    info = PacketPokerId.info + ( ('reason', '', 'bs'), )
 
 Packet.infoDeclare(globals(), PacketPokerWaitFor, Packet, "POKER_WAIT_FOR", 103) # 103 # 0x67
 ########################################
