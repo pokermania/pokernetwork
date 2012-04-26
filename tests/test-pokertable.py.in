@@ -2317,6 +2317,66 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.scheduleAutoDeal()
         return d1
         
+
+    def test54_serial2delta(self):
+        class MockLockCheck(object):
+            def start(self):
+                pass
+            def stop(self):
+                pass
+               
+        restore_all_messages()
+        table = self.table9
+        table.game._lock_check = MockLockCheck()
+        player_list = [85554, 85562, 55742]
+        
+        def sitIn(serial):
+            client = clients[serial]
+            table.seatPlayer(client, serial, -1)
+            table.buyInPlayer(client, table.game.maxBuyIn())
+            table.game.noAutoBlindAnte(serial)
+            table.sitPlayer(client, serial)
+            table.update()
+
+        clients = {}
+            
+        for serial in player_list:
+            clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            client.setExplain(PacketPokerExplain.REST)
+            table.joinPlayer(client,serial)
+        for serial in player_list:
+            sitIn(serial)
+        table.sitOutPlayer(table.avatar_collection.get(85562)[0] , 85562)
+
+        def game2(packet):
+            table.game.blind(85554); table.update()
+            table.leavePlayer(clients[85562], 85562)
+            table.game.blind(55742); table.update()
+            table.game.check(85554); table.update() # ignored
+            table.leavePlayer(clients[85554], 85554)
+
+        def game1(packet):
+            table.game.blind(55742); table.update()
+            table.game.blind(85554); table.update()
+            table.game.call(55742); table.update()
+            table.game.check(85554); table.update()
+            table.game.check(55742); table.update()
+            table.game.check(85554); table.update()
+            table.game.callNraise(55742, 400); table.update()
+            table.game.fold(85554); table.update()
+            d2 = clients[85554].waitFor(PACKET_POKER_BLIND_REQUEST)
+            d2.addCallback(game2)
+            table.sitPlayer(clients[85562], 85562) ; table.update()
+            table.scheduleAutoDeal()
+            return d2
+            
+
+        d = clients[85554].waitFor(PACKET_POKER_BLIND_REQUEST)
+        d.addCallback(game1)
+        table.game.forced_dealer_seat = 0
+        table.scheduleAutoDeal()
+        return d
         
 # --------------------------------------------------------------------------------
 def Run():
