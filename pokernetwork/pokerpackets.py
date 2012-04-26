@@ -249,9 +249,6 @@ game_id: integer uniquely identifying a game.
 Packet.infoDeclare(globals(), PacketPokerSeats, Packet, "POKER_SEATS", 50) # 50 # 0x32
 ########################################
 
-PACKET_POKER_ID = 51 # 0x33 # %SEQ%
-PacketNames[PACKET_POKER_ID] = "POKER_ID"
-
 class PacketPokerId(PacketSerial):
     """
     abstract packet with game id and serial
@@ -263,9 +260,6 @@ class PacketPokerId(PacketSerial):
         
 Packet.infoDeclare(globals(), PacketPokerId, Packet, "POKER_ID", 51) # 51 # 0x33
 ########################################
-
-PACKET_POKER_MESSAGE = 52 # 0x34 # %SEQ%
-PacketNames[PACKET_POKER_MESSAGE] = "POKER_MESSAGE"
 
 class PacketPokerMessage(PacketPokerId):
     """
