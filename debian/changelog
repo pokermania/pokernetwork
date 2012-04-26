@@ -1,3 +1,9 @@
+poker-network (2.1.1-2) pokermania; urgency=low
+
+  * updated dependecy to poker-engine
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 26 Apr 2012 15:00:00 +0200
+
 poker-network (2.1.1-1) pokermania; urgency=low
 
   * cd60874 added test which checks for the serial2delta KeyError in explains to test-pokertable
