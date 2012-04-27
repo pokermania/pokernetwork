@@ -541,7 +541,10 @@ class PokerTable:
 
             elif event_type == "finish":
                 pass
-
+            
+            elif event_type == "sit":
+                pass
+            
             else:
                 self.error("history2packets: unknown history type %s " % event_type)
         return packets
