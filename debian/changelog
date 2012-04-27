@@ -1,3 +1,12 @@
+poker-network (2.1.1-4) pokermania; urgency=low
+
+  * updated poker-engine (1.4.2-2)
+  * 785d6a9 history_index is used not only in PokerTable update, fixes #5703
+  * 81be46b removed obsolete defensive programming, polishing
+  * 8480e29 recently added 'sit' event is ignored in history2messages and -packets
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 26 Apr 2012 19:00:00 +0200
+
 poker-network (2.1.1-3) pokermania; urgency=low
 
   * updated poker-engine (1.4.2-1)
