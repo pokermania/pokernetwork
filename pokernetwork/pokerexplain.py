@@ -558,12 +558,7 @@ class PokerExplain:
                 # betting round. No state change is received when
                 # reaching showdown or otherwise terminating the hand.
                 if game.isFirstRound():
-                    try:
-                        game.initRound()
-                    except Exception, e:
-                        self.error('explain exception initRound 1')
-                        if self.verbose > 0: self._postMortemDump(packet,game)
-                        raise e
+                    game.initRound()
                 else:
                     if not self.no_display_packets:
                         if packet.string == "end" and game.isSingleUncalledBet(game.side_pots):
@@ -571,12 +566,7 @@ class PokerExplain:
                         else:
                             forward_packets.extend(self.moveBet2Pot(game))
                     if packet.string != "end":
-                        try:
-                            game.initRound()
-                        except Exception, e:
-                            self.error('explain exception initRound 2')
-                            if self.verbose > 0: self._postMortemDump(packet,game)
-                            raise e
+                        game.initRound()
                 if not self.no_display_packets:
                     if game.isRunning() and game.cardsDealt() and game.downCardsDealtThisRoundCount() > 0:
                         forward_packets.append(PacketPokerDealCards(

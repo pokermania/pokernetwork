@@ -130,8 +130,8 @@ class PokerTable:
         self.game.setBettingStructure(description["betting_structure"])
         self.game.setMaxPlayers(int(description["seats"]))
         self.game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
-        self.game.registerCallback(lambda game_id, game_type, *args: game_type == 'end' and self.tourneyEndTurn())  # @UnusedVariable
-        self.game.registerCallback(lambda game_id, game_type, *args: game_type == 'end' and self.tourneyUpdateStats())  # @UnusedVariable
+        self.game.registerCallback(self._gameCallbackTourneyEndTurn)
+        self.game.registerCallback(self._gameCallbackTourneyUpdateStats)
         self.skin = description.get("skin", "default")
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
@@ -1525,6 +1525,15 @@ class PokerTable:
             # if the game is not running, cancel the previous timeout
             self.cancelPlayerTimers()
             
+    def _gameCallbackTourneyEndTurn(self,game_id,game_type,*args):
+        if game_type == 'end':
+            self.tourneyEndTurn()
+            
+    def _gameCallbackTourneyUpdateStats(self,game_id,game_type,*args):
+        if game_type == 'end':
+            self.tourneyUpdateStats()
+            
+                
     def _initLockCheck(self):
         self._lock_check = LockCheck(20 * 60, self._warnLock)
         self.game.registerCallback(self.__lockCheckEndCallback)
