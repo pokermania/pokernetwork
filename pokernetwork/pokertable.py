@@ -920,11 +920,9 @@ class PokerTable:
         if not self.isValid():
             return "not valid"
         
-        history_tail = self.game.historyGet()[self.history_index:]
-        if self.game.historyCanBeReduced(): 
-            try: self.game.historyReduce()
-            except Exception: self.error('history reduce error:\n' + traceback.format_exc(limit=4))
-        self.history_index = len(self.game.historyGet())
+        history = self.game.historyGet()
+        history_len = len(history)
+        history_tail = history[self.history_index:]
 
         try:
             self.updateTimers(history_tail)
@@ -938,6 +936,12 @@ class PokerTable:
                 self.cashGame_kickPlayerSittingOutTooLong(history_tail)
                 self.scheduleAutoDeal()
         finally:
+            if history_len != len(history):
+                self.error("%s length changed from %d to %d (i.e. %s was added)" % ( str(history), history_len, len(history), history[history_len:] ))
+            if self.game.historyCanBeReduced(): 
+                try: self.game.historyReduce()
+                except Exception: self.error('history reduce error:\n' + traceback.format_exc(limit=4))
+            self.history_index = len(self.game.historyGet())
             self.update_recursion = False
         return "ok"
 
