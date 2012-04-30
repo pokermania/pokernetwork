@@ -521,6 +521,9 @@ class PokerTable:
                     game_id=game_id,
                     serial=serial
                 ))
+                
+            elif event_type == "sit":
+                pass
 
             elif event_type == "rebuy":
                 serial, amount = event[1:]
@@ -540,9 +543,6 @@ class PokerTable:
                     ))
 
             elif event_type == "finish":
-                pass
-            
-            elif event_type == "sit":
                 pass
             
             else:
@@ -643,6 +643,9 @@ class PokerTable:
             elif event_type == "sitOut":
                 pass
 
+            elif event_type == "sit":
+                pass
+
             elif event_type == "leave":
                 pass
 
@@ -652,7 +655,7 @@ class PokerTable:
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 transient = 1 if self.transient else 0
                 self.factory.databaseEvent(event=PacketPokerMonitorEvent.HAND, param1=hand_serial, param2=transient)
-
+                
             else:
                 self.error("syncDatabase: unknown history type %s " % event_type)
 
