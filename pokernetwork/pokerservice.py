@@ -961,10 +961,15 @@ class PokerService(service.Service):
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
             self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_START, param1 = tourney.serial)            
             reactor.callLater(0.01, self.tourneyBroadcastStart, tourney.serial)
+            #
             # Only obey extra_wait_tourney_start if we had been registering and are now running,
             # since we only want this behavior before the first deal.
-            wait = int(self.delays.get('extra_wait_tourney_start', 0))
+            wait_type = 'tourney' if tourney.sit_n_go != 'y' else 'sng'
+            wait = int(self.delays.get('extra_wait_%s_start' % wait_type, 0))
+            wait_msg_interval = 20
             if wait > 0:
+                for remaining in range(wait-int(wait_msg_interval/2),0,-wait_msg_interval):
+                    reactor.callLater(remaining,self.tourneyStartingMessage,tourney,wait-remaining)
                 reactor.callLater(wait, self.tourneyDeal, tourney)
             else:
                 self.tourneyDeal(tourney)
@@ -972,7 +977,12 @@ class PokerService(service.Service):
             self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
             self.tourneyBreakWait(tourney)
-
+    
+    def tourneyStartingMessage(self,tourney,remaining):
+        for game_id in tourney.id2game.keys():
+            table = self.getTable(game_id)
+            table.broadcastMessage(PacketPokerGameMessage, "Waiting for players.\nNext hand will be dealt shortly.\n(maximum %d seconds)" % remaining)
+            
     def tourneyBreakCheck(self, tourney):
         key = 'tourney_breaks_%d' % id(tourney)
         self.cancelTimer(key)
@@ -985,8 +995,8 @@ class PokerService(service.Service):
                 remaining = "one minute"
             else:
                 remaining = "%d minutes" % int(remaining / 60)
-            for game_id in map(lambda game: game.id, tourney.games):
-                table = self.getTable(game_id)
+            for game in tourney.games:
+                table = self.getTable(game.id)
                 table.broadcastMessage(PacketPokerGameMessage, "Tournament is now on break for " + remaining)
 
             self.timer[key] = reactor.callLater(int(self.delays.get('breaks_check', 30)), self.tourneyBreakCheck, tourney)
