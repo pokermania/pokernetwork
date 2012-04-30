@@ -212,7 +212,6 @@ class PokerTable:
         # cut connection from and to factory
         self.factory.deleteTable(self)
         del self.factory
-
         #
         # kill lock check timer
         self._stopLockCheck()
