@@ -56,8 +56,7 @@ class PokerNetworkGameClient(PokerGameClient):
         if self.verbose >= 3:
             self.message("buildPlayerList " + str(self.player_list))
 
-        asserted_player_list = [s for s, p in self.serial2player.iteritems() if p.isSit()]
-        asserted_player_list.sort(key=lambda s: self.serial2player[s].seat)
+        asserted_player_list = [s for s in self.player_list if self.serial2player[s].isSit()]
 
         if self.player_list != asserted_player_list:
             self.error("self.player_list %s differs from asserted_player_list %s" % (
