@@ -2378,6 +2378,64 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.game.forced_dealer_seat = 0
         table.scheduleAutoDeal()
         return d
+
+    def test55_assertionTest(self):
+        table = self.table9
+        restore_all_messages()
+        table.factory.verbose = 0
+        clients_all = {}
+        clients = {}        
+        s_all = [31464, 49610, 50317, 38108, 73933, 17030, 40712, 74280]
+        s_sit = [50317, 38108, 73933, 17030, 40712, 74280]
+        s_seats = [0,1,2,4,5,6,7,8,9]
+        
+        def joinAndSeat(serial,should_sit,pos):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            client.setExplain(PacketPokerExplain.ALL)
+            self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertEqual(True, table.seatPlayer(client, serial, pos))
+            self.assertEqual(True, table.buyInPlayer(client, table.game.maxBuyIn()))
+            client.setMoney(table,2000)
+            table.game.noAutoBlindAnte(serial)
+            if should_sit:
+                clients[serial] = client
+                table.sitPlayer(client, serial)
+            table.update()
+            
+        for pos,serial in enumerate(s_all):
+            joinAndSeat(serial,serial in s_sit,s_seats[pos])
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        table.game.dealer_seat = 1
+        table.game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial in s_all:
+            table.game.serial2player[serial].missed_blind = None
+        #
+        # setup 49610 
+        table.game.serial2player[49610].missed_blind = 'small'
+        
+        def firstGame(packet):
+            s_all.append(52392)
+            s_sit.append(52392)
+            joinAndSeat(52392,False,3)
+            s_sit.append(49610)
+            clients[49610] = clients_all[49610]
+            table.sitPlayer(clients[49610], 49610)
+            
+            table.game.blind(38108); table.update()
+            table.game.blind(73933); table.update()
+            table.quitPlayer(clients_all[31464], 31464)
+
+            table.cancelPlayerTimers()
+            table.destroy()
+            
+        table.scheduleAutoDeal()
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        return d1
         
 # --------------------------------------------------------------------------------
 def Run():
