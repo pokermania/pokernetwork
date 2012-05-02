@@ -2381,8 +2381,10 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 
     def test55_assertionTest(self):
         table = self.table9
-        restore_all_messages()
+        #restore_all_messages()
         table.factory.verbose = 0
+        table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
+        table.factory.tableMoneyAndBet = lambda *a,**kw: (0,0)
         clients_all = {}
         clients = {}        
         s_all = [31464, 49610, 50317, 38108, 73933, 17030, 40712, 74280]
@@ -2396,7 +2398,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
             self.assertEqual(True, table.seatPlayer(client, serial, pos))
             self.assertEqual(True, table.buyInPlayer(client, table.game.maxBuyIn()))
-            client.setMoney(table,2000)
+            #client.setMoney(table,2000)
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
@@ -2418,19 +2420,20 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.game.serial2player[49610].missed_blind = 'small'
         
         def firstGame(packet):
-            s_all.append(52392)
-            s_sit.append(52392)
-            joinAndSeat(52392,False,3)
-            s_sit.append(49610)
-            clients[49610] = clients_all[49610]
-            table.sitPlayer(clients[49610], 49610)
-            
-            table.game.blind(38108); table.update()
-            table.game.blind(73933); table.update()
-            table.quitPlayer(clients_all[31464], 31464)
+            try:
+                s_all.append(52392)
+                s_sit.append(52392)
+                joinAndSeat(52392,False,3)
+                s_sit.append(49610)
+                clients[49610] = clients_all[49610]
+                table.sitPlayer(clients[49610], 49610)
 
-            table.cancelPlayerTimers()
-            table.destroy()
+                table.game.blind(38108); table.update()
+                table.game.blind(73933); table.update()
+                table.quitPlayer(clients_all[31464], 31464)
+            finally:
+                table.cancelPlayerTimers()
+                table.destroy()
             
         table.scheduleAutoDeal()
         d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)

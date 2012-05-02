@@ -55,16 +55,14 @@ class PokerNetworkGameClient(PokerGameClient):
         self.player_list = self.getStaticPlayerList()
         if self.verbose >= 3:
             self.message("buildPlayerList " + str(self.player_list))
-        #assert self.player_list == filter(lambda x: self.serial2player[x].isSit(), self.player_list)
 
-        if with_wait_for:
-            assert_player_list = [s for s, p in self.serial2player.iteritems() if p.isSit() and p.wait_for != "first_round"]
-        else:
-            assert_player_list = [s for s, p in self.serial2player.iteritems() if p.isSit() and not p.isWaitForBlind()]
-        assert_player_list.sort(key=lambda i: self.serial2player[i].seat)
-        assert self.player_list == assert_player_list, "self.player_list %s differs from %s" % (
-            str(self.player_list),
-            str(assert_player_list)
-        )
-    
+        asserted_player_list = [s for s, p in self.serial2player.iteritems() if p.isSit()]
+        asserted_player_list.sort(key=lambda s: self.serial2player[s].seat)
+
+        if self.player_list != asserted_player_list:
+            self.error("self.player_list %s differs from asserted_player_list %s" % (
+                str(self.player_list),
+                str(asserted_player_list)
+            ))
+
         return True
