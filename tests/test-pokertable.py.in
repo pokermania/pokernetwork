@@ -33,6 +33,7 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
 
+from collections import OrderedDict
 from random import seed, randint
 import copy
 
@@ -2320,15 +2321,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
 
     def test54_serial2delta(self):
-        class MockLockCheck(object):
-            def start(self):
-                pass
-            def stop(self):
-                pass
-               
-        restore_all_messages()
-        table = self.table9
-        table.game._lock_check = MockLockCheck()
+        # restore_all_messages()
+        self.table = table = self.table9
         player_list = [85554, 85562, 55742]
         
         def sitIn(serial):
@@ -2380,31 +2374,54 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         return d
 
     def test55_assertionTest(self):
-        table = self.table9
-        #restore_all_messages()
-        table.factory.verbose = 0
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        # restore_all_messages()
+        # table.factory.verbose = 0
         table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
         table.factory.tableMoneyAndBet = lambda *a,**kw: (0,0)
+        
+        def addPlayerAndReorder(self, serial, seat=-1):
+            was_added = self.addPlayerOrig(serial,seat)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
+        
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
         clients_all = {}
         clients = {}        
         s_all = [31464, 49610, 50317, 38108, 73933, 17030, 40712, 74280]
         s_sit = [50317, 38108, 73933, 17030, 40712, 74280]
         s_seats = [0,1,2,4,5,6,7,8,9]
+        od_order = [49610, 17030, 74280, 73933, 40712, 50317, 31464, 52392, 38108]
         
-        def joinAndSeat(serial,should_sit,pos):
+        def checkPlayerlistAndMoney():
+            pl = game.player_list
+            mm = game.moneyMap()
+            for client in clients_all.values():
+                client_game = client.explain.games.getGame(game.id)
+                self.assertTrue(pl==client_game.player_list)
+                self.assertTrue(mm==client_game.moneyMap())
+                
+        def joinAndSeat(serial,should_sit,pos,explain=False):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
-            client.setExplain(PacketPokerExplain.ALL)
-            self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
-            self.assertEqual(True, table.seatPlayer(client, serial, pos))
-            self.assertEqual(True, table.buyInPlayer(client, table.game.maxBuyIn()))
-            #client.setMoney(table,2000)
+            if explain:
+                client.setExplain(PacketPokerExplain.ALL)
+            self.assertTrue(table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
                 table.sitPlayer(client, serial)
             table.update()
-            
+        
+        #
+        # get seats for all players
         for pos,serial in enumerate(s_all):
             joinAndSeat(serial,serial in s_sit,s_seats[pos])
         #
@@ -2418,22 +2435,33 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         #
         # setup 49610 
         table.game.serial2player[49610].missed_blind = 'small'
+        #
+        # setup 52392 (only observer)
+        s_all.append(52392)
+        clients_all[52392] = client = self.createPlayer(52392, getReadyToPlay=False, clientClass=MockClientWithExplain)
+        client.service = self.service
+        client.setExplain(PacketPokerExplain.ALL)
+        self.assertTrue(table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
         
         def firstGame(packet):
-            try:
-                s_all.append(52392)
-                s_sit.append(52392)
-                joinAndSeat(52392,False,3)
-                s_sit.append(49610)
-                clients[49610] = clients_all[49610]
-                table.sitPlayer(clients[49610], 49610)
-
-                table.game.blind(38108); table.update()
-                table.game.blind(73933); table.update()
-                table.quitPlayer(clients_all[31464], 31464)
-            finally:
-                table.cancelPlayerTimers()
-                table.destroy()
+            #
+            # 49610 joins again
+            clients[49610] = clients_all[49610]
+            s_sit.append(49610)
+            self.assertFalse(table.seatPlayer(clients[49610], 49610, -1))
+            table.game.noAutoBlindAnte(49610)
+            table.sitPlayer(clients[49610], 49610)
+            table.update()
+            #
+            # get a seat for 52392
+            self.assertTrue(table.seatPlayer(clients_all[52392], 52392, 3))
+            self.assertTrue(table.buyInPlayer(clients_all[52392], table.game.maxBuyIn()))
+            table.game.noAutoBlindAnte(52392)
+            table.update()
+            table.game.blind(38108); table.update()
+            table.game.blind(73933); table.update()
+            table.quitPlayer(clients_all[31464], 31464); table.update()
+            joinAndSeat(31464, True, -1,True)
             
         table.scheduleAutoDeal()
         d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)

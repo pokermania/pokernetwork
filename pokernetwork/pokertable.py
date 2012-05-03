@@ -522,13 +522,7 @@ class PokerTable:
                 ))
 
             elif event_type == "sit":
-                serial = event[1]
-                packets.append(PacketPokerPlayerChips(
-                    game_id=game_id,
-                    serial=serial,
-                    bet=0,
-                    money=self.game.getPlayerMoney(serial)
-                ))
+                pass
 
             elif event_type == "rebuy":
                 serial, amount = event[1:]
