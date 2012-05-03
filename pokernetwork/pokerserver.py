@@ -98,7 +98,7 @@ def makeService(configuration):
         internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)).setServiceParent(serviceCollection)
 
     #
-    # TELNET twisted.manhole (without SSL)
+    # SSh twisted.conch.manhole
     #
     manhole_port = settings.headerGetInt("/server/listen/@manhole")
     if manhole_port:
@@ -110,7 +110,7 @@ def makeService(configuration):
             }
         ).setServiceParent(serviceCollection)
         if settings.headerGetInt("/server/@verbose") > 0:
-            print "PokerManhole: manhole is useful for debugging, use with telnet admin/admin, however, it can be a security risk and should be used only during debugging"
+            print "PokerManhole: manhole is useful for debugging, however, it can be a security risk and should be used only during debugging"
     
     return serviceCollection
 
