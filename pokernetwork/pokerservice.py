@@ -705,7 +705,7 @@ class PokerService(service.Service):
                 "UPDATE tourneys AS t " \
                     "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
                     "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
-                "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'canceled' " \
+                "SET u2m.amount = u2m.amount + t.buy_in + t.rake " \
                 "WHERE t.serial = %s",
                 (tourney.serial,)
             )
