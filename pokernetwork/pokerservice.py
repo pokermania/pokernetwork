@@ -254,10 +254,12 @@ class PokerService(service.Service):
         cursor.execute("SELECT rank,percentile FROM rank WHERE currency_serial = %s AND user_serial = %s", ( currency_serial, user_serial ))
         if cursor.rowcount == 1:
             row = cursor.fetchone()
-            packet = PacketPokerPlayerStats(currency_serial = currency_serial,
-                                            serial = user_serial,
-                                            rank = row[0],
-                                            percentile = row[1])
+            packet = PacketPokerPlayerStats(
+                currency_serial = currency_serial,
+                serial = user_serial,
+                rank = row[0],
+                percentile = row[1]
+            )
         else:
             packet = PacketPokerError(
                 serial = user_serial,

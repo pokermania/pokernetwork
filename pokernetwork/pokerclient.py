@@ -77,7 +77,6 @@ class PokerSkin:
 
 #
 # Set a flag when an error is logged
-#
 from twisted.python import log
 
 log.error_occurred = False
@@ -103,7 +102,6 @@ class PokerClientFactory(UGAMEClientFactory):
         # it is initialized. This is done
         # so that the caller does not have to check the existence of the
         # attribute when catching an exception.
-        #
         self.crashing = False
 
         settings = self.settings
@@ -199,7 +197,6 @@ class PokerClientFactory(UGAMEClientFactory):
         # is not fatal and the data will be freed eventually. However,
         # debugging is made much harder because leak detection can't
         # check as much as it could.
-        #        
         self.skin.destroy()
 
     def getSkin(self):
@@ -249,24 +246,24 @@ class PokerClientFactory(UGAMEClientFactory):
         settings.headerSet("/settings/passwd", self.password)
 
     def isOutbound(self, packet):
-        return ( packet.type == PACKET_ERROR or
-                 packet.type == PACKET_MESSAGE or
-                 packet.type == PACKET_POKER_HAND_LIST or
-                 packet.type == PACKET_POKER_PLAYER_INFO or
-                 packet.type == PACKET_POKER_USER_INFO or
-                 packet.type == PACKET_POKER_HAND_HISTORY or
-                 packet.type == PACKET_POKER_PLAYERS_LIST or
-                 packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST or
-                 packet.type == PACKET_POKER_TOURNEY_UNREGISTER or
-                 packet.type == PACKET_POKER_TOURNEY_REGISTER )
+        return packet.type in (
+            PACKET_ERROR,
+            PACKET_MESSAGE,
+            PACKET_POKER_HAND_LIST,
+            PACKET_POKER_PLAYER_INFO,
+            PACKET_POKER_USER_INFO,
+            PACKET_POKER_HAND_HISTORY,
+            PACKET_POKER_PLAYERS_LIST,
+            PACKET_POKER_TOURNEY_PLAYERS_LIST,
+            PACKET_POKER_TOURNEY_UNREGISTER,
+            PACKET_POKER_TOURNEY_REGISTER
+        )
 
     def isAlwaysHandled(self, packet):
-        return ( packet.type == PACKET_POKER_PLAYER_CHIPS or
-                 packet.type == PACKET_POKER_CHAT )
+        return packet.type in (PACKET_POKER_PLAYER_CHIPS, PACKET_POKER_CHAT)
     
     def isConnectionLess(self, packet):
-        return ( packet.type == PACKET_PROTOCOL_ERROR or
-                 packet.type == PACKET_QUIT )
+        return packet.type in (PACKET_PROTOCOL_ERROR, PACKET_QUIT)
 
     def getGame(self, game_id):
         return self.games.getGame(game_id)
@@ -380,16 +377,18 @@ class PokerClientProtocol(UGAMEClientProtocol):
             values = self.factory.chips_values[self.factory.chips_values.index(game.unit):]
         else:
             values = []
-        list = PokerChips(values, chips).tolist()
+        chips_list = PokerChips(values, chips).tochips_list()
         if self.factory.verbose > 4:
-            self.message("normalizeChips: " + str(list) + " " + str(values))
-        return list
+            self.message("normalizeChips: %s %s" % (chips_list,values))
+        return chips_list
             
     def updatePlayerChips(self, game, player):
-        packet = PacketPokerPlayerChips(game_id = game.id,
-                                        serial = player.serial,
-                                        bet = player.bet,
-                                        money = player.money)
+        packet = PacketPokerPlayerChips(
+            game_id = game.id,
+            serial = player.serial,
+            bet = player.bet,
+            money = player.money
+        )
         return packet
 
     def updatePotsChips(self, game, side_pots):
@@ -403,18 +402,22 @@ class PokerClientProtocol(UGAMEClientProtocol):
         for (amount, total) in side_pots['pots']:
             chips = amount
             bet = self.normalizeChips(game, chips)
-            pot = PacketPokerPotChips(game_id = game.id,
-                                      index = index,
-                                      bet = bet)
+            pot = PacketPokerPotChips(
+                game_id = game.id,
+                index = index,
+                bet = bet
+            )
             packets.append(pot)
             index += 1
         return packets
 
     def chipsPlayer2Bet(self, game, player, chips):
         packets = []
-        packet = PacketPokerChipsPlayer2Bet(game_id = game.id,
-                                            serial = player.serial,
-                                            chips = self.normalizeChips(game, chips))
+        packet = PacketPokerChipsPlayer2Bet(
+            game_id = game.id,
+            serial = player.serial,
+            chips = self.normalizeChips(game, chips)
+        )
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
         return packets
@@ -428,20 +431,24 @@ class PokerClientProtocol(UGAMEClientProtocol):
             # The ante or the dead are already in the pot
             #
             bet -= player.dead
-        packet = PacketPokerChipsBet2Pot(game_id = game.id,
-                                         serial = player.serial,
-                                         chips = self.normalizeChips(game, bet),
-                                         pot = pot_index)
+        packet = PacketPokerChipsBet2Pot(
+            game_id = game.id,
+            serial = player.serial,
+            chips = self.normalizeChips(game, bet),
+            pot = pot_index
+        )
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
         return packets
         
     def chipsPot2Player(self, game, player, bet, pot_index, reason):
-        packet = PacketPokerChipsPot2Player(game_id = game.id,
-                                            serial = player.serial,
-                                            chips = self.normalizeChips(game, bet),
-                                            pot = pot_index,
-                                            reason = reason)
+        packet = PacketPokerChipsPot2Player(
+            game_id = game.id,
+            serial = player.serial,
+            chips = self.normalizeChips(game, bet),
+            pot = pot_index,
+            reason = reason
+        )
         return packet
         
     def handleUserInfo(self, packet):
@@ -591,7 +598,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
             elif packet.type == PACKET_POKER_MUCK_REQUEST:                
                 if packet.game_id != self.getCurrentGameId():
-                   self.postMuck(game, True)
+                    self.postMuck(game, True)
 
         self.explain.explain(packet)
 
@@ -635,13 +642,14 @@ class PokerClientProtocol(UGAMEClientProtocol):
     def scheduleTableQuit(self, game):
         self.schedulePacket(PacketPokerBatchMode(game_id = game.id))
         for player in game.playersAll():
-            packet = PacketPokerPlayerLeave(game_id = game.id,
-                                            serial = player.serial,
-                                            seat = player.seat)
+            packet = PacketPokerPlayerLeave(
+                game_id = game.id,
+                serial = player.serial,
+                seat = player.seat
+            )
             self.schedulePacket(packet)
         self.schedulePacket(PacketPokerStreamMode(game_id = game.id))
-        self.schedulePacket(PacketPokerTableQuit(game_id = game.id,
-                                                serial = self.getSerial()))
+        self.schedulePacket(PacketPokerTableQuit(game_id = game.id, serial = self.getSerial()))
         self.schedulePacket(self.currentGames(game.id))
         self.publishAllPackets()
 
@@ -650,56 +658,57 @@ class PokerClientProtocol(UGAMEClientProtocol):
         game = self.getGame(game_id)
         self.setCurrentGameId(game.id)
         packets = []
-        packet = PacketPokerTable(id = game.id,
-                                  name = game.name,
-                                  variant = game.variant,
-                                  seats = game.max_players,
-                                  betting_structure = game.betting_structure,
-                                  players = game.allCount(),
-                                  # observers ?
-                                  # waiting ?
-                                  # player_timeout ?
-                                  # muck_timeout ?
-                                  hands_per_hour = game.stats["hands_per_hour"],                                  
-                                  average_pot = game.stats["average_pot"],
-                                  percent_flop = game.stats["percent_flop"],
-                                  skin = game.level_skin
-                                  )
+        packet = PacketPokerTable(
+            id = game.id,
+            name = game.name,
+            variant = game.variant,
+            seats = game.max_players,
+            betting_structure = game.betting_structure,
+            players = game.allCount(),
+            # observers ?
+            # waiting ?
+            # player_timeout ?
+            # muck_timeout ?
+            hands_per_hour = game.stats["hands_per_hour"],                                  
+            average_pot = game.stats["average_pot"],
+            percent_flop = game.stats["percent_flop"],
+            skin = game.level_skin
+        )
         packets.append(PacketPokerBatchMode(game_id = game.id))
         packet.seats_all = game.seats_all
         packets.append(packet)
-        packets.append(PacketPokerBuyInLimits(game_id = game.id,
-                                              min = game.buyIn(),
-                                              max = game.maxBuyIn(),
-                                              best = game.bestBuyIn(),
-                                              rebuy_min = game.minMoney()))
+        packets.append(PacketPokerBuyInLimits(
+            game_id = game.id,
+            min = game.buyIn(),
+            max = game.maxBuyIn(),
+            best = game.bestBuyIn(),
+            rebuy_min = game.minMoney()
+        ))
         packets.append(PacketPokerDealer(game_id = game.id, dealer = game.dealer_seat))
         for player in game.playersAll():
-            packets.append(PacketPokerPlayerArrive(game_id = game.id,
-                                                   serial = player.serial,
-                                                   name = player.name,
-                                                   url = player.url,
-                                                   outfit = player.outfit,
-                                                   blind = player.blind,
-                                                   remove_next_turn = player.remove_next_turn,
-                                                   sit_out = player.sit_out,
-                                                   sit_out_next_turn = player.sit_out_next_turn,
-                                                   auto = player.auto,
-                                                   auto_blind_ante = player.auto_blind_ante,
-                                                   wait_for = player.wait_for,
-                                                   seat = player.seat))
+            packets.append(PacketPokerPlayerArrive(
+                game_id = game.id,
+                serial = player.serial,
+                name = player.name,
+                url = player.url,
+                outfit = player.outfit,
+                blind = player.blind,
+                remove_next_turn = player.remove_next_turn,
+                sit_out = player.sit_out,
+                sit_out_next_turn = player.sit_out_next_turn,
+                auto = player.auto,
+                auto_blind_ante = player.auto_blind_ante,
+                wait_for = player.wait_for,
+                seat = player.seat
+            ))
             # FIXME: Should a PokerPlayerStats() packet be sent here?
             if player.isSit():
-                packets.append(PacketPokerSit(game_id = game.id,
-                                              serial = player.serial))
+                packets.append(PacketPokerSit(game_id = game.id, serial = player.serial))
             else:
-                packets.append(PacketPokerSitOut(game_id = game.id,
-                                                 serial = player.serial))
+                packets.append(PacketPokerSitOut(game_id = game.id, serial = player.serial))
             packets.append(self.updatePlayerChips(game, player))
-        packets.append(PacketPokerSeats(game_id = game.id,
-                                        seats = game.seats()))
-        packets.append(PacketPokerStart(game_id = game.id,
-                                        hand_serial = game.hand_serial))
+        packets.append(PacketPokerSeats(game_id = game.id, seats = game.seats()))
+        packets.append(PacketPokerStart(game_id = game.id, hand_serial = game.hand_serial))
         if game.isRunning():
             players_with_cards = game.playersNotFold()
         elif  game.isGameEndInformationValid():
@@ -709,17 +718,23 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         if players_with_cards:
             for player in players_with_cards:
-                packet = PacketPokerPlayerCards(game_id = game.id,
-                                                serial = player.serial,
-                                                cards = player.hand.toRawList())
+                packet = PacketPokerPlayerCards(
+                    game_id = game.id,
+                    serial = player.serial,
+                    cards = player.hand.toRawList()
+                )
                 packets.append(packet)
-            packets.append(PacketPokerBoardCards(game_id = game.id,
-                                                 cards = game.board.tolist(False)))
+            packets.append(PacketPokerBoardCards(
+                game_id = game.id,
+                cards = game.board.tolist(False)
+            ))
         if game.isRunning():
             if not self.no_display_packets:
                 packets.extend(self.updatePotsChips(game, game.getPots()))
-            packets.append(PacketPokerPosition(game_id = game.id,
-                                               serial = game.getSerialInPosition()))
+            packets.append(PacketPokerPosition(
+                game_id = game.id,
+                serial = game.getSerialInPosition()
+            ))
             if not self.no_display_packets:
                 packets.extend(self.updateBetLimit(game))
         else:
@@ -755,14 +770,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
             game = self.getGame(packet.game_id)
             if game:
                 game.sitOutNextTurn(packet.serial)
-            self.schedulePacket(PacketPokerSitOutNextTurn(game_id = packet.game_id,
-                                                          serial = packet.serial))
+            self.schedulePacket(PacketPokerSitOutNextTurn(game_id = packet.game_id, serial = packet.serial))
         elif packet.type == PACKET_POKER_SIT:
             game = self.getGame(packet.game_id)
             if game:
                 game.sitRequested(packet.serial)
-            self.schedulePacket(PacketPokerSitRequest(game_id = packet.game_id,
-                                                      serial = packet.serial))
+            self.schedulePacket(PacketPokerSitRequest(game_id = packet.game_id, serial = packet.serial))
         elif packet.type == PACKET_QUIT:
             self.ignoreIncomingData()
             self.abortAllTables()

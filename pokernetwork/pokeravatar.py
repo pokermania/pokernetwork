@@ -1407,7 +1407,6 @@ class PokerAvatar:
             # If the player is not in a game, the removal will be effective
             # immediately and can be announced to all players, including
             # the one that will be removed.
-            #
             packet = PacketPokerPlayerLeave(game_id = game.id, serial = serial, seat = seat)
             self.sendPacketVerbose(packet)
             table.broadcast(packet)

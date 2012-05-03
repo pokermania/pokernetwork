@@ -263,21 +263,21 @@ class PokerTable:
     def toPacket(self):
         return PacketPokerTable(
             id=self.game.id,
-            name=self.game.name,
-            variant=self.game.variant,
-            betting_structure=self.game.betting_structure,
-            seats=self.game.max_players,
-            players=self.game.allCount(),
-            hands_per_hour=self.game.stats["hands_per_hour"],
-            average_pot=self.game.stats["average_pot"],
-            percent_flop=self.game.stats["percent_flop"],
-            player_timeout=self.playerTimeout,
-            muck_timeout=self.muckTimeout,
-            observers=len(self.observers),
-            waiting=len(self.waiting),
-            skin=self.skin,
-            currency_serial=self.currency_serial,
-            tourney_serial=self.tourney and self.tourney.serial or 0
+            name = self.game.name,
+            variant = self.game.variant,
+            betting_structure = self.game.betting_structure,
+            seats = self.game.max_players,
+            players = self.game.allCount(),
+            hands_per_hour = self.game.stats["hands_per_hour"],
+            average_pot = self.game.stats["average_pot"],
+            percent_flop = self.game.stats["percent_flop"],
+            player_timeout = self.playerTimeout,
+            muck_timeout = self.muckTimeout,
+            observers = len(self.observers),
+            waiting = len(self.waiting),
+            skin = self.skin,
+            currency_serial = self.currency_serial,
+            tourney_serial = self.tourney and self.tourney.serial or 0
         )
 
     def cards2packets(self, game_id, board, pockets, cache):
@@ -288,8 +288,8 @@ class PokerTable:
         if board != None:
             if board != cache["board"]:
                 packets.append(PacketPokerBoardCards(
-                    game_id=game_id,
-                    cards=board.tolist(False)
+                    game_id = game_id,
+                    cards = board.tolist(False)
                 ))
                 cache["board"] = board.copy()
 
@@ -299,9 +299,9 @@ class PokerTable:
             for (serial, pocket) in pockets.iteritems():
                 if serial not in cache["pockets"] or cache["pockets"][serial] != pocket:
                     packets.append(PacketPokerPlayerCards(
-                        game_id=game_id,
-                        serial=serial,
-                        cards=pocket.toRawList()
+                        game_id = game_id,
+                        serial = serial,
+                        cards = pocket.toRawList()
                     ))
                 if serial not in cache["pockets"]:
                     cache["pockets"][serial] = pocket.copy()
@@ -330,9 +330,9 @@ class PokerTable:
         # cards private to each player are shown only to the player
         if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial != serial:
             return PacketPokerPlayerCards(
-                game_id=packet.game_id,
-                serial=packet.serial,
-                cards=PokerCards(packet.cards).tolist(False)
+                game_id = packet.game_id,
+                serial = packet.serial,
+                cards = PokerCards(packet.cards).tolist(False)
             )
         else:
             return packet
@@ -349,14 +349,14 @@ class PokerTable:
                         if serial == 'values':
                             continue
                         packets.append(PacketPokerPlayerChips(
-                            game_id=game_id,
-                            serial=serial,
-                            bet=nochips,
-                            money=chips
+                            game_id = game_id,
+                            serial = serial,
+                            bet = nochips,
+                            money = chips
                         ))
                 packets.append(PacketPokerInGame(
-                    game_id=game_id,
-                    players=player_list
+                    game_id = game_id,
+                    players = player_list
                 ))
                 #
                 # this may happen, for instance, if a turn is canceled
@@ -365,47 +365,47 @@ class PokerTable:
                 else:
                     previous_dealer = self.previous_dealer
                 packets.append(PacketPokerDealer(
-                    game_id=game_id,
-                    dealer=dealer,
-                    previous_dealer=previous_dealer
+                    game_id = game_id,
+                    dealer = dealer,
+                    previous_dealer = previous_dealer
                 ))
                 self.previous_dealer = dealer
                 packets.append(PacketPokerStart(
-                    game_id=game_id,
-                    hand_serial=hand_serial,
-                    hands_count=hands_count,
-                    time=int(time),
-                    level=level
+                    game_id = game_id,
+                    hand_serial = hand_serial,
+                    hands_count = hands_count,
+                    time = int(time),
+                    level = level
                 ))
 
             elif event_type == "wait_for":
                 serial, reason = event[1:]
                 packets.append(PacketPokerWaitFor(
-                    game_id=game_id,
-                    serial=serial,
-                    reason=reason
+                    game_id = game_id,
+                    serial = serial,
+                    reason = reason
                 ))
 
             elif event_type == "player_list":
                 player_list = event[1]
                 packets.append(PacketPokerInGame(
-                    game_id=game_id,
-                    players=player_list
+                    game_id = game_id,
+                    players = player_list
                 ))
 
             elif event_type == "round":
                 name, board, pockets = event[1:]
                 packets.extend(self.cards2packets(game_id, board, pockets, cache))
                 packets.append(PacketPokerState(
-                    game_id=game_id,
-                    string=name
+                    game_id = game_id,
+                    string = name
                 ))
 
             elif event_type == "position":
                 position = event[1]
                 packets.append(PacketPokerPosition(
-                    game_id=game_id,
-                    position=position
+                    game_id = game_id,
+                    position = position
                 ))
 
             elif event_type == "showdown":
@@ -415,11 +415,12 @@ class PokerTable:
             elif event_type == "blind_request":
                 serial, amount, dead, state = event[1:]
                 packets.append(PacketPokerBlindRequest(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount,
-                    dead=dead,
-                    state=state))
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount,
+                    dead = dead,
+                    state = state
+                ))
 
             elif event_type == "wait_blind":
                 pass
@@ -427,26 +428,26 @@ class PokerTable:
             elif event_type == "blind":
                 serial, amount, dead = event[1:]
                 packets.append(PacketPokerBlind(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount,
-                    dead=dead
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount,
+                    dead = dead
                 ))
 
             elif event_type == "ante_request":
                 serial, amount = event[1:]
                 packets.append(PacketPokerAnteRequest(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount
                 ))
 
             elif event_type == "ante":
                 serial, amount = event[1:]
                 packets.append(PacketPokerAnte(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount
                 ))
 
             elif event_type == "all-in":
@@ -455,70 +456,70 @@ class PokerTable:
             elif event_type == "call":
                 serial, amount = event[1:]
                 packets.append(PacketPokerCall(
-                    game_id=game_id,
-                    serial=serial
+                    game_id = game_id,
+                    serial = serial
                 ))
 
             elif event_type == "check":
                 serial = event[1]
                 packets.append(PacketPokerCheck(
-                    game_id=game_id,
-                    serial=serial
+                    game_id = game_id,
+                    serial = serial
                 ))
 
             elif event_type == "fold":
                 serial = event[1]
                 packets.append(PacketPokerFold(
-                    game_id=game_id,
-                    serial=serial
+                    game_id = game_id,
+                    serial = serial
                 ))
 
             elif event_type == "raise":
                 serial, amount = event[1:]
                 packets.append(PacketPokerRaise(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount
                 ))
 
             elif event_type == "canceled":
                 serial, amount = event[1:]
                 packets.append(PacketPokerCanceled(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount
                 ))
 
             elif event_type == "muck":
                 muckable_serials = event[1]
                 packets.append(PacketPokerMuckRequest(
-                    game_id=game_id,
-                    muckable_serials=muckable_serials
+                    game_id = game_id,
+                    muckable_serials = muckable_serials
                 ))
 
             elif event_type == "rake":
                 amount = event[1]
                 packets.append(PacketPokerRake(
-                    game_id=game_id,
-                    value=amount
+                    game_id = game_id,
+                    value = amount
                 ))
 
             elif event_type == "end":
                 winners = event[1]
                 packets.append(PacketPokerState(
-                    game_id=game_id,
-                    string="end"
+                    game_id = game_id,
+                    string = "end"
                 ))
                 packets.append(PacketPokerWin(
-                    game_id=game_id,
-                    serials=winners
+                    game_id = game_id,
+                    serials = winners
                 ))
 
             elif event_type == "sitOut":
                 serial = event[1]
                 packets.append(PacketPokerSitOut(
-                    game_id=game_id,
-                    serial=serial
+                    game_id = game_id,
+                    serial = serial
                 ))
 
             elif event_type == "sit":
@@ -527,18 +528,18 @@ class PokerTable:
             elif event_type == "rebuy":
                 serial, amount = event[1:]
                 packets.append(PacketPokerRebuy(
-                    game_id=game_id,
-                    serial=serial,
-                    amount=amount
+                    game_id = game_id,
+                    serial = serial,
+                    amount = amount
                 ))
 
             elif event_type == "leave":
                 quitters = event[1]
                 for (serial, seat) in quitters:
                     packets.append(PacketPokerPlayerLeave(
-                        game_id=game_id,
-                        serial=serial,
-                        seat=seat
+                        game_id = game_id,
+                        serial = serial,
+                        seat = seat
                     ))
 
             elif event_type == "finish":
@@ -653,7 +654,7 @@ class PokerTable:
                 self.factory.saveHand(self.compressedHistory(self.game.historyGet()), hand_serial)
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 transient = 1 if self.transient else 0
-                self.factory.databaseEvent(event=PacketPokerMonitorEvent.HAND, param1=hand_serial, param2=transient)
+                self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
                 
             else:
                 self.error("syncDatabase: unknown history type %s " % event_type)
@@ -815,7 +816,7 @@ class PokerTable:
         connected_serials = [serial for serial in serials if self.avatar_collection.get(serial)]
         if not connected_serials:
             return False
-        packet = message_type(game_id=self.game.id, string=message)
+        packet = message_type(game_id = self.game.id, string = message)
         for serial in connected_serials:
             for avatar in self.avatar_collection.get(serial):
                 avatar.sendPacket(packet)
@@ -955,9 +956,9 @@ class PokerTable:
         event_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = history[0]  # @UnusedVariable
         for player in self.game.playersAll():
             avatar.sendPacketVerbose(PacketPokerPlayerLeave(
-                game_id=self.game.id,
-                serial=player.serial,
-                seat=player.seat
+                game_id = self.game.id,
+                serial = player.serial,
+                seat = player.seat
             ))
         self.game.reset()
         self.game.name = "*REPLAY*"
@@ -1057,9 +1058,9 @@ class PokerTable:
             self.seated2observer(avatar, serial)
 
         self.broadcast(PacketPokerPlayerLeave(
-            game_id=self.game.id,
-            serial=serial,
-            seat=seat
+            game_id = self.game.id,
+            serial = serial,
+            seat = seat
         ))
 
     def disconnectPlayer(self, avatar, serial):
@@ -1111,11 +1112,11 @@ class PokerTable:
             else:
                 self.error("cannot leave a closed table")
                 avatar.sendPacketVerbose(PacketPokerError(
-                    game_id=self.game.id,
-                    serial=serial,
-                    other_type=PACKET_POKER_PLAYER_LEAVE,
-                    code=PacketPokerPlayerLeave.TOURNEY,
-                    message="Cannot leave tournament table"
+                    game_id = self.game.id,
+                    serial = serial,
+                    other_type = PACKET_POKER_PLAYER_LEAVE,
+                    code = PacketPokerPlayerLeave.TOURNEY,
+                    message = "Cannot leave tournament table"
                 ))
                 return False
 
@@ -1164,30 +1165,30 @@ class PokerTable:
         nochips = 0
         packets = []
         packets.append(PacketPokerPlayerArrive(
-            game_id=self.game.id,
-            serial=serial,
-            name=player_info.name,
-            url=player_info.url,
-            outfit=player_info.outfit,
-            blind=player.blind,
-            remove_next_turn=player.remove_next_turn,
-            sit_out=player.sit_out,
-            sit_out_next_turn=player.sit_out_next_turn,
-            auto=player.auto,
-            auto_blind_ante=player.auto_blind_ante,
-            wait_for=player.wait_for,
-            seat=player.seat
+            game_id = self.game.id,
+            serial = serial,
+            name = player_info.name,
+            url = player_info.url,
+            outfit = player_info.outfit,
+            blind = player.blind,
+            remove_next_turn = player.remove_next_turn,
+            sit_out = player.sit_out,
+            sit_out_next_turn = player.sit_out_next_turn,
+            auto = player.auto,
+            auto_blind_ante = player.auto_blind_ante,
+            wait_for = player.wait_for,
+            seat = player.seat
         ))
         if self.factory.has_ladder:
             packet = self.factory.getLadder(self.game.id, self.currency_serial, player.serial)
             if packet.type == PACKET_POKER_PLAYER_STATS:
                 packets.append(packet)
-        packets.append(PacketPokerSeats(game_id=self.game.id, seats=self.game.seats()))
+        packets.append(PacketPokerSeats(game_id = self.game.id, seats = self.game.seats()))
         packets.append(PacketPokerPlayerChips(
-            game_id=self.game.id,
-            serial=serial,
-            bet=nochips,
-            money=self.game.getPlayer(serial).money
+            game_id = self.game.id,
+            serial = serial,
+            bet = nochips,
+            money = self.game.getPlayer(serial).money
         ))
         return packets
 
@@ -1327,9 +1328,9 @@ class PokerTable:
             return False
         message = self.chatFilter(message)
         self.broadcast(PacketPokerChat(
-            game_id=self.game.id,
-            serial=serial,
-            message=message + "\n"
+            game_id = self.game.id,
+            serial = serial,
+            message = message+"\n"
         ))
         self.factory.chatMessageArchive(serial, self.game.id, message)
 
@@ -1425,9 +1426,9 @@ class PokerTable:
             return False
 
         self.broadcast(PacketPokerRebuy(
-            game_id=self.game.id,
-            serial=serial,
-            amount=amount
+            game_id = self.game.id,
+            serial = serial,
+            amount = amount
         ))
         return True
 
@@ -1442,9 +1443,9 @@ class PokerTable:
             # seconds.
             if timeout > 2:
                 self.broadcast(PacketPokerTimeoutWarning(
-                    game_id=self.game.id,
-                    serial=serial,
-                    timeout=timeout - 2
+                    game_id = self.game.id,
+                    serial = serial,
+                    timeout = timeout-2
                 ))
             info["playerTimeout"] = reactor.callLater(timeout, self.playerTimeoutTimer, serial)
         else:

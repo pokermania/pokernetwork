@@ -844,16 +844,16 @@ class PokerExplain:
         packets = []
         packets.append(PacketPokerBatchMode(game_id = game.id))
         for player in game.playersAll():
-            packets.append(PacketPokerPlayerLeave(\
+            packets.append(PacketPokerPlayerLeave(
                 game_id = game.id,
                 serial = player.serial,
-                seat = player.seat)
-            )
+                seat = player.seat
+            ))
         packets.append(PacketPokerStreamMode(game_id = game.id))
         packets.append(PacketPokerTableQuit(
             game_id = game.id,
-            serial = self.getSerial())
-        )
+            serial = self.getSerial()
+        ))
         packets.append(self.currentGames(game.id))
         return packets
     
