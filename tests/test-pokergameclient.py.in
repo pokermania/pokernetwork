@@ -71,7 +71,6 @@ class PokerNetworkGameClientTestCase(unittest.TestCase):
         self.failUnless(self.game.buildPlayerList(False))
         self.assertEqual(self.game.getStaticPlayerList(), self.game.player_list)
         self.game.getPlayer(player_serial).sit_out = True
-        self.assertRaises(AssertionError, self.game.buildPlayerList, True)
         self.game.setStaticPlayerList([200])
         self.assertRaises(KeyError, self.game.buildPlayerList, True)
 

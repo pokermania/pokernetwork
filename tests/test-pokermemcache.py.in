@@ -30,7 +30,7 @@ from pokernetwork.pokermemcache import MemcacheMockup
 class MemcacheTestCase(unittest.TestCase):
 
       def test01(self):
-            memcache = MemcacheMockup.Client([''])
+            memcache = MemcacheMockup.Client([])
             memcache.set('a', 'b')
             self.assertEqual(None, memcache.get('c'))
             self.assertEqual('b', memcache.get('a'))
@@ -46,7 +46,7 @@ class MemcacheTestCase(unittest.TestCase):
             self.assertEqual(1, memcache.delete_multi(map.keys()))
             self.assertEqual({}, memcache.get_multi(map.keys()))
       def test02(self):
-            memcache = MemcacheMockup.Client([''])
+            memcache = MemcacheMockup.Client([])
             memcache.set('a', 'b', time = 1)
             self.assertEqual(1, memcache.expiration['a'])
             map = {'A': 'x', 'B':'y'}
@@ -70,7 +70,7 @@ class MemcacheTestCase(unittest.TestCase):
                   caughtIt = True
             self.failUnless(caughtIt, "MemcachedStringEncodingError was not caught")
       def test04_log(self):
-            memcache = MemcacheMockup.Client([''])
+            memcache = MemcacheMockup.Client([])
             memcache.log = []
             memcache.set('a', 'b', time = 1)
             memcache.set('a', 'c', time = 2)

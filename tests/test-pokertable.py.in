@@ -2135,6 +2135,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.call(1)
             d3 = clients[1].waitFor(PACKET_POKER_STATE)
             table.update()
+            table.destroy()
             return d3
         
         def payBlinds(packet):
@@ -2321,8 +2322,15 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
 
     def test54_serial2delta(self):
-        # restore_all_messages()
-        self.table = table = self.table9
+        class MockLockCheck(object):
+            def start(self):
+                pass
+            def stop(self):
+                pass
+               
+        restore_all_messages()
+        table = self.table9
+        table.game._lock_check = MockLockCheck()
         player_list = [85554, 85562, 55742]
         
         def sitIn(serial):
@@ -2350,6 +2358,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.blind(55742); table.update()
             table.game.check(85554); table.update() # ignored
             table.leavePlayer(clients[85554], 85554)
+            table.destroy()
 
         def game1(packet):
             table.game.blind(55742); table.update()

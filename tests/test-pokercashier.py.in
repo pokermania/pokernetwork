@@ -35,6 +35,7 @@ from pprint import pprint
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
+from types import StringType, IntType, LongType, FloatType
 from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
@@ -576,6 +577,18 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
             def cursor(dbSelf):
                 return MockCursor()
+            def literal(dbSelf, arg):
+                t = type(arg)
+                if t == StringType:
+                    return "'%s'" % (arg.replace("'", "\\'"))
+                elif t == IntType:
+                    return str(arg)
+                elif t == LongType:
+                    return str(arg)
+                elif t == FloatType:
+                    return "%f" % (arg)
+                else:
+                    raise ValueError("undefined type: %s" % (t))
         
         self.cashier.setDb(MockDatabase())
 
@@ -588,7 +601,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "SQL command 'INSERT INTO currencies (url) VALUES (%s)' failed without raising exception.  Underlying DB may be severely hosed")
         self.failUnless(caughtExeption)
 
-        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)'])
+        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')'])
     # --------------------------------------------------------
     def test02_getCurrencySerial_forceExceptionOnExecute(self):
         clear_all_messages()
@@ -615,6 +628,18 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
             def cursor(dbSelf):
                 return MockCursor()
+            def literal(dbSelf, arg):
+                t = type(arg)
+                if t == StringType:
+                    return "'%s'" % (arg.replace("'", "\\'"))
+                elif t == IntType:
+                    return str(arg)
+                elif t == LongType:
+                    return str(arg)
+                elif t == FloatType:
+                    return "%f" % (arg)
+                else:
+                    raise ValueError("undefined type: %s" % (t))
         
         self.cashier.setDb(MockDatabase())
 
@@ -628,7 +653,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(e[0], ER.DUP_ENTRY)
         self.failUnless(caughtExeption)
 
-        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)'])
+        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')'])
     # --------------------------------------------------------
     def test03_getCurrencySerial_forceRecursionWithNoResolution(self):
         clear_all_messages()
@@ -660,6 +685,18 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf):
                 return dbSelf.cursorValue
+            def literal(dbSelf, arg):
+                t = type(arg)
+                if t == StringType:
+                    return "'%s'" % (arg.replace("'", "\\'"))
+                elif t == IntType:
+                    return str(arg)
+                elif t == LongType:
+                    return str(arg)
+                elif t == FloatType:
+                    return "%f" % (arg)
+                else:
+                    raise ValueError("undefined type: %s" % (t))
         
         db = MockDatabase()
         self.cashier.setDb(db)
@@ -676,7 +713,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().selectCount, 2)
         self.assertEquals(db.cursor().insertCount, 2)
 
-        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)', 'SELECT serial FROM currencies WHERE url = http://example.org', 'INSERT INTO currencies (url) VALUES (http://example.org)'])
+        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')', 'SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')'])
     # --------------------------------------------------------
     def test04_cashOutUpdateSafe_twoNullPackets(self):
         """test04_cashOutUpdateSafe_forceFallThrough
@@ -1057,6 +1094,18 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 dbSelf.db = MockInternalDatabase()
                 dbSelf.cursorValue = MockCursor()
             def cursor(dbSelf): return dbSelf.cursorValue
+            def literal(dbSelf, arg):
+                t = type(arg)
+                if t == StringType:
+                    return "'%s'" % (arg.replace("'", "\\'"))
+                elif t == IntType:
+                    return str(arg)
+                elif t == LongType:
+                    return str(arg)
+                elif t == FloatType:
+                    return "%f" % (arg)
+                else:
+                    raise ValueError("undefined type: %s" % (t))
         class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.url  = "http://cashier.example.org"
@@ -1080,7 +1129,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                 self.assertEquals(db.cursor().counts[key], 1)
             else:
                 self.assertEquals(db.cursor().counts[key], 0)
-        self.assertEquals(get_messages(), ['SELECT transaction_id FROM counter WHERE  currency_serial = 12', 'cashOutCurrencyCommit', 'SELECT serial FROM currencies WHERE url = http://cashier.example.org'])
+        self.assertEquals(get_messages(), ['SELECT transaction_id FROM counter WHERE  currency_serial = 12', 'cashOutCurrencyCommit', 'SELECT serial FROM currencies WHERE url = \'http://cashier.example.org\''])
         clear_all_messages()
 
         self.assertEquals(d.callback(True), None)

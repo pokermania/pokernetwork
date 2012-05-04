@@ -19,7 +19,7 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, os
+import sys
 sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "@srcdir@")
 sys.path.insert(0, "..")
@@ -44,6 +44,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
                 self.type = 254
                 packets.PacketList.__init__(self, packets = [TestPacket()])
 
+        _stdout, sys.stdout = sys.stdout, open('/dev/null', 'w')
         self.assertEqual(None, self.packetCheck(type = TestPacketList))
 
         class TestPacketList(packets.PacketList):
@@ -55,6 +56,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
                 packets.PacketList.unpack(self, block[:-3])
 
         self.assertEqual(None, self.packetCheck(type = TestPacketList))
+        sys.stdout = _stdout
         
     #--------------------------------------------------------------    
     def test_all(self):
@@ -193,6 +195,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         self.assertEqual("AUTH_REQUEST  type = 11 length = 3", str(test_packet))
 
     def test_unpackpackets_errors(self):
+        _stdout, sys.stdout = sys.stdout, open('/dev/null', 'w')
         #
         # Unknown packet type
         #
@@ -201,6 +204,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         # Pretend there are 2 packets although only one is present
         #
         self.assertEqual(None, packets.Packet.unpackpackets('\x00\x02\x00\x00\x03'));
+        sys.stdout = _stdout
 
 #--------------------------------------------------------------
 def GetTestSuite():

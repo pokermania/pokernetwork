@@ -69,17 +69,22 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
     def test_PacketPokerUserInfo(self):
         packet = pokerpackets.PacketPokerUserInfo(money = {1: (2, 3, 4), 10: (20, 30, 40)})
         self.packUnpack(packet, 'money')
-        self.failUnless("20/30/40" in str(packet))
+        self.failUnless("(20, 30, 40)" in str(packet))
 
     #--------------------------------------------------------------    
     def test_PacketPokerPlayersList(self):
         packet = pokerpackets.PacketPokerPlayersList(players = [('name', 10, 20)])
         self.packUnpack(packet, 'players')
-        self.failUnless("name|10|20" in str(packet))
+        self.failUnless("('name', 10, 20)" in str(packet))
         
     #--------------------------------------------------------------    
     def test_PacketPokerMoneyTransfert(self):
-        packet = pokerpackets.PacketPokerCashIn(note = ('url', 10, 'name', 20))
+        packet = pokerpackets.PacketPokerCashIn(
+            url='url',
+            name='name',
+            bserial=10,
+            value=20
+        )
         self.packUnpack(packet, 'name')
         self.failUnless("name = name" in str(packet))        
 
