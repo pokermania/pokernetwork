@@ -1,3 +1,13 @@
+poker-network (2.1.2-1) pokermania; urgency=low
+
+  * updated poker-engine (1.4.3-1)
+  * 934fa92 fixed PokerService.refundCancelTourney to not change state to 'canceled'. A callback to PokerService.tourneyNewState does that and fails if it is done before
+  * f1dc15f test + fix for AssertionError, fixes #5716
+  * 1cd0cc3 added extra_wait_sng_start, added broadcast message on tourney start
+  * 8cc0ad6 ignore sit event_type in PokerTable.syncDatabase
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 04 May 2012 19:00:00 +0200
+
 poker-network (2.1.1-4) pokermania; urgency=low
 
   * updated poker-engine (1.4.2-2)
