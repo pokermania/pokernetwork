@@ -789,71 +789,71 @@ class PokerService(service.Service):
         return date.today()
     
     def spawnTourney(self, schedule):
-        #
-        # buy-in currency
-        #
-        currency_serial = schedule['currency_serial']
-        currency_serial_from_date_format = schedule['currency_serial_from_date_format']
-        if currency_serial_from_date_format:
-            if not self._spawnTourney_currency_from_date_format_re.match(currency_serial_from_date_format):
-                raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, self._spawnTourney_currency_from_date_format_re.pattern )
-            currency_serial = long(self.today().strftime(currency_serial_from_date_format))
-        #
-        # prize pool currency
-        #
-        prize_currency = schedule['prize_currency']
-        prize_currency_from_date_format = schedule['prize_currency_from_date_format']
-        if prize_currency_from_date_format:
-            if not self._spawnTourney_currency_from_date_format_re.match(prize_currency_from_date_format):
-                raise UserWarning, "tourney_schedule.prize_currency_from_date_format format string %s does not match %s" % ( prize_currency_from_date_format, self._spawnTourney_currency_from_date_format_re.pattern )
-            prize_currency = long(self.today().strftime(prize_currency_from_date_format))
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO tourneys "
-                       " (resthost_serial, schedule_serial, name, description_short, description_long, players_quota, players_min, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, breaks_first, breaks_interval, breaks_duration, rebuy_delay, add_on, add_on_delay, start_time, via_satellite, satellite_of, satellite_player_count)"
-                       " VALUES "
-                       " (%s,              %s,              %s,   %s,                %s,               %s,            %s,          %s,      %s,                %s,             %s,             %s,              %s,             %s,        %s,            %s,     %s,   %s,       %s,           %s,              %s,              %s,          %s,     %s,           %s,         %s,            %s,           %s )",
-                       ( schedule['resthost_serial'],
-                         schedule['serial'],
-                         schedule['name'],
-                         schedule['description_short'],
-                         schedule['description_long'],
-                         schedule['players_quota'],
-                         schedule['players_min'],
-                         schedule['variant'],
-                         schedule['betting_structure'],
-                         schedule['seats_per_game'],
-                         schedule['player_timeout'],
-                         currency_serial,
-                         prize_currency,
-                         schedule['prize_min'],
-                         schedule['bailor_serial'],
-                         schedule['buy_in'],
-                         schedule['rake'],
-                         schedule['sit_n_go'],
-                         schedule['breaks_first'],
-                         schedule['breaks_interval'],
-                         schedule['breaks_duration'],
-                         schedule['rebuy_delay'],
-                         schedule['add_on'],
-                         schedule['add_on_delay'],
-                         schedule['start_time'],
-                         schedule['via_satellite'],
-                         schedule['satellite_of'],
-                         schedule['satellite_player_count']) )
-        if self.verbose > 2:
-            self.message("spawnTourney: " + str(schedule))
-        #
-        # Accomodate with MySQLdb versions < 1.1
-        #
-        if hasattr(cursor, "lastrowid"):
-            tourney_serial = cursor.lastrowid
-        else:
-            tourney_serial = cursor.insert_id()
-        if schedule['respawn'] == 'n':
-            cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s", (int(schedule['serial']),))
-        cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
-        cursor.close()
-        self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial, prize_currency)
+        try:
+            #
+            # buy-in currency
+            #
+            currency_serial = schedule['currency_serial']
+            currency_serial_from_date_format = schedule['currency_serial_from_date_format']
+            if currency_serial_from_date_format:
+                if not self._spawnTourney_currency_from_date_format_re.match(currency_serial_from_date_format):
+                    raise UserWarning, "tourney_schedule.currency_serial_from_date_format format string %s does not match %s" % ( currency_serial_from_date_format, self._spawnTourney_currency_from_date_format_re.pattern )
+                currency_serial = long(self.today().strftime(currency_serial_from_date_format))
+            #
+            # prize pool currency
+            #
+            prize_currency = schedule['prize_currency']
+            prize_currency_from_date_format = schedule['prize_currency_from_date_format']
+            if prize_currency_from_date_format:
+                if not self._spawnTourney_currency_from_date_format_re.match(prize_currency_from_date_format):
+                    raise UserWarning, "tourney_schedule.prize_currency_from_date_format format string %s does not match %s" % ( prize_currency_from_date_format, self._spawnTourney_currency_from_date_format_re.pattern )
+                prize_currency = long(self.today().strftime(prize_currency_from_date_format))
+            cursor.execute("INSERT INTO tourneys SET " + ", ".join("%s = %s" % (key, self.db.literal(val)) for key, val in {
+                'resthost_serial': schedule['resthost_serial'],
+                'schedule_serial': schedule['serial'],
+                'name': schedule['name'],
+                'description_short': schedule['description_short'],
+                'description_long': schedule['description_long'],
+                'players_quota': schedule['players_quota'],
+                'players_min': schedule['players_min'],
+                'variant': schedule['variant'],
+                'betting_structure': schedule['betting_structure'],
+                'seats_per_game': schedule['seats_per_game'],
+                'player_timeout': schedule['player_timeout'],
+                'currency_serial': currency_serial,
+                'prize_currency': prize_currency,
+                'prize_min': schedule['prize_min'],
+                'bailor_serial': schedule['bailor_serial'],
+                'buy_in': schedule['buy_in'],
+                'rake': schedule['rake'],
+                'sit_n_go': schedule['sit_n_go'],
+                'breaks_first': schedule['breaks_first'],
+                'breaks_interval': schedule['breaks_interval'],
+                'breaks_duration': schedule['breaks_duration'],
+                'rebuy_delay': schedule['rebuy_delay'],
+                'add_on': schedule['add_on'],
+                'add_on_delay': schedule['add_on_delay'],
+                'start_time': schedule['start_time'],
+                'via_satellite': schedule['via_satellite'],
+                'satellite_of': schedule['satellite_of'],
+                'satellite_player_count': schedule['satellite_player_count']
+            }.iteritems()))
+            if self.verbose > 2:
+                self.message("spawnTourney: " + str(schedule))
+            #
+            # Accomodate with MySQLdb versions < 1.1
+            #
+            if hasattr(cursor, "lastrowid"):
+                tourney_serial = cursor.lastrowid
+            else:
+                tourney_serial = cursor.insert_id()
+            if schedule['respawn'] == 'n':
+                cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s", (int(schedule['serial']),))
+            cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
+            self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial, prize_currency)
+        finally:
+            cursor.close()
 
     def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial, currency_serial, prize_currency):
         tourney_map['start_time'] = int(tourney_map['start_time'])
