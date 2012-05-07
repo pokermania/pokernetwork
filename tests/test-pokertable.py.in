@@ -2133,10 +2133,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.callNraise(2, 200000)
             table.update()
             table.game.call(1)
-            d3 = clients[1].waitFor(PACKET_POKER_STATE)
             table.update()
             table.destroy()
-            return d3
         
         def payBlinds(packet):
             table.game.blind(2,2500)
@@ -2330,7 +2328,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
                
         restore_all_messages()
         table = self.table9
-        table.game._lock_check = MockLockCheck()
+        table._lock_check = MockLockCheck()
         player_list = [85554, 85562, 55742]
         
         def sitIn(serial):
