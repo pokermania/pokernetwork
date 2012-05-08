@@ -44,6 +44,7 @@ from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
 from twisted.internet import protocol, reactor, defer
 from pokernetwork import pokernetworkconfig
+from pokernetwork.pokerpacketizer import history2packets
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
@@ -1358,7 +1359,9 @@ class PokerAvatar:
             # packet containing cards custom cards into placeholders
             # in this case.
             #
-            for past_packet in table.history2packets(game.historyGet(), game.id, table.createCache()):
+            packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, table.createCache()) #@UnusedVariable
+            for error in errors: table.error(error)
+            for past_packet in packets:
                 self.sendPacketVerbose(table.private2public(past_packet, self.getSerial()))
         self.sendPacketVerbose(PacketPokerStreamMode(game_id = game.id))
 

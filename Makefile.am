@@ -76,6 +76,7 @@ pokernetwork_PYTHON = \
 	pokernetwork/pokermemcache.py \
 	pokernetwork/pokernetworkconfig.py \
 	pokernetwork/pokerpackets.py \
+	pokernetwork/pokerpacketizer.py \
 	pokernetwork/pokerserver.py \
 	pokernetwork/pokerservice.py \
 	pokernetwork/pokermanhole.py \
