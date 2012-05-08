@@ -1,4 +1,8 @@
+from pokerengine.pokercards import PokerCards
 from pokernetwork.pokerpackets import *  # @UnusedWildImport
+
+def createCache():
+    return {"board": PokerCards(), "pockets": {}}
 
 def history2packets(history, game_id, previous_dealer, cache):
     packets = []

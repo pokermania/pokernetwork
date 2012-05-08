@@ -44,7 +44,7 @@ from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
 from twisted.internet import protocol, reactor, defer
 from pokernetwork import pokernetworkconfig
-from pokernetwork.pokerpacketizer import history2packets
+from pokernetwork.pokerpacketizer import createCache, history2packets
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
@@ -946,24 +946,28 @@ class PokerAvatar:
             elif packet.type == PACKET_POKER_TABLE_QUIT:
                 table.quitPlayer(self, self.getSerial())
 
-            elif packet.type == PACKET_POKER_HAND_REPLAY:
-                table.handReplay(self, packet.serial)
-
             table.update()
+            
+        elif table and packet.type == PACKET_POKER_HAND_REPLAY and packet.serial==table.game.hand_serial and table.game.isRunning():
+            self.sendPacketVerbose(PacketPokerError(
+                game_id = game.id,
+                serial = self.getSerial(),
+                other_type = PACKET_POKER_HAND_REPLAY,
+                message = 'game is still running'
+            ))
 
-        elif not table and packet.type == PACKET_POKER_HAND_REPLAY:
-            table = self.createTable(PacketPokerTable(reason=PacketPokerTable.REASON_HAND_REPLAY))
-            if table:
-                table.handReplay(self, packet.serial)
+        elif packet.type == PACKET_POKER_HAND_REPLAY:
+            self.handReplay(packet.game_id,packet.serial)
 
-        elif packet.type == PACKET_POKER_TABLE:
-            packet.reason = PacketPokerTable.REASON_TABLE_CREATE
-            table = self.createTable(packet)
-            if table:
-                table.joinPlayer(
-                    self, self.getSerial(),
-                    reason = PacketPokerTable.REASON_TABLE_CREATE
-                )
+#        players should not be able to create tables
+#        elif packet.type == PACKET_POKER_TABLE:
+#            packet.reason = PacketPokerTable.REASON_TABLE_CREATE
+#            table = self.createTable(packet)
+#            if table:
+#                table.joinPlayer(
+#                    self, self.getSerial(),
+#                    reason = PacketPokerTable.REASON_TABLE_CREATE
+#                )
             
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
@@ -1359,7 +1363,7 @@ class PokerAvatar:
             # packet containing cards custom cards into placeholders
             # in this case.
             #
-            packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, table.createCache()) #@UnusedVariable
+            packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, createCache()) #@UnusedVariable
             for error in errors: table.error(error)
             for past_packet in packets:
                 self.sendPacketVerbose(table.private2public(past_packet, self.getSerial()))
@@ -1475,4 +1479,25 @@ class PokerAvatar:
             return True
         else:
             return False
+        
+    def handReplay(self, game_id, hand_serial):
+        history = self.service.loadHand(hand_serial)
+        cache = createCache()
+        if not history:
+            self.sendPacketVerbose(PacketError(
+                serial = self.getSerial(),
+                other_type = PACKET_POKER_HAND_REPLAY,
+                message = 'hand not existing'
+            ))
+            return False
+        
+        level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = history[1:]  # @UnusedVariable
+        packets, previous_dealer, errors = history2packets(history, game_id, -1, cache) #@UnusedVariable
+        for packet in packets:
+            if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial == self.getSerial():
+                packet.cards = cache["pockets"][self.getSerial()].toRawList()
+            if packet.type == PACKET_POKER_PLAYER_LEAVE:
+                continue
+            self.sendPacketVerbose(packet)
+        
         

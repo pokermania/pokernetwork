@@ -42,7 +42,7 @@ from pokernetwork.pokerpackets import *  # @UnusedWildImport
 from pokernetwork.lockcheck import LockCheck
 
 from pokernetwork import pokeravatar
-from pokernetwork.pokerpacketizer import history2packets
+from pokernetwork.pokerpacketizer import createCache, history2packets
 
 class PokerAvatarCollection:
 
@@ -147,7 +147,7 @@ class PokerTable:
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
         self.temporaryPlayersPattern = settings.headerGet("/server/users/@temporary")
         self.autodealTemporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
-        self.cache = self.createCache()
+        self.cache = createCache()
         self.owner = 0
         self.avatar_collection = PokerAvatarCollection("Table%d" % id, factory.verbose)
         self.timer_info = {
@@ -233,9 +233,6 @@ class PokerTable:
                 for serial in self.game.serialsAll()
         ]
 
-    def createCache(self):
-        return {"board": PokerCards(), "pockets": {}}
-
     def cancelDealTimeout(self):
         """If there is a dealTimeout timer in timer_info cancel and delete it"""
         info = self.timer_info
@@ -258,7 +255,7 @@ class PokerTable:
 
     def historyReset(self):
         self.history_index = 0
-        self.cache = self.createCache()
+        self.cache = createCache()
 
     def toPacket(self):
         return PacketPokerTable(
@@ -738,7 +735,7 @@ class PokerTable:
         else:
             self.joinPlayer(avatar, avatar.getSerial(), reason = PacketPokerTable.REASON_HAND_REPLAY)
         serial = avatar.getSerial()
-        cache = self.createCache()
+        cache = createCache()
         packets, previous_dealer, errors = history2packets(history, self.game.id, -1, cache) #@UnusedVariable
         for packet in packets:
             if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial == serial:
