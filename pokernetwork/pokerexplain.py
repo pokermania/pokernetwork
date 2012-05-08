@@ -25,8 +25,8 @@ from pokerengine.pokerchips import PokerChips
 from pokerengine.pokergame import history2messages
 
 from pokernetwork.pokergameclient import PokerNetworkGameClient
-from pokernetwork.pokerpackets import *
-from pokernetwork.pokerclientpackets import *
+from pokernetwork.pokerpackets import * #@UnusedWildImport
+from pokernetwork.pokerclientpackets import * #@UnusedWildImport
 
 from pprint import pformat
 DEFAULT_PLAYER_USER_DATA = { 'timeout': None }
@@ -318,7 +318,8 @@ class PokerExplain:
 
         game = self.games.packet2game(packet)
 
-        if game and packet.type == PACKET_POKER_TABLE_DESTROY:
+        if game and packet.type in (PACKET_POKER_TABLE_DESTROY,PACKET_POKER_TABLE_QUIT):
+            self.games.deleteGame(game.id)
             game = None
 
         if game:

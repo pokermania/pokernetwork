@@ -1495,8 +1495,39 @@ class PokerAvatar:
             ))
             return False
         
-        level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = history[1:]  # @UnusedVariable
-        packets, previous_dealer, errors = history2packets(history, game_id, -1, cache) #@UnusedVariable
+        event_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = history[0]  # @UnusedVariable
+        serial2name = dict(self.service.getNames(player_list))
+        packets = []
+        packets.append(PacketPokerTable(
+            id = game_id,
+            seats = 10,
+            name = '*REPLAY*',
+            variant = variant,
+            betting_structure = betting_structure,
+            reason  = PacketPokerTable.REASON_HAND_REPLAY
+        ))
+        for seat,serial in enumerate(player_list):
+            packets.append(PacketPokerPlayerArrive(
+                serial = serial,
+                name = serial2name.get(serial,'player_%d' % serial),
+                game_id = game_id,
+                seat = seat
+            ))
+            packets.append(PacketPokerPlayerChips(
+                serial = serial,
+                game_id = game_id,
+                money = serial2chips[serial]
+            ))
+            packets.append(PacketPokerSit(
+                serial = serial,
+                game_id = game_id
+            ))
+        history_packets, previous_dealer, errors = history2packets(history, game_id, -1, cache) #@UnusedVariable
+        packets.extend(history_packets)
+        packets.append(PacketPokerTableDestroy(
+            game_id = game_id
+        ))
+        
         for packet in packets:
             if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial == self.getSerial():
                 packet.cards = cache["pockets"][self.getSerial()].toRawList()

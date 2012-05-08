@@ -2474,6 +2474,15 @@ class PokerService(service.Service):
         cursor.close()
         return name
     
+    def getNames(self,serials):
+        cursor = self.db.cursor()
+        sql = "SELECT serial,name FROM users WHERE serial IN (%s)"
+        params = ", ".join("%d" % serial for serial in set(serials) if serial > 0)
+        cursor.execute(sql % params)
+        ret = cursor.fetchall()
+        cursor.close()
+        return ret
+    
     def getTableAutoDeal(self):
         return self.settings.headerGet("/server/@autodeal") == "yes"
     
