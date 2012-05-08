@@ -389,6 +389,12 @@ class PokerExplain:
 
             elif packet.type == PACKET_POKER_BOARD_CARDS:
                 game.board.set(packet.cards)
+                if not self.no_display_packets and game.isSit(self.getSerial()):
+                    forward_packets.append(PacketPokerPlayerHandStrength(
+                        game_id = game.id,
+                        serial = self.getSerial(),
+                        hand = game.readablePlayerBestHands(self.getSerial())
+                    ))
 
             elif packet.type == PACKET_POKER_DEALER:
                 game.setDealer(packet.dealer)
@@ -581,13 +587,6 @@ class PokerExplain:
                             game_id = game.id,
                             serial = player.serial,
                             cards = cards)
-                        )
-                if not self.no_display_packets:
-                    if game.isRunning() and game.cardsDealt() and self.getSerial() != 0 and game.isPlaying(self.getSerial()) and (packet.string == "flop" or packet.string == "turn" or packet.string == "river"):
-                        forward_packets.append(PacketPokerPlayerHandStrength(
-                            game_id = game.id,
-                            serial = self.getSerial(),
-                            hand = game.readablePlayerBestHands(self.getSerial()))
                         )
                 if ( packet.string != "end" and not game.isBlindAnteRound() ):
                     if not self.no_display_packets:
