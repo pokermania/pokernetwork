@@ -573,8 +573,10 @@ class PokerAvatar:
             if self.setLocale(packet.locale):
                 self.sendPacketVerbose(PacketAck())
             else:
-                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
-                                                        other_type = PACKET_POKER_SET_LOCALE))
+                self.sendPacketVerbose(PacketPokerError(
+                     serial = self.getSerial(), 
+                     other_type = PACKET_POKER_SET_LOCALE
+                ))
             return
 
         if packet.type == PACKET_POKER_STATS_QUERY:
@@ -638,9 +640,11 @@ class PokerAvatar:
                 if self.setPlayerInfo(packet):
                     self.sendPacketVerbose(packet)
                 else:
-                    self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_PLAYER_INFO,
-                                                       code = PACKET_POKER_PLAYER_INFO,
-                                                       message = "Failed to save set player information"))
+                    self.sendPacketVerbose(PacketError(
+                        other_type = PACKET_POKER_PLAYER_INFO,
+                        code = PACKET_POKER_PLAYER_INFO,
+                        message = "Failed to save set player information"
+                    ))
             else:
                 self.message("attempt to set player info for player %d by player %d" % ( packet.serial, self.getSerial() ))
             return
@@ -650,9 +654,11 @@ class PokerAvatar:
                 if self.service.setPlayerImage(packet):
                     self.sendPacketVerbose(PacketAck())
                 else:
-                    self.sendPacketVerbose(PacketError(other_type = PACKET_POKER_PLAYER_IMAGE,
-                                                       code = PACKET_POKER_PLAYER_IMAGE,
-                                                       message = "Failed to save set player image"))
+                    self.sendPacketVerbose(PacketError(
+                        other_type = PACKET_POKER_PLAYER_IMAGE,
+                        code = PACKET_POKER_PLAYER_IMAGE,
+                        message = "Failed to save set player image"
+                    ))
             else:
                 self.message("attempt to set player image for player %d by player %d" % ( packet.serial, self.getSerial() ))
             return
@@ -669,8 +675,7 @@ class PokerAvatar:
                 self.queueDeferred(self.service.cashIn(packet))
             else:
                 self.message("attempt to cash in for user %d by user %d" % ( packet.serial, self.getSerial() ))
-                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
-                                                        other_type = PACKET_POKER_CASH_IN))
+                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(), other_type = PACKET_POKER_CASH_IN))
             return
 
         elif packet.type == PACKET_POKER_CASH_OUT:
@@ -678,8 +683,7 @@ class PokerAvatar:
                 self.sendPacketVerbose(self.service.cashOut(packet))
             else:
                 self.message("attempt to cash out for user %d by user %d" % ( packet.serial, self.getSerial() ))
-                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(),
-                                                        other_type = PACKET_POKER_CASH_OUT))
+                self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(), other_type = PACKET_POKER_CASH_OUT))
             return
 
         elif packet.type == PACKET_POKER_CASH_QUERY:

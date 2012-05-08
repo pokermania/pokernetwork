@@ -1710,8 +1710,8 @@ class PokerService(service.Service):
 
     def loadHand(self, hand_serial):
         cursor = self.db.cursor()
-        sql = ( "SELECT description FROM hands WHERE serial = " + str(hand_serial) )
-        cursor.execute(sql)
+        sql = "SELECT description FROM hands WHERE serial = %s"
+        cursor.execute(sql,(hand_serial,))
         if cursor.rowcount != 1:
             self.error("loadHand(%d) expected one row got %d" % ( hand_serial, cursor.rowcount ))
             cursor.close()
@@ -1727,45 +1727,45 @@ class PokerService(service.Service):
         return history
 
     def saveHand(self, description, hand_serial):
-        (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0]
+        (hand_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0] #@UnusedVariable
         
         cursor = self.db.cursor()
         
         sql = "UPDATE hands SET description = %s WHERE serial = %s"
-        cursor.execute(sql, (str(description),hand_serial))
+        params = (str(description), hand_serial)
+        cursor.execute(sql, params)
         if self.verbose > 1:
             self.message("saveHand: %s" % (cursor._executed,))
-        if cursor.rowcount != 1 and cursor.rowcount != 0:
-            self.error("modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, sql ))
+        if cursor.rowcount not in (1,0):
+            self.error("modified %d rows (expected 1 or 0): %s " % ( cursor.rowcount, cursor._executed ))
             cursor.close()
             return
 
         sql = "INSERT INTO user2hand VALUES "
-        sql += ", ".join(map(lambda player_serial: "(%d, %d)" % ( player_serial, hand_serial ), player_list))
+        sql += ", ".join("(%d, %d)" % (player_serial, hand_serial) for player_serial in player_list)
         cursor.execute(sql)
         if self.verbose > 1:
             self.message("saveHand: %s" % sql)
         if cursor.rowcount != len(player_list):
-            self.error("inserted %d rows (expected exactly %d): %s " % ( cursor.rowcount, len(player_list), sql ))
+            self.error("inserted %d rows (expected exactly %d): %s " % ( cursor.rowcount, len(player_list), cursor._executed ))
         cursor.close()
 
     def listHands(self, sql_list, sql_total):
         cursor = self.db.cursor()
         if self.verbose > 1:
-            self.message("listHands: " + sql_list + " " + sql_total)
+            self.message("listHands: %s %s" % (sql_list,sql_total))
         cursor.execute(sql_list)
         hands = cursor.fetchall()
         cursor.execute(sql_total)
         total = cursor.fetchone()[0]
         cursor.close()
-        return (total, map(lambda x: x[0], hands))
+        return (total, [x[0] for x in hands])
 
     def eventTable(self, table):
         if self.verbose > 2:
-            self.message(
-                "eventTable: %s" % {
-                    'game_id': table.game.id ,
-                    'tourney_serial': table.tourney.serial if table.tourney else 0
+            self.message("eventTable: %s" % {
+                'game_id': table.game.id ,
+                'tourney_serial': table.tourney.serial if table.tourney else 0
             })
 
     def statsTables(self):
@@ -2843,7 +2843,7 @@ class PokerService(service.Service):
         if self.verbose > 1:
             self.message("createTable: %s" % cursor._executed)
         if cursor.rowcount != 1:
-            self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, sql ))
+            self.error("inserted %d rows (expected 1): %s " % ( cursor.rowcount, cursor._executed))
             # FIXME: sr #2273 notes that this should return None from right here if rowcount == 0
             
         insert_id = cursor.lastrowid

@@ -47,7 +47,7 @@ class PokerGames:
 
     def getGameByNameNoCase(self, name):
         name = lower(name)
-        for (serial, game) in self.games.iteritems():
+        for game in self.games.itervalues():
             if lower(game.name) == name:
                 return game
         return None
@@ -118,15 +118,17 @@ class PokerExplain:
             values = self.chips_values[self.chips_values.index(game.unit):]
         else:
             values = []
-        list = PokerChips(values, chips).tolist()
-        if self.verbose > 4: self.message("normalizeChips: " + str(list) + " " + str(values))
-        return list
+        chips_list = PokerChips(values, chips).tolist()
+        if self.verbose > 4: self.message("normalizeChips: %s %s" % (chips_list,values))
+        return chips_list
             
     def updatePlayerChips(self, game, player):
-        packet = PacketPokerPlayerChips(game_id = game.id,
-                                        serial = player.serial,
-                                        bet = player.bet,
-                                        money = player.money)
+        packet = PacketPokerPlayerChips(
+            game_id = game.id,
+            serial = player.serial,
+            bet = player.bet,
+            money = player.money
+        )
         return packet
 
     def updatePotsChips(self, game, side_pots):
@@ -137,21 +139,25 @@ class PokerExplain:
             return [ packet ]
         
         index = 0
-        for (amount, total) in side_pots['pots']:
+        for (amount, total) in side_pots['pots']: #@UnusedVariable
             chips = amount
             bet = self.normalizeChips(game, chips)
-            pot = PacketPokerPotChips(game_id = game.id,
-                                      index = index,
-                                      bet = bet)
+            pot = PacketPokerPotChips(
+                game_id = game.id,
+                index = index,
+                bet = bet
+            )
             packets.append(pot)
             index += 1
         return packets
 
     def chipsPlayer2Bet(self, game, player, chips):
         packets = []
-        packet = PacketPokerChipsPlayer2Bet(game_id = game.id,
-                                            serial = player.serial,
-                                            chips = self.normalizeChips(game, chips))
+        packet = PacketPokerChipsPlayer2Bet(
+            game_id = game.id,
+            serial = player.serial,
+            chips = self.normalizeChips(game, chips)
+        )
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
         if self.what & PacketPokerExplain.CHIPSTACKS:
@@ -164,15 +170,17 @@ class PokerExplain:
             pot_index == 0 and
             player.dead > 0 and
             game.isSecondRound() 
-         ):
+        ):
             #
             # The ante or the dead are already in the pot
             #
             bet -= player.dead
-        packet = PacketPokerChipsBet2Pot(game_id = game.id,
-                                         serial = player.serial,
-                                         chips = self.normalizeChips(game, bet),
-                                         pot = pot_index)
+        packet = PacketPokerChipsBet2Pot(
+            game_id = game.id,
+            serial = player.serial,
+            chips = self.normalizeChips(game, bet),
+            pot = pot_index
+        )
         packets.append(packet)
         packets.append(self.updatePlayerChips(game, player))
         if self.what & PacketPokerExplain.CHIPSTACKS:
@@ -180,16 +188,18 @@ class PokerExplain:
         return packets
         
     def chipsPot2Player(self, game, player, bet, pot_index, reason):
-        packet = PacketPokerChipsPot2Player(game_id = game.id,
-                                            serial = player.serial,
-                                            chips = self.normalizeChips(game, bet),
-                                            pot = pot_index,
-                                            reason = reason)
+        packet = PacketPokerChipsPot2Player(
+            game_id = game.id,
+            serial = player.serial,
+            chips = self.normalizeChips(game, bet),
+            pot = pot_index,
+            reason = reason
+        )
         return packet
         
-    def gameEvent(self, game_id, type, *args):
+    def gameEvent(self, game_id, game_type, *args):
         if self.verbose > 4:
-            self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, type, str(args) ))
+            self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, game_type, str(args) ))
 
         forward_packets = self.forward_packets
         if not forward_packets:
@@ -203,13 +213,13 @@ class PokerExplain:
                 self.message("gameEvent: called for unknown game %d, ignored" % game_id)
             return False
 
-        if type == "end_round":
+        if game_type == "end_round":
             forward_packets.append(PacketPokerEndRound(game_id = game_id))
 
-        elif type == "end_round_last":
+        elif game_type == "end_round_last":
             forward_packets.append(PacketPokerEndRoundLast(game_id = game_id))
 
-        elif type == "money2bet":
+        elif game_type == "money2bet":
             ( serial, amount ) = args
             player = game.getPlayer(serial)
             last_action = game.historyGet()[-1][0]
@@ -221,17 +231,17 @@ class PokerExplain:
             if not self.no_display_packets:
                 forward_packets.extend(self.chipsPlayer2Bet(game, player, amount))
 
-        elif type == "bet2pot":
+        elif game_type == "bet2pot":
             ( serial, amount ) = args
             if not self.no_display_packets and game.isBlindAnteRound():
                 player = game.getPlayer(serial)
                 forward_packets.extend(self.chipsBet2Pot(game, player, amount, 0))
 
-        elif type == "round_cap_decrease":
+        elif game_type == "round_cap_decrease":
             if not self.no_display_packets:
                 forward_packets.extend(self.updateBetLimit(game))
 
-        elif type == "position":
+        elif game_type == "position":
             if game.inGameCount() < 2:
                 forward_packets.append(PacketPokerAllinShowdown(game_id = game.id))
                 
