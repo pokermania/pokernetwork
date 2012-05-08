@@ -1640,9 +1640,10 @@ class PokerService(service.Service):
         return packet
 
     def tourneyCancel(self, tourney):
+        players = list(tourney.players.iterkeys())
         if self.verbose > 1:
-            self.message("tourneyCancel: %s" % (tourney.players,))
-        for serial in tourney.players:
+            self.message("tourneyCancel: %s" % (players,))
+        for serial in players:
             packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
                 game_id = tourney.serial,
                 serial = serial)
@@ -2087,7 +2088,6 @@ class PokerService(service.Service):
             )
             if self.verbose > 1 and cursor.rowcount:
                 self.message("cleanupTourneys: " + cursor._executed)
-            del where
             
             # restore registering tourneys
             cursor.execute(
@@ -2102,13 +2102,15 @@ class PokerService(service.Service):
             for row in cursor.fetchall():
                 tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
                 cursor.execute(
-                    "SELECT user_serial FROM user2tourney WHERE tourney_serial = %s",
+                    "SELECT u.serial, u.name FROM users AS u " \
+                    "JOIN user2tourney AS u2t " \
+                    "ON (u.serial=u2t.user_serial AND u2t.tourney_serial=%s)",
                     (row['serial'],)
                 )
                 if self.verbose > 2:
                     self.message("cleanupTourneys: " + cursor._executed)
                 for user in cursor.fetchall():
-                    tourney.register(user['user_serial'])
+                    tourney.register(user['serial'],user['name'])
                 cursor.execute(
                     "REPLACE INTO route VALUES (0, %s, %s, %s)",
                     (row['serial'], seconds(), self.resthost_serial)

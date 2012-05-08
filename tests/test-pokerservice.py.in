@@ -1102,6 +1102,7 @@ class ResthostTestCase(unittest.TestCase):
         self.assertEqual(7777, port)
         self.assertEqual('/PATH', path)
         self.assertEqual(None, name)
+        self.assertEqual(1, state)
 
     def test001_init_with_name(self):
         """ setupResthost with name """
@@ -1116,7 +1117,8 @@ class ResthostTestCase(unittest.TestCase):
         self.assertEqual('HOST', host)
         self.assertEqual(7777, port)
         self.assertEqual('/PATH', path)
-        self.assertEqual('explain1', name)        
+        self.assertEqual('explain1', name)
+        self.assertEqual(1,state)
 
     def test01_packet2resthost(self):
         self.setUpService(self.xml_with_resthost)
@@ -1584,8 +1586,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
 
         self.createUsers()
-        player_image1 = PacketPokerPlayerImage(serial = self.user1_serial,
-                                               image = "12345")
+        player_image1 = PacketPokerPlayerImage(serial = self.user1_serial, image = "12345")
         self.assertEquals(True, self.service.setPlayerImage(player_image1))
         player_image2 = self.service.getPlayerImage(self.user1_serial)
         self.assertEquals(player_image1.image, player_image2.image)
@@ -1714,7 +1715,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 game_id = regular.serial
             ))
             self.assertEquals(self.default_money-regular.buy_in-regular.rake, self.service.getMoney(self.user1_serial, 1))
-            self.assertEquals([self.user1_serial], regular.players)
+            self.assertEquals({self.user1_serial:None}, regular.players)
 
         d1.addCallback(registerPlayer)
         reactor.callLater(5, lambda: d1.callback(True))
@@ -1884,7 +1885,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
         self.service.cleanupTourneys()
         tourney = self.service.tourneys[4000]
-        self.assertEqual([1, 2, 3], tourney.players)
+        self.assertEqual(set([1, 2, 3]), set(tourney.players.keys()))
         cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = 4000")        
         self.assertEqual(1, cursor.rowcount)
         (tournament_serial,) = cursor.fetchone()
@@ -2244,8 +2245,9 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
     def test_ok(self):
         class Tournament:
             def __init__(self):
-                self.players = [1]
+                self.players = {1:'user1'}
                 self.serial = 1
+                self.id2game = {}
 
         self.service.tourneys = {}
         self.service.tourneyCancel(Tournament())
@@ -3432,6 +3434,8 @@ class BreakTestCase(PokerServiceTestCaseBase):
         def __init__(self):
             self.serial = 1
             self.start_time = 1
+            self.sit_n_go = 'n'
+            self.id2game = {}
     # ------------------------------------------------------------------------
     def test01_tourneyNewState_simpleTransitions(self):
         def ok(tourney):
@@ -5241,7 +5245,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                         cursorSelf.rowcount = 1
                 elif statement == cursorSelf.acceptedStatements[2]:
                     cursorSelf.row = {
-                        'user_serial': 732
+                        'serial': 732,
+                        'name': 'user732'
                     }
                     cursorSelf.rowcount = 1
                 elif statement in cursorSelf.acceptedStatements:
@@ -5252,7 +5257,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 MockCursorBase.__init__(cursorSelf, self, [
                     "DELETE t FROM tourneys AS t",
                     "SELECT * FROM tourneys WHERE",
-                    "SELECT user_serial FROM user2tourney WHERE tourney_serial =",
+                    "SELECT u.serial, u.name FROM users AS u JOIN user2tourney AS u2t ON",
                     "UPDATE tourneys AS t LEFT JOIN user2tourney AS u2t ON",
                     "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys",
                     "REPLACE INTO route VALUES"
