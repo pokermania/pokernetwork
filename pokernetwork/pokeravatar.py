@@ -35,7 +35,6 @@ import re
 
 from twisted.internet import defer
 
-from types import *
 from traceback import format_exc
 
 from pokerengine import pokergame
@@ -193,25 +192,30 @@ class PokerAvatar:
         for table in self.tables.values():
             if table.possibleObserverLoggedIn(self, serial):
                 game = table.game
-                self.sendPacketVerbose(PacketPokerPlayerCards(game_id = game.id,
-                                                              serial = serial,
-                                                              cards = game.getPlayer(serial).hand.toRawList()))
-                self.sendPacketVerbose(PacketPokerPlayerSelf(game_id = game.id,
-                                                             serial = serial))
+                self.sendPacketVerbose(PacketPokerPlayerCards(
+                    game_id = game.id,
+                    serial = serial,
+                    cards = game.getPlayer(serial).hand.toRawList()
+                ))
+                self.sendPacketVerbose(PacketPokerPlayerSelf(game_id = game.id, serial = serial))
                 pending_blind_request = game.isBlindRequested(serial)
                 pending_ante_request = game.isAnteRequested(serial)
                 if pending_blind_request or pending_ante_request:
                     if pending_blind_request:
                         (amount, dead, state) = game.blindAmount(serial)
-                        self.sendPacketVerbose(PacketPokerBlindRequest(game_id = game.id,
-                                                                       serial = serial,
-                                                                       amount = amount,
-                                                                       dead = dead,
-                                                                       state = state))
+                        self.sendPacketVerbose(PacketPokerBlindRequest(
+                            game_id = game.id,
+                            serial = serial,
+                            amount = amount,
+                            dead = dead,
+                            state = state
+                        ))
                     if pending_ante_request:
-                        self.sendPacketVerbose(PacketPokerAnteRequest(game_id = game.id,
-                                                                      serial = serial,
-                                                                      amount = game.ante_info["value"]))
+                        self.sendPacketVerbose(PacketPokerAnteRequest(
+                            game_id = game.id,
+                            serial = serial,
+                            amount = game.ante_info["value"]
+                        ))
 
     def logout(self):
         if self.user.serial:
@@ -226,7 +230,6 @@ class PokerAvatar:
             status = checkNameAndPassword(packet.name, packet.password)
         elif packet.type == PACKET_AUTH:
             status = checkAuth(packet.auth)
-#            FIXME additional checking on the auth hash?
         if status[0]:
             auth_args = None
             if packet.type == PACKET_LOGIN:
@@ -539,7 +542,7 @@ class PokerAvatar:
             # turn the return value into an List if it is not
             #
             def packetList(result):
-                if type(result) == ListType:
+                if type(result) == list:
                     return result
                 else:
                     return [ result ]
@@ -948,9 +951,7 @@ class PokerAvatar:
             table.update()
 
         elif not table and packet.type == PACKET_POKER_HAND_REPLAY:
-            table = self.createTable(PacketPokerTable(
-                reason = PacketPokerTable.REASON_HAND_REPLAY
-            ))
+            table = self.createTable(PacketPokerTable(reason=PacketPokerTable.REASON_HAND_REPLAY))
             if table:
                 table.handReplay(self, packet.serial)
 

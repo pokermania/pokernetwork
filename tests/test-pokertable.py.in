@@ -2045,22 +2045,25 @@ class PokerTableRejoinTestCase(PokerTableTestCaseBase):
         player1 = self.createPlayer(1, clientClass=MockClientWithRealJoin)
         player1.service = self.service
         player2 = self.createPlayer(2)
-        self.table.scheduleAutoDeal()
-        d = player1.waitFor(PACKET_POKER_START)
+        
         def quitPlayer(x):
             self.table.quitPlayer(player1, 1)
             self.assertEquals(True, self.table.game.serial2player[1].isAuto())
         def joinPlayer(x):
-            self.table.joinPlayer(player1, 1)
             d = player1.waitFor(PACKET_POKER_PLAYER_ARRIVE)
+            self.table.joinPlayer(player1, 1)
             return d
         def checkAutoFlag(x):
             playerArrive1 = [p for p in player1.packets if p.type == PACKET_POKER_PLAYER_ARRIVE and p.serial == 1]
             self.assertEquals(False, self.table.game.serial2player[1].isAuto())            
             self.assertEquals(False, playerArrive1[0].auto)
+            
+        d = player1.waitFor(PACKET_POKER_START)
         d.addCallback(quitPlayer)
         d.addCallback(joinPlayer)
         d.addCallback(checkAutoFlag)
+        
+        self.table.scheduleAutoDeal()
         return d
     
 
@@ -2326,7 +2329,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             def stop(self):
                 pass
                
-        restore_all_messages()
         table = self.table9
         table._lock_check = MockLockCheck()
         player_list = [85554, 85562, 55742]
@@ -2389,8 +2391,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
         table.factory.tableMoneyAndBet = lambda *a,**kw: (0,0)
         
-        def addPlayerAndReorder(self, serial, seat=-1):
-            was_added = self.addPlayerOrig(serial,seat)
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
             if was_added:
                 self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
             return was_added

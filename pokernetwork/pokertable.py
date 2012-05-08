@@ -952,7 +952,6 @@ class PokerTable:
         history = self.factory.loadHand(hand)
         if not history:
             return
-        #self.message("handReplay")
         event_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = history[0]  # @UnusedVariable
         for player in self.game.playersAll():
             avatar.sendPacketVerbose(PacketPokerPlayerLeave(

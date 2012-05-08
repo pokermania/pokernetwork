@@ -144,9 +144,7 @@ class PokerFactoryFromPokerService(protocol.ServerFactory):
         """ """
         return self.service.destroyAvatar(avatar)
 
-components.registerAdapter(PokerFactoryFromPokerService,
-                           IPokerService,
-                           IPokerFactory)
+components.registerAdapter(PokerFactoryFromPokerService, IPokerService, IPokerFactory)
 
 class PokerService(service.Service):
 
@@ -166,51 +164,23 @@ class PokerService(service.Service):
         self.settings = settings
         self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.joined_max = self.settings.headerGetInt("/server/@max_joined")
-        if self.joined_max <= 0:
-            # dachary picked this maximum as a default on 2008-08-16
-            # <dachary> because the last stress test show 4000 is the upper limit
-            # <dachary> http://pokersource.info/stress-test/2007-08/
-            self.joined_max = 4000
+        if self.joined_max <= 0: self.joined_max = 4000
+        
         self.sng_timeout = self.settings.headerGetInt("/server/@sng_timeout")
-        if self.sng_timeout <= 0:
-            self.sng_timeout = 3600
+        if self.sng_timeout <= 0: self.sng_timeout = 3600
+        
         self.missed_round_max = self.settings.headerGetInt("/server/@max_missed_round")
-        if self.missed_round_max <= 0:
-            # This default for missed_round_max below (for when it is not
-            # set in config file) is completely arbitrary and made up by
-            # bkuhn.  dachary suggested 3 in #pokersource on 2008-08-24,
-            # but bkuhn argued that if someone leaves it out of the config
-            # file, it should be somewhat high since they wouldn't be
-            # expecting a pick-up if they hadn't configed their server to
-            # do it.
-            #
-            # bkuhn also pointed out that there is some arugment for
-            # making the default infinity when it is left out of the
-            # config file.  However, this complicates code to test for,
-            # say, a negative value every time to see if you should ignore
-            # the feature entirely, and it's probably not the case that
-            # the user would ever want to configure a server on purpose to
-            # have infinite sit-out time.
-            #
-            # Note that the config file example defaults this to 5, which
-            # is probably a much more reasonable default.
-            #
-            # Finally, note that this is the server-wide default.  In the
-            # config file, <table> entries can override this.
-            self.missed_round_max = 10
+        if self.missed_round_max <= 0: self.missed_round_max = 10
+        
         self.client_queued_packet_max = self.settings.headerGetInt("/server/@max_queued_client_packets")
-        if self.client_queued_packet_max <= 0:
-            self.client_queued_packet_max = 500
-
+        if self.client_queued_packet_max <= 0: self.client_queued_packet_max = 500
+        
         self.delays = settings.headerGetProperties("/server/delays")[0]
-
+        
         self.chunk_size = settings.headerGetInt("/server/@chunk_size")
         
         refill = settings.headerGetProperties("/server/refill")
-        if len(refill) > 0:
-            self.refill = refill[0]
-        else:
-            self.refill = None
+        self.refill = refill[0] if len(refill) > 0 else None
         self.db = None
         self.memcache = None
         self.cashier = None
@@ -228,9 +198,7 @@ class PokerService(service.Service):
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
         self.getPage = client.getPage
         self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
-        if self.long_poll_timeout <= 0:
-            self.long_poll_timeout = 20
-            
+        if self.long_poll_timeout <= 0: self.long_poll_timeout = 20
         #
         #badwords list
         chat_filter_filepath = settings.headerGet("/server/badwordschatfilter/@file")
@@ -1173,12 +1141,11 @@ class PokerService(service.Service):
                 to_game_id,
                 reason = PacketPokerTable.REASON_TOURNEY_MOVE
             )
-            cursor.execute("""
-                UPDATE user2tourney SET table_serial = %s
-                WHERE
-                    user_serial = %s AND
-                    tourney_serial = %s
-                """, (to_game_id, serial, tourney.serial)
+            cursor.execute(
+                "UPDATE user2tourney SET table_serial = %s " \
+                "WHERE user_serial = %s " \
+                "AND tourney_serial = %s",
+                (to_game_id, serial, tourney.serial)
             )
             if self.verbose > 4:
                 self.message("tourneyMovePlayer: " + cursor._executed)
@@ -1211,15 +1178,12 @@ class PokerService(service.Service):
                     avatar.sendPacketVerbose(packet)
             table = self.getTable(game_id)
             table.kickPlayer(serial)
-            cursor.execute("""
-                UPDATE user2tourney
-                SET
-                    rank = %s,
-                    table_serial = -1
-                WHERE
-                    user_serial = %s AND
-                    tourney_serial = %s
-                """, (rank, serial, tourney.serial)
+            cursor.execute(
+                "UPDATE user2tourney " \
+                "SET rank = %s, table_serial = -1 " \
+                "WHERE user_serial = %s " \
+                "AND tourney_serial = %s",
+                (rank, serial, tourney.serial)
             )
             if self.verbose > 4:
                 self.message("tourneyRemovePlayer: " + cursor._executed)
@@ -1231,7 +1195,7 @@ class PokerService(service.Service):
 
     def tourneySatelliteLookup(self, tourney):
         if tourney.satellite_of == 0:
-            return ( 0, None )
+            return (0, None)
         found = None
         for candidate in self.tourneys.values():
             if candidate.schedule_serial == tourney.satellite_of:
@@ -1239,12 +1203,14 @@ class PokerService(service.Service):
                 break
         if found:
             if found.state != TOURNAMENT_STATE_REGISTERING:
-                self.error("tourney %d is a satellite of %d but %d is in state %s instead of the expected state %s" % 
-                           ( tourney.serial, found.schedule_serial, found.schedule_serial, found.state, TOURNAMENT_STATE_REGISTERING) )
-                return ( 0, TOURNAMENT_STATE_REGISTERING )
-            return ( found.serial, None )
+                self.error(
+                   "tourney %d is a satellite of %d but %d is in state %s instead of the expected state %s" % 
+                   (tourney.serial, found.schedule_serial, found.schedule_serial, found.state, TOURNAMENT_STATE_REGISTERING) 
+                )
+                return (0, TOURNAMENT_STATE_REGISTERING)
+            return (found.serial, None)
         else:
-            return ( 0, False )
+            return (0, False)
                 
     def tourneySatelliteSelectPlayer(self, tourney, serial, rank):
         if tourney.satellite_of == 0:
@@ -1264,8 +1230,8 @@ class PokerService(service.Service):
         registrations = tourney.satellite_player_count - len(tourney.satellite_registrations)
         if registrations <= 0:
             return False
-        serials = filter(lambda serial: serial not in tourney.satellite_registrations, tourney.winners)
-        for serial in serials: 
+        serials = (serial for serial in tourney.winners if serial not in tourney.satellite_registrations)
+        for serial in serials:
             packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.satellite_of)
             if self.tourneyRegister(packet = packet, via_satellite = True):
                 tourney.satellite_registrations.append(serial)
@@ -1276,28 +1242,30 @@ class PokerService(service.Service):
 
     def tourneyCreate(self, packet):
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO tourneys_schedule " +
-                       " (resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, players_quota) VALUES " +
-                       " (%s             , %s             , %s     , %s               , %s            , %s            , %s  , %s               , %s             , %s    , %s)",
-                       ( self.resthost_serial,
-                         packet.currency_serial,
-                         packet.variant,
-                         packet.betting_structure,
-                         packet.seats_per_game,
-                         packet.player_timeout,
-                         packet.name,
-                         packet.description_short,
-                         packet.description_long,
-                         packet.buy_in,
-                         len(packet.players)
-                         ))
+        sql = \
+            "INSERT INTO tourneys_schedule " \
+            "(resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, players_quota) " \
+            "VALUES (%s , %s , %s , %s , %s , %s , %s , %s , %s , %s , %s)"
+        params = (
+            self.resthost_serial,
+            packet.currency_serial,
+            packet.variant,
+            packet.betting_structure,
+            packet.seats_per_game,
+            packet.player_timeout,
+            packet.name,
+            packet.description_short,
+            packet.description_long,
+            packet.buy_in,
+            len(packet.players)
+        )
+        cursor.execute(sql,params)
         schedule_serial = cursor.lastrowid
         cursor.close()
         self.updateTourneysSchedule()
         #
         # There can be only one tourney for this tourney_schedule because they are in
         # not respawned
-        #
         tourney_serial = self.schedule2tourneys[schedule_serial][0].serial
         register_packet = PacketPokerTourneyRegister(game_id = tourney_serial)
         serial_failed = []
@@ -1306,11 +1274,13 @@ class PokerService(service.Service):
             if not self.tourneyRegister(register_packet):
                 serial_failed.append(serial)
         if len(serial_failed) > 0:
-            return PacketPokerError(game_id = schedule_serial,
-                                    serial = tourney_serial,
-                                    other_type = PACKET_POKER_CREATE_TOURNEY,
-                                    code = PacketPokerCreateTourney.REGISTRATION_FAILED,
-                                    message = "registration failed for players %s in tourney %d" % ( str(serial_failed), tourney_serial ))
+            return PacketPokerError(
+                game_id = schedule_serial,
+                serial = tourney_serial,
+                other_type = PACKET_POKER_CREATE_TOURNEY,
+                code = PacketPokerCreateTourney.REGISTRATION_FAILED,
+                message = "registration failed for players %s in tourney %d" % (serial_failed, tourney_serial)
+            )
         else:
             return PacketAck()
 
@@ -1409,10 +1379,12 @@ class PokerService(service.Service):
         for row in user2tourney:
             user_serial = row["user_serial"]
             money = user2money.has_key(user_serial) and user2money[user_serial] or -1
-            user2properties[str(user_serial)] = {"name": user2name[user_serial],
-                                                 "money": money,
-                                                 "rank": row["rank"],
-                                                 "table_serial": row["table_serial"]}
+            user2properties[str(user_serial)] = {
+                "name": user2name[user_serial],
+                "money": money,
+                "rank": row["rank"],
+                "table_serial": row["table_serial"]
+            }
         packet.user2properties = user2properties
 
         return packet
@@ -1488,44 +1460,51 @@ class PokerService(service.Service):
         else:
             return None
     
-    def tourneyRegister(self, packet, via_satellite = False):
+    def tourneyRegister(self, packet, via_satellite=False):
         serial = packet.serial
         tourney_serial = packet.game_id
         avatars = self.avatar_collection.get(serial)
-
-        if not self.tourneys.has_key(tourney_serial):
-            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
-                                message = "Tournament %d does not exist" % tourney_serial)
+        tourney = self.tourneys.get(tourney_serial,None)
+        if tourney is None:
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
+                message = "Tournament %d does not exist" % tourney_serial
+            )
             if not via_satellite or self.verbose > 0:
                 self.error(error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
-        tourney = self.tourneys[tourney_serial]
-
+        
         if tourney.via_satellite and not via_satellite:
-            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                code = PacketPokerTourneyRegister.VIA_SATELLITE,
-                                message = "Player %d must register to %d via a satellite" % ( serial, tourney_serial ) )
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.VIA_SATELLITE,
+                message = "Player %d must register to %d via a satellite" % ( serial, tourney_serial ) 
+            )
             self.error(error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
             
         if tourney.isRegistered(serial):
-            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
-                                message = "Player %d already registered in tournament %d " % ( serial, tourney_serial ) )
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
+                message = "Player %d already registered in tournament %d " % ( serial, tourney_serial )
+            )
             self.error(error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
 
         if not tourney.canRegister(serial):
-            error = PacketError(other_type = PACKET_POKER_TOURNEY_REGISTER,
-                                code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
-                                message = "Registration refused in tournament %d " % tourney_serial)
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
+                message = "Registration refused in tournament %d " % tourney_serial
+            )
             self.error(error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
@@ -1642,8 +1621,7 @@ class PokerService(service.Service):
                 )
             self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
         #
-        # Unregister
-        #
+        # unregister
         cursor.execute("DELETE FROM user2tourney WHERE user_serial = %s AND tourney_serial = %s",(serial,tourney_serial))
         if self.verbose > 4:
             self.message("tourneyUnregister: %s" % cursor._executed)
@@ -2580,17 +2558,6 @@ class PokerService(service.Service):
                 self.error("modified %d rows (expected 1): %s " % ( cursor.rowcount, cursor._executed ))
                 money = -1
             cursor.close()
-
-        # HACK CHECK
-#        cursor = self.db.cursor()
-#        sql = ( "select sum(money), sum(bet) from user2table" )
-#        cursor.execute(sql)
-#        (total_money,bet) = cursor.fetchone()
-#        if total_money + bet != 120000:
-#            self.message("BUG(6) %d" % (total_money + bet))
-#            os.abort()
-#        cursor.close()
-        # END HACK CHECK
 
         return money
 
