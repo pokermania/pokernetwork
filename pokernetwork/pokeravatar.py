@@ -1364,7 +1364,7 @@ class PokerAvatar:
     def addPlayer(self, table, seat):
         serial = self.getSerial()
         game = table.game
-        if game.addPlayer(serial, seat):
+        if game.addPlayer(serial, seat, name=self.getName()):
             player = game.getPlayer(serial)
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
         table.sendNewPlayerInformation(serial)

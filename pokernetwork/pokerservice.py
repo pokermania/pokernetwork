@@ -1590,7 +1590,7 @@ class PokerService(service.Service):
         # notify success
         for avatar in avatars:
             avatar.sendPacketVerbose(packet)
-        tourney.register(serial)
+        tourney.register(serial,self.getName(serial))
         return True
 
     def tourneyUnregister(self, packet):

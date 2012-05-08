@@ -1130,7 +1130,8 @@ class PokerTable:
         #
 
         money = self.game.serial2player[serial].money
-
+        name = self.game.serial2player[serial].name
+        
         sit_out = self.movePlayerFrom(serial, to_game_id)
         for avatar in avatars:
             self.destroyPlayer(avatar, serial)
@@ -1146,7 +1147,7 @@ class PokerTable:
 
         for avatar in avatars:
             avatar.join(other_table, reason=reason)
-        other_table.movePlayerTo(serial, money, sit_out)
+        other_table.movePlayerTo(serial, name, money, sit_out)
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
             other_table.scheduleAutoDeal()
@@ -1192,9 +1193,9 @@ class PokerTable:
         ))
         return packets
 
-    def movePlayerTo(self, serial, money, sit_out):
+    def movePlayerTo(self, serial, name, money, sit_out):
         self.game.open()
-        self.game.addPlayer(serial)
+        self.game.addPlayer(serial,name=name)
         player = self.game.getPlayer(serial)
         player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
         player.money = money
