@@ -700,9 +700,9 @@ class PokerTable:
         finally:
             if history_len != len(history):
                 self.error("%s length changed from %d to %d (i.e. %s was added)" % ( str(history), history_len, len(history), history[history_len:] ))
-            if self.game.historyCanBeReduced(): 
+            if self.game.historyCanBeReduced():
                 try: self.game.historyReduce()
-                except Exception: self.error('history reduce error:\n' + traceback.format_exc(limit=4))
+                except Exception: self.error('history reduce error:\n' + traceback.format_exc())
             self.history_index = len(self.game.historyGet())
             self.update_recursion = False
         return "ok"
