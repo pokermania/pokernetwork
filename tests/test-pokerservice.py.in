@@ -4927,7 +4927,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 1
-                cursorSelf.row = ("hand_serial\r+5",)
+                cursorSelf.row = ("9\r+5",)
 
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, ["SELECT description FROM hands WHERE"])
@@ -4953,7 +4953,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 # hand_serial, the arg we send into loadHand() is set to
                 # the arg hand_serial.  So, we can test later to see if
                 # its value.
-                cursorSelf.row = ("hand_serial+5",)
+                cursorSelf.row = ("3+5",)
 
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, ["SELECT description FROM hands WHERE"])

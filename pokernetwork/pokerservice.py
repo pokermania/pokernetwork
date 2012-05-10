@@ -1720,7 +1720,7 @@ class PokerService(service.Service):
         cursor.close()
         history = None
         try:
-            history = eval(description.replace("\r",""),{'PokerCards':PokerCards})
+            history = eval(description.replace("\r",""), {'PokerCards':PokerCards})
         except Exception:
             self.error("loadHand(%d) eval failed for %s" % ( hand_serial, description ))
             if self.verbose > 1: print_exc()
