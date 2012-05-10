@@ -1,3 +1,14 @@
+poker-network (2.1.3-1) pokermania; urgency=low
+
+  * caea142 just eval HandStrength if there are enough (5) cards, fixes 4d4f788, fixes #5635
+  * 71b45d4 updated pokeradditions
+  * 6863300 game.sit returns False if already seated, refs #5781
+  * 3c778fa several changes to packetizer, pokeravatar, pokerservice
+  * 4d4f788 After PacketPokerBoardCards, send PacketPokerPlayerHandStrength to everyone that isSit, fixes #5635
+  * 1e9de58 stop pokertable lockcheck on __lockCheckEndCallback
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 10 May 2012 15:00:00 +0200
+
 poker-network (2.1.2-1) pokermania; urgency=low
 
   * updated poker-engine (1.4.3-1)
