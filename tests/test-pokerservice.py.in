@@ -1715,7 +1715,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 game_id = regular.serial
             ))
             self.assertEquals(self.default_money-regular.buy_in-regular.rake, self.service.getMoney(self.user1_serial, 1))
-            self.assertEquals({self.user1_serial:None}, regular.players)
+            self.assertEquals({self.user1_serial:'user1'}, regular.players)
 
         d1.addCallback(registerPlayer)
         reactor.callLater(5, lambda: d1.callback(True))
