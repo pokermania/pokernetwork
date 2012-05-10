@@ -401,11 +401,13 @@ class PokerExplain:
             elif packet.type == PACKET_POKER_BOARD_CARDS:
                 game.board.set(packet.cards)
                 if not self.no_display_packets and game.isSit(self.getSerial()):
-                    forward_packets.append(PacketPokerPlayerHandStrength(
-                        game_id = game.id,
-                        serial = self.getSerial(),
-                        hand = game.readablePlayerBestHands(self.getSerial())
-                    ))
+                    player = game.getPlayer(self.getSerial())
+                    if len(packet.cards) > 0 and len(player.hand.tolist(True)):
+                        forward_packets.append(PacketPokerPlayerHandStrength(
+                            game_id = game.id,
+                            serial = self.getSerial(),
+                            hand = game.readablePlayerBestHands(self.getSerial())
+                        ))
 
             elif packet.type == PACKET_POKER_DEALER:
                 game.setDealer(packet.dealer)
