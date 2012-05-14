@@ -108,7 +108,9 @@ class PokerPredefinedDecks:
 
 
 class PokerTable:
-
+    
+    TIMEOUT_DELAY_COMPENSATION = 2
+    
     def __init__(self, factory, id=0, description=None):
         self.factory = factory
         settings = self.factory.settings
@@ -153,6 +155,7 @@ class PokerTable:
         self.timer_info = {
             "playerTimeout": None,
             "playerTimeoutSerial": 0,
+            "playerTimeoutTime": None,
             "muckTimeout": None,
         }
         self.timeout_policy = "sitOut"
@@ -1199,15 +1202,14 @@ class PokerTable:
             #
             # Compensate the communication lag by always giving the avatar
             # an extra 2 seconds to react. The warning says that there only is
-            # N seconds left but the server will actually timeout after N + 2
+            # N seconds left but the server will actually timeout after N + TIMEOUT_DELAY_COMPENSATION
             # seconds.
-            if timeout > 2:
-                self.broadcast(PacketPokerTimeoutWarning(
-                    game_id = self.game.id,
-                    serial = serial,
-                    timeout = timeout-2
-                ))
-            info["playerTimeout"] = reactor.callLater(timeout, self.playerTimeoutTimer, serial)
+            self.broadcast(PacketPokerTimeoutWarning(
+                game_id = self.game.id,
+                serial = serial,
+                timeout = timeout
+            ))
+            info["playerTimeout"] = reactor.callLater(timeout+self.TIMEOUT_DELAY_COMPENSATION, self.playerTimeoutTimer, serial)
         else:
             self.updatePlayerTimers()
 
@@ -1247,18 +1249,17 @@ class PokerTable:
         info = self.timer_info
         timer = info["muckTimeout"]
         if timer != None:
-            if timer.active():
-                timer.cancel()
+            if timer.active(): timer.cancel()
             info["muckTimeout"] = None
 
     def cancelPlayerTimers(self):
         info = self.timer_info
         timer = info["playerTimeout"]
         if timer != None:
-            if timer.active():
-                timer.cancel()
+            if timer.active(): timer.cancel()
             info["playerTimeout"] = None
         info["playerTimeoutSerial"] = 0
+        info["playerTimeoutTime"] = None
 
     def updateTimers(self, history=()):
         self.updateMuckTimer(history)
@@ -1273,7 +1274,6 @@ class PokerTable:
 
     def updatePlayerTimers(self):
         info = self.timer_info
-        timer = info["playerTimeout"]
         if self.game.isRunning():
             serial = self.game.getSerialInPosition()
             #
@@ -1282,16 +1282,37 @@ class PokerTable:
                 info["playerTimeoutSerial"] != serial or 
                 len(self.game.historyGet()) > self.history_index
             ):
-                if timer != None and timer.active():
-                    timer.cancel()
+                timer = info["playerTimeout"]
+                if timer != None and timer.active(): timer.cancel()
                 timer = reactor.callLater(self.playerTimeout / 2, self.playerWarningTimer, serial)
                 info["playerTimeout"] = timer
                 info["playerTimeoutSerial"] = serial
+                info["playerTimeoutTime"] = self.playerTimeout + seconds()
         else:
             #
             # if the game is not running, cancel the previous timeout
             self.cancelPlayerTimers()
-            
+    
+    def getCurrentTimeoutWarning(self):
+        info = self.timer_info
+        packet = None
+        if (
+            self.game.isRunning() and 
+            info["playerTimeout"] is not None and
+            info["playerTimeoutSerial"] != 0 and
+            info["playerTimeoutTime"] is not None and
+            info["playerTimeout"].active()
+        ):
+            serial = info["playerTimeoutSerial"]
+            timeout = int(info["playerTimeoutTime"] - seconds())
+            packet = PacketPokerTimeoutWarning(
+                game_id = self.game.id,
+                serial = serial,
+                timeout = timeout
+            )
+        return packet
+
+    
     def _gameCallbackTourneyEndTurn(self,game_id,game_type,*args):
         if game_type == 'end':
             self.tourneyEndTurn()
@@ -1299,7 +1320,6 @@ class PokerTable:
     def _gameCallbackTourneyUpdateStats(self,game_id,game_type,*args):
         if game_type == 'end':
             self.tourneyUpdateStats()
-            
                 
     def _initLockCheck(self):
         self._lock_check = LockCheck(20 * 60, self._warnLock)

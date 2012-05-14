@@ -1258,8 +1258,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEquals(self.service.players.has_key(ii), True)
 
         self.table.game.serial2player[4].missed_big_blind_count = 1000
-        self.table.game.turn_history = self.service.loadHand(6352,
-                                         [('leave', [(1, 2), (2, 7)])])
+        self.table.game.turn_history = self.service.loadHand(6352, [('leave', [(1, 2), (2, 7)])])
 
         # Table starts with no observers before our update
 
@@ -1526,10 +1525,11 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         def failedToCancelTimeout():
             self.fail("existing playerTimeout was not replaced as expected")
 
-        self.table.timer_info = { 'playerTimeout' : 
-                                  reactor.callLater(20, failedToCancelTimeout), 
-                                  'playerTimeoutSerial' : 229 }
-                                  # Note: serial is diff from one in position
+        self.table.timer_info = {
+            'playerTimeout': reactor.callLater(20, failedToCancelTimeout), 
+            'playerTimeoutSerial': 229
+        }
+        # Note: serial is diff from one in position
         clear_all_messages()
         self.table.updatePlayerTimers()
 

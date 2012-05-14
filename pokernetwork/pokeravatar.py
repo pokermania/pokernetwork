@@ -1369,6 +1369,9 @@ class PokerAvatar:
             #
             packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, createCache()) #@UnusedVariable
             for error in errors: table.error(error)
+            timeout_packet = table.getCurrentTimeoutWarning()
+            if timeout_packet:
+                packets.append(timeout_packet)
             for past_packet in packets:
                 self.sendPacketVerbose(table.private2public(past_packet, self.getSerial()))
         self.sendPacketVerbose(PacketPokerStreamMode(game_id = game.id))
