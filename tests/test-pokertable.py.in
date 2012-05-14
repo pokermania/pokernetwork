@@ -39,14 +39,13 @@ import copy
 
 twisted.internet.base.DelayedCall.debug = True
 
+#
+# Must be done before importing any classes using twisted's seconds().
+# (e.g. pokertable, pokerclient) or these classes have to be patched manually.
+from tests import testclock
+
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokertable import PokerPredefinedDecks
-
-#
-# Must be done before importing pokerclient or pokerclient
-# will have to be patched too.
-#
-from tests import testclock
 
 from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages, redirect_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
@@ -1612,10 +1611,12 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.table.beginTurn()
         self.table.update()
 
-        return defer.DeferredList((player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-                                   player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-                                   player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-                                   player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)))
+        return defer.DeferredList([
+            player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+            player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+            player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+            player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+        ])
     # -------------------------------------------------------------------
     def test16_autoMuckTimeoutPolicy(self):
         """Make sure other timeout policies function properly"""
@@ -1717,28 +1718,28 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         class Tournament:            
             name = 'My Old Sit and Go'
             serial = 2
-        self.table = pokertable.PokerTable(self.service, table1ID, 
-                                           { 'name': "table1",
-                                             'variant': "holdem",
-                                             'betting_structure': "2-4-limit",
-                                             'seats': 4,
-                                             'player_timeout' : 6, 
-                                             'muck_timeout' : 1,
-                                             'transient' : True,
-                                             'tourney' : Tournament(),
-                                             'currency_serial': 0
-                                             })
-        self.table2 = pokertable.PokerTable(self.service, table2ID, 
-                                           { 'name': "table2",
-                                             'variant': "holdem",
-                                             'betting_structure': "2-4-limit",
-                                             'seats': 4,
-                                             'player_timeout' : 6, 
-                                             'muck_timeout' : 1,
-                                             'transient' : True,
-                                             'tourney' : Tournament(),
-                                             'currency_serial': 0
-                                             })
+        self.table = pokertable.PokerTable(self.service, table1ID, { 
+            'name': "table1",
+            'variant': "holdem",
+            'betting_structure': "2-4-limit",
+            'seats': 4,
+            'player_timeout': 6, 
+            'muck_timeout': 1,
+            'transient': True,
+            'tourney': Tournament(),
+            'currency_serial': 0
+        })
+        self.table2 = pokertable.PokerTable(self.service, table2ID, { 
+            'name': "table2",
+            'variant': "holdem",
+            'betting_structure': "2-4-limit",
+            'seats': 4,
+            'player_timeout': 6, 
+            'muck_timeout': 1,
+            'transient': True,
+            'tourney': Tournament(),
+            'currency_serial': 0
+        })
         self.service.table1 = self.table
         self.service.table2 = self.table2
         self.clients = {}
@@ -1778,7 +1779,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
         self.createPlayer(1)
         self.createPlayer(2)
-        self.table.game_delay["start"] = testclock._seconds_value - 300
+        self.table.game_delay["start"] = testclock._seconds_value - 10
         self.table.scheduleAutoDeal()
         self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
         return self.clients[2].waitFor(PACKET_POKER_START)
