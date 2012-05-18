@@ -34,6 +34,9 @@ from pokernetwork.user import checkName
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclientpackets import *
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerbotlogic')
+
 LEVEL2ITERATIONS = {
     0: 10,
     1: 1000,
@@ -100,6 +103,7 @@ class PokerBot:
     note_generator = NoteGenerator("exit 1")
     
     def __init__(self, factory):
+        self.log = log.getChild(self.__class__.__name__)
         self.factory = factory
         self.state = STATE_RUNNING
         self.batch_end_action = None
@@ -166,7 +170,7 @@ class PokerBot:
                         break
 
                 if not found:
-                    print "Unable to find table %s " % table_info["name"]
+                    self.log.warn("Unable to find table %s", table_info['name'])
                     protocol.transport.loseConnection()
 
             elif self.state == STATE_RECONNECTING:
@@ -181,24 +185,24 @@ class PokerBot:
                                                        serial = protocol.getSerial()))
                     self.state = STATE_RUNNING
                 else:
-                    print "Unexpected number of tables %d " % len(tables)
+                    self.log.inform("Unexpected number of tables %d", len(tables))
                     protocol.transport.loseConnection()
 
             else:
-                print "Unexpected state %d" % self.state
+                self.log.warn("Unexpected state %d", self.state)
                 protocol.transport.loseConnection()
 
         elif packet.type == PACKET_POKER_TOURNEY_LIST:
             name = self.factory.join_info['name']
             if len(packet.packets) <= 0:
-                print "Unable to find tournament %s " % name
+                self.log.warn("Unable to find tournament %s", name)
             found = None
             for tourney in packet.packets:
                 if tourney.state == TOURNAMENT_STATE_REGISTERING:
                     found = tourney.serial
                     break
             if not found:
-                print "No %s tournament allows registration, try later " % name
+                self.log.inform("No %s tournament allows registration, try later", name)
                 self.factory.can_disconnect = False
                 reactor.callLater(10, lambda: self.lookForGame(protocol))
             else:
@@ -208,7 +212,7 @@ class PokerBot:
             
         elif packet.type == PACKET_POKER_SEAT:
             if packet.seat == -1:
-                print "Not allowed to get a seat, give up"
+                self.log.inform("Not allowed to get a seaet, give up")
                 protocol.transport.loseConnection()
 
         elif packet.type == PACKET_POKER_ERROR or packet.type == PACKET_ERROR:
@@ -220,14 +224,15 @@ class PokerBot:
                     giveup = False
                 else:
                     name = self.factory.join_info['name']
-                    print "Registration refused for tournament %s, try later" % name
+                    self.log.inform("Registration refused for tournament %s, try later", name)
                     self.factory.can_disconnect = False
                     reactor.callLater(60, lambda: self.lookForGame(protocol))
                     giveup = False
             elif packet.other_type == PACKET_POKER_REBUY or packet.other_type == PACKET_POKER_BUY_IN:
                 self.factory.went_broke = True
 
-            if self.factory.verbose or giveup: print "ERROR: %s" % packet
+            if giveup:
+                self.error("%s", packet)
             if giveup:
                 protocol.transport.loseConnection()
             
@@ -316,7 +321,10 @@ class PokerBot:
         serial = protocol.getSerial()
         name = protocol.getName()
         if serial not in game.serialsNotFold():
-            print name + ": the server must have decided to play on our behalf before we had a chance to decide (TIMEOUT happening at the exact same time we reconnected), most likely"
+            self.log.warn("%s: the server must have decided to play on our behalf before we had a chance to decide "
+                "(TIMEOUT happening at the exact same time we reconnected), most likely",
+                name
+            )
             return
         
         (desired_action, ev) = self.eval(game, serial)
@@ -324,6 +332,13 @@ class PokerBot:
         if self.factory.verbose:
             print "%s serial = %d, hand = %s, board = %s" % (name, serial, game.getHandAsString(serial), game.getBoardAsString())
             print "%s wants to %s (ev = %d)" % (name, desired_action, ev)
+        self.log.inform("%s serial = %d, hand = %s, board = %s",
+            name,
+            serial,
+            game.getHandAsString(serial),
+            game.getBoardAsString()
+        )
+        self.log.inform("%s wants to %s (ev = %d)", name, desired_action, ev)
         while not desired_action in actions:
             if desired_action == "check":
                 desired_action = "fold"
@@ -347,6 +362,6 @@ class PokerBot:
                                                  serial = serial,
                                                  amount = min_bet * 2))
         else:
-            print "=> unexpected actions = %s" % actions
+            self.log.warn("=> unexpected actions = %s", actions)
         self.factory.can_disconnect = True
 

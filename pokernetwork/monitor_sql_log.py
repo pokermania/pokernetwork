@@ -6,6 +6,5 @@ def handle_event(service, packet):
         packet.param2,
         packet.param3
     )
-    if service.verbose > 3:
-        service.message(sql)
+    service.log.debug(sql)
     service.db.db.query(sql)

@@ -35,15 +35,18 @@ from string import split, rstrip
 from random import randint
 from traceback import print_exc
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerbot')
+
 from twisted.application import internet, service, app
 
 if platform.system() != "Windows":
     if not sys.modules.has_key('twisted.internet.reactor'):
         from twisted.internet import epollreactor
-        print "installing epoll reactor"
+        log.debug("installing epoll reactor")
         epollreactor.install()
     else:
-        print "reactor already installed"
+        log.debug("reactor already installed")
 
 from twisted.internet import reactor
 from twisted.python import components
@@ -65,18 +68,18 @@ class PokerBotProtocol(PokerClientProtocol):
         self.setPrefix(self.user.name + " ")
         if self.factory.disconnect_delay:
             delay = randint(*self.factory.disconnect_delay)
-            print self.user.name + ": will disconnect in %d seconds (for kicks)" % delay
+            self.log.debug("%s: will disconnect in %d seconds (for kicks)", self.user.name, delay)
             reactor.callLater(delay, lambda: self.disconnectMyself(self.user.name))
 
     def disconnectMyself(self, name):
         if name == self.user.name:
             if self.factory.can_disconnect:
                 self.factory.disconnected_volontarily = True
-                print self.user.name + ": disconnecting (for kicks)"
+                self.log.debug("%s: disconnect (for kicks)", self.user.name)
                 self.transport.loseConnection()
             else:
                 delay = randint(*self.factory.disconnect_delay)
-                print self.user.name + ": scheduled disconnection not allowed, will try again in %d seconds (for kicks)" % delay
+                self.log.debug("%s: scheduled disconnect not allowed, will try again in %d seconds (for kicks)", self.user.name, delay)
                 reactor.callLater(delay, lambda: self.disconnectMyself(self.user.name))
         
 class PokerBotFactory(PokerClientFactory):
@@ -84,6 +87,9 @@ class PokerBotFactory(PokerClientFactory):
     string_generator = None
 
     def __init__(self, *args, **kwargs):
+        self.log = log.getChild(self.__class__.__name__, refs=[
+            ("User", self, lambda factory: factory.serial if factory.serial else None)
+        ])
         PokerClientFactory.__init__(self, *args, **kwargs)
         self.protocol = PokerBotProtocol
         self.join_info = kwargs["join_info"]
@@ -133,8 +139,7 @@ class PokerBotFactory(PokerClientFactory):
         return protocol
 
     def clientConnectionFailed(self, connector, reason):
-        print "Failed to establish connection to table %s" % self.join_info["name"]
-        print reason
+        self.log.warn("Failed to establish connection to table %s, reason: %s", self.join_info['name'], reason)
         self.bot.parent.removeService(self.bot)
         
     def clientConnectionLost(self, connector, reason):
@@ -143,19 +148,20 @@ class PokerBotFactory(PokerClientFactory):
             if self.went_broke:
                 if not self.kwargs.has_key('name'):
                     self.name = PokerBotFactory.string_generator.getName()
-                print "Re-establishing (get more money)."
+                self.log.debug("Re-establishing (get more money).")
                 self.went_broke = False
                 reactor.callLater(self.wait, connector.connect)
             elif self.disconnected_volontarily:
                 delay = randint(*self.reconnect_delay)
-                print self.name + " Re-establishing in %d seconds." % delay
+                self.log.debug("%s Re-establishing in %d seconds.", self.name, delay)
                 self.disconnected_volontarily = False
                 reactor.callLater(delay, connector.connect)
                 reconnect = True
         else:
-            print "The bot server connection to %s was closed" % self.join_info["name"]
-            if not reason.check(error.ConnectionDone):
-                print reason
+            self.log.debug("The bot server connection to %s was closed, reason: %s",
+                self.join_info['name'],
+                reason if not reason.check(error.ConnectionDone) else None
+            )
         if not reconnect:
             self.bot.parent.removeService(self.bot)
 
@@ -175,8 +181,7 @@ class Bots(service.MultiService):
         self.check()
 
     def check(self):
-        if self.verbose > 1:
-            print "%d bots currently active" % len(self.services)
+        self.log.debug("%d bots currently active", len(self.services))
         if len(self.services) <= 0 and reactor.running:
             reactor.callLater(0, reactor.stop)
 

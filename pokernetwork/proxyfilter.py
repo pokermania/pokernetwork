@@ -22,6 +22,9 @@ from twisted.web import http
 
 from pokernetwork.pokerpackets import PacketPokerTableJoin
 
+from pokernetwork import log as network_log
+log = network_log.getChild('proxyfilter')
+
 local_reactor = reactor
 
 class ProxyClient(http.HTTPClient):
@@ -65,6 +68,7 @@ class ProxyClientFactory(protocol.ClientFactory):
     protocol = ProxyClient
 
     def __init__(self, command, rest, version, headers, data, father, verbose, destination):
+        self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
         self.rest = rest
@@ -78,16 +82,15 @@ class ProxyClientFactory(protocol.ClientFactory):
         self.serial = ProxyClientFactory.serial
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print 'Proxy(%d) %s' % ( self.serial, string )
 
     def doStart(self):
-        if self.verbose >= 3:
-            self.message('START %s => %s' % ( self.data, self.destination ))
+        self.log.debug('START %s => %s', self.data, self.destination)
         protocol.ClientFactory.doStart(self)
 
     def doStop(self):
-        if self.verbose >= 3:
-            self.message('STOP')
+        self.log.debug('STOP')
         protocol.ClientFactory.doStop(self)
 
 #    def error(self, string):

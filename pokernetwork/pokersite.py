@@ -37,6 +37,8 @@ from twisted.python.runtime import seconds
 import pokernetwork.pokerpackets
 pokerpackets = dict((p.__name__,p) for p in pokernetwork.pokerpackets.PacketFactory.values())
 from pokernetwork.pokerpackets import *
+from pokernetwork import log as network_log
+log = network_log.getChild('site')
 
 # Disabled Unicode encoding. It is not required anymore since it is only used
 # for the (dealer) chat. We measured a higher sit out count with Unicode
@@ -137,6 +139,7 @@ class Session(server.Session):
 
     def __init__(self, site, uid, auth, explain):
         server.Session.__init__(self, site, uid)
+        self._log = log.getChild(self.__class__.__name__)
         self.auth = auth
         self.avatar = site.resource.service.createAvatar()
         self.explain_default = explain
@@ -160,15 +163,18 @@ class Session(server.Session):
 class PokerResource(resource.Resource):
 
     def __init__(self, service):
+        self._log = log.getChild(self.__class__.__name__)
         resource.Resource.__init__(self)
         self.service = service
         self.verbose = service.verbose
         self.isLeaf = True
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "PokerResource: " + string
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("*ERROR* " + string)
 
     def render(self, request):
@@ -181,9 +187,8 @@ class PokerResource(resource.Resource):
             data = request.args['packet'][0];
         else:
             data = request.content.read()
-        if self.verbose >= 3:
-            if "PacketPing" not in data or self.verbose > 3:
-                self.message("(%s:%s) " % request.findProxiedIP() + "render " + data)
+        if "PacketPing" not in data:
+            self._log.debug("(%s:%s) " % request.findProxiedIP() + "render " + data)
 
         try:
             args = simplejson.loads(data, encoding = 'UTF-8')
@@ -217,8 +222,8 @@ class PokerResource(resource.Resource):
                 request.setHeader('content-type',"text/html")
                 request.setHeader('content-length', str(len(body)))
                 request.write(body)
-            if self.verbose >= 0 and request.code != 200:
-                self.error("(%s:%s) " % request.findProxiedIP() + str(body))
+            if request.code != 200:
+                self._log.warn("(%s:%s) " % request.findProxiedIP() + str(body))
             if not (request.finished or request._disconnected):
                 request.finish()
                     
@@ -244,8 +249,7 @@ class PokerResource(resource.Resource):
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         
         def render(packets,session = None):
-            if self.verbose > 3:
-                self.message("(%s:%s) " % request.findProxiedIP() + "render " + data + " returns " + str(packets))
+            self._log.debug("(%s:%s) " % request.findProxiedIP() + "render " + data + " returns " + str(packets))
             #
             # update the session information if the avatar changed
             # session is reloaded because the session object could have changed in the meantime
@@ -255,8 +259,7 @@ class PokerResource(resource.Resource):
             #
             if packet.type != PACKET_POKER_LONG_POLL_RETURN:
                 if not session or not hasattr(session,'avatar'):
-                    if self.verbose > 2:
-                        self.message("(%s:%s) " % request.findProxiedIP() + "recreating session")
+                    self._log.debug("(%s:%s) " % request.findProxiedIP() + "recreating session")
                     session = request.getSession()
                 session.site.updateSession(session)
                 session.site.persistSession(session)
@@ -302,7 +305,7 @@ class PokerResource(resource.Resource):
                     body_split = ";- ".join(re.split(r'[\r\n]+',str(error_to_print)))
                     body_chunks = [body_split[i:i+chunk_size] for i in range(0, len(body_split), chunk_size)]
                     error_to_print = re.sub(r'\n;- |;- \n',r'\n','\n'.join(body_chunks))
-                self.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
+                self._log.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
             return True
         d.addCallbacks(render, processingFailed, (session,))
         return d
@@ -311,20 +314,22 @@ class PokerImageUpload(resource.Resource):
 
     def __init__(self, service):
         resource.Resource.__init__(self)
+        self._log = log.getChild(self.__class__.__name__)
         self.service = service
         self.verbose = service.verbose
         self.deferred = defer.succeed(None)
         self.isLeaf = True
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "PokerImageUpload: " + string
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("*ERROR* " + string)
 
     def render(self, request):
-        if self.verbose > 3:
-            self.message("render " + request.content.read())
+        self._log.debug("render %s", request.content.read())
         request.content.seek(0, 0)
         self.deferred.addCallback(lambda result: self.deferRender(request))
         def failed(reason):
@@ -334,8 +339,7 @@ class PokerImageUpload(resource.Resource):
             request.setHeader('content-length', str(len(body)))
             request.write(body)
             request.connectionLost(reason)
-            if self.verbose >= 0:
-                self.error(str(body))
+            self._log.error(str(body))
             return True
         self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
@@ -367,17 +371,18 @@ class PokerTourneyStartResource(resource.Resource):
 
     def __init__(self, service):
         resource.Resource.__init__(self)
+        self._log = log.getChild(self.__class__.__name__)
         self.service = service
         self.verbose = service.verbose
         self.deferred = defer.succeed(None)
         self.isLeaf = True
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "PokerTourneyStart: " + string
 
     def render(self, request):
-        if self.verbose > 3:
-            self.message("render " + str(request))
+        self._log.debug("render %s", request)
         tourney_serial = request.args['tourney_serial'][0]
         self.service.tourneyNotifyStart(int(tourney_serial))
         body = 'OK'
@@ -390,20 +395,22 @@ class PokerAvatarResource(resource.Resource):
 
     def __init__(self, service):
         resource.Resource.__init__(self)
+        self._log = log.getChild(self.__class__.__name__)
         self.service = service
         self.verbose = service.verbose
         self.deferred = defer.succeed(None)
         self.isLeaf = True
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "PokerAvatarResource: " + string
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("*ERROR* " + string)
 
     def render(self, request):
-        if self.verbose > 3:
-            self.message("render " + request.content.read())
+        self._log.debug("render %s", request.content.read())
         request.content.seek(0, 0)
         serial = int(request.path.split('/')[-1])
         self.deferred.addCallback(lambda result: self.deferRender(request, serial))
@@ -414,8 +421,7 @@ class PokerAvatarResource(resource.Resource):
             request.setHeader('content-length', str(len(body)))
             request.write(body)
             request.connectionLost(reason)
-            if self.verbose >= 0:
-                self.error(str(body))
+            self._log.error(str(body))
             return True
         self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
@@ -445,6 +451,7 @@ class PokerSite(server.Site):
 
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
+        self._log = log.getChild(self.__class__.__name__)
         self.verbose = self.resource.verbose
         cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
         if cookieTimeout > 0:
@@ -467,9 +474,11 @@ class PokerSite(server.Site):
             self.resthost = None
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "PokerSite: " + string
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("*ERROR* " + string)
 
     def pipe(self, d, request, packet):

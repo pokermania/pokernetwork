@@ -24,6 +24,9 @@ from pokerengine import pokerengineconfig
 from pokernetwork.version import version
 import libxml2
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokernetworkconfig')
+
 class Config(pokerengineconfig.Config):
 
     upgrades_repository = None
@@ -31,6 +34,7 @@ class Config(pokerengineconfig.Config):
 
     def __init__(self, *args, **kwargs):
         pokerengineconfig.Config.__init__(self, *args, **kwargs)
+        self.log = log.getChild(self.__class__.__name__)
         self.version = version
         self.notify_updates = []
 

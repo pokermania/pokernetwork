@@ -31,10 +31,13 @@ from pokernetwork.packets import PACKET_LOGIN
 from pokernetwork.user import User
 from twisted.python.runtime import seconds
 import MySQLdb
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerauthmysql')
 
 class PokerAuth:
 
     def __init__(self, db, memcache, settings):
+        self.log = log.getChild(self.__class__.__name__)
         self.db = db
         self.memcache = memcache
         self.type2auth = {}
@@ -48,9 +51,11 @@ class PokerAuth:
                                   db = self.parameters["db"])
 
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print "PokerAuthMysql: " + string
 
     def error(self, string):
+        raise DeprecationWarning("error is deprecated")
         self.message("*ERROR* " + string)
             
     def SetLevel(self, type, level):
@@ -61,6 +66,7 @@ class PokerAuth:
 
     def auth(self, auth_type, auth_args):
         if auth_type != PACKET_LOGIN:
+            self.log.warn("can only handle PACKET_LOGIN authentication")
             raise NotImplementedError('can only handle PACKET_LOGIN authentication')
 
         name, password = auth_args
@@ -71,19 +77,18 @@ class PokerAuth:
         serial = 0
         privilege = User.REGULAR
         if numrows <= 0:
-            if self.verbose > 1:
-                self.message("user %s does not exist" % name)
+            self.log.debug("user %s does not exist", name)
             cursor.close()
             return ( False, "Invalid login or password" )
         elif numrows > 1:
-            self.error("more than one row for %s" % name)
+            self.log.error("more than one row for %s", name)
             cursor.close()
             return ( False, "Invalid login or password" )
         else:
             (serial, password_sql, privilege) = cursor.fetchone()
             cursor.close()
             if password_sql != password:
-                self.message("password mismatch for %s" % name)
+                self.log.debug("password mismatch for %s", name)
                 return ( False, "Invalid login or password" )
 
         return ( (serial, name, privilege), None )

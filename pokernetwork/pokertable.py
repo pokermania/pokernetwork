@@ -44,22 +44,26 @@ from pokernetwork.lockcheck import LockCheck
 from pokernetwork import pokeravatar
 from pokernetwork.pokerpacketizer import createCache, history2packets
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokertable')
+
 class PokerAvatarCollection:
 
     def __init__(self, prefix='', verbose=0):
+        self.log = log.getChild(self.__class__.__name__)
         self.serial2avatars = {}
         self.verbose = verbose
         self.prefix = prefix
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "PokerAvatarCollection:%s:" % self.prefix + string
 
     def get(self, serial):
         return self.serial2avatars.get(serial, [])
 
     def set(self, serial, avatars):
-        if self.verbose > 3:
-            self.message("set %d %s" % (serial, str(avatars)))
+        self.log.debug("set %d %s", serial, avatars)
         assert not serial in self.serial2avatars, \
             "setting %d with %s would override %s" % (
                 serial,
@@ -69,16 +73,14 @@ class PokerAvatarCollection:
         self.serial2avatars[serial] = avatars[:]
 
     def add(self, serial, avatar):
-        if self.verbose > 3:
-            self.message("add %d %s" % (serial, str(avatar)))
+        self.log.debug("add %d %s", serial, avatar)
         if serial not in self.serial2avatars:
             self.serial2avatars[serial] = []
         if avatar not in self.serial2avatars[serial]:
             self.serial2avatars[serial].append(avatar)
 
     def remove(self, serial, avatar):
-        if self.verbose > 3:
-            self.message("remove %d %s" % (serial, str(avatar)))
+        self.log.debug("remove %d %s", serial, avatar)
         assert avatar in self.serial2avatars[serial], "expected %d avatar in %s" % (
             serial,
             str(self.serial2avatars[serial])
@@ -112,6 +114,7 @@ class PokerTable:
     TIMEOUT_DELAY_COMPENSATION = 2
     
     def __init__(self, factory, id=0, description=None):
+        self.log = log.getChild(self.__class__.__name__)
         self.factory = factory
         settings = self.factory.settings
         self.game = PokerGameServer("poker.%s.xml", factory.dirs)
@@ -173,15 +176,17 @@ class PokerTable:
         self._lock_check_locked = True
         game_id = str(self.game.id) if hasattr(self, 'game') else '?'
         hand_serial = str(self.game.hand_serial) if hasattr(self, 'game') else '?'
-        self.error("Table is locked! game_id: %s, hand_serial: %s" % (game_id, hand_serial,))
+        self.log.warn("Table is locked! game_id: %s, hand_serial: %s", game_id, hand_serial)
 
     def isLocked(self):
         return self._lock_check_locked
 
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print "[PokerTable %s]: %s" % (self.game.id if hasattr(self, 'game') else "?", string)
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("*ERROR* " + string)
 
     def isValid(self):
@@ -190,8 +195,7 @@ class PokerTable:
 
     def destroy(self):
         """Destroys the table and deletes it from factory.tables.Also informs connected avatars."""
-        if self.factory.verbose > 1:
-            self.message("destroy table %d" % (self.game.id,))
+        self.log.debug("destroy table %d", self.game.id)
         #
         # cancel DealTimeout timer
         self.cancelDealTimeout()
@@ -250,7 +254,7 @@ class PokerTable:
         if self.game.isEndOrNull():
             self.historyReset()
             hand_serial = self.factory.getHandSerial()
-            self.message("Dealing hand %s/%d" % (self.game.name, hand_serial))
+            self.log.debug("Dealing hand %s/%d", self.game.name, hand_serial)
             self.game.setTime(seconds())
             self.game.beginTurn(hand_serial)
             for player in self.game.playersAll():
@@ -286,8 +290,7 @@ class PokerTable:
             packets = [packets]
         for packet in packets:
             keys = self.game.serial2player.keys()
-            if self.factory.verbose > 1:
-                self.message("broadcast%s %s " % (keys, packet))
+            self.log.debug("broadcast%s %s ", keys, packet)
             for serial in keys:
                 #
                 # player may be in game but disconnected.
@@ -418,7 +421,7 @@ class PokerTable:
                 self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
                 
             else:
-                self.error("syncDatabase: unknown history type %s " % event_type)
+                self.log.warn("syncDatabase: unknown history type %s ", event_type)
 
         for (serial, amount) in updates.iteritems():
             self.factory.updatePlayerMoney(serial, self.game.id, amount)
@@ -431,7 +434,11 @@ class PokerTable:
         elif hasattr(self, "factory") and self.factory.verbose > 2:
             bet = self.factory.tableMoneyAndBet(self.game.id)[1]
             if bet and self.game.potAndBetsAmount() != bet:
-                self.error("table %d bet mismatch %d in memory versus %d in database" % (self.game.id, self.game.potAndBetsAmount(), bet))
+                self.log.warn("table %d bet mismatch %d in memory versus %d in database",
+                    self.game.id,
+                    self.game.potAndBetsAmount(),
+                    bet
+                )
 
     def compressedHistory(self, history):
         new_history = []
@@ -473,7 +480,7 @@ class PokerTable:
                 new_history.append(event)
                 
             else:
-                self.error("compressedHistory: unknown history type %s " % event_type)
+                self.log.warn("compressedHistory: unknown history type %s ", event_type)
 
         return new_history
 
@@ -488,10 +495,11 @@ class PokerTable:
             elif event_type in ('round', 'position', 'showdown', 'finish'):
                 self.game_delay["delay"] += float(self.delays[event_type])
                 if self.factory.verbose > 2:
-                    self.message('delayedActions: game estimated duration is now %s and is running since %.02f seconds' % (
-                        str(self.game_delay["delay"]),
+                    self.log.warn("delayedActions: game estimated duration is now %s "
+                        "and is running since %.02f seconds",
+                        self.game_delay["delay"],
                         seconds() - self.game_delay["start"],
-                    ))
+                    )
 
             elif event_type == "leave":
                 quitters = event[1]
@@ -541,20 +549,20 @@ class PokerTable:
             for player in self.game.playersAll():
                 if player.getUserData()['ready'] == False:
                     for avatar in self.avatar_collection.get(player.serial):
-                        if self.factory.verbose > 1:
-                            self.message("Player %d marked as having a bugous PokerProcessingHand protocol" % player.serial)
-                            avatar.bugous_processing_hand = True
+                        self.log.warn("Player %d marked as having a bugous "
+                            "PokerProcessingHand protocol",
+                            player.serial
+                        )
+                        avatar.bugous_processing_hand = True
 
         self.beginTurn()
         self.update()
 
     def autoDealCheck(self, autodeal_check, delta):
-        if self.factory.verbose > 2:
-            self.message("autoDealCheck")
+        self.log.debug("autoDealCheck")
         self.cancelDealTimeout()
         if autodeal_check > delta:
-            if self.factory.verbose > 2:
-                self.message("Autodeal for %d scheduled in %f seconds" % (self.game.id, delta))
+            self.log.debug("Autodeal for %d scheduled in %f seconds", self.game.id, delta)
             self.timer_info["dealTimeout"] = reactor.callLater(delta, self.autoDeal)
             return
         #
@@ -567,8 +575,7 @@ class PokerTable:
                 serials.append(player.serial)
         if serials:
             self.broadcastMessage(PacketPokerMessage, "Waiting for players.\nNext hand will be dealt shortly.\n(maximum %d seconds)" % int(delta), serials)
-        if self.factory.verbose > 2:
-            self.message("AutodealCheck(2) for %d scheduled in %f seconds" % (self.game.id, delta))
+        self.log.debug("AutodealCheck(2) for %d scheduled in %f seconds", self.game.id, delta)
         self.timer_info["dealTimeout"] = reactor.callLater(autodeal_check, self.autoDealCheck, autodeal_check, delta - autodeal_check)
 
     def broadcastMessage(self, message_type, message, serials=None):
@@ -586,30 +593,24 @@ class PokerTable:
     def scheduleAutoDeal(self):
         self.cancelDealTimeout()
         if self.factory.shutting_down:
-            if self.factory.verbose > 2:
-                self.message("Not autodealing because server is shutting down")
+            self.log.debug("Not autodealing because server is shutting down")
             return
         if not self.autodeal:
-            if self.factory.verbose > 3:
-                self.message("No autodeal")
+            self.log.debug("No autodeal")
             return
         if self.isRunning():
-            if self.factory.verbose > 3:
-                self.message("Not autodealing %d because game is running" % self.game.id)
+            self.log.debug("Not autodealing %d because game is running", self.game.id)
             return
         if self.game.state == pokergame.GAME_STATE_MUCK:
-            if self.factory.verbose > 3:
-                self.message("Not autodealing %d because game is in muck state" % self.game.id)
+            self.log.debug("Not autodealing %d because game is in muck state", self.game.id)
             return
         if self.game.sitCount() < 2:
-            if self.factory.verbose > 2:
-                self.message("Not autodealing %d because less than 2 players willing to play" % self.game.id)
+            self.log.debug("Not autodealing %d because less than 2 players willing to play", self.game.id)
             return
         if self.game.isTournament():
             if self.tourney:
                 if self.tourney.state != pokertournament.TOURNAMENT_STATE_RUNNING:
-                    if self.factory.verbose > 2:
-                        self.message("Not autodealing %d because in tournament state %s" % (self.game.id, self.tourney.state))
+                    self.log.debug("Not autodealing %d because in tournament state %s", self.game.id, self.tourney.state)
                     if self.tourney.state == pokertournament.TOURNAMENT_STATE_BREAK_WAIT:
                         self.broadcastMessage(PacketPokerGameMessage, "Tournament will break when the other tables finish their hand")
                     return
@@ -624,8 +625,7 @@ class PokerTable:
                     onlyTemporaryPlayers = False
                     break
             if onlyTemporaryPlayers:
-                if self.factory.verbose > 2:
-                    self.message("Not autodealing because player names sit in match %s" % self.temporaryPlayersPattern)
+                self.log.debug("Not autodealing because player names sit in match %s", self.temporaryPlayersPattern)
                 return
 
         delay = self.game_delay["delay"]
@@ -640,8 +640,7 @@ class PokerTable:
                 delta = 0
         else:
             delta = 0
-        if self.factory.verbose > 2:
-            self.message("AutodealCheck scheduled in %f seconds" % delta)
+        self.log.debug("AutodealCheck scheduled in %f seconds", delta)
         autodeal_check = max(0.01, float(self.delays.get("autodeal_check", 15)))
         self.timer_info["dealTimeout"] = reactor.callLater(min(autodeal_check, delta), self.autoDealCheck, autodeal_check, delta)
 
@@ -660,8 +659,8 @@ class PokerTable:
             if player.getUserData()['ready'] == False:
                 notready.append(str(player.serial))
                 status = False
-        if notready and self.factory.verbose > 3:
-            self.message("allReadyToPlay: waiting for " + ",".join(notready))
+        if notready:
+            self.log.debug("allReadyToPlay: waiting for %s", ",".join(notready))
         return status
 
     def readyToPlay(self, serial):
@@ -674,11 +673,7 @@ class PokerTable:
 
     def update(self):
         if self.update_recursion:
-            if self.factory.verbose >= 0:
-                self.error(
-                    "unexpected recursion (ignored)" + 
-                    "\n" + "".join(traceback.format_list(traceback.extract_stack(limit=10)))
-                )
+            self.log.warn("unexpected recursion (ignored)", exc_info=1)
             return "recurse"
         self.update_recursion = True
         if not self.isValid():
@@ -691,7 +686,7 @@ class PokerTable:
         try:
             self.updateTimers(history_tail)
             packets, self.previous_dealer, errors = history2packets(history_tail, self.game.id, self.previous_dealer, self.cache)
-            for error in errors: self.error(error)
+            for error in errors: self.log.warn(error)
             self.syncDatabase()
             self.delayedActions()
             if len(packets) > 0:
@@ -702,10 +697,17 @@ class PokerTable:
                 self.scheduleAutoDeal()
         finally:
             if history_len != len(history):
-                self.error("%s length changed from %d to %d (i.e. %s was added)" % ( str(history), history_len, len(history), history[history_len:] ))
+                self.log.error("%s length changed from %d to %d (i.e. %s was added)",
+                    history,
+                    history_len,
+                    len(history),
+                    history[history_len:]
+                )
             if self.game.historyCanBeReduced():
-                try: self.game.historyReduce()
-                except Exception: self.error('history reduce error:\n' + traceback.format_exc())
+                try:
+                    self.game.historyReduce()
+                except Exception:
+                    self.log.error('history reduce error', exc_info=1)
             self.history_index = len(self.game.historyGet())
             self.update_recursion = False
         return "ok"
@@ -768,7 +770,11 @@ class PokerTable:
 
     def seated2observer(self, avatar, serial):
         if avatar.getSerial() != serial:
-            self.error("pokertable.seated2observer: avatar.user.serial (%d) doesn't match serial argument (%d)" % (avatar.getSerial(), serial))
+            self.log.warn("pokertable.seated2observer: avatar.user.serial (%d) "
+                "doesn't match serial argument (%d)",
+                avatar.getSerial(),
+                serial
+            )
         self.avatar_collection.remove(serial, avatar)
         self.observers.append(avatar)
 
@@ -794,7 +800,7 @@ class PokerTable:
                 else:
                     self.update()
             else:
-                avatar.message("cannot quit a closed table, request ignored")
+                avatar.log.inform("cannot quit a closed table, request ignored")
                 return False
 
         if self.isJoined(avatar):
@@ -810,7 +816,10 @@ class PokerTable:
         seat = player and player.seat
 
         if not self.game.removePlayer(serial):
-            self.error("kickPlayer did not succeed in removing player %d from game %d" % (serial, self.game.id))
+            self.log.warn("kickPlayer did not succeed in removing player %d from game %d",
+                serial,
+                self.game.id
+            )
             return
 
         self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
@@ -872,7 +881,7 @@ class PokerTable:
                 else:
                     self.update()
             else:
-                self.error("cannot leave a closed table")
+                self.log.warn("cannot leave a closed table")
                 avatar.sendPacketVerbose(PacketPokerError(
                     game_id = self.game.id,
                     serial = serial,
@@ -905,7 +914,7 @@ class PokerTable:
 
         money_check = self.factory.movePlayer(serial, self.game.id, to_game_id)
         if money_check != money:
-            self.error("movePlayer: player %d money %d in database, %d in memory" % (serial, money_check, money))
+            self.log.warn("movePlayer: player %d money %d in database, %d in memory", serial, money_check, money)
 
         for avatar in avatars:
             avatar.join(other_table, reason=reason)
@@ -913,8 +922,7 @@ class PokerTable:
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
             other_table.scheduleAutoDeal()
-        if self.factory.verbose:
-            self.message("player %d moved from table %d to table %d" % (serial, self.game.id, to_game_id))
+        self.log.debug("player %d moved from table %d to table %d", serial, self.game.id, to_game_id)
 
     def sendNewPlayerInformation(self, serial):
         packets = self.newPlayerInformation(serial)
@@ -923,8 +931,6 @@ class PokerTable:
     def newPlayerInformation(self, serial):
         player_info = self.getPlayerInfo(serial)
         player = self.game.getPlayer(serial)
-        if self.factory.verbose > 1:
-            self.message("about player %d" % serial)
         nochips = 0
         packets = []
         packets.append(PacketPokerPlayerArrive(
@@ -999,7 +1005,7 @@ class PokerTable:
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
         if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
-            self.error("joinPlayer: %d cannot join game %d because the server is full" % (serial, self.game.id))
+            self.log.crit("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id)
             avatar.sendPacketVerbose(PacketPokerError(
                 game_id = self.game.id,
                 serial = serial,
@@ -1012,8 +1018,7 @@ class PokerTable:
         # Next, test to see if joining this table will cause the avatar to
         # exceed the maximum permitted by the server.
         if len(avatar.tables) >= self.factory.simultaneous:
-            if self.factory.verbose:
-                self.error("joinPlayer: %d seated at %d tables (max %d)" % (serial, len(avatar.tables), self.factory.simultaneous))
+            self.log.crit("joinPlayer: %d seated at %d tables (max %d)" % (serial, len(avatar.tables), self.factory.simultaneous))
             return False
 
         #
@@ -1047,16 +1052,16 @@ class PokerTable:
 
     def seatPlayer(self, avatar, serial, seat):
         if not self.isJoined(avatar):
-            self.error("player %d can't seat before joining" % serial)
+            self.log.error("player %d can't seat before joining", serial)
             return False
         if self.isSeated(avatar):
-            self.message("player %d is already seated" % serial)
+            self.log.inform("player %d is already seated", serial)
             return False
         if not self.game.canAddPlayer(serial):
-            self.error("table refuses to seat player %d" % serial)
+            self.log.warn("table refuses to seat player %d", serial)
             return False
         if seat != -1 and seat not in self.game.seats_left:
-            self.error("table refuses to seat player %d at seat %d" % (serial, seat))
+            self.log.warn("table refuses to seat player %d at seat %d", serial, seat)
             return False
 
         amount = self.game.buyIn() if self.transient else 0
@@ -1076,7 +1081,7 @@ class PokerTable:
 
     def sitOutPlayer(self, avatar, serial):
         if not self.isSeated(avatar):
-            self.error("player %d can't sit out before getting a seat" % serial)
+            self.log.warn("player %d can't sit out before getting a seat", serial)
             return False
         #
         # silently do nothing if already sit out
@@ -1087,7 +1092,7 @@ class PokerTable:
 
     def chatPlayer(self, avatar, serial, message):
         if not self.isJoined(avatar):
-            self.error("player %d can't chat before joining" % serial)
+            self.log.error("player %d can't chat before joining", serial)
             return False
         message = self.chatFilter(message)
         self.broadcast(PacketPokerChat(
@@ -1104,25 +1109,25 @@ class PokerTable:
 
     def autoBlindAnte(self, avatar, serial, auto):
         if not self.isSeated(avatar):
-            self.error("player %d can't set auto blind/ante before getting a seat" % serial)
+            self.log.warn("player %d can't set auto blind/ante before getting a seat", serial)
             return False
         return avatar.autoBlindAnte(self, serial, auto)
 
     def muckAccept(self, avatar, serial):
         if not self.isSeated(avatar):
-            self.error("player %d can't accept muck before getting a seat" % serial)
+            self.log.warn("player %d can't accept muck before getting a seat", serial)
             return False
         return self.game.muck(serial, want_to_muck=True)
 
     def muckDeny(self, avatar, serial):
         if not self.isSeated(avatar):
-            self.error("player %d can't deny muck before getting a seat" % serial)
+            self.log.warn("player %d can't deny muck before getting a seat", serial)
             return False
         return self.game.muck(serial, want_to_muck=False)
 
     def sitPlayer(self, avatar, serial):
         if not self.isSeated(avatar):
-            self.error("player %d can't sit before getting a seat" % serial)
+            self.log.warn("player %d can't sit before getting a seat", serial)
             return False
         return avatar.sitPlayer(self, serial)
 
@@ -1136,20 +1141,20 @@ class PokerTable:
 
     def buyInPlayer(self, avatar, amount):
         if not self.isSeated(avatar):
-            self.error("player %d can't bring money to a table before getting a seat" % avatar.getSerial())
+            self.log.warn("player %d can't bring money to a table before getting a seat", avatar.getSerial())
             return False
 
         if avatar.getSerial() in self.game.serialsPlaying():
-            self.error("player %d can't bring money while participating in a hand" % avatar.getSerial())
+            self.log.warn("player %d can't bring money while participating in a hand", avatar.getSerial())
             return False
 
         if self.transient:
-            self.error("player %d can't bring money to a transient table" % avatar.getSerial())
+            self.log.warn("player %d can't bring money to a transient table", avatar.getSerial())
             return False
 
         player = self.game.getPlayer(avatar.getSerial())
         if player and player.isBuyInPayed():
-            self.error("player %d already payed the buy-in" % avatar.getSerial())
+            self.log.warn("player %d already payed the buy-in", avatar.getSerial())
             return False
 
         amount = self.factory.buyInPlayer(avatar.getSerial(), self.game.id, self.currency_serial, max(amount, self.game.buyIn()))
@@ -1157,22 +1162,22 @@ class PokerTable:
 
     def rebuyPlayerRequest(self, avatar, amount):
         if not self.isSeated(avatar):
-            self.error("player %d can't rebuy to a table before getting a seat" % avatar.getSerial())
+            self.log.warn("player %d can't rebuy to a table before getting a seat", avatar.getSerial())
             return False
 
         serial = avatar.getSerial()
         player = self.game.getPlayer(serial)
         if not player.isBuyInPayed():
-            self.error("player %d can't rebuy before paying the buy in" % serial)
+            self.log.warn("player %d can't rebuy before paying the buy in", serial)
             return False
 
         if self.transient:
-            self.error("player %d can't rebuy on a transient table" % serial)
+            self.log.warn("player %d can't rebuy on a transient table", serial)
             return False
 
         maximum = self.game.maxBuyIn() - self.game.getPlayerMoney(serial)
         if maximum <= 0:
-            self.error("player %d can't bring more money to the table" % serial)
+            self.log.warn("player %d can't bring more money to the table", serial)
             return False
 
         if amount == 0:
@@ -1181,11 +1186,11 @@ class PokerTable:
         amount = self.factory.buyInPlayer(serial, self.game.id, self.currency_serial, min(amount, maximum))
 
         if amount == 0:
-            self.error("player %d is broke and cannot rebuy" % serial)
+            self.log.warn("player %d is broke and cannot rebuy", serial)
             return False
 
         if not self.game.rebuy(serial, amount):
-            self.error("player %d rebuy denied" % serial)
+            self.log.warn("player %d rebuy denied", serial)
             return False
 
         self.broadcast(PacketPokerRebuy(
@@ -1214,8 +1219,7 @@ class PokerTable:
             self.updatePlayerTimers()
 
     def playerTimeoutTimer(self, serial):
-        if self.factory.verbose:
-            self.message("player %d times out" % serial)
+        self.log.debug("player %d times out" % serial)
         if self.game.isRunning() and serial == self.game.getSerialInPosition():
             if self.timeout_policy == "sitOut":
                 self.game.sitOutNextTurn(serial)
@@ -1227,7 +1231,7 @@ class PokerTable:
                     serial=serial
                 ))
             else:
-                self.error("unknown timeout_policy %s" % self.timeout_policy)
+                self.log.error("unknown timeout_policy %s", self.timeout_policy)
             self.broadcast(PacketPokerTimeoutNotice(
                 game_id=self.game.id,
                 serial=serial
@@ -1237,8 +1241,7 @@ class PokerTable:
             self.updatePlayerTimers()
 
     def muckTimeoutTimer(self):
-        if self.factory.verbose:
-            self.message("muck timed out")
+        self.log.debug("muck timed out")
         # timer expires, force muck on muckables not responding
         for serial in self.game.muckable_serials[:]:
             self.game.muck(serial, want_to_muck=True)

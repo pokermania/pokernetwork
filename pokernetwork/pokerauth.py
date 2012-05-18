@@ -30,13 +30,17 @@
 from pokernetwork.user import User
 from twisted.python.runtime import seconds
 from pokernetwork.packets import PACKET_LOGIN, PACKET_AUTH
+from pokernetwork import log as network_log
+log = network_log.getChild("pokerauth")
 
 def message(string):
+    raise DeprecationWarning("message is deprecated")
     print "PokerAuth: " + string
     
 class PokerAuth:
 
     def __init__(self, db, memcache, settings):
+        self.log = log.getChild(self.__class__.__name__)
         self.db = db
         self.memcache = memcache
         self.type2auth = {}
@@ -44,9 +48,11 @@ class PokerAuth:
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
 
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print "PokerAuth: " + string
 
     def error(self, string):
+        raise DeprecationWarning("error is deprecated")
         self.message("*ERROR* " + string)
             
     def SetLevel(self, type, level):
@@ -65,16 +71,14 @@ class PokerAuth:
         if numrows <= 0 and password is not None:
             if self.auto_create_account:
                 valid_credentials = True
-                if self.verbose > 1:
-                    self.message("user %s does not exist, create it" % name)
+                self.log.inform("user %s does not exist, create it", name)
                 serial = self.userCreate(name, password)
                 cursor.close()
             else:
-                if self.verbose > 1:
-                    self.message("user %s does not exist" % name)
+                self.log.debug("user %s does not exist", name)
                 cursor.close()
         elif numrows > 1:
-            self.error("more than one row for %s" % name)
+            self.error("more than one row for %s", name)
             cursor.close()
         else:
             (serial, password_sql, privilege) = cursor.fetchone()
@@ -86,7 +90,7 @@ class PokerAuth:
         else:
 #            if a user was found with this name, log the unsuccesful attempt
             if serial != 0:
-                self.message('password mismatch for %s' % name)
+                self.log.debug('password mismatch for %s', name)
             return ( False, "Invalid login or password" )
         
     def _authAuth(self,auth_token):
@@ -104,7 +108,7 @@ class PokerAuth:
         if valid_credentials:
             return ( (serial, name, privilege), None )
         else:
-            self.message('auth mismatch: %s' % auth_token)
+            self.log.debug("auth mismatch: %s", auth_token)
             return ( False, "Invalid login or password" )
                
     def auth(self,auth_type,auth_args):
@@ -115,12 +119,11 @@ class PokerAuth:
             (auth_token,) = auth_args
             return self._authAuth(auth_token)
         else:
-            print 'auth_type',auth_type
+            self.log.error("auth_type '%s' not implemented", auth_type)
             raise NotImplementedError()
 
     def userCreate(self, name, password):
-        if self.verbose:
-            self.message("creating user %s" % name)
+        self.log.inform("creating user %s", name)
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO users (created, name, password) values (%s, %s, %s)",
                        (seconds(), name, password))
@@ -131,8 +134,7 @@ class PokerAuth:
             serial = cursor.lastrowid
         else:
             serial = cursor.insert_id()
-        if self.verbose:
-            self.message("create user with serial %s" % serial)
+        self.log.inform("create user with serial %s", serial)
         cursor.execute("INSERT INTO users_private (serial) values ('%d')" % serial)
         cursor.close()
         return int(serial)
@@ -145,15 +147,12 @@ def get_auth_instance(db, memcache, settings):
         import imp
         script = settings.headerGet("/server/auth/@script")
         try:
-            if verbose > 1:
-                message("get_auth_instance: trying to load: '%s'" % script)
+            log.debug("get_auth_isntance: trying to load: '%s'", script)
             module = imp.load_source("user_defined_pokerauth", script)
             get_instance = getattr(module, "get_auth_instance")
-            if verbose > 1:
-                message("get_auth_instance: using custom implementation of get_auth_instance: %s" % script)
+            log.debug("get_auth_instance: using custom implementation of get_auth_instance: %s", script)
             _get_auth_instance = get_instance
         except:
-            if verbose > 1:
-                message("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'" % script)
+            log.warn("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'", script)
             _get_auth_instance = lambda db, memcache, settings: PokerAuth(db, memcache, settings)
     return apply(_get_auth_instance, [db, memcache, settings])

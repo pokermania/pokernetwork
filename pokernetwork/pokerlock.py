@@ -31,6 +31,9 @@ import MySQLdb
 import Queue
 import time
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerlock')
+
 class PokerLock(threading.Thread):
 
     TIMED_OUT = 1
@@ -42,6 +45,7 @@ class PokerLock(threading.Thread):
     acquire_sleep = 0.1
     
     def __init__(self, parameters):
+        self.log = log.getChild(self.__class__.__name__)
         self.verbose = 0
         self.q = Queue.Queue()
         self.lock = threading.Lock()
@@ -51,6 +55,7 @@ class PokerLock(threading.Thread):
         threading.Thread.__init__(self, target = self.main)
 
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print "PokerLock::(" + str(thread.get_ident()) + ") "  + string
         
     def close(self):
@@ -63,17 +68,16 @@ class PokerLock(threading.Thread):
             self.db = None
         
     def stopping(self):
-        if self.verbose > 2: self.message("stopping")
+        self.log.debug("stopping")
         self.running = False
 
     def main(self):
         try:
             reactor.addSystemEventTrigger('during', 'shutdown', self.stopping)
             while 1:
-                if self.verbose > 2:
-                    self.message("loop, queue size " + str(self.q.qsize()))
+                self.log.debug("lopp, queue size %s", self.q.qsize())
                 if not self.running and self.q.empty():
-                    self.message("stopped")
+                    self.log.debug("stopped")
                     break
 
                 try:
@@ -82,7 +86,7 @@ class PokerLock(threading.Thread):
                     #
                     # When timeout, silently terminate the thread
                     #
-                    self.message("timeout")
+                    self.log.debug("timeout")
                     break
                 except:
                     raise
@@ -91,7 +95,7 @@ class PokerLock(threading.Thread):
                     #
                     # Stop the thread
                     #
-                    if self.verbose > 2: self.message("stop ")
+                    self.log.debug("stop")
                     break
 
                 try:
@@ -99,21 +103,19 @@ class PokerLock(threading.Thread):
                     if self.running:
                         reactor.callFromThread(deferred.callback, name)
                     else:
-                        if self.verbose > 2: self.message("release because not running")
+                        self.log.debug("release because not running")
                         self.lock.release()
                 except:
-                    if self.verbose >= 0:
-                        self.message("exception in function " + format_exc())
-                    if self.verbose > 2: self.message("release because exception")
+                    self.log.error("exception in function main() -> release", exc_info=1)
                     try:
                         self.lock.release()
                     except:
-                        if self.verbose > 2: self.message(format_exc())
+                        self.log.error("failed to release lock after exception", exc_info=1)
                     reactor.callFromThread(deferred.errback, failure.Failure())
             self.db.close()
             self.db = None
         except:
-            if self.verbose > 2: self.message("exception " + format_exc())
+            self.log.error("exception", exc_info=1)
             raise
 
     def connect(self, parameters):
@@ -122,7 +124,7 @@ class PokerLock(threading.Thread):
                                   passwd = parameters["password"])
 
     def acquire(self, name, timeout = acquire_timeout):
-        if self.verbose > 2: self.message("acquire")
+        self.log.debug("acquire")
         if not self.isAlive():
             raise Exception(PokerLock.DEAD, "this PokerLock instance is dead, create a new one")
         d = defer.Deferred()
@@ -130,26 +132,26 @@ class PokerLock(threading.Thread):
         return d
         
     def __acquire(self, name, timeout):
-        if self.verbose > 2: self.message("__acquire %s %d" % ( name, timeout ))
+        self.log.debug("__acquire %s %d", name, timeout)
         tick = timeout
         while 1:
             if self.lock.acquire(0):
-                if self.verbose > 2: self.message("acquired")
+                self.log.debug("acquired")
                 break
             tick -= PokerLock.acquire_sleep
             if tick <= 0:
-                if self.verbose > 2: self.message("__acquire TIMED OUT")
+                self.log.debug("__acquire TIMED OUT")
                 raise Exception(PokerLock.TIMED_OUT, name)
-            if self.verbose > 2: self.message("__acquire sleep %f" % PokerLock.acquire_sleep)
+            self.log.debug("__acquire sleep %f", PokerLock.acquire_sleep)
             time.sleep(PokerLock.acquire_sleep)
         self.db.query("SELECT GET_LOCK('%s', %d)" % ( name, timeout))
         result = self.db.store_result()
         if result.fetch_row()[0][0] != 1:
             raise Exception(PokerLock.TIMED_OUT, name)
-        if self.verbose > 2: self.message("__acquire got MySQL lock")
+        self.log.debug("__acquire got MySQL lock")
 
     def release(self, name):
-        if self.verbose > 2: self.message("release " + name)
+        self.log.debug("release %s", name)
         self.db.query("SELECT RELEASE_LOCK('%s')" % name)
         result = self.db.store_result()
         if result.fetch_row()[0][0] != 1:

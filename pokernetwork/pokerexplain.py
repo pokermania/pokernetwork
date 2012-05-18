@@ -17,6 +17,7 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
+
 from string import lower
 
 from twisted.python.runtime import seconds
@@ -28,12 +29,16 @@ from pokernetwork.pokergameclient import PokerNetworkGameClient
 from pokernetwork.pokerpackets import * #@UnusedWildImport
 from pokernetwork.pokerclientpackets import * #@UnusedWildImport
 
+from pokernetwork import log as network_log
+log = network_log.getChild('explain')
+
 from pprint import pformat
 DEFAULT_PLAYER_USER_DATA = { 'timeout': None }
 
 class PokerGames:
 
     def __init__(self, **kwargs):
+        self.log = log.getChild(self.__class__.__name__)
         self.games = {}
         self.dirs = kwargs.get("dirs", [])
         self.verbose = kwargs.get("verbose", 0)
@@ -87,6 +92,7 @@ class PokerExplain:
     """Expand poker packets for the caller when they know nothing about poker """
 
     def __init__(self, *args, **kwargs):
+        self.log = log.getChild(self.__class__.__name__)
         self.serial = 0
         self.no_display_packets = False
         self.pending_auth_request = False
@@ -98,9 +104,11 @@ class PokerExplain:
         self.what = kwargs.get("explain", PacketPokerExplain.ALL)
 
     def error(self, string):
+        raise DeprecationWarning("error is deprecated")
         self.message("ERROR " + string)
         
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print self._prefix + string
         
     def setPrefix(self, prefix):
@@ -119,7 +127,7 @@ class PokerExplain:
         else:
             values = []
         chips_list = PokerChips(values, chips).tolist()
-        if self.verbose > 4: self.message("normalizeChips: %s %s" % (chips_list,values))
+        self.log.debug("normalizeChips: %s %s", chips_list, values)
         return chips_list
             
     def updatePlayerChips(self, game, player):
@@ -198,19 +206,16 @@ class PokerExplain:
         return packet
         
     def gameEvent(self, game_id, game_type, *args):
-        if self.verbose > 4:
-            self.message("gameEvent: game_id = %d, type = %s, args = %s" % ( game_id, game_type, str(args) ))
+        self.log.debug("gameEvent: game_id = %d, type = %s, args = %s", game_id, game_type, args)
 
         forward_packets = self.forward_packets
         if not forward_packets:
-            if self.verbose > 3:
-                self.message("gameEvent: called outside _handleConnection for game %d, ignored" % game_id)
+            self.log.warn("gameEvent: called outside _handleConnection for game %d, ignored", game_id)
             return False
 
         game = self.games.getGame(game_id)
         if not game:
-            if self.verbose > 3:
-                self.message("gameEvent: called for unknown game %d, ignored" % game_id)
+            self.log.warn("gameEvent: called for unknown game %d, ignored", game_id)
             return False
 
         if game_type == "end_round":
@@ -283,14 +288,14 @@ class PokerExplain:
         player.getUserData()['timeout'] = None
     
     def explain(self, packet):
-        if self.verbose > 3: self.message("PokerExplain:explain: %s" % packet )
+        self.log.debug(str(packet))
         
         self.forward_packets = [ packet ]
         forward_packets = self.forward_packets
         
         if packet.type == PACKET_POKER_TABLE:
             if packet.id == 0:
-                self.error("Too many open tables")
+                self.log.error("Too many open tables")
             else:
                 if self.games.getGame(packet.id):
                     self.games.deleteGame(packet.id)
@@ -305,6 +310,7 @@ class PokerExplain:
                 new_game.level_skin = packet.skin
                 new_game.currency_serial = packet.currency_serial
                 new_game.history_index = 0
+                new_game.log.addRef('Explain', self, lambda explain: explain.serial)
                 self.updatePotsChips(new_game, [])
                 new_game.position_info = [ 0, 0 ]
                 self.forward_packets.append(self.currentGames())
@@ -313,7 +319,7 @@ class PokerExplain:
             self.handleSerial(packet)
 
         elif packet.type == PACKET_ERROR:
-            self.error("Server reported error : %s" % packet)
+            self.log.error("Server reported error : %s", packet)
             return False
 
         game = self.games.packet2game(packet)
@@ -325,7 +331,7 @@ class PokerExplain:
         if game:
             if packet.type == PACKET_POKER_START:
                 if packet.hand_serial == 0:
-                    self.error("game start was refused")
+                    self.log.error("game start was refused")
                     forward_packets.remove(packet)
                 elif not game.isEndOrNull():
                     raise UserWarning, "you should not be here (state: %s)" % game.state
@@ -526,12 +532,18 @@ class PokerExplain:
                 player = game.getPlayer(packet.serial)
                 if player.buy_in_payed:
                     if player.bet != packet.bet:
-                        if self.verbose > 1:
-                            self.error("server says player %d has a bet of %d chips and client thinks it has %d" % ( packet.serial, packet.bet, player.bet))
+                        self.log.error("server says player %d has a bet of %d chips and client thinks it has %d",
+                            packet.serial,
+                            packet.bet,
+                            player.bet
+                        )
                         player.bet = packet.bet
                     if player.money != packet.money:
-                        if self.verbose > 1:
-                            self.error("server says player %d has a money of %d chips and client thinks it has %d" % ( packet.serial, packet.money, player.money))
+                        self.log.error("server says player %d has a money of %d chips and client thinks it has %d",
+                            packet.serial,
+                            packet.money,
+                            player.money
+                        )
                         player.money = packet.money
                 else:
                     #
@@ -607,7 +619,7 @@ class PokerExplain:
                     forward_packets.append(PacketPokerBeginRound(game_id = game.id))
 
                 if game.state != packet.string:
-                    self.error("state = %s, expected %s instead " % ( game.state, packet.string ))
+                    self.log.error("state = %s, expected %s instead ", game.state, packet.string)
 
 
             ( serial_in_position, position_is_obsolete ) = game.position_info
@@ -676,8 +688,7 @@ class PokerExplain:
         if player:
             return player.name
         else:
-            if self.verbose >= 0:
-                self.error("no player found for serial %d in game %d" % ( serial, game.id ))
+            self.log.error("no player found for serial %d in game %d", serial, game.id)
             return "<unknown>"
 
     def moveBet2Pot(self, game):
@@ -712,8 +723,8 @@ class PokerExplain:
             if min_bet % step == 0 and max_bet % step == 0 and to_call % step == 0:
                 found = step
         if found:
-            if self.verbose:
-                self.message(" => bet min=%d, max=%d, step=%d, to_call=%d" % ( min_bet, max_bet, found, to_call))
+            self.log.debug(" => bet min=%d, max=%d, step=%d, to_call=%d", min_bet, max_bet, found, to_call)
+            self.log.inform
             packets.append(PacketPokerBetLimit(
                 game_id = game.id,
                 min = min_bet,
@@ -724,7 +735,7 @@ class PokerExplain:
                 pot = game.potAndBetsAmount() + to_call * 2)
             )
         else:
-            self.error("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d" % ( self.chips_values, min_bet, max_bet ))
+            self.log.warn("no chip value (%s) is suitable to step from min_bet = %d to max_bet = %d", self.chips_values, min_bet, max_bet)
         return packets
 
     def currentGames(self, exclude = None):
@@ -766,7 +777,7 @@ class PokerExplain:
                     if cumulated_pot_size >= frame['pot']:
                         break
                 if cumulated_pot_size != frame['pot']:
-                    self.error("pot %d, total size = %d, expected %d" % ( current_pot, cumulated_pot_size, frame['pot'] )) #pragma: no cover
+                    self.log.error("pot %d, total size = %d, expected %d", current_pot, cumulated_pot_size, frame['pot'])
                 merged_pot = next_pot - 1
                 if merged_pot > current_pot:
                     merge = PacketPokerChipsPotMerge(
@@ -774,8 +785,7 @@ class PokerExplain:
                         sources = range(current_pot, merged_pot),
                         destination = merged_pot
                     )
-                    if self.verbose > 2:
-                        self.message("packetsPot2Player: %s" % merge)
+                    self.log.debug("packetsPot2Player: %s", merge)
                     packets.append(merge)
                 if frame_count == 1 and len(frame['serial2share']) == 1:
                     #
@@ -869,6 +879,3 @@ class PokerExplain:
         packets.append(self.currentGames(game.id))
         return packets
     
-    def _postMortemDump(self,packet,game):
-        self.message('Packet: %s' % packet)
-        self.message(pformat(game.__dict__))

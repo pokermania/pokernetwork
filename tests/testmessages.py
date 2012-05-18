@@ -92,7 +92,7 @@ def call_messages():
         a_class.message.im_func(Fake(), '')
         sys.stdout = stdout
     pokerauth.message('')
-call_messages()
+#call_messages()
 
 messages_needle = ''
 messages_grep_hit = None
@@ -159,3 +159,13 @@ def clear_all_messages():
 
 def get_messages():
     return messages_out
+
+
+import logging
+
+class TestLoggingHandler(logging.Handler):
+    def __init__(self):
+        logging.Handler.__init__(self)
+
+    def emit(self, record):
+        messages_out.append(self.format(record))

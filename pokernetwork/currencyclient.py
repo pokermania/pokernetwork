@@ -25,9 +25,13 @@ from types import *
 from twisted.web import client
 from twisted.internet import defer, reactor
 
+from pokernetwork import log as network_log
+log = network_log.getChild('currencyclient')
+
 class RealCurrencyClient:
 
     def __init__(self):
+        self.log = log.getChild(self.__class__.__name__)
         self.verbose = 0
         self.getPage = client.getPage
 
@@ -75,7 +79,7 @@ class RealCurrencyClient:
             if len(note) == 4:
                 notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
             else:
-                print "RealCurrencyClient::parseResultNote ignore line: " + line
+                self.log.inform("parseResultNote: ignore line: %s", line)
                 has_error = True
         if has_error:
             raise Exception("expected notes got something else")
@@ -143,15 +147,20 @@ Verbose = False
 class FakeCurrencyClient:
 
     def __init__(self):
+        self.log = log.getChild('RealCurrencyClient', refs=[
+            ('Currency', self, lambda currency: currency.serial)
+        ])
         self.serial = 1
         self.check_note_result = True
         self.commit_result = True
         
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print "FakeCurrencyClient: " + string
         
     def breakNote(self, (url, serial, name, value), *values):
-        if Verbose: self.message("breakNote vaues %s" % str(values))
+        if Verbose:
+            self.log.debug("breakNote values %s", values)
         if values: 
             values = map(int, values)
             values.sort()
@@ -181,7 +190,8 @@ class FakeCurrencyClient:
         return d
 
     def mergeNotes(self, *notes):
-        if Verbose: self.message("mergeNotes")
+        if Verbose:
+            self.log.debug("mergeNotes")
         self.serial += 1
         result = list(notes[0])
         result[1] = self.serial
@@ -194,7 +204,8 @@ class FakeCurrencyClient:
     meltNotes = mergeNotes
 
     def changeNote(self, note):
-        if Verbose: self.message("changeNote")
+        if Verbose:
+            self.log.debug("changeNote")
         self.serial += 1
         result = note.copy()
         result[1] = self.serial
@@ -204,20 +215,21 @@ class FakeCurrencyClient:
         return d
 
     def _buildNote(self, url, value):
-        if Verbose: self.message("_buildNote")
+        if Verbose:
+            self.log.debug("_buildNote")
         self.serial += 1
         name = "%040d" % self.serial
         return ( url, self.serial, name, value )
 
     def getNote(self, url, value):
-        if Verbose: self.message("getNote")
+        self.log.debug("getNote")
         note = self._buildNote(url, value)
         d = defer.Deferred()
         reactor.callLater(0, lambda: d.callback(note))
         return d
 
     def checkNote(self, note):
-        if Verbose: self.message("checkNote")
+        if Verbose: self.log.debug("checkNote")
         if self.check_note_result:
             result = note
         else:
@@ -227,7 +239,7 @@ class FakeCurrencyClient:
         return d
 
     def commit(self, url, transaction_id):
-        if Verbose: self.message("commit")
+        if Verbose: self.log.debug("commit")
         if self.commit_result:
             result = "OK"
         else:

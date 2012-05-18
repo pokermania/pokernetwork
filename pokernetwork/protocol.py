@@ -28,6 +28,9 @@ from pokernetwork.packets import Packet, PacketFactory, PacketNames
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
 
+from pokernetwork import log as network_log
+log = network_log.getChild('protocol')
+
 protocol_version = Version(protocol_number)
 
 PROTOCOL_MAJOR = "%03d" % protocol_version.major()
@@ -45,6 +48,7 @@ class UGAMEProtocol(protocol.Protocol):
     _stats_write = 0
     
     def __init__(self):
+        self.log = log.getChild(self.__class__.__name__)
         self._packet = []
         self._packet_len = 0
         self._timer = None
@@ -64,9 +68,11 @@ class UGAMEProtocol(protocol.Protocol):
         if not hasattr(self, 'factory'): self.factory = None
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("ERROR " + string)
         
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print self._prefix + string
         
     def setPingDelay(self, ping_delay):
@@ -89,8 +95,7 @@ class UGAMEProtocol(protocol.Protocol):
 
     def connectionLost(self, reason):
         self.established = 0
-        if self.factory and self.factory.verbose > 5:
-            self.message("connectionLost: reason = " + str(reason))
+        self.log.debug("connectionLost: reason = %s", reason)
         if not self._protocol_ok:
             self.protocolInvalid("different", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
         
@@ -124,8 +129,7 @@ class UGAMEProtocol(protocol.Protocol):
             self._packet[:] = [buf]
             self._packet_len = len(buf)
             self._expected_len = Packet.format_size
-            if self.factory and self.factory.verbose > 1:
-                self.message("protocol established")
+            self.log.debug("protocol established")
             self.protocolEstablished()
             if self._packet_len > 0:
                 self.dataReceived("")
@@ -193,8 +197,7 @@ class UGAMEProtocol(protocol.Protocol):
                 lag = now - queue.packets[0].time__
                 lags.append(lag)
                 if queue.delay > now and lag > self._lagmax:
-                    if self.factory and self.factory.verbose > 0:
-                        self.message(" => queue %d delay canceled because lag too high" % id)
+                    self.log.inform(" => queue %d delay canceled because lag too high", id)
                     queue.delay = 0
                 #
                 # If time has come, process one packet
@@ -213,8 +216,10 @@ class UGAMEProtocol(protocol.Protocol):
                         queue.delay = delay
                         self._queues[id].delay = delay
                 else:
-                    if self.factory and self.factory.verbose > 5:
-                        self.message("wait %s seconds before handling the next packet in queue %s" % ( str(queue.delay - now), str(id) ))
+                    self.log.inform("wait %s seconds before handling the next packet in queue %s",
+                        queue.delay - now,
+                        id
+                    )
             #
             # remember the worst lag
             #
@@ -256,17 +261,17 @@ class UGAMEProtocol(protocol.Protocol):
                     if PacketFactory.has_key(type.type):
                         packet = PacketFactory[type.type]()
                         buf = packet.unpack(buf)
-                        if self.factory and self.factory.verbose > 4:
-                            self.message("%s(%d bytes) => %s" % ( self._prefix, type.length, packet ))
+                        self.log.debug("%s(%d bytes) => %s", self._prefix, type.length, packet)
                         if self._poll:
                             self.pushPacket(packet)
                         else:
                             self._handler(packet)
                     else:
-                        if self.factory and self.factory.verbose >= 0:                        
-                            self.message("%s: unknown message received (id %d, length %d)\n" % ( self._prefix, type.type, type.length ))
-                        if self.factory and self.factory.verbose > 4:
-                            self.message("known types are %s " % PacketNames)
+                        self.log.warn("%s: unknown message received (id %d, length %d)\n",
+                            self._prefix,
+                            type.type,
+                            type.length
+                        )
                         buf = buf[1:]
                     self._expected_len = Packet.format_size
                 else:

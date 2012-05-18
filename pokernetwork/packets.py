@@ -26,6 +26,9 @@ from struct import pack, unpack, calcsize
 from copy import deepcopy
 import simplejson
 
+from pokernetwork import log as network_log
+log = network_log.getChild('packets')
+
 PacketFactory = {}
 PacketNames = {}
 
@@ -242,14 +245,14 @@ class Packet:
         while len(block) > 0 and count < length:
             t.unpack(block)
             if not PacketFactory.has_key(t.type):
-                print " *ERROR* unknown packet type %d (known types are %s)" % ( t.type, PacketNames)
+                log.warn("unknown packet type %d (knwon types are %s)", t.type, PacketNames)
                 return None
             packet = PacketFactory[t.type]()
             block = packet.unpack(block)
             count += 1
             packets.append(packet)
         if count != length:
-            print " *ERROR* expected a list of %d packets but found only %d" % ( length, count)
+            log.warn("expected a list of %d packets but found %d", length, count)
             return None
         return ( block, packets )
 
@@ -924,14 +927,14 @@ class PacketList(Packet):
         while len(block) > 0 and count < length:
             t.unpack(block)
             if not PacketFactory.has_key(t.type):
-                print " *ERROR* unknown packet type %d (known types are %s)" % ( t.type, PacketNames)
+                log.warn("unknown packet type %d (known types are %s)", t.type, PacketNames)
                 return
             packet = PacketFactory[t.type]()
             block = packet.unpack(block)
             count += 1
             self.packets.append(packet)
         if count != length:
-            print " *ERROR* expected a list of %d packets but found only %d" % ( length, count)
+            log.warn("expected a list of %d packets but found %d", length, count)
         return block
 
     def calcsize(self):

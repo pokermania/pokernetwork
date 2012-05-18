@@ -19,12 +19,16 @@
 #
 from pokerengine.pokergame import PokerGameClient
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokergameclient')
+
 class PokerNetworkGameClient(PokerGameClient):
     SERIAL_IN_POSITION = 0
     POSITION_OBSOLETE = 1
 
     def __init__(self, url, dirs):
         PokerGameClient.__init__(self, url, dirs)
+        self.log = log.getChild(self.__class__.__name__)
         self.level_skin = ""
         self.currency_serial = 0
         self.history_index = 0
@@ -53,15 +57,14 @@ class PokerNetworkGameClient(PokerGameClient):
       
     def buildPlayerList(self, with_wait_for):
         self.player_list = self.getStaticPlayerList()
-        if self.verbose >= 3:
-            self.message("buildPlayerList " + str(self.player_list))
+        self.log.debug("buildPlayerList %s", self.player_list)
 
         asserted_player_list = [s for s in self.player_list if self.serial2player[s].isSit()]
 
         if self.player_list != asserted_player_list:
-            self.error("self.player_list %s differs from asserted_player_list %s" % (
-                str(self.player_list),
-                str(asserted_player_list)
-            ))
+            self.log.error("self.player_list %s differs from asserted_player_list %s",
+                self.player_list,
+                asserted_player_list
+            )
 
         return True

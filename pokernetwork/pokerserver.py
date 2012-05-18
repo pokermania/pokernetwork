@@ -26,7 +26,10 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 
-import sys
+from pokernetwork import log as network_log
+log = network_log.getChild('server')
+
+import sys, os
 sys.path.insert(0, ".")
 sys.path.insert(0, "..")
 
@@ -38,16 +41,20 @@ try:
     from pokernetwork.pokerservice import SSLContextFactory
     HAS_OPENSSL=True
 except:
-    print "openSSL not available."
+    log.inform("OpenSSL not available.")
     HAS_OPENSSL=False
 
 from twisted.application import internet, service, app
 from twisted.web import server
+from twisted.python import log
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokermanhole import makeService as makeManholeService
+
+from reflogging import TwistedHandler, SingleLineFormatter
+import logging
 
 def makeService(configuration):
     settings = Config([''])
@@ -60,6 +67,25 @@ def makeService(configuration):
     poker_service.setServiceParent(serviceCollection)
 
     poker_factory = IPokerFactory(poker_service)
+
+    #
+    # Setup Logging
+    #
+    log_level = int(os.environ['LOG_LEVEL']) if \
+        'LOG_LEVEL' in os.environ else \
+        settings.headerGetInt("/server/@log_level")
+    logger = logging.getLogger()
+    handler = TwistedHandler(log.theLogPublisher)
+    handler.setFormatter(SingleLineFormatter('[%(refs)s] %(message)s'))
+    logger.addHandler(handler)
+    if log_level:
+        if log_level not in (10, 20, 30, 40, 50):
+            raise ValueError("Unsupported log level %d. Supported log levels "
+                "are DEBUG(10), INFO(20), WARNING(30), ERROR(40), CRITICAL(50)." % (log_level,)
+            )
+        logger.setLevel(log_level)
+    else:
+        logger.setLevel(logging.WARNING)
 
     #
     # Poker protocol (with or without SSL)
@@ -111,7 +137,9 @@ def makeService(configuration):
         ).setServiceParent(serviceCollection)
         if settings.headerGetInt("/server/@verbose") > 0:
             print "PokerManhole: manhole is useful for debugging, however, it can be a security risk and should be used only during debugging"
-    
+            log.warn("PokerManhole: manhole is useful for debugging, however, "
+                "it can be a security risk and should be used only during debugging")
+
     return serviceCollection
 
 def makeApplication(argv):
@@ -126,13 +154,14 @@ def makeApplication(argv):
     return application
 
 def run():
+    log.startLogging(sys.stdout)
     if platform.system() != "Windows":
         if not sys.modules.has_key('twisted.internet.reactor'):
-            print "installing epoll reactor"
+            log.debug("installing epoll reactor")
             from twisted.internet import epollreactor
             epollreactor.install()
         else:
-            print "reactor already installed"
+            log.debug("reactor already installed")
     from twisted.internet import reactor
     application = makeApplication(sys.argv)
     app.startApplication(application, None)
@@ -141,3 +170,4 @@ def run():
 if __name__ == '__main__':
     # Does not need coverage since we call run directly in the tests.
     run() # pragma: no cover
+    

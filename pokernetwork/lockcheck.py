@@ -1,9 +1,13 @@
 from twisted.internet import reactor
 import traceback
 
+from pokernetwork import log as network_log
+log = network_log.getChild('lockcheck')
+
 class LockCheck(object):
 
     def __init__(self, timeout, callback, cb_args=()):
+        self.log = log.getChild(self.__class__.__name__)
         self._timeout = timeout
         self._callback = callback
         self._callback_args = cb_args
@@ -16,7 +20,7 @@ class LockCheck(object):
             else:
                 self._timer.reset(self._timeout)
         except:
-            print "[LockCheck] ERROR: Exception on start()\n" + "\n".join(traceback.format_exc())
+            self.log.error("Exception on start()", exc_info=1)
 
     def stop(self):
         try:
@@ -26,7 +30,7 @@ class LockCheck(object):
                 self._timer.cancel()
             self._timer = None
         except:
-            print "[LockCheck] ERROR: Exception on stop()\n" + "\n".join(traceback.format_exc())
+            self.log.error("Exception on stop()", exc_info=1)
 
 class LockChecks(object):
 

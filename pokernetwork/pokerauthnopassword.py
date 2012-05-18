@@ -29,19 +29,24 @@
 
 from pokernetwork.user import User
 from twisted.python.runtime import seconds
+from pokernetwork import log as network_log
+log = network_log.getChild("pokerauthnopassword")
     
 class PokerAuth:
 
     def __init__(self, db, settings):
+        self.log = log.getChild(self.__class__.__name__)
         self.db = db
         self.type2auth = {}
         self.verbose = settings.headerGetInt("/server/@verbose")
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
 
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print "PokerAuthNoPassword: " + string
 
     def error(self, string):
+        raise DeprecationWarning("error is deprecated")
         self.message("*ERROR* " + string)
             
     def SetLevel(self, type, level):
@@ -58,12 +63,11 @@ class PokerAuth:
         serial = 0
         privilege = User.REGULAR
         if numrows <= 0:
-            if self.verbose > 1:
-                self.message("user %s does not exist" % name)
+            self.log.debug("user %s does not exist", name)
             cursor.close()
             return ( False, "Invalid login or password" )
         elif numrows > 1:
-            self.error("more than one row for %s" % name)
+            self.error("more than one row for %s", name)
             cursor.close()
             return ( False, "Invalid login or password" )
         else:

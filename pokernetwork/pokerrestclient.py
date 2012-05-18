@@ -24,6 +24,9 @@ from twisted.python.util import InsensitiveDict
 from twisted.python.runtime import seconds
 from pokernetwork.pokerpackets import *
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerrestclient')
+
 import pokersite
 from twisted.internet.defer import CancelledError
 
@@ -33,6 +36,7 @@ class RestClientFactory(protocol.ClientFactory):
     noisy = False
     
     def __init__(self, host, port, path, data, timeout = 60):
+        self.log = log.getChild('ClientFactory')
         self.timeout = timeout
         self.agent = "RestClient"
         self.headers = InsensitiveDict()
@@ -69,7 +73,7 @@ class RestClientFactory(protocol.ClientFactory):
         self.response_headers = headers
         
     def gotStatus(self, version, status, message):
-        self.version, self.status, self.message = version, status, message
+        self.version, self.status, self.message = version, status, message #FIXME! self.message is deprecated and gets overwriten
 
     def page(self, page):
         if self.waiting:
@@ -90,6 +94,7 @@ class PokerRestClient:
     DEFAULT_LONG_POLL_FREQUENCY = 0.1
     
     def __init__(self, host, port, path, longPollCallback, verbose = 0, timeout = 60):
+        self.log = log.getChild(self.__class__.__name__)
         self.verbose = verbose
         self.queue = defer.succeed(True)
         self.pendingLongPoll = False
@@ -108,6 +113,7 @@ class PokerRestClient:
             self.longPollFrequency = -1
 
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print 'PokerRestClient(%s) %s' % ( self.host + ':' + str(self.port), string )
 
     def sendPacket(self, packet, data):
@@ -122,8 +128,8 @@ class PokerRestClient:
         return d
 
     def receivePacket(self, data):
-        if self.verbose > 3:
-            self.message('receivePacket ' + data)
+        self.log.debug("receivePacket %s", data)
+            
         if self.pendingLongPoll:
             self.scheduleLongPoll(0)
         self.pendingLongPoll = False
@@ -136,8 +142,7 @@ class PokerRestClient:
         return [ PacketError(message = str(data)) ]
     
     def sendPacketData(self, data):
-        if self.verbose > 3:
-            self.message('sendPacketData ' + data)
+        self.log.debug("sendPacketData %s", data)
         factory = RestClientFactory(self.host, self.port, self.path, data, self.timeout)
         reactor.connectTCP(self.host, self.port, factory)
         self.sentTime = seconds()
@@ -179,6 +184,7 @@ class PokerProxyClient(http.HTTPClient):
     """
 
     def __init__(self, command, rest, version, headers, data, father):
+        self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
         self.rest = rest
@@ -214,6 +220,7 @@ class PokerProxyClientFactory(protocol.ClientFactory):
     protocol = PokerProxyClient
 
     def __init__(self, command, rest, version, headers, data, father, verbose, destination):
+        self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
         self.rest = rest
@@ -227,16 +234,15 @@ class PokerProxyClientFactory(protocol.ClientFactory):
         self.serial = PokerProxyClientFactory.serial
 
     def message(self, string):
+        raise DeprecationWarning("message is deprecated")
         print 'PokerProxyRestClient(%d) %s' % ( self.serial, string )
 
     def doStart(self):
-        if self.verbose >= 3:
-            self.message('START %s => %s' % ( self.data, self.destination ))
+        self.log.debug("START %s => %s", self.data, self.destination)
         protocol.ClientFactory.doStart(self)
 
     def doStop(self):
-        if self.verbose >= 3:
-            self.message('STOP')
+        self.log.debug("STOP")
         protocol.ClientFactory.doStop(self)
 
 #    def error(self, string):

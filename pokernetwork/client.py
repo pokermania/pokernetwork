@@ -24,6 +24,9 @@
 from twisted.internet import reactor, protocol, error, defer
 from struct import pack, unpack
 
+from pokernetwork import log as network_log
+log = network_log.getChild('client')
+
 from pokernetwork.packets import *
 from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.user import User
@@ -31,6 +34,9 @@ from pokernetwork.user import User
 class UGAMEClientProtocol(UGAMEProtocol):
     """ """
     def __init__(self):
+        self.log = log.getChild(self.__class__.__name__, refs=[
+            ('User', self, lambda x: x.user.serial if x.user.serial > 0 else None)
+        ])
         self._ping_timer = None
         self.user = User()
         self.bufferized_packets = []
@@ -56,12 +62,10 @@ class UGAMEClientProtocol(UGAMEProtocol):
     def sendPacket(self, packet):
         if self.established != 0:
             self.ping()
-            if self.factory.verbose > 2:
-                self.message("%ssendPacket(%d) %s " % ( self._prefix, self.user.serial, packet ))
+            self.log.debug("sendPacket: %s", packet)
             self.dataWrite(packet.pack())
         else:
-            if self.factory.verbose > 2:
-                self.message("%ssendPacket bufferized %s " % ( self._prefix, packet ))
+            self.log.debug("sendPacket bufferized %s", packet)
             self.bufferized_packets.append(packet)
 
     def ping(self):
@@ -71,8 +75,7 @@ class UGAMEClientProtocol(UGAMEProtocol):
         if self._ping_timer.active():
             self._ping_timer.reset(self._ping_delay)
         else:
-            if self.factory.verbose > 6:
-                self.message("%ssend ping" % self._prefix)
+            self.log.debug("send ping")
             self.dataWrite(PacketPing().pack())
             self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
         
@@ -105,8 +108,8 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self._ping_timer = None
         self.factory.protocol_instance = None
         UGAMEProtocol.connectionLost(self, reason)
-        if not reason.check(error.ConnectionDone) and self.factory.verbose > 3:
-            self.message("UGAMEClient.connectionLost %s" % reason)
+        if not reason.check(error.ConnectionDone):
+            self.log.debug("connectionLost: %s", reason)
         d = self.connection_lost_deferred
         self.connection_lost_deferred = None
         d.callback(self)
@@ -115,15 +118,18 @@ class UGAMEClientProtocol(UGAMEProtocol):
 class UGAMEClientFactory(protocol.ClientFactory):
 
     def __init__(self, *args, **kwargs):
+        self.log = log.getChild(self.__class__.__name__)
         self.protocol = UGAMEClientProtocol
         self.protocol_instance = None
         self.verbose = 0
         self.established_deferred = defer.Deferred()
 
     def error(self, string):
+        raise DeprecationWarning('error is deprecated')
         self.message("ERROR " + string)
         
     def message(self, string):
+        raise DeprecationWarning('message is deprecated')
         print string
         
     def buildProtocol(self, addr):
