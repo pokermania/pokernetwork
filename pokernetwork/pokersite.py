@@ -25,7 +25,6 @@ import re
 import imp
 import time
 import base64
-from types import *
 
 from traceback import format_exc
 
@@ -51,19 +50,19 @@ def toutf8(tree, encoding = 'ISO-8859-1'):
     return tree
 
 def __walk(tree, convert):
-    if type(tree) is TupleType or type(tree) is ListType:
+    if type(tree) is tuple or type(tree) is list:
         result = map(lambda x: __walk(x, convert), tree)
-        if type(tree) is TupleType:
+        if type(tree) is tuple:
             return tuple(result)
         else:
             return result
-    elif type(tree) is DictionaryType:
+    elif type(tree) is dict:
         new_tree = {}
         for (key, value) in tree.iteritems():
             converted_key = convert(str(key))
             new_tree[converted_key] = __walk(value, convert)
         return new_tree
-    elif ( type(tree) is UnicodeType or type(tree) is StringType ):
+    elif type(tree) is unicode or type(tree) is str:
         return convert(tree)
     else:
         return tree
