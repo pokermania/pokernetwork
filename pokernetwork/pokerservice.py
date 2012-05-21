@@ -3049,7 +3049,7 @@ class PokerXML(resource.Resource):
             mimeType = "text/xml"
         request.setHeader("Content-type", mimeType)
         args = self.getArguments(request)
-        self.log.debug("args = ", args)
+        self.log.debug("args = %s", args)
         session = None
         use_sessions = args[0]
         args = args[1:]
