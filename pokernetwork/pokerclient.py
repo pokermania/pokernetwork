@@ -78,20 +78,6 @@ class PokerSkin:
     def showOutfitEditor(self, select_callback):
         pass
 
-#
-# Set a flag when an error is logged
-from twisted.python import log
-
-log.error_occurred = False
-log_err = log.err
-
-def err(*args, **kwargs):
-    global log_err
-    log_err(*args, **kwargs)
-    log.error_occurred = True
-
-log.err = err
-log.deferr = err
 
 class PokerClientFactory(UGAMEClientFactory):
     "client factory"
