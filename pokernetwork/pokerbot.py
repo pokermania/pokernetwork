@@ -166,6 +166,10 @@ class PokerBotFactory(PokerClientFactory):
             self.bot.parent.removeService(self.bot)
 
 class Bots(service.MultiService):
+    
+    def __init__(self, *a, **kw):
+        service.MultiService.__init__(self, *a, **kw)
+        self.log = log.getChild(self.__class__.__name__)
 
     def setSettings(self, settings):
         self.count = 0
