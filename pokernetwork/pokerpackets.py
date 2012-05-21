@@ -2926,3 +2926,8 @@ _TYPES = range(50,169)
 # Local Variables:
 # compile-command: "perl -pi -e 'if(/%SEQ%/) { $s = 49 if(!defined($s)); $s++; $h = sprintf(q/0x%x/, $s); s/\\d+[ \\w#]+#/$s # $h #/; }' pokerpackets.py"
 # End:
+
+#
+# only export things starting with Packet or PACKET_
+import re
+__all__ = [n for n in locals().keys() if re.match('Packet|PACKET_',n)]
