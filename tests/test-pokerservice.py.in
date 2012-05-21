@@ -54,8 +54,16 @@ from twisted.python.runtime import seconds
 twisted.internet.base.DelayedCall.debug = True
 
 from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-silence_all_messages()
+#verbose = int(os.environ.get('VERBOSE_T', '-1'))
+#silence_all_messages()
+
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
+
 
 from pokerengine import pokertournament, pokergame
 from pokernetwork import pokerservice, pokernetworkconfig, user
@@ -659,7 +667,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         clear_all_messages()
         tables = self.service.listTables('\tholdem\t', 0)
         self.assertEqual(4, len(tables))
-        self.assertEquals(get_messages(), ["*ERROR* Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
+        self.assertEquals(get_messages(), ["Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
     # ----------------------------------------------------------------
     def test11_currencySerialIsNotAnInteger(self):
         self.service.startService()
@@ -667,7 +675,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         clear_all_messages()
         tables = self.service.listTables("hithere\t", 0)
         self.assertEqual(0, len(tables))
-        self.assertEquals(get_messages(), ["*ERROR* listTables(): currency_serial parameter must be an integer, instead was: hithere"])
+        self.assertEquals(get_messages(), ["listTables(): currency_serial parameter must be an integer, instead was: hithere"])
     # ----------------------------------------------------------------
     def test13_emptyArgsShouldGenerateSameAsSelectAll(self):
         self.service.startService()
@@ -1231,9 +1239,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         clear_all_messages()
         self.service.startService()
-        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
-        self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
-        self.failUnless(search_output('*ERROR* Translation setup for this_locale_does_not_exist failed.  Strings for clients requesting this_locale_does_not_exist will likely always be in English'))
+        self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(search_output('Translation setup for this_locale_does_not_exist failed.  Strings for clients requesting this_locale_does_not_exist will likely always be in English'))
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(self.service.__dict__.has_key(instanceVar), True)
             if instanceVar == "tables":
@@ -1289,13 +1297,13 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         self.service.startService()
         self.assertEquals(len(self.service.gettextFuncs), 17)
-        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
-        self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for ii in ('en_US.ISO-8859-1', 'fr_FR.ISO-8859-1'):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
         self.assertEquals(self.service.gettextFuncs['en_US.ISO-8859-1']("Aces"), "Aces")
         self.assertEquals(self.service.gettextFuncs['fr_FR.ISO-8859-1']("Aces"), "d'As")
-        self.assertEquals(search_output("*ERROR* Unable to restore original locale: testing bad setlocale"), True)
+        self.assertEquals(search_output("Unable to restore original locale: testing bad setlocale"), True)
         locale.setlocale = saveLocale
 
     def test00_05_configValues(self):
@@ -1318,9 +1326,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         self.service.startService()
         self.assertEquals(len(self.service.gettextFuncs), 17)
-        self.failUnless(search_output('*ERROR* Unsupported codeset MAGIC-PIXIE-DUST for fr_FR.MAGIC-PIXIE-DUST in poker-engine; locale ignored: unknown encoding: MAGIC-PIXIE-DUST'))
-        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: this_locale_does_not_exist'))
-        self.failUnless(search_output("*ERROR* No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(search_output('Unsupported codeset MAGIC-PIXIE-DUST for fr_FR.MAGIC-PIXIE-DUST in poker-engine; locale ignored: unknown encoding: MAGIC-PIXIE-DUST'))
+        self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for ii in ('en_US.ISO-8859-1', 'fr_FR.MAGIC-PIXIE-DUST'):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
@@ -1339,8 +1347,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         self.service.startService()
         self.assertEquals(len(self.service.gettextFuncs), 17)
-        self.failUnless(search_output('*ERROR* Unable to find codeset string in language value: .MAGIC-PIXIE-DUST'))
-        self.failUnless(search_output("*ERROR* No translation for language .MAGIC-PIXIE-DUST for .MAGIC-PIXIE-DUST in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(search_output('Unable to find codeset string in language value: .MAGIC-PIXIE-DUST'))
+        self.failUnless(search_output("No translation for language .MAGIC-PIXIE-DUST for .MAGIC-PIXIE-DUST in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for ii in ('en_US.ISO-8859-1', '.MAGIC-PIXIE-DUST'):
             self.assertEquals(self.service.gettextFuncs.has_key(ii), True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
@@ -1357,7 +1365,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.service._separateCodesetFromLocale('')
         msgs = get_messages()[-2:]
-        self.assertEquals(msgs, ['*ERROR* Unable to find codeset string in language value: ', '*ERROR* Unable to find locale string in language value: '])
+        self.assertEquals(msgs, ['Unable to find codeset string in language value: ', 'Unable to find locale string in language value: '])
     # ----------------------------------------------------------------
     def test01_auth(self):
         self.service.startService()
@@ -1991,7 +1999,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         clear_all_messages()
         self.assertEquals(self.service.locale2translationFunc('fr_FR', 'UTF-8'),
                          None)
-        self.assertEquals(get_messages(), ['Locale, "fr_FR.UTF-8" not available.  fr_FR.UTF-8 must not have been provide via <language/> tag in settings, or errors occured during loading.'])
+        self.assertEquals(get_messages(), ['Locale, \'fr_FR.UTF-8\' not available. fr_FR.UTF-8 must not have been provide via <language/> tag in settings, or errors occured during loading.'])
         enc = 'ISO-8859-1'
         self.assertEquals(self.service.locale2translationFunc('da_DK', enc)("%(name)s mucks loosing hand"), "%(name)s mucker tabende h\xe5nd")
         self.assertEquals(self.service.locale2translationFunc('de_DE', enc)("%(name)s raises %(amount)s"), '%(name)s erh\xf6ht %(amount)s' )
@@ -2013,7 +2021,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.seatPlayer(self.user1_serial, table_serial, 0)
         clear_all_messages()
         self.service.buyInPlayer(self.user1_serial, table_serial, currency_serial, None)
-        self.assertTrue("*ERROR*" in get_messages()[0])
+        self.failUnless(search_output("called buyInPlayer with None amount (expected > 0); denying buyin"))
     # ----------------------------------------------------------------
     def test25_chatMessageArchive(self):
         self.service.startService()
@@ -2251,8 +2259,7 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
 
         self.service.tourneys = {}
         self.service.tourneyCancel(Tournament())
-        if verbose < 0:
-            self.assertTrue(search_output('tourneyCancel:'))
+        self.assertTrue(search_output('tourneyCancel:'))
 # ----------------------------------------------------------------
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
     class ClientMockup:
@@ -3219,8 +3226,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = 2000
         self.assertEqual(False, self.service.tourneyFinished(tournament))
-        if verbose < 0:
-            self.assertTrue(search_output("bailor failed to provide requested money"))
+        self.assertTrue(search_output("bailor failed to provide requested money"))
 
     def test_bailor_zero(self):
         class Tournament:
@@ -4027,7 +4033,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         def testDestroyCalled():
             msgs = get_messages()
             self.assertEquals(len(msgs), 1)
-            self.assertEquals(msgs[0].find('*ERROR* avatar <__main__.MockAvatar instance at '), 0)
+            self.assertEquals(msgs[0].find('avatar <__main__.MockAvatar instance at '), 0)
             self.failUnless(msgs[0].find(' is not in the list of known avatars') > 0)
             self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
@@ -4105,7 +4111,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         clear_all_messages()
         self.failUnless(self.service.sessionStart(5, '192.168.0.1'))
-        self.assertEquals(get_messages(), ["sessionStart(5, 192.168.0.1): "])
+        self.assertEquals(get_messages(), ["sessionStart(5, 192.168.0.1)"])
         self.assertEquals(self.service.db.cursorValue.counts,{'REPLACE INTO session' : 1 })
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -4126,8 +4132,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(self.service.sessionStart(7, '192.168.0.2'))
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
-        self.assertEquals(msgs[0], 'sessionStart(7, 192.168.0.2): ')
-        self.assertEquals(msgs[1].find("*ERROR* modified 0 rows (expected 1 or 2): REPLACE INTO session ( user_serial, started, ip ) VALUES ( 7, "), 0)
+        self.assertEquals(msgs[0], 'sessionStart(7, 192.168.0.2)')
+        self.assertEquals(msgs[1].find("modified 0 rows (expected 1 or 2): REPLACE INTO session ( user_serial, started, ip ) VALUES ( 7, "), 0)
         self.failUnless(msgs[1].find(", '192.168.0.2')") > 0)
 
         self.assertEquals(self.service.db.cursorValue.counts,{'REPLACE INTO session' : 1 })
@@ -4148,7 +4154,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         clear_all_messages()
         self.failUnless(self.service.sessionEnd(9))
-        self.assertEquals(get_messages(), ['sessionEnd(9): '])
+        self.assertEquals(get_messages(), ['sessionEnd(9)'])
 
         self.assertEquals(self.service.db.cursorValue.counts,{
             'INSERT INTO session_history' : 1,
@@ -4173,8 +4179,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(self.service.sessionEnd(9))
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
-        self.assertEquals(msgs[0], 'sessionEnd(9): ')
-        self.assertEquals(msgs[1].find('*ERROR* a) modified 3 rows (expected 1): INSERT INTO session_history'), 0)
+        self.assertEquals(msgs[0], 'sessionEnd(9)')
+        self.assertEquals(msgs[1].find('a) modified 3 rows (expected 1): INSERT INTO session_history'), 0)
         self.assertEquals(self.service.db.cursorValue.counts, {
             'INSERT INTO session_history' : 1,
             'DELETE FROM session' : 1 
@@ -4198,9 +4204,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(self.service.sessionEnd(9))
         msgs = get_messages()
         self.assertEquals(len(msgs), 3)
-        self.assertEquals(msgs[0], 'sessionEnd(9): ')
-        self.assertEquals(msgs[1].find('*ERROR* a) modified 0 rows (expected 1): INSERT INTO session_history'), 0)
-        self.assertEquals(msgs[2].find('*ERROR* b) modified 0 rows (expected 1): DELETE FROM session'), 0)
+        self.assertEquals(msgs[0], 'sessionEnd(9)')
+        self.assertEquals(msgs[1].find('a) modified 0 rows (expected 1): INSERT INTO session_history'), 0)
+        self.assertEquals(msgs[2].find('b) modified 0 rows (expected 1): DELETE FROM session'), 0)
         self.assertEquals(self.service.db.cursorValue.counts,{ 
             'INSERT INTO session_history' : 1,
             'DELETE FROM session' : 1 
@@ -4244,7 +4250,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0].find("tourneyNewState: UPDATE tourneys SET state"), 0)
-        self.assertEquals(msgs[1], "*ERROR* modified 8 rows (expected 1): UPDATE tourneys SET state = 'running', start_time = 5 WHERE serial = 19 ")
+        self.assertEquals(msgs[1], "modified 8 rows (expected 1): UPDATE tourneys SET state = 'running', start_time = 5 WHERE serial = 19")
          
         self.assertEquals(self.service.db.cursorValue.counts, {'UPDATE tourneys SET': 1})
         self.service.db = oldDb
@@ -4330,10 +4336,15 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 cursorSelf.rowcount = 0
                 cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ "update user2tourney set" ]
+                cursorSelf.acceptedStatements = [
+                    "update user2tourney set",
+                    "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE",
+                    "DELETE FROM pokertables WHERE"
+                ]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
                     cursorSelf.counts[cntType] = 0 
+                cursorSelf._executed = ''
             def close(cursorSelf): pass
             def execute(*args):
                 cursorSelf = args[0]
@@ -4345,7 +4356,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                         cursorSelf.rowcount = 0
                         found = True
                         break
-                self.failUnless(found)
+                self.failUnless(found, sql)
+                cursorSelf._executed = sql
                 return cursorSelf.rowcount
             def fetchone(cursorSelf): return cursorSelf.row
         class MockDatabase:
@@ -4391,14 +4403,18 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
         self.service.tourneyGameFilled(MockTourney(), MockGame())
 
-        self.assertEquals(self.service.db.cursorValue.counts, {'update user2tourney set': 1})
+        self.assertEquals(self.service.db.cursorValue.counts, {
+            'DELETE FROM pokertables WHERE': 0,
+            'SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE': 0,
+            'update user2tourney set': 1
+        })
         self.assertEquals(self.service.tables[22].updateCount, 1)
 
         msgs = get_messages()
         self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[0], 'tourneyGameFilled: player 10 disconnected')
         self.assertEquals(msgs[1].find('tourneyGameFilled: update user2tourney set'), 0)
-        self.assertEquals(msgs[2].find('*ERROR* modified 0 rows (expected 1): update user2tourney set'), 0)
+        self.assertEquals(msgs[2].find('modified 0 rows (expected 1): update user2tourney set'), 0)
 
         self.service.db = oldDb
         self.service.seatPlayer = oldSeatPlayer
@@ -4444,7 +4460,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.players, [('joe', -1, 0), ('UNKNOWN', -1, 0), ('anonymous', -1, 0)])
         self.assertEquals(pack.type, PACKET_POKER_TOURNEY_PLAYERS_LIST)
         self.assertEquals(pack.serial, 77)
-        self.assertEquals(get_messages(), ['*ERROR* getName(6) expected one row got 0'])
+        self.assertEquals(get_messages(), ['getName(6) expected one row got 0'])
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -4546,7 +4562,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
-        self.assertEquals(get_messages(),['*ERROR* type = ERROR(3) message = Tournament 91 does not exist, code = 1, other_type = POKER_TOURNEY_REGISTER'])
+        self.assertEquals(get_messages(),['type = ERROR(3) message = Tournament 91 does not exist, code = 1, other_type = POKER_TOURNEY_REGISTER'])
         self.failUnless(hasattr(client, "errorPacket"))
         self.assertEquals(client.errorPacket.type, PACKET_ERROR)
         self.assertEquals(client.errorPacket.code,PacketPokerTourneyRegister.DOES_NOT_EXIST)
@@ -4633,7 +4649,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                           PacketPokerTourneyRegister.ALREADY_REGISTERED)
         msgs = get_messages()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('*ERROR* type = ERROR(3) message = Player 44 already registered in tournament 99')  == 0)
+        self.failUnless(msgs[0].find('type = ERROR(3) message = Player 44 already registered in tournament 99')  == 0)
         self.failUnless(msgs[0].find('other_type = POKER_TOURNEY_REGISTER') >= 0)
     # ----------------------------------------------------------------
     def test23_tourneyRegister_tourneyRefuseRegistration(self):
@@ -4673,7 +4689,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                           PacketPokerTourneyRegister.REGISTRATION_REFUSED)
         msgs = get_messages()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('*ERROR* type = ERROR(3) message = Registration refused in tournament 123')  == 0)
+        self.failUnless(msgs[0].find('type = ERROR(3) message = Registration refused in tournament 123')  == 0)
 
     # ----------------------------------------------------------------
     def test22_tourneyRegister_viaSatellite(self):
@@ -4752,7 +4768,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
-        self.failUnless(msgs[1].find('*ERROR* type = ERROR(3) message = Not enough money to enter the tournament 526')  == 0)
+        self.failUnless(msgs[1].find('type = ERROR(3) message = Not enough money to enter the tournament 526')  == 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -4808,7 +4824,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
-        self.failUnless(msgs[1].find('*ERROR* modified 2 rows (expected 1): UPDATE user2money SET amount')  == 0)
+        self.failUnless(msgs[1].find('modified 2 rows (expected 1): UPDATE user2money SET amount')  == 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -4838,7 +4854,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self,
                                         [ "UPDATE user2money SET amount = amount",
-                                       "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES"])
+                                       "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES",
+                                       "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE"])
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -4876,7 +4893,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 3)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount = amount - 20 WHERE user_serial = 423') >= 0)
         self.assertEquals(msgs[1], 'tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (423, 10, 865)')
-        self.assertEquals(msgs[2], '*ERROR* insert 0 rows (expected 1): INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (423, 10, 865) ')
+        self.assertEquals(msgs[2], 'insert 0 rows (expected 1): INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (423, 10, 865)')
 
         self.service.db = oldDb
         self.service.databaseEvent = oldDbEvent
@@ -4897,7 +4914,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
 
         self.assertEquals(self.service.loadHand(5), None)
-        self.assertEquals(get_messages(), ['*ERROR* loadHand(5) expected one row got 0'])
+        self.assertEquals(get_messages(), ['loadHand(5) expected one row got 0'])
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test28_loadHand_row(self):
@@ -4918,7 +4935,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
 
         self.assertEquals(self.service.loadHand(7), None)
-        self.assertEquals(get_messages(), ['*ERROR* loadHand(7) eval failed for ]'])
+        self.failUnless(search_output('loadHand(7) eval failed for ]'))
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -5133,7 +5150,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
-        self.failUnless(msgs[1].find('*ERROR* modified 5 rows (expected 1 or 0): UPDATE hands') == 0)
+        self.failUnless(msgs[1].find('modified 5 rows (expected 1 or 0): UPDATE hands') == 0)
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test37_saveHand_coverFailureOfInsert(self):
@@ -5156,7 +5173,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 3)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
         self.failUnless(msgs[1].find('saveHand: INSERT INTO user2hand') == 0)
-        self.failUnless(msgs[2].find('*ERROR* inserted 1 rows (expected exactly 2): INSERT INTO user2hand VALUES') == 0)
+        self.failUnless(msgs[2].find('inserted 1 rows (expected exactly 2): INSERT INTO user2hand VALUES') == 0)
         self.service.db = oldDb
     # ----------------------------------------------------------------
     def test38_eventTable_serialZero(self):
@@ -5260,7 +5277,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     "SELECT u.serial, u.name FROM users AS u JOIN user2tourney AS u2t ON",
                     "UPDATE tourneys AS t LEFT JOIN user2tourney AS u2t ON",
                     "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys",
-                    "REPLACE INTO route VALUES"
+                    "REPLACE INTO route VALUES",
+                    "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE",
+                    "DELETE FROM pokertables WHERE"
                 ])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):
@@ -5283,7 +5302,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
 
         msgs = get_messages()
-        self.assertEquals(len(msgs), 3)
+        self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
         self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
 
@@ -5317,7 +5336,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(msgs[0].find('SELECT amount FROM user2money'), 0)
         self.failUnless(msgs[0].find("user_serial = 7775") > 0)
         self.failUnless(msgs[0].find("currency_serial = 2356") > 0)
-        self.assertEquals(msgs[1], '*ERROR* getMoney(7775) expected one row got 3')
+        self.assertEquals(msgs[1], 'getMoney(7775) expected one row got 3')
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -5390,7 +5409,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         packet = self.service.getPlayerInfo(235)
         self.assertEquals(get_messages(),
-                          ['*ERROR* getPlayerInfo(235) expected one row got 3'])
+                          ['getPlayerInfo(235) expected one row got 3'])
         self.assertEquals(packet.serial, 235)
         self.assertEquals(packet.name, "anonymous")
         self.assertEquals(packet.url, "random")
@@ -5426,7 +5445,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         packet = self.service.getUserInfo(765)
         self.assertEquals(get_messages(),
-                          ['*ERROR* getUserInfo(765) expected one row got 3'])
+                          ['getUserInfo(765) expected one row got 3'])
         self.assertEquals(packet.serial, 765)
         self.assertEquals(packet.type, PACKET_POKER_USER_INFO)
 
@@ -5460,7 +5479,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0].find("setPersonalInfo: UPDATE users_private SET"), 0)
-        self.assertEquals(msgs[1].find("*ERROR* setPersonalInfo: modified 3 rows (expected 1 or 0): UPDATE users_private"), 0)
+        self.assertEquals(msgs[1].find("setPersonalInfo: modified 3 rows (expected 1 or 0): UPDATE users_private"), 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -5618,7 +5637,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('setPlayerInfo: UPDATE users SET') == 0)
-        self.failUnless(msgs[1].find('*ERROR* setPlayerInfo: modified 3 rows (expected 1 or 0): UPDATE users SET') == 0)
+        self.failUnless(msgs[1].find('setPlayerInfo: modified 3 rows (expected 1 or 0): UPDATE users SET') == 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -5656,7 +5675,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.image_type, 'image/png')
 
         self.assertEquals(self.service.db.cursorValue.counts["SELECT skin_image,"], 1)
-        self.assertEquals(get_messages(), ['*ERROR* getPlayerImage(825) expected one row got 3'])
+        self.assertEquals(get_messages(), ['getPlayerImage(825) expected one row got 3'])
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -5691,7 +5710,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("setPlayerInfo: UPDATE users SET") == 0,'first message should be verbose output')
         self.failUnless(
-            msgs[1].find("*ERROR* setPlayerImage: modified 3 rows (expected 1 or 0): UPDATE users SET") == 0,
+            msgs[1].find("setPlayerImage: modified 3 rows (expected 1 or 0): UPDATE users SET") == 0,
             'second message should be error about rows'
         )
 
@@ -5743,7 +5762,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("buyInPlayer: UPDATE user2money,user2table SET ") == 0,
                         'first message should be verbose output')
-        self.failUnless(msgs[1].find("*ERROR* modified 1 rows (expected 0 or 2): UPDATE user2money,user2table SET ") == 0,
+        self.failUnless(msgs[1].find("modified 1 rows (expected 0 or 2): UPDATE user2money,user2table SET ") == 0,
                         'second message should be error about rows')
 
         self.service.getMoney = saveGetMoney
@@ -5782,7 +5801,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("seatPlayer: INSERT INTO user2table") == 0,
                         'first message should be verbose output')
-        self.failUnless(msgs[1].find("*ERROR* inserted 0 rows (expected 1): INSERT INTO user2table") == 0,
+        self.failUnless(msgs[1].find("inserted 0 rows (expected 1): INSERT INTO user2table") == 0,
                         'second message should be error about rows')
 
         self.service.databaseEvent = saveDBEvent
@@ -5839,7 +5858,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 2)
         self.assertEquals(self.service.db.cursorValue.counts["SELECT money FROM user2table"], 1)
         self.failUnless(msgs[0].find("movePlayer: UPDATE user2table") == 0, "first message wrong")
-        self.failUnless(msgs[1].find("*ERROR* modified 3 rows (expected 1): UPDATE user2table") == 0,
+        self.failUnless(msgs[1].find("modified 3 rows (expected 1): UPDATE user2table") == 0,
                         "second message wrong")
 
         self.service.db = oldDb
@@ -5884,9 +5903,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 4)
         self.failUnless(msgs[0].find('leavePlayer UPDATE user2money,user2table,pokertables') == 0)
-        self.failUnless(msgs[1].find('*ERROR* modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,pokertables') == 0)
+        self.failUnless(msgs[1].find('modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,pokertables') == 0)
         self.failUnless(msgs[2].find('leavePlayer DELETE FROM user2table') == 0)
-        self.failUnless(msgs[3].find('*ERROR* modified 0 rows (expected 1): DELETE FROM user2table') == 0)
+        self.failUnless(msgs[3].find('modified 0 rows (expected 1): DELETE FROM user2table') == 0)
 
         self.service.db = oldDb
         self.service.databaseEvent = saveDBEvent
@@ -5925,7 +5944,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('updatePlayerRake: UPDATE user2money SET') == 0, 
                         "Missing expected string in: " + msgs[0])
-        self.failUnless(msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2money SET') == 0,
+        self.failUnless(msgs[1].find('modified 0 rows (expected 1): UPDATE user2money SET') == 0,
                         "Missing expected string in: " +  msgs[1])
 
         self.service.db = oldDb
@@ -5964,7 +5983,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
                         "Missing expected string in: " + msgs[0])
-        self.failUnless(msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2table SET') == 0,
+        self.failUnless(msgs[1].find('modified 0 rows (expected 1): UPDATE user2table SET') == 0,
                         "Missing expected string in: " +  msgs[1])
 
         self.service.db = oldDb
@@ -6000,7 +6019,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             "Missing expected string in: " + msgs[0]
         )
         self.failUnless(
-            msgs[1].find('*ERROR* modified 0 rows (expected 1): UPDATE user2table SET') == 0,
+            msgs[1].find('modified 0 rows (expected 1): UPDATE user2table SET') == 0,
             "Missing expected string in: " +  msgs[1]
         )
 
@@ -6043,7 +6062,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
         self.failUnless(search_output('createTable: INSERT INTO pokertables'))
-        self.failUnless(search_output('*ERROR* inserted 0 rows (expected 1): INSERT INTO pokertables'))
+        self.failUnless(search_output('inserted 0 rows (expected 1): INSERT INTO pokertables'))
         self.failUnless(search_output('table created : This'))
         
         self.service.db = oldDb
@@ -6083,7 +6102,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 #         msgs = get_messages()
 #         self.failUnless(len(msgs) >= 2, "There should be at least two output messages")
 #         self.failUnless(search_output('createTable: INSERT pokertables'))
-#         self.failUnless(search_output('*ERROR* inserted 0 rows (expected 1): INSERT pokertables'))
+#         self.failUnless(search_output('inserted 0 rows (expected 1): INSERT pokertables'))
         
 #         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -6126,7 +6145,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
         self.failUnless(search_output('createTable: INSERT INTO pokertables'))
-        self.failUnless(search_output('*ERROR* inserted 3 rows (expected 1): INSERT INTO pokertables'))
+        self.failUnless(search_output('inserted 3 rows (expected 1): INSERT INTO pokertables'))
         self.failUnless(search_output('table created : This'))
         
         self.service.db = oldDb
@@ -6169,7 +6188,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(len(msgs) == 3, "Expected excatly three messages")
         self.assertEquals(msgs[0], 'table Mocky/7775 removed from server')
         self.failUnless(msgs[1].find('deleteTable: DELETE FROM pokertables') == 0)
-        self.failUnless(msgs[2].find('*ERROR* deleted 3 rows (expected 1): DELETE FROM pokertables') == 0)
+        self.failUnless(msgs[2].find('deleted 3 rows (expected 1): DELETE FROM pokertables') == 0)
 
         self.service.db = oldDb
     # ----------------------------------------------------------------
@@ -6599,8 +6618,8 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
         pxml = pokerservice.PokerXML(service)
 
         clear_all_messages()
-        pxml.error("Test an error")
-        self.assertEquals(get_messages(), ['*ERROR* Test an error'])
+        pxml.log.error("Test an error")
+        self.assertEquals(get_messages(), ['Test an error'])
 ##############################################################################
 class PokerXMLRPCCoverageTestCase(unittest.TestCase):
     # ----------------------------------------------------------------
