@@ -33,9 +33,10 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.python.runtime import seconds
 
-import pokernetwork.pokerpackets
-pokerpackets = dict((p.__name__,p) for p in pokernetwork.pokerpackets.PacketFactory.values())
 from pokernetwork.pokerpackets import *
+from pokernetwork.packets import *
+PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_class in PacketFactory.itervalues())
+
 from pokernetwork import log as network_log
 log = network_log.getChild('site')
 
@@ -76,33 +77,46 @@ def packets2maps(packets):
         if 'message' in dir(packet):
             attributes['message'] = getattr(packet, 'message')
         #
-        # It is forbiden to set a map key to a numeric (native
+        # It is forbidden to set a map key to a numeric (native
         # numeric or string made of digits). Taint the map entries
         # that are numeric and hope the client will figure it out.
         #
-        for (key, value) in packet.__dict__.iteritems():
-            if type(value) == DictType:
-                    for ( subkey, subvalue ) in value.items():
-                            del value[subkey]
-                            new_subkey = str(subkey)
-                            if new_subkey.isdigit():
-                                    new_subkey = "X" + new_subkey
-                            value[new_subkey] = subvalue
+        for value in packet.__dict__.itervalues():
+            if type(value) is dict:
+                for ( subkey, subvalue ) in value.items():
+                    del value[subkey]
+                    new_subkey = str(subkey)
+                    if new_subkey.isdigit():
+                        new_subkey = "X" + new_subkey
+                    value[new_subkey] = subvalue
         attributes['type'] = packet.__class__.__name__
         maps.append(attributes)
     return maps
 
+
 _arg2packet_re = re.compile("^[a-zA-Z]+$")
-def arg2packet(arg):
-    if _arg2packet_re.match(arg['type']):
-        try: return pokerpackets[arg['type']](**arg) if len(arg) > 1 else pokerpackets[arg['type']]()
-        except: return PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
-    return PacketError(message = "Invalid type name %s" % arg['type'])
-
 def args2packets(args):
-    for arg in args:
-        yield arg2packet(arg)
+    return (arg2packet(arg) for arg in args)
 
+def arg2packet(arg):
+    packet_class = None
+    packet = None
+    
+    try: packet_class = PacketFactory[int(arg['type'],10)]
+    except Exception: pass
+    
+    if packet_class is None and _arg2packet_re.match(arg['type']):
+        try: packet_class = PacketFactoryWithNames[arg['type']]
+        except Exception: pass
+        
+    if packet_class is None:
+        packet = PacketError(message = "Invalid type name %s" % arg['type'])
+    else:
+        try: packet = packet_class(**arg)
+        except Exception: packet = PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
+            
+    return packet
+    
 class Request(server.Request):
 
     def getSession(self):
