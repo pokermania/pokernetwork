@@ -46,7 +46,7 @@ except:
 
 from twisted.application import internet, service, app
 from twisted.web import server
-from twisted.python import log
+from twisted.python import log as twisted_log
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory
@@ -75,7 +75,7 @@ def makeService(configuration):
         'LOG_LEVEL' in os.environ else \
         settings.headerGetInt("/server/@log_level")
     logger = logging.getLogger()
-    handler = TwistedHandler(log.theLogPublisher)
+    handler = TwistedHandler(twisted_log.theLogPublisher)
     handler.setFormatter(SingleLineFormatter('[%(refs)s] %(message)s'))
     logger.addHandler(handler)
     if log_level:
@@ -154,7 +154,7 @@ def makeApplication(argv):
     return application
 
 def run():
-    log.startLogging(sys.stdout)
+    twisted_log.startLogging(sys.stdout)
     if platform.system() != "Windows":
         if not sys.modules.has_key('twisted.internet.reactor'):
             log.debug("installing epoll reactor")

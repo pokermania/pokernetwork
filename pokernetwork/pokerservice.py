@@ -42,7 +42,7 @@ import imp
 from traceback import print_exc
 
 from pokernetwork import log as network_log
-log = network_log.getChild('service')
+log = network_log.getChild('pokerservice')
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
