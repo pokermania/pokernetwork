@@ -43,10 +43,13 @@ from pokerengine import pokertournament
 from tests import testclock
 import pprint
 
-from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
-#os.environ['VERBOSE_T'] = '0'
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+from tests.testmessages import search_output, clear_all_messages, get_messages
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
 
 twisted.internet.base.DelayedCall.debug = True
 
@@ -224,8 +227,6 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     # -------------------------------------------------------------------------
     def quit(self, args):
         client = args[0]
-        if verbose > 0:
-            print "test-pokerclient: quit client " + str(client.getSerial())
         client.sendPacket(PacketQuit())
         if hasattr(client, "transport"):
             client.transport.loseConnection()
@@ -599,8 +600,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         def stringAvatar((client, packet)):
-            if verbose > 0:
-                print "test05_testStrInterpolation" + str(self.service.avatars[0])
             self.assertEquals(str(self.service.avatars[0]),
                               "PokerAvatar serial = 4, name = user0")
             return (client, packet)
@@ -1499,19 +1498,17 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for (key, info) in badPacketAttempts.iteritems():
             avatar.resetPacketsQueue()
             avatar.queuePackets()
-            silence_all_messages()
             clear_all_messages()
             avatar.handlePacketLogic(info['packet'])
             self.assertEqual(search_output(info['output']), True, info['output'])
-            restore_all_messages()
 
             found = False
             for packet in avatar.resetPacketsQueue():
                 found = True
                 self.assertEquals(packet.type, info['err_type'])
-                if info.has_key('other_type'):
+                if 'other_type' in info:
                     self.assertEquals(info['other_type'], packet.other_type)
-            self.assertEquals(found, info.has_key('err_type'))
+            self.assertEquals(found, 'err_type' in info)
         return (client, packet)
     # -------------------------------------------------------------------------
     def test18_badAttempts(self):
@@ -2486,18 +2483,15 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
 
         avatar.queuePackets()
-        silence_all_messages()
         clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
-        restore_all_messages()
         self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
         # Coverage for when the server is shutting down
 
         avatar.service.shutting_down = True
 
         avatar.queuePackets()
-        silence_all_messages()
         clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
@@ -2513,7 +2507,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.resetPacketsQueue()
         avatar.queuePackets()
-        silence_all_messages()
         clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                              game_id = gameId))
@@ -2527,7 +2520,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.resetPacketsQueue()
         avatar.queuePackets()
-        silence_all_messages()
         clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                              game_id = gameId))
@@ -2576,7 +2568,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table = self.service.getTable(gameId)
         table.owner = client.getSerial() - 3
         avatar.queuePackets()
-        silence_all_messages()
         clear_all_messages()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
                                                             game_id = gameId))
@@ -2824,10 +2815,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for (key, info) in packetTests.iteritems():
             avatar.resetPacketsQueue()
             avatar.queuePackets()
-            silence_all_messages()
             avatar.handlePacketLogic(info['packet'])
-            restore_all_messages()
-            if info.has_key('output'):
+            if 'output' in info:
                 self.assertEqual(search_output(info['output']), True, info['output'])
             found = False
             for packet in avatar.resetPacketsQueue():
@@ -2835,7 +2824,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 self.assertEquals(packet.type, info['answer_type'])
                 self.assertEquals(packet.game_id, gameId)
                 self.assertEquals(packet.serial, client.getSerial())
-            self.assertEquals(found, info.has_key('answer_type'))
+            self.assertEquals(found, 'answer_type' in info)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test52_variousPackets(self):
@@ -2953,9 +2942,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def handReplayWithoutTable(self, (client, packet), id ):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        silence_all_messages()
         avatar.handlePacketLogic(PacketPokerHandReplay(serial= client.getSerial()))
-        restore_all_messages();
         self.assertEqual(search_output("*ERROR* loadHand(%d) expected one row got 0" % client.getSerial()), True)
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -3701,7 +3688,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         return d
     # ------------------------------------------------------------------------
     def forceObserverDisconnectPacketQueue(self, (client, packet), gameId):
-        silence_all_messages()
         avatars = self.service.avatars
         clients = {}
         table = self.service.getTable(gameId)
@@ -3861,7 +3847,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             avatar.getOrCreateRestClient = getOrCreateRestClientMockup
             r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
             r.addCallback(lambda packets: self.assertEquals(['foo'], packets))
-            r.addCallback(lambda arg: self.assertEquals(True, avatar.game_id2rest_client.has_key(2)))
+            r.addCallback(lambda arg: self.assertEquals(True, 2 in avatar.game_id2rest_client))
             d.callback(['foo'])
             return d
         d.addCallback(handleDistributedPacket)
@@ -4677,7 +4663,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
                                        autoBlindAnte = True)
             def autodeal((client, packet), gameId):
                 table = self.service.getTable(gameId)
-                self.assertTrue(table.timer_info.has_key("dealTimeout"))
+                self.assertTrue("dealTimeout" in table.timer_info)
                 return (client, packet)
             pickerDeferred.addCallback(autodeal, 5)
             return pickerDeferred

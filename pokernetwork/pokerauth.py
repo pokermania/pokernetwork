@@ -78,7 +78,7 @@ class PokerAuth:
                 self.log.debug("user %s does not exist", name)
                 cursor.close()
         elif numrows > 1:
-            self.error("more than one row for %s", name)
+            self.log.warn("more than one row for %s", name)
             cursor.close()
         else:
             (serial, password_sql, privilege) = cursor.fetchone()
@@ -147,7 +147,7 @@ def get_auth_instance(db, memcache, settings):
         import imp
         script = settings.headerGet("/server/auth/@script")
         try:
-            log.debug("get_auth_isntance: trying to load: '%s'", script)
+            log.debug("get_auth_instance: trying to load: '%s'", script)
             module = imp.load_source("user_defined_pokerauth", script)
             get_instance = getattr(module, "get_auth_instance")
             log.debug("get_auth_instance: using custom implementation of get_auth_instance: %s", script)
