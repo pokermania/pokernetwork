@@ -40,9 +40,13 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages, get_messages, clear_all_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
+from tests.testmessages import search_output, clear_all_messages, get_messages
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
 
 from pokernetwork import pokercashier, pokernetworkconfig, user
 from pokernetwork import currencyclient
@@ -844,7 +848,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
         self.assertEquals(db.cursor().counts['COMMIT'], 1)
         msgs = get_messages()
-        self.assertEquals(msgs[len(msgs)-1], '*ERROR* cashInUnlock: unexpected missing cash_5 in locks (ignored)')
+        self.assertEquals(msgs[len(msgs)-1], 'cashInUnlock: unexpected missing cash_5 in locks (ignored)')
     # --------------------------------------------------------
     def test06_cashOutUpdateSafe_forceFakeFalsePacket(self):
         """test06_cashOutUpdateSafe_forceFakeFalsePacket
@@ -919,7 +923,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
         self.assertEquals(db.cursor().counts['COMMIT'], 1)
         msgs = get_messages()
-        self.assertEquals(msgs[len(msgs)-1], '*ERROR* cashInUnlock: unexpected missing cash_5 in locks (ignored)')
+        self.assertEquals(msgs[len(msgs)-1], 'cashInUnlock: unexpected missing cash_5 in locks (ignored)')
     # --------------------------------------------------------
     def cashOutUpdateCounter_weirdLen(self, new_notes, message):
         clear_all_messages()
@@ -1145,7 +1149,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0], 'cashOutUpdateSafe: 6 777')
-        self.assertEquals(msgs[3], '*ERROR* cashInUnlock: unexpected missing cash_6 in locks (ignored)')
+        self.assertEquals(msgs[3], 'cashInUnlock: unexpected missing cash_6 in locks (ignored)')
     # --------------------------------------------------------
     def test11_cashOutBreakNote_multirowForSerial(self):
         """test11_cashOutBreakNote_multirowForSerial
@@ -1201,7 +1205,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.failUnless(caughtIt)
         msgs = get_messages()
         self.assertEquals(len(msgs), 3)
-        self.assertEquals(msgs[2], "*ERROR* " + failMsg)
+        self.assertEquals(msgs[2], "" + failMsg)
 # --------------------------------------------------------
 # Following tests are for the lock/unlock mechanism and do not need any
 # database at all.
@@ -1226,7 +1230,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
                 lockSelf.started = True
             def acquire(lockSelf, name, value):
                 self.assertEquals(value, 5)
-                if lockSelf.acquireCounts.has_key(name):
+                if name in lockSelf.acquireCounts:
                     lockSelf.acquireCounts[name] += 1
                 else:
                     lockSelf.acquireCounts[name] = 1
@@ -1248,7 +1252,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         clear_all_messages()
         self.assertEquals(self.cashier.unlock(5), None)
         self.assertEquals(self.cashier.locks, {})
-        self.assertEquals(get_messages(), ['*ERROR* cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
+        self.assertEquals(get_messages(), ['cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
     # --------------------------------------------------------
     def test02_lockCreateTwice(self):
         """test02_lockCreateTwice
@@ -1323,7 +1327,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
         self.assertEquals(get_messages(),
-                          ['*ERROR* cashInUnlock: unexpected dead cash_2 pokerlock (ignored)'])
+                          ['cashInUnlock: unexpected dead cash_2 pokerlock (ignored)'])
     # --------------------------------------------------------
     def test05_lockCreateTwiceWhenAliven(self):
         """test05_lockCreateTwiceWhenAlive
