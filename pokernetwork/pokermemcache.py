@@ -58,7 +58,7 @@ class MemcacheMockup:
 
         def get(self, key):
             check_key(key)
-            if self.cache.has_key(key):
+            if key in self.cache:
                 return self.cache[key]
             else:
                 return None
@@ -66,7 +66,7 @@ class MemcacheMockup:
         def get_multi(self, keys):
             r = {}
             for key in keys:
-                if self.cache.has_key(key):
+                if key in self.cache:
                     r[key] = self.cache[key]
             return r
         
@@ -82,7 +82,7 @@ class MemcacheMockup:
             return []
 
         def add(self, key, value, time = 0):
-            if self.cache.has_key(key):
+            if key in self.cache:
                 return 0
             else:
                 self.cache[key] = value
@@ -90,7 +90,7 @@ class MemcacheMockup:
                 return 1
 
         def replace(self, key, value, time = 0):
-            if self.cache.has_key(key):
+            if key in self.cache:
                 self.cache[key] = value
                 self.expiration[key] = time
                 return 1
@@ -107,7 +107,7 @@ class MemcacheMockup:
 
         def delete_multi(self, keys):
             for key in keys:
-                if self.cache.has_key(key):
+                if key in self.cache:
                     del self.cache[key]
             return 1
 

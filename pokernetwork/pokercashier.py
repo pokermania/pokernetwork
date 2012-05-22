@@ -47,7 +47,7 @@ class PokerCashier:
         self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.currency_client = currencyclient.CurrencyClient()
         self.parameters = settings.headerGetProperties("/server/cashier")[0]
-        if self.parameters.has_key('pokerlock_queue_timeout'):
+        if 'pokerlock_queue_timeout' in self.parameters:
             PokerLock.queue_timeout = int(self.parameters['pokerlock_queue_timeout'])
         self.db = None
         self.db_parameters = settings.headerGetProperties("/server/database")[0]
@@ -400,7 +400,7 @@ class PokerCashier:
 
     def unlock(self, currency_serial):
         name = self.getLockName(currency_serial)
-        if not self.locks.has_key(name):
+        if name not in self.locks:
             self.log.warn("cashInUnlock: unexpected missing %s in locks (ignored)", name)
             return
         if not self.locks[name].isAlive():
@@ -412,7 +412,7 @@ class PokerCashier:
         name = self.getLockName(currency_serial)
 
         self.log.debug("get lock %s", name)
-        if self.locks.has_key(name):
+        if name in self.locks:
             lock = self.locks[name]
             if lock.isAlive():
                 create_lock = False

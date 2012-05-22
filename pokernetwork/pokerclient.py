@@ -123,11 +123,11 @@ class PokerClientFactory(UGAMEClientFactory):
             self.delays = self.delays[0]
             for (key, value) in self.delays.iteritems():
                 self.delays[key] = float(value)
-            if self.delays.has_key("round"):
+            if "round" in self.delays:
                 self.delays["end_round"] = self.delays["round"]
                 self.delays["begin_round"] = self.delays["round"]
                 del self.delays["round"]
-            if not self.delays.has_key("blind_ante_position"):
+            if "blind_ante_position" not in self.delays:
                 self.delays["blind_ante_position"] = self.delays["position"]
         else:
             self.delays = {}
@@ -204,7 +204,7 @@ class PokerClientFactory(UGAMEClientFactory):
         return self.skin.setOutfit(outfit)
     
     def translateFile2Name(self, file):
-        if not self.file2name.has_key(file):
+        if file not in self.file2name:
             config = Config(self.dirs)
             config.load("poker.%s.xml" % file)
             name = config.headerGet("/bet/description")
@@ -507,7 +507,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         player = game.getPlayer(serial)
         if not player: return 0
         user_data = player.getUserData()
-        if not user_data or not user_data.has_key('delay'): return 0
+        if not user_data or 'delay' not in user_data: return 0
         return user_data['delay']
 
     def canHandlePacket(self, packet):
@@ -907,7 +907,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             what = 'outbound'
 
         self.log.debug("publishPacket(%d): %s: %s", self.getSerial(), what, packet)
-        if self.callbacks[what].has_key(packet.type):
+        if packet.type in self.callbacks[what]:
             callbacks = self.callbacks[what][packet.type]
             for callback in callbacks:
                 callback(self, packet)

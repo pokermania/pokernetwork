@@ -45,7 +45,7 @@ class PokerGames:
         self.prefix = kwargs.get("prefix", "")
     
     def getGame(self, game_id):
-        if not hasattr(self, "games") or not self.games.has_key(game_id):
+        if not hasattr(self, "games") or game_id not in self.games:
             return False
         else:
             return self.games[game_id]
@@ -58,7 +58,7 @@ class PokerGames:
         return None
     
     def getOrCreateGame(self, game_id):
-        if not self.games.has_key(game_id):
+        if game_id not in self.games:
             game = PokerNetworkGameClient("poker.%s.xml", self.dirs)
             game.prefix = self.prefix
             game.verbose = self.verbose
@@ -74,13 +74,13 @@ class PokerGames:
         del self.games[game_id]
 
     def packet2game(self, packet):
-        if hasattr(packet, "game_id") and self.games.has_key(packet.game_id):
+        if hasattr(packet, "game_id") and packet.game_id in self.games:
             return self.games[packet.game_id]
         else:
             return False
 
     def gameExists(self, game_id):
-        return self.games.has_key(game_id)
+        return game_id in self.games
 
     def getAll(self):
         return self.games.values()

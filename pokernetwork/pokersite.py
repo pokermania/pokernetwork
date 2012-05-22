@@ -196,7 +196,7 @@ class PokerResource(resource.Resource):
         jsonp = request.args.get('jsonp', [''])[0]
         if jsonp:
             data = request.args.get('packet', [''])[0]
-        elif request.args.has_key('packet'):
+        elif 'packet' in request.args:
             data = request.args['packet'][0];
         else:
             data = request.content.read()
@@ -559,7 +559,7 @@ class PokerSite(server.Site):
             # If the memcache session is gone, trash the current session
             # if it exists.
             #
-            if self.sessions.has_key(uid):
+            if uid in self.sessions:
                 self.sessions[uid].expire()
         else:
             memcache_serial = int(memcache_serial)
@@ -567,7 +567,7 @@ class PokerSite(server.Site):
             # If a session exists, make sure it is in sync with the memcache
             # serial.
             #
-            if self.sessions.has_key(uid):
+            if uid in self.sessions:
                 session = self.sessions[uid]
                 session.memcache_serial = memcache_serial
                 if session.avatar.getSerial() == 0:
@@ -586,7 +586,7 @@ class PokerSite(server.Site):
                     #
                     if session.avatar.getSerial() != memcache_serial:
                         session.expire()
-            if not self.sessions.has_key(uid):
+            if uid not in self.sessions:
                 #
                 # Create a session with an uid that matches the memcache
                 # key

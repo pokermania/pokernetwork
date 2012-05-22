@@ -44,11 +44,11 @@ class RealCurrencyClient:
             
         args = [ base + "command=" + kwargs.get('command', 'get_note') ]
         for key in ('name', 'serial', 'value', 'transaction_id'):
-            if kwargs.has_key(key): 
+            if key in kwargs: 
                 arg = kwargs[key]
                 args.append("%s=%s" % ( key, arg ))
 
-        if kwargs.has_key('notes'):
+        if 'notes' in kwargs:
             index = 0
             for (url, serial, name, value) in kwargs['notes']:
                 args.append("name[%d]=%s" % ( index, name ) )
@@ -56,13 +56,13 @@ class RealCurrencyClient:
                 args.append("value[%d]=%s" % ( index, value ) )
                 index += 1
                 
-        if kwargs.has_key('note'):
+        if 'note' in kwargs:
             (url, serial, name, value) = kwargs['note']
             args.append("name=%s" % name )
             args.append("serial=%s" % serial )
             args.append("value=%s" % value )
                 
-        if kwargs.has_key('values'):
+        if 'values' in kwargs:
             index = 0
             for value in kwargs['values']:
                 args.append("values[%d]=%d" % ( index, value ))

@@ -55,7 +55,7 @@ class PokerDatabase:
                                       db = self.parameters["name"])
             self.log.debug("MySQL server version is %s", self.db.get_server_info())
         except:
-            if self.parameters.has_key('root_user'):
+            if 'root_user' in self.parameters:
                 self.log.inform("conenction as root user '%s'", self.parameters['root_user'])
                 db = MySQLdb.connect(host = self.parameters["host"],
                                      port = int(self.parameters.get("port", '3306')),

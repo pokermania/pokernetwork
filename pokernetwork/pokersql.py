@@ -51,7 +51,7 @@ def runQuery(settings):
     form = cgi.FieldStorage()
     cursor = db.cursor(DictCursor)
     cursor.execute(form["query"].value)
-    if not form.has_key('output'):
+    if 'output' not in form:
             result = cursor.rowcount
     elif form["output"].value == "rows":
             result = cursor.fetchall()

@@ -156,7 +156,7 @@ def makeApplication(argv):
 def run():
     twisted_log.startLogging(sys.stdout)
     if platform.system() != "Windows":
-        if not sys.modules.has_key('twisted.internet.reactor'):
+        if 'twisted.internet.reactor' not in sys.modules:
             log.debug("installing epoll reactor")
             from twisted.internet import epollreactor
             epollreactor.install()

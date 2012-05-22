@@ -378,7 +378,7 @@ class PokerService(service.Service):
         return deferred
 
     def cancelTimer(self, key):
-        if self.timer.has_key(key):
+        if key in self.timer:
             self.log.debug("cancelTimer %s", key)
             timer = self.timer[key]
             if timer.active():
@@ -493,7 +493,7 @@ class PokerService(service.Service):
     def locale2translationFunc(self, locale, codeset = ""):
         if len(codeset) > 0:
             locale += "." + codeset
-        if self.gettextFuncs.has_key(locale):
+        if locale in self.gettextFuncs:
             return self.gettextFuncs[locale]
         else:
             self.log.warn("Locale, '%s' not available. %s must not have been "
@@ -649,7 +649,7 @@ class PokerService(service.Service):
         if not self.refill:
             return
         user_info = self.getUserInfo(serial)
-        if user_info.money.has_key(int(self.refill['serial'])):
+        if int(self.refill['serial']) in user_info.money:
             money = user_info.money[int(self.refill['serial'])]
             missing = int(self.refill['amount']) - ( int(money[0]) + int(money[1]) )
             if missing > 0:
@@ -712,7 +712,7 @@ class PokerService(service.Service):
         for schedule in filter(lambda schedule: schedule['respawn'] == 'y' and schedule['sit_n_go'] == 'y', self.tourneys_schedule.values()):
             schedule_serial = schedule['serial']
             if (
-                not self.schedule2tourneys.has_key(schedule_serial) or
+                schedule_serial not in self.schedule2tourneys or
                 not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial])
             ):
                 self.spawnTourney(schedule)
@@ -742,7 +742,7 @@ class PokerService(service.Service):
                 schedule['start_time'] += schedule['respawn_interval']*intervals
                 schedule['register_time'] += schedule['respawn_interval']*intervals
             if schedule['register_time'] < now and (
-                not self.schedule2tourneys.has_key(schedule_serial) or
+                schedule_serial not in self.schedule2tourneys or
                 not filter(
                     lambda tourney: tourney.start_time >= schedule['start_time'] 
                     ,self.schedule2tourneys[schedule_serial]
@@ -861,7 +861,7 @@ class PokerService(service.Service):
         tourney.callback_move_player = self.tourneyMovePlayer
         tourney.callback_remove_player = self.tourneyRemovePlayer
         tourney.callback_cancel = self.tourneyCancel
-        if not self.schedule2tourneys.has_key(schedule_serial):
+        if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
         self.schedule2tourneys[schedule_serial].append(tourney)
         self.tourneys[tourney.serial] = tourney
@@ -1333,7 +1333,7 @@ class PokerService(service.Service):
             table_serial = row['table_serial']
             if table_serial == None or table_serial == -1:
                 continue
-            if not table2serials.has_key(table_serial):
+            if table_serial not in table2serials:
                 table2serials[table_serial] = []
             table2serials[table_serial].append(row['user_serial'])
         packet.table2serials = table2serials
@@ -1376,7 +1376,7 @@ class PokerService(service.Service):
         packet.tourney = cursor.fetchone()
         packet.tourney["registered"] = len(user2tourney)
         packet.tourney["rank2prize"] = None
-        if self.tourneys.has_key(tourney_serial):
+        if tourney_serial in self.tourneys:
             packet.tourney["rank2prize"] = self.tourneys[tourney_serial].prizes()
         else:
             player_count = packet.tourney["players_quota"] \
@@ -1393,7 +1393,7 @@ class PokerService(service.Service):
         user2properties = {}
         for row in user2tourney:
             user_serial = row["user_serial"]
-            money = user2money.has_key(user_serial) and user2money[user_serial] or -1
+            money = user_serial in user2money and user2money[user_serial] or -1
             user2properties[str(user_serial)] = {
                 "name": user2name[user_serial],
                 "money": money,
@@ -1405,7 +1405,7 @@ class PokerService(service.Service):
         return packet
 
     def tourneyPlayersList(self, tourney_serial):
-        if not self.tourneys.has_key(tourney_serial):
+        if tourney_serial not in self.tourneys:
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_REGISTER,
                 code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
@@ -1588,7 +1588,7 @@ class PokerService(service.Service):
     def tourneyUnregister(self, packet):
         serial = packet.serial
         tourney_serial = packet.game_id
-        if not self.tourneys.has_key(tourney_serial):
+        if tourney_serial not in self.tourneys:
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                 code = PacketPokerTourneyUnregister.DOES_NOT_EXIST,
@@ -2810,7 +2810,7 @@ class PokerService(service.Service):
 
             buy_in = table.game.buyIn()
             currency_serial = rr['currency_serial']
-            if not money_results.has_key(currency_serial):
+            if currency_serial not in money_results:
                 money_results[currency_serial] = self.getMoney(serial, currency_serial)
 
             if money_results[currency_serial] > buy_in:
@@ -2821,7 +2821,7 @@ class PokerService(service.Service):
         return bestTable
 
     def createTable(self, owner, description):
-        tourney_serial = description['tourney'].serial if description.has_key('tourney') else 0
+        tourney_serial = description['tourney'].serial if 'tourney' in description else 0
 
         cursor = self.db.cursor()
         sql = "INSERT INTO pokertables ( resthost_serial, seats, player_timeout, muck_timeout, currency_serial, name, variant, betting_structure, skin, tourney_serial ) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"

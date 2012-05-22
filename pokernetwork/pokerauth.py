@@ -59,7 +59,7 @@ class PokerAuth:
         self.type2auth[type] = level
 
     def GetLevel(self, type):
-        return self.type2auth.has_key(type) and self.type2auth[type]
+        return type in self.type2auth and self.type2auth[type]
 
     def _authLogin(self,name,password):
         cursor = self.db.cursor()

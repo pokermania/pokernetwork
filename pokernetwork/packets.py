@@ -55,8 +55,8 @@ class Packet:
         for (field, default, format) in self.info:
             if field == 'type':
                 self.type = self.type # type is now in __dict__, for serialization 
-            if not self.__dict__.has_key(field):
-                if kwargs.has_key(field):
+            if field not in self.__dict__:
+                if field in kwargs:
                     self.__dict__[field] = kwargs[field]
                 elif type(default) in (str,int,long,float):
                     self.__dict__[field] = default
@@ -244,7 +244,7 @@ class Packet:
         packets = []
         while len(block) > 0 and count < length:
             t.unpack(block)
-            if not PacketFactory.has_key(t.type):
+            if t.type not in PacketFactory:
                 log.warn("unknown packet type %d (knwon types are %s)", t.type, PacketNames)
                 return None
             packet = PacketFactory[t.type]()
@@ -926,7 +926,7 @@ class PacketList(Packet):
         self.packets = []
         while len(block) > 0 and count < length:
             t.unpack(block)
-            if not PacketFactory.has_key(t.type):
+            if t.type not in PacketFactory:
                 log.warn("unknown packet type %d (known types are %s)", t.type, PacketNames)
                 return
             packet = PacketFactory[t.type]()

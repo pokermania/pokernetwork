@@ -41,7 +41,7 @@ log = network_log.getChild('pokerbot')
 from twisted.application import internet, service, app
 
 if platform.system() != "Windows":
-    if not sys.modules.has_key('twisted.internet.reactor'):
+    if 'twisted.internet.reactor' not in sys.modules:
         from twisted.internet import epollreactor
         log.debug("installing epoll reactor")
         epollreactor.install()
@@ -146,7 +146,7 @@ class PokerBotFactory(PokerClientFactory):
         reconnect = False
         if self.reconnect:
             if self.went_broke:
-                if not self.kwargs.has_key('name'):
+                if 'name' not in self.kwargs:
                     self.name = PokerBotFactory.string_generator.getName()
                 self.log.debug("Re-establishing (get more money).")
                 self.went_broke = False
@@ -262,7 +262,7 @@ def makeService(configuration):
 
     for table in settings.headerGetProperties("/settings/table"):
         table['tournament'] = False
-        if table.has_key('count'):
+        if 'count' in table:
             for i in range(0, int(table["count"])):
                 create_bot(settings = settings,
                            join_info = table,
@@ -276,7 +276,7 @@ def makeService(configuration):
                            password = bot['password'])
     for tournament in settings.headerGetProperties("/settings/tournament"):
         tournament['tournament'] = True
-        if tournament.has_key('count'):
+        if 'count' in tournament:
             for i in range(0, int(tournament["count"])):
                 create_bot(settings = settings,
                            join_info = tournament,

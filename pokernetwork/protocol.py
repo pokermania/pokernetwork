@@ -85,7 +85,7 @@ class UGAMEProtocol(protocol.Protocol):
         return self._lag
     
     def getOrCreateQueue(self, id):
-        if not self._queues.has_key(id):
+        if id not in self._queues:
             self._queues[id] = Queue()
         return self._queues[id]
             
@@ -161,7 +161,7 @@ class UGAMEProtocol(protocol.Protocol):
         self.triggerTimer()
         
     def discardPackets(self, id):
-        if self._queues.has_key(id):
+        if id in self._queues:
             self._queues[id] = Queue()
             del self._queues[id]
 
@@ -242,7 +242,7 @@ class UGAMEProtocol(protocol.Protocol):
         if id != None:
             packet.time__ = seconds()
             front = self._packet2front(packet)
-            if front and self._queues.has_key(id):
+            if front and id in self._queues:
                 packet.nodelay__ = True
                 self._queues[id].packets.insert(0, packet)
             else:
@@ -258,7 +258,7 @@ class UGAMEProtocol(protocol.Protocol):
                 type.unpack(buf)
                 if type.length <= len(buf):
 
-                    if PacketFactory.has_key(type.type):
+                    if type.type in PacketFactory:
                         packet = PacketFactory[type.type]()
                         buf = packet.unpack(buf)
                         self.log.debug("%s(%d bytes) => %s", self._prefix, type.length, packet)

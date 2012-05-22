@@ -398,7 +398,7 @@ class PokerAvatar:
         self.sendPacket(packet)
         
     def packet2table(self, packet):
-        if hasattr(packet, "game_id") and self.tables.has_key(packet.game_id):
+        if hasattr(packet, "game_id") and packet.game_id in self.tables:
             return self.tables[packet.game_id]
         else:
             return False
@@ -463,7 +463,7 @@ class PokerAvatar:
         packets = []
         if not self.explain: return packets
          
-        explain_client_existing = self.game_id2rest_client.has_key(game_id) and self.explain.games.gameExists(game_id)
+        explain_client_existing = game_id in self.game_id2rest_client and self.explain.games.gameExists(game_id)
         if packet.type != PACKET_POKER_TABLE_JOIN and not resthost and game_id and game_id not in self.tables:
             packets.append(PacketPokerStateInformation(
                 message = 'local connection ephemeral',
@@ -487,7 +487,7 @@ class PokerAvatar:
         path += self.distributed_args
         self.log.debug("getOrCreateRestClient(%s, %d, %s, %s)", host, port, path, game_id)
         if game_id:
-            if not self.game_id2rest_client.has_key(game_id):
+            if game_id not in self.game_id2rest_client:
                 self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, longPollCallback = lambda packets: self.incomingDistributedPackets(packets, game_id), verbose = self.service.verbose)
             client = self.game_id2rest_client[game_id]
         else:

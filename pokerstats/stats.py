@@ -26,7 +26,7 @@ from os.path import exists
 
 from twisted.application import internet, service, app
 from twisted.internet import pollreactor
-if not sys.modules.has_key('twisted.internet.reactor'):
+if 'twisted.internet.reactor' not in sys.modules:
     pollreactor.install()                    #pragma: no cover
 from twisted.internet import reactor
 from twisted.python import components
@@ -45,7 +45,7 @@ class PokerStatsFactory(PokerClientFactory):
         PokerClientFactory.__init__(self, *args, **kwargs)
         self.server = kwargs['server']
         self.verbose = self.settings.headerGetInt("/settings/@verbose")
-        self.stop_service_deferred = kwargs.has_key('stop_service_deferred') and kwargs['stop_service_deferred'] or None
+        self.stop_service_deferred = 'stop_service_deferred' in kwargs and kwargs['stop_service_deferred'] or None
         self.pokerstats = PokerStats(self)
         
     def buildProtocol(self, addr):
