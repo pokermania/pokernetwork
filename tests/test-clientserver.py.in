@@ -40,10 +40,13 @@ from twisted.application import service
 #
 from tests import testclock
 
-from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages
-#os.environ['VERBOSE_T'] = '0'
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-#if verbose < 0: silence_all_messages()
+from tests.testmessages import search_output, clear_all_messages, get_messages
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
 
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
@@ -62,8 +65,6 @@ class FakeAvatar:
         pass
 
     def setProtocol(self, protocol):
-        if verbose > 0:
-            print "SetProtocol"
         self.protocol = protocol
 
     def handlePacket(self, packet):
@@ -124,8 +125,6 @@ class ClientServerTestBase(unittest.TestCase):
         self.p = reactor.listenTCP(0, self.server_factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
-        if verbose > 0:
-            print "Listening on 127.0.0.1:" + str(self.port)
 
     def setUpClient(self, index):
         self.client_factory[index] = pokernetwork.client.UGAMEClientFactory()
@@ -141,8 +140,6 @@ class ClientServerTestBase(unittest.TestCase):
         self.client_factory = [None, None]
         self.setUpClient(0)
         reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
-        if verbose > 0:
-            print "Connecting on 127.0.0.1:" + str(self.port)
 
     def cleanSessions(self, arg):
         #
@@ -173,20 +170,12 @@ class ClientServer(ClientServerTestBase):
         def serverPingTimeout(val):
             self.assertEqual(search_output("ping: timeout Mr.Fakey/-1"), True)
         client.connection_lost_deferred.addCallback(serverPingTimeout)
-        silence_all_messages()
         return client.connection_lost_deferred
     # -----------------------------------------------------------------------        
     def ping(self, client):
         clear_all_messages()
         client.sendPacket(PacketPing())
-        self.assertEquals(get_messages(), ["sendPacket(0) type = PING(5) "])
-        return (client,)
-    # -----------------------------------------------------------------------        
-    def pingExpectingPrefix(self, client):
-        clear_all_messages()
-        client.sendPacket(PacketPing())
-        self.assertEquals(get_messages(),
-                          ["ATesterPrefix: sendPacket(0) type = PING(5) "])
+        self.assertEquals(get_messages(), ["sendPacket: type = PING(5)"])
         return (client,)
     # -----------------------------------------------------------------------        
     def setPrefix(self, client):
@@ -195,16 +184,7 @@ class ClientServer(ClientServerTestBase):
     # -----------------------------------------------------------------------        
     def test01_ping(self):
         d = self.client_factory[0].established_deferred
-        silence_all_messages()
         d.addCallback(self.ping)
-        d.addCallback(self.quit)
-        return d
-    # -----------------------------------------------------------------------        
-    def test02_pingExpectingPrefix(self):
-        d = self.client_factory[0].established_deferred
-        silence_all_messages()
-        d.addCallback(self.setPrefix)
-        d.addCallback(self.pingExpectingPrefix)
         d.addCallback(self.quit)
         return d
 
@@ -233,13 +213,9 @@ class ClientServer(ClientServerTestBase):
 
     # -----------------------------------------------------------------------
     def killThenPing(self, client):
-        self.messageValue = ""
-        def getMessage(str):
-            self.messageValue += str
-        client.message = getMessage
         def sendLostConnectionPacket(val):
             client.sendPacket(PacketPing())
-            self.assertEqual(self.messageValue.find("ufferized") >= 0, True)
+            self.assertTrue(search_output("bufferized"))
             self.assertEqual(len(client.bufferized_packets), 1)
             self.assertEqual(client.bufferized_packets[0].type, PACKET_PING)
         d = client.connection_lost_deferred
@@ -258,16 +234,11 @@ class ClientServer(ClientServerTestBase):
         saveMyTransport = server.transport
         server.transport = None
 
-        self.messageValue = ""
-        def getMessage(str):
-            self.messageValue += str
-        server.message = getMessage
-
         server.sendPackets([PacketPing()])
         self.assertEquals(len(server.bufferized_packets), 1)
         self.assertEquals(server.bufferized_packets[0].type, PACKET_PING)
-        self.assertEquals(self.messageValue.find("bufferized") > 0, True)
-        self.assertEquals(self.messageValue.find("no usuable transport") > 0, True)
+        self.assertTrue(search_output("bufferized"))
+        self.assertTrue(search_output("no usuable transport"))
         server.transport = saveMyTransport
         return client.connection_lost_deferred
 
@@ -284,11 +255,10 @@ class ClientServer(ClientServerTestBase):
                 return "you mock me"
             def check(self, foo):
                 return False
-        silence_all_messages()
         clear_all_messages()
         client.connectionLost(ReasonMockUp())
         self.assertEquals(get_messages(), ['connectionLost: reason = you mock me',
-                                           'UGAMEClient.connectionLost you mock me'])
+                                           'connectionLost: you mock me'])
         self.assertEquals(client._ping_timer, None)
         self.assertEquals(self.client_factory[0].protocol_instance,  None)
         return True
@@ -300,11 +270,10 @@ class ClientServer(ClientServerTestBase):
         return d
     # -----------------------------------------------------------------------
     def dummyClientError(self, client):
-        silence_all_messages()
         clear_all_messages()
-        client.error("stupid dummy error test since client never calls")
+        client.log.error("stupid dummy error test since client never calls")
         self.assertEquals(get_messages(),
-                          ["ERROR stupid dummy error test since client never calls"])
+                          ["stupid dummy error test since client never calls"])
         return (client,)
     # -----------------------------------------------------------------------
     def test06_dummyClientError(self):
@@ -315,12 +284,11 @@ class ClientServer(ClientServerTestBase):
         return d
     # -----------------------------------------------------------------------
     def test07_bufferizedClientPackets(self):
-        silence_all_messages()
         d = self.client_factory[0].established_deferred
         def bufferPackets(client):
             def checkOutput(client):
                 msgs = get_messages()
-                self.assertEquals(msgs[0], 'sendPacket(0) type = ACK(4) ')
+                self.assertEquals(msgs[0], 'sendPacket: type = ACK(4)')
                 return (client,)
 
             client.bufferized_packets = [ PacketAck() ]
@@ -333,13 +301,12 @@ class ClientServer(ClientServerTestBase):
         return d
     # -----------------------------------------------------------------------
     def test08_bufferizedClientPacketsTwo(self):
-        silence_all_messages()
         d = self.client_factory[0].established_deferred
         def bufferPackets(client):
             def checkOutput(client):
                 msgs = get_messages()
-                self.assertEquals(msgs[0], 'sendPacket(0) type = ACK(4) ')
-                self.assertEquals(msgs[1], 'sendPacket(0) type = SERIAL(6) serial = 0 ')
+                self.assertEquals(msgs[0], 'sendPacket: type = ACK(4)')
+                self.assertEquals(msgs[1], 'sendPacket: type = SERIAL(6) serial = 0')
                 return (client,)
 
             client.bufferized_packets = [ PacketAck(), PacketSerial() ]
@@ -367,11 +334,8 @@ class ClientServerBadClientProtocol(ClientServerTestBase):
         self.p = reactor.listenTCP(0, self.server_factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
-        if verbose > 0:
-            print "Listening on 127.0.0.1:" + str(self.port)
     # -----------------------------------------------------------------------
     def test01_badClientProtocol(self):
-        silence_all_messages()
         d = self.client_factory[0].established_deferred
         def findError(myFailure):
             from pokernetwork.protocol import PROTOCOL_MAJOR, PROTOCOL_MINOR
@@ -387,7 +351,6 @@ class ClientServerQueuedServerPackets(ClientServerTestBase):
         class BufferedFakeFactory(FakeFactory):
             def buildProtocol(self, addr):
                 proto = FakeFactory.buildProtocol(self, addr)
-                silence_all_messages()
                 clear_all_messages()
                 proto.bufferized_packets.append(PacketAck())
                 return proto
@@ -396,8 +359,6 @@ class ClientServerQueuedServerPackets(ClientServerTestBase):
         self.p = reactor.listenTCP(0, self.server_factory,
                                    interface="127.0.0.1")
         self.port = self.p.getHost().port
-        if verbose > 0:
-            print "Listening on 127.0.0.1:" + str(self.port)
     # -----------------------------------------------------------------------
     def getServerPacket(self, client):
         self.failUnless(search_output('protocol established'))
@@ -498,10 +459,8 @@ class  MockPingTimer:
 class DummyServerTests(unittest.TestCase):
     def test01_invalidProtocol(self):
         self.server_factory = FakeFactory(self)
-        silence_all_messages()
         self.server_factory.buildProtocol('addr').dataReceived("invalid protocol\n")
-        if verbose < 0: # can only grep output when output is redirected
-            self.assertEqual(search_output('client with protocol UNKNOWN rejected'), True)
+        self.assertEqual(search_output('client with protocol UNKNOWN rejected'), True)
     # -----------------------------------------------------------------------
     def test02_pingWithoutTimer(self):
         clear_all_messages()
@@ -602,7 +561,7 @@ class DummyServerTests(unittest.TestCase):
  
         self.assertEquals(server.connectionLost("test08"), None)
 
-        self.failIf(server.__dict__.has_key('avatar'))
+        self.failIf('avatar' in server.__dict__)
         self.assertEquals(server._ping_timer, None)
         self.assertEquals(processQueuesCount, 0)
         self.assertEquals(ignoreIncomingDataCount, 1)
@@ -632,7 +591,7 @@ class DummyServerTests(unittest.TestCase):
 
         self.assertEquals(server.connectionLost("test09"), None)
 
-        self.failIf(server.__dict__.has_key('avatar'))
+        self.failIf('avatar' in server.__dict__)
         self.assertEquals(server._ping_timer, None)
         self.assertEquals(processQueuesCount, 0)
         self.assertEquals(ignoreIncomingDataCount, 1)
@@ -670,7 +629,7 @@ class DummyServerTests(unittest.TestCase):
 
         self.assertEquals(server.connectionLost("test10"), None)
 
-        self.failIf(server.__dict__.has_key('avatar'))
+        self.failIf('avatar' in server.__dict__)
         self.assertEquals(server._ping_timer, None)
         self.assertEquals(processQueuesCount, 2)
         self.assertEquals(ignoreIncomingDataCount, 1)
@@ -709,7 +668,7 @@ class DummyServerTests(unittest.TestCase):
 
         self.assertEquals(server.connectionLost("test11"), None)
 
-        self.failIf(server.__dict__.has_key('avatar'))
+        self.failIf('avatar' in server.__dict__)
         self.assertEquals(server._ping_timer, None)
         # Queues don't get processed when lost connection without avatar
         self.assertEquals(processQueuesCount, 0)
@@ -1002,7 +961,7 @@ class DummyClientTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [])
         self.assertEquals(pt.cancelCount, 0)
         self.assertEquals(dataWritten, 1)
-        self.assertEqual(get_messages(), ['BLAH send ping'])
+        self.assertEqual(get_messages(), ['send ping'])
 
         return pingRecallDeferred
     # -----------------------------------------------------------------------
@@ -1048,11 +1007,10 @@ class DummyClientTests(unittest.TestCase):
     def test10_factoryError(self):
         clear_all_messages()
         clientFactory = pokernetwork.client.UGAMEClientFactory()
-        clientFactory.error("test10")
-        self.assertEquals(get_messages(), [ "ERROR test10"])
+        clientFactory.log.error("test10")
+        self.assertEquals(get_messages(), [ "test10"])
 # -----------------------------------------------------------------------------------------------------
 def Run():
-    silence_all_messages()
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()

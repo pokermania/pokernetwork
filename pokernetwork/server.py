@@ -26,6 +26,9 @@
 import sys
 from twisted.internet import reactor, protocol, defer
 
+from pokernetwork import log as network_log
+log = network_log.getChild('server')
+
 from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.packets import PacketError
 
@@ -33,6 +36,7 @@ class PokerServerProtocol(UGAMEProtocol):
     """UGAMEServerProtocol"""
 
     def __init__(self):
+        self.log = log.getChild(self.__class__.__name__)
         self._ping_timer = None
         self.bufferized_packets = []
         self.avatar = None
@@ -62,8 +66,7 @@ class PokerServerProtocol(UGAMEProtocol):
     def sendPackets(self, packets):
         self.unblock()
         if not hasattr(self, 'transport') or not self.transport:
-            if self.factory.verbose:
-                self.message("server: packets " + str(packets) + " bufferized because the protocol has no usuable transport")
+            self.log.inform("server: packets %s bufferized because the protocol has no usuable transport", packets)
             self.bufferized_packets.extend(packets)
             return
         while len(packets) > 0:
@@ -115,19 +118,18 @@ class PokerServerProtocol(UGAMEProtocol):
         UGAMEProtocol.connectionLost(self, reason)
 
     def protocolInvalid(self, client, server):
-        if self.factory.verbose > 6:
-            self.message("client with protocol %s rejected (need %s)" % ( client, server ))
+        self.log.debug("client with protocol %s rejected (need %s)", client, server)
 
     def ping(self):
         if not hasattr(self, "_ping_timer") or not self._ping_timer:
             return
 
         if self._ping_timer.active():
-            if self.factory.verbose > 6 and hasattr(self, "user") and self.user:
-                self.message("ping: renew %s/%s" % ( self.user.name, self.user.serial ))
+            if hasattr(self, "user") and self.user:
+                self.log.debug("ping: renew %s/%s", self.user.name, self.user.serial)
             self._ping_timer.reset(self._ping_delay)
         else:
             self._ping_timer = None
-            if self.factory.verbose and hasattr(self, "user") and self.user:
-                self.message("ping: timeout %s/%s" % ( self.user.name, self.user.serial ))
+            if hasattr(self, "user") and self.user:
+                self.log.debug("ping: timeout %s/%s", self.user.name, self.user.serial)
             self.transport.loseConnection()
