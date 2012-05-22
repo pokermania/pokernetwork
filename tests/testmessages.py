@@ -20,137 +20,33 @@
 #
 # Authors:
 #  Loic Dachary <loic@dachary.org>
+#  Hannes Uebelacker <hannes@pokermania.de>
 #
-import sys, os
+import os
+import logging
+from collections import namedtuple
 
-classes = []
+Message = namedtuple('Message', ['severity', 'path', 'refs', 'message', 'args', 'formated'])
+messages_out = [] # a list of Message items
 
-from pokernetwork import currencyclient
-classes.append(currencyclient.FakeCurrencyClient)
-from pokernetwork import client
-classes.append(client.UGAMEClientFactory)
-from pokernetwork import protocol
-classes.append(protocol.UGAMEProtocol)
-from pokernetwork import pokerservice
-classes.append(pokerservice.PokerService)
-classes.append(pokerservice.PokerXML)
-from pokernetwork import pokerauth
-classes.append(pokerauth.PokerAuth)
-from pokernetwork import pokerauthmysql
-classes.append(pokerauthmysql.PokerAuth)
-from pokernetwork import pokerlock
-classes.append(pokerlock.PokerLock)
-from pokernetwork import pokeravatar
-classes.append(pokeravatar.PokerAvatar)
-from pokernetwork import pokerexplain
-classes.append(pokerexplain.PokerExplain)
-from pokernetwork import pokertable
-classes.append(pokertable.PokerTable)
-classes.append(pokertable.PokerAvatarCollection)
-from pokernetwork import pokercashier
-classes.append(pokercashier.PokerCashier)
-from pokernetwork import pokerdatabase
-classes.append(pokerdatabase.PokerDatabase)
-from pokerengine import pokergame
-classes.append(pokergame.PokerGame)
-from pokerengine import pokertournament
-classes.append(pokertournament.PokerTournament)
-from pokernetwork import pokerrestclient
-classes.append(pokerrestclient.PokerRestClient)
-classes.append(pokerrestclient.PokerProxyClientFactory)
-from pokernetwork import pokersite
-classes.append(pokersite.PokerResource)
-classes.append(pokersite.PokerImageUpload)
-classes.append(pokersite.PokerAvatarResource)
-classes.append(pokersite.PokerTourneyStartResource)
-classes.append(pokersite.PokerSite)
-# that does not work because it gets imported in two different ways
-#from pokernetwork import proxyfilter
-#classes.append(proxyfilter.ProxyClientFactory)
+class TestLoggingHandler(logging.Handler):
+    def __init__(self):
+        logging.Handler.__init__(self)
 
-from twisted.internet import defer
+    def emit(self, record):
+        messages_out.append(Message(
+            severity = record.levelno,
+            path = record.name,
+            refs = record.refs if hasattr(record, 'refs') else '[]',
+            message = record.msg,
+            args = record.args,
+            formated = self.format(record)
+        ))
 
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-
-#
-# for coverage purpose, make sure all message functions
-# are called at least once
-#
-def call_messages():
-    import StringIO
-    for a_class in classes:
-        stdout = sys.stdout
-        sys.stdout = StringIO.StringIO()
-        class Fake:
-            host = 'H'
-            port = 'port'
-            serial = 1
-            prefix = 'P'
-            _prefix = 'P'
-            id = 1
-            name = 'name'
-        a_class.message.im_func(Fake(), '')
-        sys.stdout = stdout
-    pokerauth.message('')
-#call_messages()
-
-messages_needle = ''
-messages_grep_hit = None
-messages_out = []
-def grep_output(needle):
-    messages_grep_hit = defer.Deferred()
-    messages_needle = needle
-    return messages_grep_hit
-
-def messages_grep(haystack):
-    if haystack.find(messages_needle):
-        hit = messages_grep_hit
-        messages_grep_hit = None
-        hit.callback(haystack)
-        
-def messages_append(string):
-    if verbose < -1:
-        return
-    if verbose > 3:
-        print "OUTPUT: " + string
-    if not hasattr(string, '__str__'):
-        raise Exception, "Message comes in as non-stringifiable object" 
-    string = string.__str__()
-    messages_out.append(string)
-    messages_grep(string)
-
-class2message = {
-    pokergame.PokerGame: lambda self, string: messages_append(self.prefix + "[PokerGame " + str(self.id) + "] " + string)
-}
-
-def redirect_messages(obj, is_class = True):
-    if not hasattr(obj, 'orig_message'):
-        obj.orig_message = [ ]
-    obj.orig_message.append(obj.message)
-    if is_class:
-        obj.message = class2message.get(obj, lambda self, string: messages_append(string))
-    else:
-        obj.message = lambda string: messages_append(string)
-
-def silence_all_messages():
-    messages_out = []
-    for a_class in classes:
-        redirect_messages(a_class, True)
-    redirect_messages(pokerauth, False)
-    
-def restore_all_messages():
-    for a_class in classes:
-        a_class.message = a_class.orig_message.pop()
-    pokerauth.message = pokerauth.orig_message.pop()
-
-def search_output(what):
-    if verbose > 1:
-        print "search_output: " + what
+def search_output(needle):
     for message in messages_out:
-        if message.find(what) >= 0:
+        if needle in message.formated:
             return True
-        if verbose > 1:
-            print "\tnot in " + message
     return False
 
 def clear_all_messages():
@@ -158,14 +54,6 @@ def clear_all_messages():
     messages_out = []
 
 def get_messages():
-    return messages_out
+    return [m.formated for m in messages_out]
 
 
-import logging
-
-class TestLoggingHandler(logging.Handler):
-    def __init__(self):
-        logging.Handler.__init__(self)
-
-    def emit(self, record):
-        messages_out.append(self.format(record))
