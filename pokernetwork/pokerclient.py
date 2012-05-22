@@ -592,7 +592,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if game:
             if packet.type == PACKET_POKER_SEAT:
                 if packet.seat == -1:
-                    self.inform("This seat is busy")
+                    self.log.inform("This seat is busy")
                 else:
                     if game.isTournament():
                         self.sendPacket(PacketPokerSit(serial = self.getSerial(),
@@ -624,7 +624,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         if self.factory.crashing:
             self.log.warn("connectionLost: crashing, just return.")
             return
-        self.log.warn("connectionList: noticed, aborting all tables.")
+        self.log.warn("connectionLost: noticed, aborting all tables.")
         self.abortAllTables()
         UGAMEClientProtocol.connectionLost(self, reason)
         
