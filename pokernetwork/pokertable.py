@@ -431,7 +431,7 @@ class PokerTable:
 
         if reset_bet:
             self.factory.resetBet(self.game.id)
-        elif hasattr(self, "factory") and self.factory.verbose > 2:
+        elif hasattr(self, "factory"):
             bet = self.factory.tableMoneyAndBet(self.game.id)[1]
             if bet and self.game.potAndBetsAmount() != bet:
                 self.log.warn("table %d bet mismatch %d in memory versus %d in database",

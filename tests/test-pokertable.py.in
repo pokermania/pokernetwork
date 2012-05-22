@@ -39,17 +39,23 @@ import copy
 
 twisted.internet.base.DelayedCall.debug = True
 
+from pokernetwork.pokertable import PokerPredefinedDecks
+import reflogging
+log = reflogging.Logger('test-pokertable')
+
 #
-# Must be done before importing any classes using twisted's seconds().
-# (e.g. pokertable, pokerclient) or these classes have to be patched manually.
+# Must be done before importing pokerclient or pokerclient
+# will have to be patched too.
+#
 from tests import testclock
 
-from pokernetwork.pokerexplain import PokerExplain
-from pokernetwork.pokertable import PokerPredefinedDecks
-
-from tests.testmessages import restore_all_messages, silence_all_messages, search_output, clear_all_messages, get_messages, redirect_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-silence_all_messages()
+from tests.testmessages import search_output, clear_all_messages, get_messages
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
 
 from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
@@ -215,7 +221,7 @@ class MockService:
         return 0
 
     def seatPlayer(self, serial, table_id, amount, minimum_amount = None):
-        if self.players.has_key(serial):
+        if serial in self.players:
             self.error("Player is already seated at table, ." % table_id)
             return False
         else:
@@ -236,7 +242,7 @@ class MockService:
         return (0, 500)
 
     def leavePlayer(self, serial, table_id, currency_serial):
-        if self.players.has_key(serial):
+        if serial in self.players:
             del self.players[serial]
             return True
         else:
@@ -332,14 +338,13 @@ class MockService:
     def chatMessageArchive(self, player_serial, game_id, message):
         self.chat_messages.append((player_serial, game_id, message))
             
-if verbose < 0: redirect_messages(MockService)
-
 class MockClient:
     class User:
         def isLogged(self):
             return True
         
     def __init__(self, serial, testObject, expectedReason = ""):
+        self.log = log.getChild('MockClient')
         self.serial = serial
         self.deferred = None
         self.raise_if_packet = None
@@ -383,8 +388,8 @@ class MockClient:
     # with what the pokertable API expects.
 
     def removePlayer(self, table, serial):
-        if not self.tables.has_key(table.game.id):
-            self.error("Table with game number %d does not occur exactly once for this player." % table.game.id)
+        if table.game.id not in self.tables:
+            self.log.warn("Table with game number %d does not occur exactly once for this player.", table.game.id)
         if serial == 9:
             table.game.removePlayer(serial)
             return False
@@ -407,7 +412,7 @@ class MockClient:
         table.game.sitOutNextTurn(serial)
 
     def sendPacket(self, packet):
-        self.message("sendPacket: " + str(packet))
+        self.log.debug("sendPacket: %s", packet)
         self.packets.append(packet)
         if self.deferred:
             if self.raise_if_packet and packet.type == self.raise_if_packet:
@@ -440,7 +445,6 @@ class MockClient:
                 self.outfit = "random"
         return MockPlayerInfo(self)
 
-if verbose < 0: redirect_messages(MockClient)
 
 # --------------------------------------------------------------------------------
 class MockClientBot(MockClient):
@@ -676,7 +680,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         dealTimeout = self.table.timer_info["dealTimeout"]
         self.table.destroy()
         self.assertEquals(1, dealTimeout.cancelled)
-        self.assertEquals(False, self.table.timer_info.has_key("dealTimeout"))
+        self.assertEquals(False, "dealTimeout" in self.table.timer_info)
     # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
@@ -890,7 +894,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
 
         clear_all_messages()
         self.table.update()
-        self.assertEquals(get_messages(), ['*ERROR* table %d bet mismatch 0 in memory versus 500 in database' % self.table.game.id, 'AutodealCheck scheduled in 0.000000 seconds'])
+        self.assertEquals(get_messages(), ['table %d bet mismatch 0 in memory versus 500 in database' % self.table.game.id, 'AutodealCheck scheduled in 0.000000 seconds'])
 
         return expectPlayerAutoFold
     # -------------------------------------------------------------------
@@ -1104,7 +1108,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def checkFailedJoinDueToMax(self, player):
         self.assertEqual(False, self.table.isJoined(player))
         self.assertEquals(get_messages(), [
-            '*ERROR* joinPlayer: %d cannot join game %d because the server is full' % (
+            'joinPlayer: %d cannot join game %d because the server is full' % (
                 player.serial,
                 self.table.game.id
             ),
@@ -1189,9 +1193,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         messages = get_messages()
-        self.failUnlessSubstring('player 1 get seat 1', messages[1])
-        self.failUnlessSubstring('player 2 get seat 6', messages[3])
-        self.failUnlessSubstring('player 3 get seat 3', messages[5])
+        self.failUnlessSubstring('player 1 gets seat 1', messages[1])
+        self.failUnlessSubstring('player 2 gets seat 6', messages[3])
+        self.failUnlessSubstring('player 3 gets seat 3', messages[5])
         clear_all_messages()
 
         for ii in [ 4, 5, 6 ]:
@@ -1254,10 +1258,11 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         player = {}
         for ii in [1, 2, 3, 4]:
             player[ii] = self.createPlayer(ii)
-            self.assertEquals(self.service.players.has_key(ii), True)
+            self.assertEquals(ii in self.service.players, True)
 
         self.table.game.serial2player[4].missed_big_blind_count = 1000
-        self.table.game.turn_history = self.service.loadHand(6352, [('leave', [(1, 2), (2, 7)])])
+        self.table.game.turn_history = self.service.loadHand(6352,
+                                         [('leave', [(1, 2), (2, 7)])])
 
         # Table starts with no observers before our update
 
@@ -1265,21 +1270,21 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         if self.table.factory.verbose < 2: self.table.factory.verbose = 2
         clear_all_messages()
         self.table.update()
-        #FIXME! doesn't make sense to search 4 times for the same string to check if there are 4 in messages
-        for msg in [
-            '[Server][PokerGame %d] removing player 4 from game',
-            'broadcast[1, 2, 3] POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
-            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
-            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
-            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
-            'sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 serial = 4 cookie =  game_id = %d seat = 8',
-            ]:
-                self.assertEquals(search_output(msg % self.table1_value), True, msg)
-
+        messages = get_messages()
+        self.assertTrue(search_output('removing player 4 from game'))
+        self.assertTrue(search_output(
+            "broadcast[1, 2, 3] POKER_PLAYER_LEAVE  type = 81 length = 12 "
+            "serial = 4 cookie =  game_id = %d seat = 8" % (self.table1_value,)
+        ))
+        self.assertEqual(messages.count(
+            "sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 "
+            "serial = 4 cookie =  game_id = %d seat = 8" % (self.table1_value,)
+        ), 4)
+        
         for ii in [1, 2, 3, 4]:
             # Our service's leavePlayer() should have been called for 4,
             # the rest should still be there
-            self.assertEquals(self.service.players.has_key(ii), ii != 4)
+            self.assertEquals(ii in self.service.players, ii != 4)
             foundCount = 0
             for pp in player[ii].packets:
                 if pp.type == PACKET_POKER_PLAYER_LEAVE:
@@ -1524,11 +1529,10 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         def failedToCancelTimeout():
             self.fail("existing playerTimeout was not replaced as expected")
 
-        self.table.timer_info = {
-            'playerTimeout': reactor.callLater(20, failedToCancelTimeout), 
-            'playerTimeoutSerial': 229
-        }
-        # Note: serial is diff from one in position
+        self.table.timer_info = { 'playerTimeout' : 
+                                  reactor.callLater(20, failedToCancelTimeout), 
+                                  'playerTimeoutSerial' : 229 }
+                                  # Note: serial is diff from one in position
         clear_all_messages()
         self.table.updatePlayerTimers()
 
@@ -1564,7 +1568,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.message = message
         self.table.error = error
         self.table.seated2observer(a, 1)
-        self.assertEquals("pokertable.seated2observer: avatar.user.serial (0) doesn't match serial argument (1)", self.message)
+        self.assertTrue(search_output("pokertable.seated2observer: avatar.user.serial (0) doesn't match serial argument (1)"))
     
 # -------------------------------------------------------------------
 
@@ -1611,12 +1615,10 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.table.beginTurn()
         self.table.update()
 
-        return defer.DeferredList([
-            player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-            player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-            player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-            player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
-        ])
+        return defer.DeferredList((player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+                                   player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)))
     # -------------------------------------------------------------------
     def test16_autoMuckTimeoutPolicy(self):
         """Make sure other timeout policies function properly"""
@@ -1718,28 +1720,28 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         class Tournament:            
             name = 'My Old Sit and Go'
             serial = 2
-        self.table = pokertable.PokerTable(self.service, table1ID, { 
-            'name': "table1",
-            'variant': "holdem",
-            'betting_structure': "2-4-limit",
-            'seats': 4,
-            'player_timeout': 6, 
-            'muck_timeout': 1,
-            'transient': True,
-            'tourney': Tournament(),
-            'currency_serial': 0
-        })
-        self.table2 = pokertable.PokerTable(self.service, table2ID, { 
-            'name': "table2",
-            'variant': "holdem",
-            'betting_structure': "2-4-limit",
-            'seats': 4,
-            'player_timeout': 6, 
-            'muck_timeout': 1,
-            'transient': True,
-            'tourney': Tournament(),
-            'currency_serial': 0
-        })
+        self.table = pokertable.PokerTable(self.service, table1ID, 
+                                           { 'name': "table1",
+                                             'variant': "holdem",
+                                             'betting_structure': "2-4-limit",
+                                             'seats': 4,
+                                             'player_timeout' : 6, 
+                                             'muck_timeout' : 1,
+                                             'transient' : True,
+                                             'tourney' : Tournament(),
+                                             'currency_serial': 0
+                                             })
+        self.table2 = pokertable.PokerTable(self.service, table2ID, 
+                                           { 'name': "table2",
+                                             'variant': "holdem",
+                                             'betting_structure': "2-4-limit",
+                                             'seats': 4,
+                                             'player_timeout' : 6, 
+                                             'muck_timeout' : 1,
+                                             'transient' : True,
+                                             'tourney' : Tournament(),
+                                             'currency_serial': 0
+                                             })
         self.service.table1 = self.table
         self.service.table2 = self.table2
         self.clients = {}
@@ -1779,7 +1781,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
         self.createPlayer(1)
         self.createPlayer(2)
-        self.table.game_delay["start"] = testclock._seconds_value - 10
+        self.table.game_delay["start"] = testclock._seconds_value - 300
         self.table.scheduleAutoDeal()
         self.clients[2].raiseIfPacket(PACKET_POKER_MESSAGE)
         return self.clients[2].waitFor(PACKET_POKER_START)
@@ -1930,9 +1932,9 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         messages = get_messages()
-        self.failUnlessSubstring('player 1 get seat 1', messages[1])
-        self.failUnlessSubstring('player 2 get seat 6', messages[3])
-        self.failUnlessSubstring('player 3 get seat 3', messages[5])
+        self.failUnlessSubstring('player 1 gets seat 1', messages[1])
+        self.failUnlessSubstring('player 2 gets seat 6', messages[3])
+        self.failUnlessSubstring('player 3 gets seat 3', messages[5])
         clear_all_messages()
         self.assertEquals(self.table.factory.joined_count, 3)
 
@@ -2016,7 +2018,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
             self.assertEqual(packet.name, "Player1")
             self.assertEqual(packet.game_id, self.table2_value)
             self.assertEquals(self.service.calledLadderMockup, packet.serial)
-            self.assertEquals(self.table2.timer_info.has_key('dealTimeout'), False)
+            self.assertEquals('dealTimeout' in self.table2.timer_info, False)
         expectPlayerDeferred.addCallback(checkReturnPacket)
 
         #
