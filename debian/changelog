@@ -1,3 +1,13 @@
+poker-network (2.1.4-1) pokermania; urgency=low
+
+  * 3f7717e args2packets now support integer types as well
+  * 1dc203a only export Packet|PACKET_ variables from packetpoker*.py
+  * f46a798 make python 2.6 compatible
+  * e1d7f60 reflogging package created, added dependencies to network, engine
+  * e948e8c Seveity logging
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 23 May 2012 13:43:47 +0200
+
 poker-network (2.1.3-3) pokermania; urgency=low
 
   * afff89c fixed test-pokertable race condition
