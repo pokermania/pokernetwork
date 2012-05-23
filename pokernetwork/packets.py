@@ -213,16 +213,13 @@ class Packet:
 
     @staticmethod
     def packjson(object):
-        return Packet.packstring(Packet.JSON.encode(object))
+        return simplejson.dumps(object)
 
     @staticmethod
     def unpackjson(block):
         ( block, string ) = Packet.unpackstring(block)
         object = simplejson.loads(string)
-        if hasattr(Packet.JSON, 'decode_objects'):
-            return ( block, Packet.JSON.decode_objects(object) )
-        else:
-            return ( block, object )
+        return ( block, object )
 
     @staticmethod
     def calcsizejson(object):

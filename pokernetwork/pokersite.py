@@ -68,45 +68,56 @@ def __walk(tree, convert):
     else:
         return tree
 
-def packets2maps(packets):
-    maps = []
-    for packet in packets:
-        attributes = packet.__dict__.copy()
-        if isinstance(packet, PacketList):
-            attributes['packets'] = packets2maps(attributes['packets'])
-        if 'message' in dir(packet):
-            attributes['message'] = getattr(packet, 'message')
-        #
-        # It is forbidden to set a map key to a numeric (native
-        # numeric or string made of digits). Taint the map entries
-        # that are numeric and hope the client will figure it out.
-        #
-        for value in packet.__dict__.itervalues():
-            if type(value) is dict:
-                for ( subkey, subvalue ) in value.items():
+def packets2maps(packets,packet_type_numeric=False):
+    return (packet2map(packet,packet_type_numeric) for packet in packets)
+    
+def packet2map(packet,packet_type_numeric):
+    attributes = packet.__dict__.copy()
+    if isinstance(packet, PacketList):
+        attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
+    if 'message' in dir(packet):
+        attributes['message'] = getattr(packet,'message')
+    #
+    # FIXME the followiong statementis NOT true (anymore?)
+    # It is forbidden to set a map key to a numeric (native
+    # numeric or string made of digits). Taint the map entries
+    # that are numeric and hope the client will figure it out.
+    for value in packet.__dict__.itervalues():
+        if type(value) is dict:
+            for (subkey,subvalue) in value.items():
+                if type(subkey) != str:
                     del value[subkey]
-                    new_subkey = str(subkey)
-                    if new_subkey.isdigit():
-                        new_subkey = "X" + new_subkey
-                    value[new_subkey] = subvalue
-        attributes['type'] = packet.__class__.__name__
-        maps.append(attributes)
-    return maps
-
+                    subkey_new = str(subkey)
+                    if subkey_new.isdigit():
+                        subkey_new = 'X' + subkey_new
+                    value[subkey_new] = subvalue
+                    
+    attributes['type'] = packet.__class__.__name__ \
+        if not packet_type_numeric \
+        else packet.type            
+        
+    return attributes
+    
 
 _arg2packet_re = re.compile("^[a-zA-Z]+$")
+
 def args2packets(args):
-    return (arg2packet(arg) for arg in args)
+    return (arg2packet(arg)[0] for arg in args)
 
 def arg2packet(arg):
     packet_class = None
     packet = None
+    packet_type_numeric = None
     
-    try: packet_class = PacketFactory[int(arg['type'],10)]
+    try: 
+        packet_class = PacketFactory[int(arg['type'],10)]
+        packet_type_numeric = True
     except Exception: pass
     
     if packet_class is None and _arg2packet_re.match(arg['type']):
-        try: packet_class = PacketFactoryWithNames[arg['type']]
+        try: 
+            packet_class = PacketFactoryWithNames[arg['type']]
+            packet_type_numeric = False
         except Exception: pass
         
     if packet_class is None:
@@ -115,7 +126,7 @@ def arg2packet(arg):
         try: packet = packet_class(**arg)
         except Exception: packet = PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
             
-    return packet
+    return (packet, packet_type_numeric)
     
 class Request(server.Request):
 
@@ -191,7 +202,7 @@ class PokerResource(resource.Resource):
         self.message("*ERROR* " + string)
 
     def render(self, request):
-        args = ""
+        arg = ""
         request.content.seek(0, 0)
         jsonp = request.args.get('jsonp', [''])[0]
         if jsonp:
@@ -204,7 +215,7 @@ class PokerResource(resource.Resource):
             self._log.debug("(%s:%s) " % request.findProxiedIP() + "render " + data)
 
         try:
-            args = simplejson.loads(data, encoding = 'UTF-8')
+            arg = simplejson.loads(data, encoding = 'utf-8')
         except simplejson.decoder.JSONDecodeError:
             resp = 'invalid request'
             request.setResponseCode(http.BAD_REQUEST)
@@ -212,11 +223,10 @@ class PokerResource(resource.Resource):
             request.setHeader('content-length', str(len(resp)))
             return resp
         
-        if hasattr(Packet.JSON, 'decode_objects'): # backward compatibility
-            args = Packet.JSON.decode_objects(args)
-        args = fromutf8(args)
-        packet = arg2packet(args)
-
+        arg = fromutf8(arg)
+        
+        (packet, packet_type_numeric) = arg2packet(arg)
+        
         deferred = defer.succeed(None)
 
         if request.site.pipes:
@@ -247,11 +257,11 @@ class PokerResource(resource.Resource):
             #
             return True
 
-        deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet, data))
+        deferred.addCallback(lambda result: self.deferRender(request, jsonp, packet, data, packet_type_numeric))
         deferred.addErrback(pipesFailed)
         return server.NOT_DONE_YET
 
-    def deferRender(self, request, jsonp, packet, data):
+    def deferRender(self, request, jsonp, packet, data, packet_type_numeric):
         if request.finished:
             #
             # For instance : the request was reverse-proxied to a server.
@@ -287,7 +297,7 @@ class PokerResource(resource.Resource):
             #
             # Format answer
             #
-            maps = toutf8(packets2maps(packets))
+            maps = toutf8(list(packets2maps(packets, packet_type_numeric)))
             if jsonp:
                 result_string = '%s(%s)' % (jsonp,Packet.JSON.encode(maps))
             else:
