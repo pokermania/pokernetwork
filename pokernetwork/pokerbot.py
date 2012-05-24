@@ -32,6 +32,8 @@ import platform
 from os.path import exists
 from random import randint
 
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerbot')
 
 from twisted.application import internet, service, app
 
@@ -53,8 +55,6 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
 from pokernetwork.pokerbotlogic import StringGenerator, NoteGenerator, PokerBot
-from pokernetwork import log as network_log
-log = network_log.getChild('pokerbot')
 
 class PokerBotProtocol(PokerClientProtocol):
 
