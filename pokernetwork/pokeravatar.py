@@ -365,7 +365,7 @@ class PokerAvatar:
                 packets = self.explain.forward_packets
             except Exception:
                 packets = [ PacketError(other_type = PACKET_NONE, message = format_exc()) ]
-                self.log.inform(packets[0].message)
+                self.log.inform("%s", packets[0].message)
                 self.explain = None # disabling the explain instance
                                     # that issued the exception, as it
                                     # may be in an inconsistent state,
