@@ -95,7 +95,7 @@ class UGAMEProtocol(protocol.Protocol):
 
     def connectionLost(self, reason):
         self.established = 0
-        self.log.debug("connectionLost: reason = %s", reason)
+        #self.log.debug("connectionLost: reason = %s", reason)
         if not self._protocol_ok:
             self.protocolInvalid("different", PROTOCOL_MAJOR + "." + PROTOCOL_MINOR)
         
