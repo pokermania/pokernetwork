@@ -212,18 +212,18 @@ class Packet:
         return calcsize("!H") + len(string)
 
     @staticmethod
-    def packjson(object):
-        return simplejson.dumps(object)
+    def packjson(obj):
+        return Packet.packstring(simplejson.dumps(obj))
 
     @staticmethod
     def unpackjson(block):
         ( block, string ) = Packet.unpackstring(block)
-        object = simplejson.loads(string)
-        return ( block, object )
+        obj = simplejson.loads(string)
+        return ( block, obj)
 
     @staticmethod
-    def calcsizejson(object):
-        return len(Packet.packjson(object))
+    def calcsizejson(obj):
+        return len(Packet.packjson(obj))
 
     @staticmethod
     def packpackets(packets):
@@ -305,9 +305,9 @@ class Packet:
         return (block, obj)
 
     @staticmethod
-    def calcsizeplayers(object):
+    def calcsizeplayers(obj):
         size = calcsize('!H')
-        for (name, chips, flags) in object:
+        for (name, chips, flags) in obj:
             size += Packet.calcsizestring(name) + calcsize('!IB')
         return size
     
