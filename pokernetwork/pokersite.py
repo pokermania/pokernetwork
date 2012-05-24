@@ -203,7 +203,7 @@ class PokerResource(resource.Resource):
         else:
             data = request.content.read()
         if "PacketPing" not in data:
-            self._log.debug("(%s:%s) " % request.findProxiedIP() + "render " + data)
+            self._log.debug("(%s:%s)", request.findProxiedIP(), "render " + data)
 
         try:
             arg = simplejson.loads(data, encoding = 'utf-8')
