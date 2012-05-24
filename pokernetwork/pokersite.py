@@ -266,7 +266,7 @@ class PokerResource(resource.Resource):
         
         def render(packets,session = None):
             host, port = request.findProxiedIP()
-            self._log.debug("(%s:%s) render %s returns %s", host, port, data, returns)
+            self._log.debug("(%s:%s) render %s returns %s", host, port, data, packets)
             #
             # update the session information if the avatar changed
             # session is reloaded because the session object could have changed in the meantime
