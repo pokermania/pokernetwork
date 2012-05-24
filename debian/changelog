@@ -1,3 +1,9 @@
+poker-network (2.1.4-3) pokermania; urgency=low
+
+  * hotfixes
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Thu, 24 May 2012 17:25:04 +0200
+
 poker-network (2.1.4-2) pokermania; urgency=low
 
   * 0aff68d fixes Packet.pack.json regression
