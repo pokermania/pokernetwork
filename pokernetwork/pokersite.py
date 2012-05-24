@@ -203,7 +203,8 @@ class PokerResource(resource.Resource):
         else:
             data = request.content.read()
         if "PacketPing" not in data:
-            self._log.debug("(%s:%s)", request.findProxiedIP(), "render " + data)
+            host, port = request.findProxiedIP()
+            self._log.debug("(%s:%s) render %s", host, port, data)
 
         try:
             arg = simplejson.loads(data, encoding = 'utf-8')
@@ -237,7 +238,8 @@ class PokerResource(resource.Resource):
                 request.setHeader('content-length', str(len(body)))
                 request.write(body)
             if request.code != 200:
-                self._log.warn("(%s:%s) " % request.findProxiedIP() + str(body))
+                host, port = requst.findProxiedIP()
+                self._log.warn("(%s:%s) %s", host, port, body)
             if not (request.finished or request._disconnected):
                 request.finish()
                     
@@ -263,7 +265,8 @@ class PokerResource(resource.Resource):
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         
         def render(packets,session = None):
-            self._log.debug("(%s:%s) " % request.findProxiedIP() + "render " + data + " returns " + str(packets))
+            host, port = request.findProxiedIP()
+            self._log.debug("(%s:%s) render %s returns %s", host, port, data, returns)
             #
             # update the session information if the avatar changed
             # session is reloaded because the session object could have changed in the meantime
@@ -273,7 +276,7 @@ class PokerResource(resource.Resource):
             #
             if packet.type != PACKET_POKER_LONG_POLL_RETURN:
                 if not session or not hasattr(session,'avatar'):
-                    self._log.debug("(%s:%s) " % request.findProxiedIP() + "recreating session")
+                    self._log.debug("(%s:%s) recreating session", host, port)
                     session = request.getSession()
                 session.site.updateSession(session)
                 session.site.persistSession(session)
@@ -346,7 +349,7 @@ class PokerImageUpload(resource.Resource):
             request.setHeader('content-length', str(len(body)))
             request.write(body)
             request.connectionLost(reason)
-            self._log.error(str(body))
+            self._log.error("%s", body)
             return True
         self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
@@ -414,7 +417,7 @@ class PokerAvatarResource(resource.Resource):
             request.setHeader('content-length', str(len(body)))
             request.write(body)
             request.connectionLost(reason)
-            self._log.error(str(body))
+            self._log.error("%s", body)
             return True
         self.deferred.addErrback(failed)
         return server.NOT_DONE_YET
