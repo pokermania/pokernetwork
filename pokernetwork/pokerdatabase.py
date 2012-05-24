@@ -75,7 +75,7 @@ class PokerDatabase:
                     db.query("CREATE DATABASE " + self.parameters["name"])
                     self.log.inform("populating database from %s", self.parameters['schema'])
                     cmd = self.mysql_command + " --host='" + self.parameters["host"] + "' --user='" + self.parameters["root_user"] + "' --password='" + self.parameters["root_password"] + "' '" + self.parameters["name"] + "' < " + self.parameters["schema"]
-                    self.log.inform(cmd)
+                    self.log.inform("%s", cmd)
                     os.system(cmd)
                 db.select_db("mysql")
                 #
@@ -83,10 +83,10 @@ class PokerDatabase:
                 #
                 try:
                     sql = "CREATE USER '" + self.parameters['user'] + "'@'%' IDENTIFIED BY '" + self.parameters['password'] + "'"
-                    self.log.debug(sql)
+                    self.log.debug("%s", sql)
                     db.query(sql)
                     sql = "CREATE USER '" + self.parameters['user'] + "'@'localhost' IDENTIFIED BY '" + self.parameters['password'] + "'"
-                    self.log.debug(sql)
+                    self.log.debug("%s", sql)
                     db.query(sql)
                     db.query("FLUSH PRIVILEGES")
                     self.log.debug("create database user '%s'", self.parameters['user'])

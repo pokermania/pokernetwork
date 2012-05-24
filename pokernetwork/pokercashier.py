@@ -68,8 +68,8 @@ class PokerCashier:
         # Figure out the currency_serial matching the URL
         #
         sql = "SELECT serial FROM currencies WHERE url = %s"
-        self.log.debug(sql, self.db.literal(url))
         cursor.execute(sql, url)
+        self.log.debug("%s", cursor._executed)
         if cursor.rowcount == 0:
             user_create = self.parameters.get('user_create', 'no').lower()
             if user_create not in ('yes', 'on'):
@@ -77,9 +77,9 @@ class PokerCashier:
                                   code = PacketPokerCashIn.REFUSED,
                                   message = "Invalid currency " + url + " and user_create = " + user_create + " in settings.")
             sql = "INSERT INTO currencies (url) VALUES (%s)"
-            self.log.debug(sql, self.db.literal(url))
             try:
                 cursor.execute(sql, url)
+                self.log.debug("%s", cursor._executed)
                 if cursor.rowcount == 1:
                     currency_serial = cursor.lastrowid
                 else:
@@ -134,7 +134,7 @@ class PokerCashier:
             for ( sql, rowcount ) in sqls:
                 if cursor.execute(sql) < rowcount:
                     message = sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount)
-                    self.log.error(message)
+                    self.log.error("%s", message)
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
@@ -192,8 +192,8 @@ class PokerCashier:
             sql = ( "SELECT transaction_id FROM counter WHERE " + #pragma: no cover
                     " currency_serial = " + str(packet.currency_serial) + " AND " + #pragma: no cover
                     " serial = " + str(packet.bserial) ) #pragma: no covermessage
-            self.log.debug(sql)
             cursor.execute(sql)
+            self.log.debug("%s", cursor._executed)
             if cursor.rowcount > 0:
                 (transaction_id, ) = cursor.fetchone()
                 deferred = self.cashInCurrencyCommit(transaction_id, packet)
@@ -202,11 +202,11 @@ class PokerCashier:
                 # Get the currency note from the safe
                 #
                 sql = "SELECT name, serial, value FROM safe WHERE currency_serial = " + str(packet.currency_serial)
-                self.log.debug(sql)
                 cursor.execute(sql)
+                self.log.debug("%s", cursor._executed)
                 if cursor.rowcount not in (0, 1):
                     message = sql + " found " + str(cursor.rowcount) + " records instead of 0 or 1"
-                    self.log.error(message)
+                    self.log.error("%s", message)
                     raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                       code = PacketPokerCashIn.SAFE,
                                       message = message)
@@ -236,8 +236,8 @@ class PokerCashier:
                 "             counter.currency_serial = " + str(currency_serial) + " AND " + #pragma: no cover
                 transaction + #pragma: no cover
                 "             counter.status = 'c' " ) #pragma: no cover
-        self.log.debug(sql)
         cursor.execute(sql)
+        self.log.debug("%s", cursor._executed)
         if cursor.rowcount == 0:
             return None
         ( serial, url, bserial, name, value, application_data ) = cursor.fetchone()
@@ -268,10 +268,10 @@ class PokerCashier:
                 sqls.append(( "DELETE FROM counter WHERE currency_serial = %s and status = 'r'" % currency_serial, zero_or_one))
                 sqls.append(( "UPDATE counter SET status = 'c' WHERE currency_serial = %s " % currency_serial , one))
                 for ( sql, numrowsp ) in sqls:
-                    self.log.debug(sql)
+                    self.log.debug("%s", sql)
                     if not numrowsp(cursor.execute(sql)):
                         message = sql + " affected " + str(cursor.rowcount) + " records "
-                        self.log.error(message)
+                        self.log.error("%s", message)
                         raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                           code = PacketPokerCashOut.SAFE,
                                           message = message)
@@ -282,7 +282,7 @@ class PokerCashier:
                         "             currency_serial = " + str(currency_serial) ) #pragma: no cover
                 if cursor.execute(sql) != 1:
                     message = sql + " affected " + str(cursor.rowcount) + " records instead of 1 "
-                    self.log.error(message)
+                    self.log.error("%s", message)
                     raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                       code = PacketPokerCashOut.SAFE,
                                       message = message)
@@ -353,8 +353,8 @@ class PokerCashier:
         try:
             sql = ( "SELECT transaction_id FROM counter WHERE " +
                     " currency_serial = " + str(packet.currency_serial) )
-            self.log.debug(sql)
             cursor.execute(sql)
+            self.log.debug("%s", cursor._executed)
             if cursor.rowcount > 0:
                 (transaction_id, ) = cursor.fetchone()
                 deferred = self.cashOutCurrencyCommit(transaction_id, packet.url)
@@ -363,11 +363,11 @@ class PokerCashier:
                 # Get the currency note from the safe
                 #
                 sql = "SELECT name, serial, value FROM safe WHERE currency_serial = " + str(packet.currency_serial)
-                self.log.debug(sql)
                 cursor.execute(sql)
+                self.log.debug("%s", cursor._executed)
                 if cursor.rowcount != 1:
                     message = sql + " found " + str(cursor.rowcount) + " records instead of exactly 1"
-                    self.log.error(message)
+                    self.log.error("%s", message)
                     raise PacketError(other_type = PACKET_POKER_CASH_OUT,
                                       code = PacketPokerCashOut.SAFE,
                                       message = message)
@@ -446,8 +446,8 @@ class PokerCashier:
         cursor = self.db.cursor()
         sql = ( "SELECT COUNT(*) FROM counter WHERE " +
                 " application_data = '" + str(packet.application_data) + "'" )
-        self.log.debug(sql)
         cursor.execute(sql)
+        self.log.debug("%s", cursor._executed)
         (count,) = cursor.fetchone()
         cursor.close()
         if count > 0:

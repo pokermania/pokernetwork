@@ -6,5 +6,5 @@ def handle_event(service, packet):
         packet.param2,
         packet.param3
     )
-    service.log.debug(sql)
+    service.log.debug("%s", sql)
     service.db.db.query(sql)

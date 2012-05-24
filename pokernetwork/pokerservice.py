@@ -1470,7 +1470,7 @@ class PokerService(service.Service):
                 message = "Tournament %d does not exist" % tourney_serial
             )
             if not via_satellite:
-                self.log.error(error)
+                self.log.error("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
@@ -1481,7 +1481,7 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.VIA_SATELLITE,
                 message = "Player %d must register to %d via a satellite" % ( serial, tourney_serial ) 
             )
-            self.log.error(error)
+            self.log.error("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
@@ -1492,7 +1492,7 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
                 message = "Player %d already registered in tournament %d " % ( serial, tourney_serial )
             )
-            self.log.error(error)
+            self.log.error("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
@@ -1503,7 +1503,7 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
                 message = "Registration refused in tournament %d " % tourney_serial
             )
-            self.log.error(error)
+            self.log.error("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
@@ -1531,7 +1531,7 @@ class PokerService(service.Service):
                 )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(error)
-                self.log.error(error)
+                self.log.error("%s", error)
                 return False
             if cursor.rowcount != 1:
                 self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
@@ -2114,7 +2114,7 @@ class PokerService(service.Service):
             "AND currency_serial = %s",
             (serial,currency_serial)
         )
-        self.log.debug(cursor._executed)
+        self.log.debug("%s", cursor._executed)
 
         if cursor.rowcount > 1:
             self.log.error("getMoney(%d) expected one row got %d", serial, cursor.rowcount)

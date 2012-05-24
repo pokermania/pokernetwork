@@ -671,7 +671,7 @@ class PokerTable:
         try:
             self.updateTimers(history_tail)
             packets, self.previous_dealer, errors = history2packets(history_tail, self.game.id, self.previous_dealer, self.cache)
-            for error in errors: self.log.warn(error)
+            for error in errors: self.log.warn("%s", error)
             self.syncDatabase()
             self.delayedActions()
             if len(packets) > 0:

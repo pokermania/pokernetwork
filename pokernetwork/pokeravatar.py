@@ -1066,7 +1066,7 @@ class PokerAvatar:
         mySerial = self.getSerial()
         if mySerial != packet.serial:
             errMsg = "attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial )
-            self.log.warn(errMsg)
+            self.log.warn("%s", errMsg)
             self.sendPacketVerbose(PacketPokerError(
                 code = PacketPokerTableJoin.GENERAL_FAILURE,
                 message = errMsg,
@@ -1359,7 +1359,7 @@ class PokerAvatar:
             # in this case.
             #
             packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, createCache()) #@UnusedVariable
-            for error in errors: table.log.error(error)
+            for error in errors: table.log.error("%s", error)
             timeout_packet = table.getCurrentTimeoutWarning()
             if timeout_packet:
                 packets.append(timeout_packet)
