@@ -707,7 +707,7 @@ class PokerAvatar:
             if self.getSerial() == packet.serial:
                 self.sendPacketVerbose(self.service.tourneyCreate(packet))
             else:
-                self.log.warn("attempt to create tourney for palyer %d by player %d", packet.serial, self.getSerial())
+                self.log.warn("attempt to create tourney for player %d by player %d", packet.serial, self.getSerial())
                 self.sendPacketVerbose(PacketAuthRequest())
             return
 
