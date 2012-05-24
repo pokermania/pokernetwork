@@ -20,17 +20,16 @@
 # Authors:
 #  Loic Dachary <loic@dachary.org>
 #
-from pokerengine import pokerengineconfig
-from pokernetwork.version import version
 import libxml2
 
+from pokerengine import pokerengineconfig
+from pokernetwork.version import version
 from pokernetwork import log as network_log
 log = network_log.getChild('pokernetworkconfig')
 
 class Config(pokerengineconfig.Config):
 
     upgrades_repository = None
-    verbose = 0
 
     def __init__(self, *args, **kwargs):
         pokerengineconfig.Config.__init__(self, *args, **kwargs)

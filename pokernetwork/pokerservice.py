@@ -30,23 +30,17 @@
 
 from os.path import exists
 from types import *
-import os
-import copy
-import operator
 import re
 import locale
 import gettext
 import libxml2
-import simplejson
 import imp
-from traceback import print_exc
 
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerservice')
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
-import traceback
 from lockcheck import LockChecks
 from twisted.python.runtime import seconds
 from twisted.web import client
@@ -137,7 +131,6 @@ class PokerFactoryFromPokerService(protocol.ServerFactory):
 
     def __init__(self, service):
         self.service = service
-        self.verbose = service.verbose
 
     def createAvatar(self):
         """ """
@@ -166,7 +159,6 @@ class PokerService(service.Service):
             settings_object.header = settings_object.doc.xpathNewContext()
             settings = settings_object
         self.settings = settings
-        self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.joined_max = self.settings.headerGetInt("/server/@max_joined")
         if self.joined_max <= 0: self.joined_max = 4000
         
@@ -288,7 +280,7 @@ class PokerService(service.Service):
         self.cashier.setDb(self.db)
         self.poker_auth = get_auth_instance(self.db, self.memcache, self.settings)
         self.dirs = self.settings.headerGet("/server/path").split()
-        self.avatar_collection = PokerAvatarCollection("service", self.verbose)
+        self.avatar_collection = PokerAvatarCollection("service")
         self.avatars = []
         self.tables = {}
         self.joined_count = 0
@@ -347,14 +339,6 @@ class PokerService(service.Service):
             player_timeout * max_players * len_rounds,
             self._warnLock
         )
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerService: " + str(string)
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + str(string))
 
     def stopServiceFinish(self):
         self.monitors = []
@@ -843,7 +827,6 @@ class PokerService(service.Service):
             tourney_map['register_time'] = int(tourney_map.get('register_time', 0))
         tourney = PokerTournament(dirs = self.dirs, **tourney_map)
         tourney.serial = tourney_serial
-        tourney.verbose = self.verbose
         tourney.schedule_serial = schedule_serial
         tourney.currency_serial = currency_serial
         tourney.prize_currency = prize_currency
@@ -1486,7 +1469,7 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
                 message = "Tournament %d does not exist" % tourney_serial
             )
-            if not via_satellite or self.verbose > 0:
+            if not via_satellite:
                 self.log.error(error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
@@ -2631,7 +2614,7 @@ class PokerService(service.Service):
 #         cursor.execute(sql)
 #         (money,bet) = cursor.fetchone()
 #         if money + bet != 120000:
-#             self.message("BUG(4) %d" % (money + bet))
+#             self.log.warn("BUG(4) %d", money + bet)
 #             os.abort()
 #         cursor.close()
 
@@ -2640,7 +2623,7 @@ class PokerService(service.Service):
 #         cursor.execute(sql)
 #         if cursor.rowcount >= 1:
 #             (user_serial, table_serial, money) = cursor.fetchone()
-#             self.message("BUG(11) %d/%d/%d" % (user_serial, table_serial, money))
+#             self.log.warn("BUG(11) %d/%d/%d", user_serial, table_serial, money)
 #             os.abort()
 #         cursor.close()
 #         # END HACK CHECK
@@ -2682,7 +2665,7 @@ class PokerService(service.Service):
 #         sql = ( "select * from user2table where money != 0 and bet != 0 and table_serial = " + str(table_id) )
 #         cursor.execute(sql)
 #         if cursor.rowcount != 0:
-#             self.message("BUG(10)")
+#             self.log.warn("BUG(10)")
 #             os.abort()
 #         cursor.close()
 #         # END HACK CHECK
@@ -2713,11 +2696,9 @@ class PokerService(service.Service):
 #                     params.append(param)
 
 #         params = join(params, '&')
-#         if self.verbose > 2:
-#             self.message("setRating: url = %s" % url + params)
+#         self.log.debug("setRating: url = %s", url + params)
 #         content = loadURL(url + params)
-#         if self.verbose > 2:
-#             self.message("setRating: %s" % content)
+#         self.log.debug("setRating: %s", content)
 
     def resetBet(self, table_id):
         status = True
@@ -2734,7 +2715,7 @@ class PokerService(service.Service):
 #         cursor.execute(sql)
 #         (money,bet) = cursor.fetchone()
 #         if money + bet != 120000:
-#             self.message("BUG(2) %d" % (money + bet))
+#             self.log.warn("BUG(2) %d", money + bet)
 #             os.abort()
 #         cursor.close()
 #         # END HACK CHECK
@@ -2962,7 +2943,6 @@ class PokerRestTree(resource.Resource):
     def __init__(self, service):
         resource.Resource.__init__(self)
         self.service = service
-        self.verbose = service.verbose
         self.putChild("POKER_REST", PokerResource(self.service))
         self.putChild("UPLOAD", PokerImageUpload(self.service))
         self.putChild("TOURNEY_START", PokerTourneyStartResource(self.service))
@@ -3026,15 +3006,6 @@ class PokerXML(resource.Resource):
         self.log = log.getChild(self.__class__.__name__)
         resource.Resource.__init__(self)
         self.service = service
-        self.verbose = service.verbose
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerXML: " + string
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + string)
 
     def sessionExpires(self, session):
         self.service.destroyAvatar(session.avatar)

@@ -53,7 +53,7 @@ def rest_filter(site, request, packet):
             clientFactory = PokerProxyClientFactory(                            #pragma: no cover
                 request.method, path, request.clientproto,                      #pragma: no cover
                 header, data, request,                                          #pragma: no cover
-                service.verbose, host + ':' + str(port) + path)                 #pragma: no cover
+                host + ':' + str(port) + path)                 #pragma: no cover
             local_reactor.connectTCP(host, int(port), clientFactory)            #pragma: no cover
             return clientFactory.deferred                                       #pragma: no cover
     return True                                                                 #pragma: no cover

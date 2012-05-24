@@ -32,7 +32,6 @@ class RealCurrencyClient:
 
     def __init__(self):
         self.log = log.getChild(self.__class__.__name__)
-        self.verbose = 0
         self.getPage = client.getPage
 
     def request(self, *args, **kwargs):
@@ -68,7 +67,6 @@ class RealCurrencyClient:
                 args.append("values[%d]=%d" % ( index, value ))
                 index += 1
         url = "&".join(args)
-        #print "RealCurrencyClient: " + url
         return self.getPage(url)
 
     def parseResultNote(self, result):
@@ -127,7 +125,7 @@ class RealCurrencyClient:
 
     def commit(self, url, transaction_id):
         def validate(result):
-            if self.verbose > 2: print "CurrencyClient::commit " + str(result)
+            self.log.debug("commit %s", result)
             if len(result.split("\n")) > 1:
                 raise Exception("expected a single line got " + str(result) + " instead")
             return result
@@ -142,7 +140,6 @@ CurrencyClient = RealCurrencyClient
 
 FakeCurrencyFailure = False
 
-Verbose = False
 
 class FakeCurrencyClient:
 
@@ -154,13 +151,8 @@ class FakeCurrencyClient:
         self.check_note_result = True
         self.commit_result = True
         
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print "FakeCurrencyClient: " + string
-        
     def breakNote(self, (url, serial, name, value), *values):
-        if Verbose:
-            self.log.debug("breakNote values %s", values)
+        self.log.debug("breakNote values %s", values)
         if values: 
             values = map(int, values)
             values.sort()
@@ -190,8 +182,7 @@ class FakeCurrencyClient:
         return d
 
     def mergeNotes(self, *notes):
-        if Verbose:
-            self.log.debug("mergeNotes")
+        self.log.debug("mergeNotes")
         self.serial += 1
         result = list(notes[0])
         result[1] = self.serial
@@ -204,8 +195,7 @@ class FakeCurrencyClient:
     meltNotes = mergeNotes
 
     def changeNote(self, note):
-        if Verbose:
-            self.log.debug("changeNote")
+        self.log.debug("changeNote")
         self.serial += 1
         result = note.copy()
         result[1] = self.serial
@@ -215,8 +205,7 @@ class FakeCurrencyClient:
         return d
 
     def _buildNote(self, url, value):
-        if Verbose:
-            self.log.debug("_buildNote")
+        self.log.debug("_buildNote")
         self.serial += 1
         name = "%040d" % self.serial
         return ( url, self.serial, name, value )
@@ -229,7 +218,7 @@ class FakeCurrencyClient:
         return d
 
     def checkNote(self, note):
-        if Verbose: self.log.debug("checkNote")
+        self.log.debug("checkNote")
         if self.check_note_result:
             result = note
         else:
@@ -239,7 +228,7 @@ class FakeCurrencyClient:
         return d
 
     def commit(self, url, transaction_id):
-        if Verbose: self.log.debug("commit")
+        self.log.debug("commit")
         if self.commit_result:
             result = "OK"
         else:

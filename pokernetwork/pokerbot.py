@@ -29,14 +29,9 @@ import sys
 sys.path.insert(0, "..")
 
 import platform
-from os import popen
 from os.path import exists
-from string import split, rstrip
 from random import randint
-from traceback import print_exc
 
-from pokernetwork import log as network_log
-log = network_log.getChild('pokerbot')
 
 from twisted.application import internet, service, app
 
@@ -54,12 +49,12 @@ from twisted.persisted import sob
 from twisted.internet import error
 
 from pokerengine.pokertournament import *
-
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
-from pokernetwork.user import checkName
 from pokernetwork.pokerbotlogic import StringGenerator, NoteGenerator, PokerBot
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerbot')
 
 class PokerBotProtocol(PokerClientProtocol):
 
@@ -103,13 +98,12 @@ class PokerBotFactory(PokerClientFactory):
         self.wait = settings.headerGetInt("/settings/@wait")
         self.disconnect_delay = settings.headerGet("/settings/@disconnect_delay")
         if self.disconnect_delay:
-            self.disconnect_delay = tuple(map(lambda x: int(x), split(self.disconnect_delay, ",")))
+            self.disconnect_delay = tuple(map(lambda x: int(x), self.disconnect_delay.split(',')))
         self.reconnect_delay = settings.headerGet("/settings/@reconnect_delay")
         if self.reconnect_delay:
-            self.reconnect_delay = tuple(map(lambda x: int(x), split(self.reconnect_delay, ",")))
+            self.reconnect_delay = tuple(map(lambda x: int(x), self.reconnect_delay.split(',')))
         self.currency = settings.headerGetInt("/settings/currency")
         self.currency_id = settings.headerGet("/settings/currency/@id")
-        self.verbose = settings.headerGetInt("/settings/@verbose")
         self.bot = None
         self.went_broke = False
         self.disconnected_volontarily = False
@@ -174,7 +168,6 @@ class Bots(service.MultiService):
     def setSettings(self, settings):
         self.count = 0
         self.settings = settings
-        self.verbose = settings.headerGetInt("/settings/@verbose")
 
     def addService(self, _service):
         service.MultiService.addService(self, _service)
@@ -240,7 +233,7 @@ def makeService(configuration):
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
     PokerBot.note_generator = NoteGenerator(settings.headerGet("/settings/currency"))
 
-    ( host, port ) = split(settings.headerGet("/settings/servers"), ":")
+    ( host, port ) = settings.headerGet("/settings/servers").split(':')
     port = int(port)
 
     services = Bots()

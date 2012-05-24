@@ -1,5 +1,4 @@
 from twisted.internet import reactor
-import traceback
 
 from pokernetwork import log as network_log
 log = network_log.getChild('lockcheck')

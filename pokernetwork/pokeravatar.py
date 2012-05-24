@@ -31,30 +31,20 @@
 
 from string import join
 import sets
-import re
 
-from twisted.internet import defer
-
+from twisted.internet import reactor, defer
 from traceback import format_exc
 
-from pokerengine import pokergame
 from pokernetwork.user import User, checkNameAndPassword, checkAuth
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
-from twisted.internet import protocol, reactor, defer
-from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerpacketizer import createCache, history2packets
 
 from pokernetwork import log as network_log
 log = network_log.getChild('pokeravatar')
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
-
-from packets import PacketNames
-from itertools import chain
-
-from pokernetwork import log as network_log
 
 class PokerAvatar:
 
@@ -99,11 +89,7 @@ class PokerAvatar:
                     self.log.warn("setExplain must be called when not connected to any table")
                     return False
 
-                self.explain = PokerExplain(
-                    dirs = self.service.dirs,
-                    verbose = self.service.verbose,
-                    explain = what
-                )
+                self.explain = PokerExplain(dirs = self.service.dirs, explain = what)
         else:
             self.explain = None
         return True
@@ -136,17 +122,6 @@ class PokerAvatar:
     def setProtocol(self, protocol):
         self.protocol = protocol
 
-#    def __del__(self):
-#       self.message("instance deleted")
-
-    def error(self, string):
-        raise DeprecationWarning("message is deprecated")
-        self.message("ERROR " + str(string))
-        
-    def message(self, string):
-        raise DeprecationWarning("error is deprecated")
-        print "PokerAvatar: " + str(string)
-        
     def isAuthorized(self, type):
         return self.user.hasPrivilege(self.service.poker_auth.GetLevel(type))
 
@@ -488,10 +463,10 @@ class PokerAvatar:
         self.log.debug("getOrCreateRestClient(%s, %d, %s, %s)", host, port, path, game_id)
         if game_id:
             if game_id not in self.game_id2rest_client:
-                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, longPollCallback = lambda packets: self.incomingDistributedPackets(packets, game_id), verbose = self.service.verbose)
+                self.game_id2rest_client[game_id] = PokerRestClient(host, port, path, longPollCallback = lambda packets: self.incomingDistributedPackets(packets, game_id))
             client = self.game_id2rest_client[game_id]
         else:
-            client = PokerRestClient(host, port, path, longPollCallback = None, verbose = self.service.verbose)
+            client = PokerRestClient(host, port, path, longPollCallback = None)
         return client
             
     def distributePacket(self, packet, data, resthost, game_id):
@@ -1384,7 +1359,7 @@ class PokerAvatar:
             # in this case.
             #
             packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, createCache()) #@UnusedVariable
-            for error in errors: table.error(error)
+            for error in errors: table.log.error(error)
             timeout_packet = table.getCurrentTimeoutWarning()
             if timeout_packet:
                 packets.append(timeout_packet)

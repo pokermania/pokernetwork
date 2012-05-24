@@ -26,14 +26,12 @@
 #
 
 from MySQLdb.constants import ER
-from string import lower
 
 from twisted.internet import reactor
 
 from pokernetwork import currencyclient
 from pokernetwork import pokerlock
 from pokernetwork.pokerpackets import *
-
 from pokernetwork import log as network_log
 log = network_log.getChild('pokercashier')
 
@@ -44,7 +42,6 @@ class PokerCashier:
     def __init__(self, settings):
         self.log = log.getChild(self.__class__.__name__)
         self.settings = settings
-        self.verbose = self.settings.headerGetInt("/server/@verbose")
         self.currency_client = currencyclient.CurrencyClient()
         self.parameters = settings.headerGetProperties("/server/cashier")[0]
         if 'pokerlock_queue_timeout' in self.parameters:
@@ -54,14 +51,6 @@ class PokerCashier:
         self.locks = {}
         reactor.callLater(0, self.resumeCommits)
 
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print "PokerCashier: " + string
-
-    def error(self, string):
-        raise DeprecationWarning("error is deprecated")
-        self.message("*ERROR* " + string)
-        
     def close(self):
         for lock in self.locks.values():
             lock.close()
@@ -82,7 +71,7 @@ class PokerCashier:
         self.log.debug(sql, self.db.literal(url))
         cursor.execute(sql, url)
         if cursor.rowcount == 0:
-            user_create = lower(self.parameters.get('user_create', 'no'))
+            user_create = self.parameters.get('user_create', 'no').lower()
             if user_create not in ('yes', 'on'):
                 raise PacketError(other_type = PACKET_POKER_CASH_IN,
                                   code = PacketPokerCashIn.REFUSED,
@@ -423,7 +412,6 @@ class PokerCashier:
             create_lock = True
         if create_lock:
             self.locks[name] = PokerLock(self.db_parameters)
-            self.locks[name].verbose = self.verbose
             self.locks[name].start()
 
         return self.locks[name].acquire(name, int(self.parameters.get('acquire_timeout', 60)))

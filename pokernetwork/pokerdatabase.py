@@ -25,8 +25,6 @@
 #
 import os
 from os.path import exists
-import re
-from traceback import format_exc, print_stack
 import MySQLdb
 from MySQLdb.cursors import DictCursor
 
@@ -44,7 +42,6 @@ class PokerDatabase:
 
     def __init__(self, settings):
         self.log = log.getChild(self.__class__.__name__)
-        self.verbose = settings.headerGetInt("/server/@verbose")
         self.parameters = settings.headerGetProperties("/server/database")[0]
         self.mysql_command = settings.headerGet("/server/database/@command")
         try:
@@ -115,14 +112,6 @@ class PokerDatabase:
         self.version = Version(self.getVersionFromDatabase())
         self.log.inform("Database version %s", self.version)
 
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print "PokerDatabase: " + string
-
-    def error(self, string):
-        raise DeprecationWarning("error is deprecated")
-        self.message("*ERROR* " + string)
-        
     def close(self):
         if hasattr(self, 'db'):
             self.db.close()
@@ -154,7 +143,7 @@ class PokerDatabase:
                 self.log.warn("upgrade the database with pokerdatabaseupgrade")
                 raise ExceptionDatabaseTooOld
             else:
-                self.error("upgrade poker-network to version %s or better", self.version)
+                self.log.warn("upgrade poker-network to version %s or better", self.version)
                 raise ExceptionSoftwareTooOld
 
     def upgrade(self, directory, dry_run):

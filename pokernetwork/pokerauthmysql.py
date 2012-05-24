@@ -27,10 +27,8 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #  Cedric Pinson <mornifle@plopbyte.net> (2004-2006)
 
-from pokernetwork.packets import PACKET_LOGIN
-from pokernetwork.user import User
-from twisted.python.runtime import seconds
 import MySQLdb
+from pokernetwork.packets import PACKET_LOGIN
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerauthmysql')
 
@@ -41,7 +39,6 @@ class PokerAuth:
         self.db = db
         self.memcache = memcache
         self.type2auth = {}
-        self.verbose = settings.headerGetInt("/server/@verbose")
         self.settings = settings
         self.parameters = self.settings.headerGetProperties("/server/auth")[0]
         self.auth_db = MySQLdb.connect(host = self.parameters["host"],
@@ -50,14 +47,6 @@ class PokerAuth:
                                   passwd = self.parameters["password"],
                                   db = self.parameters["db"])
 
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print "PokerAuthMysql: " + string
-
-    def error(self, string):
-        raise DeprecationWarning("error is deprecated")
-        self.message("*ERROR* " + string)
-            
     def SetLevel(self, type, level):
         self.type2auth[type] = level
 

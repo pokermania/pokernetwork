@@ -135,10 +135,8 @@ def makeService(configuration):
                 'poker_site': rest_site
             }
         ).setServiceParent(serviceCollection)
-        if settings.headerGetInt("/server/@verbose") > 0:
-            print "PokerManhole: manhole is useful for debugging, however, it can be a security risk and should be used only during debugging"
-            log.warn("PokerManhole: manhole is useful for debugging, however, "
-                "it can be a security risk and should be used only during debugging")
+        log.warn("PokerManhole: manhole is useful for debugging, however, "
+            "it can be a security risk and should be used only during debugging")
 
     return serviceCollection
 

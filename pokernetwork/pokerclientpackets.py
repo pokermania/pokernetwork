@@ -25,11 +25,6 @@
 # PACKET_POKER_CHIPS_POT_MERGE
 #
 from struct import pack, unpack
-import simplejson
-import types
-
-from pokerengine.pokercards import PokerCards
-from pokerengine.pokerchips import PokerChips
 
 from pokernetwork.packets import Packet
 from pokernetwork.pokerpackets import *

@@ -24,15 +24,12 @@ from twisted.python.runtime import seconds
 
 from pokerengine.pokerchips import PokerChips
 from pokerengine.pokergame import history2messages
-
 from pokernetwork.pokergameclient import PokerNetworkGameClient
 from pokernetwork.pokerpackets import * #@UnusedWildImport
 from pokernetwork.pokerclientpackets import * #@UnusedWildImport
-
 from pokernetwork import log as network_log
 log = network_log.getChild('explain')
 
-from pprint import pformat
 DEFAULT_PLAYER_USER_DATA = { 'timeout': None }
 
 class PokerGames:
@@ -41,7 +38,6 @@ class PokerGames:
         self.log = log.getChild(self.__class__.__name__)
         self.games = {}
         self.dirs = kwargs.get("dirs", [])
-        self.verbose = kwargs.get("verbose", 0)
         self.prefix = kwargs.get("prefix", "")
     
     def getGame(self, game_id):
@@ -61,7 +57,6 @@ class PokerGames:
         if game_id not in self.games:
             game = PokerNetworkGameClient("poker.%s.xml", self.dirs)
             game.prefix = self.prefix
-            game.verbose = self.verbose
             game.id = game_id
             self.games[game_id] = game
 
@@ -100,26 +95,11 @@ class PokerExplain:
         self.chips_values = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 2500, 5000, 10000, 25000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000]
         self._prefix = ""
         self.games = PokerGames(**kwargs)
-        self.setVerbose(kwargs.get('verbose', 0))
         self.what = kwargs.get("explain", PacketPokerExplain.ALL)
 
-    def error(self, string):
-        raise DeprecationWarning("error is deprecated")
-        self.message("ERROR " + string)
-        
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print self._prefix + string
-        
     def setPrefix(self, prefix):
         self._prefix = prefix
         self.games.prefix = prefix
-
-    def setVerbose(self, verbose):
-        self.verbose = verbose
-        self.games.verbose = verbose
-        for game in self.games.getAll():
-            game.verbose = verbose
 
     def normalizeChips(self, game, chips):
         if game.unit in self.chips_values:
@@ -288,7 +268,7 @@ class PokerExplain:
         player.getUserData()['timeout'] = None
     
     def explain(self, packet):
-        self.log.debug(str(packet))
+        self.log.debug("%s", packet)
         
         self.forward_packets = [ packet ]
         forward_packets = self.forward_packets

@@ -22,14 +22,13 @@
 #
 # 
 from twisted.internet import reactor, protocol, error, defer
-from struct import pack, unpack
-
-from pokernetwork import log as network_log
-log = network_log.getChild('client')
 
 from pokernetwork.packets import *
 from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.user import User
+from pokernetwork import log as network_log
+
+log = network_log.getChild('client')
 
 class UGAMEClientProtocol(UGAMEProtocol):
     """ """
@@ -121,17 +120,8 @@ class UGAMEClientFactory(protocol.ClientFactory):
         self.log = log.getChild(self.__class__.__name__)
         self.protocol = UGAMEClientProtocol
         self.protocol_instance = None
-        self.verbose = 0
         self.established_deferred = defer.Deferred()
 
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("ERROR " + string)
-        
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print string
-        
     def buildProtocol(self, addr):
         instance = self.protocol()
         instance.factory = self

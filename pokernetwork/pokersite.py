@@ -190,16 +190,7 @@ class PokerResource(resource.Resource):
         self._log = log.getChild(self.__class__.__name__)
         resource.Resource.__init__(self)
         self.service = service
-        self.verbose = service.verbose
         self.isLeaf = True
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerResource: " + string
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + string)
 
     def render(self, request):
         arg = ""
@@ -316,21 +307,21 @@ class PokerResource(resource.Resource):
             # request.getSession().expire()
             
             error_trace = reason.getTraceback()
-            body = error_trace if self.verbose >= 1 else "Internal Server Error"
+            body = "Internal Server Error"
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             request.setHeader('content-length', str(len(body)))
             request.setHeader('content-type',"text/html")
             request.write(body)
             request.finish()
             
-            if self.verbose >= 0:
-                error_to_print = str(error_trace)
-                chunk_size = self.service.chunk_size
-                if chunk_size > 0:
-                    body_split = ";- ".join(re.split(r'[\r\n]+',str(error_to_print)))
-                    body_chunks = [body_split[i:i+chunk_size] for i in range(0, len(body_split), chunk_size)]
-                    error_to_print = re.sub(r'\n;- |;- \n',r'\n','\n'.join(body_chunks))
-                self._log.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
+#            if self.verbose >= 0:
+#                error_to_print = str(error_trace)
+#                chunk_size = self.service.chunk_size
+#                if chunk_size > 0:
+#                    body_split = ";- ".join(re.split(r'[\r\n]+',str(error_to_print)))
+#                    body_chunks = [body_split[i:i+chunk_size] for i in range(0, len(body_split), chunk_size)]
+#                    error_to_print = re.sub(r'\n;- |;- \n',r'\n','\n'.join(body_chunks))
+#                self._log.error("(%s:%s) " % request.findProxiedIP() + error_to_print)
             return True
         d.addCallbacks(render, processingFailed, (session,))
         return d
@@ -341,17 +332,8 @@ class PokerImageUpload(resource.Resource):
         resource.Resource.__init__(self)
         self._log = log.getChild(self.__class__.__name__)
         self.service = service
-        self.verbose = service.verbose
         self.deferred = defer.succeed(None)
         self.isLeaf = True
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerImageUpload: " + string
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + string)
 
     def render(self, request):
         self._log.debug("render %s", request.content.read())
@@ -398,13 +380,8 @@ class PokerTourneyStartResource(resource.Resource):
         resource.Resource.__init__(self)
         self._log = log.getChild(self.__class__.__name__)
         self.service = service
-        self.verbose = service.verbose
         self.deferred = defer.succeed(None)
         self.isLeaf = True
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerTourneyStart: " + string
 
     def render(self, request):
         self._log.debug("render %s", request)
@@ -422,17 +399,8 @@ class PokerAvatarResource(resource.Resource):
         resource.Resource.__init__(self)
         self._log = log.getChild(self.__class__.__name__)
         self.service = service
-        self.verbose = service.verbose
         self.deferred = defer.succeed(None)
         self.isLeaf = True
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerAvatarResource: " + string
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + string)
 
     def render(self, request):
         self._log.debug("render %s", request.content.read())
@@ -477,7 +445,6 @@ class PokerSite(server.Site):
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
         self._log = log.getChild(self.__class__.__name__)
-        self.verbose = self.resource.verbose
         cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
         if cookieTimeout > 0:
             self.cookieTimeout = cookieTimeout
@@ -497,14 +464,6 @@ class PokerSite(server.Site):
             self.resthost = ( resthost['host'], int(resthost['port']), resthost['path'] )
         else:
             self.resthost = None
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerSite: " + string
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + string)
 
     def pipe(self, d, request, packet):
         if self.pipes:

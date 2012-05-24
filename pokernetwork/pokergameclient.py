@@ -18,7 +18,6 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 from pokerengine.pokergame import PokerGameClient
-
 from pokernetwork import log as network_log
 log = network_log.getChild('pokergameclient')
 

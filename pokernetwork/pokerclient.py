@@ -24,24 +24,15 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 
-from string import split, lower
-from re import match
-import platform
 
 from twisted.internet import reactor, defer
 from twisted.python.runtime import seconds
 
-from pokereval import PokerEval
-from pokerengine.pokergame import PokerGameClient, PokerPlayer, history2messages
-from pokerengine.pokercards import PokerCards
 from pokerengine.pokerchips import PokerChips
-
 from pokerengine.pokerengineconfig import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
 from pokernetwork.pokerclientpackets import *
-from pokernetwork.pokergameclient import PokerNetworkGameClient
 from pokernetwork.pokerexplain import PokerGames, PokerExplain
-
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerclient')
 
@@ -116,8 +107,7 @@ class PokerClientFactory(UGAMEClientFactory):
                 self.chat_config[key] = int(value)
         else:
             self.chat_config = {}
-        self.dirs = split(self.settings.headerGet("/settings/path"))
-        self.verbose = self.settings.headerGetInt("/settings/@verbose")
+        self.dirs = self.settings.headerGet("/settings/path").split()
         self.delays = self.settings.headerGetProperties("/settings/delays")
         if self.delays:
             self.delays = self.delays[0]
@@ -135,7 +125,7 @@ class PokerClientFactory(UGAMEClientFactory):
         self.delays_enable = self.settings.headerGet("/settings/@delays") == "true"
         self.skin = PokerSkin(settings = self.settings)
         self.protocol = PokerClientProtocol
-        self.games = PokerGames(dirs = self.dirs, verbose = self.verbose)
+        self.games = PokerGames(dirs = self.dirs)
         self.file2name = {}
         self.first_time = self.settings.headerGet("/settings/name") == "username"
         self.played_time = self.settings.headerGet("/settings/played_time")
@@ -148,7 +138,6 @@ class PokerClientFactory(UGAMEClientFactory):
         protocol = UGAMEClientFactory.buildProtocol(self, addr)
         protocol.explain.chips_values = self.chips_values
         protocol.explain.games = self.games
-        protocol.explain.setVerbose(self.verbose)
         return protocol
 
     def resolve(self, url):

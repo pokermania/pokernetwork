@@ -24,7 +24,6 @@
 
 from twisted.internet import reactor, defer
 from twisted.python import failure
-from traceback import format_exc
 import threading
 import thread
 import MySQLdb
@@ -46,7 +45,6 @@ class PokerLock(threading.Thread):
     
     def __init__(self, parameters):
         self.log = log.getChild(self.__class__.__name__)
-        self.verbose = 0
         self.q = Queue.Queue()
         self.lock = threading.Lock()
         self.db = None
@@ -54,10 +52,6 @@ class PokerLock(threading.Thread):
         self.connect(parameters)
         threading.Thread.__init__(self, target = self.main)
 
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print "PokerLock::(" + str(thread.get_ident()) + ") "  + string
-        
     def close(self):
         if self.isAlive():
             self.q.put((None, None, None, None))

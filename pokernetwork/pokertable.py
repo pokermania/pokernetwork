@@ -49,15 +49,10 @@ log = network_log.getChild('pokertable')
 
 class PokerAvatarCollection:
 
-    def __init__(self, prefix='', verbose=0):
+    def __init__(self, prefix=''):
         self.log = log.getChild(self.__class__.__name__)
         self.serial2avatars = {}
-        self.verbose = verbose
         self.prefix = prefix
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "PokerAvatarCollection:%s:" % self.prefix + string
 
     def get(self, serial):
         return self.serial2avatars.get(serial, [])
@@ -119,7 +114,6 @@ class PokerTable:
         settings = self.factory.settings
         self.game = PokerGameServer("poker.%s.xml", factory.dirs)
         self.game.prefix = "[Server]"
-        self.game.verbose = factory.verbose
         self.history_index = 0
         predefined_decks = settings.headerGetList("/server/decks/deck")
         if predefined_decks:
@@ -154,7 +148,7 @@ class PokerTable:
         self.autodealTemporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
         self.cache = createCache()
         self.owner = 0
-        self.avatar_collection = PokerAvatarCollection("Table%d" % id, factory.verbose)
+        self.avatar_collection = PokerAvatarCollection("Table%d" % id)
         self.timer_info = {
             "playerTimeout": None,
             "playerTimeoutSerial": 0,
@@ -180,14 +174,6 @@ class PokerTable:
 
     def isLocked(self):
         return self._lock_check_locked
-
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print "[PokerTable %s]: %s" % (self.game.id if hasattr(self, 'game') else "?", string)
-
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("*ERROR* " + string)
 
     def isValid(self):
         """Returns true if the table has a factory."""
@@ -494,12 +480,11 @@ class PokerTable:
                 }
             elif event_type in ('round', 'position', 'showdown', 'finish'):
                 self.game_delay["delay"] += float(self.delays[event_type])
-                if self.factory.verbose > 2:
-                    self.log.warn("delayedActions: game estimated duration is now %s "
-                        "and is running since %.02f seconds",
-                        self.game_delay["delay"],
-                        seconds() - self.game_delay["start"],
-                    )
+                self.log.debug("delayedActions: game estimated duration is now %s "
+                    "and is running since %.02f seconds",
+                    self.game_delay["delay"],
+                    seconds() - self.game_delay["start"],
+                )
 
             elif event_type == "leave":
                 quitters = event[1]

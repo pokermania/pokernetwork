@@ -20,8 +20,6 @@
 from twisted.internet import defer, protocol, reactor, error
 from twisted.web import http
 
-from pokernetwork.pokerpackets import PacketPokerTableJoin
-
 from pokernetwork import log as network_log
 log = network_log.getChild('proxyfilter')
 
@@ -67,7 +65,7 @@ class ProxyClientFactory(protocol.ClientFactory):
     noisy = False
     protocol = ProxyClient
 
-    def __init__(self, command, rest, version, headers, data, father, verbose, destination):
+    def __init__(self, command, rest, version, headers, data, father, destination):
         self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
@@ -76,14 +74,10 @@ class ProxyClientFactory(protocol.ClientFactory):
         self.data = data
         self.version = version
         self.deferred = defer.Deferred()
-        self.verbose = verbose
         self.destination = destination
         ProxyClientFactory.serial += 1
         self.serial = ProxyClientFactory.serial
 
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print 'Proxy(%d) %s' % ( self.serial, string )
 
     def doStart(self):
         self.log.debug('START %s => %s', self.data, self.destination)
@@ -92,9 +86,6 @@ class ProxyClientFactory(protocol.ClientFactory):
     def doStop(self):
         self.log.debug('STOP')
         protocol.ClientFactory.doStop(self)
-
-#    def error(self, string):
-#    self.message("*ERROR* " + str(string))
 
     def buildProtocol(self, addr):
         return self.protocol(self.command, self.rest, self.version,
@@ -131,7 +122,7 @@ def rest_filter(site, request, packet):
         clientFactory = ProxyClientFactory(
             request.method, path, request.clientproto,
             request.getAllHeaders(), request.content.read(), request,
-            service.verbose, host + ':' + str(port) + path)
+            host + ':' + str(port) + path)
         local_reactor.connectTCP(host, int(port), clientFactory)
         return clientFactory.deferred
     return True

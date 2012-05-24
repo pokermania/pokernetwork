@@ -31,7 +31,7 @@
 # Authors:
 #  Loic Dachary <loic@gnu.org>
 #
-from twisted.internet import base, tcp, ssl, interfaces, protocol, address
+from twisted.internet import tcp, ssl, protocol, address
 from re import match
 
 #

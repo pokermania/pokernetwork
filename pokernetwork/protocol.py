@@ -24,10 +24,9 @@
 from twisted.internet import reactor, protocol
 from twisted.python.runtime import seconds
 
-from pokernetwork.packets import Packet, PacketFactory, PacketNames
+from pokernetwork.packets import Packet, PacketFactory
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
-
 from pokernetwork import log as network_log
 log = network_log.getChild('protocol')
 
@@ -67,14 +66,6 @@ class UGAMEProtocol(protocol.Protocol):
         self._ping_delay = 5
         if not hasattr(self, 'factory'): self.factory = None
 
-    def error(self, string):
-        raise DeprecationWarning('error is deprecated')
-        self.message("ERROR " + string)
-        
-    def message(self, string):
-        raise DeprecationWarning('message is deprecated')
-        print self._prefix + string
-        
     def setPingDelay(self, ping_delay):
         self._ping_delay = ping_delay
 

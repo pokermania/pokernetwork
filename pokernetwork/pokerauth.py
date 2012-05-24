@@ -27,16 +27,12 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #  Cedric Pinson <mornifle@plopbyte.net> (2004-2006)
 
-from pokernetwork.user import User
 from twisted.python.runtime import seconds
+from pokernetwork.user import User
 from pokernetwork.packets import PACKET_LOGIN, PACKET_AUTH
 from pokernetwork import log as network_log
 log = network_log.getChild("pokerauth")
 
-def message(string):
-    raise DeprecationWarning("message is deprecated")
-    print "PokerAuth: " + string
-    
 class PokerAuth:
 
     def __init__(self, db, memcache, settings):
@@ -44,17 +40,8 @@ class PokerAuth:
         self.db = db
         self.memcache = memcache
         self.type2auth = {}
-        self.verbose = settings.headerGetInt("/server/@verbose")
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
 
-    def message(self, string):
-        raise DeprecationWarning("message is deprecated")
-        print "PokerAuth: " + string
-
-    def error(self, string):
-        raise DeprecationWarning("error is deprecated")
-        self.message("*ERROR* " + string)
-            
     def SetLevel(self, type, level):
         self.type2auth[type] = level
 
@@ -143,7 +130,6 @@ _get_auth_instance = None
 def get_auth_instance(db, memcache, settings):
     global _get_auth_instance
     if _get_auth_instance == None:
-        verbose = settings.headerGetInt("/server/@verbose")
         import imp
         script = settings.headerGet("/server/auth/@script")
         try:

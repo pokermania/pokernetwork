@@ -29,11 +29,9 @@ from random import randint
 from twisted.internet import reactor
 
 from pokerengine.pokertournament import *
-
 from pokernetwork.user import checkName
 from pokernetwork.pokerpackets import *
 from pokernetwork.pokerclientpackets import *
-
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerbotlogic')
 
@@ -232,7 +230,7 @@ class PokerBot:
                 self.factory.went_broke = True
 
             if giveup:
-                self.error("%s", packet)
+                self.log.error("%s", packet)
             if giveup:
                 protocol.transport.loseConnection()
             
@@ -329,9 +327,8 @@ class PokerBot:
         
         (desired_action, ev) = self.eval(game, serial)
         actions = game.possibleActions(serial)
-        if self.factory.verbose:
-            print "%s serial = %d, hand = %s, board = %s" % (name, serial, game.getHandAsString(serial), game.getBoardAsString())
-            print "%s wants to %s (ev = %d)" % (name, desired_action, ev)
+        self.log.debug("%s serial = %d, hand = %s, board = %s", name, serial, game.getHandAsString(serial), game.getBoardAsString())
+        self.log.debug("%s wants to %s (ev = %d)", name, desired_action, ev)
         self.log.inform("%s serial = %d, hand = %s, board = %s",
             name,
             serial,
