@@ -238,7 +238,7 @@ class PokerResource(resource.Resource):
                 request.setHeader('content-length', str(len(body)))
                 request.write(body)
             if request.code != 200:
-                host, port = requst.findProxiedIP()
+                host, port = request.findProxiedIP()
                 self._log.warn("(%s:%s) %s", host, port, body)
             if not (request.finished or request._disconnected):
                 request.finish()
