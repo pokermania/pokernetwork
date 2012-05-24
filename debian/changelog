@@ -1,3 +1,14 @@
+poker-network (2.1.4-2) pokermania; urgency=low
+
+  * 0aff68d fixes Packet.pack.json regression
+  * 8537912 reflogging 1.0.0-6
+  * 927ccd2 less debug statements in tournament tests
+  * 2dcf7b7 updated pokeradditions
+  * 60b5d8a enable chunked encoding in pokersite
+  * 8fca93d numeric type is sent when also received
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Thu, 24 May 2012 13:43:47 +0200
+
 poker-network (2.1.4-1) pokermania; urgency=low
 
   * 3f7717e args2packets now support integer types as well
