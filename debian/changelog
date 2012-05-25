@@ -1,3 +1,9 @@
+poker-network (2.1.4-5) pokermania; urgency=low
+
+  * 9f9e532 don't log protocolInvalid, arrival of PACKET_PING
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 25 May 2012 14:25:04 +0200
+
 poker-network (2.1.4-4) pokermania; urgency=low
 
   * 10abf1f reflogging 1.0.1-1
