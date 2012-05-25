@@ -1214,8 +1214,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         for (key, value) in ( ('serial', '1'), ('amount', '10000000')):
             self.assertEquals(self.service.refill[key], value)
 
-        self.assertEquals(self.service.verbose, 6)
-
         self.assertEquals(joined_max, self.service.joined_max)
         self.assertEquals(missed_round_max, self.service.missed_round_max)
         self.assertEquals(missed_round_max, self.service.getMissedRoundMax())
@@ -3868,7 +3866,6 @@ class PokerFactoryFromPokerServiceTestCase(unittest.TestCase):
         mockServ = MockServiceSmall()
         pokerFactory = pokerservice.PokerFactoryFromPokerService(mockServ)
         self.assertEquals(pokerFactory.service, mockServ)
-        self.assertEquals(pokerFactory.verbose, mockServ.verbose)
         self.assertEquals(mockServ.createAvatarCount, 0)
         self.assertEquals(mockServ.destroyAvatarCount, 0)
 
@@ -6430,7 +6427,6 @@ class PokerRestTreeCoverageTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(self.settings)
         prt = pokerservice.PokerRestTree(self.service)
         self.assertEquals(prt.service, self.service)
-        self.assertEquals(prt.verbose, self.service.verbose)
         for (child, cl) in [ ("POKER_REST", PokerResource), ("UPLOAD", PokerImageUpload),
                              ("AVATAR", PokerAvatarResource) ]:
             self.failUnless(child in prt.children, "Missing child of PokerTree: " + child)
@@ -6550,7 +6546,6 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(self.settings)
         px = pokerservice.PokerXML(self.service)
         self.assertEquals(px.service, self.service)
-        self.assertEquals(px.verbose, self.service.verbose)
         self.assertNotEquals(pokerservice.PokerXML.encoding, "")
         self.assertNotEquals(pokerservice.PokerXML.encoding, None)
     # ----------------------------------------------------------------
@@ -6880,8 +6875,8 @@ def Run():
     suite.addTest(loader.loadClass(PokerTreeCoverageTestCase))
     suite.addTest(loader.loadClass(PokerRestTreeCoverageTestCase))
     suite.addTest(loader.loadClass(PokerXMLCoverageTestCase))
-    suite.addTest(loader.loadClass(PokerXMLRPCCoverageTestCase))
-    suite.addTest(loader.loadClass(PokerSOAPCoverageTestCase))
+    #suite.addTest(loader.loadClass(PokerXMLRPCCoverageTestCase))
+    #suite.addTest(loader.loadClass(PokerSOAPCoverageTestCase))
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     suite.addTest(loader.loadClass(TourneyNotifyTestCase))
     suite.addTest(loader.loadClass(LadderTestCase))
