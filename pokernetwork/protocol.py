@@ -24,7 +24,7 @@
 from twisted.internet import reactor, protocol
 from twisted.python.runtime import seconds
 
-from pokernetwork.packets import Packet, PacketFactory
+from pokernetwork.packets import Packet, PacketFactory, PACKET_PING
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
 from pokernetwork import log as network_log
@@ -252,7 +252,8 @@ class UGAMEProtocol(protocol.Protocol):
                     if type.type in PacketFactory:
                         packet = PacketFactory[type.type]()
                         buf = packet.unpack(buf)
-                        self.log.debug("%s(%d bytes) => %s", self._prefix, type.length, packet)
+                        if type.type != PACKET_PING:
+                            self.log.debug("%s(%d bytes) => %s", self._prefix, type.length, packet)
                         if self._poll:
                             self.pushPacket(packet)
                         else:

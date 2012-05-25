@@ -118,7 +118,9 @@ class PokerServerProtocol(UGAMEProtocol):
         UGAMEProtocol.connectionLost(self, reason)
 
     def protocolInvalid(self, client, server):
-        self.log.debug("client with protocol %s rejected (need %s)", client, server)
+        # commented out because of haproxy checks
+        # self.log.debug("client with protocol %s rejected (need %s)", client, server)
+        return
 
     def ping(self):
         if not hasattr(self, "_ping_timer") or not self._ping_timer:
