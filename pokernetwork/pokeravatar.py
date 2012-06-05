@@ -605,7 +605,7 @@ class PokerAvatar:
             if self.getSerial() == packet.serial:
                 self.getPersonalInfo(packet.serial)
             else:
-                self.log.warn("attempt to get peronal info for user %d by user %d", packet.serial, self.getSerial())
+                self.log.warn("attempt to get personal info for user %d by user %d", packet.serial, self.getSerial())
                 self.sendPacketVerbose(PacketAuthRequest())
             return
 
@@ -941,18 +941,18 @@ class PokerAvatar:
             elif packet.type == PACKET_POKER_TABLE_QUIT:
                 table.quitPlayer(self, self.getSerial())
 
-            table.update()
+            elif packet.type == PACKET_POKER_HAND_REPLAY and packet.serial==table.game.hand_serial and table.game.isRunning():
+                self.sendPacketVerbose(PacketPokerError(
+                    game_id = game.id,
+                    serial = self.getSerial(),
+                    other_type = PACKET_POKER_HAND_REPLAY,
+                    message = 'game is still running'
+                ))
             
-        elif table and packet.type == PACKET_POKER_HAND_REPLAY and packet.serial==table.game.hand_serial and table.game.isRunning():
-            self.sendPacketVerbose(PacketPokerError(
-                game_id = game.id,
-                serial = self.getSerial(),
-                other_type = PACKET_POKER_HAND_REPLAY,
-                message = 'game is still running'
-            ))
-
+            table.update()
+    
         elif packet.type == PACKET_POKER_HAND_REPLAY:
-            self.handReplay(packet.game_id,packet.serial)
+            self.handReplay(packet.game_id, packet.serial)
 
 #        players should not be able to create tables
 #        elif packet.type == PACKET_POKER_TABLE:

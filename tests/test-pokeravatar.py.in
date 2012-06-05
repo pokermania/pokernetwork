@@ -143,13 +143,11 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
 
     def setUpServer(self, serverSettings = settings_xml_server):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(serverSettings, len(serverSettings))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(serverSettings)
         #
         # Setup server
         #
         self.service = pokerservice.PokerService(settings)
-        self.service.verbose = 6
         self.service.startService()
         factory = pokerservice.IPokerFactory(self.service)
         self.p = reactor.listenTCP(0, factory, interface="127.0.0.1")
@@ -157,8 +155,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     # ------------------------------------------------------
     def setUpClient(self, index):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_client)
         self.client_factory.append(pokerclient.PokerClientFactory(settings = settings))
         self.assertEquals(len(self.client_factory), index + 1,
                           "clients must be created in daisy-chain with createClients() or createClient()")
@@ -2765,22 +2762,22 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[avid]
         packetTests = {
             'muck_accept' : { 'output' : 
-                          "[PokerGame %d] ERROR: muck: game state muck expected, found null" % gameId,
+                          "muck: game state muck expected, found null",
                           'packet' :
                                   PacketPokerMuckAccept(game_id = gameId,
                                                         serial = client.getSerial()) },
             'muck_deny' : { 'output' : 
-                          "[PokerGame %d] ERROR: muck: game state muck expected, found null" % gameId,
+                          "muck: game state muck expected, found null",
                           'packet' :
                                   PacketPokerMuckDeny(game_id = gameId,
                                                         serial = client.getSerial()) },
             'wait_blind' : { 'output' : 
-                          "[PokerGame %d] ERROR: player %d cannot pay blind while in state null" % (gameId, client.getSerial()),
+                          "player %d cannot pay blind while in state null" % (client.getSerial(),),
                           'packet' :
                                   PacketPokerWaitBigBlind(game_id = gameId,
                                                         serial = client.getSerial()) },
             'ante' : { 'output' : 
-                          "[PokerGame %d] ERROR: no ante due" % gameId,
+                          "no ante due",
                           'packet' :
                                   PacketPokerAnte(game_id = gameId, amount = 500,
                                                         serial = client.getSerial()) },
@@ -2788,25 +2785,21 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                           'packet' :
                                   PacketPokerLookCards(game_id = gameId,
                                                         serial = client.getSerial()) },
-            'fold' : { 'output' : "ERROR: player %d cannot fold." % client.getSerial(),
+            'fold' : { 'output' : "player %d cannot fold." % client.getSerial(),
                           'packet' :
                                   PacketPokerFold(game_id = gameId,
                                                         serial = client.getSerial()) },
-            'call' : { 'output' : "ERROR: player %d cannot call." % client.getSerial(),
+            'call' : { 'output' : "player %d cannot call." % client.getSerial(),
                           'packet' :
                                   PacketPokerCall(game_id = gameId,
                                                         serial = client.getSerial()) },
-            'raise' : { 'output' : "ERROR: player %d cannot raise." % client.getSerial(),
+            'raise' : { 'output' : "player %d cannot raise." % client.getSerial(),
                           'packet' :
                                   PacketPokerRaise(game_id = gameId, amount = 0,
                                                         serial = client.getSerial()) },
-            'check' : { 'output' : "ERROR: player %d cannot check." % client.getSerial(),
+            'check' : { 'output' : "player %d cannot check." % client.getSerial(),
                           'packet' :
                                   PacketPokerCheck(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'replay' : { 'output' : "*ERROR* loadHand(%d) expected one row got 0" % client.getSerial(),
-                          'packet' :
-                                  PacketPokerHandReplay(game_id = gameId,
                                                         serial = client.getSerial()) },
             }
         # Next, we loop through all the serial-related bad pack list,
@@ -2943,7 +2936,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerHandReplay(serial= client.getSerial()))
-        self.assertEqual(search_output("*ERROR* loadHand(%d) expected one row got 0" % client.getSerial()), True)
+        self.assertEqual(search_output("loadHand(%d) expected one row got 0" % client.getSerial()), True)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test56_handReplyNoTable(self):
@@ -3374,7 +3367,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.serial, client.getSerial())
                     self.assertEquals(packet.other_type, PACKET_POKER_SET_LOCALE)
                     foundCount += 1
-                    self.failUnless(search_output('Locale, "Klingon_Kronos.ISO-8859-1" not available.  Klingon_Kronos.ISO-8859-1 must not have been provide via <language/> tag in settings, or errors occured during loading.'))
+                    self.failUnless(search_output("Locale, 'Klingon_Kronos.ISO-8859-1' not available. Klingon_Kronos.ISO-8859-1 must not have been provide via <language/> tag in settings, or errors occured during loading."))
         self.assertEquals(foundCount, 1)
         return (client, packet)
     # -------------------------------------------------------------------------
