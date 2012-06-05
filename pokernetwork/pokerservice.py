@@ -64,16 +64,16 @@ except ImportError:
     # twisted-1.3 forwards compatibility
     def implements(interface):
         frame = sys._getframe(1)
-        locals = frame.f_locals
+        f_locals = frame.f_locals
 
         # Try to make sure we were called from a class def
-        if (locals is frame.f_globals) or ('__module__' not in locals):
+        if (f_locals is frame.f_globals) or ('__module__' not in f_locals):
             raise TypeError(" can be used only from a class definition.")
 
-        if '__implements__' in locals:
+        if '__implements__' in f_locals:
             raise TypeError(" can be used only once in a class definition.")
 
-        locals['__implements__'] = interface
+        f_locals['__implements__'] = interface
 
     from twisted.python.components import Interface
 
@@ -90,7 +90,7 @@ from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8, toutf8
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, packets2maps, args2packets, fromutf8
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
