@@ -75,8 +75,9 @@ def packet2map(packet,packet_type_numeric):
     attributes = packet.__dict__.copy()
     if isinstance(packet, PacketList):
         attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
-    if 'message' in dir(packet):
-        attributes['message'] = getattr(packet,'message')
+    msg = getattr(packet,'message', None)
+    if msg is not None:
+        attributes['message'] = msg
     #
     # FIXME the followiong statementis NOT true (anymore?)
     # It is forbidden to set a map key to a numeric (native
