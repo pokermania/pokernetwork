@@ -107,7 +107,6 @@ class PokerExplain:
         else:
             values = []
         chips_list = PokerChips(values, chips).tolist()
-        self.log.debug("normalizeChips: %s %s", chips_list, values)
         return chips_list
             
     def updatePlayerChips(self, game, player):
@@ -186,7 +185,8 @@ class PokerExplain:
         return packet
         
     def gameEvent(self, game_id, game_type, *args):
-        self.log.debug("gameEvent: game_id = %d, type = %s, args = %s", game_id, game_type, args)
+        #FIXME! is this information needed?
+        #self.log.debug("gameEvent: game_id = %d, type = %s, args = %s", game_id, game_type, args)
 
         forward_packets = self.forward_packets
         if not forward_packets:
@@ -268,7 +268,8 @@ class PokerExplain:
         player.getUserData()['timeout'] = None
     
     def explain(self, packet):
-        self.log.debug("%s", packet)
+        #FIXME! is this information needed?
+        #self.log.debug("%s", packet)
         
         self.forward_packets = [ packet ]
         forward_packets = self.forward_packets
@@ -291,6 +292,8 @@ class PokerExplain:
                 new_game.currency_serial = packet.currency_serial
                 new_game.history_index = 0
                 new_game.log.addRef('Explain', self, lambda explain: explain.serial)
+                new_game.log.addRef('Game', new_game, lambda game: game.id)
+                new_game.log.addRef('Hand', new_game, lambda game: game.hand_serial if game.hand_serial > 1 else None)
                 self.updatePotsChips(new_game, [])
                 new_game.position_info = [ 0, 0 ]
                 self.forward_packets.append(self.currentGames())
