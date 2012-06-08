@@ -131,4 +131,4 @@ def checkMemcacheServers(memcache_client):
             continue
     
     if servers_offline:
-        raise Exception('Memcached connectity errors: %s' % str(servers_offline))
+        raise Exception('Memcached connectivity errors: %s' % str(servers_offline))
