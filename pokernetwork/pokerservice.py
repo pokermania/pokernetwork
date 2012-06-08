@@ -1224,8 +1224,8 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = \
             "INSERT INTO tourneys_schedule " \
-            "(resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, players_quota) " \
-            "VALUES (%s , %s , %s , %s , %s , %s , %s , %s , %s , %s , %s)"
+            "(resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, players_quota, sit_n_go) " \
+            "VALUES (%s , %s , %s , %s , %s , %s , %s , %s , %s , %s , %s, %s)"
         params = (
             self.resthost_serial,
             packet.currency_serial,
@@ -1237,7 +1237,8 @@ class PokerService(service.Service):
             packet.description_short,
             packet.description_long,
             packet.buy_in,
-            len(packet.players)
+            len(packet.players),
+            "y"
         )
         cursor.execute(sql,params)
         schedule_serial = cursor.lastrowid
