@@ -327,14 +327,16 @@ class PokerService(service.Service):
         self.poker_auth.SetLevel(PACKET_POKER_PLAYER_INFO, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_TOURNEY_REGISTER, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
+        self.poker_auth.SetLevel(PACKET_POKER_CREATE_TOURNEY, User.ADMIN)
+        self.poker_auth.SetLevel(PACKET_POKER_TABLE, User.ADMIN)
         service.Service.startService(self)
         self.down = False
 
         # Setup Lock Check
         self._lock_check_running = LockChecks(5 * 60 * 60, self._warnLock)
-        player_timeout = max(map(lambda t: t.playerTimeout, self.tables.itervalues())) if self.tables else 20
-        max_players = max(map(lambda t: t.game.max_players, self.tables.itervalues())) if self.tables else 9
-        len_rounds = (max(map(lambda t: len(t.game.round_info), self.tables.itervalues())) + 3) if self.tables else 8
+        player_timeout = max(t.playerTimeout for t in self.tables.itervalues()) if self.tables else 20
+        max_players = max(t.game.max_players for t in self.tables.itervalues()) if self.tables else 9
+        len_rounds = (max(len(t.game.round_info) for t in self.tables.itervalues()) + 3) if self.tables else 8
         self._lock_check_break = LockChecks(
             player_timeout * max_players * len_rounds,
             self._warnLock

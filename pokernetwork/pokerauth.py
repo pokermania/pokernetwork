@@ -42,11 +42,11 @@ class PokerAuth:
         self.type2auth = {}
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
 
-    def SetLevel(self, type, level):
-        self.type2auth[type] = level
+    def SetLevel(self, pkt_type, level):
+        self.type2auth[pkt_type] = level
 
-    def GetLevel(self, type):
-        return type in self.type2auth and self.type2auth[type]
+    def GetLevel(self, pkt_type):
+        return pkt_type in self.type2auth and self.type2auth[pkt_type]
 
     def _authLogin(self,name,password):
         cursor = self.db.cursor()
