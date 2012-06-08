@@ -41,6 +41,8 @@ from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
 from pokernetwork.pokerpacketizer import createCache, history2packets
 
+from pokerengine.pokertournament import TOURNAMENT_STATE_REGISTERING
+
 from pokernetwork import log as network_log
 log = network_log.getChild('pokeravatar')
 
@@ -678,14 +680,6 @@ class PokerAvatar:
             self.sendPacketVerbose(self.service.setAccount(packet))
             return
 
-        elif packet.type == PACKET_POKER_CREATE_TOURNEY:
-            if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.service.tourneyCreate(packet))
-            else:
-                self.log.warn("attempt to create tourney for player %d by player %d", packet.serial, self.getSerial())
-                self.sendPacketVerbose(PacketAuthRequest())
-            return
-
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
             (playerCount, tourneyCount) = self.service.tourneyStats()
             tourneyList = PacketPokerTourneyList(
@@ -954,16 +948,26 @@ class PokerAvatar:
         elif packet.type == PACKET_POKER_HAND_REPLAY:
             self.handReplay(packet.game_id, packet.serial)
 
-#        players should not be able to create tables
-#        elif packet.type == PACKET_POKER_TABLE:
-#            packet.reason = PacketPokerTable.REASON_TABLE_CREATE
-#            table = self.createTable(packet)
-#            if table:
-#                table.joinPlayer(
-#                    self, self.getSerial(),
-#                    reason = PacketPokerTable.REASON_TABLE_CREATE
-#                )
+        elif packet.type == PACKET_POKER_TABLE: # can only be done by User.ADMIN
+            packet.reason = PacketPokerTable.REASON_TABLE_CREATE
+            table = self.createTable(packet)
             
+        elif packet.type == PACKET_POKER_CREATE_TOURNEY: # can only be done by User.ADMIN
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.service.tourneyCreate(packet))
+            else:
+                self.log.warn("attempt to create tourney for player %d by player %d", packet.serial, self.getSerial())
+                self.sendPacketVerbose(PacketAuthRequest())
+        
+        elif packet.type == PACKET_POKER_TOURNEY_START:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.performPacketPokerTourneyStart(packet))
+            else:
+                self.log.warn("attempt to start tournament %d for player %d by player %d",
+                    packet.game_id, packet.serial, self.getSerial()
+                )
+                
+        
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
                 table.quitPlayer(self, self.getSerial())
@@ -1061,6 +1065,43 @@ class PokerAvatar:
         else:
             self.log.warn("attempt to sit back for player %d by player %d that is not the owner of the game", packet.serial, self.getSerial())
             return False
+        
+    def performPacketPokerTourneyStart(self, packet):
+        serial = packet.serial
+        tourney_serial = packet.tourney_serial
+        error = None
+        
+        tourney = self.service.tourneys.get(tourney_serial,None)
+        
+        if tourney is None:
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_START,
+                code = PacketPokerTourneyStart.DOES_NOT_EXIST,
+                message = "Tournament %d does not exist" % packet.tourney_serial
+            )
+        
+        elif tourney.state != TOURNAMENT_STATE_REGISTERING:
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_START,
+                code = PacketPokerTourneyStart.WRONG_STATE,
+                message = "Tournament %d not in state %s" % (packet.tourney_serial,TOURNAMENT_STATE_REGISTERING)
+            )
+        
+        # user has to be the bailor (or an admin) in order to start a tourney
+        elif not self.user.hasPrivilege(User.ADMIN) and tourney.bailor_serial != serial:
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_START,
+                code = PacketPokerTourneyStart.NOT_BAILOR,
+                message = "Player %d is not the bailor for Tournament %d" % (serial, tourney_serial)
+            )
+            
+        if error:
+            self.log.error("%s", error)
+            return error
+        
+        return self.service.tourneyStart(tourney)
+        
+    
     # -------------------------------------------------------------------------
     def performPacketPokerTablePicker(self, packet):
         mySerial = self.getSerial()

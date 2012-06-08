@@ -2579,23 +2579,27 @@ Packet.infoDeclare(globals(), PacketPokerTableTourneyBreakDone, Packet, "POKER_T
 
 ########################################
 
-class PacketPokerTourneyStart(Packet):
+class PacketPokerTourneyStart(PacketSerial):
     """\
 
-Semantics: the "tourney_serial" tournament started and
-the player is seated at table "table_serial".
+Semantics: If sent from the server: The "tourney_serial" tournament started and
+the player is seated at table "table_serial". If sent from a client with appropriate
+permissions, the tourney will be started before it's start_time.
 
-Direction: server  => client
+Direction: server <=> client
 
-Context: this packet is sent to the client when it is
-logged in. The player seated at the table "table_serial"
-is implicitly the logged in player.
+Context: this packet is sent to the client when it is logged in. The 
+player seated at the table "table_serial" is implicitly the logged in player.
 
+serial: integer uniquely identifying a player. 
 tourney_serial: integer uniquely identifying a tournament.
 table_serial: integer uniquely identifying a game.
 """
+    DOES_NOT_EXIST = 1
+    WRONG_STATE = 2
+    NOT_BAILOR = 3
     
-    info = Packet.info + (
+    info = PacketSerial.info + (
             ('tourney_serial', 0, 'I'),
             ('table_serial', 0, 'I')
             )

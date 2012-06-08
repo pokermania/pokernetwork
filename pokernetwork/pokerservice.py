@@ -1618,6 +1618,22 @@ class PokerService(service.Service):
 
         return packet
 
+    def tourneyStart(self, tourney):
+        ''' \
+        start a registering tourney immediately.
+        if more than one player is registered, players_min and quota is set to the
+        amount of the currently registered players.
+        '''
+        now = seconds()
+        cursor = self.db.cursor()
+        sql = 'UPDATE tourneys SET start_time=%s,player_min=%s,players_quota=%s WHERE serial=%s'
+        cursor.execute(sql, (now,tourney.registered,tourney.registered,tourney.serial))
+        tourney.start_time = now
+        tourney.players_min = tourney.players_quota = tourney.registered
+        tourney.updateRunning()
+        
+        return PacketAck()
+
     def tourneyCancel(self, tourney):
         players = list(tourney.players.iterkeys())
         self.log.debug("tourneyCancel: %s", players)
