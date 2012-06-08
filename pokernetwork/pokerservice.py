@@ -2070,14 +2070,25 @@ class PokerService(service.Service):
                     "(t.sit_n_go = 'y' AND t.state IN ('aborted', 'registering')) " \
                     "OR (t.state = 'registering' AND t.start_time < %s) " \
                 ")"
+            _seconds = seconds()
+            cursor.execute(
+                "UPDATE tourneys AS t " \
+                    "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
+                    "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
+                "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted' " \
+                + where,
+                (self.resthost_serial, _seconds)
+            )
+            if cursor.rowcount:
+                self.log.debug("cleanupTourneys: rows: %d, sql: %s", cursor.rowcount, cursor._executed)
             cursor.execute(
                 "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial " + where,
-                (self.resthost_serial, seconds())
+                (self.resthost_serial, _seconds)
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
             cursor.execute("DELETE t FROM tourneys AS t " + where,
-                (self.resthost_serial, seconds())
+                (self.resthost_serial, _seconds)
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
@@ -2088,7 +2099,7 @@ class PokerService(service.Service):
                 "WHERE resthost_serial = %s " \
                 "AND state = 'registering' " \
                 "AND start_time >= %s",
-                (self.resthost_serial, seconds())
+                (self.resthost_serial, _seconds)
             )
             self.log.debug("cleanupTourneys: %s", cursor._executed)
             for row in cursor.fetchall():
@@ -2104,7 +2115,7 @@ class PokerService(service.Service):
                     tourney.register(user['serial'],user['name'])
                 cursor.execute(
                     "REPLACE INTO route VALUES (0, %s, %s, %s)",
-                    (row['serial'], seconds(), self.resthost_serial)
+                    (row['serial'], _seconds, self.resthost_serial)
                 )
         finally:
             cursor.close()
