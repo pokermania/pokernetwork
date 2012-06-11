@@ -630,8 +630,8 @@ class PokerTable:
         self.timer_info["dealTimeout"] = reactor.callLater(min(autodeal_check, delta), self.autoDealCheck, autodeal_check, delta)
 
     def updatePlayerUserData(self, serial, key, value):
-        player = self.game.getPlayer(serial)
-        if player:
+        if self.game.isSeated(serial):
+            player = self.game.getPlayer(serial)
             user_data = player.getUserData()
             if user_data[key] != value:
                 user_data[key] = value
