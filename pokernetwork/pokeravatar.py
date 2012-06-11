@@ -954,7 +954,7 @@ class PokerAvatar:
             
         elif packet.type == PACKET_POKER_CREATE_TOURNEY: # can only be done by User.ADMIN
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.service.tourneyCreate(packet))
+                self.sendPacketVerbose(self.performPacketPokerCreateTourney(packet))
             else:
                 self.log.warn("attempt to create tourney for player %d by player %d", packet.serial, self.getSerial())
                 self.sendPacketVerbose(PacketAuthRequest())
@@ -1065,6 +1065,20 @@ class PokerAvatar:
         else:
             self.log.warn("attempt to sit back for player %d by player %d that is not the owner of the game", packet.serial, self.getSerial())
             return False
+    
+    def performPacketPokerCreateTourney(self,packet):
+        error = None
+        if max(packet.players_quota,len(packet.players)) < 2:
+            error = PacketError(
+                other_type = PACKET_POKER_CREATE_TOURNEY,
+                code = 0,
+                message = "Cannot create Tourney with less than 2 people"
+            )
+        if error:
+            self.log.error("%s", error)
+            return error
+        
+        return self.service.tourneyCreate(packet)
         
     def performPacketPokerTourneyStart(self, packet):
         serial = packet.serial

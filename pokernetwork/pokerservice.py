@@ -1995,12 +1995,20 @@ class PokerService(service.Service):
             #
             # Look for the server with the less routes going to it
             #
-            sql =   "SELECT host, port, path FROM route,resthost " \
-                    "WHERE route.resthost_serial = resthost.serial " \
-                    "GROUP BY route.resthost_serial ORDER BY count(*) ASC LIMIT 1"
+            sql = \
+                "SELECT rh.serial, host, port, path " \
+                "FROM resthost rh " \
+                "JOIN route r ON (rh.serial=r.resthost_serial) " \
+                "GROUP BY rh.serial " \
+                "ORDER BY count(rh.serial) " \
+                "LIMIT 1"
             self.log.debug("packet2resthost: create tourney %s", sql)
             cursor.execute(sql)
-            result = cursor.fetchone() if cursor.rowcount > 0 else None
+            result = None
+            if cursor.rowcount > 0:
+                (resthost_serial, host, port, path) = cursor.fetchone()
+                if resthost_serial != self.resthost_serial:
+                    result = (host,port,path)
         else:
             if packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
                 where = "tourney_serial = %d" % packet.game_id

@@ -46,7 +46,8 @@ class PokerAuth:
         self.type2auth[pkt_type] = level
 
     def GetLevel(self, pkt_type):
-        return pkt_type in self.type2auth and self.type2auth[pkt_type]
+        # return the minimum privilege level if not defined
+        return self.type2auth.get(pkt_type,0) 
 
     def _authLogin(self,name,password):
         cursor = self.db.cursor()
