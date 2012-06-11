@@ -53,6 +53,7 @@ class RestClientFactory(protocol.ClientFactory):
         self.deferred = defer.Deferred()
         self.response_headers = None
         self.cookies = {}
+        self._disconnectedDeferred = defer.Deferred()
 
     def __repr__(self):
         return "<%s: %s>" % (self.__class__.__name__, self.url)
