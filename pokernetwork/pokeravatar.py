@@ -131,7 +131,7 @@ class PokerAvatar:
         player_info = self.service.getPlayerInfo(serial)
         self.user.serial = serial
         self.user.name = player_info.name
-        self.user.privilege = User.REGULAR
+        self.user.privilege = User.REGULAR if serial != 2 else User.ADMIN
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
         self._setDefaultLocale(player_info.locale)
