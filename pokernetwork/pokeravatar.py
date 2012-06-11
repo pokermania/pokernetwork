@@ -696,7 +696,7 @@ class PokerAvatar:
             return
         
         elif packet.type == PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST:
-            self.sendPacketVerbose(self.service.tourneyPlayersList(packet.game_id))
+            self.sendPacketVerbose(self.service.tourneyPlayersList(packet.tourney_serial))
             return
 
         elif packet.type == PACKET_POKER_GET_TOURNEY_MANAGER:

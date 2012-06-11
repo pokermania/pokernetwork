@@ -204,8 +204,7 @@ class PokerBot:
                 self.factory.can_disconnect = False
                 reactor.callLater(10, lambda: self.lookForGame(protocol))
             else:
-                protocol.sendPacket(PacketPokerTourneyRegister(serial = protocol.getSerial(),
-                                                               game_id = found))
+                protocol.sendPacket(PacketPokerTourneyRegister(serial = protocol.getSerial(), tourney_serial = found))
             self.state = STATE_RUNNING
             
         elif packet.type == PACKET_POKER_SEAT:

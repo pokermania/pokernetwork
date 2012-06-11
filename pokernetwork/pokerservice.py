@@ -1196,7 +1196,7 @@ class PokerService(service.Service):
         if tourney.satellite_of == 0:
             return False
         if rank <= tourney.satellite_player_count:
-            packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.satellite_of)
+            packet = PacketPokerTourneyRegister(serial = serial, tourney_serial = tourney.satellite_of)
             if self.tourneyRegister(packet = packet, via_satellite = True):
                 tourney.satellite_registrations.append(serial)
         return True
@@ -1212,7 +1212,7 @@ class PokerService(service.Service):
             return False
         serials = (serial for serial in tourney.winners if serial not in tourney.satellite_registrations)
         for serial in serials:
-            packet = PacketPokerTourneyRegister(serial = serial, game_id = tourney.satellite_of)
+            packet = PacketPokerTourneyRegister(serial = serial, tourney_serial = tourney.satellite_of)
             if self.tourneyRegister(packet = packet, via_satellite = True):
                 tourney.satellite_registrations.append(serial)
                 registrations -= 1
@@ -1249,7 +1249,7 @@ class PokerService(service.Service):
         # There can be only one tourney for this tourney_schedule because they are in
         # not respawned
         tourney = self.schedule2tourneys[schedule_serial][0]
-        register_packet = PacketPokerTourneyRegister(game_id = tourney.serial)
+        register_packet = PacketPokerTourneyRegister(tourney_serial = tourney.serial)
         serial_failed = []
         for serial in packet.players:
             register_packet.serial = serial
@@ -1380,13 +1380,13 @@ class PokerService(service.Service):
     def tourneyPlayersList(self, tourney_serial):
         if tourney_serial not in self.tourneys:
             return PacketError(
-                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                other_type = PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST,
                 code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
                 message = "Tournament %d does not exist" % tourney_serial
             )
         tourney = self.tourneys[tourney_serial]
         players = [(self.getName(serial),-1,0) for serial in tourney.players]
-        return PacketPokerTourneyPlayersList(serial = tourney_serial, players = players)
+        return PacketPokerTourneyPlayersList(tourney_serial = tourney_serial, players = players)
 
     def tourneyStats(self):
         cursor = self.db.cursor()
@@ -1450,7 +1450,7 @@ class PokerService(service.Service):
     
     def tourneyRegister(self, packet, via_satellite=False):
         serial = packet.serial
-        tourney_serial = packet.game_id
+        tourney_serial = packet.tourney_serial
         avatars = self.avatar_collection.get(serial)
         tourney = self.tourneys.get(tourney_serial,None)
         if tourney is None:
@@ -1560,7 +1560,7 @@ class PokerService(service.Service):
 
     def tourneyUnregister(self, packet):
         serial = packet.serial
-        tourney_serial = packet.game_id
+        tourney_serial = packet.tourney_serial
         if tourney_serial not in self.tourneys:
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_UNREGISTER,
@@ -2011,7 +2011,7 @@ class PokerService(service.Service):
                     result = (host,port,path)
         else:
             if packet.type in ( PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST, PACKET_POKER_TOURNEY_REGISTER, PACKET_POKER_TOURNEY_UNREGISTER ):
-                where = "tourney_serial = %d" % packet.game_id
+                where = "tourney_serial = %d" % packet.tourney_serial
             elif packet.type in ( PACKET_POKER_GET_TOURNEY_MANAGER, ):
                 where = "tourney_serial = " + str(packet.tourney_serial)
             elif getattr(packet, "game_id",0) > 0 and packet.game_id in self.tables.iterkeys():

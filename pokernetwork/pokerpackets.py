@@ -1631,7 +1631,7 @@ game_id: integer uniquely identifying a game.
 Packet.infoDeclare(globals(), PacketPokerTableRequestPlayersList, Packet, "POKER_TABLE_REQUEST_PLAYERS_LIST", 107) # 107 # 0x6b
 ########################################
 
-class PacketPokerPlayersList(PacketPokerId):
+class PacketPokerPlayersList(Packet):
     """
 Semantics: List of players participating in "game_id". 
 
@@ -1645,7 +1645,8 @@ players: list of player serials participating in "game_id"
      flag: byte 0
     """
 
-    info = PacketPokerId.info + (
+    info = Packet.info + (
+        ('game_id', 0, 'I'),
         ('players', [], 'players'),
         )
 
@@ -1775,26 +1776,29 @@ packets: a list of PACKET_POKER_TOURNEY packets.
 Packet.infoDeclare(globals(), PacketPokerTourneyList, Packet, "POKER_TOURNEY_LIST", 114) # 114 # 0x72
 ########################################
 
-class PacketPokerTourneyRequestPlayersList(PacketPokerId):
+class PacketPokerTourneyRequestPlayersList(PacketSerial):
     """\
-Semantics: client request the player list of the tourney "game_id".
+Semantics: client request the player list of the tourney "tourney_serial".
 
 Direction: server <= client
 
-Context: If the tournament "game_id" is among the list of known tournamens,
+Context: If the tournament "tourney_serial" is among the list of known tournamens,
 a PacketPokerTourneyPlayersList is returned by the server. Otherwise,
 a PacketError is returned with the code set to
 PacketPokerTourneyRegister.DOES_NOT_EXIST.
 
-game_id: integer uniquely identifying a tournament.
+tourney_serial: integer uniquely identifying a tournament.
 """
+    info = PacketSerial.info + (
+        ('tourney_serial', 0, 'I'),
+    )
 
 Packet.infoDeclare(globals(), PacketPokerTourneyRequestPlayersList, Packet, "POKER_TOURNEY_REQUEST_PLAYERS_LIST", 115) # 115 # 0x73
 ########################################
 
-class PacketPokerTourneyRegister(PacketPokerId):
+class PacketPokerTourneyRegister(PacketSerial):
     """\
-Semantics: register player "serial" to tournament "game_id".
+Semantics: register player "serial" to tournament "tourney_serial".
 
 Direction: server <= client
 
@@ -1808,22 +1812,22 @@ will send back
 
 with the "code" field name set as follows:
 
-DOES_NOT_EXIST : the "game_id" field does not match any existing
+DOES_NOT_EXIST : the "tourney_serial" field does not match any existing
                  tournaments.
 ALREADY_REGISTERED : the "serial" player is already listed as
-                 a registered player in the "game_id" tournament.
+                 a registered player in the "tourney_serial" tournament.
 REGISTRATION_REFUSED : the "serial" player registration was refused
-                 because the "game_id" tournament is no longer in
+                 because the "tourney_serial" tournament is no longer in
                  the registration phase or because the players
                  quota was exceeded.
 NOT_ENOUGH_MONEY : the "serial" player does not have enough money
-                 to pay the "game_id" tournament.
+                 to pay the "tourney_serial" tournament.
 SERVER_ERROR : the server failed to register the player because the
                database is inconsistent.
 VIA_SATELLITE : registration is only allowed by playing a satellite
 
 serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a tournament.
+tourney_serial: integer uniquely identifying a tournament.
 """
     DOES_NOT_EXIST = 1
     ALREADY_REGISTERED = 2
@@ -1831,13 +1835,18 @@ game_id: integer uniquely identifying a tournament.
     NOT_ENOUGH_MONEY = 4
     SERVER_ERROR = 5
     VIA_SATELLITE = 6
+    
+    info = PacketSerial.info + (
+        ('tourney_serial', 0, 'I'),
+    )
+
 
 Packet.infoDeclare(globals(), PacketPokerTourneyRegister, Packet, "POKER_TOURNEY_REGISTER", 116) # 116 # 0x74
 ########################################
 
-class PacketPokerTourneyUnregister(PacketPokerId):
+class PacketPokerTourneyUnregister(PacketSerial):
     """\
-Semantics: unregister player "serial" from tournament "game_id".
+Semantics: unregister player "serial" from tournament "tourney_serial".
 
 Direction: server <= client
 
@@ -1851,40 +1860,50 @@ will send back
 
 with the "code" field name set as follows:
 
-DOES_NOT_EXIST : the "game_id" field does not match any existing
+DOES_NOT_EXIST : the "tourney_serial" field does not match any existing
                  tournaments.
 NOT_REGISTERED : the "serial" player is not listed as
-                 a registered player in the "game_id" tournament.
+                 a registered player in the "tourney_serial" tournament.
 TOO_LATE : the "serial" player cannot unregister from the tournament
            because it already started.
 SERVER_ERROR : the server failed to unregister the player because the
                database is inconsistent.
 
 serial: integer uniquely identifying a player.
-game_id: integer uniquely identifying a tournament.
+tourney_serial: integer uniquely identifying a tournament.
 """
 
     DOES_NOT_EXIST = 1
     NOT_REGISTERED = 2
     TOO_LATE = 3
     SERVER_ERROR = 4
+    
+    info = PacketSerial.info + (
+        ('tourney_serial', 0, 'I'),
+    )
+
 
 Packet.infoDeclare(globals(), PacketPokerTourneyUnregister, Packet, "POKER_TOURNEY_UNREGISTER", 117) # 117 # 0x75
 ########################################
 
-class PacketPokerTourneyPlayersList(PacketPokerPlayersList):
+class PacketPokerTourneyPlayersList(Packet):
     """
 Semantics: List of players participating in tourney "serial". 
 
 Direction: server => client
 
 serial: integer uniquely identifying a tourney.
-players: list of player serials participating in "game_id"
+players: list of player serials participating in tourney "tourney_serial"
  for each player, a list of two numbers:
      name: name of the player
      chips: integer -1
      flag: byte 0
     """
+    info = Packet.info + (
+        ('tourney_serial', 0, 'I'),
+        ('players', [], 'players'),
+        )
+    
 
 Packet.infoDeclare(globals(), PacketPokerTourneyPlayersList, Packet, "POKER_TOURNEY_PLAYERS_LIST", 118) # 118 # 0x76
 ########################################
