@@ -1,3 +1,31 @@
+poker-network (2.1.5-1) pokermania; urgency=low
+
+  * cf09c16 pokersite: fix in error logging
+  * a89aa8c sensible error logging for errors that bubble up to the main reactor.
+  * f5480f0 fixes for TourneyStart
+  * 9ec37fa HttpPageGetter expects a _disconnectedDeferred attribute
+  * 8203454 avatar.relogin: set user.privilege on ADMIN if serial == 2 #XXX
+  * dacb2e8 PacketPokerCreateTourney endless loop fix, sending is now possible
+  * 463b3ef Revert "enable chunked encoding in pokersite"
+  * b0ac301 removed tourneysschedule fixtures from schema, moved it to test
+  * 4887468 removed obsolete comments (# ---- )
+  * 4399248 add players_quota to create_tourney packet
+  * 40fc96f service.createTourney: make sit_n_go explicit (was implied by db schema)
+  * f51d61a on server restart refund leftover tourneys as before my rewrite of cleanupTourneys, fixes #5515
+  * 40aedea fixed codestyle
+  * b470970 PacketPokerTable/PacketPokerCreateTable only for User.ADMIN
+  * 3d0ae64 PacketPokerTourneyStart pt1
+  * b6038d4 typo in memcached error message
+  * e7b8a74 updated pokeradditions
+  * d7b2e8c tweaked reflogging to use less cpu on higher log levels
+  * 638a42e minor cleanups in pokerservice
+  * 4a2b596 Revert "refund buyin when SnGs are canceled", refs #5515
+  * c17da54 fixes for test-pokeravatar
+  * 7314246 changed log severity from warn to info for:
+  * f454284 got rid of verbose in test-pokerservice and disabled XMLRPC and SOAP tests
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 11 Jun 2012 16:00:00 +0200
+
 poker-network (2.1.4-5) pokermania; urgency=low
 
   * 9f9e532 don't log protocolInvalid, arrival of PACKET_PING
