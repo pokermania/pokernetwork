@@ -2886,6 +2886,8 @@ player_timeout:    the number of seconds after which a player in position is for
                    play (by folding).
 currency_serial:   int currency id
 buy_in:            Amount, in currency_serial, for buying into this tournament.
+players_quota      Quota of the tournament. If smaller than len(players), len(players) 
+                   is used (i.e. the tourney starts immediately).
 players:           Serials of the players participating in the tournament.
 """
     REGISTRATION_FAILED = 1
@@ -2896,10 +2898,12 @@ players:           Serials of the players participating in the tournament.
         ('description_long', 'nodescription_long', 's'),
         ('variant', 'holdem', 's'),
         ('betting_structure', 'level-001', 's'),
-        ('seats_per_game', 10, 'I'),
+        ('seats_per_game', 9, 'I'),
         ('player_timeout', 60, 'I'),
         ('currency_serial', 0, 'I'),
         ('buy_in', 0, 'I'),
+        ('bailor_serial',0,'I'),
+        ('players_quota',0,'I'),
         ('players', [], 'Il')
         )
 

@@ -1224,8 +1224,8 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = \
             "INSERT INTO tourneys_schedule " \
-            "(resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, players_quota, sit_n_go) " \
-            "VALUES (%s , %s , %s , %s , %s , %s , %s , %s , %s , %s , %s, %s)"
+            "(resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, bailor_serial, players_quota, sit_n_go) " \
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         params = (
             self.resthost_serial,
             packet.currency_serial,
@@ -1237,7 +1237,8 @@ class PokerService(service.Service):
             packet.description_short,
             packet.description_long,
             packet.buy_in,
-            len(packet.players),
+            packet.bailor_serial,
+            packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
             "y"
         )
         cursor.execute(sql,params)
@@ -1247,20 +1248,21 @@ class PokerService(service.Service):
         #
         # There can be only one tourney for this tourney_schedule because they are in
         # not respawned
-        tourney_serial = self.schedule2tourneys[schedule_serial][0].serial
-        register_packet = PacketPokerTourneyRegister(game_id = tourney_serial)
+        tourney = self.schedule2tourneys[schedule_serial][0]
+        register_packet = PacketPokerTourneyRegister(game_id = tourney.serial)
         serial_failed = []
         for serial in packet.players:
             register_packet.serial = serial
             if not self.tourneyRegister(register_packet):
                 serial_failed.append(serial)
         if len(serial_failed) > 0:
+            self.tourneyCancel(tourney)
             return PacketPokerError(
                 game_id = schedule_serial,
-                serial = tourney_serial,
+                serial = tourney.serial,
                 other_type = PACKET_POKER_CREATE_TOURNEY,
                 code = PacketPokerCreateTourney.REGISTRATION_FAILED,
-                message = "registration failed for players %s in tourney %d" % (serial_failed, tourney_serial)
+                message = "registration failed for players %s in tourney %d" % (serial_failed, tourney.serial)
             )
         else:
             return PacketAck()
@@ -1641,12 +1643,15 @@ class PokerService(service.Service):
         players = list(tourney.players.iterkeys())
         self.log.debug("tourneyCancel: %s", players)
         for serial in players:
+            avatars = self.avatar_collection.get(serial)
             packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
                 game_id = tourney.serial,
-                serial = serial)
-            )
+                serial = serial
+            ))
             if packet.type == PACKET_ERROR:
                 self.log.debug("tourneyCancel: %s", packet)
+            for avatar in avatars:
+                avatar.sendPacketVerbose(packet)
 
     def getHandSerial(self):
         cursor = self.db.cursor()
