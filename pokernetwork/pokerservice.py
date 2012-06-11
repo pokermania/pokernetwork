@@ -1631,7 +1631,7 @@ class PokerService(service.Service):
         '''
         now = seconds()
         cursor = self.db.cursor()
-        sql = 'UPDATE tourneys SET start_time=%s,player_min=%s,players_quota=%s WHERE serial=%s'
+        sql = 'UPDATE tourneys SET start_time=%s, players_min=%s, players_quota=%s WHERE serial=%s'
         cursor.execute(sql, (now,tourney.registered,tourney.registered,tourney.serial))
         tourney.start_time = now
         tourney.players_min = tourney.players_quota = tourney.registered

@@ -964,7 +964,7 @@ class PokerAvatar:
                 self.sendPacketVerbose(self.performPacketPokerTourneyStart(packet))
             else:
                 self.log.warn("attempt to start tournament %d for player %d by player %d",
-                    packet.game_id, packet.serial, self.getSerial()
+                    packet.tourney_serial, packet.serial, self.getSerial()
                 )
                 
         
