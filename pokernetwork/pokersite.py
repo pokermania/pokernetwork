@@ -309,8 +309,7 @@ class PokerResource(resource.Resource):
             # request.getSession().expire()
             
             error_trace = reason.getTraceback()
-            host,port = request.findProxiedIP()
-            
+            host = request.findProxiedIP()[1]
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             
             body = "Internal Server Error" if host != '127.0.0.1' else error_trace
@@ -319,7 +318,7 @@ class PokerResource(resource.Resource):
             request.write(body)
             request.finish()
             
-            self._log.error("%s => %s", (host,port), error_trace)
+            self._log.error("%s => %s", host, error_trace)
             
             return True
         d.addCallbacks(render, processingFailed, (session,))
