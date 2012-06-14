@@ -1202,7 +1202,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # -------------------------------------------------------------------------
     def tourneyRegisterUnpriv(self, (client, packet)):
         return self.pingThenExpectPrivilegeFailure((client, packet), 
-            PacketPokerTourneyRegister(serial = client.getSerial(), game_id = 3))
+            PacketPokerTourneyRegister(serial = client.getSerial(), tourney_serial = 3))
     # -------------------------------------------------------------------------
     def test17_0_tourneyRegisterUnpriv(self):
         self.createClients(1)
@@ -1326,13 +1326,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                                          % (messageStart, gameId, forPlayerByPlayer),
                              'packet' : 
                              PacketPokerTourneyRegister(serial = someoneElseSerial,
-                                                        game_id = gameId) },
+                                                        tourney_serial = gameId) },
             'tourney_unreg': { 'output':
                                    "%sattempt to unregister from tournament %d%s"
                                          % (messageStart, gameId, forPlayerByPlayer),
                              'packet' : 
                                PacketPokerTourneyUnregister(serial = someoneElseSerial,
-                                                            game_id = gameId) },
+                                                            tourney_serial = gameId) },
             'hand_hist' : { 'output':
                                 "%sattempt to get history%s" % (messageStart, ofPlayerByPlayer),
                             'packet' :
@@ -2196,8 +2196,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def tourneyRegister(self, (client, packet), id ):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerTourneyRegister(serial = client.getSerial(),
-                                                            game_id = 1101134))
+        avatar.handlePacketLogic(PacketPokerTourneyRegister(serial = client.getSerial(), tourney_serial = 1101134))
         for packet in avatar.resetPacketsQueue():
             count = 0
             if packet.type == PACKET_ERROR:
@@ -4825,10 +4824,9 @@ def Run():
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTablePickerTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
+        reporter.TextReporter,
+        tracebackFormat='default',
+    ).run(suite)
 
 # ------------------------------------------------------
 if __name__ == '__main__':

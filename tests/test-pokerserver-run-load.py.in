@@ -125,22 +125,15 @@ class PokerServerLoadingSSLTestCase(unittest.TestCase):
 
         def failSSLImport(moduleName, *args, **kwargs):
             if moduleName == "OpenSSL":
-                raise Exception("SSL was imported")
+                raise ImportError("SSL was imported")
             else:
                 return realImporter(moduleName, *args, **kwargs)
 
         __builtins__.__import__  = failSSLImport
 
-        oldStout = sys.stdout
-        sys.stdout = StringIO()
-
         from pokernetwork import pokerserver as ps
 
-        value = sys.stdout.getvalue()
-        sys.stdout = oldStout
-
         self.failIf(ps.HAS_OPENSSL, "HAS_OPENSSL should be False when OpenSSL.SSL is not available")
-        self.failUnless('openSSL not available.' in value)
 
         __builtins__.__import__  = realImporter
 # ------------------------------------------------------------
@@ -155,7 +148,7 @@ def GetTestSuite():
 #    suite.addTest(unittest.makeSuite(PokerGameHistoryTestCase, prefix = "test2"))
     return suite
 # -----------------------------------------------------------------------------
-def Run(verbose = 2):
+def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':

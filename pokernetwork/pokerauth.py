@@ -113,17 +113,13 @@ class PokerAuth:
     def userCreate(self, name, password):
         self.log.inform("creating user %s", name)
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO users (created, name, password) values (%s, %s, %s)",
-                       (seconds(), name, password))
-        #
-        # Accomodate for MySQLdb versions < 1.1
-        #
-        if hasattr(cursor, "lastrowid"):
-            serial = cursor.lastrowid
-        else:
-            serial = cursor.insert_id()
+        cursor.execute(
+           "INSERT INTO users (created, name, password) values (%s, %s, %s)",
+           (seconds(), name, password)
+        )
+        serial = cursor.lastrowid
         self.log.inform("create user with serial %s", serial)
-        cursor.execute("INSERT INTO users_private (serial) values ('%d')" % serial)
+        cursor.execute("INSERT INTO users_private (serial) values (%s)", (serial,))
         cursor.close()
         return int(serial)
 
@@ -133,13 +129,15 @@ def get_auth_instance(db, memcache, settings):
     if _get_auth_instance == None:
         import imp
         script = settings.headerGet("/server/auth/@script")
-        try:
-            log.debug("get_auth_instance: trying to load: '%s'", script)
-            module = imp.load_source("user_defined_pokerauth", script)
-            get_instance = getattr(module, "get_auth_instance")
-            log.debug("get_auth_instance: using custom implementation of get_auth_instance: %s", script)
-            _get_auth_instance = get_instance
-        except:
-            log.warn("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'", script)
-            _get_auth_instance = lambda db, memcache, settings: PokerAuth(db, memcache, settings)
+        _get_auth_instance = lambda db, memcache, settings: PokerAuth(db, memcache, settings)
+        if script:
+            try:
+                log.debug("get_auth_instance: trying to load: '%s'", script)
+                module = imp.load_source("user_defined_pokerauth", script)
+                get_instance = getattr(module, "get_auth_instance")
+                log.debug("get_auth_instance: using custom implementation of get_auth_instance: %s", script)
+                _get_auth_instance = get_instance
+            except:
+                log.warn("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'", script)
+            
     return apply(_get_auth_instance, [db, memcache, settings])

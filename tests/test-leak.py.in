@@ -182,7 +182,7 @@ def Run():
       suite = loader.suiteFactory()
       suite.addTest(loader.loadClass(LeakTestCase))
       return runner.TrialRunner(
-            reporter.VerboseTextReporter,
+            reporter.TextReporter,
             tracebackFormat='default',
 #            logfile = '-',
             ).run(suite)

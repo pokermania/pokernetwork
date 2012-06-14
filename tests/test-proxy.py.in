@@ -37,7 +37,7 @@ from pokernetwork.proxy import ConnectProtocol, Client, Connector
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
+from tests.testmessages import search_output, clear_all_messages, get_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 silence_all_messages()
 # ----------------------------------------------------------------
@@ -96,7 +96,7 @@ class ProxyConnectProtocolTestCase(unittest.TestCase):
             cp.dataReceived("We got two newlines here\n\nBut we'll fail\rno HTTP")
             self.fail("previous line should have thrown exception")
         except Exception, e:
-            self.assertEquals(e.__str__(), "We got two newlines here\n\nBut we'll failno HTTP")
+            self.assertEquals(str(e), "We got two newlines here\n\nBut we'll failno HTTP")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
 
@@ -142,7 +142,7 @@ class ProxyConnectProtocolTestCase(unittest.TestCase):
             cp.dataReceived("HTTP/10.0 200\n\n")
             self.fail("previous line should have thrown exception")
         except Exception, e:
-            self.assertEquals(e.__str__(), "HTTP/10.0 200\n\n")
+            self.assertEquals(str(e), "HTTP/10.0 200\n\n")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
 
@@ -169,7 +169,8 @@ class ProxyClientTestCase(unittest.TestCase):
 
         def sslClientInit(clientSelf, host, port, bindAddress, contextFactory, connector, reactor):
             clientSelf.callCounts = {}
-            for ss in ['startReading', 'makeConnection', 'startWriting',                       'startTLS', 'connectionDone', 'tcpConnectDone' ]:
+            valid = ['startReading', 'makeConnection', 'startWriting','startTLS', 'connectionDone', 'tcpConnectDone']
+            for ss in valid:
                 clientSelf.callCounts[ss] = 0
 
             clientSelf.addr = (host, port)
@@ -216,94 +217,105 @@ class ProxyClientTestCase(unittest.TestCase):
         tcp.Client._connectDone = self.saveMethods['tcpClientConnectDone']
     # -------------------------------------------------------------------------
     def test00_Client_init(self):
-        self.client = Client("testhost", 7677, "bindaddr", "fakecontext", 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", "fakecontext", 
+            "fakeconnector", "fakeproxy"
+        )
         self.assertEquals(self.client.proxy, "fakeproxy")
         self.assertEquals(self.client.contextFactory, "fakecontext")
     # -------------------------------------------------------------------------
     def test01_Client_getHost_contextIsNone(self):
-        self.client = Client("testhost", 7677, "bindaddr", None, 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", None, 
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getHost()
-        self.assertEquals(host._bwHack, 'INET')
         self.assertEquals(host.host, 'mocksocket.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 923)
     # -------------------------------------------------------------------------
     def test02_Client_getHost_contextIsFalse(self):
-        self.client = Client("testhost", 7677, "bindaddr", False, 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", False, 
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getHost()
-        self.assertEquals(host._bwHack, 'INET')
         self.assertEquals(host.host, 'mocksocket.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 923)
     # -------------------------------------------------------------------------
     def test03_Client_getHost_contextIsString(self):
-        self.client = Client("testhost", 7677, "bindaddr", "ContextISString", 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", "ContextISString", 
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getHost()
-        self.assertEquals(host._bwHack, 'SSL')
         self.assertEquals(host.host, 'mocksocket.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 923)
     # -------------------------------------------------------------------------
     def test04_Client_getHost_contextIsTrue(self):
-        self.client = Client("testhost", 7677, "bindaddr", True,
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", True,
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getHost()
-        self.assertEquals(host._bwHack, 'SSL')
         self.assertEquals(host.host, 'mocksocket.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 923)
     # -------------------------------------------------------------------------
     def test05_Client_getPeer_contextIsNone(self):
-        self.client = Client("testhost", 7677, "bindaddr", None, 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", None, 
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getPeer()
-        self.assertEquals(host._bwHack, 'INET')
         self.assertEquals(host.host, 'testhost')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 7677)
     # -------------------------------------------------------------------------
     def test06_Client_getPeer_contextIsFalse(self):
-        self.client = Client("testhost", 7677, "bindaddr", False, 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", False, 
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getPeer()
-        self.assertEquals(host._bwHack, 'INET')
         self.assertEquals(host.host, 'testhost')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 7677)
     # -------------------------------------------------------------------------
     def test07_Client_getPeer_contextIsString(self):
-        self.client = Client("testhost", 7677, "bindaddr", "ContextISString", 
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", "ContextISString", 
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getPeer()
-        self.assertEquals(host._bwHack, 'SSL')
         self.assertEquals(host.host, 'testhost')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 7677)
     # -------------------------------------------------------------------------
     def test08_Client_getPeer_contextIsTrue(self):
-        self.client = Client("testhost", 7677, "bindaddr", True,
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", True,
+            "fakeconnector", "fakeproxy"
+        )
         host = self.client.getPeer()
-        self.assertEquals(host._bwHack, 'SSL')
         self.assertEquals(host.host, 'testhost')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 7677)
     # -------------------------------------------------------------------------
     def test09_Client_connectDone_usesProxy(self):
-        self.client = Client("testhost", 7677, "bindaddr", True,
-                             "fakeconnector", "fakeproxy")
+        self.client = Client(
+            "testhost", 7677, "bindaddr", True,
+            "fakeconnector", "fakeproxy"
+        )
         self.client.proxy = ("proxy.example.org", 215)
         host = self.client._connectDone()
         self.assertEquals(self.client.connected, 1)
         self.assertEquals(self.client.logstr, 'ConnectProtocol,client')
 
         for ss in self.client.callCounts.keys():
-            val = 0
-            if ss == 'startReading' or ss == 'makeConnection': val = 1
+            val = 1 if ss in ('startReading','makeConnection') else 0
             self.assertEquals(self.client.callCounts[ss], val)
     # -------------------------------------------------------------------------
     def test09_Client_connectDone_usesProxy(self):
@@ -315,8 +327,7 @@ class ProxyClientTestCase(unittest.TestCase):
         self.assertEquals(self.client.logstr, 'ConnectProtocol,client')
 
         for ss in self.client.callCounts.keys():
-            val = 0
-            if ss == 'startReading' or ss == 'makeConnection': val = 1
+            val = 1 if ss in ('startReading','makeConnection') else 0
             self.assertEquals(self.client.callCounts[ss], val)
 
         self.assertEquals(self.client.protocol.host, "proxy.example.org")
@@ -333,8 +344,7 @@ class ProxyClientTestCase(unittest.TestCase):
         self.assertEquals(self.client.protocol, None)
 
         for ss in self.client.callCounts.keys():
-            val = 0
-            if ss == 'tcpConnectDone': val = 1
+            val = 1 if ss == 'tcpConnectDone' else 0
             self.assertEquals(self.client.callCounts[ss], val)
     # -------------------------------------------------------------------------
     def test11_Client_connectDone_noProxy_withContextFactory(self):
@@ -348,9 +358,7 @@ class ProxyClientTestCase(unittest.TestCase):
         self.assertEquals(self.client.protocol, None)
 
         for ss in self.client.callCounts.keys():
-            val = 0
-            if ss == 'tcpConnectDone' or ss == 'startTLS' or ss == 'startWriting':
-               val = 1
+            val = 1 if ss in ('tcpConnectDone','startTLS','startWriting') else 0 
             self.assertEquals(self.client.callCounts[ss], val)
 # ----------------------------------------------------------------
 class ConnectorTestCase(unittest.TestCase):
@@ -384,50 +392,55 @@ class ConnectorTestCase(unittest.TestCase):
         ssl.Connector.__init__ = self.saveMethods['sslConnectorInit']
     # -------------------------------------------------------------------------
     def test00_connector_init(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, None)
+        self.connector = Connector(
+            "fake.example.org", 1233, None,
+            None, None, None
+        )
     # -------------------------------------------------------------------------
     def test01_connector_setProxyHost_noColon(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, None)
+        self.connector = Connector(
+            "fake.example.org", 1233, None,
+            None, None, None
+        )
         self.assertEquals(self.connector.proxy, None)
         caughtIt = False
         try:
             self.connector.setProxyHost("proxy.example.org")
         except IndexError, ie:
-            self.assertEquals(ie.__str__(), "list index out of range")
+            self.assertEquals(str(ie), "list index out of range")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an IndexError")
     # -------------------------------------------------------------------------
     def test02_connector_setProxyHost_colonOnRight(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, None)
+        self.connector = Connector(
+            "fake.example.org", 1233, None,
+            None, None, None
+        )
         self.assertEquals(self.connector.proxy, None)
         caughtIt = False
         try:
             self.connector.setProxyHost("proxy.example.org:")
         except ValueError, ve:
-            self.assertEquals(ve.__str__(),
-                              "invalid literal for int() with base 10: ''")
+            self.assertEquals(str(ve), "invalid literal for int() with base 10: ''")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an ValueError")
     # -------------------------------------------------------------------------
     def test03_connector_setProxyHost_portIsNotInt(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, None)
+        self.connector = Connector(
+            "fake.example.org", 1233, None,
+            None, None, None
+        )
         self.assertEquals(self.connector.proxy, None)
         caughtIt = False
         try:
             self.connector.setProxyHost("proxy.example.org:my22port22")
         except ValueError, ve:
-            self.assertEquals(ve.__str__(),
-                        "invalid literal for int() with base 10: 'my22port22'")
+            self.assertEquals(str(ve), "invalid literal for int() with base 10: 'my22port22'")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an ValueError")
     # -------------------------------------------------------------------------
     def test04_connector_setProxyHost_colonOnLeft(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, None)
+        self.connector = Connector("fake.example.org", 1233, None, None, None, None)
         self.assertEquals(self.connector.proxy, None)
 
         self.connector.setProxyHost(":555")
@@ -435,8 +448,7 @@ class ConnectorTestCase(unittest.TestCase):
         self.assertEquals(self.connector.proxy, ('', 555))
     # -------------------------------------------------------------------------
     def test05_connector_setProxyHost_fullyValid(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, None)
+        self.connector = Connector("fake.example.org", 1233, None, None, None, None)
         self.assertEquals(self.connector.proxy, None)
 
         self.connector.setProxyHost("myproxy.example.org:274")
@@ -444,45 +456,41 @@ class ConnectorTestCase(unittest.TestCase):
         self.assertEquals(self.connector.proxy, ('myproxy.example.org', 274))
     # -------------------------------------------------------------------------
     def test06_connector_makeTransport(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   "conextFactoryDummy", None, 7634)
+        self.connector = Connector(
+            "fake.example.org", 1233, None,
+            "contextFactoryDummy", None, 7634
+        )
         client = self.connector._makeTransport()
         # Note: other checks in the setUp() init.
-        self.assertEquals(client.contextFactory, "conextFactoryDummy")
+        self.assertEquals(client.contextFactory, "contextFactoryDummy")
     # -------------------------------------------------------------------------
     def test07_connector_getDestination_contextIsNone(self):
-        self.connector = Connector("fake.example.org", 1233, None,
-                                   None, None, 7634)
-
+        self.connector = Connector("fake.example.org", 1233, None, None, None, 7634)
         host = self.connector.getDestination()
-        self.assertEquals(host._bwHack, 'INET')
         self.assertEquals(host.host, 'fake.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 1233)
     # -------------------------------------------------------------------------
     def test08_connector_getDestination_contextIsFalse(self):
-        self.connector = Connector("fake.example.org", 1234, None,
-                                   False, None, 7634)
+        self.connector = Connector("fake.example.org", 1234, None, False, None, 7634)
         host = self.connector.getDestination()
-        self.assertEquals(host._bwHack, 'INET')
         self.assertEquals(host.host, 'fake.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 1234)
     # -------------------------------------------------------------------------
     def test09_connector_getDestination_contextIsString(self):
-        self.connector = Connector("myfake.example.org", 1235, None,
-                                   "conextFactoryDummy", None, 7634)
+        self.connector = Connector(
+            "myfake.example.org", 1235, None,
+            "contextFactoryDummy", None, 7634
+        )
         host = self.connector.getDestination()
-        self.assertEquals(host._bwHack, 'SSL')
         self.assertEquals(host.host, 'myfake.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 1235)
     # -------------------------------------------------------------------------
     def test10_connector_getDestination_contextIsTrue(self):
-        self.connector = Connector("afake.example.org", 1400, None,
-                                   True, None, 7634)
+        self.connector = Connector("afake.example.org", 1400, None, True, None, 7634)
         host = self.connector.getDestination()
-        self.assertEquals(host._bwHack, 'SSL')
         self.assertEquals(host.host, 'afake.example.org')
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 1400)
@@ -495,8 +503,8 @@ def Run():
     suite.addTest(loader.loadClass(ProxyClientTestCase))
     suite.addTest(loader.loadClass(ConnectorTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
-#       reporter.TextReporter,
+#        reporter.VerboseTextReporter,
+       reporter.TextReporter,
 #	tracebackFormat='verbose',
         tracebackFormat='default',
         ).run(suite)

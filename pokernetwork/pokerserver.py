@@ -40,7 +40,7 @@ try:
     from OpenSSL import SSL ; del SSL # just imported to check for SSL
     from pokernetwork.pokerservice import SSLContextFactory
     HAS_OPENSSL=True
-except:
+except Exception:
     log.inform("OpenSSL not available.")
     HAS_OPENSSL=False
 
@@ -71,21 +71,19 @@ def makeService(configuration):
     #
     # Setup Logging
     #
-    log_level = int(os.environ['LOG_LEVEL']) if \
-        'LOG_LEVEL' in os.environ else \
-        settings.headerGetInt("/server/@log_level")
+    log_level = int(os.environ['LOG_LEVEL']) \
+        if 'LOG_LEVEL' in os.environ \
+        else settings.headerGetInt("/server/@log_level")
     logger = logging.getLogger()
     handler = TwistedHandler(twisted_log.theLogPublisher)
     handler.setFormatter(SingleLineFormatter('[%(refs)s] %(message)s'))
     logger.addHandler(handler)
-    if log_level:
-        if log_level not in (10, 20, 30, 40, 50):
-            raise ValueError("Unsupported log level %d. Supported log levels "
-                "are DEBUG(10), INFO(20), WARNING(30), ERROR(40), CRITICAL(50)." % (log_level,)
-            )
-        logger.setLevel(log_level)
-    else:
-        logger.setLevel(logging.WARNING)
+    if log_level and not log_level in (10, 20, 30, 40, 50):
+        raise ValueError(
+            "Unsupported log level %d. Supported log levels "
+            "are DEBUG(10), INFO(20), WARNING(30), ERROR(40), CRITICAL(50)." % (log_level,)
+        )
+    logger.setLevel(log_level if log_level else logging.WARNING)
 
     #
     # Poker protocol (with or without SSL)
@@ -128,15 +126,16 @@ def makeService(configuration):
     #
     manhole_port = settings.headerGetInt("/server/listen/@manhole")
     if manhole_port:
-        makeManholeService(
-            manhole_port,
-            {
-                'poker_service': poker_service,
-                'poker_site': rest_site
-            }
-        ).setServiceParent(serviceCollection)
-        log.warn("PokerManhole: manhole is useful for debugging, however, "
-            "it can be a security risk and should be used only during debugging")
+        manhole_service = makeManholeService(manhole_port, {
+            'poker_service': poker_service,
+            'poker_site': rest_site
+        })
+        manhole_service.name = 'manhole'
+        manhole_service.setServiceParent(serviceCollection)
+        log.warn(
+            "PokerManhole: manhole is useful for debugging, however, "
+            "it can be a security risk and should be used only during debugging"
+        )
 
     return serviceCollection
 
@@ -153,6 +152,7 @@ def makeApplication(argv):
 
 def run():
     twisted_log.startLogging(sys.stdout)
+        
     if platform.system() != "Windows":
         if 'twisted.internet.reactor' not in sys.modules:
             log.debug("installing epoll reactor")

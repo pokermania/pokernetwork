@@ -31,6 +31,7 @@ sys.path.insert(0, "..")
 
 import libxml2
 from MySQLdb.cursors import DictCursor
+from MySQLdb.constants import ER
 from pprint import pprint
 
 from twisted.trial import unittest, runner, reporter
@@ -61,6 +62,72 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
 </server>
 """
+
+class MockCursorBase:
+    def __init__(cursorSelf, testObject, acceptList):
+        cursorSelf.testObject = testObject
+        cursorSelf.rowcount = 0
+        cursorSelf.closedCount = 0
+        cursorSelf.counts = {}
+        cursorSelf.acceptedStatements = acceptList
+        cursorSelf.row = ()
+        for cntType in cursorSelf.acceptedStatements:
+            cursorSelf.counts[cntType] = 0 
+    def close(cursorSelf):
+        cursorSelf.closedCount += 1
+        
+    def statementActions(cursorSelf, sql, statement):
+        raise NotImplementedError("MockCursor subclass must implement this")
+    
+    def statementActionsStatic(cursorSelf,sql,statement,acceptList,acceptListRowCount):
+        for (accept,accept_cnt) in zip(acceptList,acceptListRowCount):
+            if sql[:len(statement)] == accept:
+                cursorSelf.rowcount = accept_cnt
+                return True
+
+    @staticmethod
+    def literal(param):
+        if type(param) == str:
+            return "'%s'" % param.replace(r"\\", "").replace(r"'",r"\'")
+        elif type(param) == float:
+            return "%f" % param
+        elif type(param) == int:
+            return "%d" % param
+        else:
+            raise Exception("undefined type: %s" % param)
+        
+    def execute(cursorSelf,*args):
+        sql = args[0]
+        params = args[1] if len(args)>1 else []
+        found = False
+        
+        if '%s' in sql: 
+            sql = sql % tuple(map(MockCursorBase.literal, params))
+        
+        for statement in cursorSelf.acceptedStatements:
+            if sql[:len(statement)] == statement:
+                cursorSelf.counts[statement] += 1
+                cursorSelf.rowcount = 0
+                found = True
+                break
+        cursorSelf.row = (None,)
+        cursorSelf.lastrowid = None
+        cursorSelf.testObject.failUnless(found, "Unknown sql statement: " + sql)
+        cursorSelf.statementActions(sql, statement)
+        cursorSelf._executed = sql
+        return cursorSelf.rowcount
+    def fetchone(cursorSelf): return cursorSelf.row
+    def fetchall(cursorSelf): return [cursorSelf.row]
+
+class MockDatabase:
+    def __init__(dbSelf, cursorClass):
+        class MockInternalDatabase:
+            def literal(intDBSelf, *args): return MockCursorBase.literal(args[0])
+        dbSelf.db = MockInternalDatabase()
+        dbSelf.cursorValue = cursorClass()
+    def cursor(dbSelf): return dbSelf.cursorValue
+    def literal(dbSelf, val): return dbSelf.db.literal(val)
+    def close(dbSelf): return
 
 class PokerCashierTestCase(unittest.TestCase):
     def destroyDb(self):
@@ -96,11 +163,13 @@ class PokerCashierTestCase(unittest.TestCase):
         #
         self.value = 100
         self.url = 'http://fake'
-        packet = PacketPokerCashIn(serial = self.user_serial,
-                                   url = self.url,
-                                   bserial = 1,
-                                   name = "%040d" % 1,
-                                   value = self.value)
+        packet = PacketPokerCashIn(
+            serial = self.user_serial,
+            url = self.url,
+            bserial = 1,
+            name = "%040d" % 1,
+            value = self.value
+        )
         d = self.cashier.cashIn(packet)
         d.addCallback(lambda result: self.check01_cashIn(packet))
         return d
@@ -573,28 +642,15 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
                     self.rowcount = 0
                 else:
                     self.failIf(True)  # Should not be reached.
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args):
-                        return args[0]
-                dbSelf.db = MockInternalDatabase()
-            def cursor(dbSelf):
-                return MockCursor()
-            def literal(dbSelf, arg):
-                t = type(arg)
-                if t == StringType:
-                    return "'%s'" % (arg.replace("'", "\\'"))
-                elif t == IntType:
-                    return str(arg)
-                elif t == LongType:
-                    return str(arg)
-                elif t == FloatType:
-                    return "%f" % (arg)
-                else:
-                    raise ValueError("undefined type: %s" % (t))
-        
-        self.cashier.setDb(MockDatabase())
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if sql[:len(statement)] == "SELECT":
+                    cursorSelf.rowCount = 0
+                elif sql[:len(statement)] == "INSERT":
+                    cursorSelf.rowCount = 0
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT","INSERT"])
+        self.cashier.setDb(MockDatabase(MockCursor))
 
         caughtExeption = False
         try:
@@ -603,49 +659,28 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         except Exception, e:
             caughtExeption = True
             self.assertEquals(e.__str__(), "SQL command 'INSERT INTO currencies (url) VALUES (%s)' failed without raising exception.  Underlying DB may be severely hosed")
+        
         self.failUnless(caughtExeption)
 
-        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')'])
+        self.assertEquals(get_messages(), [
+            "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
+            "INSERT INTO currencies (url) VALUES ('http://example.org')"
+        ])
     # --------------------------------------------------------
     def test02_getCurrencySerial_forceExceptionOnExecute(self):
         clear_all_messages()
-        from MySQLdb.constants import ER
         self.cashier.parameters['user_create'] = 'yes'
-        class MockCursor:
-            def __init__(cursorSelf):
-                cursorSelf.rowcount = 0
-            def close(cursorSelf): pass
-            def execute(*args):
-                self = args[0]
-                sql = args[1]
-                if sql.find('SELECT') >= 0:
-                    self.rowcount = 0
-                elif sql.find('INSERT INTO') >= 0:
-                    raise Exception(ER.DUP_ENTRY)
-                else:
-                    self.failIf(True)  # Should not be reached.
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args):
-                        return args[0]
-                dbSelf.db = MockInternalDatabase()
-            def cursor(dbSelf):
-                return MockCursor()
-            def literal(dbSelf, arg):
-                t = type(arg)
-                if t == StringType:
-                    return "'%s'" % (arg.replace("'", "\\'"))
-                elif t == IntType:
-                    return str(arg)
-                elif t == LongType:
-                    return str(arg)
-                elif t == FloatType:
-                    return "%f" % (arg)
-                else:
-                    raise ValueError("undefined type: %s" % (t))
         
-        self.cashier.setDb(MockDatabase())
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if sql[:len(statement)] == "SELECT":
+                    cursorSelf.rowcount = 0
+                elif sql[:len(statement)] == "INSERT INTO":
+                    raise Exception(ER.DUP_ENTRY)
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT","INSERT INTO"])
+                
+        self.cashier.setDb(MockDatabase(MockCursor))
 
         caughtExeption = False
         try:
@@ -657,52 +692,23 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(e[0], ER.DUP_ENTRY)
         self.failUnless(caughtExeption)
 
-        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')'])
+        self.assertEquals(get_messages(), ["SELECT serial FROM currencies WHERE url = 'http://example.org'"])
     # --------------------------------------------------------
     def test03_getCurrencySerial_forceRecursionWithNoResolution(self):
         clear_all_messages()
-        from MySQLdb.constants import ER
         self.cashier.parameters['user_create'] = 'yes'
-        class MockCursor:
-            def __init__(cursorSelf):
-                cursorSelf.rowcount = 0
-                cursorSelf.selectCount = 0
-                cursorSelf.insertCount = 0
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                if sql.find('SELECT') >= 0:
-                    self.rowcount = 0
-                    cursorSelf.selectCount += 1
-                elif sql.find('INSERT INTO') >= 0:
-                    cursorSelf.insertCount += 1
+                    
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if sql[:len(statement)] == "SELECT":
+                    cursorSelf.rowcount = 0
+                elif sql[:len(statement)] == "INSERT INTO":
                     raise Exception(ER.DUP_ENTRY)
-                else:
-                    self.failIf(True)  # Should not be reached.
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args):
-                        return args[0]
-                dbSelf.db = MockInternalDatabase()
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf):
-                return dbSelf.cursorValue
-            def literal(dbSelf, arg):
-                t = type(arg)
-                if t == StringType:
-                    return "'%s'" % (arg.replace("'", "\\'"))
-                elif t == IntType:
-                    return str(arg)
-                elif t == LongType:
-                    return str(arg)
-                elif t == FloatType:
-                    return "%f" % (arg)
-                else:
-                    raise ValueError("undefined type: %s" % (t))
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT","INSERT INTO"])
+                
         
-        db = MockDatabase()
+        db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
 
         caughtExeption = False
@@ -714,10 +720,13 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(len(e.args), 1)
             self.assertEquals(e[0], ER.DUP_ENTRY)
         self.failUnless(caughtExeption)
-        self.assertEquals(db.cursor().selectCount, 2)
-        self.assertEquals(db.cursor().insertCount, 2)
+        self.assertEquals(db.cursor().counts["SELECT"], 2)
+        self.assertEquals(db.cursor().counts["INSERT INTO"], 2)
 
-        self.assertEquals(get_messages(), ['SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')', 'SELECT serial FROM currencies WHERE url = \'http://example.org\'', 'INSERT INTO currencies (url) VALUES (\'http://example.org\')'])
+        self.assertEquals(get_messages(), [
+            "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
+            "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
+        ])
     # --------------------------------------------------------
     def test04_cashOutUpdateSafe_twoNullPackets(self):
         """test04_cashOutUpdateSafe_forceFallThrough
@@ -728,43 +737,22 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         operations."""
 
         clear_all_messages()
-        from MySQLdb.constants import ER
         self.cashier.parameters['user_create'] = 'yes'
-        class MockCursor:
-            def __init__(cursorSelf):
-                cursorSelf.rowcount = 0
-                cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'SELECT', 'INSERT INTO', 'UPDATE',
-                                                  'DELETE', 'START TRANSACTION',
-                                                  'COMMIT', 'ROLLBACK' ]
-                for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                found = False
-                for str in cursorSelf.acceptedStatements:
-                    if sql[:len(str)] == str:
-                        cursorSelf.counts[str] += 1
-                        cursorSelf.rowcount = 0
-                        if str == "DELETE" or str == 'UPDATE':
-                            cursorSelf.rowcount = 1
-                        found = True
-                        break
-                self.failUnless(found)
-                return cursorSelf.rowcount
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args):
-                        return args[0]
-                dbSelf.db = MockInternalDatabase()
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf):
-                return dbSelf.cursorValue
         
-        db = MockDatabase()
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                cursorSelf.rowcount = 0
+                if sql[:len(statement)] in ("DELETE","UPDATE"):
+                    cursorSelf.rowcount = 1
+                
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, [
+                    "SELECT","INSERT INTO","UPDATE","DELETE",
+                    "START TRANSACTION","COMMIT","ROLLBACK"
+                ])
+        
+        
+        db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
 
         caughtExeption = False
@@ -777,11 +765,11 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(e[0], "'NoneType' object has no attribute 'value'")
 
         self.assertEquals(caughtExeption, True)
-        self.assertEquals(db.cursor().counts['SELECT'], 2)
-        self.assertEquals(db.cursor().counts['DELETE'], 2)
-        self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
-        self.assertEquals(db.cursor().counts['ROLLBACK'], 1)
-        self.assertEquals(db.cursor().counts['COMMIT'], 0)
+        self.assertEquals(db.cursor().counts["SELECT"], 2)
+        self.assertEquals(db.cursor().counts["DELETE"], 2)
+        self.assertEquals(db.cursor().counts["INSERT INTO"], 1)
+        self.assertEquals(db.cursor().counts["ROLLBACK"], 1)
+        self.assertEquals(db.cursor().counts["COMMIT"], 0)
     # --------------------------------------------------------
     def test05_cashOutUpdateSafe_secondPacketGood(self):
         """test05_cashOutUpdateSafe_secondPacketGood
@@ -789,50 +777,24 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         This causes us to get back a valid packet.  But still an (ignored)
         error on the lock() not existing."""
         clear_all_messages()
-        from MySQLdb.constants import ER
         self.cashier.parameters['user_create'] = 'yes'
-        class MockCursor:
-            def __init__(cursorSelf):
+            
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 0
-                cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'SELECT', 'INSERT INTO', 'UPDATE',
-                                                  'DELETE', 'START TRANSACTION',
-                                                  'COMMIT', 'ROLLBACK' ]
-                cursorSelf.row = ()
-                for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                found = False
-                for str in cursorSelf.acceptedStatements:
-                    if sql[:len(str)] == str:
-                        cursorSelf.counts[str] += 1
-                        cursorSelf.rowcount = 0
-                        if str == "DELETE" or str == 'UPDATE':
-                            cursorSelf.rowcount = 1
-                        found = True
-                        break
-                self.failUnless(found)
-                # The second time cashOutCollect() is called, we want to
-                # return a valid set of values.
-                if str == "SELECT" and cursorSelf.counts[str] == 2:
+                if sql[:len(statement)] in ("DELETE","UPDATE"):
+                    cursorSelf.rowcount = 1
+                elif sql[:len(statement)] == ("SELECT") and cursorSelf.counts["SELECT"] == 2:
                     cursorSelf.rowcount = 1
                     cursorSelf.row = (5, "http://example.org", 5, "example", 10, "")
-                return cursorSelf.rowcount
-            def fetchone(cursorSelf): return cursorSelf.row
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args):
-                        return args[0]
-                dbSelf.db = MockInternalDatabase()
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf):
-                return dbSelf.cursorValue
-        
-        db = MockDatabase()
+                
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, [
+                    "SELECT","INSERT INTO","UPDATE","DELETE",
+                    "START TRANSACTION","COMMIT","ROLLBACK"
+                ])
+            
+        db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
 
         packet = self.cashier.cashOutUpdateSafe("IGNORED", 5, 8)
@@ -856,7 +818,6 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         valid row.  We force the packet returned to always be false, to
         force the final error code to operate.  """
         clear_all_messages()
-        from MySQLdb.constants import ER
         self.cashier.parameters['user_create'] = 'yes'
         class MockCursor:
             def __init__(cursorSelf):
@@ -1057,71 +1018,40 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         Handle situation where the currency_serial already has an entry in
         counter table, and causes a deferred to be returned from
         cashOutCurrencyCommit()."""
-        class MockCursor:
-            def __init__(cursorSelf):
+            
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 0
-                cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'SELECT transaction_id', 
-                                                  "SELECT serial FROM currencies",
-                                                  "SELECT counter.user_serial"]
-                cursorSelf.row = ()
-                for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                found = False
-                for str in cursorSelf.acceptedStatements:
-                    if sql[:len(str)] == str:
-                        cursorSelf.counts[str] += 1
-                        cursorSelf.rowcount = 0
-                        cursorSelf.row = ()
-                        found = True
-                        break
-                self.failUnless(found)
-                if sql[:len(str)] == 'SELECT transaction_id':
+                if sql[:len(statement)] == "SELECT transaction_id":
                     cursorSelf.rowcount = 1
                     cursorSelf.row = (777,)
-                elif sql[:len(str)] == "SELECT serial FROM currencies":
+                elif sql[:len(statement)] == "SELECT serial FROM currencies":
                     cursorSelf.rowcount = 1
                     cursorSelf.row = (6,)
-                elif sql[:len(str)] == "SELECT counter.user_serial":
+                elif sql[:len(statement)] == "SELECT counter.user_serial":
                     cursorSelf.rowcount = 1
                     cursorSelf.row = ( 6, "http://example.org", 9, "joe", 100, "application" )
-                return cursorSelf.rowcount
-            def fetchone(cursorSelf): return cursorSelf.row
-        class MockDatabase:
-            def __init__(dbSelf):
-                class MockInternalDatabase:
-                    def literal(intDBSelf, *args): return args[0]
-                dbSelf.db = MockInternalDatabase()
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf): return dbSelf.cursorValue
-            def literal(dbSelf, arg):
-                t = type(arg)
-                if t == StringType:
-                    return "'%s'" % (arg.replace("'", "\\'"))
-                elif t == IntType:
-                    return str(arg)
-                elif t == LongType:
-                    return str(arg)
-                elif t == FloatType:
-                    return "%f" % (arg)
-                else:
-                    raise ValueError("undefined type: %s" % (t))
+                
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, [
+                    "SELECT transaction_id", 
+                    "SELECT serial FROM currencies",
+                    "SELECT counter.user_serial"
+                ])
+            
         class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.url  = "http://cashier.example.org"
                 mockPacketSelf.currency_serial = 12
             def __str__(mockPacketSelf): return "MOCK PACKET"
+            
         class  MockCurrencyClient:
             def commit(ccSelf, url, transactionId):
                 self.assertEquals(url, "http://cashier.example.org")
                 self.assertEquals(transactionId, 777)
                 return defer.Deferred()
 
-        db = MockDatabase()
+        db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
         self.cashier.currency_client = MockCurrencyClient()
 
@@ -1129,11 +1059,17 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         d = self.cashier.cashOutBreakNote("MEANINGLESS ARG", MockPacket())
 
         for key in db.cursor().counts.keys():
-            if key in [ 'SELECT transaction_id', "SELECT serial FROM currencies" ]:
+            if key in ["SELECT transaction_id", "SELECT serial FROM currencies"]:
                 self.assertEquals(db.cursor().counts[key], 1)
             else:
                 self.assertEquals(db.cursor().counts[key], 0)
-        self.assertEquals(get_messages(), ['SELECT transaction_id FROM counter WHERE  currency_serial = 12', 'cashOutCurrencyCommit', 'SELECT serial FROM currencies WHERE url = \'http://cashier.example.org\''])
+                
+        self.assertEquals(get_messages(), [
+            "SELECT transaction_id FROM counter WHERE currency_serial = 12", 
+            "cashOutCurrencyCommit", 
+            "SELECT serial FROM currencies WHERE url = 'http://cashier.example.org'"
+        ])
+        
         clear_all_messages()
 
         self.assertEquals(d.callback(True), None)
@@ -1150,44 +1086,27 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0], 'cashOutUpdateSafe: 6 777')
         self.assertEquals(msgs[3], 'cashInUnlock: unexpected missing cash_6 in locks (ignored)')
+        
     # --------------------------------------------------------
     def test11_cashOutBreakNote_multirowForSerial(self):
-        """test11_cashOutBreakNote_multirowForSerial
-
-        """
-        class MockCursor:
-            def __init__(cursorSelf):
-                cursorSelf.rowcount = 0
-                cursorSelf.counts = {}
-                cursorSelf.acceptedStatements = [ 'SELECT transaction_id', 
-                                                  'SELECT name']
-                cursorSelf.row = ()
-                for cntType in cursorSelf.acceptedStatements:
-                    cursorSelf.counts[cntType] = 0 
-            def close(cursorSelf): pass
-            def execute(*args):
-                cursorSelf = args[0]
-                sql = args[1]
-                found = False
-                for str in cursorSelf.acceptedStatements:
-                    if sql[:len(str)] == str:
-                        cursorSelf.counts[str] += 1
-                        cursorSelf.rowcount = 0
-                        cursorSelf.row = ()
-                        found = True
-                        break
-                self.failUnless(found)
-                return cursorSelf.rowcount
-        class MockDatabase:
-            def __init__(dbSelf):
-                dbSelf.cursorValue = MockCursor()
-            def cursor(dbSelf): return dbSelf.cursorValue
+        """test11_cashOutBreakNote_multirowForSerial"""
+        
         class  MockPacket:
             def __init__(mockPacketSelf):
                 mockPacketSelf.url  = "http://cashier.example.org"
                 mockPacketSelf.currency_serial = 12
             def __str__(mockPacketSelf): return "MOCK PACKET"
-        db = MockDatabase()
+            
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                return
+                
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, [
+                    "SELECT transaction_id", "SELECT name"
+                ])
+
+        db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
 
         clear_all_messages()
@@ -1372,10 +1291,10 @@ def Run():
     suite.addTest(loader.loadClass(PokerCashierTestCase))
     suite.addTest(loader.loadClass(PokerCashierFakeDBTestCase))
     suite.addTest(loader.loadClass(PokerCashierLockUnlockTestCase))
-    return runner.TrialRunner(reporter.VerboseTextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
+    return runner.TrialRunner(
+        reporter.TextReporter,
+        tracebackFormat='default',
+    ).run(suite)
 
 # --------------------------------------------------------
 if __name__ == '__main__':

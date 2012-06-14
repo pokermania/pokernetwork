@@ -72,12 +72,10 @@ class Client(ssl.Client):
 
     def getHost(self):
         h, p = self.socket.getsockname()
-        bwHack = self.contextFactory and 'SSL' or 'INET'
-        return address.IPv4Address('TCP', h, p, bwHack)
+        return address.IPv4Address('TCP', h, p)
 
     def getPeer(self):
-        bwHack = self.contextFactory and 'SSL' or 'INET'
-        return address.IPv4Address('TCP', self.addr[0], self.addr[1], bwHack)
+        return address.IPv4Address('TCP', self.addr[0], self.addr[1])
 
     def _connectDone(self):
         if self.proxy:
@@ -135,5 +133,4 @@ class Connector(ssl.Connector):
         return Client(self.host, self.port, self.bindAddress, self.contextFactory, self, self.proxy, self.reactor)
 
     def getDestination(self):
-        bwHack = self.contextFactory and 'SSL' or 'INET'
-        return address.IPv4Address('TCP', self.host, self.port, bwHack)
+        return address.IPv4Address('TCP', self.host, self.port)

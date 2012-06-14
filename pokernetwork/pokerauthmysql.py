@@ -28,6 +28,7 @@
 #  Cedric Pinson <mornifle@plopbyte.net> (2004-2006)
 
 import MySQLdb
+from pokernetwork.user import User
 from pokernetwork.packets import PACKET_LOGIN
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerauthmysql')
@@ -41,11 +42,13 @@ class PokerAuth:
         self.type2auth = {}
         self.settings = settings
         self.parameters = self.settings.headerGetProperties("/server/auth")[0]
-        self.auth_db = MySQLdb.connect(host = self.parameters["host"],
-                                  port = int(self.parameters.get("port", '3306')),
-                                  user = self.parameters["user"],
-                                  passwd = self.parameters["password"],
-                                  db = self.parameters["db"])
+        self.auth_db = MySQLdb.connect(
+            host = self.parameters["host"],
+            port = int(self.parameters.get("port", '3306')),
+            user = self.parameters["user"],
+            passwd = self.parameters["password"],
+            db = self.parameters["db"]
+        )
 
     def SetLevel(self, type, level):
         self.type2auth[type] = level
@@ -60,9 +63,11 @@ class PokerAuth:
 
         name, password = auth_args
         cursor = self.auth_db.cursor()
-        cursor.execute("SELECT username, password, privilege FROM %s " % self.parameters["table"] +
-                       "WHERE username = '%s'" % name)
-        numrows = int(cursor.rowcount)
+        cursor.execute(
+            "SELECT username, password, privilege FROM %s " % self.parameters["table"] +
+            "WHERE username = %s", (name,)
+        )
+        numrows = cursor.rowcount
         serial = 0
         privilege = User.REGULAR
         if numrows <= 0:

@@ -274,8 +274,7 @@ def Run():
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(TourneyTableBalanceTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
-#       reporter.TextReporter,
+       reporter.TextReporter,
 #	tracebackFormat='verbose',
         tracebackFormat='default',
         ).run(suite)

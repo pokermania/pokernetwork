@@ -60,8 +60,6 @@ class PokerPacketsTestCase(testpackets.PacketsTestBase):
     def test_PacketPokerPlayerArrive(self):
         packet = pokerpackets.PacketPokerPlayerArrive(seat = 1)
         self.packUnpack(packet, 'seat')
-        packet = pokerpackets.PacketPokerPlayerArrive(blind = None)
-        self.packUnpack(packet, 'blind')
         packet = pokerpackets.PacketPokerPlayerArrive(blind = False)
         self.packUnpack(packet, 'blind')
 
@@ -123,7 +121,7 @@ def GetTestSuite():
     return suite
     
 #--------------------------------------------------------------
-def Run(verbose = 2):
+def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 #--------------------------------------------------------------

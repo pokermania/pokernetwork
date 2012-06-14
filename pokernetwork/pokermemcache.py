@@ -41,6 +41,7 @@ def check_key(key, key_extra_len=0):
 memcache_singleton = {}
 memcache_log_singleton = []
 memcache_expiration_singleton = {}
+
 class _MemcacheMockupHost:
     def __init__(self,address):
         host,port = address.split(':')

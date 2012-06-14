@@ -22,7 +22,6 @@
 #  Loic Dachary <loic@dachary.org>
 #  Hannes Uebelacker <hannes@pokermania.de>
 #
-import os
 import logging
 from collections import namedtuple
 

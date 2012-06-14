@@ -77,7 +77,7 @@ class CurrencyClientTestCase(unittest.TestCase):
     def getPage(self, url):
         ( scheme, netloc, path, parameters, query, fragement ) = urlparse(url)
         cmd = """
-cat <<'EOF' | QUERY_STRING='""" + query + """' @PHP@ --define extension=mysql.so
+cat <<'EOF' | QUERY_STRING='""" + query + """' @PHP@
 <?
   ini_set('include_path', '@srcdir@/../../pokerweb/pages:' . ini_get('include_path'));
   $GLOBALS['currency_db_base'] = 'currencytest';
@@ -556,19 +556,16 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
         self.client = currencyclient.RealCurrencyClient()
         caughtIt = False
 
-        oldStdio = sys.stdout
-        sys.stdout = StringIO()
+        clear_all_messages()
         try:
             self.client.parseResultNote("two\tfield")
             self.fail("Previous line should have caused exception")
         except Exception, e:
-            self.assertEquals(e.__str__(), "expected notes got something else")
+            self.assertEquals(str(e), "expected notes got something else")
             caughtIt = True
-        value = sys.stdout.getvalue()
-        sys.stdout = oldStdio
-
-        self.assertEquals(value, "RealCurrencyClient::parseResultNote ignore line: two\tfield\n")
-        self.failUnless(caughtIt, "Should have caught an exception")
+            
+        self.assertTrue(caughtIt, "Should have caught an exception")
+        self.assertEquals(get_messages(), ["parseResultNote: ignore line: two\tfield"])
     # -----------------------------------------------------------------------------
     def test02_commit_multiLineResult(self):
         self.client = currencyclient.RealCurrencyClient()
@@ -582,15 +579,16 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
             return requestDeferred
         self.client.request = myRequest
 
-        self.assertEquals(self.client.commit("url_dummy", "transaction_dummy"),
-                          requestDeferred)
+        self.assertEquals(
+            self.client.commit("url_dummy", "transaction_dummy"),
+            requestDeferred
+        )
 
 
         confirmErrorFoundDeferred = defer.Deferred()
         def catchException(err):
             self.assertEquals(err.check(Exception), Exception)
-            self.assertEquals(err.getErrorMessage(),
-                              "expected a single line got two\nlines instead")
+            self.assertEquals(err.getErrorMessage(), "expected a single line got two\nlines instead")
             confirmErrorFoundDeferred.callback(True)
         requestDeferred.addErrback(catchException)
 

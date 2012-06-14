@@ -122,10 +122,13 @@ def arg2packet(arg):
         except Exception: pass
         
     if packet_class is None:
-        packet = PacketError(message = "Invalid type name %s" % arg['type'])
+        packet = PacketError(message = "Invalid type name %s" % arg.get('type',None))
     else:
-        try: packet = packet_class(**arg) if arg else packet_class()
-        except Exception: packet = PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
+        if 'packets' in arg: arg['packets'] = list(args2packets(arg['packets']))
+        
+        try: packet = packet_class(**arg) if len(arg)>1 else packet_class()
+        except Exception: 
+            packet = PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
             
     return (packet, packet_type_numeric)
     

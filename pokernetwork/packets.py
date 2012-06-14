@@ -924,7 +924,7 @@ class PacketList(Packet):
         while len(block) > 0 and count < length:
             t.unpack(block)
             if t.type not in PacketFactory:
-                log.warn("unknown packet type %d (known types are %s)", t.type, PacketNames)
+                log.warn("unknown packet type %d", t.type)
                 return
             packet = PacketFactory[t.type]()
             block = packet.unpack(block)

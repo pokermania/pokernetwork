@@ -28,9 +28,7 @@ from twisted.internet import defer, reactor
 from twisted.internet import defer
 from twisted.python.util import InsensitiveDict
 
-from tests.testmessages import silence_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
 
 from tests import testclock
 
@@ -97,7 +95,7 @@ class PokerRestClientTestCase(unittest.TestCase):
       def test01_longPoll(self):
             def longPollCallback(packets):
                   self.assertEquals(PACKET_PING, packets[0].type)
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', longPollCallback, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', longPollCallback)
             def sendPacketData(data):
                   self.assertSubstring('LongPoll', data)
                   return '[ { "type": "PacketPing" } ]'
@@ -110,7 +108,7 @@ class PokerRestClientTestCase(unittest.TestCase):
       # --------------------------------------------------------------
       def test02_longPollReturn(self):
             packets = []
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', lambda packets: None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', lambda packets: None)
             def sendPacketData(data):
                   packets.append(data)
                   return "[]"
@@ -122,7 +120,7 @@ class PokerRestClientTestCase(unittest.TestCase):
             return client.queue
       # --------------------------------------------------------------
       def test03_longPollSchedule(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', lambda packets: None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', lambda packets: None)
             client.sendPacketData = lambda data: "[]"
             client.longPoll()
             client.longPoll()
@@ -131,30 +129,30 @@ class PokerRestClientTestCase(unittest.TestCase):
             return client.queue
       # --------------------------------------------------------------
       def test04_sendPacketData(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', None)
             d = client.sendPacketData('{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda data: self.assertSubstring('PacketPokerTableList', data))
             return d
       # --------------------------------------------------------------
       def test05_sendPacket(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST?explain=no', None)
             d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda packets: self.assertEquals(PACKET_POKER_TABLE_LIST, packets[0].type))
             return d
       # --------------------------------------------------------------
       def test06_404(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST2', None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 19481, '/POKER_REST2', None)
             d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda packets: self.assertEquals(PACKET_ERROR, packets[0].type))
             return d
       # --------------------------------------------------------------
       def test07_connectionFailed(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 20000, '/POKER_REST?explain=no', None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 20000, '/POKER_REST?explain=no', None)
             d = client.sendPacket(PacketPokerTableSelect(), '{"type": "PacketPokerTableSelect"}')
             d.addCallback(lambda packets: self.assertEquals(PACKET_ERROR, packets[0].type))
             return d
       def test08_noCallback(self):
-            client = pokerrestclient.PokerRestClient('127.0.0.1', 20000, '/POKER_REST?explain=no', None, verbose=6)
+            client = pokerrestclient.PokerRestClient('127.0.0.1', 20000, '/POKER_REST?explain=no', None)
             self.assertEquals(-1, client.longPollFrequency)
             self.assertEquals(None, client.timer)
 
@@ -212,14 +210,17 @@ class PokerProxyClientFactoryTestCase(unittest.TestCase):
             host = '127.0.0.1'
             port = 19481
             path = '/POKER_REST'
-            factory = pokerrestclient.PokerProxyClientFactory('POST', path, '1.1', headers, data, MockRequest(), 6, host + ':' + str(port) + path)
+            factory = pokerrestclient.PokerProxyClientFactory(
+                'POST', path, '1.1', headers, data, MockRequest(), '%s:%d%s' % (host,port,path)
+            )
             reactor.connectTCP(host, port, factory)
             factory.deferred.addCallback(self.assertNotEquals, None)
             return factory.deferred
       # --------------------------------------------------------------
       def test02_proxy_failed(self):
-            factory = pokerrestclient.PokerProxyClientFactory("command", "rest", "version", "headers", "data", "father",
-                                                              "verbose", "destination")
+            factory = pokerrestclient.PokerProxyClientFactory(
+                "command", "rest", "version", "headers", "data", "father", "destination"
+            )
             def errback(reason):
                   self.assertNotEquals(None, reason)
             factory.deferred.addErrback(errback)
@@ -227,8 +228,9 @@ class PokerProxyClientFactoryTestCase(unittest.TestCase):
             return factory.deferred
       # --------------------------------------------------------------
       def test03_proxy_lost(self):
-            factory = pokerrestclient.PokerProxyClientFactory("command", "rest", "version", "headers", "data", "father",
-                                                              "verbose", "destination")
+            factory = pokerrestclient.PokerProxyClientFactory(
+                "command", "rest", "version", "headers", "data", "father", "destination"
+            )
             def errback(reason):
                   self.assertNotEquals(None, reason)
             factory.deferred.addErrback(errback)
@@ -242,9 +244,9 @@ def Run():
     suite.addTest(loader.loadClass(PokerRestClientTestCase))
     suite.addTest(loader.loadClass(PokerProxyClientFactoryTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
+        reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+    ).run(suite)
 
 if __name__ == '__main__':
     if Run().wasSuccessful():

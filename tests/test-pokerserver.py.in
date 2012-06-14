@@ -35,13 +35,22 @@ from twisted.manhole import telnet
 from twisted.application.internet import SSLServer
 from twisted.application.internet import TCPServer
 from twisted.web.server import Site as TwistedSite
+from twisted.conch.ssh.transport import SSHServerTransport
 from pokernetwork.pokerservice import PokerService, PokerRestTree, PokerFactoryFromPokerService, SSLContextFactory
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokertable import PokerTable
 
-from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
+from tests.testmessages import search_output, clear_all_messages, get_messages
+
+from twisted.python import log as twisted_log
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+logger.addHandler(TestLoggingHandler())
+logger.setLevel(10)
+os.environ['LOG_LEVEL'] = '10'
+
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-silence_all_messages()
 
 settings_xml_server_manhole = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -146,12 +155,10 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         self.assertNotEqual(None, manhole)
         self.assertEqual(self.manhole_port, manhole._port.port)
         self.assertEqual('127.0.0.1', manhole._port.interface)
-        self.assertEqual(telnet.Shell, manhole._port.factory.protocol)
+        self.assertEqual(SSHServerTransport, manhole._port.factory.protocol)
         self.assertEquals(manhole._port.connected, 1)
         self.assertEquals(manhole.parent, self.service)
         self.failUnless(manhole.running)
-        self.assertNotEqual(None, manhole._port.factory.namespace['poker_service'])
-        self.assertNotEqual(None, manhole._port.factory.namespace['poker_site'])
 # ----------------------------------------------------------------
 class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
     def destroyDb(self, arg = None):
@@ -210,8 +217,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test02_tcpSsl_hasSSL(self):
-        self.createConfig({'listen_options' : 'tcp_ssl="3234"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'tcp_ssl="3234"', 'additional_path' : self.tmpdir})
         self.createPemFile()
 
         self.createService()
@@ -235,51 +241,50 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer):
                 self.failUnless(isinstance(service.args[1], PokerFactoryFromPokerService))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(service._port.__str__(),
-                                  "<<class 'twisted.internet.ssl.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on 3234>")
+                self.assertEquals(
+                    service._port.__str__(),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 3234>"
+                )
                 self.assertEquals(service._port.port, 3234)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertNotEquals(service._port.ctxFactory, None)
-                self.assertEquals(service._port.ctxFactory, service.args[2])
+                self.assertNotEquals(service._port.factory._contextFactory, None)
+                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
     # -------------------------------------------------------------------------
     def test03_tcpSsl_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options' : 'tcp_ssl="3234"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'tcp_ssl="3234"', 'additional_path' : self.tmpdir})
         caughtIt = False
         try:
             self.createService()
             self.fail("previous line should have thrown exception")
-        except exceptions.TypeError, ee:
-            self.assertEquals(ee.__str__(),'use_certificate_file() argument 1 must be string, not None')
+        except Exception, ee:
+            self.assertEquals(str(ee),"no poker.pem found in the setting's server path")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test04_httpSSL_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options' : 'http_ssl="3234"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'http_ssl="3234"', 'additional_path' : self.tmpdir})
         caughtIt = False
         try:
             self.createService()
             self.fail("previous line should have thrown exception")
-        except exceptions.TypeError, ee:
-            self.assertEquals(ee.__str__(),'use_certificate_file() argument 1 must be string, not None')
+        except Exception, ee:
+            self.assertEquals(str(ee), "no poker.pem found in the setting's server path")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test05_httpSSL_hasSSL(self):
-        self.createConfig({'listen_options' : 'http_ssl="9356"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'http_ssl="9356"', 'additional_path' : self.tmpdir})
         self.createPemFile()
 
         self.createService()
@@ -303,38 +308,38 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer):
                 self.failUnless(isinstance(service.args[1], TwistedSite))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(service._port.__str__(),
-                                  "<<class 'twisted.internet.ssl.Port'> of twisted.web.server.Site on 9356>")
+                self.assertEquals(
+                    service._port.__str__(),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 9356>"
+                )
                 self.assertEquals(service._port.port, 9356)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.ctxFactory, service.args[2])
+                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
     # -------------------------------------------------------------------------
     def test06_restSSL_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options' : 'rest_ssl="10234"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'rest_ssl="10234"', 'additional_path' : self.tmpdir})
         caughtIt = False
         try:
             self.createService()
             self.fail("previous line should have thrown exception")
-        except exceptions.TypeError, ee:
-            self.assertEquals(ee.__str__(),'use_certificate_file() argument 1 must be string, not None')
+        except Exception, ee:
+            self.assertEquals(str(ee),"no poker.pem found in the setting's server path")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test07_restSSL_hasSSL(self):
-        self.createConfig({'listen_options' : 'rest_ssl="10234"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'rest_ssl="10234"', 'additional_path' : self.tmpdir})
         self.createPemFile()
 
         self.createService()
@@ -351,26 +356,30 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.failUnless(isinstance(service.tables[1], PokerTable))
                 self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer):
-                self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on") == 0)
+                self.assertTrue(service._port.__str__().find(
+                    "<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on"
+                ) == 0)
                 self.failUnless(service._port.port > 1024)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer):
                 self.failUnless(isinstance(service.args[1], PokerSite))
                 self.failUnless(isinstance(service.args[1].resource, PokerRestTree))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(service._port.__str__(),
-                                  "<<class 'twisted.internet.ssl.Port'> of pokernetwork.pokersite.PokerSite on 10234>")
+                self.assertEquals(
+                    service._port.__str__(),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 10234>"
+                )
                 self.assertEquals(service._port.port, 10234)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.ctxFactory, service.args[2])
+                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -400,7 +409,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer):
                 count += 1
@@ -410,15 +419,14 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
         self.assertEquals(len(self.service.services), count)
     # -------------------------------------------------------------------------
     def test09_plainHTTP(self):
-        self.createConfig({'listen_options' : 'http="10235"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options' : 'http="10235"', 'additional_path' : self.tmpdir})
         self.createService()
 
         # Only named service that we could possibly expect is manhole, and
@@ -441,7 +449,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer):
                 count += 1
@@ -451,7 +459,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -473,12 +481,10 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.assertNotEqual(None, manhole)
         self.assertEqual(10143, manhole._port.port)
         self.assertEqual('127.0.0.1', manhole._port.interface)
-        self.assertEqual(telnet.Shell, manhole._port.factory.protocol)
+        self.assertEqual(SSHServerTransport, manhole._port.factory.protocol)
         self.assertEquals(manhole._port.connected, 1)
         self.assertEquals(manhole.parent, self.service)
         self.failUnless(manhole.running)
-        self.assertNotEqual(None, manhole._port.factory.namespace['poker_service'])
-        self.assertNotEqual(None, manhole._port.factory.namespace['poker_site'])
 
         self.assertEquals(len(self.service.services), 8)
         count = 0
@@ -496,55 +502,62 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer) and service._port.port == 10143:
                 count += 1
-                print service._port.__str__()
-                self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of twisted.manhole.telnet.ShellFactory on 10143>") == 0)
+                self.assertEquals(
+                    str(service._port),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.conch.manhole_ssh.ConchFactory on 10143>"
+                )
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '127.0.0.1')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer) and service._port.port == 9123:
                 count += 1
                 self.failUnless(isinstance(service.args[1], PokerFactoryFromPokerService))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(service._port.__str__(),
-                                  "<<class 'twisted.internet.ssl.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on 9123>")
+                self.assertEquals(
+                    service._port.__str__(),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 9123>"
+                )
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertNotEquals(service._port.ctxFactory, None)
-                self.assertEquals(service._port.ctxFactory, service.args[2])
+                self.assertNotEquals(service._port.factory._contextFactory, None)
+                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer) and service._port.port == 6675:
                 count += 1
                 self.failUnless(isinstance(service.args[1], TwistedSite))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(service._port.__str__(),
-                                  "<<class 'twisted.internet.ssl.Port'> of twisted.web.server.Site on 6675>")
+                self.assertEquals(
+                    service._port.__str__(),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 6675>"
+                )
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.ctxFactory, service.args[2])
+                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer) and service._port.port == 7765:
                 count += 1
                 self.failUnless(isinstance(service.args[1], PokerSite))
                 self.failUnless(isinstance(service.args[1].resource, PokerRestTree))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(service._port.__str__(),
-                                  "<<class 'twisted.internet.ssl.Port'> of pokernetwork.pokersite.PokerSite on 7765>")
+                self.assertEquals(
+                    service._port.__str__(),
+                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 7765>"
+                )
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.ctxFactory, service.args[2])
+                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer) and service._port.port == 5563:
                 count += 1
@@ -553,7 +566,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer) and service._port.port == 7658:
                 count += 1
@@ -562,7 +575,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.failIf(hasattr(service._port, 'ctxFactory'))
+                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -610,13 +623,13 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
     def test02_validConfig(self):
         configFile = os.path.join(self.tmpdir, "ourconfig.xml")
         configFH = open(configFile, "w")
-        configFH.write(settings_xml_server_open_options % { 'listen_options' : '', 
-                                                            'additional_path' : ''})
+        configFH.write(settings_xml_server_open_options % { 'listen_options' : '', 'additional_path' : ''})
         configFH.close()
         application =  makeApplication([configFile])
         from twisted.python.components import Componentized
         self.failUnless(isinstance(application, Componentized))
 # ----------------------------------------------------------------
+
 class PokerServerRunCoverageTestCase(unittest.TestCase):
     def destroyDb(self, arg = None):
         if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
@@ -625,25 +638,19 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
     # -------------------------------------------------------------------------
     def setUp(self):
+        clear_all_messages()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
-        self.saveSysout = None
         self.saveArgv = None
+        self.saveStdout, sys.stdout = sys.stdout, StringIO()
+        
     # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
-        if self.saveSysout:
-            value = sys.stdout.getvalue()
-            if self.expectedOutput:
-                self.failUnless(value.find(self.expectedOutput) >= 0,
-                                "Unable to find " + self.expectedOutput + " in " + value)
-            sys.stdout = self.saveSysout
         if self.saveArgv:
             sys.argv = self.saveArgv
-    # -------------------------------------------------------------------------
-    def holdStdout(self):
-        self.saveSysout = sys.stdout
-        sys.stdout = StringIO()
+        sys.stdout = self.saveStdout
+        
     # -------------------------------------------------------------------------
     def setArgv(self, newArgv):
         self.saveArgv = sys.argv
@@ -652,7 +659,6 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
     def test00_missingConfigFileGivenOnCLI(self):
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
         caughtIt = False
-        self.holdStdout()
         try:
             sys.argv = [ doesNotExistFile ]
             pokerServerRun()
@@ -661,14 +667,13 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "1")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
-        self.expectedOutput = "poll reactor already installed"
+        self.assertTrue(search_output("reactor already installed"))
+        
     def test01_missingConfigFileGivenOnCLI_forceReactorInstall(self):
         import platform
         from twisted.internet import pollreactor
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
         caughtIt = False
-        self.holdStdout()
 
         saveSystem = platform.system
         if platform.system() == "Windows":
@@ -692,10 +697,10 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "1")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
+        
+        self.assertTrue(search_output("installing epoll reactor"))
 
-        self.expectedOutput = "installing poll reactor"
-
-        self.failIf(reactorCalled, "Poll reactor should have been installed")
+        self.failIf(reactorCalled, "epoll reactor should have been installed")
 
         if saveSystem:
             platform.system = saveSystem
@@ -711,11 +716,9 @@ def Run():
     suite.addTest(loader.loadClass(PokerServerMakeApplicationCoverageTestCase))
     suite.addTest(loader.loadClass(PokerServerRunCoverageTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
-#       reporter.TextReporter,
-#	tracebackFormat='verbose',
+       reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+    ).run(suite)
 
 if __name__ == '__main__':
     if Run().wasSuccessful():

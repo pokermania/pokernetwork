@@ -45,19 +45,23 @@ class PokerDatabase:
         self.parameters = settings.headerGetProperties("/server/database")[0]
         self.mysql_command = settings.headerGet("/server/database/@command")
         try:
-            self.db = MySQLdb.connect(host = self.parameters["host"],
-                                      port = int(self.parameters.get("port", '3306')),
-                                      user = self.parameters["user"],
-                                      passwd = self.parameters["password"],
-                                      db = self.parameters["name"])
+            self.db = MySQLdb.connect(
+                host = self.parameters["host"],
+                port = int(self.parameters.get("port", '3306')),
+                user = self.parameters["user"],
+                passwd = self.parameters["password"],
+                db = self.parameters["name"]
+            )
             self.log.debug("MySQL server version is %s", self.db.get_server_info())
         except:
             if 'root_user' in self.parameters:
-                self.log.inform("conenction as root user '%s'", self.parameters['root_user'])
-                db = MySQLdb.connect(host = self.parameters["host"],
-                                     port = int(self.parameters.get("port", '3306')),
-                                     user = self.parameters["root_user"],
-                                     passwd = self.parameters["root_password"])
+                self.log.inform("connection as root user '%s'", self.parameters['root_user'])
+                db = MySQLdb.connect(
+                    host = self.parameters["host"],
+                    port = int(self.parameters.get("port", '3306')),
+                    user = self.parameters["root_user"],
+                    passwd = self.parameters["root_password"]
+                )
                 self.log.inform("MySQL server version is %s", db.get_server_info())
                 if int(db.get_server_info().split('.')[0]) < 5:
                     raise UserWarning, "PokerDatabase: MySQL server version is " + db.get_server_info() + " but version >= 5.0 is required"
@@ -91,7 +95,7 @@ class PokerDatabase:
                     db.query("FLUSH PRIVILEGES")
                     self.log.debug("create database user '%s'", self.parameters['user'])
                 except:
-                    self.log.error("poker user '%s' already exists", self.parameters['user'], exc_info=1)
+                    self.log.inform("poker user '%s' already exists", self.parameters['user'], exc_info=1)
                 #
                 # Or because the user does not have permission
                 #
@@ -150,14 +154,14 @@ class PokerDatabase:
         try:
             self.checkVersion()
         except ExceptionDatabaseTooOld:
-            files = filter(lambda file: ".sql" == file[-4:], os.listdir(directory))
-            files = map(lambda file: directory + "/" + file, files)
+            files = ["%s/%s" % (directory,f) for f in os.listdir(directory) if f[-4:]=='.sql']
             parameters = self.parameters
-            mysql = self.mysql_command + " -h '" + parameters['host'] + "' -u '" + parameters['user'] + "' --password='" + parameters['password'] + "' '" + parameters['name'] + "'"
-            for file in self.version.upgradeChain(version, files):
-                self.log.inform("apply '%s'", file)
+            mysql = "%s -h '%s' -u '%s' --password='%s' '%s'" % \
+                (self.mysql_command,parameters['host'],parameters['user'],parameters['password'],parameters['name'])
+            for f in self.version.upgradeChain(version, files):
+                self.log.inform("apply '%s'", f)
                 if not dry_run:
-                    if os.system(mysql + " < " + file):
+                    if os.system("%s < %s" % (mysql,f)):
                         raise ExceptionUpgradeFailed, "upgrade failed"
             self.log.inform("upgraded database to version %s", version)
             if not dry_run:

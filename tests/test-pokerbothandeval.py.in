@@ -327,7 +327,7 @@ def Run():
     suite.addTest(loader.loadClass(PostFlopHandEvalTestCase))
     suite.addTest(loader.loadClass(EvalDrawsTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
+        reporter.TextReporter,
         tracebackFormat='default',
         ).run(suite)
 

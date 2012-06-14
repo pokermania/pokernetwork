@@ -27,9 +27,7 @@ from twisted.trial import unittest, runner, reporter
 
 from tests import testclock
 
-from tests.testmessages import silence_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
 
 from pokerengine import pokergame
 from pokernetwork.pokerexplain import PokerGames
@@ -79,9 +77,6 @@ class PokerExplainTestCase(unittest.TestCase):
     def test01_utilities(self):
         game_id = 1
         game = self.explain.games.getOrCreateGame(game_id)
-        self.explain.message("")
-        self.explain.setVerbose(10)
-        self.explain.error("test")
         self.explain.setPrefix("foo")
         self.assertEqual("foo", self.explain._prefix)
 
@@ -1335,9 +1330,9 @@ def Run():
     suite.addTest(loader.loadClass(PokerGamesTestCase))
     suite.addTest(loader.loadClass(PokerExplainTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
+        reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+    ).run(suite)
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':

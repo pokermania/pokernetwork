@@ -56,7 +56,7 @@ def GetTestSuite():
 #    suite.addTest(unittest.makeSuite(PokerGameHistoryTestCase, prefix = "test2"))
     return suite
 # -----------------------------------------------------------------------------
-def Run(verbose = 2):
+def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':

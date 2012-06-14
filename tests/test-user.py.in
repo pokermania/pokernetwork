@@ -28,9 +28,6 @@ import unittest
 import os.path
 import types
 
-from tests.testmessages import silence_all_messages, clear_all_messages, get_messages
-silence_all_messages()
-
 from pokernetwork.user import User
 from pokernetwork import user as userClass
 from pokernetwork.pokerpackets import PacketPokerSetAccount as mylimits
@@ -226,14 +223,13 @@ def GetTestSuite():
 #    suite.addTest(unittest.makeSuite(PokerUserTestCase, prefix = "test05"))
     return suite
 # -----------------------------------------------------------------------------------------------------
-def Run(verbose):
+def Run(verbose=1):
     suite = GetTestSuite()
-    verbosity = int(os.environ.get('VERBOSE_T', 2))
     return unittest.TextTestRunner(verbosity=verbose).run(suite)
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    if Run(int(os.environ.get('VERBOSE_T', 2))).wasSuccessful():
+    if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)

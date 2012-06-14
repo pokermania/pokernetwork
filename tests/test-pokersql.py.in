@@ -26,9 +26,7 @@ sys.path.insert(0, "..")
 import unittest
 import simplejson
 
-from tests.testmessages import silence_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-silence_all_messages()
 
 settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server verbose="3" admin="yes">
@@ -114,7 +112,7 @@ def GetTestSuite():
     return suite
     
 #--------------------------------------------------------------
-def Run(verbose = 2):
+def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 #--------------------------------------------------------------

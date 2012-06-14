@@ -77,7 +77,7 @@ class RealCurrencyClient:
             if len(note) == 4:
                 notes.append(( note[0], int(note[1]), note[2], int(note[3]) ),)
             else:
-                self.log.inform("parseResultNote: ignore line: %s", line)
+                self.log.warn("parseResultNote: ignore line: %s", line)
                 has_error = True
         if has_error:
             raise Exception("expected notes got something else")

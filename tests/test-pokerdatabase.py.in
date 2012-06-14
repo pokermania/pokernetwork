@@ -36,9 +36,7 @@ twisted.internet.base.DelayedCall.debug = True
 import libxml2
 import re
 
-from tests.testmessages import silence_all_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
 
 from pokernetwork import pokerdatabase
 from pokernetwork import pokernetworkconfig
@@ -105,15 +103,16 @@ class PokerDatabaseTestCase(unittest.TestCase):
         try:
             import MySQLdb
             settings = pokernetworkconfig.Config([])
-            settings.doc = libxml2.parseMemory(settings_xml,
-                                           len(settings_xml))
+            settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
             settings.header = settings.doc.xpathNewContext()
             parameters = settings.headerGetProperties("/server/database")[0]
-            db = MySQLdb.connect(host = parameters["host"],
-                                 port = int(parameters.get("port", '3306')),
-                                 user = parameters["root_user"],
-                                 passwd = parameters["root_password"],
-                                 db = 'mysql')
+            db = MySQLdb.connect(
+                host = parameters["host"],
+                port = int(parameters.get("port", '3306')),
+                user = parameters["root_user"],
+                passwd = parameters["root_password"],
+                db = 'mysql'
+            )
             try:
                 db.query("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'" % parameters['user'])
                 db.query("drop user '%s'" % parameters['user'])
@@ -123,16 +122,11 @@ class PokerDatabaseTestCase(unittest.TestCase):
             db.query("FLUSH PRIVILEGES")
             db.close()
         except Exception, e:
-            print e
             assert("Unable to delete the user, " + parameters["user"] + "; some tests will fail incorrectly.")
-        try:
-            del self.db
-        except:
-            pass
-        try:
-            self.destroyDb()
-        except:
-            pass
+        try: del self.db
+        except: pass
+        try: self.destroyDb()
+        except: pass
     # ----------------------------------------------------------------------------
     def test01_upgrade(self):
         self.db = pokerdatabase.PokerDatabase(self.settings)
@@ -326,10 +320,10 @@ def Run():
     os.environ['VERBOSE_T'] = '4'
 
     suite = loader.loadClass(PokerDatabaseTestCase)
-    return runner.TrialRunner(reporter.VerboseTextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
+    return runner.TrialRunner(
+        reporter.TextReporter,
+        tracebackFormat='default',
+    ).run(suite)
 # --------------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():

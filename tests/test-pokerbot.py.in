@@ -121,7 +121,7 @@ def Run():
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerBotTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
+        reporter.TextReporter,
         tracebackFormat='default',
         ).run(suite)
 

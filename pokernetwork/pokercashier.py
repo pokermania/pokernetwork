@@ -68,17 +68,19 @@ class PokerCashier:
         # Figure out the currency_serial matching the URL
         #
         sql = "SELECT serial FROM currencies WHERE url = %s"
-        cursor.execute(sql, url)
+        cursor.execute(sql, (url,))
         self.log.debug("%s", cursor._executed)
         if cursor.rowcount == 0:
             user_create = self.parameters.get('user_create', 'no').lower()
             if user_create not in ('yes', 'on'):
-                raise PacketError(other_type = PACKET_POKER_CASH_IN,
-                                  code = PacketPokerCashIn.REFUSED,
-                                  message = "Invalid currency " + url + " and user_create = " + user_create + " in settings.")
+                raise PacketError(
+                    other_type = PACKET_POKER_CASH_IN,
+                    code = PacketPokerCashIn.REFUSED, #FIXME asdasd
+                    message = "Invalid currency %s and user_create = %s in settings." % (url,user_create)
+                )
             sql = "INSERT INTO currencies (url) VALUES (%s)"
             try:
-                cursor.execute(sql, url)
+                cursor.execute(sql, (url,))
                 self.log.debug("%s", cursor._executed)
                 if cursor.rowcount == 1:
                     currency_serial = cursor.lastrowid
@@ -135,9 +137,11 @@ class PokerCashier:
                 if cursor.execute(sql) < rowcount:
                     message = sql + " affected " + str(cursor.rowcount) + " records instead >= " + str(rowcount)
                     self.log.error("%s", message)
-                    raise PacketError(other_type = PACKET_POKER_CASH_IN,
-                                      code = PacketPokerCashIn.SAFE,
-                                      message = message)
+                    raise PacketError(
+                        other_type = PACKET_POKER_CASH_IN,
+                        code = PacketPokerCashIn.SAFE,
+                        message = message
+                    )
                 self.log.debug("cashInUpdateSafe: %d: %s", cursor.rowcount, sql)
             cursor.execute("COMMIT")
             cursor.close()
@@ -189,10 +193,12 @@ class PokerCashier:
         #
         cursor = self.db.cursor()
         try:
-            sql = ( "SELECT transaction_id FROM counter WHERE " + #pragma: no cover
-                    " currency_serial = " + str(packet.currency_serial) + " AND " + #pragma: no cover
-                    " serial = " + str(packet.bserial) ) #pragma: no covermessage
-            cursor.execute(sql)
+            sql = \
+                "SELECT transaction_id FROM counter " \
+                "WHERE currency_serial = %s " \
+                "AND serial = %s"
+            params = (packet.currency_serial,packet.bserial)
+            cursor.execute(sql,params)
             self.log.debug("%s", cursor._executed)
             if cursor.rowcount > 0:
                 (transaction_id, ) = cursor.fetchone()
@@ -201,15 +207,17 @@ class PokerCashier:
                 #
                 # Get the currency note from the safe
                 #
-                sql = "SELECT name, serial, value FROM safe WHERE currency_serial = " + str(packet.currency_serial)
-                cursor.execute(sql)
+                sql = "SELECT name, serial, value FROM safe WHERE currency_serial = %s"
+                cursor.execute(sql,(packet.currency_serial,))
                 self.log.debug("%s", cursor._executed)
                 if cursor.rowcount not in (0, 1):
-                    message = sql + " found " + str(cursor.rowcount) + " records instead of 0 or 1"
+                    message = "%s found %d records instead of 0 or 1" % (cursor._executed, cursor.rowcount)
                     self.log.error("%s", message)
-                    raise PacketError(other_type = PACKET_POKER_CASH_IN,
-                                      code = PacketPokerCashIn.SAFE,
-                                      message = message)
+                    raise PacketError(
+                        other_type = PACKET_POKER_CASH_IN,
+                        code = PacketPokerCashIn.SAFE,
+                        message = message
+                    )
                 notes = [ (packet.url, packet.bserial, packet.name, packet.value) ]
                 if cursor.rowcount == 1:
                     #
@@ -351,9 +359,8 @@ class PokerCashier:
         #
         cursor = self.db.cursor()
         try:
-            sql = ( "SELECT transaction_id FROM counter WHERE " +
-                    " currency_serial = " + str(packet.currency_serial) )
-            cursor.execute(sql)
+            sql = "SELECT transaction_id FROM counter WHERE currency_serial = %s"
+            cursor.execute(sql,(packet.currency_serial,))
             self.log.debug("%s", cursor._executed)
             if cursor.rowcount > 0:
                 (transaction_id, ) = cursor.fetchone()
@@ -362,15 +369,17 @@ class PokerCashier:
                 #
                 # Get the currency note from the safe
                 #
-                sql = "SELECT name, serial, value FROM safe WHERE currency_serial = " + str(packet.currency_serial)
-                cursor.execute(sql)
+                sql = "SELECT name, serial, value FROM safe WHERE currency_serial = %s"
+                cursor.execute(sql,(packet.currency_serial,))
                 self.log.debug("%s", cursor._executed)
                 if cursor.rowcount != 1:
-                    message = sql + " found " + str(cursor.rowcount) + " records instead of exactly 1"
+                    message = "%s found %d records instead of exactly 1" % (cursor._executed, cursor.rowcount)
                     self.log.error("%s", message)
-                    raise PacketError(other_type = PACKET_POKER_CASH_OUT,
-                                      code = PacketPokerCashOut.SAFE,
-                                      message = message)
+                    raise PacketError(
+                        other_type = PACKET_POKER_CASH_OUT,
+                        code = PacketPokerCashOut.SAFE,
+                        message = message
+                    )
                 (name, serial, value) = cursor.fetchone()
                 note = (packet.url, serial, name, value)
                 remainder = value - packet.value

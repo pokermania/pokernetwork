@@ -38,9 +38,6 @@ import unittest
 import os.path
 import types
 
-from tests.testmessages import silence_all_messages, clear_all_messages, get_messages, search_output
-silence_all_messages()
-
 from twisted.python.runtime import seconds
 
 from pokernetwork import pokerauth
@@ -48,6 +45,14 @@ from pokernetwork.user import User
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerdatabase import PokerDatabase
 import libxml2
+
+import logging
+from tests.testmessages import clear_all_messages, get_messages, search_output
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
 
 settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <server auto_create_account="no" verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -82,6 +87,73 @@ settings_alternate_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
+class MockCursorBase:
+    def __init__(cursorSelf, testObject, acceptList):
+        cursorSelf.testObject = testObject
+        cursorSelf.rowcount = 0
+        cursorSelf.closedCount = 0
+        cursorSelf.counts = {}
+        cursorSelf.acceptedStatements = acceptList
+        cursorSelf.row = ()
+        for cntType in cursorSelf.acceptedStatements:
+            cursorSelf.counts[cntType] = 0 
+    def close(cursorSelf):
+        cursorSelf.closedCount += 1
+        
+    def statementActions(cursorSelf, sql, statement):
+        raise NotImplementedError("MockCursor subclass must implement this")
+    
+    def statementActionsStatic(cursorSelf,sql,statement,acceptList,acceptListRowCount):
+        for (accept,accept_cnt) in zip(acceptList,acceptListRowCount):
+            if sql[:len(statement)] == accept:
+                cursorSelf.rowcount = accept_cnt
+                return True
+
+    @staticmethod
+    def literal(param):
+        if type(param) == str:
+            return "'%s'" % param.replace(r"\\", "").replace(r"'",r"\'")
+        elif type(param) == float:
+            return "%f" % param
+        elif type(param) == int:
+            return "%d" % param
+        else:
+            raise Exception("undefined type: %s" % param)
+        
+    def execute(cursorSelf,*args):
+        sql = args[0]
+        params = args[1] if len(args)>1 else []
+        found = False
+        
+        if '%s' in sql: 
+            sql = sql % tuple(map(MockCursorBase.literal, params))
+        
+        for statement in cursorSelf.acceptedStatements:
+            if sql[:len(statement)] == statement:
+                cursorSelf.counts[statement] += 1
+                cursorSelf.rowcount = 0
+                found = True
+                break
+        cursorSelf.row = (None,)
+        cursorSelf.lastrowid = None
+        cursorSelf.testObject.failUnless(found, "Unknown sql statement: " + sql)
+        cursorSelf.statementActions(sql, statement)
+        cursorSelf._executed = sql
+        return cursorSelf.rowcount
+    def fetchone(cursorSelf): return cursorSelf.row
+    def fetchall(cursorSelf): return [cursorSelf.row]
+
+class MockDatabase:
+    def __init__(dbSelf, cursorClass):
+        class MockInternalDatabase:
+            def literal(intDBSelf, *args): return MockCursorBase.literal(args[0])
+        dbSelf.db = MockInternalDatabase()
+        dbSelf.cursorValue = cursorClass()
+    def cursor(dbSelf): return dbSelf.cursorValue
+    def literal(dbSelf, val): return dbSelf.db.literal(val)
+    def close(dbSelf): return
+
+
 class PokerAuthTestCase(unittest.TestCase):
         
     # -----------------------------------------------------------------------------------------------------
@@ -93,6 +165,7 @@ class PokerAuthTestCase(unittest.TestCase):
         
     # --------------------------------------------------------
     def setUp(self):
+        clear_all_messages()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -148,10 +221,12 @@ class PokerAuthTestCase(unittest.TestCase):
         settings.header = settings.doc.xpathNewContext()
         auth = pokerauth.get_auth_instance(db, None, settings)
 
-        clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('joe_schmoe', 'foo')), ((4, 'joe_schmoe', 1), None))
-        self.assertEquals(get_messages(), ['user joe_schmoe does not exist, create it',
-                                       'creating user joe_schmoe', 'create user with serial 4'])
+        self.assertEquals(auth.auth(PACKET_LOGIN,('joe_schmoe', 'foo')), ((4, 'joe_schmoe', 1), None))
+        self.assertEquals(get_messages()[-3:], [
+            'user joe_schmoe does not exist, create it',
+            'creating user joe_schmoe', 
+            'create user with serial 4'
+        ])
         self.failUnless(len(self.checkIfUserExistsInDB('joe_schmoe')) == 1)
     # -----------------------------------------------------------------------------------------------------    
     def test04_authWithoutAutoCreate(self, expectedMessage = 'user john_smith does not exist'):
@@ -159,9 +234,8 @@ class PokerAuthTestCase(unittest.TestCase):
         Test Poker auth : Try basic auth with autocreate on"""
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
-        clear_all_messages()
 
-        self.assertEquals(auth.auth(PacketLogin.type,('john_smith', 'blah')), (False, 'Invalid login or password'))
+        self.assertEquals(auth.auth(PACKET_LOGIN,('john_smith', 'blah')), (False, 'Invalid login or password'))
         if expectedMessage:
             self.assertTrue(search_output(expectedMessage))
         self.failUnless(len(self.checkIfUserExistsInDB('john_smith')) == 0)
@@ -176,34 +250,35 @@ class PokerAuthTestCase(unittest.TestCase):
  	    serial int unsigned not null auto_increment,
 	    name varchar(32), password varchar(32), privilege int default 1,
             primary key (serial))""")
-        for ii in [ 1 , 2 ]:
-            cursor.execute("INSERT INTO users (name, password) values ('%s', '%s')" %
-                           ('doyle_brunson', 'foo'))
+        for ii in [1,2]:
+            cursor.execute("INSERT INTO users (name, password) values (%s, %s)", ('doyle_brunson', 'foo'))
         cursor.close()
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
-
+        
         clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(get_messages(), ['*ERROR* more than one row for doyle_brunson'])
+        self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
+        self.assertEquals(get_messages(), ['more than one row for doyle_brunson'])
     # -----------------------------------------------------------------------------------------------------    
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
         Tests case for single-row returned existing auth, both success and failure.
         """
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO users (created, name, password) values (%d, '%s', '%s')" %
-                       (seconds(), 'dan_harrington', 'bar'))
+        cursor.execute(
+            "INSERT INTO users (created, name, password) values (%s, %s, %s)",
+            (seconds(), 'dan_harrington', 'bar')
+        )
         cursor.close()
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
         clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('dan_harrington', 'bar')), ((4L, 'dan_harrington', 1L), None))
+        self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), ((4L, 'dan_harrington', 1L), None))
         self.assertEquals(get_messages(), [])
-
+        
         clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
+        self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
         self.assertEquals(get_messages(), ['password mismatch for dan_harrington'])
     # -----------------------------------------------------------------------------------------------------    
     def test07_mysql11userCreate(self):
@@ -212,13 +287,13 @@ class PokerAuthTestCase(unittest.TestCase):
         the situation.
         """
         class MockCursor:
-            def execute(self, str): pass
-            def insert_id(self):    return 4815
-            def close(self):        pass
+            def __init__(self):
+                self.lastrowid = 4815
+            def execute(self, *a): pass
+            def close(self): pass
         class MockDatabase:
-            def cursor(self):    return MockCursor()
-
-        clear_all_messages()
+            def cursor(self): return MockCursor()
+            
         auth = pokerauth.get_auth_instance(MockDatabase(), None, self.settings)
         self.assertEquals(auth.userCreate("nobody", "nothing"), 4815)
         self.assertTrue(search_output('creating user nobody'))
@@ -232,13 +307,11 @@ class PokerAuthTestCase(unittest.TestCase):
         class MockCursor:
             def __init__(self):
                 self.lastrowid = 162342
-            def execute(self, str): pass
-            def insert_id(self):    self.failIf(1)
-            def close(self):        pass
+            def execute(self, *a): pass
+            def close(self): pass
         class MockDatabase:
-            def cursor(self):    return MockCursor()
+            def cursor(self): return MockCursor()
 
-        clear_all_messages()
         auth = pokerauth.get_auth_instance(MockDatabase(), None, self.settings)
         self.assertEquals(auth.userCreate("somebody", "something"), 162342)
         self.assertTrue(search_output('creating user somebody'))
@@ -277,15 +350,18 @@ import MySQLdb
 class PokerAuthMysqlTestCase(PokerAuthTestCase):
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
+        clear_all_messages()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_mysql_xml, len(settings_mysql_xml))
         self.settings.header = self.settings.doc.xpathNewContext()
 
         self.parameters = self.settings.headerGetProperties("/server/auth")[0]
-        self.db = MySQLdb.connect(host = self.parameters["host"],
-                                  port = int(self.parameters.get("port", '3306')),
-                                  user = self.parameters["user"],
-                                  passwd = self.parameters["password"])
+        self.db = MySQLdb.connect(
+            host = self.parameters["host"],
+            port = int(self.parameters.get("port", '3306')),
+            user = self.parameters["user"],
+            passwd = self.parameters["password"]
+        )
         self.db.query("CREATE DATABASE %s" % self.parameters["db"])
         self.db.query("USE %s" % self.parameters["db"])
         self.db.query("CREATE TABLE %s (username varchar(20), password varchar(20), privilege int)" % self.parameters["table"])
@@ -296,16 +372,16 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
         pokerauth._get_auth_instance = None
     # -----------------------------------------------------------------------------------------------------    
     def checkIfUserExistsInDB(self, name, selectString = ""):
-        return PokerAuthTestCase.checkIfUserExistsInDB(self, name,
-                             selectString = "SELECT username from " + self.parameters["table"] 
-                                                +  " where username = '%s'")
+        return PokerAuthTestCase.checkIfUserExistsInDB(
+            self, name,
+            selectString="SELECT username from "+self.parameters["table"]+" WHERE username = '%s'")
     # -----------------------------------------------------------------------------------------------------    
     def test01_Init(self):
         """test01_Init
         Test initalizing pokerauthmysql"""
         db = None
         auth = pokerauth.get_auth_instance(db, None, self.settings)
-        result, message = auth.auth(PacketLogin.type,("testuser", "testpassword"))
+        result, message = auth.auth(PACKET_LOGIN,("testuser", "testpassword"))
         self.assertNotEquals(False, result)
     # -----------------------------------------------------------------------------------------------------    
     def test03_authWithAutoCreate(self):
@@ -322,35 +398,39 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
         Tests case in fallback authentication where more than one entry exists.
         """
         cursor = self.db.cursor()
-        for ii in [ 1 , 2 ]:
-            cursor.execute("INSERT INTO %s (username, password, privilege) values ('%s', '%s', %i)" %
-                           (self.parameters["table"], 'doyle_brunson', 'foo', User.REGULAR))
+        for ii in [1,2]:
+            cursor.execute(
+                "INSERT INTO "+self.parameters["table"]+" (username, password, privilege) values (%s, %s, %s)",
+                ('doyle_brunson', 'foo', User.REGULAR)
+            )
         cursor.close()
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
-
+        
         clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
+        self.assertEquals(get_messages(), ['more than one row for doyle_brunson'])
     # -----------------------------------------------------------------------------------------------------    
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
         Tests case for single-row returned existing auth, both success and failure.
         """
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO %s (username, password, privilege) values ('%s', '%s', %i)" %
-                           (self.parameters["table"], 'dan_harrington', 'bar', User.REGULAR))
+        cursor.execute(
+            "INSERT INTO "+self.parameters["table"]+" (username, password, privilege) values (%s, %s, %s)",
+            ('dan_harrington', 'bar', User.REGULAR)
+        )
         cursor.close()
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
         clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('dan_harrington', 'bar')), (('dan_harrington', 'dan_harrington', 1L), None))
+        self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), (('dan_harrington', 'dan_harrington', 1L), None))
         self.assertEquals(get_messages(), [])
-
+        
         clear_all_messages()
-        self.assertEquals(auth.auth(PacketLogin.type,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
+        self.assertEquals(get_messages(), ['password mismatch for dan_harrington'])
     # -----------------------------------------------------------------------------------------------------    
     def test07_mysql11userCreate(self):
         """test08_mysqlbeyond11userCreate is not needed for MySQLAUTH"""
@@ -370,14 +450,13 @@ def GetTestSuite():
     return suite
     
 # -----------------------------------------------------------------------------------------------------
-def Run(verbose):
+def Run(verbose = 1):
     suite = GetTestSuite()
-    verbosity = int(os.environ.get('VERBOSE_T', 2))
     return unittest.TextTestRunner(verbosity=verbose).run(suite)
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    if Run(int(os.environ.get('VERBOSE_T', 2))).wasSuccessful():
+    if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)

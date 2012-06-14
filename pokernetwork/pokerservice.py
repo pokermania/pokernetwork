@@ -52,30 +52,12 @@ client.HTTPClientFactory.noisy = False
 try:
     from OpenSSL import SSL
     HAS_OPENSSL=True
-except:
+except :
     log.inform("OpenSSL not available.")
     HAS_OPENSSL=False
 
-try:
-    # twisted-2.0
-    from zope.interface import Interface
-    from zope.interface import implements
-except ImportError:
-    # twisted-1.3 forwards compatibility
-    def implements(interface):
-        frame = sys._getframe(1)
-        f_locals = frame.f_locals
-
-        # Try to make sure we were called from a class def
-        if (f_locals is frame.f_globals) or ('__module__' not in f_locals):
-            raise TypeError(" can be used only from a class definition.")
-
-        if '__implements__' in f_locals:
-            raise TypeError(" can be used only once in a class definition.")
-
-        f_locals['__implements__'] = interface
-
-    from twisted.python.components import Interface
+from zope.interface import Interface
+from zope.interface import implements
 
 from MySQLdb.cursors import DictCursor
 
@@ -795,10 +777,7 @@ class PokerService(service.Service):
             #
             # Accomodate with MySQLdb versions < 1.1
             #
-            if hasattr(cursor, "lastrowid"):
-                tourney_serial = cursor.lastrowid
-            else:
-                tourney_serial = cursor.insert_id()
+            tourney_serial = cursor.lastrowid
             if schedule['respawn'] == 'n':
                 cursor.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s", (int(schedule['serial']),))
             cursor.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
@@ -2932,19 +2911,18 @@ class PokerService(service.Service):
         cursor.execute("INSERT INTO chat_messages (player_serial, game_id, message) VALUES (%s, %s, %s)", (player_serial, game_id, message))
 
 if HAS_OPENSSL:
-    class SSLContextFactory:
-
-        def __init__(self, settings):
+    from twisted.internet.ssl import DefaultOpenSSLContextFactory
+    
+    class SSLContextFactory(DefaultOpenSSLContextFactory):
+        def __init__(self,settings):
             self.pem_file = None
             for path in settings.headerGet("/server/path").split():
                 if exists(path + "/poker.pem"):
                     self.pem_file = path + "/poker.pem"
-
-        def getContext(self):
-            ctx = SSL.Context(SSL.SSLv23_METHOD)
-            ctx.use_certificate_file(self.pem_file)
-            ctx.use_privatekey_file(self.pem_file)
-            return ctx
+            if self.pem_file is None:
+                raise Exception("no poker.pem found in the setting's server path")
+            DefaultOpenSSLContextFactory.__init__(self, self.pem_file, self.pem_file)
+            
 
 from twisted.web import resource, server
 

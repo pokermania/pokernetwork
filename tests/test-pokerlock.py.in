@@ -27,10 +27,7 @@
 #
 
 import sys, os
-sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
-
-from tests.testmessages import silence_all_messages, clear_all_messages, search_output, get_messages
 
 from twisted.python import failure
 from twisted.trial import unittest, runner, reporter
@@ -44,6 +41,14 @@ from urlparse import urlparse
 
 from pokernetwork import pokerlock
 
+from tests.testmessages import clear_all_messages, search_output, get_messages
+import logging
+from tests.testmessages import TestLoggingHandler
+logger = logging.getLogger()
+handler = TestLoggingHandler()
+logger.addHandler(handler)
+logger.setLevel(10)
+
 class PokerLockTestCase(unittest.TestCase):
     # A note about clear_all_messages() calls: Note that due to the
     #  threading nature of the pokerlock methods, you must be very careful
@@ -54,16 +59,11 @@ class PokerLockTestCase(unittest.TestCase):
     #  always call clear_all_messages() before each lock.aquire() method
     #  call.
     #  ----------------------------------------------------------------
-    def setUp(self, verbose = 6):
+    def setUp(self):
         pokerlock.PokerLock.acquire_sleep = 1
-#        verbose = int(os.environ.get('VERBOSE_T', '-1'))
-        silence_all_messages()
-        if verbose < 0:
-            pokerlock.PokerLock.message = lambda self, string: True
-        self.parameters = {'host': '@MYSQL_TEST_DBHOST@', 'user': '@MYSQL_TEST_DBROOT@', 'password': '@MYSQL_TEST_DBROOT_PASSWORD@'}
+        self.parameters = {'host': 'localhost', 'user': 'root', 'password': 'holahola'}
         pokerlock.PokerLock.queue_timeout = 30
         self.locker = pokerlock.PokerLock(self.parameters)
-        if verbose >= 0: self.locker.verbose = verbose;
         self.locker.start()
     # ----------------------------------------------------------------    
     def tearDown(self):
@@ -94,10 +94,11 @@ class PokerLockTestCase(unittest.TestCase):
             self.locker2.close()
 
         def locker2_failed(result):
-            for string in [ '__acquire lock01', 'acquired', 'exception in function', 
-                         'release because exception', 'loop, queue size']:
-                if not search_output(string): print get_messages()
-                self.failUnless(search_output(string), "missing '%s' in output" % string)
+            needed = [
+                '__acquire lock01', 'acquired', 'exception in function', 'loop, queue size'
+            ]
+            for s in needed:
+                self.assertTrue(search_output(s), "missing '%s' in output (got %s)" % (s,get_messages()))
 
             clear_all_messages()
             self.locker.release('lock01')
@@ -109,7 +110,6 @@ class PokerLockTestCase(unittest.TestCase):
             clear_all_messages()
             self.locker2 = pokerlock.PokerLock(self.parameters)
             self.locker2.start()
-            self.locker2.verbose = 6
             d = self.locker2.acquire('lock01', 0)
             d.addCallback(locker2_succeeded)
             d.addErrback(locker2_failed)
@@ -118,11 +118,13 @@ class PokerLockTestCase(unittest.TestCase):
         def validate(result):
             if isinstance(result, failure.Failure): raise result
 
-            for string in ['__acquire lock01',
-                           'acquired', '__acquire got MySQL lock']:
-                if not search_output(string): print get_messages()
-                self.failUnless(search_output(string),
-                                "%s not found in string" % string)
+            needed = [
+                '__acquire lock01',
+                'acquired', 
+                '__acquire got MySQL lock'
+            ]
+            for s in needed:
+                self.assertTrue(search_output(s), "missing '%s' in output (got %s)" % (s,get_messages()))
             self.assertEqual("lock01", result)
             return locker2()
 
@@ -176,7 +178,6 @@ class PokerLockTestCase(unittest.TestCase):
     # ----------------------------------------------------------------    
     def test05_many(self):
         self.locker.message = lambda self, string: True
-        self.locker.verbose = 0
         # Runs too slow if you have messages on
         dl = []
         def show(x):
@@ -250,8 +251,10 @@ class PokerLockTestCase(unittest.TestCase):
         can be used that force-raises a Queue.Empty() exception, which is
         caught by the running loop in the lock and ends it."""
         import Queue
-        from pokernetwork.pokerlock import PokerLock
         import threading
+        from pokernetwork.pokerlock import PokerLock
+        from pokernetwork import log as network_log
+        
         class  MockQueue:
             def __init__(qSelf):
                 qSelf.qSizeCallCount = 0
@@ -266,10 +269,13 @@ class PokerLockTestCase(unittest.TestCase):
                 return False
             def put(qSelf, val):
                 pass
+            
         myMockQueue = MockQueue()
+        log = network_log.getChild('pokerlock')
+        
         class MockInitLock(PokerLock):
             def __init__(self, parameters):
-                self.verbose = 6
+                self.log = log.getChild(self.__class__.__name__)
                 self.q = myMockQueue
                 self.lock = threading.Lock()
                 self.db = None
@@ -353,12 +359,10 @@ class PokerLockTestCase(unittest.TestCase):
             def release(lSelf):
                 lSelf.calledReleaseCount += 1
 
-        silence_all_messages()
         clear_all_messages()
         anotherLock = pokerlock.PokerLock(self.parameters)
         anotherLock.q = MockQueue()
         anotherLock.lock = MockLock()
-        anotherLock.verbose = 6
         myLock = anotherLock
         anotherLock.start()
         time.sleep(2)
@@ -410,13 +414,11 @@ class PokerLockTestCase(unittest.TestCase):
             def release(lSelf):
                 raise MockException("MOCKY NO LOCK RELEASE")
 
-        silence_all_messages()
         clear_all_messages()
         anotherLock = pokerlock.PokerLock(self.parameters)
 
         anotherLock.q = MockQueue()
         anotherLock.lock = MockLock()
-        anotherLock.verbose = 6
         anotherLock.start()
         time.sleep(2)
 
@@ -456,11 +458,9 @@ def Run():
 #    loader.methodPrefix = "test02"
     suite = loader.loadClass(PokerLockTestCase)
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
-        #                              reporter.TextReporter,
-        #                              tracebackFormat='verbose',
+        reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+    ).run(suite)
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':

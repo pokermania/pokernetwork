@@ -63,9 +63,9 @@ def Run():
     suite.addTest(loader.loadClass(StringGeneratorTestCase))
     suite.addTest(loader.loadClass(NoteGeneratorTestCase))
     return runner.TrialRunner(
-        reporter.VerboseTextReporter,
+        reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+    ).run(suite)
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':

@@ -28,6 +28,7 @@ import libxml2
 from string import split
 import time
 
+from tests import testclock
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
@@ -46,11 +47,11 @@ log = reflogging.Logger('test-pokertable')
 # Must be done before importing pokerclient or pokerclient
 # will have to be patched too.
 #
-from tests import testclock
 
 from tests.testmessages import search_output, clear_all_messages, get_messages
 import logging
 from tests.testmessages import TestLoggingHandler
+
 logger = logging.getLogger()
 handler = TestLoggingHandler()
 logger.addHandler(handler)
@@ -153,7 +154,6 @@ class MockService:
             
     def __init__(self, settings):
         self.settings = settings
-        self.verbose = settings.headerGetInt("/server/@verbose")
         self.dirs = split(settings.headerGet("/server/path"))
         self.simultaneous = 1
         self.shutting_down = False
@@ -492,7 +492,7 @@ class MockClientWithExplain(MockClientWithRealJoin):
 class PokerAvatarCollectionTestCase(unittest.TestCase):
 
     def test01(self):
-        avatar_collection = pokertable.PokerAvatarCollection(prefix = '', verbose = 6)
+        avatar_collection = pokertable.PokerAvatarCollection(prefix = '')
         serial1 = 200
         serial2 = 400
         self.assertEquals([], avatar_collection.get(serial1))
@@ -644,9 +644,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.processingHand(1)
         self.table.scheduleAutoDeal()
         threeGetsStart = self.clients[3].waitFor(PACKET_POKER_START)
-        verboseVal = self.table.factory.verbose
-        if self.table.factory.verbose < 2:
-            self.table.factory.verbose = 2
         def checkValues(value):
             search_output('Player 1 marked as having a bugous PokerProcessingHand protocol')
             self.failUnless(player[1].bugous_processing_hand, "1 should have bugous_processing_hand")
@@ -1266,7 +1263,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         # Table starts with no observers before our update
 
         self.assertEquals(len(self.table.observers), 0)
-        if self.table.factory.verbose < 2: self.table.factory.verbose = 2
         clear_all_messages()
         self.table.update()
         messages = get_messages()
@@ -1429,12 +1425,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         for ii in [1, 2, 3, 4]:
             player[ii] = self.createPlayer(ii)
 
-        verboseVal = self.table.factory.verbose
-        if self.table.factory.verbose < 3: self.table.factory.verbose = 4
         clear_all_messages()
         self.table.game.state = GAME_STATE_MUCK
         self.table.scheduleAutoDeal()
-        self.table.factory.verbose = verboseVal
 
         # No packets should be received if we tried to autodeal in
         # GAME_STATE_MUCK
@@ -1464,8 +1457,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.timer_info["muckTimeout"] = None
         origGame = self.table.game
         self.table.game = MockGame()
-        verboseVal = self.table.factory.verbose
-        if self.table.factory.verbose <= 0: self.table.factory.verbose = 1
         clear_all_messages()
 
         self.table.muckTimeoutTimer()
@@ -1474,7 +1465,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         for ii in [ 1, 2 ]:
             self.failUnless(self.table.game.mucked[ii], "Serial %d should be mucked" % ii)
         self.assertEquals(get_messages()[0], 'muck timed out')
-        self.table.factory.verbose = verboseVal
         self.table.game = origGame
     # -------------------------------------------------------------------
     def test45_cancelMuckTimer_hollowedOutTimer(self):
@@ -1546,7 +1536,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         from pokerengine.pokergame import GAME_STATE_MUCK
 
         self.table.timer_info["muckTimeout"] = None
-        if self.table.factory.verbose <= 0: self.table.factory.verbose = 1
         clear_all_messages()
 
         self.createPlayer(1)
@@ -1777,7 +1766,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         return self.clients[2].waitFor(PACKET_POKER_MESSAGE)
     # -------------------------------------------------------------------
     def test04_autodeal_transient_now(self):
-        """ Transient tables hand deal has no minium duration if all players are in auto mode but the hand lasted more than the required minium """
+        """ Transient tables hand deal has no minimum duration if all players are in auto mode but the hand lasted more than the required minium """
         self.createPlayer(1)
         self.createPlayer(2)
         self.table.game_delay["start"] = testclock._seconds_value - 300
@@ -1911,7 +1900,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.assertEquals(get_messages(), [])
         self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
 
-        clear_all_messages()  # Ignore any messages from leave
+        clear_all_messages()
         players[4] = self.createPlayer(4, getReadyToPlay = False)
         self.checkFailedJoinDueToMax(players[4])
 
@@ -2078,7 +2067,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
         
     def test50_fold_immediately(self):
-        # restore_all_messages()
         serials = [1,2]
         clients = {}
         for serial in serials:
@@ -2115,7 +2103,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
     
     def test51_blindAnteState(self):
         table = self.table3
-        # restore_all_messages()
         # receive a PACKET_POKER_STATE when in state blind_ante. players have to have the same bet
         serials = [1,2]
         clients = {}
@@ -2200,7 +2187,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             d2 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
             d2.addCallback(secondGame)
             table.scheduleAutoDeal()
-#            restore_all_messages()
             return d2
         
         d1 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
@@ -2210,7 +2196,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         return d1
     
     def test53_uncalled(self):
-#        restore_all_messages()
         table = self.table9
         
         player_list = [101, 102, 103, 104, 105, 106, 107]
@@ -2388,8 +2373,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         self.table = table = self.table9
         game = table.game
         self.service.has_ladder = False
-        # restore_all_messages()
-        # table.factory.verbose = 0
         table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
         table.factory.tableMoneyAndBet = lambda *a,**kw: (0,0)
         
@@ -2493,8 +2476,8 @@ def Run():
     suite.addTest(loader.loadClass(PokerTableMoveTestCase))
     suite.addTest(loader.loadClass(PokerTableRejoinTestCase))
     suite.addTest(loader.loadClass(PokerTableExplainedTestCase))
-    return runner.TrialRunner(reporter.VerboseTextReporter,
-#        tracebackFormat='verbose',
+    return runner.TrialRunner(
+        reporter.TextReporter,
         tracebackFormat='default',
     ).run(suite)
 # ------------------------------------------------------------------------------

@@ -259,10 +259,9 @@ class UGAMEProtocol(protocol.Protocol):
                         else:
                             self._handler(packet)
                     else:
-                        self.log.warn("%s: unknown message received (id %d, length %d)\n",
-                            self._prefix,
-                            type.type,
-                            type.length
+                        self.log.warn(
+                            "%s: unknown message received (id %d, length %d)\n",
+                            self._prefix, type.type, type.length
                         )
                         buf = buf[1:]
                     self._expected_len = Packet.format_size

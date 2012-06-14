@@ -89,8 +89,7 @@ class LogicThatOccursDuringLoadTestCase(unittest.TestCase):
         value = sys.stdout.getvalue()
         sys.stdout = oldStout
 
-        self.failIf(ps.HAS_OPENSSL, "HAS_OPENSSL should be False when OpenSSL.SSL is not available")
-        self.assertEquals(value, 'openSSL not available.\nPython SOAP module not available\n')
+        self.assertFalse(ps.HAS_OPENSSL, "HAS_OPENSSL should be False when OpenSSL.SSL is not available")
 
         oldStout = sys.stdout
         sys.stdout = StringIO()

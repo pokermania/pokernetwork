@@ -17,7 +17,7 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import simplejson as json
 from twisted.internet import defer, protocol, reactor, error
 from twisted.internet.defer import CancelledError
 from twisted.web import http, client
@@ -73,7 +73,7 @@ class RestClientFactory(protocol.ClientFactory):
     def gotHeaders(self, headers):
         self.response_headers = headers
         
-    def gotStatus(self, version, status):
+    def gotStatus(self, version, status, message):
         self.version, self.status = version, status
 
     def page(self, page):
@@ -129,7 +129,7 @@ class PokerRestClient:
         if self.pendingLongPoll:
             self.scheduleLongPoll(0)
         self.pendingLongPoll = False
-        args = simplejson.loads(data, encoding = 'UTF-8')
+        args = json.loads(data)
         args = pokersite.fromutf8(args)
         packets = list(pokersite.args2packets(args))
         return packets
