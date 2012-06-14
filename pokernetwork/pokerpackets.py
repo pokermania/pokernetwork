@@ -2915,15 +2915,20 @@ players:           Serials of the players participating in the tournament.
         ('name', 'noname', 's'),
         ('description_short', 'nodescription_short', 's'),
         ('description_long', 'nodescription_long', 's'),
+        ('players_quota',0,'I'),
         ('variant', 'holdem', 's'),
         ('betting_structure', 'level-001', 's'),
-        ('seats_per_game', 9, 'I'),
+        ('seats_per_game', 10, 'I'),
         ('player_timeout', 60, 'I'),
         ('currency_serial', 0, 'I'),
-        ('buy_in', 0, 'I'),
+        ('prize_currency', 0, 'I'),
+        ('prize_min', 0, 'I'),
         ('bailor_serial',0,'I'),
-        ('players_quota',0,'I'),
-        ('players', [], 'Il')
+        ('buy_in', 0, 'I'),
+        ('rake', 0, 'I'),
+        ('sit_n_go','y','cbool'),
+        ('start_time',0,'I'),
+        ('players', [], 'Il'),
         )
 
 Packet.infoDeclare(globals(), PacketPokerCreateTourney, Packet, "POKER_CREATE_TOURNEY", 166) # 166 # 0xa6 # %SEQ%

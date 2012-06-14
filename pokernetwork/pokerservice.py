@@ -1203,22 +1203,25 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = \
             "INSERT INTO tourneys_schedule " \
-            "(resthost_serial, currency_serial, variant, betting_structure, seats_per_game, player_timeout, name, description_short, description_long, buy_in, bailor_serial, players_quota, sit_n_go) " \
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            "(resthost_serial, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, start_time)" \
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         params = (
             self.resthost_serial,
-            packet.currency_serial,
+            packet.description_short,
+            packet.description_long,
+            packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
             packet.variant,
             packet.betting_structure,
             packet.seats_per_game,
             packet.player_timeout,
-            packet.name,
-            packet.description_short,
-            packet.description_long,
-            packet.buy_in,
+            packet.currency_serial,
+            packet.prize_currency,
+            packet.prize_min,
             packet.bailor_serial,
-            packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
-            "y"
+            packet.buy_in,
+            packet.rake,
+            packet.sit_n_go,
+            packet.start_time
         )
         cursor.execute(sql,params)
         schedule_serial = cursor.lastrowid
@@ -1244,7 +1247,7 @@ class PokerService(service.Service):
                 message = "registration failed for players %s in tourney %d" % (serial_failed, tourney.serial)
             )
         else:
-            return PacketAck()
+            return PacketPokerTourney(**tourney)
 
     def tourneyBroadcastStart(self, tourney_serial):
         cursor = self.db.cursor()
