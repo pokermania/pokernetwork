@@ -1203,10 +1203,11 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = \
             "INSERT INTO tourneys_schedule " \
-            "(resthost_serial, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, start_time)" \
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            "(resthost_serial, name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, start_time)" \
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         params = (
             self.resthost_serial,
+            packet.name,
             packet.description_short,
             packet.description_long,
             packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
@@ -1247,7 +1248,7 @@ class PokerService(service.Service):
                 message = "registration failed for players %s in tourney %d" % (serial_failed, tourney.serial)
             )
         else:
-            return PacketPokerTourney(**tourney)
+            return PacketPokerTourney(**tourney.__dict__)
 
     def tourneyBroadcastStart(self, tourney_serial):
         cursor = self.db.cursor()
