@@ -40,29 +40,29 @@ CREATE TABLE users (
   -- number of seconds since 1970, argument to from_unixtime()
   created INT UNSIGNED NOT NULL,
   -- user name matching the regexp ^[a-zA-Z][a-zA-Z0-9_]{5,50}$
-  name VARCHAR(64),
+  name VARCHAR(64) NOT NULL,
   -- optional email address matching the regexp .*.@.*\..*$
   email VARCHAR(128),   
   -- serial of the users record to which this user is affiliated
-  affiliate INT UNSIGNED DEFAULT 0,
+  affiliate INT UNSIGNED DEFAULT 0 NOT NULL,
   -- client interpreted URL from which the player avatar can be downloaded
-  skin_url VARCHAR(255) DEFAULT "random",
+  skin_url VARCHAR(255) DEFAULT "random" NOT NULL,
   -- client interpreted textual description of the player aspect
-  skin_outfit TEXT,
+  skin_outfit TEXT NOT NULL,
   -- base64 encoded player picture of type skin_image_type
-  skin_image TEXT,
+  skin_image TEXT NOT NULL,
   -- the type of the base64 encoded skin_image field content
   skin_image_type VARCHAR(32) DEFAULT "image/png",
   -- clear text password matching the regexp ^[a-zA-Z0-9]{5,15}$
-  password VARCHAR(32),
+  password VARCHAR(32) NOT NULL,
   -- 1 is a regular player, 0 is an observer and cannot play, 2 is admin
-  privilege INT DEFAULT 1,
+  privilege INT DEFAULT 1 NOT NULL,
   -- locale
-  locale VARCHAR(32) DEFAULT "en_US",
+  locale VARCHAR(32) DEFAULT "en_US" NOT NULL,
 
-  rating INT DEFAULT 1000,
-  future_rating FLOAT DEFAULT 1000,
-  games_count INT DEFAULT 0,
+  rating INT DEFAULT 1000 NOT NULL,
+  future_rating FLOAT DEFAULT 1000 NOT NULL,
+  games_count INT DEFAULT 0 NOT NULL,
   
   PRIMARY KEY (serial),
   KEY name_idx (name),
@@ -73,19 +73,19 @@ DROP TABLE IF EXISTS users_private;
 
 CREATE TABLE users_private (
   serial INT UNSIGNED NOT NULL,
-  firstname VARCHAR(255) DEFAULT "",
-  lastname VARCHAR(255) DEFAULT "",
-  addr_street VARCHAR(255) DEFAULT "",
-  addr_street2 VARCHAR(255) DEFAULT "",
-  addr_zip VARCHAR(64) DEFAULT "",
-  addr_town VARCHAR(64) DEFAULT "",
-  addr_state VARCHAR(128) DEFAULT "",
-  addr_country VARCHAR(64) DEFAULT "",
-  phone VARCHAR(64) DEFAULT "",
-  gender CHAR DEFAULT '',
+  firstname VARCHAR(255) DEFAULT "" NOT NULL,
+  lastname VARCHAR(255) DEFAULT "" NOT NULL,
+  addr_street VARCHAR(255) DEFAULT "" NOT NULL,
+  addr_street2 VARCHAR(255) DEFAULT "" NOT NULL,
+  addr_zip VARCHAR(64) DEFAULT "" NOT NULL,
+  addr_town VARCHAR(64) DEFAULT "" NOT NULL,
+  addr_state VARCHAR(128) DEFAULT "" NOT NULL,
+  addr_country VARCHAR(64) DEFAULT "" NOT NULL,
+  phone VARCHAR(64) DEFAULT "" NOT NULL,
+  gender CHAR DEFAULT "" NOT NULL,
   birthdate DATE,
-  verified CHAR DEFAULT 'n',
-  verified_time INT DEFAULT 0,
+  verified CHAR DEFAULT 'n' NOT NULL,
+  verified_time INT DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (serial)
 ) ENGINE=InnoDB CHARSET=utf8;
@@ -107,8 +107,8 @@ DROP TABLE IF EXISTS currencies;
 CREATE TABLE currencies (
   serial INT NOT NULL AUTO_INCREMENT UNIQUE,
   url CHAR(255) NOT NULL UNIQUE,
-  symbol CHAR(8),
-  name CHAR(32),
+  symbol CHAR(8) NOT NULL,
+  name CHAR(32) NOT NULL,
   cash_out INT,
 
   PRIMARY KEY (serial, url)
@@ -186,7 +186,7 @@ DROP TABLE IF EXISTS hands;
 CREATE TABLE hands (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   created TIMESTAMP NOT NULL,
-  name VARCHAR(32),
+  name VARCHAR(32) NOT NULL,
   description TEXT NOT NULL,
 
   PRIMARY KEY (serial)
@@ -205,9 +205,9 @@ DROP TABLE IF EXISTS session;
 
 CREATE TABLE session (
   user_serial INT NOT NULL,
-  started INT DEFAULT 0,
-  ended INT DEFAULT 0,
-  ip VARCHAR(16),
+  started INT DEFAULT 0 NOT NULL,
+  ended INT DEFAULT 0 NOT NULL,
+  ip VARCHAR(16) NOT NULL,
 
   PRIMARY KEY (user_serial, ip)
 )  ENGINE=InnoDB CHARSET=utf8;
@@ -216,9 +216,9 @@ DROP TABLE IF EXISTS session_history;
 
 CREATE TABLE session_history (
   user_serial INT NOT NULL,
-  started INT DEFAULT 0,
-  ended INT DEFAULT 0,
-  ip VARCHAR(16),
+  started INT DEFAULT 0 NOT NULL,
+  ended INT DEFAULT 0 NOT NULL,
+  ip VARCHAR(16) NOT NULL,
 
   KEY session_history_serial (user_serial)
 )  ENGINE=InnoDB CHARSET=utf8;
@@ -228,66 +228,66 @@ DROP TABLE IF EXISTS tourneys_schedule;
 CREATE TABLE tourneys_schedule (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
-  name VARCHAR(200),
+  name VARCHAR(200) NOT NULL,
   -- Description that will be shown in tournament lists
-  description_short VARCHAR(64),
+  description_short VARCHAR(64) NOT NULL,
   -- Description that will be shown on a detailed page about
   -- the tournament.
-  description_long TEXT,
+  description_long TEXT NOT NULL,
   -- The maximum number of players allowed to register in the tournament
-  players_quota INT DEFAULT 10,
+  players_quota INT DEFAULT 10 NOT NULL,
   -- The minimum number of players to start the tournament. If the 
   -- number of registered players in the tournament is less than this
   -- limit, the tournament is canceled.
-  players_min INT DEFAULT 2,
+  players_min INT DEFAULT 2 NOT NULL,
   -- Poker variant (holdem, omaha, omaha8, 7stud)
-  variant VARCHAR(32),
+  variant VARCHAR(32) NOT NULL,
   -- Betting structure (level-001, level-10-15-pot-limit, level-10-20-no-limit, level-15-30-no-limit, level-2-4-limit)
-  betting_structure VARCHAR(32),
+  betting_structure VARCHAR(32) NOT NULL,
   -- Number of seats, in the range 2 and 10 included.
-  seats_per_game INT DEFAULT 10,
+  seats_per_game INT DEFAULT 10 NOT NULL,
   -- Maximum number of seconds before a player times out when in position.
-  player_timeout INT DEFAULT 60,
+  player_timeout INT DEFAULT 60 NOT NULL,
   -- Serial of the currency required to pay the buyin.
-  currency_serial INT,
+  currency_serial INT NOT NULL,
   -- Serial of the currency in which the prizes will be payed (same as currency_serial if zero)
-  prize_currency INT UNSIGNED DEFAULT 0,
+  prize_currency INT UNSIGNED DEFAULT 0 NOT NULL,
   -- Minimum prize pool in cents.
-  prize_min INT DEFAULT 0,
+  prize_min INT DEFAULT 0 NOT NULL,
   -- Serial number of the player (serial field of the users table) 
   -- who guarantees the minimum prize set in the prize_min field
   -- if the total buyin payed by the players is not enough.
-  bailor_serial INT DEFAULT 0,
+  bailor_serial INT DEFAULT 0 NOT NULL,
   -- Tournament buyin in cent.
-  buy_in INT DEFAULT 0,
+  buy_in INT DEFAULT 0 NOT NULL,
   -- Tournament rake in cent.
-  rake INT DEFAULT 0,
+  rake INT DEFAULT 0 NOT NULL,
   -- y for sit&go tournament, n for regular tournament
-  sit_n_go CHAR DEFAULT 'y',
+  sit_n_go CHAR DEFAULT 'y' NOT NULL,
   -- Number of seconds for the first breaks.
-  breaks_first INT DEFAULT 7200,
+  breaks_first INT DEFAULT 7200 NOT NULL,
   -- Number of seconds between breaks after the first break.
-  breaks_interval INT DEFAULT 3600,
+  breaks_interval INT DEFAULT 3600 NOT NULL,
   -- Number of seconds of each break.
-  breaks_duration INT DEFAULT 300,
+  breaks_duration INT DEFAULT 300 NOT NULL,
   -- Unused.
-  rebuy_delay INT DEFAULT 0,
+  rebuy_delay INT DEFAULT 0 NOT NULL,
   -- Unused.
-  add_on INT DEFAULT 0,
+  add_on INT DEFAULT 0 NOT NULL,
   -- Unused.
-  add_on_delay INT DEFAULT 60,
+  add_on_delay INT DEFAULT 60 NOT NULL,
   -- Unix timestamp of the tournament start.
-  start_time INT DEFAULT 0,
+  start_time INT DEFAULT 0 NOT NULL,
   -- Unix timestamp of the registration start.
-  register_time INT DEFAULT 0,
+  register_time INT DEFAULT 0 NOT NULL,
   -- n : the tournament is ignored by the server, y : the tournament
   -- is considered by the server.
-  active CHAR DEFAULT 'y',
+  active CHAR DEFAULT 'y' NOT NULL,
   -- y : the tournament restarts when complete, n : the tournament does
   -- not restart when complete.
-  respawn CHAR DEFAULT 'n',
+  respawn CHAR DEFAULT 'n' NOT NULL,
   -- Unused.
-  respawn_interval INT DEFAULT 0,
+  respawn_interval INT DEFAULT 0 NOT NULL,
   -- Format string to override the currency_serial field from date 
   -- %d 	Day of the month as a decimal number [01,31]. 	 
   -- %H 	Hour (24-hour clock) as a decimal number [00,23]. 	 
@@ -316,14 +316,14 @@ CREATE TABLE tourneys_schedule (
   -- taken into account. The value is a reference to the serial  
   -- field of the tourneys_schedule table. 
   --
-  satellite_of INT UNSIGNED DEFAULT 0,
+  satellite_of INT UNSIGNED DEFAULT 0 NOT NULL,
   --
   -- If 1 the users cannot register to the tournament unless they
   -- participated in a satellite. See the TourneyRegister packet
   -- for more information. If 0 the users can register if they pay
   -- the buyin.
   -- 
-  via_satellite TINYINT DEFAULT 0,
+  via_satellite TINYINT DEFAULT 0 NOT NULL,
   --
   -- The number of tournament winners that will be registered to the
   -- satellite_of tournament. The winners that are already registered
@@ -331,7 +331,7 @@ CREATE TABLE tourneys_schedule (
   -- and 2 of the top 10 are already registered, the remaining 2
   -- will be drawn from the top 12 winners.
   --
-  satellite_player_count INT UNSIGNED DEFAULT 0,
+  satellite_player_count INT UNSIGNED DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (serial),
   KEY tourneys_schedule_active_index (active),
@@ -424,38 +424,38 @@ DROP TABLE IF EXISTS tourneys;
 CREATE TABLE tourneys (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
-  name VARCHAR(200),
-  description_short VARCHAR(64),
-  description_long TEXT,
-  players_quota INT DEFAULT 10,
-  players_min INT DEFAULT 2,
-  variant VARCHAR(32),
-  betting_structure VARCHAR(32),
-  seats_per_game INT DEFAULT 10,
-  player_timeout INT DEFAULT 60,
-  currency_serial INT,
-  prize_currency INT UNSIGNED DEFAULT 0,
-  prize_min INT DEFAULT 0,
-  bailor_serial INT DEFAULT 0,
-  buy_in INT DEFAULT 0,
-  rake INT DEFAULT 0,
-  sit_n_go CHAR DEFAULT 'y',
-  breaks_first INT DEFAULT 7200,
-  breaks_interval INT DEFAULT 3600,
-  breaks_duration INT DEFAULT 300,
-  rebuy_delay INT DEFAULT 0,
-  add_on INT DEFAULT 0,
-  add_on_delay INT DEFAULT 60,
-  start_time INT DEFAULT 0,
-  satellite_of INT UNSIGNED DEFAULT 0,
-  via_satellite TINYINT DEFAULT 0,
-  satellite_player_count INT UNSIGNED DEFAULT 0,
+  name VARCHAR(200) NOT NULL,
+  description_short VARCHAR(64) NOT NULL,
+  description_long TEXT NOT NULL,
+  players_quota INT DEFAULT 10 NOT NULL,
+  players_min INT DEFAULT 2 NOT NULL,
+  variant VARCHAR(32) NOT NULL,
+  betting_structure VARCHAR(32) NOT NULL,
+  seats_per_game INT DEFAULT 10 NOT NULL,
+  player_timeout INT DEFAULT 60 NOT NULL,
+  currency_serial INT NOT NULL,
+  prize_currency INT UNSIGNED DEFAULT 0 NOT NULL,
+  prize_min INT DEFAULT 0 NOT NULL,
+  bailor_serial INT DEFAULT 0 NOT NULL,
+  buy_in INT DEFAULT 0 NOT NULL,
+  rake INT DEFAULT 0 NOT NULL,
+  sit_n_go CHAR DEFAULT 'y' NOT NULL,
+  breaks_first INT DEFAULT 7200 NOT NULL,
+  breaks_interval INT DEFAULT 3600 NOT NULL,
+  breaks_duration INT DEFAULT 300 NOT NULL,
+  rebuy_delay INT DEFAULT 0 NOT NULL,
+  add_on INT DEFAULT 0 NOT NULL,
+  add_on_delay INT DEFAULT 60 NOT NULL,
+  start_time INT DEFAULT 0 NOT NULL,
+  satellite_of INT UNSIGNED DEFAULT 0 NOT NULL,
+  via_satellite TINYINT DEFAULT 0 NOT NULL,
+  satellite_player_count INT UNSIGNED DEFAULT 0 NOT NULL,
 
-  finish_time INT DEFAULT 0,
-  state VARCHAR(16) DEFAULT "registering",
-  schedule_serial INT,
-  add_on_count INT DEFAULT 0,
-  rebuy_count INT DEFAULT 0,
+  finish_time INT DEFAULT 0 NOT NULL,
+  state VARCHAR(16) DEFAULT "registering" NOT NULL,
+  schedule_serial INT NOT NULL,
+  add_on_count INT DEFAULT 0 NOT NULL,
+  rebuy_count INT DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (serial),
   KEY tourneys_start_time_index (start_time),
@@ -469,7 +469,7 @@ CREATE TABLE user2tourney (
   currency_serial INT UNSIGNED NOT NULL,
   tourney_serial INT NOT NULL,
   table_serial INT,
-  rank INT DEFAULT -1,
+  rank INT DEFAULT -1 NOT NULL,
 
   PRIMARY KEY (user_serial, tourney_serial),
   KEY user_serial (user_serial, currency_serial, tourney_serial),
@@ -495,11 +495,11 @@ DROP TABLE IF EXISTS users_transactions;
 CREATE TABLE users_transactions (
   from_serial INT UNSIGNED NOT null,
   to_serial INT UNSIGNED NOT null,
-  modified TIMESTAMP,
-  amount INT DEFAULT 0,
+  modified TIMESTAMP NOT NULL,
+  amount INT DEFAULT 0 NOT NULL,
   currency_serial INT NOT NULL,
-  status CHAR DEFAULT 'n',
-  notes TEXT,
+  status CHAR DEFAULT 'n' NOT NULL,
+  notes TEXT NOT NULL,
 
   KEY (from_serial,to_serial)
 ) ENGINE=InnoDB CHARSET=utf8;
@@ -510,31 +510,31 @@ DROP TABLE IF EXISTS affiliates;
 --
 create table affiliates (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  modified TIMESTAMP,
+  modified TIMESTAMP NOT NULL,
   created INT UNSIGNED NOT NULL,
 
-  users_count INT UNSIGNED DEFAULT 0,
-  users_rake INT UNSIGNED DEFAULT 0,
-  users_points INT UNSIGNED DEFAULT 0,
+  users_count INT UNSIGNED DEFAULT 0 NOT NULL,
+  users_rake INT UNSIGNED DEFAULT 0 NOT NULL,
+  users_points INT UNSIGNED DEFAULT 0 NOT NULL,
 
   --
   -- percentage of the rake assigned to the affiliate
   --
-  share INT UNSIGNED DEFAULT 0, 
+  share INT UNSIGNED DEFAULT 0 NOT NULL, 
 
-  companyname VARCHAR(255) DEFAULT "",
-  firstname VARCHAR(255) DEFAULT "",
-  lastname VARCHAR(255) DEFAULT "",
-  addr_street VARCHAR(255) DEFAULT "",
-  addr_street2 VARCHAR(255) DEFAULT "",
-  addr_zip VARCHAR(64) DEFAULT "",
-  addr_town VARCHAR(64) DEFAULT "",
-  addr_state VARCHAR(128) DEFAULT "",
-  addr_country VARCHAR(64) DEFAULT "",
-  phone VARCHAR(64) DEFAULT "",
+  companyname VARCHAR(255) DEFAULT "" NOT NULL,
+  firstname VARCHAR(255) DEFAULT "" NOT NULL,
+  lastname VARCHAR(255) DEFAULT "" NOT NULL,
+  addr_street VARCHAR(255) DEFAULT "" NOT NULL,
+  addr_street2 VARCHAR(255) DEFAULT "" NOT NULL,
+  addr_zip VARCHAR(64) DEFAULT "" NOT NULL,
+  addr_town VARCHAR(64) DEFAULT "" NOT NULL,
+  addr_state VARCHAR(128) DEFAULT "" NOT NULL,
+  addr_country VARCHAR(64) DEFAULT "" NOT NULL,
+  phone VARCHAR(64) DEFAULT "" NOT NULL,
 
-  url TEXT,
-  notes TEXT,
+  url TEXT NOT NULL,
+  notes TEXT NOT NULL,
 
   PRIMARY KEY (serial)
 ) ENGINE=InnoDB CHARSET=utf8;
@@ -543,9 +543,9 @@ DROP TABLE IF EXISTS messages;
 
 CREATE TABLE messages (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  send_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  message TEXT DEFAULT '',
-  sent CHAR DEFAULT 'n',
+  send_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  message TEXT DEFAULT '' NOT NULL,
+  sent CHAR DEFAULT 'n' NOT NULL,
 
   PRIMARY KEY (serial, send_date, sent)
 ) ENGINE=InnoDB CHARSET=utf8;
@@ -557,8 +557,8 @@ CREATE TABLE chat_messages (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   player_serial INT UNSIGNED NOT NULL,
   game_id INT UNSIGNED NOT NULL,
-  message TEXT DEFAULT '',
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
+  message TEXT DEFAULT '' NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,  
 
   PRIMARY KEY (serial)
 ) ENGINE=MyISAM CHARSET=utf8;
@@ -584,10 +584,10 @@ DROP TABLE IF EXISTS resthost;
 
 CREATE TABLE resthost (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name VARCHAR(255),
-  host VARCHAR(255),
-  port INT UNSIGNED,
-  path VARCHAR(255),
+  name VARCHAR(255) NOT NULL,
+  host VARCHAR(255) NOT NULL,
+  port INT UNSIGNED NOT NULL,
+  path VARCHAR(255) NOT NULL,
   state INT UNSIGNED NOT NULL DEFAULT '0',
 
   PRIMARY KEY (serial)
@@ -596,10 +596,10 @@ CREATE TABLE resthost (
 DROP TABLE IF EXISTS route;
 
 CREATE TABLE route (
-  table_serial INT UNSIGNED,
-  tourney_serial INT UNSIGNED,
-  modified INT UNSIGNED,
-  resthost_serial INT UNSIGNED,
+  table_serial INT UNSIGNED NOT NULL,
+  tourney_serial INT UNSIGNED NOT NULL,
+  modified INT UNSIGNED NOT NULL,
+  resthost_serial INT UNSIGNED NOT NULL,
   
   PRIMARY KEY (table_serial, tourney_serial),
   KEY (table_serial),
