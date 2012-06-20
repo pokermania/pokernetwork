@@ -109,7 +109,10 @@ class PokerTable:
     TIMEOUT_DELAY_COMPENSATION = 2
     
     def __init__(self, factory, id=0, description=None):
-        self.log = log.getChild(self.__class__.__name__)
+        self.log = log.getChild(self.__class__.__name__, refs=[
+            ('Game', self, lambda table: table.game.id),
+            ('Hand', self, lambda table: table.game.hand_serial if table.game.hand_serial > 1 else None)
+        ])
         self.factory = factory
         settings = self.factory.settings
         self.game = PokerGameServer("poker.%s.xml", factory.dirs)
