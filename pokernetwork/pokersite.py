@@ -71,7 +71,7 @@ def __walk(tree, convert):
 def packets2maps(packets,packet_type_numeric=False):
     return (packet2map(packet,packet_type_numeric) for packet in packets)
     
-def packet2map(packet,packet_type_numeric):
+def packet2map(packet,packet_type_numeric=False):
     attributes = packet.__dict__.copy()
     if isinstance(packet, PacketList):
         attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
