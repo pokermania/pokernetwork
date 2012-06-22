@@ -296,12 +296,12 @@ class PokerResource(resource.Resource):
             # Format answer
             #
             maps = toutf8(list(packets2maps(packets, packet_type_numeric)))
-            if jsonp:
-                result_string = '%s(%s)' % (jsonp,Packet.JSON.encode(maps))
-            else:
-                result_string = str(Packet.JSON.encode(maps))
+            
+            result_string = '%s(%s)' % (jsonp,Packet.JSON.encode(maps)) if jsonp else str(Packet.JSON.encode(maps))
+            content_type = 'text/javascript' if jsonp else 'text/plain'
+             
+            request.setHeader("content-type", '%s; charset=utf-8' % content_type)
             request.setHeader("content-length", str(len(result_string)))
-            request.setHeader("content-type", 'text/plain; charset="UTF-8"')
             request.write(result_string)
             if not (request.finished or request._disconnected):
                 request.finish()
