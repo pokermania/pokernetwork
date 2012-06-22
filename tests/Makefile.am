@@ -82,7 +82,6 @@ TESTS = coverage-reset \
 	test-pokergameclient.py \
 	test-pokerlock.py \
 	test-pokercashier.py \
-	test-webservice.py \
 	test-protocol.py \
 	test-pokersite.py \
 	test-pokermemcache.py \

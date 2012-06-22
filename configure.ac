@@ -273,19 +273,18 @@ AC_CONFIG_FILES([
         tests/test-proxyfilter.py
         tests/test-sessionproxyfilter.py
         tests/test-nullfilter.py
-        tests/test-webservice.py
-	tests/test-protocol.py
-	tests/test-leak.py
-	tests/test-leak-no-trial.py
-	tests/test-leak-reference.py
-	tests/test-leak-exarkun.py
-	tests/test-pokerserver.py
-	tests/test-pokerserver-run-load.py
-	tests/test-pokerrestclient.py
+        tests/test-protocol.py
+        tests/test-leak.py
+        tests/test-leak-no-trial.py
+        tests/test-leak-reference.py
+        tests/test-leak-exarkun.py
+        tests/test-pokerserver.py
+        tests/test-pokerserver-run-load.py
+        tests/test-pokerrestclient.py
         tests/testcurrency.php
         tests/testpoker.php
         tests/testbirthday.php
-	tests/testwebservice.php
+        tests/testwebservice.php
         tests/upgrade
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
@@ -309,7 +308,7 @@ AC_CONFIG_FILES([
 AC_CONFIG_FILES([
         pokerstats/run
         pokerstats/pokerstats
-	examples/merged-translation-import.plx
+        examples/merged-translation-import.plx
 ], [chmod +x $ac_file])
 AC_CONFIG_FILES([
         pokerstats/pokerstats.1
