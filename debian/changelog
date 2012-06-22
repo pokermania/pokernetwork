@@ -1,3 +1,9 @@
+poker-network (2.1.5-2) pokermania; urgency=low
+
+  * updated pokeradditions
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 22 Jun 2012 14:25:04 +0200
+
 poker-network (2.1.5-1) pokermania; urgency=low
 
   * cf09c16 pokersite: fix in error logging
