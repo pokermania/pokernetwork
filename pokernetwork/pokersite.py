@@ -110,13 +110,14 @@ def arg2packet(arg):
     packet = None
     packet_type_numeric = None
     
-    try: 
-        packet_class = PacketFactory[int(arg['type'],10)]
-        packet_type_numeric = True
-    except Exception: pass
-    
-    if packet_class is None and _arg2packet_re.match(arg['type']):
+    if type(arg['type']) == int:
         try: 
+            packet_class = PacketFactory[arg['type']]
+            packet_type_numeric = True
+        except Exception: pass
+    
+    elif type(arg['type']) == str and _arg2packet_re.match(arg['type']):
+        try:
             packet_class = PacketFactoryWithNames[arg['type']]
             packet_type_numeric = False
         except Exception: pass
