@@ -1,3 +1,9 @@
+poker-network (2.1.5-4) pokermania; urgency=low
+
+  * c0771cf pokersite: numeric type fixes
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 25 Jun 2012 14:35:04 +0200
+
 poker-network (2.1.5-3) pokermania; urgency=low
 
   * 53c22ec content type is text/javascript if jsonp
