@@ -243,7 +243,24 @@ class Packet:
     @staticmethod
     def calcsizestring(string):
         return calcsize("!H") + len(string)
-    
+
+    @staticmethod
+    def packustring(string):
+        string = string.encode('utf-8')
+        return pack("!H", len(string)) + string
+
+    @staticmethod
+    def unpackustring(block):
+        offset = calcsize("!H")
+        (length,) = unpack("!H", block[:offset])
+        string = block[offset:offset + length]
+        string = string.decode('utf-8')
+        return (block[offset + length:], string)
+
+    @staticmethod
+    def calcsizeustring(string):
+        return calcsize("!H") + len(string.encode('utf-8'))
+
     @staticmethod
     def packbstring(obj):
         if obj == True: string = '_TRUE'
@@ -484,6 +501,15 @@ Packet.format_info = {
           'unpack': Packet.unpackstring,
           'calcsize': Packet.calcsizestring,
           },
+
+    #
+    # Unicode character string, length as a 2 bytes integer, network order (big endian)
+    #  followed by the content of the string.
+    #
+    'u': {'pack': Packet.packustring,
+          'unpack': Packet.unpackustring,
+          'calcsize': Packet.calcsizeustring,
+         },
     #
     # Character string or boolean, length as a 2 bytes integer, network order (big endian)
     #   followed by the content of the string.
