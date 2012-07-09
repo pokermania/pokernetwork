@@ -1628,7 +1628,7 @@ class PokerService(service.Service):
         for serial in players:
             avatars = self.avatar_collection.get(serial)
             packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
-                game_id = tourney.serial,
+                tourney_serial = tourney.serial,
                 serial = serial
             ))
             if packet.type == PACKET_ERROR:
