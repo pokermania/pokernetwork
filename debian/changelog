@@ -1,3 +1,9 @@
+poker-network (2.1.5-5) pokermania; urgency=low
+
+  * d2dbf65 send tourney_serial instead of game_id, refs #6217
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 09 Jul 2012 12:00:00 +0200
+
 poker-network (2.1.5-4) pokermania; urgency=low
 
   * c0771cf pokersite: numeric type fixes
