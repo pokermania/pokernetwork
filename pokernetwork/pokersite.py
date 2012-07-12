@@ -40,6 +40,11 @@ PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_cl
 from pokernetwork import log as network_log
 log = network_log.getChild('site')
 
+def find(f, seq):
+    """Return first item in sequence where f(item) == True."""
+    for item in seq:
+        if f(item): return item
+
 # Disabled Unicode encoding. It is not required anymore since it is only used
 # for the (dealer) chat. We measured a higher sit out count with Unicode
 # activated FIXME a better solution would be to refactor the engine to only
@@ -71,27 +76,36 @@ def __walk(tree, convert):
 def packets2maps(packets,packet_type_numeric=False):
     return (packet2map(packet,packet_type_numeric) for packet in packets)
     
-def packet2map(packet,packet_type_numeric=False):
+def packet2map(packet, packet_type_numeric=False):
     attributes = packet.__dict__.copy()
+    
+    for attr_name in attributes.keys():
+        if attr_name[0] == '_':
+            del attributes[attr_name]
+            
     if isinstance(packet, PacketList):
         attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
+        
     msg = getattr(packet,'message', None)
     if msg is not None:
         attributes['message'] = msg
+        
     #
-    # FIXME the followiong statementis NOT true (anymore?)
+    # FIXME the followiong statement is NOT true (anymore?)
     # It is forbidden to set a map key to a numeric (native
     # numeric or string made of digits). Taint the map entries
     # that are numeric and hope the client will figure it out.
-    for value in packet.__dict__.itervalues():
-        if type(value) is dict:
-            for (subkey,subvalue) in value.items():
-                if type(subkey) != str:
-                    del value[subkey]
-                    subkey_new = str(subkey)
-                    if subkey_new.isdigit():
-                        subkey_new = 'X' + subkey_new
-                    value[subkey_new] = subvalue
+    dict_keys = (k for (k,v) in attributes.iteritems() if isinstance(v, dict) and find(lambda el: not isinstance(el,str), v))
+    for key in dict_keys:
+        new_dict = attributes[key].copy()
+        for (subkey,subvalues) in new_dict.iteritems():
+            if not isinstance(subkey,str):
+                del new_dict[subkey]
+                subkey_new = str(subkey)
+                if subkey_new.isdigit():
+                    subkey_new = 'X'+ subkey_new
+                new_dict[subkey_new] = subvalues
+        attributes[key] = new_dict
                     
     attributes['type'] = packet.__class__.__name__ \
         if not packet_type_numeric \
