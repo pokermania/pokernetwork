@@ -35,7 +35,7 @@ PacketNames = {}
 PACKET_NONE = 0
 PacketNames[PACKET_NONE] = "NONE"
 
-class Packet:
+class Packet(object):
     """
 
      Packet base class
@@ -51,10 +51,9 @@ class Packet:
     format_list_length = "!B"
 
     def infoInit(self, **kwargs):
-        info = self.info
         for (field, default, format) in self.info:
             if field == 'type':
-                self.type = self.type # type is now in __dict__, for serialization 
+                self.type = self.type # type is now in __dict__, for serialization
             if field not in self.__dict__:
                 if field in kwargs:
                     self.__dict__[field] = kwargs[field]
@@ -70,9 +69,8 @@ class Packet:
 
     def infoPack(self):
         blocks = []
-        info = self.info
         self.length = self.infoCalcsize()
-        for (field, default, format) in self.info:
+        for (field, _default, format) in self.info:
             if format != 'no net':
                 packer = self.format_info[format]['pack']
                 blocks.append(packer(self.__dict__[field]))
@@ -83,9 +81,7 @@ class Packet:
         return block[Packet.format_size:]
 
     def infoUnpack(self, block):
-        blocks = []
-        info = self.info
-        for (field, default, format) in self.info:
+        for (field, _default, format) in self.info:
             if format != 'no net':
                 unpacker = self.format_info[format]['unpack']
                 ( block, self.__dict__[field] ) = unpacker(block)
@@ -144,7 +140,7 @@ class Packet:
 
     def infoCalcsize(self):
         size = 0
-        for (field, default, format) in self.info:
+        for (field, _default, format) in self.info:
             if format != 'no net':
                 calcsize = self.format_info[format]['calcsize']
                 size += calcsize(self.__dict__[field])
@@ -272,7 +268,7 @@ class Packet:
         fmt = '!IQQQ'
         format_size = calcsize(fmt)
         obj = {}
-        for i in xrange(length):
+        for _i in xrange(length):
             fields = unpack(fmt, block[:format_size])
             obj[fields[0]] = fields[1:]
             block = block[format_size:]
@@ -297,7 +293,7 @@ class Packet:
         format = '!IB'
         format_size = calcsize(format)
         obj = []
-        for i in xrange(length):
+        for _i in xrange(length):
             (block, name) = Packet.unpackstring(block)
             (chips, flags) = unpack(format, block[:format_size])
             obj.append((name, chips, flags))
@@ -307,7 +303,7 @@ class Packet:
     @staticmethod
     def calcsizeplayers(obj):
         size = calcsize('!H')
-        for (name, chips, flags) in obj:
+        for (name, _chips, _flags) in obj:
             size += Packet.calcsizestring(name) + calcsize('!IB')
         return size
     
@@ -316,7 +312,7 @@ class Packet:
 
     def infoStr(self):
         strings = [ PacketNames[self.type] + " " ]
-        for (field, default, format) in self.info:
+        for (field, _default, format) in self.info:
             strings.append(field + " = " + str(self.__dict__[field]))
         return " ".join(strings)
 
@@ -530,150 +526,63 @@ PacketFactory[PACKET_NONE] = Packet
 
 ########################################
 
-PACKET_STRING = 1
-PacketNames[PACKET_STRING] = "STRING"
-
 class PacketString(Packet):
     """
-
     Packet containing a single string
-    
     """
 
-    type = PACKET_STRING
-
-    info = Packet.info + ( ( 'string', '', 's' ), )
+    info = Packet.info + (
+        ( 'string', '', 's' ),
+        )
                            
-    def __init__(self, **kwargs):
-        self.string = kwargs.get("string", "")
-
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.string)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.string) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.string)
-
-    def __str__(self):
-        return Packet.__str__(self) + " string = %s" % self.string
-
-PacketFactory[PACKET_STRING] = PacketString
-
+Packet.infoDeclare(globals(), PacketString, Packet, "STRING", 1) # 1 #
 ########################################
-
-PACKET_INT = 2
-PacketNames[PACKET_INT] = "INT"
 
 class PacketInt(Packet):
     """
-
     Packet containing an unsigned integer value
-    
     """
 
-    type = PACKET_INT
-
-    info = Packet.info + ( ( 'value', 0, 'I' ), )
+    info = Packet.info + (
+        ( 'value', 0, 'I' ),
+        )
     
-    format = "!I"
-    format_size = calcsize(format)
-    
-    def __init__(self, **kwargs):
-        self.value = kwargs.get("value", 0)
-
-    def pack(self):
-        return Packet.pack(self) + pack(PacketInt.format, self.value)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (self.value,) = unpack(PacketInt.format, block[:PacketInt.format_size])
-        return block[PacketInt.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketInt.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " value = %d" % self.value
-
-PacketFactory[PACKET_INT] = PacketInt
-
+Packet.infoDeclare(globals(), PacketInt, Packet, "INT", 2) # 2 #
 ########################################
-
-PACKET_ERROR = 3
-PacketNames[PACKET_ERROR] = "ERROR"
 
 class PacketError(Packet, Exception):
     """
-
     Packet describing an error
-    
     """
     
-    type = PACKET_ERROR
 
-    info = Packet.info + ( ('message', 'no message', 's'),
-                           ('code', 0, 'I' ),
-                           ('other_type', PACKET_ERROR, 'B'),
-                           )
+    info = Packet.info + (
+       ('message', 'no message', 's'),
+       ('code', 0, 'I' ),
+       ('other_type', 3, 'B'),
+       )
     
-    format = "!IB"
-    format_size = calcsize(format)
 
-    def __init__(self, **kwargs):
-        self.message = kwargs.get("message", "no message")
-        self.code = kwargs.get("code", 0)
-        self.other_type = kwargs.get("other_type", PACKET_ERROR)
-        Exception.__init__(self)
+Packet.infoDeclare(globals(), PacketError, Packet, "ERROR", 3) # 3 #
 
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.message) + pack(PacketError.format, self.code, self.other_type)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.message) = self.unpackstring(block)
-        (self.code, self.other_type) = unpack(PacketError.format, block[:PacketError.format_size])
-        return block[PacketError.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.message) + PacketError.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " message = %s, code = %d, other_type = %s" % (self.message, self.code, PacketNames[self.other_type])
-
-PacketFactory[PACKET_ERROR] = PacketError
-
+def packetErrorInit(obj, **kwargs):
+    Packet.infoInit(obj)
+    Exception.__init__(obj)
+PacketError.__init__ = packetErrorInit
 ########################################
-
-PACKET_ACK = 4
-PacketNames[PACKET_ACK] = "ACK"
 
 class PacketAck(Packet):
     ""
 
-    type = PACKET_ACK
-
-PacketFactory[PACKET_ACK] = PacketAck
+Packet.infoDeclare(globals(), PacketAck, Packet, "ACK", 4) # 4 #
 
 ########################################
-
-PACKET_PING = 5
-PacketNames[PACKET_PING] = "PING"
 
 class PacketPing(Packet):
     ""
 
-    type = PACKET_PING
-
-PacketFactory[PACKET_PING] = PacketPing
-
+Packet.infoDeclare(globals(), PacketPing, Packet, "PING", 5) # 5 #
 ########################################
-
-PACKET_SERIAL = 6
-PacketNames[PACKET_SERIAL] = "SERIAL"
 
 class PacketSerial(Packet):
     """\
@@ -688,52 +597,21 @@ Direction: server => client
 serial: the unique number associated to the user.
     """
 
-    type = PACKET_SERIAL
-
-    info = Packet.info + ( ('serial', 0, 'I'),
-                           ('cookie', '', 'no net') )
+    info = Packet.info + (
+        ('serial', 0, 'I'),
+        ('cookie', '', 'no net'),
+        )
     
-    format = "!I"
-    format_size = calcsize(format)
-    
-    def __init__(self, **kwargs):
-        self.serial = kwargs.get("serial", 0)
-        self.cookie = kwargs.get("cookie", "") # not present in client/server dialog
-
-    def pack(self):
-        return Packet.pack(self) + pack(PacketSerial.format, self.serial)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        self.serial = int(unpack(PacketSerial.format, block[:PacketSerial.format_size])[0])
-        return block[PacketSerial.format_size:]
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketSerial.format_size
-
-    def __str__(self):
-        return Packet.__str__(self) + " serial = %d" % self.serial
-        
-PacketFactory[PACKET_SERIAL] = PacketSerial
-
+Packet.infoDeclare(globals(), PacketSerial, Packet, "SERIAL", 6) # 6 #
 ########################################
-
-PACKET_QUIT = 7
-PacketNames[PACKET_QUIT] = "QUIT"
 
 class PacketQuit(Packet):
     """
     Client tells the server it will leave
     """
-
-    type = PACKET_QUIT
-
-PacketFactory[PACKET_QUIT] = PacketQuit
-
+    
+Packet.infoDeclare(globals(), PacketQuit, Packet, "QUIT", 7) # 7  #
 ########################################
-
-PACKET_AUTH_OK = 8
-PacketNames[PACKET_AUTH_OK] = "AUTH_OK"
 
 class PacketAuthOk(Packet):
     """\
@@ -742,14 +620,8 @@ Semantics: authentication request succeeded.
 Direction: server => client
     """
 
-    type = PACKET_AUTH_OK
-
-PacketFactory[PACKET_AUTH_OK] = PacketAuthOk
-
+Packet.infoDeclare(globals(), PacketAuthOk, Packet, "AUTH_OK", 8) # 8 #
 ########################################
-
-PACKET_AUTH_REFUSED = 9
-PacketNames[PACKET_AUTH_REFUSED] = "AUTH_REFUSED"
 
 class PacketAuthRefused(PacketError):
     """\
@@ -765,14 +637,8 @@ other_type: the type of the packet that triggered the authentication
             error, i.e. PACKET_LOGIN
     """
 
-    type = PACKET_AUTH_REFUSED
-
-PacketFactory[PACKET_AUTH_REFUSED] = PacketAuthRefused
-
+Packet.infoDeclare(globals(), PacketAuthRefused, Packet, "AUTH_REFUSED", 9) # 9 #
 ########################################
-
-PACKET_LOGIN = 10
-PacketNames[PACKET_LOGIN] = "LOGIN"
 
 class PacketLogin(Packet):
     """\
@@ -796,36 +662,13 @@ password: matching password string
 
     LOGGED = 1
     
-    type = PACKET_LOGIN
-
-    info = Packet.info + ( ('name', 'unknown', 's'),
-                           ('password', 'unknown', 's') )
+    info = Packet.info + (
+        ('name', 'unknown', 's'),
+        ('password', 'unknown', 's'),
+        )
     
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", "unknown")
-        self.password = kwargs.get("password", "unknown")
-
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.name) + self.packstring(self.password)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.name) = self.unpackstring(block)
-        (block, self.password) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.name) + self.calcsizestring(self.password)
-
-    def __str__(self):
-        return Packet.__str__(self) + " name = %s, password = %s" % (self.name, self.password)
-
-PacketFactory[PACKET_LOGIN] = PacketLogin
-
+Packet.infoDeclare(globals(), PacketLogin, Packet, "LOGIN", 10) # 10 #
 ########################################
-
-PACKET_AUTH = 25
-PacketNames[PACKET_AUTH] = "AUTH"
 
 class PacketAuth(Packet):
     """\
@@ -845,149 +688,55 @@ with code set to PacketAuth.LOGGED.
 
 auth: valid user auth hash as a string
     """
-
     LOGGED = 1
+    info = Packet.info + (
+        ('auth', 'unknown', 's'),
+        )
     
-    type = PACKET_AUTH
-
-    info = Packet.info + ( ('auth', 'unknown', 's'), )
-    
-    def __init__(self, **kwargs):
-        self.auth = kwargs.get("auth", "unknown")
-
-    def pack(self):
-        return Packet.pack(self) + self.packstring(self.auth)
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (block, self.auth) = self.unpackstring(block)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + self.calcsizestring(self.auth)
-
-    def __str__(self):
-        return Packet.__str__(self) + " auth = %s" % (self.auth,)
-
-PacketFactory[PACKET_AUTH] = PacketAuth
-
+Packet.infoDeclare(globals(), PacketAuth, Packet, "AUTH", 25) # 25 #
 ########################################
-
-PACKET_AUTH_REQUEST = 11
-PacketNames[PACKET_AUTH_REQUEST] = "AUTH_REQUEST"
 
 class PacketAuthRequest(Packet):
     """
     Packet to ask authentification from the client
     """
-
-    type = PACKET_AUTH_REQUEST
-
-PacketFactory[PACKET_AUTH_REQUEST] = PacketAuthRequest
-
+    
+Packet.infoDeclare(globals(), PacketAuthRequest, Packet, "AUTH_REQUEST", 11) # 11  #
 ########################################
-
-PACKET_LIST = 12
-PacketNames[PACKET_LIST] = "LIST"
 
 class PacketList(Packet):
     """
-
     Packet containing a list of packets
-    
     """
-
-    type = PACKET_LIST
-
-    info = Packet.info + ( ('packets', [], 'pl'), )
+    info = Packet.info + (
+        ('packets', [], 'pl'),
+        )
     
-    packets = []
-    format = "!H"
-    format_size = calcsize(format)
-
-    def __init__(self, **kwargs):
-        self.packets = kwargs.get("packets", [])
-
-    def pack(self):
-        block = Packet.pack(self) + pack(PacketList.format, len(self.packets))
-        for packet in self.packets:
-            block += packet.pack()
-        return block
-
-    def unpack(self, block):
-        block = Packet.unpack(self, block)
-        (length,) = unpack(PacketList.format, block[:PacketList.format_size])
-        block = block[PacketList.format_size:]
-        t = Packet()
-        count = 0
-        self.packets = []
-        while len(block) > 0 and count < length:
-            t.unpack(block)
-            if t.type not in PacketFactory:
-                log.warn("unknown packet type %d", t.type)
-                return
-            packet = PacketFactory[t.type]()
-            block = packet.unpack(block)
-            count += 1
-            self.packets.append(packet)
-        if count != length:
-            log.warn("expected a list of %d packets but found %d", length, count)
-        return block
-
-    def calcsize(self):
-        return Packet.calcsize(self) + PacketList.format_size + sum([ packet.calcsize() for packet in self.packets ])
-
-    def __str__(self):
-        return Packet.__str__(self) + "".join(packet.__str__() for packet in self.packets)
-
-PacketFactory[PACKET_LIST] = PacketList
-
+Packet.infoDeclare(globals(), PacketList, Packet, "LIST", 12) # 12 #
 ########################################
-
-PACKET_LOGOUT = 13
-PacketNames[PACKET_LOGOUT] = "LOGOUT"
 
 class PacketLogout(Packet):
     """
     Login out
     """
-
     NOT_LOGGED_IN = 1
     
-    type = PACKET_LOGOUT
-
-PacketFactory[PACKET_LOGOUT] = PacketLogout
-
+Packet.infoDeclare(globals(), PacketLogout, Packet, "LOGOUT", 13) # 13 #
 ########################################
-
-PACKET_BOOTSTRAP = 14
-PacketNames[PACKET_BOOTSTRAP] = "BOOTSTRAP"
 
 class PacketBootstrap(Packet):
     ""
 
-    type = PACKET_BOOTSTRAP
-
-PacketFactory[PACKET_BOOTSTRAP] = PacketBootstrap
-
+Packet.infoDeclare(globals(), PacketBootstrap, Packet, "BOOTSTRAP", 14) # 14  #
 ########################################
-
-PACKET_PROTOCOL_ERROR = 15
-PacketNames[PACKET_PROTOCOL_ERROR] = "PROTOCOL_ERROR"
 
 class PacketProtocolError(PacketError):
     """
     Client protocol version does not match server protocol version.
     """
 
-    type = PACKET_PROTOCOL_ERROR
-
-PacketFactory[PACKET_PROTOCOL_ERROR] = PacketProtocolError
-
+Packet.infoDeclare(globals(), PacketProtocolError, Packet, "PROTOCOL_ERROR", 15) # 15 #
 ########################################
-
-PACKET_MESSAGE = 16
-PacketNames[PACKET_MESSAGE] = "MESSAGE"
 
 class PacketMessage(PacketString):
     """
@@ -995,9 +744,7 @@ class PacketMessage(PacketString):
     Informative messages
     """
 
-    type = PACKET_MESSAGE
-
-PacketFactory[PACKET_MESSAGE] = PacketMessage
+Packet.infoDeclare(globals(), PacketMessage, Packet, "MESSAGE", 16) # 16 #
 
 _TYPES = range(0,39)
 

@@ -34,30 +34,6 @@ from pokernetwork import packets
 
 class PacketsTestCase(testpackets.PacketsTestBase):
 
-    def test_unpack(self):
-        class TestPacket(packets.Packet):
-            def __init__(self):
-                self.type = 77
-
-        class TestPacketList(packets.PacketList):
-            def __init__(self):
-                self.type = 254
-                packets.PacketList.__init__(self, packets = [TestPacket()])
-
-        _stdout, sys.stdout = sys.stdout, open('/dev/null', 'w')
-        self.assertEqual(None, self.packetCheck(type = TestPacketList))
-
-        class TestPacketList(packets.PacketList):
-            def __init__(self):
-                self.type = 253
-                packets.PacketList.__init__(self, packets = [packets.Packet()])
-
-            def unpack(self, block):
-                packets.PacketList.unpack(self, block[:-3])
-
-        self.assertEqual(None, self.packetCheck(type = TestPacketList))
-        sys.stdout = _stdout
-        
     #--------------------------------------------------------------    
     def test_all(self):
         for type_index in packets._TYPES:
