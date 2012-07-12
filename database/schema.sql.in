@@ -186,7 +186,7 @@ DROP TABLE IF EXISTS hands;
 CREATE TABLE hands (
   serial INT UNSIGNED NOT NULL AUTO_INCREMENT,
   created TIMESTAMP NOT NULL,
-  name VARCHAR(32) NOT NULL,
+  name VARCHAR(32),
   description TEXT NOT NULL,
 
   PRIMARY KEY (serial)
@@ -230,10 +230,10 @@ CREATE TABLE tourneys_schedule (
   resthost_serial INT UNSIGNED DEFAULT 0 NOT NULL,
   name VARCHAR(200) NOT NULL,
   -- Description that will be shown in tournament lists
-  description_short VARCHAR(64) NOT NULL,
+  description_short VARCHAR(64) DEFAULT '' NOT NULL,
   -- Description that will be shown on a detailed page about
   -- the tournament.
-  description_long TEXT NOT NULL,
+  description_long TEXT,
   -- The maximum number of players allowed to register in the tournament
   players_quota INT DEFAULT 10 NOT NULL,
   -- The minimum number of players to start the tournament. If the 

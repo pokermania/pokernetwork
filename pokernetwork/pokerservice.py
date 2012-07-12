@@ -1938,14 +1938,14 @@ class PokerService(service.Service):
             resthost = resthost[0]
             cursor = self.db.cursor()
             values = ( resthost['host'], resthost['port'], resthost['path'])
-            name = resthost.get('name', None)
+            name = resthost.get('name', '')
             cursor.execute("SELECT serial FROM resthost WHERE host = %s AND port = %s AND path = %s", values)
             if cursor.rowcount > 0:
                 self.resthost_serial = cursor.fetchone()[0]
                 cursor.execute("UPDATE resthost SET state = %s WHERE serial = %s", (self.STATE_ONLINE,self.resthost_serial))
             else:
                 if not name:
-                    cursor.execute("INSERT INTO resthost (host, port, path, state) VALUES (%s, %s, %s, %s)", values + (self.STATE_ONLINE,))
+                    cursor.execute("INSERT INTO resthost (name, host, port, path, state) VALUES ('', %s, %s, %s, %s)", values + (self.STATE_ONLINE,))
                 else:
                     cursor.execute("INSERT INTO resthost (name, host, port, path, state) VALUES (%s, %s, %s, %s, %s)", (name,) + values + (self.STATE_ONLINE,))
                 self.resthost_serial = cursor.lastrowid
@@ -2918,7 +2918,7 @@ if HAS_OPENSSL:
     from twisted.internet.ssl import DefaultOpenSSLContextFactory
     
     class SSLContextFactory(DefaultOpenSSLContextFactory):
-        def __init__(self,settings):
+        def __init__(self, settings):
             self.pem_file = None
             for path in settings.headerGet("/server/path").split():
                 if exists(path + "/poker.pem"):
