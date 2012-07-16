@@ -1126,7 +1126,7 @@ class ResthostTestCase(unittest.TestCase):
         self.assertEqual('HOST', host)
         self.assertEqual(7777, port)
         self.assertEqual('/PATH', path)
-        self.assertEqual(None, name)
+        self.assertEqual('', name)
         self.assertEqual(1, state)
 
     def test001_init_with_name(self):
@@ -2480,7 +2480,7 @@ class TourneyCreateTestCase(PokerServiceTestCaseBase):
             players = [self.user1_serial, self.user2_serial]
         )
         result = self.service.tourneyCreate(packet)
-        self.assertEquals(PACKET_ACK, result.type)
+        self.assertEquals(PACKET_POKER_TOURNEY, result.type)
         places = self.service.getPlayerPlaces(self.user1_serial)
         tourney = self.service.tourneys[places.tourneys[0]]
         self.assertEquals(tourney_name, tourney.name)
@@ -4496,7 +4496,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         clear_all_messages()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
-        self.assertEquals(get_messages(),['type = ERROR(3) message = Tournament 91 does not exist, code = 1, other_type = POKER_TOURNEY_REGISTER'])
+        self.assertEquals(get_messages(),['ERROR  type = 3 length = 38 message = Tournament 91 does not exist code = 1 other_type = 116'])
         self.failUnless(hasattr(client, "errorPacket"))
         self.assertEquals(client.errorPacket.type, PACKET_ERROR)
         self.assertEquals(client.errorPacket.code,PacketPokerTourneyRegister.DOES_NOT_EXIST)
@@ -4581,8 +4581,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                           PacketPokerTourneyRegister.ALREADY_REGISTERED)
         msgs = get_messages()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('type = ERROR(3) message = Player 44 already registered in tournament 99')  == 0)
-        self.failUnless(msgs[0].find('other_type = POKER_TOURNEY_REGISTER') >= 0)
+        self.failUnless(msgs[0].find('ERROR  type = 3 length = 56 message = Player 44 already registered in tournament 99  code = 2')  == 0)
+        self.failUnless(msgs[0].find('other_type = %d' % PACKET_POKER_TOURNEY_REGISTER) >= 0)
     def test23_tourneyRegister_tourneyRefuseRegistration(self):
         self.service = pokerservice.PokerService(self.settings)
         class MockClient:
@@ -4616,11 +4616,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.type, PACKET_ERROR)
         self.failUnless(pack.message.find('Registration refused in tournament 123') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
-        self.assertEquals(pack.code,
-                          PacketPokerTourneyRegister.REGISTRATION_REFUSED)
+        self.assertEquals(pack.code, PacketPokerTourneyRegister.REGISTRATION_REFUSED)
         msgs = get_messages()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('type = ERROR(3) message = Registration refused in tournament 123')  == 0)
+        self.failUnless(msgs[0].find('ERROR  type = 3 length = 49 message = Registration refused in tournament 123') == 0)
 
     def test22_tourneyRegister_viaSatellite(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -4697,7 +4696,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = get_messages()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
-        self.failUnless(msgs[1].find('type = ERROR(3) message = Not enough money to enter the tournament 526')  == 0)
+        self.failUnless(msgs[1].find('ERROR  type = 3 length = 54 message = Not enough money to enter the tournament 526')  == 0)
 
         self.service.db = oldDb
     def test25_tourneyRegister_updateMoneyWeirdness(self):
@@ -6224,18 +6223,19 @@ class SSLContextFactoryCoverage(unittest.TestCase):
             def __init__(mcSelf, val):
                 self.assertEquals(SSL.SSLv23_METHOD, val)
                 mcSelf.testerData = "Stuff"
+            def set_options(mcSelf, val):
+                self.assertEquals(SSL.OP_NO_SSLv2, val)
             def use_certificate_file(mcSelf, file):
                 self.assertEquals(scf.pem_file, file)
             def use_privatekey_file(mcSelf, file):
                 self.assertEquals(scf.pem_file, file)
-
-        saveContext = SSL.Context
-        SSL.Context = MockContext
-
+            
+        scf._context = None
+        scf._contextFactory = MockContext
+        scf.cacheContext()
         context = scf.getContext()
         self.assertEquals(context.testerData, "Stuff")
 
-        SSL.Context = saveContext
         shutil.rmtree(tmpdir)
 ##############################################################################
 from pokernetwork.pokerservice import PokerSOAP, PokerXMLRPC

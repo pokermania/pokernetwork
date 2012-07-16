@@ -655,7 +655,7 @@ Packet.infoDeclare(globals(), PacketError, Packet, "ERROR", 3) # 3 #
 def packetErrorInit(obj, **kwargs):
     Packet.infoInit(obj)
     Exception.__init__(obj)
-PacketError.__init__ = packetErrorInit
+PacketError._PacketError__init__ = packetErrorInit
 ########################################
 
 class PacketAck(Packet):
