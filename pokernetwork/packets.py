@@ -24,7 +24,6 @@
 #
 from struct import pack, unpack, calcsize
 from copy import deepcopy
-import simplejson
 
 from pokernetwork import log as network_log
 log = network_log.getChild('packets')
@@ -35,14 +34,73 @@ PacketNames = {}
 PACKET_NONE = 0
 PacketNames[PACKET_NONE] = "NONE"
 
-class Packet(object):
-    """
+def find(f, seq):
+    """Return first item in sequence where f(item) == True."""
+    for item in seq:
+        if f(item): return item
 
-     Packet base class
+def packets2maps(packets, packet_type_numeric=True):
+    return (packet2map(packet,packet_type_numeric) for packet in packets)
     
+def packet2map(packet, packet_type_numeric=True):
+    attributes = packet.__dict__.copy()
+    
+    for attr_name in attributes.keys():
+        if attr_name[0] == '_':
+            del attributes[attr_name]
+            
+    if isinstance(packet, PacketList):
+        attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
+        
+    msg = getattr(packet,'message', None)
+    if msg is not None:
+        attributes['message'] = msg
+        
+    #
+    # FIXME the followiong statement is NOT true (anymore?)
+    # It is forbidden to set a map key to a numeric (native
+    # numeric or string made of digits). Taint the map entries
+    # that are numeric and hope the client will figure it out.
+    dict_keys = (k for (k,v) in attributes.iteritems() if isinstance(v, dict) and find(lambda el: not isinstance(el,str), v))
+    for key in dict_keys:
+        new_dict = attributes[key].copy()
+        for (subkey,subvalues) in new_dict.iteritems():
+            if not isinstance(subkey,str):
+                del new_dict[subkey]
+                subkey_new = str(subkey)
+                if subkey_new.isdigit():
+                    subkey_new = 'X'+ subkey_new
+                new_dict[subkey_new] = subvalues
+        attributes[key] = new_dict
+                    
+    attributes['type'] = packet.__class__.__name__ \
+        if not packet_type_numeric \
+        else packet.type            
+        
+    return attributes
+
+
+import simplejson
+class JSON:
     """
-    JSON = simplejson.JSONEncoder()
+    JSON implementation used for packet en/decoding
+    """
+    encoder = simplejson.JSONEncoder(ensure_ascii=False,separators=(',', ':'))
+    decoder = simplejson.JSONDecoder()
     
+    def encode(self,obj):
+        """encode an object, returning a utf8 encoded string (not a unicode string!)"""
+        return self.encoder.encode(obj).encode('utf8')
+    def decode(self,string):
+        return self.decoder.decode(string)
+        
+class Packet:
+    """
+     Packet base class
+    """
+    
+    JSON = JSON()
+
     type = PACKET_NONE
     length = -1
     format = "!BH"
@@ -64,6 +122,9 @@ class Packet(object):
         self.length = self.infoCalcsize()
         return None
             
+    def packJson(self):
+        return Packet.JSON.encode(packet2map(self))
+    
     def pack(self):
         return pack(Packet.format, self.type, self.calcsize())
 
