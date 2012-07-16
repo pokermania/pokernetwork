@@ -178,15 +178,13 @@ class PokerResource(resource.Resource):
             self._log.debug("(%s:%s) render %s", host, port, data)
 
         try:
-            arg = simplejson.loads(data, encoding = 'utf-8')
+            arg = Packet.JSON.decode(data)
         except Exception:
             resp = 'invalid request'
             request.setResponseCode(http.BAD_REQUEST)
             request.setHeader('content-type',"text/html")
             request.setHeader('content-length', str(len(resp)))
             return resp
-        
-        arg = fromutf8(arg)
         
         (packet, packet_type_numeric) = arg2packet(arg)
         
