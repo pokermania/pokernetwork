@@ -20,30 +20,23 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-import simplejson
 import re
 import imp
-import time
 import base64
 
 from traceback import format_exc
 
-from twisted.web import server, resource, util, http
+from twisted.web import server, resource, http
 from twisted.internet import defer
-from twisted.python import log
-from twisted.python.runtime import seconds
 
-from pokernetwork.pokerpackets import *
+from pokernetwork.packets import packets2maps
+
 from pokernetwork.packets import *
+from pokernetwork.pokerpackets import *
 PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_class in PacketFactory.itervalues())
 
 from pokernetwork import log as network_log
 log = network_log.getChild('site')
-
-def find(f, seq):
-    """Return first item in sequence where f(item) == True."""
-    for item in seq:
-        if f(item): return item
 
 # Disabled Unicode encoding. It is not required anymore since it is only used
 # for the (dealer) chat. We measured a higher sit out count with Unicode
@@ -72,47 +65,6 @@ def __walk(tree, convert):
         return convert(tree)
     else:
         return tree
-
-def packets2maps(packets,packet_type_numeric=False):
-    return (packet2map(packet,packet_type_numeric) for packet in packets)
-    
-def packet2map(packet, packet_type_numeric=False):
-    attributes = packet.__dict__.copy()
-    
-    for attr_name in attributes.keys():
-        if attr_name[0] == '_':
-            del attributes[attr_name]
-            
-    if isinstance(packet, PacketList):
-        attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
-        
-    msg = getattr(packet,'message', None)
-    if msg is not None:
-        attributes['message'] = msg
-        
-    #
-    # FIXME the followiong statement is NOT true (anymore?)
-    # It is forbidden to set a map key to a numeric (native
-    # numeric or string made of digits). Taint the map entries
-    # that are numeric and hope the client will figure it out.
-    dict_keys = (k for (k,v) in attributes.iteritems() if isinstance(v, dict) and find(lambda el: not isinstance(el,str), v))
-    for key in dict_keys:
-        new_dict = attributes[key].copy()
-        for (subkey,subvalues) in new_dict.iteritems():
-            if not isinstance(subkey,str):
-                del new_dict[subkey]
-                subkey_new = str(subkey)
-                if subkey_new.isdigit():
-                    subkey_new = 'X'+ subkey_new
-                new_dict[subkey_new] = subvalues
-        attributes[key] = new_dict
-                    
-    attributes['type'] = packet.__class__.__name__ \
-        if not packet_type_numeric \
-        else packet.type            
-        
-    return attributes
-    
 
 _arg2packet_re = re.compile("^[a-zA-Z]+$")
 
@@ -227,7 +179,7 @@ class PokerResource(resource.Resource):
 
         try:
             arg = simplejson.loads(data, encoding = 'utf-8')
-        except simplejson.decoder.JSONDecodeError:
+        except Exception:
             resp = 'invalid request'
             request.setResponseCode(http.BAD_REQUEST)
             request.setHeader('content-type',"text/html")
@@ -310,16 +262,20 @@ class PokerResource(resource.Resource):
             #
             # Format answer
             #
-            maps = toutf8(list(packets2maps(packets, packet_type_numeric)))
             
-            result_string = '%s(%s)' % (jsonp,Packet.JSON.encode(maps)) if jsonp else str(Packet.JSON.encode(maps))
+
+            packets_encoded = Packet.JSON.encode(list(packets2maps(packets, packet_type_numeric)))
+            result = '%s(%s)' % (jsonp,packets_encoded) if jsonp else packets_encoded
+
             content_type = 'text/javascript' if jsonp else 'text/plain'
              
             request.setHeader("content-type", '%s; charset=utf-8' % content_type)
-            request.setHeader("content-length", str(len(result_string)))
-            request.write(result_string)
+            request.setHeader("content-length", str(len(result)))
+            request.write(result)
+            
             if not (request.finished or request._disconnected):
                 request.finish()
+                
             return True
         def processingFailed(reason):
             # session was reloaded (and expired) because the session object could have changed in the meantime
