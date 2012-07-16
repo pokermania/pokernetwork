@@ -660,7 +660,6 @@ serial: the unique number associated to the user.
 
     info = Packet.info + (
         ('serial', 0, 'I'),
-        ('cookie', '', 'no net'),
         )
     
 Packet.infoDeclare(globals(), PacketSerial, Packet, "SERIAL", 6) # 6 #
