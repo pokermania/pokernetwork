@@ -106,7 +106,7 @@ class PacketsTestCase(testpackets.PacketsTestBase):
                        "\0\x03ABC", # c
                        "\x03\x01\x02\x03", # d
                        "\xff", # e
-                       '\x00\x1b[{"a": [1, 2]}, null, true]', # g
+                       '\x00\x17[{"a":[1,2]},null,true]', # g
                        "\x00\x02\x05\x00\x03\x05\x00\x03", # h
                        "\x01", # i
                        "\x00", # i1
@@ -138,9 +138,8 @@ class PacketsTestCase(testpackets.PacketsTestBase):
     def test_infoUnpackJSON(self):
         type = self.defineTestPacket()
         packet = type()
-        class TestJSON(simplejson.JSONEncoder):
-            @staticmethod
-            def decode_objects(something):
+        class TestJSON:
+            def decode(self,something):
                 return something
         old_JSON = packets.Packet.JSON
         packets.Packet.JSON = TestJSON()

@@ -270,12 +270,12 @@ class Packet:
 
     @staticmethod
     def packjson(obj):
-        return Packet.packstring(simplejson.dumps(obj))
+        return Packet.packstring(Packet.JSON.encode(obj))
 
     @staticmethod
     def unpackjson(block):
         ( block, string ) = Packet.unpackstring(block)
-        obj = simplejson.loads(string)
+        obj = Packet.JSON.decode(string)
         return ( block, obj)
 
     @staticmethod
