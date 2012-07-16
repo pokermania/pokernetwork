@@ -128,8 +128,7 @@ class nusoap_base {
 	* @var      string
 	* @access   public
 	*/
-    var $soap_defencoding = 'ISO-8859-1';
-	//var $soap_defencoding = 'UTF-8';
+	var $soap_defencoding = 'UTF-8';
 
 	/**
 	* namespaces in an array of prefix => uri
@@ -602,9 +601,6 @@ class nusoap_base {
     * @access public
     */
     function serializeEnvelope($body,$headers=false,$namespaces=array(),$style='rpc',$use='encoded',$encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'){
-    // TODO: add an option to automatically run utf8_encode on $body and $headers
-    // if $this->soap_defencoding is UTF-8.  Not doing this automatically allows
-    // one to send arbitrary UTF-8 characters, not just characters that map to ISO-8859-1
 
 	// serialize namespaces
     $ns_string = '';
@@ -2932,7 +2928,6 @@ class soap_server extends nusoap_base {
 	var $methodparams = array();	// method parameters from request
 	var $xml_encoding = '';			// character set encoding of incoming (request) messages
 	var $SOAPAction = '';			// SOAP Action from request
-    var $decode_utf8 = true;		// toggles whether the parser decodes element content w/ utf8_decode()
 
 	var $outgoing_headers = array();// HTTP headers of response
 	var $response = '';				// HTTP response
@@ -3087,7 +3082,7 @@ class soap_server extends nusoap_base {
 			// get the character encoding of the incoming request
 			if(isset($this->headers['Content-Type']) && strpos($this->headers['Content-Type'],'=')){
 				$enc = str_replace('"','',substr(strstr($this->headers["Content-Type"],'='),1));
-				if(eregi('^(ISO-8859-1|US-ASCII|UTF-8)$',$enc)){
+				if(eregi('^(US-ASCII|UTF-8)$',$enc)){
 					$this->xml_encoding = strtoupper($enc);
 				} else {
 					$this->xml_encoding = 'US-ASCII';
@@ -3115,7 +3110,7 @@ class soap_server extends nusoap_base {
 						$enc = substr(strstr($v, '='), 1);
 						$enc = str_replace('"', '', $enc);
 						$enc = str_replace('\\', '', $enc);
-						if (eregi('^(ISO-8859-1|US-ASCII|UTF-8)$', $enc)) {
+						if (eregi('^(US-ASCII|UTF-8)$', $enc)) {
 							$this->xml_encoding = strtoupper($enc);
 						} else {
 							$this->xml_encoding = 'US-ASCII';
@@ -3145,7 +3140,7 @@ class soap_server extends nusoap_base {
 							$enc = substr(strstr($v, '='), 1);
 							$enc = str_replace('"', '', $enc);
 							$enc = str_replace('\\', '', $enc);
-							if (eregi('^(ISO-8859-1|US-ASCII|UTF-8)$', $enc)) {
+							if (eregi('^(US-ASCII|UTF-8)$', $enc)) {
 								$this->xml_encoding = strtoupper($enc);
 							} else {
 								$this->xml_encoding = 'US-ASCII';
@@ -3212,7 +3207,7 @@ class soap_server extends nusoap_base {
 		$this->request .= "\r\n".$data;
 		$this->requestSOAP = $data;
 		// parse response, get soap parser obj
-		$parser = new soap_parser($data,$this->xml_encoding,'',$this->decode_utf8);
+		$parser = new soap_parser($data,$this->xml_encoding,'');
 		// parser debug
 		$this->debug("parser debug: \n".$parser->getDebug());
 		// if fault occurred during message parsing
@@ -5461,8 +5456,6 @@ class soap_parser extends nusoap_base {
 	var $ids = array();
 	// array of id => hrefs => pos
 	var $multirefs = array();
-	// toggle for auto-decoding element content
-	var $decode_utf8 = true;
 
 	/**
 	* constructor that actually does the parsing
@@ -5470,15 +5463,13 @@ class soap_parser extends nusoap_base {
 	* @param    string $xml SOAP message
 	* @param    string $encoding character encoding scheme of message
 	* @param    string $method method for which XML is parsed (unused?)
-	* @param    string $decode_utf8 whether to decode UTF-8 to ISO-8859-1
 	* @access   public
 	*/
-	function soap_parser($xml,$encoding='UTF-8',$method='',$decode_utf8=true){
+	function soap_parser($xml,$encoding='UTF-8',$method=''){
 		parent::nusoap_base();
 		$this->xml = $xml;
 		$this->xml_encoding = $encoding;
 		$this->method = $method;
-		$this->decode_utf8 = $decode_utf8;
 
 		// Check whether content has been read.
 		if(!empty($xml)){
@@ -5821,21 +5812,13 @@ class soap_parser extends nusoap_base {
 	*/
 	function character_data($parser, $data){
 		$pos = $this->depth_array[$this->depth];
-		if ($this->xml_encoding=='UTF-8'){
-			// TODO: add an option to disable this for folks who want
-			// raw UTF-8 that, e.g., might not map to iso-8859-1
-			// TODO: this can also be handled with xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, "ISO-8859-1");
-			if($this->decode_utf8){
-				$data = utf8_decode($data);
-			}
-		}
-        $this->message[$pos]['cdata'] .= $data;
-        // for doclit
-        if($this->status == 'header'){
-        	$this->responseHeaders .= $data;
-        } else {
-        	$this->document .= $data;
-        }
+    $this->message[$pos]['cdata'] .= $data;
+    // for doclit
+    if($this->status == 'header'){
+      $this->responseHeaders .= $data;
+    } else {
+      $this->document .= $data;
+    }
 	}
 
 	/**
@@ -6052,7 +6035,6 @@ class nusoapclient extends nusoap_base  {
 	var $response = '';				// HTTP response
 	var $responseData = '';			// SOAP payload of response
 	var $cookies = array();			// Cookies from response or for request
-    var $decode_utf8 = true;		// toggles whether the parser decodes element content w/ utf8_decode()
 	var $operations = array();		// WSDL operations, empty for WSDL initialization error
 	
 	/*
@@ -6456,7 +6438,7 @@ class nusoapclient extends nusoap_base  {
 			$this->xml_encoding = 'ISO-8859-1';
 		}
 		$this->debug('Use encoding: ' . $this->xml_encoding . ' when creating soap_parser');
-		$parser = new soap_parser($data,$this->xml_encoding,$this->operation,$this->decode_utf8);
+		$parser = new soap_parser($data,$this->xml_encoding,$this->operation);
 		// add parser debug data to our debug
 		$this->appendDebug($parser->getDebug());
 		// if parse errors
@@ -6723,16 +6705,6 @@ class nusoapclient extends nusoap_base  {
 		return $this->soap_defencoding;
 	}
 
-	/*
-	* whether or not parser should decode utf8 element content
-    *
-    * @return   always returns true
-    * @access   public
-    */
-    function decodeUTF8($bool){
-		$this->decode_utf8 = $bool;
-		return true;
-    }
 
 	/**
 	 * adds a new Cookie into $this->cookies array

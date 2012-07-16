@@ -5,7 +5,7 @@
 	define('_cst_avatar_max_width', '90');
 	define('_cst_avatar_max_height', '60');
 	define('_cst_avatar_max_size_kb', '10');
-	define('_cst_encoding', 'iso-8859-1');
+	define('_cst_encoding', 'utf-8');
 	define('_cst_header', 'header_default.php');
 	define('_cst_footer', 'footer_default.php');
 	define('_cst_currency_one_public', 'currency_one.php');
