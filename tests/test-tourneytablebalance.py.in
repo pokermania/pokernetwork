@@ -1,5 +1,5 @@
 #!@PYTHON@
-# -*- mode: python; coding: iso-8859-1 -*-
+# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
 # Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>

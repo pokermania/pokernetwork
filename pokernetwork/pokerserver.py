@@ -1,5 +1,5 @@
 #
-# -*- coding: iso-8859-1 -*-
+# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 #
 # Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
