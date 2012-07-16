@@ -267,7 +267,7 @@ class PokerResource(resource.Resource):
             packets_encoded = Packet.JSON.encode(list(packets2maps(packets, packet_type_numeric)))
             result = '%s(%s)' % (jsonp,packets_encoded) if jsonp else packets_encoded
 
-            content_type = 'text/javascript' if jsonp else 'text/plain'
+            content_type = 'application/javascript' if jsonp else 'application/json'
              
             request.setHeader("content-type", '%s; charset=utf-8' % content_type)
             request.setHeader("content-length", str(len(result)))
