@@ -17,7 +17,6 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-import simplejson as json
 from twisted.internet import defer, protocol, reactor, error
 from twisted.internet.defer import CancelledError
 from twisted.web import http, client
@@ -129,8 +128,8 @@ class PokerRestClient:
         if self.pendingLongPoll:
             self.scheduleLongPoll(0)
         self.pendingLongPoll = False
-        args = json.loads(data)
-        args = pokersite.fromutf8(args)
+        
+        args = Packet.JSON.decode(data)
         packets = list(pokersite.args2packets(args))
         return packets
 

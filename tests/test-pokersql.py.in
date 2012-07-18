@@ -28,7 +28,7 @@ import simplejson
 
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
 
-settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="3" admin="yes">
 
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"

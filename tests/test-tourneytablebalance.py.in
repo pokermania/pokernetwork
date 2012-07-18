@@ -75,7 +75,7 @@ class ConstantPlayerShuffler:
 from pokerengine import pokertournament
 pokertournament.shuffler = ConstantPlayerShuffler()
 
-settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -84,7 +84,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
-  <language value="en_US.ISO-8859-1"/>
+  <language value="en_US.UTF-8"/>
 
   <stats type="RankPercentile"/>
 

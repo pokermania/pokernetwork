@@ -89,7 +89,7 @@ TABLE2 = 2
 TABLE3 = 3
 
 
-settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -98,22 +98,22 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
-  <language value="en_US.ISO-8859-1"/>
-  <language value="fr_FR.ISO-8859-1"/>
-  <language value="fr_FX.ISO-8859-1"/>
-  <language value="de_DE.ISO-8859-1"/>
-  <language value="en_GB.ISO-8859-1"/>
-  <language value="es_ES.ISO-8859-1"/>
-  <language value="nl_NL.ISO-8859-1"/>
-  <language value="fr_BE.ISO-8859-1"/>
-  <language value="en_CA.ISO-8859-1"/>
-  <language value="fr_CA.ISO-8859-1"/>
-  <language value="it_IT.ISO-8859-1"/>
-  <language value="pt_PT.ISO-8859-1"/>
-  <language value="da_DK.ISO-8859-1"/>
-  <language value="fi_FI.ISO-8859-1"/>
-  <language value="nb_NO.ISO-8859-1"/>
-  <language value="sv_SE.ISO-8859-1"/>
+  <language value="en_US.UTF-8"/>
+  <language value="fr_FR.UTF-8"/>
+  <language value="fr_FX.UTF-8"/>
+  <language value="de_DE.UTF-8"/>
+  <language value="en_GB.UTF-8"/>
+  <language value="es_ES.UTF-8"/>
+  <language value="nl_NL.UTF-8"/>
+  <language value="fr_BE.UTF-8"/>
+  <language value="en_CA.UTF-8"/>
+  <language value="fr_CA.UTF-8"/>
+  <language value="it_IT.UTF-8"/>
+  <language value="pt_PT.UTF-8"/>
+  <language value="da_DK.UTF-8"/>
+  <language value="fi_FI.UTF-8"/>
+  <language value="nb_NO.UTF-8"/>
+  <language value="sv_SE.UTF-8"/>
   <language value="this_locale_does_not_exist"/>
 
   <stats type="RankPercentile"/>
@@ -295,7 +295,7 @@ class PokerServiceTestCaseBase(unittest.TestCase):
         cursor.execute(sql)
         cursor.close()
 
-monitor_settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -376,7 +376,7 @@ class CleanUpTestCase(PokerServiceTestCaseBase):
         self.assertEqual(1, cursor.fetchone()[0])
         cursor.close()
 
-list_table_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -388,7 +388,7 @@ list_table_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 
   <listen tcp="19480" />
 
-  <language value="en_US.ISO-8859-1"/>
+  <language value="en_US.UTF-8"/>
 
   <stats type="RankPercentile"/>
 
@@ -1029,7 +1029,7 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
 
 class ResthostTestCase(unittest.TestCase):
 
-    xml_with_resthost = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    xml_with_resthost = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -1049,7 +1049,7 @@ class ResthostTestCase(unittest.TestCase):
 </server>
 """
 
-    xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -1068,7 +1068,7 @@ class ResthostTestCase(unittest.TestCase):
 </server>
 """
 
-    xml_with_resthost_name = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    xml_with_resthost_name = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -1260,12 +1260,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             if instanceVar == "tables":
                 self.assertEquals(len(self.service.__dict__[instanceVar]), val)
 
-        for ii in ('this_locale_does_not_exist', 'en_US.ISO-8859-1', 'fr_FR.ISO-8859-1'):
+        for ii in ('this_locale_does_not_exist', 'en_US.UTF-8', 'fr_FR.UTF-8'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
             self.assertEquals(callable(self.service.locale2translationFunc(ii)), True)
-        for ii in ('this_locale_does_not_exist', 'en_US.ISO-8859-1'):
+        for ii in ('this_locale_does_not_exist', 'en_US.UTF-8'):
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
-        self.assertEquals(self.service.gettextFuncs['fr_FR.ISO-8859-1']("Aces"), "d'As")
+        self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
 
         for ii in ('nothing', 'unknown'):
             self.assertEquals(self.service.locale2translationFunc(ii), None)
@@ -1313,10 +1313,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(len(self.service.gettextFuncs), 17)
         self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
         self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
-        for ii in ('en_US.ISO-8859-1', 'fr_FR.ISO-8859-1'):
+        for ii in ('en_US.UTF-8', 'fr_FR.UTF-8'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
-        self.assertEquals(self.service.gettextFuncs['en_US.ISO-8859-1']("Aces"), "Aces")
-        self.assertEquals(self.service.gettextFuncs['fr_FR.ISO-8859-1']("Aces"), "d'As")
+        self.assertEquals(self.service.gettextFuncs['en_US.UTF-8']("Aces"), "Aces")
+        self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
         self.assertEquals(search_output("Unable to restore original locale: testing bad setlocale"), True)
         locale.setlocale = saveLocale
 
@@ -1331,7 +1331,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         Check the case where an error occurs due to an encoding requested
         for a config language value has an unknown encoding."""
 
-        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>','<language value="fr_FR.MAGIC-PIXIE-DUST"/>')
+        new_settings_xml = settings_xml.replace('<language value="fr_FR.UTF-8"/>','<language value="fr_FR.MAGIC-PIXIE-DUST"/>')
 
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
@@ -1343,7 +1343,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.failUnless(search_output('Unsupported codeset MAGIC-PIXIE-DUST for fr_FR.MAGIC-PIXIE-DUST in poker-engine; locale ignored: unknown encoding: MAGIC-PIXIE-DUST'))
         self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
         self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
-        for ii in ('en_US.ISO-8859-1', 'fr_FR.MAGIC-PIXIE-DUST'):
+        for ii in ('en_US.UTF-8', 'fr_FR.MAGIC-PIXIE-DUST'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
 
@@ -1352,7 +1352,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         Check the case where an error occurs due to an encoding requested
         for a config language value has an unknown encoding."""
 
-        new_settings_xml = settings_xml.replace('<language value="fr_FR.ISO-8859-1"/>','<language value=".MAGIC-PIXIE-DUST"/>')
+        new_settings_xml = settings_xml.replace('<language value="fr_FR.UTF-8"/>','<language value=".MAGIC-PIXIE-DUST"/>')
 
         settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
@@ -1363,7 +1363,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(len(self.service.gettextFuncs), 17)
         self.failUnless(search_output('Unable to find codeset string in language value: .MAGIC-PIXIE-DUST'))
         self.failUnless(search_output("No translation for language .MAGIC-PIXIE-DUST for .MAGIC-PIXIE-DUST in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
-        for ii in ('en_US.ISO-8859-1', '.MAGIC-PIXIE-DUST'):
+        for ii in ('en_US.UTF-8', '.MAGIC-PIXIE-DUST'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
 
@@ -1744,7 +1744,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         return defer.DeferredList((d1, d2), fireOnOneErrback = True)
 
     def test14_sng_timeout(self):
-        settings = """<?xml version="1.0" encoding="ISO-8859-1"?><server sng_timeout="111"><delays /></server>"""
+        settings = """<?xml version="1.0" encoding="UTF-8"?><server sng_timeout="111"><delays /></server>"""
         service = pokerservice.PokerService(settings)
         self.assertEqual(111, service.sng_timeout)
 
@@ -1992,24 +1992,20 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 ##############################################################################        
     def test23_localeChecks(self):
         self.service.startService()
-        for enlo in ('this_locale_does_not_exist', 'en_GB.ISO-8859-1',
-                     'en_US.ISO-8859-1', 'en_CA.ISO-8859-1'):
-            self.assertEquals(self.service.locale2translationFunc(enlo)("Aces"), "Aces")
+        for enlo in ('this_locale_does_not_exist', 'en_GB.UTF-8', 'en_US.UTF-8', 'en_CA.UTF-8'):
+            self.assertEquals(self.service.locale2translationFunc(enlo)("Aces"), u"Aces".encode('utf8'))
         clear_all_messages()
-        self.assertEquals(self.service.locale2translationFunc('fr_FR', 'UTF-8'),
-                         None)
-        self.assertEquals(get_messages(), ['Locale, \'fr_FR.UTF-8\' not available. fr_FR.UTF-8 must not have been provide via <language/> tag in settings, or errors occured during loading.'])
-        enc = 'ISO-8859-1'
-        self.assertEquals(self.service.locale2translationFunc('da_DK', enc)("%(name)s mucks loosing hand"), "%(name)s mucker tabende h\xe5nd")
-        self.assertEquals(self.service.locale2translationFunc('de_DE', enc)("%(name)s raises %(amount)s"), '%(name)s erh\xf6ht %(amount)s' )
-        self.assertEquals(self.service.locale2translationFunc('fi_FI', enc)("Board: %(board)s"), 'P\xf6yt\xe4kortit: %(board)s')
+        enc = 'UTF-8'
+        self.assertEquals(self.service.locale2translationFunc('da_DK', enc)("%(name)s mucks loosing hand"), u'%(name)s mucker tabende hånd'.encode('utf8'))
+        self.assertEquals(self.service.locale2translationFunc('de_DE', enc)("%(name)s raises %(amount)s"), u'%(name)s erhöht %(amount)s'.encode('utf8') )
+        self.assertEquals(self.service.locale2translationFunc('fi_FI', enc)("Board: %(board)s"), u'Pöytäkortit: %(board)s'.encode('utf8'))
         for fr in ('fr_FR', 'fr_FX', 'fr_BE', 'fr_CA'):
-            self.assertEquals(self.service.locale2translationFunc(fr, enc)("%(name)s receives %(amount)s"), '%(name)s re\xe7oit %(amount)s')
-        self.assertEquals(self.service.locale2translationFunc('it_IT', enc)("High card %(card)s"),'Carta pi\xf9 alta: %(card)s')
-        self.assertEquals(self.service.locale2translationFunc('nb_NO', enc)("%(name)s mucks loosing hand"), '%(name)s skjuler tapende h\xe5nd')
-        self.assertEquals(self.service.locale2translationFunc('nl_NL', enc)("Four of a kind %(card)s"), 'Carr\xe9 %(card)s')
-        self.assertEquals(self.service.locale2translationFunc('pt_PT', enc)("Rake %(amount)s"), 'Comiss\xe3o %(amount)s')
-        self.assertEquals(self.service.locale2translationFunc('sv_SE', enc)("winners share a pot of %(pot)s"), 'vinnarna delar p\xe5 potten %(pot)s')
+            self.assertEquals(self.service.locale2translationFunc(fr, enc)("%(name)s receives %(amount)s"), u'%(name)s reçoit %(amount)s'.encode('utf8'))
+        self.assertEquals(self.service.locale2translationFunc('it_IT', enc)("High card %(card)s"), u'Carta più alta: %(card)s'.encode('utf8'))
+        self.assertEquals(self.service.locale2translationFunc('nb_NO', enc)("%(name)s mucks loosing hand"), u'%(name)s skjuler tapende hånd'.encode('utf8'))
+        self.assertEquals(self.service.locale2translationFunc('nl_NL', enc)("Four of a kind %(card)s"), u'Carré %(card)s'.encode('utf8'))
+        self.assertEquals(self.service.locale2translationFunc('pt_PT', enc)("Rake %(amount)s"), u'Comissão %(amount)s'.encode('utf8'))
+        self.assertEquals(self.service.locale2translationFunc('sv_SE', enc)("winners share a pot of %(pot)s"), u'vinnarna delar på potten %(pot)s'.encode('utf8'))
     def test24_buyInPlayerNoneAmount(self):
         self.service.startService()
         self.service.refill = None
@@ -2045,7 +2041,7 @@ class RefillTestCase(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
     def setUp(self):
-        settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <server verbose="3">
         <listen tcp="19480" />
         <refill serial="1" amount="10000" />
@@ -2081,7 +2077,7 @@ class RefillTestCase(unittest.TestCase):
 class TimerTestCase(unittest.TestCase):
 
     def test_cancelTimers(self):
-        settings = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        settings = """<?xml version="1.0" encoding="UTF-8"?>
         <server verbose="3">
         <delays />
         </server>
@@ -5911,7 +5907,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         )
 
         self.service.db = oldDb
-    def test65_createTable_insertFailsAndLasRowNotThere(self):
+    def test65_createTable_insertFailsProperly(self):
         acceptList = ["INSERT INTO pokertables", 'REPLACE INTO route']
         acceptListRowCount = [0,1]
         class MockCursor(MockCursorBase):
@@ -5936,60 +5932,16 @@ class PokerServiceCoverageTests(unittest.TestCase):
             'name': "This", 'variant' : 'omaha',
             'betting_structure' : "2-4-limit" 
         })
-        self.assertEquals(self.service.tables[1567], table)
-        self.assertEquals(table.owner, 'bobby')
-        self.assertEquals(table.game.name, "This")
-        self.assertEquals(table.game.variant, "omaha")
-        self.assertEquals(table.game.max_players, 7)
-        self.assertEquals(table.currency_serial, 2663)
-
-        for statement in acceptList:
-            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
+        
+        self.failIf(self.service.tables.has_key(1567), "Table Should not have been created, INSERT 0 rows!")
+        self.assertEquals(table, None)
+        
         msgs = get_messages()
-        self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
+        self.failUnless(len(msgs) >= 2, "There should be at least two output messages")
         self.failUnless(search_output('createTable: INSERT INTO pokertables'))
         self.failUnless(search_output('inserted 0 rows (expected 1): INSERT INTO pokertables'))
-        self.failUnless(search_output('table created : This'))
         
         self.service.db = oldDb
-        # NOTE: these test below (65a) can be used to replace
-        # the above test 65 above if sr #2273 is ever closed.
-
-#     def test65a_createTable_insertFailsProperly(self):
-#         validStatements = ["INSERT pokertables"]
-#         class MockCursor(MockCursorBase):
-#             def insert_id(mcBase): return 1567
-#             def statementActions(cursorSelf, sql, statement):
-#                 if statement == "INSERT pokertables":
-#                     cursorSelf.rowcount = 0
-#                     cursorSelf.row = []
-#             def __init__(cursorSelf):
-#                 MockCursorBase.__init__(cursorSelf, self, validStatements)
-
-
-#         self.service = pokerservice.PokerService(self.settings)
-#         self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
-
-#         oldDb = self.service.db
-#         self.service.db = MockDatabase(MockCursor)
-
-#         clear_all_messages()
-
-#         self.service.tables = {}
-#         table = self.service.createTable("bobby", { 'seats' : 7, 'currency_serial' : 2663,
-#                                                     'name': "This", 'variant' : 'omaha',
-#                                                     'betting_structure' : "2-4-limit" })
-#         self.failIf(self.service.tables.has_key(1567), "Table Should not have been created, INSERT 0 rows!")
-#         self.assertEquals(table, None)
-
-#         for statement in validStatements:
-#             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-#         msgs = get_messages()
-#         self.failUnless(len(msgs) >= 2, "There should be at least two output messages")
-#         self.failUnless(search_output('createTable: INSERT pokertables'))
-#         self.failUnless(search_output('inserted 0 rows (expected 1): INSERT pokertables'))
-        
-#         self.service.db = oldDb
     def test65b_createTable_insertSucceedsWithLargerThan1ReturnedWithLastRowThere(self):
         acceptList = ["INSERT INTO pokertables", 'REPLACE INTO route']
         acceptListRowCount = [3,1]
@@ -6435,7 +6387,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
 
         self.assertEquals(request.headerData,
-                          {'Content-type': ['text/xml; charset="ISO-8859-1"']})
+                          {'Content-type': ['text/xml; charset="UTF-8"']})
         self.failUnless(search_output('render hello'), "render hello should occur in output!")
     def test04a_maps2result(self):
         service = MockServiceForPokerXML()
@@ -6479,7 +6431,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
 class TourneySelectInfoTestCase(unittest.TestCase):
 
     def test01_not_found(self):
-        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -6502,7 +6454,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
         self.assertEqual(True, caught)
 
     def test02_no_init(self):
-        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -6525,7 +6477,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
         self.assertEqual(True, caught)
 
     def test03_no_handle(self):
-        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -6548,7 +6500,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
         self.assertEqual(True, caught)
 
     def test04_ok(self):
-        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -6570,7 +6522,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
         self.assertTrue(self.service.tourney_select_info.settings.path.find('testsettings.xml'))
 
     def test05_non_specified(self):
-        xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 

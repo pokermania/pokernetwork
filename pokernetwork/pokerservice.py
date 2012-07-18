@@ -73,7 +73,7 @@ from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokernetwork.packets import packets2maps
 from pokernetwork.pokerpackets import *
-from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, args2packets, fromutf8
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, args2packets
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -1303,7 +1303,7 @@ class PokerService(service.Service):
         cursor.execute("SELECT user_serial, name FROM user2tourney, users WHERE user2tourney.tourney_serial = " + str(tourney_serial) + " AND user2tourney.user_serial = users.serial")
         user2name = dict((entry["user_serial"], entry["name"]) for entry in cursor.fetchall())
 
-        cursor.execute("SELECT * FROM tourneys WHERE serial = " + str(tourney_serial));
+        cursor.execute("SELECT * FROM tourneys WHERE serial = %s",(tourney_serial,));
         if cursor.rowcount > 1:
             # This would be a bizarre case; unlikely to happen, but worth
             # logging if it happens.
@@ -2834,7 +2834,7 @@ class PokerService(service.Service):
         self.log.debug("createTable: %s", cursor._executed)
         if cursor.rowcount != 1:
             self.log.error("inserted %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-            # FIXME: sr #2273 notes that this should return None from right here if rowcount == 0
+            return None
             
         insert_id = cursor.lastrowid
         cursor.execute("REPLACE INTO route VALUES (%s,%s,%s,%s)", ( insert_id, tourney_serial, int(seconds()), self.resthost_serial))
@@ -3011,7 +3011,7 @@ def _getRequestCookie(request):
 #
 class PokerXML(resource.Resource):
 
-    encoding = "ISO-8859-1"
+    encoding = "UTF-8"
 
     def __init__(self, service):
         self.log = log.getChild(self.__class__.__name__)
@@ -3107,7 +3107,7 @@ class PokerXMLRPC(PokerXML):
 
     def getArguments(self, request):
         args = xmlrpclib.loads(request.content.read())[0]
-        return fromutf8(args, self.encoding)
+        return args
 
     def maps2result(self, request, maps):
         return xmlrpclib.dumps((maps, ), methodresponse = 1)
@@ -3118,14 +3118,14 @@ try:
     class PokerSOAP(PokerXML):
         def getArguments(self, request):
             data = request.content.read()
-            p, header, body, attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
-            methodName, args, kwargs, ns = p._name, p._aslist, p._asdict, p._ns
+            p, _header, _body, _attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
+            _methodName, args, kwargs, _ns = p._name, p._aslist, p._asdict, p._ns
             # deal with changes in SOAPpy 0.11
             if callable(args):
                 args = args()
             if callable(kwargs):
                 kwargs = kwargs()
-            return fromutf8(SOAPpy.simplify(args), self.encoding)
+            return SOAPpy.simplify(args)
 
         def maps2result(self, request, maps):
             return SOAPpy.buildSOAP(

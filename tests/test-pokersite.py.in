@@ -46,7 +46,7 @@ from pokernetwork.pokertable import PokerAvatarCollection
 from pokernetwork.pokerpackets import *
 
 class PokerAuthMockup:
-    def GetLevel(self,*a,**kw):
+    def GetLevel(self, *a, **kw):
         return 0
     
 class PokerServiceMockup:
@@ -58,11 +58,11 @@ class PokerServiceMockup:
             self.poker_auth = PokerAuthMockup()
 
       def getPlayerInfo(self, serial):
-            packet = PacketPokerPlayerInfo(serial = serial)
+            packet = PacketPokerPlayerInfo(serial=serial)
             packet.locale = 'en_US.UTF-8'
             return packet
 
-      def locale2translationFunc(self, locale, codeset = ""):
+      def locale2translationFunc(self, locale, codeset=""):
             return None
       
       def createAvatar(self):
@@ -71,11 +71,11 @@ class PokerServiceMockup:
       def destroyAvatar(self, avatar):
             pass
 
-      def forceAvatarDestroy(self,avatar):
+      def forceAvatarDestroy(self, avatar):
           pass
 
       def getPlayerPlaces(self, serial):
-            return PacketPokerPlayerPlaces(serial = serial)
+            return PacketPokerPlayerPlaces(serial=serial)
 
       def tourneyNotifyStart(self, tourney_serial):
             self.tourney_serial = tourney_serial
@@ -97,35 +97,33 @@ class PokerServiceMockup:
 
 class HelpersTestCase(unittest.TestCase):
 
-      def test_fromutf8(self):
-            self.assertEqual(['b', {'a': 'c'}, ('d',), 1], pokersite.fromutf8([u'b', {u'a': u'c'}, (u'd',), 1]))
-            self.assertEqual([u'b', {u'a': u'c'}, (u'd',), 1], pokersite.toutf8(['b', {'a': 'c'}, ('d',), 1]))
-                             
       def test_args2packets(self):
             self.assertEqual([PacketPing()], list(pokersite.args2packets([{'type':'PacketPing'}])))
+            self.assertEqual([PacketPing()], list(pokersite.args2packets([{'type':PACKET_PING}])))
             packet = pokersite.args2packets([{'type':'BadPacket'}]).next()
             self.assertSubstring('Invalid type name BadPacket', packet.message)
             packet = pokersite.args2packets([{'type':'-1'}]).next()
             self.assertSubstring('Invalid type', packet.message)
 
       def test_packets2maps(self):
-            self.assertEqual([{'type': 'PacketPing'}], list(pokersite.packets2maps([PacketPing()])))
+            self.assertEqual([{'type': PACKET_PING}], list(pokersite.packets2maps([PacketPing()])))
             self.assertEqual(
-                [{'packets': [{'type': 'PacketPing'}], 'type': 'PacketList'}], 
-                list(pokersite.packets2maps([PacketList(packets = [PacketPing()])]))
+                [{'packets': [{'type': PACKET_PING}], 'type': PACKET_LIST}],
+                list(pokersite.packets2maps([PacketList(packets=[PacketPing()])]))
             )
             packet = Packet()
             packet.message = "MESSAGE"
             packet.what = { 0: 1 }
-            self.assertEqual([{'message': 'MESSAGE', 'type': 'Packet', 'what': {'X0': 1}}], list(pokersite.packets2maps([packet])))
+            self.assertEqual([{'message': 'MESSAGE', 'type': PACKET_NONE, 'what': {'X0': 1}}], list(pokersite.packets2maps([packet])))
 
 class PokerSiteBase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<server verbose="6" />
-"""
+            settings_xml = \
+                '<?xml version="1.0" encoding="UTF-8"?>' \
+                '<server verbose="6" />'
+
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
             pokermemcache.memcache = pokermemcache.MemcacheMockup
@@ -157,7 +155,7 @@ class PokerResourceTestCase(PokerSiteBase):
       def test01_render(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r.gotLength(len(input))
             r.handleContentChunk(input)
             r.queued = 0
@@ -169,16 +167,17 @@ class PokerResourceTestCase(PokerSiteBase):
             return d
       
       def test02_render_error(self):
+            input = '{"type": %d}' % PACKET_PING
             r = pokersite.Request(self.Channel(self.site), True)
+            r.findProxiedIP = lambda *a,**kw: ('client-ip','127.0.0.1')
             r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
             r.gotLength(len(input))
             r.handleContentChunk(input)
             r.queued = 0
             error_pattern = 'UNLIKELY'
             def handlePacketLogic(packet):
-                  raise UserWarning, error_pattern
-            r.args = { 'uid': [ 'uid' ], 'auth': ['auth'] }
+                  raise UserWarning(error_pattern)
+            r.args = { 'uid': ['uid'], 'auth': ['auth'] }
             r.getSession().avatar.handlePacketLogic = handlePacketLogic
             r.requestReceived('GET', '/?uid=uid&auth=auth', '')
             self.assertSubstring(error_pattern, r.transport.getvalue())
@@ -192,7 +191,7 @@ class PokerResourceTestCase(PokerSiteBase):
             channel = self.Channel(self.site)
             r1 = pokersite.Request(channel, True)
             r1.site = r1.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r1.gotLength(len(input))
             r1.handleContentChunk(input)
             r1.queued = 0
@@ -206,7 +205,7 @@ class PokerResourceTestCase(PokerSiteBase):
 
             r2 = pokersite.Request(channel, True)
             r2.site = r2.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r2.gotLength(len(input))
             r2.handleContentChunk(input)
             r2.queued = 0
@@ -224,12 +223,12 @@ class PokerResourceTestCase(PokerSiteBase):
             #
             # r2 complete
             #
-            self.assertSubstring('PacketPing', r2.transport.getvalue())
+            self.assertSubstring(":%d" % PACKET_PING, r2.transport.getvalue())
             #
             # r1 complete
             #
             d1.callback(PacketAck())
-            self.assertSubstring('PacketAck', r1.transport.getvalue())
+            self.assertSubstring(":%d" % PACKET_ACK, r1.transport.getvalue())
 
       def test04_render_jsonp(self):
             r = pokersite.Request(self.Channel(self.site), True)
@@ -254,7 +253,7 @@ class PokerResourceTestCase(PokerSiteBase):
       def test06_render_expire_logged(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r.gotLength(len(input))
             r.handleContentChunk(input)
             r.queued = 0
@@ -322,7 +321,7 @@ class PokerResourceTestCase(PokerSiteBase):
             r.site = r.channel.site
             r.received_headers['x-forwarded-for'] = '1.2.3.4'
             r.site.resource.message = lambda message: self.assertSubstring('1.2.3.4', message)
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r.gotLength(len(input))
             r.handleContentChunk(input)
             r.queued = 0
@@ -346,7 +345,7 @@ class PokerTourneyStartTestCase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" />
 """
             self.settings = pokernetworkconfig.Config([])
@@ -387,7 +386,7 @@ class PokerImageUploadTestCase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" />
 """
             self.settings = pokernetworkconfig.Config([])
@@ -478,7 +477,7 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" />
 """
             self.settings = pokernetworkconfig.Config([])
@@ -491,7 +490,7 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
       def test01_render(self):
             data = 'image data'
             serial = 64
-            self.service.setPlayerImage(PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial))
+            self.service.setPlayerImage(PacketPokerPlayerImage(image=base64.b64encode(data), serial=serial))
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
             r.gotLength(0)
@@ -502,7 +501,7 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
 
       def test02_not_found(self):
             serial = 100
-            self.service.setPlayerImage(PacketPokerPlayerImage(image = '', serial = serial))
+            self.service.setPlayerImage(PacketPokerPlayerImage(image='', serial=serial))
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
             r.gotLength(0)
@@ -514,7 +513,7 @@ class PokerAvatarResourceTestCase(unittest.TestCase):
       def test03_error(self):
             data = 'image data'
             serial = 64
-            self.service.setPlayerImage(PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial))
+            self.service.setPlayerImage(PacketPokerPlayerImage(image=base64.b64encode(data), serial=serial))
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
             r.gotLength(0)
@@ -531,7 +530,7 @@ class FilterTestCase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
 <rest_filter>../@srcdir@/testfilter.py</rest_filter>
 <rest_filter>../@srcdir@/../pokernetwork/nullfilter.py</rest_filter>
@@ -558,7 +557,7 @@ class FilterTestCase(unittest.TestCase):
       def test01_render(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r.gotLength(len(input))
             r.handleContentChunk(input)
             r.requestReceived('GET', '/', '')
@@ -570,7 +569,7 @@ class FilterErrorTestCase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
 <rest_filter>../@srcdir@/testerrorfilter.py</rest_filter>
 </server>
@@ -595,7 +594,7 @@ class FilterErrorTestCase(unittest.TestCase):
       def test01_render(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r.gotLength(len(input))
             r.handleContentChunk(input)
             
@@ -611,7 +610,7 @@ class FilterFinishTestCase(unittest.TestCase):
 
       def setUp(self):
             testclock._seconds_reset()        
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
 <rest_filter>../@srcdir@/finishedfilter.py</rest_filter>
 </server>
@@ -639,7 +638,7 @@ class FilterFinishTestCase(unittest.TestCase):
       def test01_render(self):
             r = pokersite.Request(self.Channel(self.site), True)
             r.site = r.channel.site
-            input = '{"type": "PacketPing"}'
+            input = '{"type": %d}' % PACKET_PING
             r.gotLength(len(input))
             r.handleContentChunk(input)
             r.queued = 0
@@ -762,7 +761,7 @@ class RequestTestCase(PokerSiteBase):
 class PokerSiteTestCase(PokerSiteBase):
 
       def test01_init_full(self):
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" memcached="127.0.0.1:11211" session_timeout="60" cookie_timeout="120" />
 """
             settings = pokernetworkconfig.Config([])
@@ -940,7 +939,7 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             the session expires after persistSession, unless there are tables
             """
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6">
 <resthost host="HOST" port="7777" path="PATH" />
 </server>"""
@@ -964,7 +963,7 @@ class PokerSiteTestCase(PokerSiteBase):
             """
             the session expires after persistSession, unless there are games in explain
             """
-            settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+            settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6">
 <resthost host="HOST" port="7777" path="PATH" />
 </server>"""

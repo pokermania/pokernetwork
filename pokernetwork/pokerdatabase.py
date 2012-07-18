@@ -105,11 +105,13 @@ class PokerDatabase:
                 self.log.inform("granted privilege to '%s' for database '%s'", self.parameters['user'], self.parameters['name'])
             else:
                 self.log.warn("root_user is not defined in the self.parameters, cannot create schema database")
-            self.db = MySQLdb.connect(host = self.parameters["host"],
-                                      port = int(self.parameters.get("port", '3306')),
-                                      user = self.parameters["user"],
-                                      passwd = self.parameters["password"],
-                                      db = self.parameters["name"])
+            self.db = MySQLdb.connect(
+                host = self.parameters["host"],
+                port = int(self.parameters.get("port", '3306')),
+                user = self.parameters["user"],
+                passwd = self.parameters["password"],
+                db = self.parameters["name"]
+            )
 
         self.log.debug("Database connection to %s/%s open", self.parameters['host'], self.parameters['name'])
         self.db.query("SET AUTOCOMMIT = 1")

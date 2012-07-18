@@ -48,9 +48,9 @@ CREATE TABLE users (
   -- client interpreted URL from which the player avatar can be downloaded
   skin_url VARCHAR(255) DEFAULT "random" NOT NULL,
   -- client interpreted textual description of the player aspect
-  skin_outfit TEXT NOT NULL,
+  skin_outfit TEXT,
   -- base64 encoded player picture of type skin_image_type
-  skin_image TEXT NOT NULL,
+  skin_image TEXT,
   -- the type of the base64 encoded skin_image field content
   skin_image_type VARCHAR(32) DEFAULT "image/png",
   -- clear text password matching the regexp ^[a-zA-Z0-9]{5,15}$
@@ -106,10 +106,10 @@ DROP TABLE IF EXISTS currencies;
 
 CREATE TABLE currencies (
   serial INT NOT NULL AUTO_INCREMENT UNIQUE,
-  url CHAR(255) NOT NULL UNIQUE,
-  symbol CHAR(8) NOT NULL,
-  name CHAR(32) NOT NULL,
-  cash_out INT,
+  url VARCHAR(255) NOT NULL UNIQUE,
+  symbol VARCHAR(8) DEFAULT '' NOT NULL,
+  name VARCHAR(32) DEFAULT '' NOT NULL,
+  cash_out INT DEFAULT 0 NOT NULL,
 
   PRIMARY KEY (serial, url)
 )  ENGINE=InnoDB CHARSET=utf8;

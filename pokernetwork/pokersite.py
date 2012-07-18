@@ -38,34 +38,6 @@ PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_cl
 from pokernetwork import log as network_log
 log = network_log.getChild('site')
 
-# Disabled Unicode encoding. It is not required anymore since it is only used
-# for the (dealer) chat. We measured a higher sit out count with Unicode
-# activated FIXME a better solution would be to refactor the engine to only
-# encode chat packets than to disable it altogether
-def fromutf8(tree, encoding = 'ISO-8859-1'):
-    return tree
-
-def toutf8(tree, encoding = 'ISO-8859-1'):
-    return tree
-
-def __walk(tree, convert):
-    if type(tree) is tuple or type(tree) is list:
-        result = map(lambda x: __walk(x, convert), tree)
-        if type(tree) is tuple:
-            return tuple(result)
-        else:
-            return result
-    elif type(tree) is dict:
-        new_tree = {}
-        for (key, value) in tree.iteritems():
-            converted_key = convert(str(key))
-            new_tree[converted_key] = __walk(value, convert)
-        return new_tree
-    elif type(tree) is unicode or type(tree) is str:
-        return convert(tree)
-    else:
-        return tree
-
 _arg2packet_re = re.compile("^[a-zA-Z]+$")
 
 def args2packets(args):
@@ -260,8 +232,6 @@ class PokerResource(resource.Resource):
             #
             # Format answer
             #
-            
-
             packets_encoded = Packet.JSON.encode(list(packets2maps(packets, packet_type_numeric)))
             result = '%s(%s)' % (jsonp,packets_encoded) if jsonp else packets_encoded
 

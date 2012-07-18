@@ -51,6 +51,9 @@ def packet2map(packet, packet_type_numeric=True):
             
     if isinstance(packet, PacketList):
         attributes['packets'] = list(packets2maps(attributes['packets'], packet_type_numeric))
+    
+    if 'length' in attributes:
+        del attributes['length']
         
     msg = getattr(packet,'message', None)
     if msg is not None:
@@ -61,7 +64,10 @@ def packet2map(packet, packet_type_numeric=True):
     # It is forbidden to set a map key to a numeric (native
     # numeric or string made of digits). Taint the map entries
     # that are numeric and hope the client will figure it out.
-    dict_keys = (k for (k,v) in attributes.iteritems() if isinstance(v, dict) and find(lambda el: not isinstance(el,str), v))
+    dict_keys = [
+        k for (k,v) in attributes.iteritems()
+        if isinstance(v, dict) and find(lambda el: not isinstance(el,str), v.keys()) is not None
+    ]
     for key in dict_keys:
         new_dict = attributes[key].copy()
         for (subkey,subvalues) in new_dict.iteritems():

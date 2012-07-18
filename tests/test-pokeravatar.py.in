@@ -86,12 +86,12 @@ class PokerAvatarLocaleTestCase(unittest.TestCase):
         avatar.sendPacket(Packet())
         self.assertEquals(None, avatar._avatarSavedUnder)
 
-settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <language value="en_US.ISO-8859-1"/>
-  <language value="fr_FR.ISO-8859-1"/>
+  <language value="en_US.UTF-8"/>
+  <language value="de_DE.UTF-8"/>
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -109,7 +109,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-settings_xml_client = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
 <settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
    <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
@@ -140,6 +140,24 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+            
+    def createTourneysSchedules(self):
+        stmts = []
+        stmts.append(
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `register_time`, `respawn`, `respawn_interval`) ' \
+            'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", "2", 1, "300000", "0", "y", "0", "0", "y", "0");'
+        )
+        stmts.append(
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) ' \
+            'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", 1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), "n", "0", 3);'
+        )
+        
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            prefix = "@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -D pokernetworktest -e '%s'"
+        else:
+            prefix = "@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -D pokernetworktest -e '%s'"
+        for stmt in stmts:
+            os.system(prefix % stmt)
 
     def setUpServer(self, serverSettings = settings_xml_server):
         settings = pokernetworkconfig.Config([])
@@ -149,6 +167,8 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         #
         self.service = pokerservice.PokerService(settings)
         self.service.startService()
+        self.createTourneysSchedules()
+        self.service.updateTourneysSchedule()
         factory = pokerservice.IPokerFactory(self.service)
         self.p = reactor.listenTCP(0, factory, interface="127.0.0.1")
         self.port = self.p.getHost().port
@@ -157,8 +177,10 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(settings_xml_client)
         self.client_factory.append(pokerclient.PokerClientFactory(settings = settings))
-        self.assertEquals(len(self.client_factory), index + 1,
-                          "clients must be created in daisy-chain with createClients() or createClient()")
+        self.assertEquals(
+            len(self.client_factory), index + 1,
+            "clients must be created in daisy-chain with createClients() or createClient()"
+        )
         def setUpProtocol(client):
             client._poll_frequency = 0.1
             return client
@@ -237,8 +259,10 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     def autoBlindAnte(self, (client, packet), id, gameId ):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerAutoBlindAnte(serial= client.getSerial(),
-                                                        game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerAutoBlindAnte(
+            serial= client.getSerial(),
+            game_id = gameId
+        ))
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
@@ -459,7 +483,6 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                 self.assertEquals(True, packet.serial == avatar0.getSerial() or packet.serial == avatar1.getSerial())
             elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
                 found += 1
-                self.assertEquals(packet.cookie, "")
                 self.assertEquals(packet.game_id, gameId)
                 self.assertEquals(packet.length, 11)
                 self.assertEquals(packet.serial, 0)
@@ -567,25 +590,18 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         def handleTable((client, packet)):
             avatar = self.service.avatars[0]
-            packets = avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
-                        name = "A Testing Cash Table", variant = "holdem",
-                        betting_structure = '2-4-limit', player_timeout =  6,
-                        currency_serial = 0))
-            self.assertEquals(len(avatar.tables), 1)
-            for  (kk, vv) in avatar.tables.items():
-                self.assertEquals(vv.game.name, "A Testing Cash Table")
-                self.assertEquals(vv.game.max_players, 5)
-                self.assertEquals(vv.game.variant, 'holdem')
-                self.assertEquals(vv.game.betting_structure, '2-4-limit')
-            found = False
-            for packet in packets:
-                if packet.type == PACKET_POKER_TABLE:
-                    found = True
-                    self.assertEquals(packet.betting_structure, '2-4-limit')
-                    self.assertEquals(packet.variant, 'holdem')
-                    self.assertEquals(packet.name, "A Testing Cash Table")
-                    self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_CREATE)
-            self.failUnless(found, "PACKET_POKER_TABLE not present")
+            table_packet = PacketPokerTable(
+                id = 1, seats  = 5,
+                name = "A Testing Cash Table", variant = "holdem",
+                betting_structure = '2-4-limit', player_timeout =  6,
+                currency_serial = 0
+            )
+            packets = avatar.handlePacket(table_packet)
+            self.assertEquals(len(avatar.tables), 0)
+            self.assertEquals(packets[0].type, PACKET_AUTH_REQUEST, 'cannot create table as user.REGULAR')
+            avatar.user.privilege = avatar.user.ADMIN
+            packets = avatar.handlePacket(table_packet)
+            self.assertEquals(packets[0].type, PACKET_ACK, 'can create table as user.ADMIN')
             return (client, packet)
         d.addCallback(handleTable)
         return d
@@ -942,10 +958,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 "Dealer: user0 pays 2 blind\n",
                 "Dealer: pre-flop, 2 players\n" 
             ], 
-             'fr_FR' : [
-                "Dealer: user1 paye 1 de blind\n",
-                "Dealer: user0 paye 2 de blind\n",
-                "Dealer: pre-flop, 2 joueurs\n" 
+             'de_DE' : [
+                "Dealer: user1 zahlt 1 blind\n",
+                "Dealer: user0 zahlt 2 blind\n",
+                "Dealer: pre-flop, 2 Spieler\n"
             ] 
         }
         avatar = []
@@ -976,7 +992,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 elif packet.type == PACKET_POKER_CHIPS_PLAYER2BET:
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
-                    self.assertEquals(packet.cookie, "")
                     if (packet.serial == avatar[0].getSerial()):
                         self.assertEquals(packet.chips, [100, 2])
                     elif (packet.serial == avatar[1].getSerial()):
@@ -1011,7 +1026,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
-                    self.assertEquals(packet.cookie, "")
 
                 elif packet.type == PACKET_POKER_PLAYER_CARDS:
                     found += 1
@@ -1027,7 +1041,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
-                    self.assertEquals(packet.cookie, "")
                     self.assertEquals(packet.step, 100)
                     if (avid == 0):
                         self.assertEquals(packet.min, 200)
@@ -1056,7 +1069,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
-            d.addCallback(self.setLocale, "fr_FR")
+            d.addCallback(self.setLocale, "de_DE")
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
@@ -1133,8 +1146,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
             d.addCallback(self.forceDbToLocaleValue, avid = 0, 
-                          setTo = 'fr_FR', expect = "RESET_BY_SET_LOCALE")
-            d.addCallback(self.setLocale, "fr_FR")
+                          setTo = 'de_DE', expect = "RESET_BY_SET_LOCALE")
+            d.addCallback(self.setLocale, "de_DE")
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
@@ -1150,7 +1163,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
             d.addCallback(self.forceDbToLocaleValue, avid = 1, 
-                           setTo = 'fr_FR', expect = "fr_FR")
+                           setTo = 'de_DE', expect = "de_DE")
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit',
@@ -1270,193 +1283,176 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             (someoneElseSerial, client.getSerial())
         messageStart = ""
         badPacketAttempts = {
-            'user_info' : { 'output' : 
-                          "%sattempt to get user info%s" % (messageStart, userByUser),
-                          'packet' :
-                              PacketPokerGetUserInfo(serial = someoneElseSerial) },
-            'get_personal' : { 'output' :
-                              "%sattempt to get personal info%s" % (messageStart, userByUser),
-                                'packet' :
-                                    PacketPokerGetPersonalInfo(serial = someoneElseSerial),
-                               'err_type': PACKET_AUTH_REQUEST },
-            'player_info' : { 'output': "%sattempt to set player info%s" \
-                                  % (messageStart, forPlayerByPlayer),
-                              'packet': 
-                              PacketPokerPlayerInfo(serial = someoneElseSerial,
-                                      name = "YOU_BEEN_CRACKED",
-                                      url = "http://example.com/myhack", outfit = "Naked") },
-            'player_image' : { 'output' :
-                               "%sattempt to set player image%s" \
-                                   % (messageStart, forPlayerByPlayer),
-                               'packet' :
-                                   PacketPokerPlayerImage(serial = someoneElseSerial,
-                                      image_type = "crack/tiff", image = "YOU_BEEN_CRACKED") },
-            'tourney_create' : { 'output' :
-                               "attempt to create tourney%s" \
-                                   % forPlayerByPlayer,
-                               'packet' :
-                                   PacketPokerCreateTourney(serial = someoneElseSerial),
-                               'err_type': PACKET_AUTH_REQUEST 
-                                 },
-            'set_personal' : { 'output' :
-                               "%sattempt to set player info%s" \
-                                   % (messageStart, forPlayerByPlayer),
-                               'packet' :
-                                   PacketPokerPersonalInfo(serial = someoneElseSerial,
-                                        firstname = "YOU_HAVE",
-                                        lastname = "BEEN_CRACKED", birthday = "2001-01-01") },
-            'cash_in' : { 'output' :
-                              "%sattempt to cash in%s" % (messageStart, userByUser),
-                          'packet' : 
-                          PacketPokerCashIn(serial = someoneElseSerial, 
-                                            name = "YOU_BEEN_CRACKED", value = 1000000,
-                                            url = "http://example.com/myhack"),
-                          'err_type' : PACKET_POKER_ERROR,
-                          'other_type' : PACKET_POKER_CASH_IN },
-            'cash_out' : { 'output' :
-                               "%sattempt to cash out%s" % (messageStart, userByUser),
-                           'packet' : 
-                           PacketPokerCashOut(serial = someoneElseSerial, 
-                                             name = "YOU_BEEN_CRACKED", value = 1000000,
-                                             url = "http://example.com/myhack"),
-                           'err_type' : PACKET_POKER_ERROR,
-                           'other_type' : PACKET_POKER_CASH_OUT },
-            'tourney_reg': { 'output':
-                               "%sattempt to register in tournament %d%s" 
-                                         % (messageStart, gameId, forPlayerByPlayer),
-                             'packet' : 
-                             PacketPokerTourneyRegister(serial = someoneElseSerial,
-                                                        tourney_serial = gameId) },
-            'tourney_unreg': { 'output':
-                                   "%sattempt to unregister from tournament %d%s"
-                                         % (messageStart, gameId, forPlayerByPlayer),
-                             'packet' : 
-                               PacketPokerTourneyUnregister(serial = someoneElseSerial,
-                                                            tourney_serial = gameId) },
-            'hand_hist' : { 'output':
-                                "%sattempt to get history%s" % (messageStart, ofPlayerByPlayer),
-                            'packet' :
-                                PacketPokerHandHistory(serial = someoneElseSerial,
-                                                       serial2name = { someoneElseSerial : "YOU_BEEN_CRACKED" },
-                                                       history = 'CRACKED') },
-            'ready' : { 'output':
-                                "%sattempt to set ready to play%s %s" % (messageStart, \
+            'user_info': {
+                'output': "%sattempt to get user info%s" % (messageStart, userByUser),
+                'packet': PacketPokerGetUserInfo(serial = someoneElseSerial)
+            },
+            'get_personal': {
+                'output': "%sattempt to get personal info%s" % (messageStart, userByUser),
+                'packet': PacketPokerGetPersonalInfo(serial = someoneElseSerial),
+                'err_type': PACKET_AUTH_REQUEST 
+            },
+            'player_info': {
+                'output': "%sattempt to set player info%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerPlayerInfo(serial = someoneElseSerial,
+                      name = "YOU_BEEN_CRACKED",
+                      url = "http://example.com/myhack", outfit = "Naked"
+                )
+            },
+            'player_image': { 
+                'output': "%sattempt to set player image%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerPlayerImage(serial = someoneElseSerial, image_type = "crack/tiff", image = "YOU_BEEN_CRACKED") 
+            },
+            'set_personal': { 
+                'output': "%sattempt to set player info%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerPersonalInfo(
+                    serial = someoneElseSerial,
+                    firstname = "YOU_HAVE",
+                    lastname = "BEEN_CRACKED", birthday = "2001-01-01"
+                ) 
+            },
+            'cash_in': { 
+                'output': "%sattempt to cash in%s" % (messageStart, userByUser),
+                'packet': PacketPokerCashIn(
+                    serial = someoneElseSerial, 
+                    name = "YOU_BEEN_CRACKED", value = 1000000,
+                    url = "http://example.com/myhack"),
+                'err_type': PACKET_POKER_ERROR,
+                'other_type': PACKET_POKER_CASH_IN 
+            },
+            'cash_out': { 
+                'output': "%sattempt to cash out%s" % (messageStart, userByUser),
+                'packet': PacketPokerCashOut(
+                     serial = someoneElseSerial, 
+                     name = "YOU_BEEN_CRACKED", value = 1000000,
+                     url = "http://example.com/myhack"
+                ),
+                'err_type': PACKET_POKER_ERROR,
+                'other_type': PACKET_POKER_CASH_OUT 
+            },
+            'tourney_reg': { 
+                'output': "%sattempt to register in tournament %d%s" % (messageStart, gameId, forPlayerByPlayer),
+                'packet': PacketPokerTourneyRegister(serial = someoneElseSerial, tourney_serial = gameId) 
+            },
+            'tourney_unreg': { 
+                'output': "%sattempt to unregister from tournament %d%s" % (messageStart, gameId, forPlayerByPlayer),
+                'packet': PacketPokerTourneyUnregister(serial = someoneElseSerial,tourney_serial = gameId) 
+            },
+            'hand_hist': {
+                'output': "%sattempt to get history%s" % (messageStart, ofPlayerByPlayer),
+                'packet': PacketPokerHandHistory(
+                    serial = someoneElseSerial,
+                    serial2name = { someoneElseSerial: "YOU_BEEN_CRACKED" },
+                    history = 'CRACKED') 
+            },
+            'ready': {
+                'output': "%sattempt to set ready to play%s %s" % (
+                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerReadyToPlay(serial = someoneElseSerial, game_id = gameId) 
+            },
+            'proc': {
+                'output': "%sattempt to set processing hand%s %s" % (
+                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerProcessingHand(serial = someoneElseSerial, game_id = gameId) },
+            'seat': {
+                'output': "%sattempt to get seat%s %s" % (messageStart, forPlayerByPlayer, "that is not the owner of the game"),
+                'packet': PacketPokerSeat(serial = someoneElseSerial, seat = 255, game_id = gameId) 
+            },
+            'buyin': {
+                'output': "%sattempt to bring money%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerBuyIn(serial = someoneElseSerial, amount = 1000, game_id = gameId)
+            },
+            'table_picker': {
+                'output': "%sattempt to run table picker%s" % (messageStart, forPlayerByPlayer),
+                'err_type': PACKET_POKER_ERROR,
+                'packet': PacketPokerTablePicker(serial = someoneElseSerial) 
+            },
+            'rebuy': {
+                'output': "%sattempt to rebuy%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerRebuy(serial = someoneElseSerial, amount = 1000, game_id = gameId)
+            },
+            'chat': {
+                'output': "%sattempt chat%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerChat(
+                    serial = someoneElseSerial, game_id = gameId,
+                    message = "I AM IN YOUR SERIALZ CHATING YOUR POKERZ") 
+            },
+            'leave': {
+                'output': "%sattempt to leave%s %s" % (
+                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerPlayerLeave(serial = someoneElseSerial, game_id = gameId, seat = 2) 
+            },
+            'sit': {
+                'output': "%sattempt to sit back%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerReadyToPlay(serial = someoneElseSerial,
-                                                       game_id = gameId) },
-            'proc' : { 'output':
-                           "%sattempt to set processing hand%s %s" % (messageStart, \
+                'packet': PacketPokerSit(serial = someoneElseSerial, game_id = gameId) },
+            'sitout': {
+                'output': "%sattempt to sit out%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerProcessingHand(serial = someoneElseSerial,
-                                                          game_id = gameId) },
-            'seat' : { 'output':
-                           "%sattempt to get seat%s %s" % (messageStart, \
+                'packet': PacketPokerSitOut(serial = someoneElseSerial, game_id = gameId) },
+            'autoblind': {
+                'output': "%sattempt to set auto blind/ante%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerSeat(serial = someoneElseSerial, 
-                                                seat = 255, game_id = gameId) },
-            'buyin' : { 'output':
-                           "%sattempt to bring money%s" % (messageStart, \
-                            forPlayerByPlayer),
-                            'packet' :
-                                PacketPokerBuyIn(serial = someoneElseSerial, 
-                                                 amount = 1000, game_id = gameId) },
-            'table_picker' : { 'output':
-                           "%sattempt to run table picker%s" % (messageStart, \
-                            forPlayerByPlayer),
-                           'err_type' : PACKET_POKER_ERROR,
-                            'packet' :
-                                PacketPokerTablePicker(serial = someoneElseSerial) },
-            'rebuy' : { 'output':
-                           "%sattempt to rebuy%s" % (messageStart, forPlayerByPlayer),
-                            'packet' :
-                                PacketPokerRebuy(serial = someoneElseSerial, 
-                                                 amount = 1000, game_id = gameId) },
-            'chat' : { 'output':
-                           "%sattempt chat%s" % (messageStart, forPlayerByPlayer),
-                            'packet' :
-                                PacketPokerChat(serial = someoneElseSerial, game_id = gameId,
-                                    message = "I AM IN YOUR SERIALZ CHATING YOUR POKERZ") },
-            'leave' : { 'output':
-                           "%sattempt to leave%s %s" % (messageStart, \
+                'packet': PacketPokerAutoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
+            'noautoblind': {
+                'output': "%sattempt to set auto blind/ante%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerPlayerLeave(serial = someoneElseSerial, game_id = gameId,
-                                                       seat = 2) },
-            'sit' : { 'output':
-                           "%sattempt to sit back%s %s" % (messageStart, \
+                'packet': PacketPokerNoautoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
+            'muckaccept': {
+                'output': "%sattempt to accept muck%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerSit(serial = someoneElseSerial, game_id = gameId) },
-            'sitout' : { 'output':
-                           "%sattempt to sit out%s %s" % (messageStart, \
+                'packet': PacketPokerMuckAccept(serial = someoneElseSerial, game_id = gameId) },
+            'muckdeny': {
+                'output': "%sattempt to deny muck%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerSitOut(serial = someoneElseSerial, game_id = gameId) },
-            'autoblind' : { 'output':
-                           "%sattempt to set auto blind/ante%s %s" % (messageStart, \
+                'packet': PacketPokerMuckDeny(serial = someoneElseSerial, game_id = gameId) },
+            'setaccount': {
+                'output': "password must be at least 5 characters long",
+                'packet': PacketPokerSetAccount(serial= someoneElseSerial),
+                             'err_type': PACKET_ERROR,
+                             'other_type': PACKET_POKER_SET_ACCOUNT },
+            'automuck': {
+                'output': "%sattempt to set auto muck%s %s" % (
+                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerAutoMuck(serial = someoneElseSerial, game_id = gameId, info = 0x01) 
+            },
+            'blind': {
+                'output': "%sattempt to pay the blind%s %s" % (
+                    messageStart, ofPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerBlind(
+                    serial = someoneElseSerial, 
+                    game_id = gameId, 
+                    dead = 0,
+                    amount = 100) 
+            },
+            'waitblind': {
+                'output': "%sattempt to wait for big blind%s %s" % (
+                    messageStart, ofPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerWaitBigBlind(serial = someoneElseSerial, game_id = gameId) },
+            'ante': {
+                'output': "%sattempt to pay the ante%s %s" % (
+                    messageStart, ofPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerAnte(serial = someoneElseSerial, game_id = gameId,amount = 10) },
+            'fold': {
+                'output': "%sattempt to fold%s %s" % (
+                        messageStart, playerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerFold(serial = someoneElseSerial, game_id = gameId) },
+            'call': {
+                'output': "%sattempt to call%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerAutoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
-            'noautoblind' : { 'output':
-                           "%sattempt to set auto blind/ante%s %s" % (messageStart, \
+                'packet': PacketPokerCall(serial = someoneElseSerial, game_id = gameId) },
+            'raise': {
+                'output': "%sattempt to raise%s %s" % (messageStart, \
                             forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerNoautoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
-            'muckaccept' : { 'output':
-                           "%sattempt to accept muck%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerMuckAccept(serial = someoneElseSerial, game_id = gameId) },
-            'muckdeny' : { 'output':
-                           "%sattempt to deny muck%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerMuckDeny(serial = someoneElseSerial, game_id = gameId) },
-            'setaccount' : { 'output':
-                           "password must be at least 5 characters long",
-                            'packet' :
-                                PacketPokerSetAccount(serial= someoneElseSerial),
-                             'err_type' : PACKET_ERROR,
-                             'other_type' : PACKET_POKER_SET_ACCOUNT },
-            'automuck' : { 'output':
-                           "%sattempt to set auto muck%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerAutoMuck(serial = someoneElseSerial, game_id = gameId, info = 0x01) },
-            'blind' : { 'output':
-                           "%sattempt to pay the blind%s %s" % (messageStart, \
-                            ofPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerBlind(serial = someoneElseSerial, game_id = gameId, dead = 0,
-                                               amount = 100) },
-            'waitblind' : { 'output':
-                           "%sattempt to wait for big blind%s %s" % (messageStart, \
-                            ofPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerWaitBigBlind(serial = someoneElseSerial, game_id = gameId) },
-            'ante' : { 'output':
-                           "%sattempt to pay the ante%s %s" % (messageStart, \
-                            ofPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerAnte(serial = someoneElseSerial, game_id = gameId,amount = 10) },
-            'fold' : { 'output':
-                           "%sattempt to fold%s %s" % (messageStart, \
-                            playerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerFold(serial = someoneElseSerial, game_id = gameId) },
-            'call' : { 'output':
-                           "%sattempt to call%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerCall(serial = someoneElseSerial, game_id = gameId) },
-            'raise' : { 'output':
-                           "%sattempt to raise%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100) },
+                'packet': PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100) },
 # Note that the 'start' packet test that follows is different from all the
 # other packets in this group.  The point is that if a game.isEndorNull()
 # is true at line 411 of pokeravatar.py, the message sent back --
@@ -1472,27 +1468,37 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 #  correctly now.  You will note that it now looks like the rest of the
 #  tests in here (ala "not the owner") --bkuhn, 2008-07-05
 
-            'start' : { 'output':
-                           "%splayer %d %s" % (messageStart, client.getSerial(), \
-                            "tried to start a new game but is not the owner of the table"),
-                            'packet' : PacketPokerStart(serial = someoneElseSerial,
-                                                        game_id = gameId),
-                        },
+            'start': { 
+                'output': "%splayer %d %s" % (
+                    messageStart, client.getSerial(),
+                    "tried to start a new game but is not the owner of the table"
+                ),
+                'packet': PacketPokerStart(serial = someoneElseSerial,game_id = gameId),
+            },
 # This used to generate an error packet but does not now, except
 #  table.owner apperas to be zero in this setup so ti falls through to the
 #  bootm else block (see details in pokeravatar.handlePacketLogic()
 #                        'err_type' : PACKET_POKER_START },
-            'check' : { 'output':
-                           "%sattempt to check%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                            'packet' :
-                                PacketPokerCheck(serial = someoneElseSerial, game_id = gameId) }
+            'check': {
+                'output': "%sattempt to check%s %s" % (
+                    messageStart,
+                    forPlayerByPlayer, "that is not the owner of the game"
+                ),
+                'packet': PacketPokerCheck(serial = someoneElseSerial, game_id = gameId) 
             }
+        }
+        badAdminAttempts = {
+            'tourney_create': { 
+                'output': "attempt to create tourney%s"  % forPlayerByPlayer,
+                'packet': PacketPokerCreateTourney(serial = someoneElseSerial),
+                'err_type': PACKET_AUTH_REQUEST 
+            },
+        }
         # Next, we loop through all the serial-related bad pack list,
         # attempting to handle each one.  Setup stdout to go to a string
         # so that we can test if they generate the right printed output.
         # Also, catch any error packets for those we expect to receive.
-        for (key, info) in badPacketAttempts.iteritems():
+        def assertBadAttempt(key,info):
             avatar.resetPacketsQueue()
             avatar.queuePackets()
             clear_all_messages()
@@ -1506,6 +1512,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 if 'other_type' in info:
                     self.assertEquals(info['other_type'], packet.other_type)
             self.assertEquals(found, 'err_type' in info)
+        for (key, info) in badPacketAttempts.iteritems():
+            assertBadAttempt(key,info)
+        
+        avatar.user.privilege = avatar.user.ADMIN
+        for (key, info) in badAdminAttempts.iteritems():
+            assertBadAttempt(key,info)
+            
         return (client, packet)
     # -------------------------------------------------------------------------
     def test18_badAttempts(self):
@@ -1527,8 +1540,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table = self.service.getTable(gameId)
         seatNumber = id + 1
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerBuyIn(serial = client.getSerial(),
-                                               amount = myAmount, game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerBuyIn(serial = client.getSerial(), amount = myAmount, game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_ERROR:
@@ -1645,7 +1657,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
-            d.addCallback(self.setLocale, "fr_FR")
+            d.addCallback(self.setLocale, "de_DE")
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
@@ -2091,9 +2103,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             PokerAvatarTestCase.calledCashOut = True
         self.originalFunction = avatar.service.cashOut
         avatar.service.cashOut = fakeCashOut
-        avatar.handlePacketLogic(PacketPokerCashOut(serial= client.getSerial(),
-                                                   currency = "http://fake",
-                                                   bserial = 0, value = 10))
+        avatar.handlePacketLogic(PacketPokerCashOut(
+            serial= client.getSerial(),
+            currency = "http://fake",
+            bserial = 0, value = 10
+        ))
         return (client, packet)
     # ------------------------------------------------------------------------
     def checkCashOut(self, (client, packet), id ):
@@ -2119,7 +2133,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             PokerAvatarTestCase.calledCashOutCommit = True
         self.originalFunction = avatar.service.cashOutCommit
         avatar.service.cashOutCommit = fakeCashOutCommit
-        avatar.handlePacketLogic(PacketPokerCashOutCommit(transaction_id = 0))
+        avatar.handlePacketLogic(PacketPokerCashOutCommit(transaction_id = "0"))
         return (client, packet)
     # ------------------------------------------------------------------------
     def checkCashOutCommit(self, (client, packet), id ):
@@ -2136,15 +2150,14 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.cashOutCommit, 0)
         return d
     # ------------------------------------------------------------------------
-    def tourneyPlayerList(self, (client, packet), id, gameId ):
+    def tourneyPlayerList(self, (client, packet), id, tourney_serial ):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerTourneyRequestPlayersList(game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerTourneyRequestPlayersList(tourney_serial = tourney_serial))
         for packet in avatar.resetPacketsQueue():
             count = 0
             if packet.type == PACKET_POKER_TOURNEY_PLAYERS_LIST:
-                self.assertEquals(packet.serial, 1)
-                self.assertEquals(packet.game_id, 0)
+                self.assertEquals(packet.tourney_serial, 1)
                 count += 1
             self.assertEquals(count, 1)
         return (client, packet)
@@ -2480,8 +2493,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.queuePackets()
         clear_all_messages()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
-                                                            game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
         self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
         # Coverage for when the server is shutting down
 
@@ -2489,10 +2501,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.queuePackets()
         clear_all_messages()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
-                                                            game_id = gameId))
-        self.assertEqual(search_output("Not autodealing because server is shutting down"),
-                         True)
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
+        self.assertEqual(search_output("Not autodealing because server is shutting down"), True)
 
         # Coverage for the table owner is not the player, but it would
         # otherwise be a valid start
@@ -2504,8 +2514,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.resetPacketsQueue()
         avatar.queuePackets()
         clear_all_messages()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
-                                                             game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
         self.assertEquals(search_output('tried to start a new game but is not the owner of the table'), True)
                           
         # Coverage for the table owner is the player
@@ -2517,8 +2526,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.resetPacketsQueue()
         avatar.queuePackets()
         clear_all_messages()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
-                                                             game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
             self.assertEquals(packet.game_id, gameId)
@@ -2554,7 +2562,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEquals(found, 14)
         # This game start should "succeed" (but later fail due to game running) because 
         #  the owner of the table is our player.
-        self.assertEqual(search_output("tried to start a new game while in a game"), False)
+        self.assertEqual(search_output("tried to start a new game while in game"), False)
         self.assertEqual(search_output("No autodeal"), True)
 
         # Following is coverage for when someone else owns the table
@@ -2565,9 +2573,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table.owner = client.getSerial() - 3
         avatar.queuePackets()
         clear_all_messages()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(),
-                                                            game_id = gameId))
-        self.assertEqual(search_output("tried to start a new game while in game "), True)
+        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
+        self.assertEqual(search_output("tried to start a new game while in game"), True)
         self.assertEqual(search_output("No autodeal"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
@@ -2696,9 +2703,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def chatItUp(self, (client, packet), id, gameId, myMessage):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerChat(serial = client.getSerial(),
-                                                 game_id = gameId,
-                                                 message = myMessage))
+        avatar.handlePacketLogic(PacketPokerChat(
+            serial = client.getSerial(),
+            game_id = gameId,
+            message = myMessage
+        ))
         found = 0
         for packet in avatar.resetPacketsQueue():
             found += 1
@@ -2726,8 +2735,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def leaveTable(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerPlayerLeave(game_id = gameId,
-                                                    serial = client.getSerial()))
+        avatar.handlePacketLogic(PacketPokerPlayerLeave(game_id = gameId, serial = client.getSerial()))
         found = 0
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
@@ -3031,18 +3039,20 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.service.createTable = forceFalse
 
         avatar.queuePackets()
-        q = avatar.handlePacket(PacketPokerTable(id = 1, seats  = 5,
-                    name = "A Testing Cash Table", variant = "holdem",
-                    betting_structure = '2-4-limit', player_timeout =  6,
-                    currency_serial = 0))
+        avatar.user.privilege = avatar.user.ADMIN
+        
+        packets = avatar.handlePacket(PacketPokerTable(
+            id = 1, seats  = 5,
+            name = "A Testing Cash Table", variant = "holdem",
+            betting_structure = '2-4-limit', player_timeout =  6,
+            currency_serial = 0
+        ))
         found = False
-        for packet in q:
-            if packet.type == PACKET_POKER_TABLE:
+        for packet in packets:
+            if packet.type == PACKET_ERROR:
                 found = True
-                self.assertEquals(packet.id, 0)
-                self.assertEquals(packet.seats, 10)
-                self.assertEquals(packet.name, 'noname')
-                self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_CREATE)
+                self.assertEquals(packet.message, PacketPokerTable.REASON_TABLE_CREATE)
+                self.assertEquals(packet.other_type, PACKET_POKER_TABLE)
         self.assertEquals(found, True)
         self.service.createTable = originalCreate
         return (client, packet)
@@ -3095,16 +3105,16 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
-                                                      game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(), game_id = gameId))
         found = 0
-        for packet in avatar.resetPacketsQueue():
+        packets = avatar.resetPacketsQueue()
+        for packet in packets:
             if packet.type == PACKET_POKER_TABLE:
                 found += 1
                 self.assertEquals(packet.variant, 'holdem')
                 self.assertEquals(packet.betting_structure, struct)
                 self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_JOIN)
-                for  (kk, vv) in avatar.tables.items():
+                for (kk, vv) in avatar.tables.items():
                     self.assertEquals(vv.game.id, table.game.id)
                     self.assertEquals(vv.game.name, name)
                     self.assertEquals(vv.game.max_players, 10)
@@ -3366,7 +3376,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.serial, client.getSerial())
                     self.assertEquals(packet.other_type, PACKET_POKER_SET_LOCALE)
                     foundCount += 1
-                    self.failUnless(search_output("Locale, 'Klingon_Kronos.ISO-8859-1' not available. Klingon_Kronos.ISO-8859-1 must not have been provide via <language/> tag in settings, or errors occured during loading."))
+                    self.failUnless(search_output("Locale, 'Klingon_Kronos.UTF-8' not available. Klingon_Kronos.UTF-8 must not have been provide via <language/> tag in settings, or errors occured during loading."))
         self.assertEquals(foundCount, 1)
         return (client, packet)
     # -------------------------------------------------------------------------
@@ -3700,7 +3710,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             for ii in [ 0, 1]:
                 self.assertEquals(expectedCount, len(avatars[ii]._packets_queue))
                 if expectedCount >= 15:
-                    self.assertTrue(search_output("ERROR WARNING: user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
+                    self.assertTrue(search_output("user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
                 packets.extend(avatars[ii].resetPacketsQueue())
             while bbPacket == None:
                 for packet in packets:
@@ -3721,16 +3731,15 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         clear_all_messages()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(0, expectedCount), None)
-        avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(),
-                                                     game_id = gameId))
+        avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(), game_id = gameId))
+        
         # we should get the warning on the observer
-        self.assertTrue(search_output("ERROR WARNING: user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
+        self.assertTrue(search_output("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
         expectedCount = 20
         clear_all_messages()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(1, expectedCount), None)
-        avatars[0].handlePacketLogic(PacketPokerFold(serial = clients[0].getSerial(),
-                                                     game_id = gameId))
+        avatars[0].handlePacketLogic(PacketPokerFold(serial = clients[0].getSerial(), game_id = gameId))
         # This is the point where observer has been disconnected.  We need
         # to create a callback, I picked this function because it appears
         # to be the pure bottom of the chain of items that are called when
@@ -3750,9 +3759,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         av1 = avatars[1]
         av2 = avatars[2]
         def checkLogout():
-            self.assertEquals(search_output('connection lost for %s/%d' %
-                                            (av2.getName(), av2.getSerial())), True)
-            self.assertEquals(search_output('[Server][PokerGame %d] removing player %d from game' % (gameId, av2.getSerial())), True)
+            self.assertEquals(search_output('connection lost for %s/%d' % (av2.getName(), av2.getSerial())), True)
+            self.assertEquals(
+                search_output('removing player %d from game' % (av2.getSerial(),)), 
+                True
+            )
             self.assertTrue(len(av2._packets_queue) > 21)
             for pack in av0._packets_queue[-1:], av0._packets_queue[-1:]:
                 pack = pack[0]
@@ -3768,7 +3779,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         return checkLogoutDeferred
     # ------------------------------------------------------------------------
     def test76_forceObserverDisconnectPacketQueue(self):
-        """Tests packet queue growth and cutoff by setting max leng small"""
+        """Tests packet queue growth and cutoff by setting max length small"""
         def client(result, gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
@@ -3797,15 +3808,18 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def tourneyCreate(self, (client, packet), id):
         avatar = self.service.avatars[id]
+        avatar.user.privilege = avatar.user.ADMIN
         avatar.queuePackets()
-        wrong_player = 4444
-        avatar.handlePacketLogic(PacketPokerCreateTourney(serial = client.getSerial(),
-                                                          buy_in = 100,
-                                                          players = [wrong_player]))
+        another_player = 4444
+        avatar.handlePacketLogic(PacketPokerCreateTourney(
+            serial = client.getSerial(),
+            buy_in = 100,
+            players = [another_player],
+            players_quota = 2
+        ))
         found = False
         for packet in avatar.resetPacketsQueue():
-            if packet.type == PACKET_POKER_ERROR:
-                self.assertSubstring(str(wrong_player), packet.message)
+            if packet.type == PACKET_POKER_TOURNEY:
                 found = True
         self.assertEquals(found, True)
         return (client, packet)
@@ -3878,7 +3892,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(handleDistributedPacket)
         return d
     # ------------------------------------------------------------------------
-    def test82_1_distributePacketNoMoreActiveGame(self):
+    def test82_1_distributePacketNoMoreActiveGame(self): # FIXME
         self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)                
@@ -3902,7 +3916,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 return arg
             d.addCallback(clearActiveTable)
             r = avatar.handleDistributedPacket(None, PacketPing(), '{ "type": "PacketPing" }')
-            r.addCallback(lambda packets: self.assertEquals(PACKET_PING, packets[0].type))
+            r.addCallback(lambda packets: self.assertEquals([PACKET_POKER_STATE_INFORMATION, PACKET_PING], [p.type for p in packets]))
             r.addCallback(lambda arg: self.assertEquals({}, avatar.game_id2rest_client))
             r.addCallback(lambda arg: self.assertEquals(None, clients[2].timer))
             def f(x): PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
@@ -4343,12 +4357,12 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         self.assertEquals(None, avatar.explain)
         self.assertEquals(True, forceAvatarDestroyMockup.called)
 ##############################################################################
-settings_xml_table_picker_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_table_picker_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="2000" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <language value="en_US.ISO-8859-1"/>
-  <language value="fr_FR.ISO-8859-1"/>
+  <language value="en_US.UTF-8"/>
+  <language value="de_DE.UTF-8"/>
 
   <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="6" player_timeout="60" currency_serial="1" />
@@ -4439,13 +4453,14 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
         self.failUnless(len(avatars) ==  1, "Only one avatar should have this serial")
         avatar = avatars[0]
         avatar.queuePackets()
-        avatar.handlePacketLogic(
-            PacketPokerTablePicker(serial = client.getSerial(),
-                                   currency_serial = currencySerial,
-                                   min_players = numPlayers,
-                                   variant = variant,
-                                   betting_structure = structure,
-                                   auto_blind_ante = autoBlindAnte))
+        avatar.handlePacketLogic(PacketPokerTablePicker(
+            serial = client.getSerial(),
+            currency_serial = currencySerial,
+            min_players = numPlayers,
+            variant = variant,
+            betting_structure = structure,
+            auto_blind_ante = autoBlindAnte
+        ))
         total = 7
         if autoBlindAnte: total += 1
         found = 0
@@ -4471,9 +4486,10 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
                         if structure != '':
                             self.assertEquals(ourStruct, structure)
                         else:
-                            self.failUnless(ourStruct in [ '100-200-no-limit',
-                                                             '2-4-limit' ],
-                                "strange struct: \"" + ourStruct + "\"")
+                            self.failUnless(
+                                ourStruct in [ '100-200-no-limit','2-4-limit' ],
+                                "strange struct: \"" + ourStruct + "\""
+                            )
                     self.failUnless(vv.game.max_players in [ 8, 10, 6 ])
             elif packet.type == PACKET_POKER_SEATS:
                 self.assertEquals(packet.game_id, table.game.id)

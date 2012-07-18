@@ -48,7 +48,7 @@ if [ "$1" = "config" ]; then
 fi
 
 script=$(cat <<'EOF'
-$obj = jsonToObj($_);
+$obj = from_json($_);
 print "in.value $obj->[0]{'bytesin'}\n";
 print "out.value $obj->[0]{'bytesout'}\n";
 EOF

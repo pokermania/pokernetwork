@@ -23,7 +23,6 @@ import sys, os
 sys.path.insert(0, "@srcdir@/..")
 sys.path.insert(0, "..")
 
-import simplejson
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer, reactor
@@ -45,9 +44,10 @@ from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
 from pokernetwork import proxyfilter
+from pokernetwork.packets import Packet
 from pokernetwork.pokerpackets import *
 
-settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
@@ -65,7 +65,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-settings_xml_proxy = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
@@ -162,7 +162,7 @@ class ProxyTestCase(unittest.TestCase):
             postdata='{"type":"PacketPokerTableSelect"}'
         )
         def checkTables(result):
-            packets = simplejson.JSONDecoder().decode(result)
+            packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTableList', packets[0]['type'])
             tables = packets[0]['packets']
             self.assertEqual('Table1', tables[0]['name'])
@@ -176,7 +176,7 @@ class ProxyTestCase(unittest.TestCase):
             postdata='{"type":"PacketPokerTableJoin","game_id":1}'
         )
         def checkTable(result):
-            packets = simplejson.JSONDecoder().decode(result)
+            packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTable', packets[0]['type'])
             self.assertEqual('Table1', packets[0]['name'])
         d.addCallback(checkTable)
@@ -215,7 +215,7 @@ class ProxyTestCase(unittest.TestCase):
             postdata='{"type":"PacketPokerTableJoin","game_id":1,"serial":%d}' % serial
         )
         def checkTable(result):
-            packets = simplejson.JSONDecoder().decode(result)
+            packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTable', packets[0]['type'])
             self.assertEqual('Table1', packets[0]['name'])
             return result
@@ -245,7 +245,7 @@ class ProxyTestCase(unittest.TestCase):
         #
         db = self.server_service.db
         cursor = db.cursor()
-        cursor.execute("INSERT INTO tourneys_schedule (resthost_serial, active, start_time) VALUES (%s, 'y', %s)", ( self.server_service.resthost_serial, seconds() + 36000))
+        cursor.execute("INSERT INTO tourneys_schedule (resthost_serial, active, start_time, description_long) VALUES (%s, 'y', %s, '')", ( self.server_service.resthost_serial, seconds() + 36000))
         schedule_serial = cursor.lastrowid
         self.server_service.updateTourneysSchedule()
         cursor.execute("SELECT serial FROM tourneys WHERE schedule_serial = %s", schedule_serial)
@@ -267,7 +267,7 @@ class ProxyTestCase(unittest.TestCase):
             postdata='{"type":"PacketPokerTourneyRegister","tourney_serial":%d,"serial":%d}' % (tourney_serial,serial)
         )
         def checkTable(result):
-            packets = simplejson.JSONDecoder().decode(result)
+            packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTourneyRegister', packets[0]['type'])
             self.assertEqual(tourney_serial, packets[0]['tourney_serial'])
             return result
@@ -293,7 +293,7 @@ class ProxyTestCase(unittest.TestCase):
             postdata='{"type":"PacketPokerTableJoin","game_id":1}'
         )
         def checkTable(result):
-            packets = simplejson.JSONDecoder().decode(result)
+            packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTable', packets[0]['type'])
             self.assertEqual('Table1', packets[0]['name'])
             return result
@@ -309,7 +309,7 @@ class ProxyTestCase(unittest.TestCase):
             )
             def checkLogin(result):
                 global serial
-                packets = simplejson.JSONDecoder().decode(result)
+                packets = Packet.JSON.decode(result)
                 serial = packets[1]['serial']
                 return True
             d3.addCallback(checkLogin)
@@ -338,7 +338,7 @@ class ProxyTestCase(unittest.TestCase):
             postdata='{"type":"PacketPokerPoll","game_id":1}'
         )
         def checkTable(result):
-            packets = simplejson.JSONDecoder().decode(result)
+            packets = Packet.JSON.decode(result)
             self.assertEqual(0, len(packets))
         d.addCallback(checkTable)
         return d

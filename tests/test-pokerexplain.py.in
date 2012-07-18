@@ -72,7 +72,6 @@ class PokerExplainTestCase(unittest.TestCase):
     def setUp(self):
         self.explain = PokerExplain()
         self.explain.games.dirs = [ '../@srcdir@/poker-engine' ]
-        self.explain.setVerbose(10)
 
     def test01_utilities(self):
         game_id = 1

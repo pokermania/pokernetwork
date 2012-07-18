@@ -22,10 +22,8 @@ import sys
 import cgi
 import cgitb
 from MySQLdb.cursors import DictCursor
-try:
-        import json # native in python-2.6
-except:
-        import simplejson as json
+import json
+
 sys.path.insert(0, ".")
 sys.path.insert(0, "..")
 
@@ -35,7 +33,7 @@ from pokernetwork.pokerdatabase import PokerDatabase
 def getPath(argv):
     default_path = "/etc/poker-network/poker.server.xml"
     return argv[-1][-4:] == ".xml" and argv[-1] or default_path    
-        
+
 def getSettings(path):
     settings = Config([''])
     settings.load(path)
@@ -44,20 +42,20 @@ def getSettings(path):
 
 def runQuery(settings):
     if not settings.headerGet('/server/database/@name'):
-            return "Content-type: text/plain\n\n"
+        return "Content-type: text/plain\n\n"
     db = PokerDatabase(settings)
     cgitb.enable()
     form = cgi.FieldStorage()
     cursor = db.cursor(DictCursor)
     cursor.execute(form["query"].value)
     if 'output' not in form:
-            result = cursor.rowcount
+        result = cursor.rowcount
     elif form["output"].value == "rows":
-            result = cursor.fetchall()
+        result = cursor.fetchall()
     elif form["output"].value == "lastrowid":
-            result = cursor.lastrowid
+        result = cursor.lastrowid
     else:
-            result = cursor.rowcount
+        result = cursor.rowcount
     cursor.close()
     return "Content-type: text/plain\n\n" + json.dumps(result)
 

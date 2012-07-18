@@ -48,7 +48,7 @@ if [ "$1" = "config" ]; then
 fi
 
 script=$(cat <<'EOF'
-$obj = jsonToObj($_);
+$obj = from_json($_);
 print "players.value $obj->[0]{'players'}\n";
 EOF
 )

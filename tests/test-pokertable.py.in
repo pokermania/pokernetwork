@@ -71,7 +71,7 @@ table1ID = 100
 table2ID = 200
 table3ID = 300
 table9ID = 900
-settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4" autodeal="yes" max_missed_round="5">
   <delays autodeal_tournament_min="2" autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
@@ -79,7 +79,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
   <users temporary="BOT"/>
 </server>
 """
-settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4" autodeal="no" >
   <delays autodeal_tournament_min="2" autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
@@ -1108,7 +1108,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
                 player.serial,
                 self.table.game.id
             ),
-            'sendPacket: POKER_ERROR  type = 53 length = 72 serial = %d cookie =  ' \
+            'sendPacket: POKER_ERROR  type = 53 length = 72 serial = %d ' \
             'game_id = %d message = This server has too many seated players and ' \
             'observers. code = 1 other_type = 71' % (
                 player.serial,
@@ -1269,11 +1269,11 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertTrue(search_output('removing player 4 from game'))
         self.assertTrue(search_output(
             "broadcast[1, 2, 3] POKER_PLAYER_LEAVE  type = 81 length = 12 "
-            "serial = 4 cookie =  game_id = %d seat = 8" % (self.table1_value,)
+            "serial = 4 game_id = %d seat = 8" % (self.table1_value,)
         ))
         self.assertEqual(messages.count(
             "sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 "
-            "serial = 4 cookie =  game_id = %d seat = 8" % (self.table1_value,)
+            "serial = 4 game_id = %d seat = 8" % (self.table1_value,)
         ), 4)
         
         for ii in [1, 2, 3, 4]:

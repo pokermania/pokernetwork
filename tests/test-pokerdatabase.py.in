@@ -44,25 +44,25 @@ from pokernetwork import version
 
 actualSchemaFile = "@srcdir@/../../database/schema.sql"
 
-settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernettestuser" password="mytestuser"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="%s" command="@MYSQL@" />
 </server>
 """ % actualSchemaFile
-settings_missing_schema_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_missing_schema_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktestuser" password="mytestuser"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
 </server>
 """
-settings_root_both_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_root_both_users_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
 </server>
 """
-settings_missing_root_users_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_missing_root_users_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
   schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />

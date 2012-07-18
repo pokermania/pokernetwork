@@ -44,6 +44,8 @@ from pokernetwork import pokerauth
 from pokernetwork.user import User
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerdatabase import PokerDatabase
+from pokernetwork.packets import PACKET_LOGIN, PACKET_AUTH
+
 import libxml2
 
 import logging
@@ -54,7 +56,7 @@ handler = TestLoggingHandler()
 logger.addHandler(handler)
 logger.setLevel(10)
 
-settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server auto_create_account="no" verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../database/schema.sql" command="@MYSQL@" />
@@ -71,7 +73,7 @@ settings_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-settings_alternate_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_alternate_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
@@ -328,7 +330,7 @@ class PokerAuthTestCase(unittest.TestCase):
         self.assertEquals(auth.GetLevel('first'), 7)
         self.assertEquals(auth.GetLevel('second'), False)
 # -----------------------------------------------------------------------------------------------------    
-settings_mysql_xml = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_mysql_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 

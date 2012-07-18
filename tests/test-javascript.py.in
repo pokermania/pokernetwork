@@ -24,7 +24,6 @@ sys.path.insert(0, "@top_srcdir@")
 sys.path.insert(0, "..")
 
 import unittest
-import simplejson
 from struct import pack, unpack, calcsize
 
 from pokernetwork import pokerclientpackets

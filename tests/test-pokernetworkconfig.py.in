@@ -49,7 +49,7 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     #--------------------------------------------------------------    
     def test_loadFromString(self):
 
-        self.Config.loadFromString("""<?xml version="1.0" encoding="ISO-8859-1"?>
+        self.Config.loadFromString("""<?xml version="1.0" encoding="UTF-8"?>
 <server>
 </server>
 """)
@@ -68,7 +68,7 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     def test_notify(self):
         def f(config):
             pass
-        self.Config.loadFromString("""<?xml version="1.0" encoding="ISO-8859-1"?>
+        self.Config.loadFromString("""<?xml version="1.0" encoding="UTF-8"?>
 <server name='value'>
 </server>
 """)

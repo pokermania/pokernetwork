@@ -1,4 +1,4 @@
-#!@PYTHON@python test-pokerlock.py
+#!@PYTHON@ test-pokerlock.py
 # -*- mode: python -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -423,8 +423,11 @@ class PokerLockTestCase(unittest.TestCase):
         time.sleep(2)
 
         self.assertEquals(anotherLock.running, True)
-        for string in [ 'exception in function Traceback', 'release because exception',
-                        'raise MockException("MOCKY NO LOCK RELEASE")']:
+        for string in [ 
+            'exception in function', 
+            'failed to release lock after exception',
+            'raise MockException("MOCKY NO LOCK RELEASE")'
+        ]:
             self.failUnless(search_output(string), "missing '%s' in output" % string)
     # ----------------------------------------------------------------    
     def test12_mainTests_makeSureDBCloses(self):

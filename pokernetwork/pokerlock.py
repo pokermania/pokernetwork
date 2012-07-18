@@ -69,7 +69,7 @@ class PokerLock(threading.Thread):
         try:
             reactor.addSystemEventTrigger('during', 'shutdown', self.stopping)
             while 1:
-                self.log.debug("lopp, queue size %s", self.q.qsize())
+                self.log.debug("loop, queue size %s", self.q.qsize())
                 if not self.running and self.q.empty():
                     self.log.debug("stopped")
                     break
@@ -113,9 +113,11 @@ class PokerLock(threading.Thread):
             raise
 
     def connect(self, parameters):
-        self.db = MySQLdb.connect(host = parameters["host"],
-                                  user = parameters["user"],
-                                  passwd = parameters["password"])
+        self.db = MySQLdb.connect(
+            host=parameters["host"],
+            user=parameters["user"],
+            passwd=parameters["password"]
+        )
 
     def acquire(self, name, timeout = acquire_timeout):
         self.log.debug("acquire")

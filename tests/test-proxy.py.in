@@ -39,7 +39,6 @@ twisted.internet.base.DelayedCall.debug = True
 
 from tests.testmessages import search_output, clear_all_messages, get_messages
 verbose = int(os.environ.get('VERBOSE_T', '-1'))
-silence_all_messages()
 # ----------------------------------------------------------------
 class MockTransport():
     def __init__(self, bufSize = None):

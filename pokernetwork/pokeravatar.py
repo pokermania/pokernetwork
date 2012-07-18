@@ -109,16 +109,7 @@ class PokerAvatar:
             
     def setLocale(self, locale):
         if locale:
-            # 'ISO-8859-1' is currently enforced for all setLocale()
-            # requests.  This is primarily because the JSON interface
-            # implemented in pokersite.py *assumes* that all strings must
-            # be 'ISO-8859-1' and encodes them to unicode.  We should
-            # actually find a way to be knowledgeable about the needed
-            # encoding, because there is probably pointless conversion
-            # between ISO and UTF-8 happening in this process.  Also, we
-            # cannot currently support any languages that are non
-            # 'ISO-8859-1', so that's a huge FIXME!  --bkuhn, 2008-10-28
-            self.localeFunc = self.service.locale2translationFunc(locale, 'ISO-8859-1')
+            self.localeFunc = self.service.locale2translationFunc(locale, 'UTF-8')
         return self.localeFunc
 
     def setProtocol(self, protocol):
@@ -707,9 +698,7 @@ class PokerAvatar:
                 self.sendPacketVerbose(self.service.tourneyPlayerStats(packet.tourney_serial,packet.serial))
             else:
                 self.log.warn("attempt to receive stats in tournament %d for player %d by player %d",
-                    packet.tourney_serial,
-                    packet.serial,
-                    self.getSerial()
+                    packet.tourney_serial, packet.serial, self.getSerial()
                 )
             return
         
@@ -720,9 +709,7 @@ class PokerAvatar:
                 self.tourneyUpdates(packet.serial)
             else:
                 self.log.warn("attempt to register in tournament %d for player %d by player %d",
-                    packet.game_id,
-                    packet.serial,
-                    self.getSerial()
+                    packet.tourney_serial, packet.serial, self.getSerial()
                 )
             return
             
@@ -732,9 +719,7 @@ class PokerAvatar:
                 self.tourneyUpdates(packet.serial)
             else:
                 self.log.warn("attempt to unregister from tournament %d for player %d by player %d",
-                    packet.game_id,
-                    packet.serial,
-                    self.getSerial()
+                    packet.tourney_serial, packet.serial, self.getSerial()
                 )
             return
             
@@ -948,7 +933,6 @@ class PokerAvatar:
             self.handReplay(packet.game_id, packet.serial)
 
         elif packet.type == PACKET_POKER_TABLE: # can only be done by User.ADMIN
-            packet.reason = PacketPokerTable.REASON_TABLE_CREATE
             table = self.createTable(packet)
             
         elif packet.type == PACKET_POKER_CREATE_TOURNEY: # can only be done by User.ADMIN
@@ -1284,17 +1268,18 @@ class PokerAvatar:
                 skin = table['skin'],
                 currency_serial = int(table['currency_serial']),
                 player_seated = int(table.get('player_seated',-1)),
+                tourney_serial = int(table['tourney_serial']),
                 reason = PacketPokerTable.REASON_TABLE_LIST,
-            )
-            packet.tourney_serial = int(table['tourney_serial'])
+            )            
             packets.append(packet)
+            
         (players, tables) = self.service.statsTables()
         self.sendPacketVerbose(PacketPokerTableList(
             players = players,
             tables = tables,
             packets = packets
         ))
-
+        
     def listHands(self, packet, serial):
         if packet.type != PACKET_POKER_HAND_SELECT_ALL:
             start = packet.start
@@ -1342,7 +1327,12 @@ class PokerAvatar:
             "reason" : packet.reason
         })
         if not table:
-            self.sendPacket(PacketPokerTable(reason = packet.reason))
+            self.sendPacketVerbose(PacketError(
+                message = PacketPokerTable.REASON_TABLE_CREATE,
+                other_type = PACKET_POKER_TABLE
+            ))
+        else:
+            self.sendPacketVerbose(PacketAck())
         return table            
 
     def join(self, table, reason = ""):

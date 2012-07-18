@@ -51,7 +51,7 @@ from pokernetwork.pokerrestclient import PokerRestClient
 PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
 import time
 
-settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
@@ -69,7 +69,7 @@ settings_xml_server = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-settings_xml_explain = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_explain = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
@@ -84,7 +84,7 @@ settings_xml_explain = """<?xml version="1.0" encoding="ISO-8859-1"?>
 </server>
 """
 
-settings_xml_proxy = """<?xml version="1.0" encoding="ISO-8859-1"?>
+settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
