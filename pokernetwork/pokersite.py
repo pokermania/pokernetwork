@@ -174,8 +174,8 @@ class PokerResource(resource.Resource):
         else:
             data = request.content.read()
         if "PacketPing" not in data:
-            host, port = request.findProxiedIP()
-            self._log.debug("(%s:%s) render %s", host, port, data)
+            _host_type, host = request.findProxiedIP()
+            self._log.debug("(%s) render %s", host, data)
 
         try:
             arg = Packet.JSON.decode(data)
@@ -207,8 +207,8 @@ class PokerResource(resource.Resource):
                 request.setHeader('content-length', str(len(body)))
                 request.write(body)
             if request.code != 200:
-                host, port = request.findProxiedIP()
-                self._log.warn("(%s:%s) %s", host, port, body)
+                _host_type, host = request.findProxiedIP()
+                self._log.warn("(%s) %s", host, body)
             if not (request.finished or request._disconnected):
                 request.finish()
                     
@@ -234,8 +234,8 @@ class PokerResource(resource.Resource):
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         
         def render(packets,session = None):
-            host, port = request.findProxiedIP()
-            self._log.debug("(%s:%s) render %s returns %s", host, port, data, packets)
+            _host_type, host = request.findProxiedIP()
+            self._log.debug("(%s) render %s returns %s", host, data, packets)
             #
             # update the session information if the avatar changed
             # session is reloaded because the session object could have changed in the meantime
@@ -245,7 +245,7 @@ class PokerResource(resource.Resource):
             #
             if packet.type != PACKET_POKER_LONG_POLL_RETURN:
                 if not session or not hasattr(session,'avatar'):
-                    self._log.debug("(%s:%s) recreating session", host, port)
+                    self._log.debug("(%s) recreating session", host)
                     session = request.getSession()
                 session.site.updateSession(session)
                 session.site.persistSession(session)
@@ -281,10 +281,10 @@ class PokerResource(resource.Resource):
             # request.getSession().expire()
             
             error_trace = reason.getTraceback()
-            host = request.findProxiedIP()[1]
+            host_type, host = request.findProxiedIP()
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
             
-            body = "Internal Server Error" if host != '127.0.0.1' else error_trace
+            body = error_trace if (host_type, host) == ('client-ip','127.0.0.1') else "Internal Server Error"
             request.setHeader('content-length', str(len(body)))
             request.setHeader('content-type',"text/plain")
             request.write(body)
