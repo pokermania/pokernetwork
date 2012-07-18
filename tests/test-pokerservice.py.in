@@ -6176,13 +6176,15 @@ class SSLContextFactoryCoverage(unittest.TestCase):
     def test01_initNoHeader(self):
         class MockSettings():
             def headerGet(msSelf, path): return ""
-        scf = pokerservice.SSLContextFactory(MockSettings())
-        self.assertEquals(scf.pem_file, None)
+        try: scf = pokerservice.SSLContextFactory(MockSettings())
+        except: pass
+        else: self.fail('should have failed')
     def test02_initNoneExist(self):
         class MockSettings():
             def headerGet(msSelf, path): return "/this/goes/nowhere /and/this/does/not/either"
-        scf = pokerservice.SSLContextFactory(MockSettings())
-        self.assertEquals(scf.pem_file, None)
+        try: scf = pokerservice.SSLContextFactory(MockSettings())
+        except: pass
+        else: self.fail('should have failed')
     def test03_oneGoodFile(self):
         tmpdir = tempfile.mkdtemp()
         filename = os.path.join(tmpdir, "poker.pem")
