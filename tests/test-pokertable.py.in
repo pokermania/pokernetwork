@@ -76,7 +76,7 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <delays autodeal_tournament_min="2" autodeal="2" autodeal_max="2" autodeal_check="0" round="0" position="0" showdown="0" finish="0" />
 
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -88,7 +88,7 @@ settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="UTF-8"
   </decks>
 
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 

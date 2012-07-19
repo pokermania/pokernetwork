@@ -105,7 +105,7 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <tourney_select_info>../@srcdir@/testtourney_select_info.py</tourney_select_info>
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -4377,7 +4377,7 @@ settings_xml_table_picker_server = """<?xml version="1.0" encoding="UTF-8"?>
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <tourney_select_info>../@srcdir@/testtourney_select_info.py</tourney_select_info>
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 # -----------------------------------------------------------------------------

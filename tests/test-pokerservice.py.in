@@ -124,7 +124,7 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -306,7 +306,7 @@ monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -398,7 +398,7 @@ list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -1045,7 +1045,7 @@ class ResthostTestCase(unittest.TestCase):
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -1064,7 +1064,7 @@ class ResthostTestCase(unittest.TestCase):
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -1084,7 +1084,7 @@ class ResthostTestCase(unittest.TestCase):
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -6442,7 +6442,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <tourney_select_info>UNLIKELY</tourney_select_info>
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
         try:
@@ -6465,7 +6465,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <tourney_select_info>../@srcdir@/testfilter.py</tourney_select_info>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
         try:
@@ -6488,7 +6488,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <tourney_select_info>../@srcdir@/testtourney_select_info_no_call.py</tourney_select_info>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
         try:
@@ -6511,7 +6511,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <tourney_select_info settings="../@srcdir@/testsettings.xml">../@srcdir@/testtourney_select_info.py</tourney_select_info>
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
         self.service = pokerservice.PokerService(xml)
@@ -6532,7 +6532,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
         self.service = pokerservice.PokerService(xml)

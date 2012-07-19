@@ -69,7 +69,7 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
@@ -84,7 +84,7 @@ settings_alternate_xml = """<?xml version="1.0" encoding="UTF-8"?>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
   <auth script="@srcdir@/test-pokerauth/pokerauth.py" />
 </server>
 """
@@ -343,7 +343,7 @@ settings_mysql_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
             root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
   <auth script="@srcdir@/../pokernetwork/pokerauthmysql.py" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@" db="testpokerauthmysql" table="users"/>
 </server>
 """

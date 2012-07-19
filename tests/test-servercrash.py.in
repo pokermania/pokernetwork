@@ -59,7 +59,7 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
             root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
   <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT"/>
+  <users temporary="BOT.*"/>
 </server>
 """
 
