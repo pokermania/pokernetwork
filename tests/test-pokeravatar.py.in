@@ -322,17 +322,18 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         self.assertEquals(found, total)
         return (client, packet)
     # -------------------------------------------------------------------------
-    def seatTable(self, (client, packet), id, gameId, rank = None, percentile = None,
-                  seatNumber = None):
+    def seatTable(self, (client, packet), id, gameId, rank = None, percentile = None, seatNumber = None):
         if seatNumber == None: seatNumber = id + 1
 
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
-
+        
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerSeat(serial = client.getSerial(),
-                                                 seat = seatNumber,
-                                                 game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerSeat(
+            serial = client.getSerial(),
+            seat = seatNumber,
+            game_id = gameId
+        ))
         found = 0
         packets = avatar.resetPacketsQueue()
         for packet in packets:
@@ -1551,9 +1552,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEquals(found, 1)
         return (client, packet)
     # -------------------------------------------------------------------------
-#    this test currently fails because the logic changed
-#    without the needed money, it is currenty impossible to get a seat
-    def _test19_badBuyIn(self):
+    def test19_badBuyIn(self):
         """Test to cover the condition where the buyIn fails"""
         self.createClients(1)
         d = self.client_factory[0].established_deferred
@@ -1561,6 +1560,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200-no-limit')
+        
+        # overload service.seatPlayer, if not the player cannot sit
+        self.service.seatPlayer = lambda *a, **kw: True
         d.addCallback(self.seatTable, 0, 1)
 
         # Note: this only "works" (i.e., fails properly) if you have a
@@ -1569,6 +1571,20 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         #     if not currency_serial: return amount
         d.addCallback(self.badBuyIn, 0, 1, 1)
         return d
+    
+    def test19a_cannotSitWithoutEnoughMoney(self):
+        """A player should not be able to get a seat if he cannot afford the buyin"""
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.sendRolePlay)
+        d.addCallback(self.login, 0)
+        
+        d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200-no-limit')
+        d.addCallback(self.seatTable, 0, 1)
+        d.addCallbacks(lambda *a,**kw: self.fail('should have failed'), lambda *a,**kw: True)
+
+        return d    
     # ------------------------------------------------------------------------
     def noAutoBlindAnte(self, (client, packet), id, gameId ):
         avatar = self.service.avatars[id]
