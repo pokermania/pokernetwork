@@ -96,7 +96,7 @@ class JSON:
     
     def encode(self,obj):
         """encode an object, returning a utf8 encoded string (not a unicode string!)"""
-        return self.encoder.encode(obj).encode('utf8')
+        return self.encoder.encode(obj).encode('utf-8')
     def decode(self,string):
         return self.decoder.decode(string)
         
@@ -120,7 +120,7 @@ class Packet:
                 self.type = self.type # type is now in __dict__, for serialization
             if field not in self.__dict__:
                 if field in kwargs:
-                    self.__dict__[field] = kwargs[field]
+                    self.__dict__[field] = kwargs[field] if format != 'u' else kwargs[field].encode('utf-8')
                 elif type(default) in (str,int,long,float):
                     self.__dict__[field] = default
                 else:
@@ -226,7 +226,7 @@ class Packet:
         format_size = calcsize(format)
         block = block[calcsize(Packet.format_list_length):]
         l = []
-        for i in xrange(length):
+        for _i in xrange(length):
             l.append(unpack(format, block[:format_size])[0])
             block = block[format_size:]
         return (block, l)
@@ -249,23 +249,6 @@ class Packet:
     @staticmethod
     def calcsizestring(string):
         return calcsize("!H") + len(string)
-
-    @staticmethod
-    def packustring(string):
-        string = string.encode('utf-8')
-        return pack("!H", len(string)) + string
-
-    @staticmethod
-    def unpackustring(block):
-        offset = calcsize("!H")
-        (length,) = unpack("!H", block[:offset])
-        string = block[offset:offset + length]
-        string = string.decode('utf-8')
-        return (block[offset + length:], string)
-
-    @staticmethod
-    def calcsizeustring(string):
-        return calcsize("!H") + len(string.encode('utf-8'))
 
     @staticmethod
     def packbstring(obj):
@@ -397,7 +380,7 @@ class Packet:
     def infoStr(self):
         strings = [ PacketNames[self.type] + " " ]
         for (field, _default, format) in self.info:
-            strings.append(field + " = " + str(self.__dict__[field]))
+            strings.append("%s = %s" % (field, self.__dict__[field]))
         return " ".join(strings)
 
     def __repr__(self):
@@ -509,12 +492,12 @@ Packet.format_info = {
           },
 
     #
-    # Unicode character string, length as a 2 bytes integer, network order (big endian)
-    #  followed by the content of the string.
+    # utf-8 encoded string, length as a 2 bytes integer, network order (big endian)
+    #  followed by the content of the string. Is used to encode unicode to utf8 in infoInit
     #
-    'u': {'pack': Packet.packustring,
-          'unpack': Packet.unpackustring,
-          'calcsize': Packet.calcsizeustring,
+    'u': {'pack': Packet.packstring,
+          'unpack': Packet.unpackstring,
+          'calcsize': Packet.calcsizestring,
          },
     #
     # Character string or boolean, length as a 2 bytes integer, network order (big endian)

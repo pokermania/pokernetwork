@@ -268,7 +268,7 @@ class PacketPokerMessage(PacketPokerId):
     """
 
     info = PacketPokerId.info + (
-        ('string', '', 's' ), 
+        ('string', '', 'u' ), 
         )
         
 Packet.infoDeclare(globals(), PacketPokerMessage, Packet, "POKER_MESSAGE", 52) # 52 # 0x34

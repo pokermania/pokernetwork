@@ -33,13 +33,31 @@ import testpackets
 from pokernetwork import packets
 
 class PacketsTestCase(testpackets.PacketsTestBase):
-
+    
+    def setUp(self):
+        self._origInfo = {
+            'PacketFactory': packets.PacketFactory,
+            'PacketNames': packets.PacketNames
+        }
+        packets.PacketFactory = {}
+        packets.PacketNames = {}
+        self.d = {'PacketFactory': {}, 'PacketNames': {}}
+        
+    def tearDown(self):
+        packets.PacketFactory = self._origInfo['PacketFactory']
+        packets.PacketNames = self._origInfo['PacketNames']
+        
+    def updatePacketDicts(self):
+        packets.PacketFactory.update(self.d['PacketFactory'])
+        packets.PacketNames.update(self.d['PacketNames'])
+        
     #--------------------------------------------------------------    
     def test_all(self):
+        packets.PacketFactory = self._origInfo['PacketFactory']
+        packets.PacketNames = self._origInfo['PacketNames']
+        
         for type_index in packets._TYPES:
             if packets.PacketFactory.has_key(type_index):
-                if self.verbose > 0:
-                    print packets.PacketNames[type_index]
                 self.packetCheck(type = packets.PacketFactory[type_index])
 
         class TestPacketList(packets.PacketList):
@@ -80,47 +98,49 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         self.packetCheck(type = TestPacketFieldList, serials = [1])
 
     def defineTestPacket(self):
-        d = {}
-        d['PacketFactory'] = {}
-        d['PacketNames'] = {}
+        class TestPingPacket(packets.Packet):
+            pass
+        packets.Packet.infoDeclare(self.d, TestPingPacket, packets.Packet, 'TESTPING', 5)
+        self.updatePacketDicts()
         
         class TestPacket(packets.Packet):
-            info = packets.Packet.info + (('b' , 10, 'B'),
-                                          ('a', 20, 'I'),
-                                          ('c', 'ABC', 's'),
-                                          ('d', [1,2,3], 'Bl'),
-                                          ('e', -1, 'b'),
-                                          ('f', None, 'no net'),
-                                          ('g', [{'a': [1,2]}, None, True], 'j'),
-                                          ('h', [packets.PacketPing(), packets.PacketPing()], 'pl'),
-                                          ('i', True, 'bool'),
-                                          ('i1', False, 'bool'),
-                                          ('j', 'n', 'cbool'),
-                                          ('j1', 'y', 'cbool'),
-                                          ('k', None, 'Bnone'),
-                                          ('m', u'aü', 'u')
-                                          )
-            fields = ( "\x0a", # type
-                       "\0\0", # length
-                       "\x02", # b
-                       "\0\0\0\x01", # a
-                       "\0\x03ABC", # c
-                       "\x03\x01\x02\x03", # d
-                       "\xff", # e
-                       '\x00\x17[{"a":[1,2]},null,true]', # g
-                       "\x00\x02\x05\x00\x03\x05\x00\x03", # h
-                       "\x01", # i
-                       "\x00", # i1
-                       "\x00", # j
-                       "\x01", # j1
-                       "\xff", # k
-                       "\x00\x03a\xc3\xbc", # m
-                       )
+            info = packets.Packet.info + (
+                ('b' , 10, 'B'),
+                ('a', 20, 'I'),
+                ('c', 'ABC', 's'),
+                ('d', [1,2,3], 'Bl'),
+                ('e', -1, 'b'),
+                ('f', None, 'no net'),
+                ('g', [{'a': [1,2]}, None, True], 'j'),
+                ('h', [TestPingPacket(), TestPingPacket()], 'pl'),
+                ('i', True, 'bool'),
+                ('i1', False, 'bool'),
+                ('j', 'n', 'cbool'),
+                ('j1', 'y', 'cbool'),
+                ('k', None, 'Bnone'),
+                ('m', u'aü'.encode('utf-8'), 'u')
+            )
+            fields = (
+                "\x0a", # type
+                "\0\0", # length
+                "\x02", # b
+                "\0\0\0\x01", # a
+                "\0\x03ABC", # c
+                "\x03\x01\x02\x03", # d
+                "\xff", # e
+                '\x00\x17[{"a":[1,2]},null,true]', # g
+                "\x00\x02\x05\x00\x03\x05\x00\x03", # h
+                "\x01", # i
+                "\x00", # i1
+                "\x00", # j
+                "\x01", # j1
+                "\xff", # k
+                "\x00\x03a\xc3\xbc", # m
+            )
+            bla = fields[0]
             binary = fields[0] + pack('!H', len("".join(fields))) + "".join(fields[2:])
-        d = {}
-        d['PacketFactory'] = {}
-        d['PacketNames'] = {}
-        packets.Packet.infoDeclare(d, TestPacket, packets.Packet, 'NAME', 10)
+        packets.Packet.infoDeclare(self.d, TestPacket, packets.Packet, 'NAME', 10)
+        self.updatePacketDicts()
         return TestPacket
 
     def test_infoPack(self):
@@ -156,20 +176,18 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         self.assertEqual(len(type.binary), packet.infoCalcsize())
 
     def test_infoDeclare(self):
-        d = {}
-        d['PacketFactory'] = {}
-        d['PacketNames'] = {}
         class TestPacketClass(packets.Packet):
             pass
         index = 11
-        packets.Packet.infoDeclare(d, TestPacketClass, packets.Packet, 'NAME', index)
-        self.assertEqual(TestPacketClass, d['PacketFactory'][index])
-        self.assertEqual('NAME', d['PacketNames'][index])
+        packets.Packet.infoDeclare(self.d, TestPacketClass, packets.Packet, 'NAME', index)
+        self.updatePacketDicts()
+        self.assertEqual(TestPacketClass, packets.PacketFactory[index])
+        self.assertEqual('NAME', packets.PacketNames[index])
         self.assertEqual(TestPacketClass.type, index)
         test_packet = TestPacketClass()
         packet = packets.Packet()
         self.assertEqual(packet.calcsize(), test_packet.calcsize())
-        self.assertEqual("AUTH_REQUEST  type = 11 length = 3", str(test_packet))
+        self.assertEqual("NAME  type = 11 length = 3", str(test_packet))
 
     def test_unpackpackets_errors(self):
         _stdout, sys.stdout = sys.stdout, open('/dev/null', 'w')
@@ -182,6 +200,18 @@ class PacketsTestCase(testpackets.PacketsTestBase):
         #
         self.assertEqual(None, packets.Packet.unpackpackets('\x00\x02\x00\x00\x03'));
         sys.stdout = _stdout
+        
+    def test_infoStr(self):
+        class TestPacketClass(packets.Packet):
+            info = packets.Packet.info + (('string','','u'),)
+        index = 11
+        packets.Packet.infoDeclare(self.d, TestPacketClass, packets.Packet, 'NAME', index)
+        self.updatePacketDicts()
+        
+        packet1 = TestPacketClass()
+        packet2 = TestPacketClass(string=u'über')
+        self.assertEqual('NAME  type = 11 length = 5 string = ', str(packet1))
+        self.assertEqual('NAME  type = 11 length = 10 string = \xc3\xbcber', str(packet2))
 
 #--------------------------------------------------------------
 def GetTestSuite():
