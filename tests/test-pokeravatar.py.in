@@ -3822,16 +3822,17 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(resetQueueMax, saveClientQueueMax)
         return d
     # ------------------------------------------------------------------------
-    def tourneyCreate(self, (client, packet), id):
+    def tourneyCreate(self, (client, packet), id, otherid):
         avatar = self.service.avatars[id]
         avatar.user.privilege = avatar.user.ADMIN
         avatar.queuePackets()
-        another_player = 4444
+        another_player = self.service.avatars[otherid].user.serial
         avatar.handlePacketLogic(PacketPokerCreateTourney(
             serial = client.getSerial(),
             buy_in = 100,
             players = [another_player],
-            players_quota = 2
+            players_quota = 2,
+            currency_serial = 1,
         ))
         found = False
         for packet in avatar.resetPacketsQueue():
@@ -3843,7 +3844,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test80_tourneyCreate(self):
         """Test user created tournament."""
-        self.createClients(1)
+        self.createClients(2)
+        d2 = self.client_factory[1].established_deferred
+        d2.addCallback(self.sendExplain)
+        d2.addCallback(self.login, 1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
