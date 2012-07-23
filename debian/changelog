@@ -1,3 +1,9 @@
+poker-network (2.2.0-2) pokermania; urgency=low
+
+  * 60ffd8e fix: pokermessage can receive unicode
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 23 Jul 2012 22:00:00 +0200
+
 poker-network (2.2.0-1) pokermania; urgency=low
 
   * 30de03e updated pokeradditions, debian/control
