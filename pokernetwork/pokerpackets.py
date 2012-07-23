@@ -1127,7 +1127,7 @@ message: a text message string (2^16 long max)
 game_id: integer uniquely identifying a game.
 """
 
-    info = PacketPokerId.info + ( ('message', '', 's'), )
+    info = PacketPokerId.info + ( ('message', '', 'u'), )
    
 Packet.infoDeclare(globals(),PacketPokerChat , Packet, "POKER_CHAT", 86) # 86 # 0x56
 ########################################
