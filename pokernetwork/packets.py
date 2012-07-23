@@ -120,7 +120,10 @@ class Packet:
                 self.type = self.type # type is now in __dict__, for serialization
             if field not in self.__dict__:
                 if field in kwargs:
-                    self.__dict__[field] = kwargs[field] if format != 'u' else kwargs[field].encode('utf-8')
+                    self.__dict__[field] = \
+                        kwargs[field].encode('utf-8') \
+                        if format == 'u' and type(kwargs[field]) == unicode \
+                        else kwargs[field]
                 elif type(default) in (str,int,long,float):
                     self.__dict__[field] = default
                 else:
