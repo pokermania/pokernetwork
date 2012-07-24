@@ -1,61 +1,17 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
 
-#export DH_VERBOSE=1 
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
 
-#
-# Help backward compatibility for those distributions that do
-# not distinguish /usr/lib and /usr/share for pkgconfig (i.e.
-# /usr/share/pkgconfig is not part of the path in the standard
-# pkg-config command.
-#
-export PKG_CONFIG_PATH=/usr/share/pkgconfig
-
+# %:
+# 	dh $@ 
+DEB_PYTHON_SYSTEM=pysupport
+DEB_PYTHON_BUILD_ARGS="test -q"
 include /usr/share/cdbs/1/rules/debhelper.mk
-
-clean:: # $(DEB_BUILDDIR)/config.status
-	rm -f $(DEB_SRCDIR)/*cdbs-*
-
-$(DEB_SRCDIR)/configure:: $(DEB_SRCDIR)/configure.ac
-	autoreconf --install
-	chmod a+x $@
-
-include /usr/share/cdbs/1/class/autotools.mk
-include /usr/share/cdbs/1/class/gnome.mk
-
-#DEB_MAKE_CLEAN_TARGET = maintainer-clean
-
-#DEB_CONFIGURE_EXTRA_FLAGS = --enable-maintainer-mode --disable-static
-DEB_CONFIGURE_EXTRA_FLAGS = --disable-static
-
-DEB_CONFIGURE_EXTRA_FLAGS += \
-		--with-poker-server-host=%HOST% \
-		--with-poker-www-host=%WWW% \
-		--with-wwwbrowser=/usr/bin/x-www-browser \
-		--with-poker-database=_DBC_DBNAME_ \
-		--with-poker-dbhost=_DBC_DBSERVER_ \
-		--with-poker-dbuser=_DBC_DBUSER_ \
-		--with-poker-dbuser-password=_DBC_DBPASS_
-
-
-DEB_MAKE_CHECK_TARGET = $(if $(findstring nocheck,$(DEB_BUILD_OPTIONS)),,check)
-
-is_debug_package=$(if $(findstring noopt,$(DEB_BUILD_OPTIONS)),yes,)
-
-binary-install/python-poker-network::
-	-dh_pycentral -ppython-poker-network
-	dh_python -ppython-poker-network
-
-binary-install/python-poker-stats::
-	-dh_pycentral -ppython-poker-stats
-	dh_python -ppython-poker-stats
-
-binary-install/python-poker-additions::
-	-dh_pycentral -ppython-poker-additions
-	dh_python -ppython-poker-additions
-
-debian/stamp-autotools-configure: $(DEB_SRCDIR)/configure
-	chmod a+x $(DEB_CONFIGURE_SCRIPT)
-	$(DEB_CONFIGURE_INVOKE) $(cdbs_configure_flags) $(DEB_CONFIGURE_EXTRA_FLAGS) $(DEB_CONFIGURE_USER_FLAGS)
-	touch $@
-
+include /usr/share/cdbs/1/class/python-distutils.mk
