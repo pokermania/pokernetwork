@@ -731,19 +731,25 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.normalSetRoles, PacketPokerRoles.PLAY, "PLAY")
             d.addCallback(self.login, index)
             return d
-        def client2(result):
+
+        def client2():
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
             d.addCallback(self.errorSetRoles, PacketPokerRoles.PLAY,
-                           PacketPokerSetRole.NOT_AVAILABLE,
-                           "another client already has role %s" % PacketPokerRoles.PLAY)
+                PacketPokerSetRole.NOT_AVAILABLE,
+                "another client already has role %s" % PacketPokerRoles.PLAY
+            )
             d.addCallback(self.login, index)
             return d
-        d = client1();
-        d.addCallback(client2)
-        d.addCallback(self.quit)
-        return d
+
+        dl = defer.DeferredList([client1(),client2()])
+        def quitAll(client_info):
+            for (_packet,client) in client_info:
+                self.quit(client)
+
+        dl.addCallback(quitAll)
+        return dl
     # -------------------------------------------------------------------------
     def test07_getImage(self):
         """Tests player getting its image"""
@@ -1087,7 +1093,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
-        def client1(result, gameId):
+        def client1(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -1102,7 +1108,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
-        def client2(result, gameId):
+        def client2(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -1119,14 +1125,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             return d
         gameId = 2
-        d = defer.succeed(True)
-        d.addCallback(client1, gameId)
-        d.addCallback(client2, gameId)
-        d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.beginHandSetup, gameId)
-        d.addCallback(self.doBlindPost, 1, gameId)
-        d.addCallback(self.startHandAndReceiveCards, gameId)
-        return d
+        dl = defer.DeferredList([client1(gameId), client2(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.dealTable, gameId)
+        dl.addCallback(self.beginHandSetup, gameId)
+        dl.addCallback(self.doBlindPost, 1, gameId)
+        dl.addCallback(self.startHandAndReceiveCards, gameId)
+        return dl
     # -------------------------------------------------------------------------
     def sendExplainTooLate(self, (client, packet)):
         avatar = self.service.avatars[0]
@@ -1163,7 +1168,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # RANDOM
     def test15a_handPlay_dbLocalesAndOverridesThereof(self):
         """Test playing an actual hand all the way through when locale changes"""
-        def client1(result, gameId):
+        def client1(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -1180,7 +1185,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
-        def client2(result, gameId):
+        def client2(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -1197,14 +1202,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             return d
         gameId = 2
-        d = defer.succeed(True)
-        d.addCallback(client1, gameId)
-        d.addCallback(client2, gameId)
-        d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.beginHandSetup, gameId)
-        d.addCallback(self.doBlindPost, 1, gameId)
-        d.addCallback(self.startHandAndReceiveCards, gameId)
-        return d
+        dl = defer.DeferredList([client1(gameId), client2(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.dealTable, gameId)
+        dl.addCallback(self.beginHandSetup, gameId)
+        dl.addCallback(self.doBlindPost, 1, gameId)
+        dl.addCallback(self.startHandAndReceiveCards, gameId)
+        return dl
 
     # -------------------------------------------------------------------------
     def test16_explainTooLate(self):
@@ -1682,7 +1686,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
-        def client1(result, gameId):
+        def client1(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -1698,18 +1702,16 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             d.addCallback(self.sitOutClosedGame, index, gameId)
             return d
-        def client2(result, gameId):
+        def client2(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.joinTableAndCheckPokerSitAndAutoFoldAreSend, index, gameId, 'Table2', '2-4-limit')
+            return d
         gameId = 2
-        d = defer.succeed(True)
-        d.addCallback(client1, gameId)
-        d.addCallback(client2, gameId)
-        return d
+        return defer.DeferredList([client1(gameId),client2(gameId)])
     # ------------------------------------------------------------------------
     def doBlindPostAndHaveOtherGuyWaitForCardsAndQuit(self, (client, packet), id, gameId):
         # By now, we should have seen as noted above, a request for the
@@ -1729,7 +1731,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # The sequence of how to get yourself seated in a cash game was
         # taken from the instructions at the top of pokerpackets.py
         # labelled "How to sit at a cash game table ?"
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -1743,13 +1745,12 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             return d
         gameId = 2
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.beginHandSetup, gameId, True)
-        d.addCallback(self.doBlindPostAndHaveOtherGuyWaitForCardsAndQuit, 1, gameId)
-        return d
+        dl = defer.DeferredList([client(gameId),client(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.dealTable, gameId)
+        dl.addCallback(self.beginHandSetup, gameId, True)
+        dl.addCallback(self.doBlindPostAndHaveOtherGuyWaitForCardsAndQuit, 1, gameId)
+        return dl
 
     # ------------------------------------------------------------------------
     def getPersonalInfo(self, (client, packet), id ):
@@ -2215,7 +2216,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test39_tablePlayerList(self):
         """Test for listing players in at a table."""
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2229,9 +2230,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             return d
         gameId = 2
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
+        d = defer.DeferredList([client(gameId),client(gameId)])
+        d.addCallback(fixIt)
         d.addCallback(self.listPlayers, 1, gameId)
         return d
     # ------------------------------------------------------------------------
@@ -2385,7 +2385,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test44_possibleObserverLoggedIn(self):
-        def client1(result, gameId):
+        def client1(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2397,7 +2397,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
-        def client2(result, gameId):
+        def client2(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2411,12 +2411,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             return d
         gameId = 2
-        d = defer.succeed(True)
-        d.addCallback(client1, gameId)
-        d.addCallback(client2, gameId)
-        d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.loseConnection, gameId)
-        return d
+        dl = defer.DeferredList([client1(gameId),client2(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.dealTable, gameId)
+        dl.addCallback(self.loseConnection, gameId)
+        return dl
     # ------------------------------------------------------------------------
     def loseConnectionAnte(self, (client, packet), gameId):
         table = self.service.getTable(gameId)
@@ -2443,7 +2442,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         return (client, packet)
     # ------------------------------------------------------------------------
     def test45_possibleObserverLoggedInWithAnte(self):
-        def client1(result, gameId):
+        def client1(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2455,7 +2454,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
-        def client2(result, gameId):
+        def client2(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.sendExplain)
@@ -2469,12 +2468,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.readyToPlay, index, gameId)
             return d
         gameId = 4
-        d = defer.succeed(True)
-        d.addCallback(client1, gameId)
-        d.addCallback(client2, gameId)
-        d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.loseConnectionAnte, gameId)
-        return d
+        dl = defer.DeferredList([client1(gameId),client2(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.dealTable, gameId)
+        dl.addCallback(self.loseConnectionAnte, gameId)
+        return dl
     # ------------------------------------------------------------------------
     def processingHand(self, (client, packet), id, gameId, isBugous=False ):
         avatar = self.service.avatars[id]
@@ -2607,7 +2605,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEqual(search_output("No autodeal"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -2623,11 +2621,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         gameId = 2
         table = self.service.getTable(gameId)
         table.autodeal = False
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(self.variousStartPackets, 1, gameId)
-        return d
+        dl = defer.DeferredList([client(gameId),client(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.variousStartPackets, 1, gameId)
+        return dl
     # ------------------------------------------------------------------------
     def badSeatTable(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
@@ -3180,7 +3177,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # where a third client joined while two were already playing a
         # hand.  This test does that.  Note it's the only test that uses
         # the third client.
-        def client0(result, gameId):
+        def client0(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -3192,7 +3189,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
-        def client1(result, gameId):
+        def client1(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -3205,26 +3202,24 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
-        def client2(result, gameId):
+        def client2(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             return d
-        
+
         gameId = 2
-        
+
         # set autodeal on false; we want to deal only on dealTable
         table = self.service.tables[gameId].autodeal = False
-        
-        d = defer.succeed(True)
-        d.addCallback(client0, gameId)
-        d.addCallback(client1, gameId)
-        d.addCallback(client2, gameId)
-        d.addCallback(self.dealTable, gameId)
-        d.addCallback(self.joinTableWhenHandRunning, 2, gameId, 'Table2', '2-4-limit')
-        return d
+
+        dl = defer.DeferredList([client0(gameId), client1(gameId), client2(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.dealTable, gameId)
+        dl.addCallback(self.joinTableWhenHandRunning, 2, gameId, 'Table2', '2-4-limit')
+        return dl
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
@@ -3517,7 +3512,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def test73_playerTimeoutAndThenViewsQueuedPackets(self):
         """Test when a player was in a hand, reconnects after other hands
         have been played, and expects certain packet playback  packets."""
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -3530,12 +3525,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         gameId = 2
         table = self.service.getTable(gameId)
         table.autodeal = False
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(self.playerTimesoutAndThenLooksAtQueuedPackets, gameId)
-        return d
+        dl = defer.DeferredList([client(gameId), client(gameId), client(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.playerTimesoutAndThenLooksAtQueuedPackets, gameId)
+        return dl
 
     # ------------------------------------------------------------------------
     def playWhileObserverGrows(self, (client, packet), gameId):
@@ -3610,7 +3603,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test74_tooManyPacketsGrowOnObserver(self):
         """Test when a player merely observes, the packet queue grows and grows"""
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -3623,12 +3616,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         gameId = 2
         table = self.service.getTable(gameId)
         table.autodeal = False
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(self.playWhileObserverGrows, gameId)
-        return d
+        dl = defer.DeferredList([client(gameId), client(gameId), client(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.playWhileObserverGrows, gameId)
+        return dl
     # ------------------------------------------------------------------------
     def playerSitsBrieflyThenSitsOut(self, (client, packet), gameId):
         avatars = self.service.avatars
@@ -3703,7 +3694,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test75_playerSitsBrieflyThenOut(self):
         """Test when a player sits in briefly, then sits out.  Packet queue grows?"""
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -3716,12 +3707,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         gameId = 2
         table = self.service.getTable(gameId)
         table.autodeal = False
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(self.playerSitsBrieflyThenSitsOut, gameId)
-        return d
+        dl = defer.DeferredList([client(gameId), client(gameId), client(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.playerSitsBrieflyThenSitsOut, gameId)
+        return dl
     # ------------------------------------------------------------------------
     def forceObserverDisconnectPacketQueue(self, (client, packet), gameId):
         avatars = self.service.avatars
@@ -3814,7 +3803,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def test76_forceObserverDisconnectPacketQueue(self):
         """Tests packet queue growth and cutoff by setting max length small"""
-        def client(result, gameId):
+        def client(gameId):
             index = self.createClient()
             d = self.client_factory[index].established_deferred
             d.addCallback(self.setupCallbackChain)
@@ -3829,16 +3818,14 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.service.client_queued_packet_max = 21
         table = self.service.getTable(gameId)
         table.autodeal = False
-        d = defer.succeed(True)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(client, gameId)
-        d.addCallback(self.forceObserverDisconnectPacketQueue, gameId)
+        dl = defer.DeferredList([client(gameId), client(gameId), client(gameId)])
+        dl.addCallback(fixIt)
+        dl.addCallback(self.forceObserverDisconnectPacketQueue, gameId)
         def resetQueueMax(d, saveClientQueueMax):
             self.service.client_queued_packet_max = saveClientQueueMax
             return d
-        d.addCallback(resetQueueMax, saveClientQueueMax)
-        return d
+        dl.addCallback(resetQueueMax, saveClientQueueMax)
+        return dl
     # ------------------------------------------------------------------------
     def tourneyCreate(self, (client, packet), id, otherid):
         avatar = self.service.avatars[id]
@@ -3858,7 +3845,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 found = True
         self.assertEquals(found, True)
         return (client, packet)
-        
+
     # ------------------------------------------------------------------------
     def test80_tourneyCreate(self):
         """Test user created tournament."""
@@ -3869,7 +3856,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.tourneyCreate, 0)
+        d.addCallback(self.tourneyCreate, 0, 1)
         return d
 
     # ------------------------------------------------------------------------
@@ -4656,8 +4643,6 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
         return d
     # ------------------------------------------------------------------------
     def preparePlayerForTablePickerSend(self, playerNumber):
-        playerNumber_confirm = self.createClient()
-        assert playerNumber_confirm == playerNumber
         d = self.client_factory[playerNumber].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
@@ -4667,7 +4652,7 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
 class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
     # ------------------------------------------------------------------------
     def test00_tablePicker_failure_by_min(self):
-        playerNumber = len(self.client_factory)
+        playerNumber = self.createClient()
         playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_best", 1)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
@@ -4677,7 +4662,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return playerDeferred
     # ------------------------------------------------------------------------
     def test01_tablePicker_failure_by_variant(self):
-        playerNumber = len(self.client_factory)
+        playerNumber = self.createClient()
         playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_best", 1)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
@@ -4686,7 +4671,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return playerDeferred
     # ------------------------------------------------------------------------
     def test02_tablePicker_failure_by_structure(self):
-        playerNumber = len(self.client_factory)
+        playerNumber = self.createClient()
         playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_best", 1)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
@@ -4696,77 +4681,47 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
     # ------------------------------------------------------------------------
     def test03_tablePicker_onlyOnePossible(self):
 
-        d = defer.succeed(True)
+        playerNumber = self.createClient()
+        dl = defer.DeferredList([self.startPlayerSeatedAndPlaying(True, 5, "Stud 8-max 2/4", "2-4-limit", "7stud", 8, 2),
+            self.preparePlayerForTablePickerSend(playerNumber)])
+        dl.addCallback(fixIt)
 
-        d.addCallback(self.startPlayerSeatedAndPlaying, 5, "Stud 8-max 2/4", "2-4-limit", "7stud", 8, 2)
-
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
-            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_min_under_best", 5)
-            pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 1, 0,
-                                       "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
-                                       autoBlindAnte = True)
-            def autodeal((client, packet), gameId):
-                table = self.service.getTable(gameId)
-                self.assertTrue("dealTimeout" in table.timer_info)
-                return (client, packet)
-            pickerDeferred.addCallback(autodeal, 5)
-            return pickerDeferred
-        d.addCallback(check)
-        return d
+        dl.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_min_under_best", 5)
+        dl.addCallback(self.tablePickerSucceeds, playerNumber, 1, 0,
+                                   "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
+                                   autoBlindAnte = True)
+        def autodeal((client, packet), gameId):
+            table = self.service.getTable(gameId)
+            self.assertTrue("dealTimeout" in table.timer_info)
+            return (client, packet)
+        dl.addCallback(autodeal, 5)
+        return dl
     # ------------------------------------------------------------------------
     def test04_tablePicker_twoPossibleGivesMostFullWithSeats(self):
-        d = defer.succeed(True)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
-            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
-            pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
-                                       "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
-            return pickerDeferred
-        d.addCallback(check)
-        return d
+        defs = []
+        for idx in range(7):
+            if idx < 3:
+                defs.append(self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1))
+            else:
+                defs.append(self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1))
+
+        playerNumber = self.createClient()
+        pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+        pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
+            "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
+
+        defs.append(pickerDeferred)
+        dl = defer.DeferredList(defs)
+        return dl
     # ------------------------------------------------------------------------
     def test05_tablePicker_emptyTableLowestNumberWhenEverythingIsEmpty(self):
-        playerNumber = len(self.client_factory)
+        playerNumber = self.createClient()
         playerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
         playerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 0, 0,
                                     '', '', 1, "NL HE 10-max 100/200")
         return playerDeferred
-    # ------------------------------------------------------------------------
-    def test06_tablePicker_shouldNoticeWhenSitOutMakesTableBadChoice(self):
-        d = defer.succeed(True)
-        table = self.service.getTable(1)
-        table.autodeal = False
-        table = self.service.getTable(2)
-        table.autodeal = False
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 1
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 2
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)   # 3
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)   # 4
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)   # 5
-        d.addCallback(self.sitOut, 5, 2)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)   # 6
-        d.addCallback(self.sitOut, 6, 2)
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
-            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_min_under_best", 2)
-            pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
-                                       "holdem", "100-200-no-limit", 1, "NL HE 10-max 100/200")
-            return pickerDeferred
-        d.addCallback(check)
-        return d
     # ------------------------------------------------------------------------
     def test07_tablePicker_shouldNotPickFullTableEvenIfPlayerSitsOut(self):
         table = self.service.getTable(1)
@@ -4778,21 +4733,19 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
             if idx < 10:
                 d = self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
                 if idx == 9:
-        d.addCallback(self.sitOut, 9, 1)
+                    d.addCallback(self.sitOut, 9, 1)
             else:
                 d = self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
             defs.append(d)
 
-        dl = defer.DeferredList(defs)
 
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
-            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
-            pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
-                                       "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
-            return pickerDeferred
-        dl.addCallback(check)
+        playerNumber = self.createClient()
+        pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+        pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
+                                   "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
+        defs.append(pickerDeferred)
+        dl = defer.DeferredList(defs)
         return dl
     # ------------------------------------------------------------------------
     def test08_tablePicker_failureBecauseAllTablesMeetingCriteriaAreFull(self):
@@ -4810,32 +4763,28 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
 
         dl = defer.DeferredList(defs)
 
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        playerNumber = self.createClient()
+        pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        def check(result, pickerDeferred, playerNumber):
             pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
             pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 3, 0,
                                        "holdem", "100-200-no-limit")
             return pickerDeferred
-        dl.addCallback(check)
-        return d
+        dl.addCallback(check, pickerDeferred, playerNumber)
+        return dl
     # ------------------------------------------------------------------------
 
     def test09_tablePicker_noTableDueToLackofFunds(self):
-        d = defer.succeed(True)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
-            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "under_min", 1)
-            pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
-                                       "holdem", "100-200-no-limit")
-            return pickerDeferred
-        d.addCallback(check)
-        return d
+        client1 = self.startPlayerSeatedAndPlaying(True, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
+        playerNumber = self.createClient()
+        pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "under_min", 1)
+        pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
+                                   "holdem", "100-200-no-limit")
+        return defer.DeferredList([client1, pickerDeferred])
     # ------------------------------------------------------------------------
     def test10_tablePicker_sitOutCausesNoMatchesFound(self):
-        playerNumber = len(self.client_factory)
+        playerNumber = self.createClient()
         pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
         pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
@@ -4843,19 +4792,21 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         return pickerDeferred
     # ------------------------------------------------------------------------
     def test11_tablePicker_failureFromTableCannotAddPlayer(self):
-        d = defer.succeed(True)
-        d.addCallback(self.startPlayerSeatedAndPlaying, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
-        def check(result):
-            playerNumber = len(self.client_factory)
-            pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
-            pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
-            pickerDeferred.addCallback(self.dummyTableCanAddPlayer, 1)
-            pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
-                                       "holdem", "100-200-no-limit", 1)
-            pickerDeferred.addCallback(self.restoreTableCanAddPlayer, 1)
-            return pickerDeferred
-        d.addCallback(check)
-        return d
+        client = self.startPlayerSeatedAndPlaying(True, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
+        playerNumber = self.createClient()
+        pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
+        pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
+        pickerDeferred.addCallback(self.dummyTableCanAddPlayer, 1)
+        pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
+                                   "holdem", "100-200-no-limit", 1)
+        pickerDeferred.addCallback(self.restoreTableCanAddPlayer, 1)
+        return defer.DeferredList([client, pickerDeferred])
+######################### Little Helper ######################################
+
+def fixIt(client_info):
+    for (_packet,client) in client_info:
+        pass
+    return client
 ##############################################################################
 def Run():
     loader = runner.TestLoader()
