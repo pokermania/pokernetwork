@@ -2501,6 +2501,28 @@ Packet.infoDeclare(globals(), PacketPokerTourneyManager, Packet, "POKER_TOURNEY_
 
 ########################################
 
+class PacketPokerAutoPlay(PacketPokerId):
+    """\
+Semantics: If the player leaves the keybord, or the connection breaks, a bot could play for player instead
+This Behaviour could be defined by this package.
+
+As soon as the player returns, or the connection is rebuild, the player should send a POkER_SIT packet.
+
+AUTOPLAY_NO  0x00
+AUTOPLAY_YES 0x01
+
+Direction: server <= client
+game_id: integer uniquely indentifying a game.
+
+    """
+    info = PacketPokerId.info + (
+        ('auto_play', 0x00, 'B'),
+        )
+
+Packet.infoDeclare(globals(), PacketPokerAutoPlay, Packet, "POKER_AUTO_PLAY", 150) # 150 # 0x96 # %SEQ%
+
+########################################
+
 class PacketPokerGetPlayerPlaces(Packet):
     """ """
     
@@ -2949,9 +2971,6 @@ class PacketPokerLongPollReturn(Packet):
 
 Packet.infoDeclare(globals(), PacketPokerLongPollReturn, Packet, "POKER_LONG_POLL_RETURN", 168) # 168 # 0xa8 # %SEQ%
 
-########################################
-
-    
 _TYPES = range(50,169)
 
 # Interpreted by emacs
