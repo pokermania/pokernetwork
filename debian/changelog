@@ -1,3 +1,9 @@
+poker-network (2.2.0-4) pokermania; urgency=low
+
+  * a57468a postinstall fix for additions, refs #6536
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 27 Jul 2012 13:20:00 +0200
+
 poker-network (2.2.0-3) pokermania; urgency=low
 
   * b3a4e02 forgot PokerChat...
