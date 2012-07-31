@@ -10,6 +10,7 @@
 #debian/tmp/usr/share/munin/plugins
 #debian/tmp/usr/share/man/man8
 #debian/tmp/usr/lib/pkgconfig
-database/*.sql upgrades /usr/share/poker-network
-conf/*.xml conf/poker.pem /usr/share/poker-network/conf
-twisted /usr/share/pyshared
+pokernetwork/*.py usr/share/pyshared/pokernetwork
+database/*.sql upgrades usr/share/poker-network
+conf/*.xml conf/poker.pem usr/share/poker-network/conf
+twisted usr/share/pyshared
